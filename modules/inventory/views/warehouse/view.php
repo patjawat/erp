@@ -14,6 +14,11 @@ use app\modules\inventory\models\Stock;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
+
+$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory']];
+// $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['/inventory/warehouse']];
+// $this->params['breadcrumbs'][] = 'Update';
+
 ?>
 
 
@@ -26,7 +31,7 @@ Dashboard
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
+<?=$this->render('../default/menu',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
 
 <?php  Pjax::begin(['id' => 'inventory-container']); ?>

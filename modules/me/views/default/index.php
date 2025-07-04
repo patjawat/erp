@@ -113,7 +113,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 <?php
 $urlRepair = Url::to(['/me/repair']);
 $ApproveStockUrl = Url::to(['/me/approve/stock-out']);
-$ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
+// $ApprovePurchaseUrl = Url::to(['/me/approve/purchase']);
 $ownerAssetUrl = Url::to(['/me/owner']);
 $documentUrl = Url::to(['/me/documents/show-home']);
 // $urlRepair = Url::to(['/me/repair-me']);
@@ -121,7 +121,7 @@ $js = <<< JS
 
     loadRepairHostory();
     // loadApproveStock();
-    loadPurchase();
+    // loadPurchase();
     loadOwnerAsset();
     loadDocumentMe();
     
@@ -183,7 +183,7 @@ $js = <<< JS
         async  function  loadPurchase(){
             await \$.ajax({
                 type: "get",
-                url: "$ApprovePurchaseUrl",
+                url: "ApprovePurchaseUrl",
                 dataType: "json",
                 success: function (res) {
                     console.log(res.count)
@@ -194,7 +194,8 @@ $js = <<< JS
                     }
                 }
             });
-    }
+        }
+
 
     //ทรัพย์สินที่รับผิดขอบ
     async function  loadOwnerAsset(){
@@ -212,6 +213,7 @@ $js = <<< JS
             }
         });
     }
+
     JS;
 $this->registerJS($js, yii\web\View::POS_END);
 ?>

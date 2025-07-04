@@ -27,24 +27,25 @@ yii\web\YiiAsset::register($this);
 <i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('../default/menu'); ?>
+<?= $this->render('../default/menu') ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'warehouse'])?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
 
 <?php
-
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
 $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
 $emp = UserHelper::GetEmployee();
 
 ?>
- <?php $balanced=0;foreach ($model->getItems() as $item):?>
-                        <?php
+<?php $balanced=0;foreach ($model->getItems() as $item):?>
+<?php
                         if($item->qty > $item->SumlotQty()){
                             $balanced +=1;
                         }
@@ -162,7 +163,7 @@ $emp = UserHelper::GetEmployee();
                             <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
                             <?php }?>
                             <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
-                            
+
                             <?php   //if($balanced == 0):?>
                             <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout','id' => 'btnSave']); ?>
 
@@ -195,24 +196,34 @@ $emp = UserHelper::GetEmployee();
         </div>
         <?php endif?>
 
+        <div class="d-grid gap-2">
+            <?php  // echo Html::a('อนุมัติเห็นชอบแทนหัวหน้า',['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApproveId()],['class' => 'btn btn-primary shadow open-modal','data' => ['size' => 'modal-md']])?>
+        </div>
+
+        <!-- หัวหน้าอนุมัติให้เบิก -->
+        <?php // if($model->viewChecker('ผู้เห็นชอบ')['status'] !==''):?>
         <!-- approve -->
         <div class="card">
+            <div class="card-header bg-primary-gradient d-flex justify-content-between">
+                <h6 class=" text-white">ผู้เห็นชอบ</h6>
+                <?php  echo $model->leaderApprove()->status == 'Pending' ? Html::a('<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApprove()->id],['class' => 'btn btn-light rounded-pill shadow open-modal','data' => ['size' => 'modal-md']]) : ''?>
+            </div>
             <div class="card-body">
+                <?php
+                // echo $model->getStatus()['title'];
+                
+                ?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
-                    <?php echo $model->viewChecker('ผู้เห็นชอบ')['position']; ?>
-                    <?php
-                    // echo "<pre>";
-                    // print_r($model->viewChecker());
-                    // echo "</pre>";
-                    ?>
+                    <?php // echo $model->viewChecker('ผู้เห็นชอบ')['position']; ?>
                     <?php if($model->checker == $emp->id && $model->order_status != 'success'):?>
                     <?php // echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
                     <?php endif;?>
                 </div>
             </div>
         </div>
-
+        <?php // endif;?>
+        <!-- หัวหน้าอนุมัติให้เบิก จบ -->
     </div>
 </div>
 
@@ -222,7 +233,7 @@ $id = isset($model->id) ? $model->id : null;
 $js = <<< JS
 
 
-    showOrderItem();
+showOrderItem();
 
 //โหลดรายการวัสดุที่ขอเบิก
 async function showOrderItem() {
@@ -239,8 +250,11 @@ async function showOrderItem() {
         
         if(res.balance == 0){
             $('#btnSave').show();
+            console.log('show');
+            
         }else{
             $('#btnSave').hide();
+            console.log('hide');
         }
         $("#checkout").html(res.sumPrice);
         console.log('balance',res.sumPrice)
@@ -353,38 +367,6 @@ $("body").on("keypress", ".qty", function (e) {
     }
 });
 
-// $("body").on("click", ".update-qty", function (e) {
-//         e.preventDefault();
-        
-//         $.ajax({
-//             type: "get",
-//             url: $(this).attr('href'),
-//             data: {},
-//             dataType: "json",
-//             success: function (res) {
-//                 if(res.status == 'error'){
-//                     Swal.fire({
-//                     icon: "warning",
-//                     title: "เกินจำนวน",
-//                     showConfirmButton: false,
-//                     timer: 1500,
-//                 });
-//                 }
-//                 if(res.status == 'success')
-//                 {
-//                     $('#'+res.data.id).val(res.data.qty)
-//                     console.log(res.data.qty);
-                    
-//                 }
-
-
-//                 //   $.pjax.reload({container:'#inventory', history:false});
-//             }
-//         });
-        
-//     });
-
-
     $("body").on("click", ".checkout", async function (e) {
     e.preventDefault();
 
@@ -461,7 +443,6 @@ $('.confirm-order').click(async function (e) {
 
   $("body").on("click", ".copy-item", function (e) {
     e.preventDefault();
-
          Swal.fire({
             title: "ยืนยัน?",
             text: "ต้องการเพิ่มรายการล็อตจากล็อตใหม่!",
@@ -490,15 +471,71 @@ $('.confirm-order').click(async function (e) {
 
                   if (res.status == "success") {
                     location.reload();
-                    //   $.pjax.reload({container:res.container, history:false,url:res.url});
-                    // success("บันสำเร็จ!.");
                   }
                 },
             });
             }
         });
-
   });
+
+
+
+$("body").on("click", "#stockApprove", function (e) {
+    e.preventDefault();
+    Swal.fire({
+        title: "ยืนยันเห็นชอบเทนหัวหน้า?",
+        text: "เจ้าหน้าที่คลังเห็นชอบให้เบิกได้!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "ใช่, ยืนยัน!",
+        cancelButtonText: "ยกเลิก",
+    }).then((result) => {
+        if (result.value == true) {
+            Swal.fire({
+                title: "กำลังดำเนินการ...",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            $.ajax({
+                type: "get",
+                url: $(this).attr('href'),
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == "error") {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Oops...",
+                            text: res.message,
+                            footer: 'เกิดข้อผิดพลาด'
+                        });
+                    }
+                    if (res.status == "success") {
+                        Swal.fire({
+                            icon: "success",
+                            title: "สำเร็จ!",
+                            text: "เห็นชอบเรียบร้อยแล้ว",
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "เกิดข้อผิดพลาด",
+                        text: "ไม่สามารถดำเนินการได้"
+                    });
+                }
+            });
+        }
+    });
+});
 
 
 JS;

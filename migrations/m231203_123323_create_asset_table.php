@@ -20,6 +20,7 @@ class m231203_123323_create_asset_table extends Migration
             'license_plate' => $this->string()->comment('เลขทะเบียน (ถ้าเป็นรถยนต์)'),
             'car_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),
             'code' => $this->string(255)->comment('หมายเลขครุภัณฑ์'),
+            'fsn_number' => $this->string(255)->comment('รหัสครุภัณฑ์'),
             'order_number' => $this->string(255)->comment('หมายเลขใบสั่งซื้อ'),
             'receive_date' => $this->date()->comment('วันที่รับเข้า'),
             'price' => $this->double()->comment('ราคา'),

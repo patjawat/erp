@@ -32,7 +32,7 @@ class MainStockController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();
-        $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
+        $model = Approve::findOne(['id' => $id,  'name' => 'main_stock','emp_id' => $me->id]);
         \Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
             $status = $this->request->post('status');
@@ -86,5 +86,64 @@ class MainStockController extends \yii\web\Controller
             ]);
         }
     }
+
+     public function actionUpdateFormStore($id)
+    {
+        $me = UserHelper::GetEmployee();
+        $model = Approve::findOne(['id' => $id, 'name' => 'main_stock']);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            $status = $this->request->post('status');
+             // ระบบอนุมัติเบิกคลัง
+             $old = $model->data_json;
+             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+             $model->status = $status;
+             //ถ้าบันทุกเรียบร้อย
+             if($model->save(false))
+             {
+                // update ส่วน stock
+                $oldStockObj = $model->stock->data_json;
+                $checkData = $model->stock->empChecker;
+                $checkerData = [
+                    'checker_confirm_date' => date('Y-m-d H:i:s'),
+                    'checker_name' => $checkData->fullname,
+                    'checker_position' => $checkData->positionName(),
+                    'checker_confirm' => ($model->status == 'Pass' ? 'Y' : 'N')
+                ];
+                
+                if ($model->status == 'Pass') {
+                    $model->stock->order_status = 'pending';
+                }
+
+                if ($model->status == 'Reject') {
+                    $model->stock->order_status = 'cancel';
+                }
+                $model->stock->data_json = ArrayHelper::merge($oldStockObj, $model->stock->data_json, $checkerData);
+                $model->stock->save(false);
+
+                }
+                
+                return [
+                    'status' => 'success'
+                ];
+                
+        }
+        
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => isset($model->stock) ? $model->stock->CreateBy('ขอเบิกวัสดุ')['avatar'] : '',
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
+    }
+
 
 }

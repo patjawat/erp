@@ -1,6 +1,7 @@
 <?php
-use yii\helpers\Url;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\widgets\Pjax;
 use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\modules\dms\models;
@@ -11,6 +12,7 @@ $me = UserHelper::GetEmployee();
 
 
 ?>
+<?php Pjax::begin(['id' => 'document-container', 'enablePushState' => false, 'timeout' => 5000]);?>
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-top align-items-center">
@@ -37,7 +39,8 @@ $me = UserHelper::GetEmployee();
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr id="<?=$item->id?>">
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td class="text-center fw-semibold"><?= isset($item->document) ? $item->document->doc_regis_number : ''?></td>
+                    <td class="text-center fw-semibold">
+                        <?= isset($item->document) ? $item->document->doc_regis_number : ''?></td>
                     <td class="fw-light align-middle">
                         <div>
                             <h6 style="width:600px" class="text-truncate fw-semibold mb-0">
@@ -52,7 +55,8 @@ $me = UserHelper::GetEmployee();
                                     ลับที่สุด
                                 </span>
                                 <?php endif;?>
-                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>" class="open-modal view-document" data-size="modal-xxl" data-tr-id="<?=$item->id?>">
+                                <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id,'callback' => '/me'])?>"
+                                    class="open-modal view-document" data-size="modal-xxl" data-tr-id="<?=$item->id?>">
                                     เรื่อง : <?php echo $item->document ? $item->document->topic : ''?>
                                 </a>
                                 <?php echo  $item->document ? ($item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : '') : ''?>
@@ -86,13 +90,28 @@ $me = UserHelper::GetEmployee();
                         </div>
                     </td>
                     <td> <?=$item->document->documentStatus->title ?? '-'?></td>
-                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me'],['class' => 'open-modal view-document','data' => ['size' => 'modal-xxl']]) : ''?></td>
+                    <td><?php echo  $item->document ?  Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['view', 'id' => $item->id,'callback' => '/me'],['class' => 'open-modal view-document','data' => ['size' => 'modal-xxl']]) : ''?>
+                    </td>
                 </tr>
                 <?php endforeach;?>
 
             </tbody>
+        </table>
+        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
+        </div>
     </div>
 </div>
+
+<?php Pjax::end()?>
 <?php
 $js = <<< JS
 

@@ -14,7 +14,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashbroad', ['/inventory/default/dashboard'], ['class' => 'nav-link']) ?>
 </li>
 <li class="nav-item">
-    <?= Html::a('<i class="fa-solid fa-house me-1"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'nav-link']) ?>
+    <?= Html::a('<i class="fa-solid fa-house me-1"></i> หน้าหลัก', ['/inventory/warehouse'], ['class' => 'nav-link ' . (isset($active) && $active == 'index' ? 'active' : '')]) ?>
 </li>
 <?php if($checkOffer >=2):?>
 <li class="nav-item">
@@ -26,13 +26,13 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 </li>
 <?php if(isset($warehouse) && $warehouse['warehouse_type'] == 'MAIN'):?>
 <li class="nav-item">
-    <?php echo Html::a('<i class="fa-solid fa-cube me-1"></i> สต๊อก', ['/inventory/stock/in-stock'], ['class' => 'nav-link']) ?>
+    <?php echo Html::a('<i class="fa-solid fa-cube me-1"></i> สต๊อก', ['/inventory/stock/in-stock'], ['class' => 'nav-link ' . (isset($active) && $active == 'in_stock' ? 'active' : '')]) ?>
 </li>
 <li class="nav-item">
-    <?=Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'nav-link']) ?>
+    <?=Html::a('<i class="fa-solid fa-circle-down me-1 text-success"></i> ทะเบียนรับเข้า', ['/inventory/stock-in'], ['class' => 'nav-link ' . (isset($active) && $active == 'stock_in' ? 'active' : '')]) ?>
 </li>
 <li class="nav-item">
-    <?=Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> ทะเบียนขอเบิก', ['/inventory/warehouse/order-request'], ['class' => 'nav-link']) ?>
+    <?=Html::a('<i class="fa-solid fa-circle-up me-1 text-danger"></i> ทะเบียนขอเบิก', ['/inventory/warehouse/order-request'],['class' => 'nav-link ' . (isset($active) && $active == 'request' ? 'active' : '')]) ?>
 </li>
 <?php else:?>
 <li class="nav-item">
@@ -42,7 +42,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <?php echo Html::a('<i class="fa-solid fa-file-pen me-1"></i> ทะเบียนรับเข้า', ['/inventory/stock-order'], ['class' => 'nav-link']) ?>
 </li>
 <li class="nav-item">
-    <?php echo Html::a('<i class="fa-solid fa-store me-1"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'nav-link','data-pjax' => '0']) ?>
+    <?php echo Html::a('<i class="fa-solid fa-store me-1"></i> เบิกวัสดุคลังหลัก', ['/inventory/main-stock/store'], ['class' => 'nav-link']) ?>
 </li>
 <?php endif;?>
 <li class="nav-item">

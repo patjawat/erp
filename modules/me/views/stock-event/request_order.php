@@ -39,32 +39,34 @@ $products = $cart->getItems();
 
     <div class="card">
         <div class="card-body">
-        
-                
- 
-        <div class="d-flex justify-content-between">
-                    <div>
 
-                        <h6><i class="bi bi-ui-checks"></i> ทะเบียนเบิกวัสดุคลังหลัก <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-                        <?php echo $this->render('_search_order', ['model' => $searchModel]); ?>
-                        </div>
-                        <div>
-                            <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
-                            <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/me/stock-event/reuqest-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
-                    </div>
 
+
+            <div class="d-flex justify-content-between">
+                <div>
+
+                    <h6><i class="bi bi-ui-checks"></i> ทะเบียนเบิกวัสดุคลังหลัก <span
+                            class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?></span>
+                        รายการ</h6>
+                    <?php echo $this->render('_search_order', ['model' => $searchModel]); ?>
                 </div>
-                
-    <div class="table-responsive">
-       
+                <div>
+                    <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
+                    <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/me/stock-event/reuqest-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
+                </div>
+
+            </div>
+
+            <div class="table-responsive">
 
 
-<table class="table table-striped table-sm">
+
+                <table class="table table-striped table-sm">
                     <thead>
                         <tr>
                             <th style="width:210px">รหัส/วันที่</th>
                             <th scope="col">ผู้เบิก</th>
-                            <th >หัวหน้าตรวจสอบ</th>
+                            <th>หัวหน้าตรวจสอบ</th>
                             <th>คลังหลัก</th>
                             <th class="text-center" style="width:350px">สถานะ</th>
                             <th class="text-start">มูลค่า</th>
@@ -89,38 +91,35 @@ $products = $cart->getItems();
                                 ?>
                             </td>
                             <td><?=$item->viewChecker()['avatar']?></td>
-                            <td><?php echo $item->warehouse->warehouse_name?></td>
+                            <td>
+                            <?php echo $item->warehouse->warehouse_name?></td>
                             <td class="text-start">
-                            <?php  if($item->order_status == 'success' && isset($item->data_json['player'])):?>
+                                <?php  if($item->order_status == 'success' && isset($item->data_json['player'])):?>
                                 <?php
                                     $datetime = \Yii::$app->thaiDate->toThaiDate($item->data_json['player_date'], true, false);
                                     $msg = $item->viewstatus().' '.$datetime;
                                     echo $item->ShowPlayer($msg)['avatar'];
                                     ?>
-                                    <?php else:?>
-                                        <?php echo $item->viewstatus()?>
-                        <?php endif;?>
-                        </td>
+                                <?php else:?>
+                                <?php echo $item->viewstatus()?>
+                                <?php endif;?>
+                            </td>
                             <td class="text-end">
-                                
+
                                 <span class="fw-semibold mb-0">
                                     <?=number_format($item->getTotalOrderPrice(),2)?>
-                                </td>
-                                </span>
+                            </td>
+                            </span>
                             <td class="text-center">
                                 <div class="btn-group">
                                     <?=Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>',['/me/store-v2/view','id' => $item->id],['class'=> 'btn btn-light'])?>
-
                                     <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                         data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>
                                     <ul class="dropdown-menu">
-
                                         <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
                                         </li>
-
-
                                     </ul>
                                 </div>
                             </td>
@@ -130,8 +129,8 @@ $products = $cart->getItems();
                 </table>
 
                 <div class="d-flex justify-content-center mt-5">
-            <div class="text-muted">
-                <?= LinkPager::widget([
+                    <div class="text-muted">
+                        <?= LinkPager::widget([
                             'pagination' => $dataProvider->pagination,
                             'firstPageLabel' => 'หน้าแรก',
                             'lastPageLabel' => 'หน้าสุดท้าย',
@@ -140,18 +139,17 @@ $products = $cart->getItems();
                                 'class' => 'pagination-sm',
                             ],
                         ]); ?>
-            </div>
-        </div>
-        
+                    </div>
+                </div>
 
-        
+
+
+            </div>
+
+
+        </div>
     </div>
-    
-           
-    </div>
-    </div>
-    
+
     <?php Pjax::end(); ?>
 
 </div>
-

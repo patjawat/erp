@@ -3,8 +3,8 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 
-$this->title = 'คลังหลัก';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
+$this->title = 'ระบคลัง';
+// $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>

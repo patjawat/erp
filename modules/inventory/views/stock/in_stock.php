@@ -12,7 +12,11 @@ use yii\grid\ActionColumn;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
+$warehouse = Yii::$app->session->get('warehouse');
+$this->title = $warehouse['warehouse_name'];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory']];
 $this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = 'สต๊อก';
 
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -26,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'warehouse'])?>
+<?=$this->render('../default/menu',['active' => 'in_stock'])?>
 <?php $this->endBlock(); ?>
 
 

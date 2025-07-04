@@ -9,6 +9,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\purchase\models\Order;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
@@ -103,14 +104,26 @@ class WarehouseController extends Controller
             $dataProvider->query->andFilterWhere(['name' => 'order']);
             $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
             
-            try {
-            //ค้นหาตามช่วงของวันที่
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
+            if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
+        
+
+        $dataProvider->query->andFilterWhere(['between', 'created_at', AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
+            // try {
+            // //ค้นหาตามช่วงของวันที่
+            // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            // } catch (\Throwable $th) {
+            //     //throw $th;
+            // }
 
             $dataProvider->query->andFilterWhere([
                 'or',
@@ -170,7 +183,7 @@ class WarehouseController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->setWarehouse($id);
-        return $this->redirect(['/inventory/warehouse/order-request']);
+        return $this->redirect(['/inventory/warehouse']);
         // return $this->render('view', [
         //     'model' => $this->findModel($id),
         // ]);

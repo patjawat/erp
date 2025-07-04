@@ -63,6 +63,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public $date_end;
     public $q_month;
     public $receive_month;
+    public $date_filter;
 
     public function rules()
     {
@@ -71,7 +72,7 @@ class StockEvent extends Yii\db\ActiveRecord
             [['warehouse_id', 'from_warehouse_id', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
             [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total', 'asset_type_name', 'q', 'date_start','q_month','receive_month',
-                'date_end','transaction_type', 'category_id', 'qty'], 'safe'],
+                'date_end','transaction_type', 'category_id', 'qty','date_filter'], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -144,6 +145,25 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
 
+        // แสดงปีงบประมานทั้งหมด
+    public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
+    
+
      public function afterDelete()
     {
         parent::afterDelete();
@@ -160,6 +180,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
     }
+
 
     public function getWarehouse()
     {
@@ -195,6 +216,18 @@ class StockEvent extends Yii\db\ActiveRecord
             return $this->hasOne(Employees::class, ['id' => 'checker']);
         }
 
+
+            // หารอนุมัติจากหัวหน้า
+    public function leaderApprove()
+    {
+
+        $model = Approve::findOne(['from_id' => $this->id,'name' => 'main_stock']);
+        if($model){
+            return $model;
+        }else{
+            return 0;
+        }
+    }
 
 
 
@@ -615,18 +648,22 @@ public function mainOrderSummary($status = null)
     }
 
 
-
+public function getStatus()
+{
+    return AppHelper::viewStatus($this->order_status);
+}
     // แสดงผู้ตรวจสอบ
     public function viewChecker($msg = null)
     {
-        try {
-            $status = '';
-            switch ($this->data_json['checker_confirm']) {
-                case 'Y':
+        // try {
+            $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'level' => 1]);
+            $status = $approve->status;
+            switch ($status) {
+                case 'Pass':
                     $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
                     break;
 
-                case 'N':
+                case 'Reject':
                     $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
                     break;
 
@@ -636,7 +673,7 @@ public function mainOrderSummary($status = null)
             }
 
             $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
-            $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
+            // $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
 
             return
                 [
@@ -645,21 +682,21 @@ public function mainOrderSummary($status = null)
                     // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
                     'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
                     'position' => $this->getAvatar($approve->emp_id)['position_name'],
-                    'approve_date' => $approve->data_json['approve_date'] ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
+                    'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
                     'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                     'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
                     // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
                 ];
-        } catch (\Throwable $th) {
-            return
-                [
-                    'status' => '',
-                    'fullname' => '',
-                    'position' => '',
-                    'approve_date' => '',
-                    'avatar' => '',
-                ];
-        }
+        // } catch (\Throwable $th) {
+        //     return
+        //         [
+        //             'status' => '',
+        //             'fullname' => '',
+        //             'position' => '',
+        //             'approve_date' => '',
+        //             'avatar' => '',
+        //         ];
+        // }
     }
 
     //แสดงวันเวลารับวัสดุ
@@ -768,7 +805,11 @@ public function mainOrderSummary($status = null)
 
     public function viewCreatedAt()
     {
-        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+        try {
+            return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+        } catch (\Throwable $th) {
+            return '-';
+        }
     }
 
     public function viewCreated()

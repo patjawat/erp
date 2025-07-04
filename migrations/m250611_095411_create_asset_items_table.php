@@ -139,6 +139,13 @@ class m250611_095411_create_asset_items_table extends Migration
             $this->addColumn('asset', 'asset_name', $this->string(255)->comment('ชื่อของครุภัณฑ์')->after('asset_group'));
         }
 
+        $table = $this->db->getTableSchema('asset', true);
+        if ($table !== null && !isset($table->columns['fsn_number'])) {
+            // ALTER TABLE `asset` ADD `fsn_number` VARCHAR(255) NULL COMMENT 'รหัสครุภัณฑ์' AFTER `code`;
+            $this->addColumn('asset', 'fsn_number', $this->string(255)->null()->comment('รหัสครุภัณฑ์')->after('code'));
+        }
+
+
         // เปลี่ยน column `title` ในตาราง `categorise` (ตรวจสอบก่อนเพื่อป้องกัน error)
         $table = $this->db->getTableSchema('categorise', true);
         if ($table !== null && isset($table->columns['title'])) {

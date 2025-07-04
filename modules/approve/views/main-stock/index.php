@@ -47,7 +47,7 @@ $msg = 'ขอ';
                             <?php echo isset($item->stock) ? $item->stock->CreateBy()['avatar'] : ''?>
                         </a>
                     </td>
-                    <td><?php echo $item->stock->viewCreatedAt()?></td>
+                    <td><?php echo $item->stock?->viewCreatedAt()?></td>
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
