@@ -9,6 +9,10 @@ $this->title = 'คลัง'.$warehouse->warehouse_name.'/สต๊อก/เ�
 
 $cart = Yii::$app->cartSub;
 $products = $cart->getItems();
+
+$this->params['breadcrumbs'][] = ['label' => 'คลังหน่วยงาน', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'dashboard', 'url' => ['index']];
+$this->params['breadcrumbs'][] = 'สต๊อก/เบิกใช้งาน'
 ?>
 
 
@@ -25,10 +29,6 @@ $products = $cart->getItems();
 <?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('action'); ?>
-<?php // echo $this->render('@app/modules/me/views/store-v2/menu') ?>
-<?php $this->endBlock(); ?>
 
 <div class="row">
     <div class="col-8">

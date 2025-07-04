@@ -15,25 +15,16 @@ use app\modules\inventory\models\Stock;
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = 'คลัง'.$warehouse->warehouse_name.'/Dashboard';
 
+$this->params['breadcrumbs'][] = ['label' => 'คลังหน่วยงาน', 'url' => ['index']];
+$this->params['breadcrumbs'][] = 'Dashboard'
 ?>
-
-
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-shop fs-4 text-primaryr"></i> <?php echo $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
-<?php $this->endBlock(); ?>
-
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
-<?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('action'); ?>
-<?php // $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
 
 

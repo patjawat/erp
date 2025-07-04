@@ -16,9 +16,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/views/store-v2/menu') ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
 <?php $this->endBlock(); ?>
+
+
 <?php Pjax::begin(['id' => 'order-container','enablePushState' => false]); ?>
 <div class="row">
     <div class="col-8">

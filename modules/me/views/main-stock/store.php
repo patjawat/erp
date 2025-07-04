@@ -8,6 +8,10 @@ use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = 'คลัง'.$warehouse->warehouse_name.'/เบิกวัสดุคลังหลัก';
+
+$this->params['breadcrumbs'][] = ['label' => 'คลังหน่วยงาน', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'dashboard', 'url' => ['index']];
+$this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหลัก'
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -20,11 +24,6 @@ $this->title = 'คลัง'.$warehouse->warehouse_name.'/เบิกวัส
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
-<?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('action'); ?>
-<?php // echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
 
 
