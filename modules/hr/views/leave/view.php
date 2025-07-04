@@ -45,14 +45,13 @@ $this->params['breadcrumbs'][] = $this->title;
         <!-- <div id="viewHistory"></div> -->
         <?php echo $this->render('history', ['model' => $model]) ?>
 </div>
-
 <?php  echo $this->render('timeline_approve', ['model' => $model]) ?>
 
 <div class="d-flex justify-content-center gap-3">
-    <?php echo ($model->status == 'ReqCancel' && ($me->user_id != $model->created_by)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
-    <?php if ($me->user_id == $model->created_by): ?>
-        <?= $model->status !== 'Cancel' ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
-            'class' => 'req-cancel-btn btn btn-sm btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
+    <?php echo ($model->status == 'ReqCancel' && ($me->id != $model->emp_id)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
+    <?php if ($me->id == $model->emp_id): ?>
+        <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
+            'class' => 'req-cancel-btn btn btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
     <?php echo $model->levelStatusCount() == 0 ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
     <?php endif; ?>
@@ -70,31 +69,53 @@ $urlApprove = Url::to(['/me/approve/leave-approve']);
 $js = <<<JS
 
             // ขอยกเลิกวันลา
-            \$("body").on("click", ".req-cancel-btn", function (e) {
+            $("body").on("click", ".req-cancel-btn", function (e) {
                 e.preventDefault();
-                var title = \$(this).data('title')
+                var title = $(this).data('title');
+                var btn = $(this);
                 Swal.fire({
-                title: 'ยืนยัน?',
-                text: title+"!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'ใช่',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
+                    title: 'ยืนยัน?',
+                    text: title + "!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ใช่',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
                     if (result.isConfirmed) {
-                        \$.ajax({
+                        Swal.fire({
+                            title: 'กำลังดำเนินการ...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        $.ajax({
                             type: "post",
-                            url: \$(this).attr('href'),
+                            url: btn.attr('href'),
                             dataType: "json",
                             success: function (res) {
-                                console.log(res);
-                                
+                                if (res.status == 'success') {
+                                    Swal.fire({
+                                        title: 'สำเร็จ',
+                                        text: 'ดำเนินการเรียบร้อยแล้ว',
+                                        icon: 'success'
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.close();
+                                    Swal.fire('เกิดข้อผิดพลาด', res.message || '', 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.close();
+                                Swal.fire('เกิดข้อผิดพลาด', '', 'error');
                             }
                         });
                     }
-                })
+                });
             });
             
 

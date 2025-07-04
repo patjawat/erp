@@ -175,12 +175,20 @@ class LeaveController extends Controller
     //ขอยกเลิกวันลา
     public function actionReqCancel($id)
     {
+         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
-        if ($this->request->isPost && $me->user_id == $model->created_by) {
+        if ($this->request->isPost && $me->id == $model->emp_id) {
             $model->status = "ReqCancel";
-            $model->save();
-            return $this->redirect(['/me/leave']);
+            if( $model->save()){
+                return [
+                    'status' => 'success'
+                ];
+            }else{
+                return [
+                    'status' => 'error'
+                ];
+            }
         }
     }
 
