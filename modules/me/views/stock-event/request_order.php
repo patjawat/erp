@@ -27,7 +27,7 @@ $products = $cart->getItems();
 
 
 <?php $this->beginBlock('action'); ?>
-<?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
+<?php // echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
 
 
