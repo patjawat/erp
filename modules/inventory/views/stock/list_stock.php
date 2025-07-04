@@ -20,7 +20,7 @@ $stockEvents = StockEvent::find()
     ->orderBy(['movement_date' => SORT_ASC]);
 
 // Debug raw SQL
-echo $stockEvents->createCommand()->getRawSql();
+// echo $stockEvents->createCommand()->getRawSql();
 
 $stockEvents = $stockEvents->all();
 

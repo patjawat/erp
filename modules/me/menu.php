@@ -19,8 +19,18 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item mt-1">
     <?php echo  Html::a('<i class="fa-regular fa-circle-check me-1 fs-5"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold ms-1"> '.$total.' </span>',['/approve'],['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')])?>
 </li>
-<li class="nav-item">
-    <?php echo  Html::a('<i class="bi bi-shop me-1 fs-5"></i> คลังหน่วยงาน ',['/me/store-v2/dashboard'],['class' => 'nav-link ' . (isset($active) && $active == 'store' ? 'active' : '')])?>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'store' ? 'active' : '')?>" href="#"
+        id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="bi bi-shop me-1 fs-5"></i> คลังหน่วยงาน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+        <?=Html::a('<i class="fa-solid fa-gauge me-2"></i> Dashboard ',['/me/store-v2/dashboard'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-cube me-2"></i> เบิกวัสดุคลังหลัก ',['/me/main-stock/store'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="bi bi-shop me-2"></i> สต๊อก/เบิกใช้งาน ',['/me/store-v2/index'],['class' => 'dropdown-item'])?>
+    </div>
 </li>
 
 

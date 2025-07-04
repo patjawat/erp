@@ -33,7 +33,7 @@ $this->title = 'คลัง'.$warehouse->warehouse_name.'/Dashboard';
 
 
 <?php $this->beginBlock('action'); ?>
-<?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
+<?php // $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>
 
 
