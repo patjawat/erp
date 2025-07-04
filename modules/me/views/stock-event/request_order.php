@@ -39,9 +39,6 @@ $products = $cart->getItems();
 
     <div class="card">
         <div class="card-body">
-
-
-
             <div class="d-flex justify-content-between">
                 <div>
 
@@ -56,10 +53,6 @@ $products = $cart->getItems();
                 </div>
 
             </div>
-
-            <div class="table-responsive">
-
-
 
                 <table class="table table-striped table-sm">
                     <thead>
@@ -118,8 +111,10 @@ $products = $cart->getItems();
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
-                                        </li>
+                                        <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?></li>
+                                        <?php if($item->order_status == 'pending' OR $item->order_status == '' OR $item->order_status == 'none'):?>
+                                        <li><?= Html::a('<i class="fa-solid fa-xmark me-1"></i> ยกเลิก', ['/me/stock-event/cancel-order','id' => $item->id], ['class' => 'dropdown-item cancel-order']) ?></li>
+                                        <?php endif;?>
                                     </ul>
                                 </div>
                             </td>
@@ -141,12 +136,6 @@ $products = $cart->getItems();
                         ]); ?>
                     </div>
                 </div>
-
-
-
-            </div>
-
-
         </div>
     </div>
 

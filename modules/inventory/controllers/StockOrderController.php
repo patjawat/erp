@@ -573,6 +573,14 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockEvent::findOne($id);
 
+        if($model->order_status =='cancel'){
+            return [
+                'status' => 'error',
+                'container' => '#inventory-container',
+                'message' => 'รายการนี้ถูกยกเลิก'
+            ];
+        }
+
         // ตรวจสอบว่า stock พอจ่ายหรือไม่
         $checkBalanced = 0;
         foreach ($model->getItems() as $item) {

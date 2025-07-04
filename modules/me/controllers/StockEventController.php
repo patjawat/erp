@@ -189,6 +189,26 @@ class StockEventController extends Controller
         return $this->redirect(['index']);
     }
 
+
+    public function actionCancelOrder($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if($model){
+            $model->order_status = 'cancel';
+            $model->save(false);
+            return[
+                'status' => 'success'
+            ];
+        }else{
+
+            return[
+                'status' => 'error'
+            ];
+        }
+    }
+
+
     /**
      * Finds the StockEvent model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
