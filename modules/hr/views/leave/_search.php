@@ -52,6 +52,7 @@ use app\modules\hr\models\Organization;
                         'width' => '120px',
                     ],
         ])->label(false);?>
+        
 
     <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
 

@@ -75,13 +75,13 @@ class LeaveController extends Controller
             'or',
             ['like', 'cid', $searchModel->q],
             ['like', 'email', $searchModel->q],
-          
+
             ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
         ]);
 
-         if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -91,50 +91,48 @@ class LeaveController extends Controller
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
-        
-        
+
+
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
 
-        if($status)
-        {
+        if ($status) {
             $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
-
         }
-        
+
         // search employee department
-         // ค้นหาคามกลุ่มโครงสร้าง
-         $org1 = Organization::findOne($searchModel->q_department);
-         // ถ้ามีกลุ่มย่อย
-         if (isset($org1) && $org1->lvl == 1) {
-             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
              FROM tree t1
              JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
              WHERE t2.name = :name;';
-             $querys = Yii::$app
-                 ->db
-                 ->createCommand($sql)
-                 ->bindValue(':name', $org1->name)
-                 ->queryAll();
-             $arrDepartment = [];
-             foreach ($querys as $tree) {
-                 $arrDepartment[] = $tree['id'];
-             }
-             if (count($arrDepartment) > 0) {
-                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-             } else {
-                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-             }
-         } else {
-             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-         }
-       
-        
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+        }
+
+
         // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
 
-          $dataProvider->setSort(['defaultOrder' => [
+        $dataProvider->setSort(['defaultOrder' => [
             // 'total_days' => SORT_DESC,
             'created_at' => SORT_DESC,
         ]]);
@@ -155,35 +153,35 @@ class LeaveController extends Controller
             'thai_year' => AppHelper::YearBudget()
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-       
+
         $dataProvider->query->groupBy('code');
         return $this->render('dashboard/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
-    
 
-        // รายงานการลา
-        public function actionReport()
-        {
 
-            $searchModel = new LeaveSearch([
-                'thai_year' => AppHelper::YearBudget(),
-            ]);
+    // รายงานการลา
+    public function actionReport()
+    {
 
-            $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->joinWith('employee e');
-            $dataProvider->query->select([
-                'leave.*',
-                'IFNULL(SUM(CASE WHEN leave_type_id = "LT1" THEN total_days ELSE 0 END), 0) AS sum_lt1',
-                'IFNULL(SUM(CASE WHEN leave_type_id = "LT2" THEN total_days ELSE 0 END), 0) AS sum_lt2',
-                'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
-                'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
-            ]);
-            $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
+        $searchModel = new LeaveSearch([
+            'thai_year' => AppHelper::YearBudget(),
+        ]);
 
-          if ($searchModel->date_filter) {
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee e');
+        $dataProvider->query->select([
+            'leave.*',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT1" THEN total_days ELSE 0 END), 0) AS sum_lt1',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT2" THEN total_days ELSE 0 END), 0) AS sum_lt2',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
+        ]);
+        $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
+
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -193,7 +191,7 @@ class LeaveController extends Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        
+
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
@@ -203,350 +201,511 @@ class LeaveController extends Controller
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
 
-        
+
         // search employee department
-         // ค้นหาคามกลุ่มโครงสร้าง
-         $org1 = Organization::findOne($searchModel->q_department);
-         // ถ้ามีกลุ่มย่อย
-         if (isset($org1) && $org1->lvl == 1) {
-             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
              FROM tree t1
              JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
              WHERE t2.name = :name;';
-             $querys = Yii::$app
-                 ->db
-                 ->createCommand($sql)
-                 ->bindValue(':name', $org1->name)
-                 ->queryAll();
-             $arrDepartment = [];
-             foreach ($querys as $tree) {
-                 $arrDepartment[] = $tree['id'];
-             }
-             if (count($arrDepartment) > 0) {
-                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-             } else {
-                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-             }
-         } else {
-             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-         }
-       
-        
-        
-            $dataProvider->query->groupBy('emp_id');
-            // $dataProvider->sort->defaultOrder = ['leave.emp_id' => SORT_DESC];
-
-            if(isset($searchModel->data_json['export']) && $searchModel->data_json['export'] == 'true'){
-                $dataProvider->pagination->pageSize = 1000000000000;
-                $this->ExportLeave($dataProvider,$searchModel);
-                // \Yii::$app->response->format = Response::FORMAT_JSON;
-                // return 'xx';
-               
-            }else{
-                return $this->render('report/index',[
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]);
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
             }
-            // $dataProvider->query->andWhere(['status' => Leave::STATUS_APPROVED]);
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         }
 
-         public function actionReport2()
+
+
+        $dataProvider->query->groupBy('emp_id');
+        // $dataProvider->sort->defaultOrder = ['leave.emp_id' => SORT_DESC];
+
+        if (isset($searchModel->data_json['export']) && $searchModel->data_json['export'] == 'true') {
+            // ไม่ต้องใส่ pagination
+            $dataProvider->pagination = false;
+            $this->ExportReport($dataProvider, $searchModel);
+            // \Yii::$app->response->format = Response::FORMAT_JSON;
+            // return 'xx';
+
+        } else {
+            return $this->render('report/index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+        // $dataProvider->query->andWhere(['status' => Leave::STATUS_APPROVED]);
+    }
+
+
+    //ออกรายงานสรุปวันลา
+
+    protected function ExportReport($dataProvider, $searchModel)
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->mergeCells('A1:I1');
+        $sheet->mergeCells('A2:A3');
+        $sheet->mergeCells('B2:B3');
+        $sheet->mergeCells('C2:C3');
+        $sheet->mergeCells('D2:D3');
+        $sheet->mergeCells('E2:H2');
+        $sheet->mergeCells('I2:I3');
+
+
+        $rowTitle = 'A1';
+        // ถ้ามีการเลืือกแผนกฝ่าย
+        if ($searchModel->q_department) {
+            $org = Organization::findOne($searchModel->q_department);
+            $departmentName = '(' . $org->name . ')';
+        } else {
+            $departmentName = '(ทุกหน่วยงาน)';
+        }
+
+        //วันที่ข้อมูลรายงาน
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+
+
+        $sheet->setCellValue($rowTitle, 'รายงานวันลาประจำปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport . ' ' . $departmentName);
+        $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowA1 = 'A2';
+        $sheet->setCellValue($rowA1, 'ลำดับ');
+        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowB1 = 'B2';
+        $sheet->setCellValue($rowB1, 'ชื่อ-สกุล');
+        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('B')->setWidth(40);
+
+        $rowC1 = 'C2';
+        $sheet->setCellValue($rowC1, 'ตำแหน่ง');
+        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('C')->setWidth(50);
+
+        $rowD1 = 'D2';
+        $sheet->setCellValue($rowD1, 'ฝ่าย/แผนก');
+        $sheet->getStyle($rowD1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowD1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowD1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('D')->setWidth(50);
+
+        $rowE1 = 'E2';
+        $sheet->setCellValue($rowE1, 'ประเภทการลา');
+        $sheet->getStyle($rowE1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowE1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowE1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        // $sheet->getColumnDimension('E')->setWidth(20);
+
+        $rowE2 = 'E3';
+        $sheet->setCellValue($rowE2, 'ลาป่วย');
+        $sheet->getStyle($rowE2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowE2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowE2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('E')->setWidth(15);
+
+        $rowF2 = 'F3';
+        $sheet->setCellValue($rowF2, 'ลากิจ');
+        $sheet->getStyle($rowF2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowF2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowF2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('F')->setWidth(15);
+
+
+        $rowG2 = 'G3';
+        $sheet->setCellValue($rowG2, 'ลาคลอดบุตร');
+        $sheet->getStyle($rowG2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowG2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('G')->setWidth(15);
+
+        $rowH2 = 'H3';
+        $sheet->setCellValue($rowH2, 'ลาพักผ่อน');
+        $sheet->getStyle($rowH2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowH2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowH2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('H')->setWidth(15);
+
+        $rowI2 = 'I2';
+        $sheet->setCellValue($rowI2, 'รวมได้ลาแล้ว');
+        $sheet->getStyle($rowI2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowI2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowI2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('I')->setWidth(20);
+
+
+
+        // ตั้งชื่อแผ่นงาน
+        $sheet->setTitle('รางานวันลา');
+
+        $StartRowSheet = 4;
+        foreach ($dataProvider->getModels() as $key => $item) {
+            $numRow = $StartRowSheet++;
+            // $a[] = ['B' => 'B'.$StartRow++];
+            $sheet->setCellValue('A' . $numRow, ($key + 1));
+            $sheet->getStyle('A' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('A' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('A' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('B' . $numRow, $item->employee->fullname);
+            $sheet->getStyle('B' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('B' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('B' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('B' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $text = '<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>ไม่ระบุตำแหน่ง';
+            $cleaned_text = str_replace('<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>', '', $item->employee->positionName());
+
+            $sheet->setCellValue('C' . $numRow, trim($cleaned_text));
+            $sheet->getStyle('C' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('C' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('C' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('C' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('D' . $numRow, $item->employee->departmentName());
+            $sheet->getStyle('D' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('D' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('D' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('D' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('E' . $numRow, $item->sum_lt1);
+            $sheet->getStyle('E' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('E' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('E' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('E' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('F' . $numRow, $item->sum_lt3);
+            $sheet->getStyle('F' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('F' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('F' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('F' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('F' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('G' . $numRow, $item->sum_lt2);
+            $sheet->getStyle('G' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('G' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('G' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('G' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('G' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('H' . $numRow, $item->sum_lt4);
+            $sheet->getStyle('H' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('H' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('H' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('H' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('H' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('I' . $numRow, ($item->sum_lt1 + $item->sum_lt2 + $item->sum_lt3 + $item->sum_lt4));
+            $sheet->getStyle('I' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('I' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('I' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('I' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('I' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+        }
+        // set font style ตั้งค่า font
+        // $setHeader = 'B1:I3000';
+        // $sheet->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+        // $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        // $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        // $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+        // $sheet->getStyle('E1:I3000')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        // $sheet->getStyle('E3:I3000')->getFont()->setBold(true)->setItalic(false);
+        // $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/report-leave.xlsx';
+        $writer->save($filePath);  // สร้าง excel
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+    }
+
+
+    // ส่งออกรายการวันลา
+    public function actionExportLeave()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
-        $searchModel = new LeaveSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
-            'status' =>   $status ? [$status] : ['Pending']
-        ]);
+        $searchModel = new LeaveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'cid', $searchModel->q],
             ['like', 'email', $searchModel->q],
-          
+            
             ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
         ]);
-
-         if ($searchModel->date_filter) {
+        
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
         if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+            // $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            // $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        if(!$searchModel->date_filter && !$searchModel->thai_year){
-            $date_start= AppHelper::convertToGregorian($searchModel->date_start);
-            $date_end = AppHelper::convertToGregorian($searchModel->date_end);
-             $dataProvider->query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
-        }
-        
-      
-    
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         if (!empty($searchModel->leave_type_id)) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
-        // if (!empty($searchModel->status)) {
-        //     $dataProvider->query->andFilterWhere(['in', 'leave.status', $searchModel->status]);
-        // }
-        if($status)
-        {
-            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
 
+        if ($status) {
+            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
         }
-        
+
         // search employee department
-         // ค้นหาคามกลุ่มโครงสร้าง
-         $org1 = Organization::findOne($searchModel->q_department);
-         // ถ้ามีกลุ่มย่อย
-         if (isset($org1) && $org1->lvl == 1) {
-             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
              FROM tree t1
              JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
              WHERE t2.name = :name;';
-             $querys = Yii::$app
-                 ->db
-                 ->createCommand($sql)
-                 ->bindValue(':name', $org1->name)
-                 ->queryAll();
-             $arrDepartment = [];
-             foreach ($querys as $tree) {
-                 $arrDepartment[] = $tree['id'];
-             }
-             if (count($arrDepartment) > 0) {
-                 $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-             } else {
-                 $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-             }
-         } else {
-             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-         }
-       
-        
-        // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+        }
 
-          $dataProvider->setSort(['defaultOrder' => [
+
+        $dataProvider->setSort(['defaultOrder' => [
             // 'total_days' => SORT_DESC,
             'created_at' => SORT_DESC,
         ]]);
+        $dataProvider->pagination = false;
 
 
-        return $this->render('report/index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            // 'dateStart' => $dateStart,
-            // 'dateEnd' => $dateEnd,
-        ]);
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->mergeCells('A1:I1');
+
+        $rowTitle = 'A1';
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+
+        $sheet->setCellValue($rowTitle, 'ทะเบียนวันลา ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport);
+        $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowA1 = 'A2';
+        $sheet->setCellValue($rowA1, 'ลำดับ');
+        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(6);
+
+        $rowB1 = 'B2';
+        $sheet->setCellValue($rowB1, 'สถานะ');
+        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('B')->setWidth(13);
+
+        $rowC1 = 'C2';
+        $sheet->setCellValue($rowC1, 'ปีงบ');
+        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('C')->setWidth(10);
+
+        $rowD1 = 'D2';
+        $sheet->setCellValue($rowD1, 'ชื่อผู้แจ้งลา');
+        $sheet->getStyle($rowD1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowD1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowD1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('D')->setWidth(30);
+
+        $rowE1 = 'E2';
+        $sheet->setCellValue($rowE1, 'ประเภทการลา');
+        $sheet->getStyle($rowE1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowE1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowE1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('E')->setWidth(15);
+
+        $rowF1 = 'F2';
+        $sheet->setCellValue($rowF1, 'เหตุผลการลา');
+        $sheet->getStyle($rowF1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowF1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowF1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('F')->setWidth(35);
+
+
+        $rowG1 = 'G2';
+        $sheet->setCellValue($rowG1, 'ตำแหน่ง');
+        $sheet->getStyle($rowG1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowG1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowG1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('G')->setWidth(35);
+        $rowH1 = 'H2';
+        $sheet->setCellValue($rowH1, 'หน่วยงาน');
+        $sheet->getStyle($rowH1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowH1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowH1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('H')->setWidth(35);
+
+        $rowI1 = 'I2';
+        $sheet->setCellValue($rowI1, 'ระหว่างวันที่');
+        $sheet->getStyle($rowI1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowI1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowI1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('I')->setWidth(40);
+
+        $rowJ1 = 'J2';
+        $sheet->setCellValue($rowJ1, 'จำนวนวันลา');
+        $sheet->getStyle($rowJ1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowJ1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowJ1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('I')->setWidth(20);
+
+
+ $StartRowSheet = 3;
+        foreach ($dataProvider->getModels() as $key => $item) {
+            $numRow = $StartRowSheet++;
+            $sheet->setCellValue('A' . $numRow, ($key + 1));
+            $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('A' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('B' . $numRow, $item->leaveStatus->title  ?? '-');
+            $sheet->getStyle('B' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('B' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('C' . $numRow, $item->thai_year);
+            $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('C' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('D' . $numRow, $item->employee->fullname());
+            $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle('D' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('D' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('E' . $numRow, $item->leaveType?->title ?? '-');
+            $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('E' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+
+            // $sheet->setCellValue('F' . $numRow,  ThaiDateHelper::formatThaiDate($item->doc_transactions_date));
+            $sheet->setCellValue('F' . $numRow,  $item->data_json['reason']);
+            $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('F' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('F' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+
+            $sheet->setCellValue('G' . $numRow,  $item->employee->positionName());
+            $sheet->getStyle('G' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('G' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('G' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('G' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('G' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('H' . $numRow,  $item->employee->departmentName());
+            $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('H' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('H' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('H' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('H' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('I' . $numRow,  $item->showLeaveDate());
+            $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('I' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('I' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('I' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('I' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('J' . $numRow,  $item->total_days);
+            $sheet->getStyle('J' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('J' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('J' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('J' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('J' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/export-leave.xlsx';
+        $writer->save($filePath);
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+    }
+
+    public function actionExportLeaveExample()
+    {
+        return $this->render('export_leave');
     }
 
 
-        protected function ExportLeave($dataProvider,$searchModel)
-        {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->mergeCells('A1:I1');
-            $sheet->mergeCells('A2:A3');
-            $sheet->mergeCells('B2:B3');
-            $sheet->mergeCells('C2:C3');
-            $sheet->mergeCells('D2:D3');
-            $sheet->mergeCells('E2:H2');
-            $sheet->mergeCells('I2:I3');
-
-            
-            $rowTitle = 'A1';
-            // ถ้ามีการเลืือกแผนกฝ่าย
-            if($searchModel->q_department){
-             $org = Organization::findOne($searchModel->q_department);
-             $departmentName = '('.$org->name.')';
-            }else{
-            $departmentName = '(ทุกหน่วยงาน)';
-            }
-
-            //วันที่ข้อมูลรายงาน
-            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd, 'long', 'short');
-
-
-            $sheet->setCellValue($rowTitle, 'รายงานวันลาประจำปีงบประมาณ '.$searchModel->thai_year .' วันที่ '.$dateReport.' '.$departmentName);
-            $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('A')->setWidth(6);
-
-            $rowA1 = 'A2';
-            $sheet->setCellValue($rowA1, 'ลำดับ');
-            $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('A')->setWidth(6);
-            
-            $rowB1 = 'B2';
-            $sheet->setCellValue($rowB1, 'ชื่อ-สกุล');
-            $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('B')->setWidth(40);
-
-            $rowC1 = 'C2';
-            $sheet->setCellValue($rowC1, 'ตำแหน่ง');
-            $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('C')->setWidth(50);
-            
-            $rowD1 = 'D2';
-            $sheet->setCellValue($rowD1, 'ฝ่าย/แผนก');
-            $sheet->getStyle($rowD1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowD1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowD1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('D')->setWidth(50);
-            
-            $rowE1 = 'E2';
-            $sheet->setCellValue($rowE1, 'ประเภทการลา');
-            $sheet->getStyle($rowE1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowE1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowE1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            // $sheet->getColumnDimension('E')->setWidth(20);
-
-            $rowE2 = 'E3';
-            $sheet->setCellValue($rowE2, 'ลาป่วย');
-            $sheet->getStyle($rowE2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowE2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowE2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('E')->setWidth(15);
-
-            $rowF2 = 'F3';
-            $sheet->setCellValue($rowF2, 'ลากิจ');
-            $sheet->getStyle($rowF2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowF2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowF2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('F')->setWidth(15);
-
-
-            $rowG2 = 'G3';
-            $sheet->setCellValue($rowG2, 'ลาคลอดบุตร');
-            $sheet->getStyle($rowG2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowG2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('G')->setWidth(15);
-
-            $rowH2 = 'H3';
-            $sheet->setCellValue($rowH2, 'ลาพักผ่อน');
-            $sheet->getStyle($rowH2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowH2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowH2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('H')->setWidth(15);
-
-            $rowI2 = 'I2';
-            $sheet->setCellValue($rowI2, 'รวมได้ลาแล้ว');
-            $sheet->getStyle($rowI2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle($rowI2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle($rowI2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            $sheet->getColumnDimension('I')->setWidth(20);
-
-            
-
-            // ตั้งชื่อแผ่นงาน
-            $sheet->setTitle('รางานวันลา');
-            
-            $StartRowSheet = 4;
-            foreach ($dataProvider->getModels() as $key => $item) {
-                $numRow = $StartRowSheet++;
-                // $a[] = ['B' => 'B'.$StartRow++];
-                $sheet->setCellValue('A' . $numRow, ($key+1));
-                $sheet->getStyle('A' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('A' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('A' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('A' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('A' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-    
-                $sheet->setCellValue('B' . $numRow, $item->employee->fullname);
-                $sheet->getStyle('B' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('B' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('B' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('B' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $text = '<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>ไม่ระบุตำแหน่ง';
-                $cleaned_text = str_replace('<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>', '', $item->employee->positionName());
-                
-                $sheet->setCellValue('C' . $numRow, trim($cleaned_text));
-                $sheet->getStyle('C' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('C' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('C' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('C' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('D' . $numRow, $item->employee->departmentName());
-                $sheet->getStyle('D' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('D' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('D' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('D' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('E' . $numRow, $item->sum_lt1);
-                $sheet->getStyle('E' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('E' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('E' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('E' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('E' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('F' . $numRow, $item->sum_lt3);
-                $sheet->getStyle('F' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('F' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('F' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('F' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('F' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('G' . $numRow, $item->sum_lt2);
-                $sheet->getStyle('G' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('G' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('G' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('G' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('G' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('H' . $numRow, $item->sum_lt4);
-                $sheet->getStyle('H' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('H' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('H' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('H' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('H' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-
-                $sheet->setCellValue('I' . $numRow, ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4));
-                $sheet->getStyle('I' . $numRow, ($key+1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('I' . $numRow, ($key+1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                $sheet->getStyle('I' . $numRow, ($key+1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $sheet->getStyle('I' . $numRow, ($key+1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                $sheet->getStyle('I' . $numRow, ($key+1))->getFill()->getStartColor()->setRGB('8DB4E2');
-            }   
-             // set font style ตั้งค่า font
-                // $setHeader = 'B1:I3000';
-                // $sheet->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-                // $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                // $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-                // $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
-                
-                // $sheet->getStyle('E1:I3000')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                // $sheet->getStyle('E3:I3000')->getFont()->setBold(true)->setItalic(false);
-                // $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-
-            $writer = new Xlsx($spreadsheet);
-            $filePath = Yii::getAlias('@webroot') . '/downloads/report-leave.xlsx';
-            $writer->save($filePath);  // สร้าง excel
-            if (file_exists($filePath)) {
-                return Yii::$app->response->sendFile($filePath);
-            } else {
-                throw new \yii\web\NotFoundHttpException('The file does not exist.');
-            }
-        }
     public function actionMe()
     {
 
@@ -575,12 +734,10 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('calendar', [
-                ]),
+                'content' => $this->renderAjax('calendar', []),
             ];
         } else {
-            return $this->render('calendar', [
-            ]);
+            return $this->render('calendar', []);
         }
     }
 
@@ -591,8 +748,7 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('holiday', [
-                ]),
+                'content' => $this->renderAjax('holiday', []),
             ];
         } else {
             return $this->render('holiday');
@@ -612,7 +768,7 @@ class LeaveController extends Controller
     {
 
         $model = $this->findModel($id);
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -636,12 +792,10 @@ class LeaveController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('type_select', [
-                ]),
+                'content' => $this->renderAjax('type_select', []),
             ];
         } else {
-            return $this->render('type_select', [
-            ]);
+            return $this->render('type_select', []);
         }
     }
 
@@ -680,11 +834,11 @@ class LeaveController extends Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
-                
-                if($model->save()){
+
+                if ($model->save()) {
                     $model->createApprove();
                 }
-                
+
                 return $this->redirect(['view', 'id' => $model->id]);
                 // return [
                 //     'status' => 'success',
@@ -724,8 +878,8 @@ class LeaveController extends Controller
             }
             $dateStart = preg_replace('/\D/', '', $model->date_start) !== '' ? AppHelper::convertToGregorian($model->date_start) : '';
             $dateEnd = preg_replace('/\D/', '', $model->date_end) !== '' ? AppHelper::convertToGregorian($model->date_end) : '';
-            
-            if($dateStart > $dateEnd && $dateEnd !=='' ){
+
+            if ($dateStart > $dateEnd && $dateEnd !== '') {
                 $model->addError('date_start', 'มากกว่าวันสุดท้าย');
                 $model->addError('date_end', 'มากกว่าวันเริ่มต้น');
             }
@@ -752,9 +906,9 @@ class LeaveController extends Controller
     public function actionCalDays()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $emp_id = (Float) ($this->request->get('emp_id'));
-        $date_start_type = (Float) ($this->request->get('date_start_type'));
-        $date_end_type = (Float) ($this->request->get('date_end_type'));
+        $emp_id = (float) ($this->request->get('emp_id'));
+        $date_start_type = (float) ($this->request->get('date_start_type'));
+        $date_end_type = (float) ($this->request->get('date_end_type'));
         $on_holidays = $this->request->get('on_holidays');
 
         $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));
@@ -762,16 +916,14 @@ class LeaveController extends Controller
 
         $dateStart = $date_start == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_end'));
-        $model = LeaveHelper::CalDay($dateStart, $dateEnd,$emp_id);
+        $model = LeaveHelper::CalDay($dateStart, $dateEnd, $emp_id);
         //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
-        if($model['dayOff'] == 0){
-            $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['satsunDays'] - $model['holiday']);
-        }else{
+        if ($model['dayOff'] == 0) {
+            $total = ($model['allDays'] - ($date_start_type + $date_end_type) - $model['satsunDays'] - $model['holiday']);
+        } else {
             //จำเป็นต้องนับวัน off หรือไม่
             // $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['dayOff']);
-            $total = ($model['allDays']-($date_start_type+$date_end_type));
-            
-           
+            $total = ($model['allDays'] - ($date_start_type + $date_end_type));
         }
 
         return [
@@ -782,7 +934,7 @@ class LeaveController extends Controller
             'isDayOff' => $model['dayOff'],
             // 'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,
-            'type_days' => ($date_start_type+$date_end_type),
+            'type_days' => ($date_start_type + $date_end_type),
             'total' => ($total ?? 0),
             'start_type' => $date_start_type,
             'start_end' => $date_end_type,
@@ -790,7 +942,7 @@ class LeaveController extends Controller
             'end' => $dateEnd,
         ];
     }
-    
+
     /**
      * Updates an existing Leave model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -837,7 +989,7 @@ class LeaveController extends Controller
     }
 
 
-    
+
     // public function actionViewHistory($emp_id)
     // {
     //     $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
@@ -864,7 +1016,7 @@ class LeaveController extends Controller
     //             'dataProvider' => $dataProvider,
     //         ]);
     //     }
-      
+
     // }
     //แสดงรายการที่รอ Approve
     public function actionDashboardApprove()
@@ -873,7 +1025,7 @@ class LeaveController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['status' => 'Pending']);
         $dataProvider->query->andWhere(['thai_year' => AppHelper::YearBudget()]);
-        return $this->render('dashboard_approve',[
+        return $this->render('dashboard_approve', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -886,8 +1038,7 @@ class LeaveController extends Controller
         $model = Approve::findOne(["id" => $id]);
         // $model = Approve::findOne(["id" => $id]);
         $leave = Leave::findOne($model->from_id);
-        if(!$model)
-        {
+        if (!$model) {
             return [
                 'title' => 'แจ้งเตือน',
                 'content' => '<h6 class="text-center">ไม่อนุญาต</h6>',
@@ -895,34 +1046,33 @@ class LeaveController extends Controller
         }
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-           
-            
+
+
             $approveDate = ["approve_date" => date('Y-m-d H:i:s')];
             $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
-            if($model->level == 3){
+            if ($model->level == 3) {
                 $model->emp_id = $me->id;
             }
-            
-            if($model->save()){
-                $nextApprove = Approve::findOne(["from_id" => $model->from_id,'level' => ($model->level+1)]);
-                if($nextApprove){
+
+            if ($model->save()) {
+                $nextApprove = Approve::findOne(["from_id" => $model->from_id, 'level' => ($model->level + 1)]);
+                if ($nextApprove) {
                     $nextApprove->status = 'Pending';
                     $nextApprove->save();
                 }
-                
+
                 // ถ้า ผอ. อนุมัติ ให้สถานะการลาเป็น Allow
-                if($model->level == 4){
+                if ($model->level == 4) {
                     $leave->status = 'Allow';
                     $leave->save();
-                }else if($model->status == 'Reject')
-                {
+                } else if ($model->status == 'Reject') {
                     $leave->status = 'Reject';
                     $leave->save();
-                }else{                    
+                } else {
                     $leave->status = 'Checking';
                     $leave->save();
                 }
-                
+
                 return [
                     'status' => 'success',
                     'container' => '#leave',
@@ -930,10 +1080,10 @@ class LeaveController extends Controller
             }
         }
 
-            if ($this->request->isAJax) {
+        if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="bi bi-person-exclamation"></i> '.$this->request->get('title'),
+                'title' => '<i class="bi bi-person-exclamation"></i> ' . $this->request->get('title'),
                 'content' => $this->renderAjax('form_approve', [
                     'model' => $model,
                 ]),
@@ -945,7 +1095,7 @@ class LeaveController extends Controller
         }
     }
 
-    
+
     // ตรวจสอบความถูกต้อง
     public function actionApproveValidator()
     {
@@ -953,8 +1103,7 @@ class LeaveController extends Controller
         $model = new LeaveStep();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-                $model->status == '' ? $model->addError('status', $requiredName) : null;
-
+            $model->status == '' ? $model->addError('status', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;
@@ -988,13 +1137,14 @@ class LeaveController extends Controller
         $model->data_json = ArrayHelper::merge($model->data_json, $checkerCancel);
         $model->save();
         $lineId = $model->employee->user->line_id;
-        $message = 'ขอยกเลิกวัน'.($model->leaveType->title ?? '-').' วันที่ '.Yii::$app->thaiFormatter->asDate($model->date_start, 'long').' ถึง '.Yii::$app->thaiFormatter->asDate($model->date_end, 'long').'ได้รับการอนุมัติแล้ว';
+        $message = 'ขอยกเลิกวัน' . ($model->leaveType->title ?? '-') . ' วันที่ ' . Yii::$app->thaiFormatter->asDate($model->date_start, 'long') . ' ถึง ' . Yii::$app->thaiFormatter->asDate($model->date_end, 'long') . 'ได้รับการอนุมัติแล้ว';
         LineMsg::sendMsg($lineId, $message);
 
-        return $this->redirect(['/hr/leave','status'=>'ReqCancel']);
+        return $this->redirect(['/hr/leave', 'status' => 'ReqCancel']);
     }
 
-  
+
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
@@ -1002,7 +1152,7 @@ class LeaveController extends Controller
         return $this->redirect(['index']);
     }
 
-    
+
     /**
      * Finds the Leave model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

@@ -131,8 +131,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <!--End  BoxStatus -->
 
 <div class="card">
-    <div class="card-body d-flex justify-content-center">
+    <div class="card-body d-flex justify-content-center gap-2">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+       
 
     </div>
 </div>
@@ -145,6 +146,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
             </h6>
+             <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
         </div>
 
 
@@ -162,8 +164,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-    
-
     \$('.filter-status').click(function (e) { 
         e.preventDefault();
         var id = \$(this).data('id');
@@ -173,6 +173,72 @@ $js = <<< JS
         
         
     });
+
+        $("body").on("click", ".export-leave", function (e) {
+            e.preventDefault();
+            let form = $('#search-leave');
+            let action = form.attr('action');
+            let data = form.serialize();
+
+            Swal.fire({
+                title: 'ยืนยันการส่งออกข้อมูล?',
+                text: 'คุณต้องการส่งออกข้อมูลหรือไม่',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ส่งออก',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังส่งออกข้อมูล...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        type: "get",
+                        url: '/hr/leave/export-leave',
+                        data: form.serialize(),
+                        xhrFields: {
+                            responseType: 'blob' 
+                        },
+                        success: function (response) {
+                            Swal.close();
+
+                            const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'ทะเบียนวันลา.xlsx'; // The default file name
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ส่งออกสำเร็จ',
+                                text: 'ไฟล์ถูกดาวน์โหลดเรียบร้อยแล้ว',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.close();
+                            $('#page-content').show();
+                            $('#loader').hide();
+                            warning(xhr.responseText);
+                            console.log('Error occurred:', error);
+                            console.log('Status:', status);
+                            console.log('Response:', xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
     JS;
 $this->registerJs($js);
 ?>

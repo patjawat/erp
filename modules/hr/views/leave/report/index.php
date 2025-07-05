@@ -22,7 +22,7 @@ $this->title = 'รายงานระบบลา';
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
 
-            <span class="btn btn-success rounded-pill shadow export-leave"><i
+            <span class="btn btn-success rounded-pill shadow export-report"><i
                     class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
 
                     <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -92,7 +92,7 @@ $this->title = 'รายงานระบบลา';
 $url = Url::to(['/hr/leave/report/export']);
 $params = Yii::$app->request->queryParams;
 $js = <<< JS
-    $("body").on("click", ".export-leave", function (e) {
+    $("body").on("click", ".export-report", function (e) {
            e.preventDefault();
            $('#leavesearch-data_json-export').val('true')
             $.ajax({
