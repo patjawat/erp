@@ -144,9 +144,9 @@ class Warehouse extends \yii\db\ActiveRecord
 
         $model = StockEvent::find()
             ->select([
-                'order_in' => 'SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)',
-                'order_out' => 'SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)',
-                'total_price' => 'SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END) - SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END)'
+                'order_in' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)',
+                'order_out' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)',
+                'total_price' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END) - SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)'
             ])
             ->leftJoin('categorise', 'categorise.code = stock_events.asset_item AND categorise.name = "asset_item"')
             ->where([
