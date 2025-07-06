@@ -87,6 +87,16 @@ use iamsaint\datetimepicker\Datetimepicker;
 $js = <<<JS
 thaiDatepicker('#meetingsearch-date_start,#meetingsearch-date_end')
 
+    $("#meetingsearch-date_start").on('change', function() {
+            $('#meetingsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+    $("#meetingsearch-date_end").on('change', function() {
+            $('#meetingsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+
+
 JS;
 $this->registerJS($js, View::POS_END)
 ?>
