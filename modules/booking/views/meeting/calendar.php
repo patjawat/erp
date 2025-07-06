@@ -143,27 +143,24 @@ $js = <<<JS
                         },
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
-                        const title = arg.event.extendedProps.title || '';
+                        const title = arg.event.title || '';
                         const dateTime = arg.event.extendedProps.dateTime || '';
                         const status = arg.event.extendedProps.status || '';
                         const viewGoType = arg.event.extendedProps.viewGoType || '';
-                        const showDateRange = arg.event.extendedProps.showDateRange || '';
-                        let cotnentHtml = arg.event.extendedProps.calendar_content;
+                        const showDateRange = arg.event.extendedProps.showDateRange || '';;
 
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = cotnentHtml;
-
-
+                        container.innerHTML = title;
                         return { domNodes: [container] };
                     },
                     eventDidMount: function(info) {
                         info.el.addEventListener('dblclick', function() {
                         document.getElementById('modalEventContent').innerHTML =
-                            `<strong>Title:</strong> \${info.event.title}<br>
-                            <strong>Description:</strong> \${info.event.extendedProps.description}`;
+                            `<strong>Title:</strong> \${title}<br>
+                            <strong>Description:</strong> \${title}`;
                         $('#main-modal').modal('show');
                         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                         $(".modal-dialog").addClass('modal-lg');

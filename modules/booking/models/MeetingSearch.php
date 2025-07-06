@@ -18,7 +18,7 @@ class MeetingSearch extends Meeting
     {
         return [
             [['id', 'thai_year', 'document_id', 'emp_number', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'urgent', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['ref', 'code','room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'urgent', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter'], 'safe'],
         ];
     }
 
@@ -59,6 +59,7 @@ class MeetingSearch extends Meeting
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'room_id' => $this->room_id,
             'thai_year' => $this->thai_year,
             'document_id' => $this->document_id,
             'emp_number' => $this->emp_number,

@@ -10,6 +10,7 @@ use yii\web\UrlManager;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\MeetingSearch;
 
@@ -69,18 +70,17 @@ class MeetingController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         
-         if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+         if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -202,11 +202,11 @@ class MeetingController extends Controller
             $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
             $data[] = [
                 'id' => $item->id,
-                'title' => $item->room->title,
+                'title' => $this->renderAjax('title', ['model' => $item, 'action' => false]),
                 'start' => $dateStart,
                 'end' => $dateStart,
                 'extendedProps' => [
-                    'title' => $item->title,
+                    'room' => $item->room->title,
                     'dateTime' => $item->viewMeetingTime(),
                     'status' => $item->viewStatus()['view'],
                     'calendar_content' => $this->renderAjax('calendar_content', ['model' => $item, 'action' => false]),

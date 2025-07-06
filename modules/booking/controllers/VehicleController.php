@@ -217,6 +217,7 @@ class VehicleController extends Controller
                 ->andWhere(['<>', 'status', 'Cancel'])
                 ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
                 ->orderBy(['id' => SORT_DESC])
+                ->limit(10)
                 ->all();
                 $data = [];
 
@@ -236,9 +237,9 @@ class VehicleController extends Controller
                         'allDay' => false,
                         'source' => 'vehicle',
                         'extendedProps' => [
-                            'title' => $title,
+                            'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
                             // 'avatar' => $item->employee?->getAvatar(false,($title)),
-                            'avatar' => $this->renderAjax('@app/modules/booking/views/vehicle/avatar', ['model' => $item]),
+                            // 'avatar' => $this->renderAjax('@app/modules/booking/views/vehicle/avatar', ['model' => $item]),
                             'fullname' => $item->employee?->fullname,
                             'dateTime' => $item->viewTime(),
                             // 'dateTime' => $item->viewMeetingTime(),
@@ -249,7 +250,7 @@ class VehicleController extends Controller
                          'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
                         'description' => 'description for All Day Event',
                         'textColor' => 'black',
-                        'backgroundColor' => '#eee',
+                        // 'backgroundColor' => '#eee',
                     ];
                 }
 

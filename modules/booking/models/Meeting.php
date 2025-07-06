@@ -45,6 +45,7 @@ class Meeting extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $date_filter;
     public static function tableName()
     {
         return 'meeting';
@@ -57,7 +58,7 @@ class Meeting extends \yii\db\ActiveRecord
     {
         return [
             [['code', 'room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'thai_year', 'urgent', 'status', 'emp_id'], 'required'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter'], 'safe'],
             [['thai_year', 'document_id', 'emp_number', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'code', 'room_id', 'title', 'time_start', 'time_end', 'urgent', 'status', 'emp_id'], 'string', 'max' => 255],
         ];

@@ -17,9 +17,16 @@ $this->params['breadcrumbs'][] = '<i class="bi bi-ui-checks me-1"></i>'.$this->t
 <?=$this->render('menu',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
 
-
+<!-- https://www.canva.com/ai/code/thread/52a8afb0-5caf-4151-a563-8a2106920508 -->
 
 <?=$this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) ?>
+
+<div class="card">
+  <div class="card-body">
+ <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+  </div>
+</div>
+
 
     <div class="card">
         <div class="card-body">
@@ -31,7 +38,7 @@ $this->params['breadcrumbs'][] = '<i class="bi bi-ui-checks me-1"></i>'.$this->t
                     รายการ
                 </h6>
                 <div class="d-flex justify-content-end">
-                  <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                 
                 </div>
             </div>
    

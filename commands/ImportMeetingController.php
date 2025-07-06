@@ -49,8 +49,7 @@ class ImportMeetingController extends Controller
     public function actionIndex()
     {
         $sql = "SELECT r.ROOM_ID,r.ROOM_NAME,s.* FROM `meetingroom_service` s 
-        LEFT JOIN meetingroom_index r ON r.ROOM_ID = s.ROOM_ID 
-        WHERE `DATE_BEGIN` BETWEEN '2025-05-22' AND '2025-05-22'
+        LEFT JOIN meetingroom_index r ON r.ROOM_ID = s.ROOM_ID
         ORDER BY s.DATE_TIME_REQUEST ASC";
         $querys = Yii::$app->db2->createCommand($sql)
         ->queryAll();

@@ -6,6 +6,7 @@ use yii\helpers\Html;
     <thead>
         <tr>
             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="fw-semibold">วันที่</th>
             <th class="fw-semibold">ห้องประชุม</th>
             <th class="fw-semibold">หัวข้อการประชุม</th>
             <th class="fw-semibold">ผู้ขอ</th>
@@ -22,11 +23,12 @@ use yii\helpers\Html;
             <td>
                 <div class="avatar-detail">
                     <h6 class="mb-0 fs-13"><?= $item->room?->title ?? '-' ?></h6>
-                    <p class="text-muted mb-0 fs-13">
-                        <?= $item->viewMeetingDate() ?>
-                    </p>
+                   
                 </div>
             </td>
+            <td> <p class="text-muted mb-0 fs-13">
+                        <?= $item->viewMeetingDate() ?>
+                    </p></td>
             <td>
                 <div class="avatar-detail">
                     <h6 class="mb-0 fs-13"><?= $item->title ?></h6>

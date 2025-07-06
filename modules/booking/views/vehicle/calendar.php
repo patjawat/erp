@@ -61,7 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
    
     white-space: normal; /* เพื่อให้ข้อความแสดงได้เต็มบรรทัด */
     text-align: center; /* จัดข้อความให้อยู่ตรงกลาง */
-    font-size: 14px; /* ปรับขนาดฟอนต์ให้เหมาะสม */
+    font-size: 12px; /* ปรับขนาดฟอนต์ให้เหมาะสม */
 }
 
 .fc-daygrid-event-harness{
@@ -171,9 +171,8 @@ $js = <<<JS
                         },
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
-                        const avatar = arg.event.extendedProps.avatar || '';
-                        const code = arg.event.extendedProps.code || '';
                         const title = arg.event.extendedProps.title || '';
+                        const code = arg.event.extendedProps.code || '';
                         const dateTime = arg.event.extendedProps.dateTime || '';
                         const status = arg.event.extendedProps.status || '';
                         const viewGoType = arg.event.extendedProps.viewGoType || '';
@@ -183,7 +182,7 @@ $js = <<<JS
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${avatar}</div>`;
+                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
                         return { domNodes: [container] };
                     },
                     eventDidMount: function(info) {
