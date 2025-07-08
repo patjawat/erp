@@ -567,7 +567,7 @@ class Leave extends \yii\db\ActiveRecord
         $data .= '<div class="avatar-stack">';
         foreach (Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['not in', 'status', ['None','Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
             try {
-                $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
+                $data .=Html::img('@web/img/loading.gif', ['class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
                         'data' => [
                             'expand' => '-20',
                             'sizes' => 'auto',

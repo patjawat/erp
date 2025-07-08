@@ -84,7 +84,7 @@ class EmployeesController extends Controller
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
         // ถ้ามีกลุ่มย่อย
-        if (isset($org1) && $org1->lvl == 2) {
+        if (isset($org1) && $org1->lvl == 1) {
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1

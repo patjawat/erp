@@ -110,20 +110,6 @@ class WarehouseController extends Controller
                 $searchModel->date_end = AppHelper::convertToThai($range[1]);
             }
 
-            // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-            // }
-
-
-
-            // try {
-            // //ค้นหาตามช่วงของวันที่
-            // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            // $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            // } catch (\Throwable $th) {
-            //     //throw $th;
-            // }
 
             $dataProvider->query->andFilterWhere([
                 'or',
@@ -131,12 +117,17 @@ class WarehouseController extends Controller
                 ['like', 'thai_year', $searchModel->q],
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
-            $dataProvider->query->andFilterWhere([
+            
+            if($searchModel->date_start && $searchModel->date_end) {
+                // ตรวจสอบว่ามีการกรอกวันที่เริ่มต้นและสิ้นสุดหรือไม่
+                $dataProvider->query->andFilterWhere([
                 'between',
                 'created_at',
                 AppHelper::convertToGregorian($searchModel->date_start) . ' 00:00:00',
                 AppHelper::convertToGregorian($searchModel->date_end) . ' 23:59:59',
             ]);
+            } 
+          
 
             if ($all) {
                 $dataProvider->pagination = false; // ปิดการแบ่งหน้า
