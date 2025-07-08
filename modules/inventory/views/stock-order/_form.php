@@ -44,24 +44,13 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 $js = <<< JS
 
-                            \$('#form').on('beforeSubmit', function (e) {
-                                var form = \$(this);
-                                \$.ajax({
-                                    url: form.attr('action'),
-                                    type: 'post',
-                                    data: form.serialize(),
-                                    dataType: 'json',
-                                    success: async function (response) {
-                                        form.yiiActiveForm('updateMessages', response, true);
-                                        if(response.status == 'success') {
-                                            closeModal()
-                                            success()
-                                            await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                        }
-                                    }
-                                });
-                                return false;
-                            });
-            JS;
+
+    thaiDatepicker('#stockevent-created_at')
+
+    handleFormSubmit('#form', null, async function(response) {
+        await location.reload();
+    });
+    
+JS;
 $this->registerJS($js)
 ?>

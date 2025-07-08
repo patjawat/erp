@@ -204,7 +204,7 @@ class MainStockController extends Controller
         $warehouse = Yii::$app->session->get('sub-warehouse');
         
         if(!$warehouse){
-            return $this->redirect(['/me/store-v2/set-warehouse']);
+            return $this->redirect(['/me/store-v2/set-warehouse','store' => 'main-stock']);
         }
         $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouseModel->data_json['item_type'];

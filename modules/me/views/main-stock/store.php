@@ -26,6 +26,10 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 <?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('action'); ?>
+ <?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary shadow'])?>
+<?php $this->endBlock(); ?>
+
 
 <?php
 
@@ -60,7 +64,7 @@ $products = $cart->getItems();
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
                     <?php endif;?>
-                    <?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary rounded-pill shadow'])?>
+                   
                     </div>
         </div>
     </div>

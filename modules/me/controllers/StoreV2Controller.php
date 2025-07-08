@@ -27,22 +27,27 @@ class StoreV2Controller extends \yii\web\Controller
 {
     public function actionSetWarehouse()
     {
+        $storeUrl = Yii::$app->request->get('store');
         try {
             $emp = UserHelper::GetEmployee();
             $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
             $warehouse = Warehouse::findOne($checkWarehouse->id);
             if (!$checkWarehouse) {
-               return $this->render('not_set_warehouse', [
+                return $this->render('not_set_warehouse', [
+                    'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
+                ]);
+            }
+            Yii::$app->session->set('sub-warehouse', $warehouse);
+        } catch (\Throwable $th) {
+            return $this->render('not_set_warehouse', [
                 'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
             ]);
         }
-        Yii::$app->session->set('sub-warehouse', $warehouse);
-    } catch (\Throwable $th) {
-        return $this->render('not_set_warehouse', [
-                'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
-            ]);
+        if ($storeUrl == 'main-stock') {
+            return $this->redirect(['/me/main-stock/store']);
+        }else{
+            return $this->redirect(['/me/store-v2/index']);
         }
-        return $this->redirect(['/me/store-v2/index']);
     }
 
     public function actionIndex()
@@ -388,7 +393,7 @@ class StoreV2Controller extends \yii\web\Controller
         ];
         $cartItem->data_json =  ArrayHelper::merge($oldObj, $cartItem->data_json, $newData);
 
-        
+
         if ($cartItem->save(false)) {
             return ['status' => 'success', 'message' => 'อัปเดตจำนวนสินค้าสำเร็จ'];
         }

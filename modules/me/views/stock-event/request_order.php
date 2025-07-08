@@ -1,12 +1,14 @@
 <?php
-
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
-use app\modules\inventory\models\StockEvent;
+
+$this->title = 'ทะเบียนเบิกวัสดุคลังหลัก';
+$this->params['breadcrumbs'][] = ['label' => 'คลังหน่วยงาน', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'เบิกวัสดุคลังหลัก', 'url' => ['/me/main-stock/store']];
+$this->params['breadcrumbs'][] = $this->title;
+
+
 $warehouse = Yii::$app->session->get('sub-warehouse');
 $this->title = 'คลัง'.$warehouse->warehouse_name;
 
@@ -25,10 +27,6 @@ $products = $cart->getItems();
 <?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('action'); ?>
-<?php // echo $this->render('@app/modules/me/views/store-v2/menu') ?>
-<?php $this->endBlock(); ?>
 
 
 
@@ -113,6 +111,7 @@ $products = $cart->getItems();
                                     <ul class="dropdown-menu">
                                         <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบเบิก', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?></li>
                                         <?php if($item->order_status == 'pending' OR $item->order_status == '' OR $item->order_status == 'none'):?>
+                                        <!-- <li><?php //  Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไขใบขอเบิก', ['/me/stock-event/update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขใบขอเบิก'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']]) ?></li> -->
                                         <li><?= Html::a('<i class="fa-solid fa-xmark me-1"></i> ยกเลิก', ['/me/stock-event/cancel-order','id' => $item->id], ['class' => 'dropdown-item cancel-order']) ?></li>
                                         <?php endif;?>
                                     </ul>

@@ -1,13 +1,16 @@
 <?php
 
-use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use yii\helpers\Url;
-use kartik\select2\Select2;
-use iamsaint\datetimepicker\Datetimepicker;
-use app\modules\hr\models\Employees;
-use yii\web\JsExpression;
 use yii\web\View;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\db\Expression;
+use yii\web\JsExpression;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use yii\bootstrap5\ActiveForm;
+use app\modules\hr\models\Employees;
+use app\modules\inventory\models\Warehouse;
+use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
 /** @var yii\widgets\ActiveForm $form */
@@ -113,22 +116,26 @@ try {
         ])->label('ผู้เห็นชอบ')
     ?>
 
-    <?php
-    //    $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-    //                                     'data' => $model->listWareHouseMain(),
-    //                                     'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
-    //                                     'pluginEvents' => [
-    //                                         "select2:unselect" => "function() { 
+<?=$form->field($model, 'created_at')->textInput()->label('วันที่ขอเบิก');?>
+    <?=$form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
+                                        'data' =>ArrayHelper::map(
+                                                    Warehouse::find()->where(['warehouse_type' => 'sub'])
+                                                        ->all(),
+                                                    'id',
+                                                    'warehouse_name'
+                                                ),
+                                        'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
+                                        'pluginEvents' => [
+                                            "select2:unselect" => "function() { 
 
-    //                                         }",
-    //                                         "select2:select" => "function() {
-    //                                            console.log($(this).val());
-    //                                     }",],
-    //                                     'pluginOptions' => [
-    //                                         'allowClear' => true,
-    //                                         'dropdownParent' => '#main-modal',
-    //                                     ],
-    //                                 ])->label('คลังวัสดุ');
-                                    
-                                    ?>
+                                            }",
+                                            "select2:select" => "function() {
+                                               console.log($(this).val());
+                                        }",],
+                                        'pluginOptions' => [
+                                            'allowClear' => true,
+                                            'dropdownParent' => '#main-modal',
+                                        ],
+                                    ])->label('คลังที่ต้องการเบิก');?>
+
 <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5])->label('เหตุผล');?>

@@ -17,6 +17,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('@app/modules/me/views/store-v2/menu') ?>
 <?php $this->endBlock(); ?>

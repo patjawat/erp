@@ -19,8 +19,9 @@ try {
 } catch (Throwable $th) {
     $this->title = 'ไม่ระบุคลังที่ร้องขอ';
 }
-$this->params['breadcrumbs'][] = ['label' => 'Stock Ins', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = ['label' => 'คลัง', 'url' => ['/inventory']];
+$this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
+$this->params['breadcrumbs'][] = 'เบิกวัสดุ';
 yii\web\YiiAsset::register($this);
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -32,7 +33,7 @@ yii\web\YiiAsset::register($this);
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'warehouse'])?>
+<?=$this->render('../default/menu',['active' => 'request'])?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>

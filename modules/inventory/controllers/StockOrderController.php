@@ -393,9 +393,25 @@ class StockOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
+        $model->created_at = AppHelper::convertToThai(isset($model->created_at) ? $model->created_at : date('Y-m-d'));
         if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->created_at = AppHelper::convertToGregorian($model->created_at).' '.date('H:i:s');
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-            $model->save(false);
+            if($model->save(false)){
+                return [
+                    'status' => 'success',
+                    'container' => '#inventory-container',
+                    'data' => $model,
+                ];
+            }else{
+                return [
+                    'status' => 'error',
+                    'container' => '#inventory-container',
+                    'message' => 'ไม่สามารถบันทึกข้อมูลได้',
+                ];
+            }
+
 
             return $this->redirect(['view', 'id' => $model->id]);
         }

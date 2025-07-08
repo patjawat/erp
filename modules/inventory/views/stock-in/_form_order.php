@@ -82,8 +82,7 @@ echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), 
 </div>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า');?>
 
-<?=$form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า');
-                ?>
+<?=$form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า');?>
 
 <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true,'checked' => true])->label('ล็อตอัตโนมัติ');?>
 

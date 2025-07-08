@@ -11,6 +11,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
+use Yiisoft\Arrays\ArrayHelper;
 
 /**
  * StockEventController implements the CRUD actions for StockEvent model.
@@ -51,6 +52,40 @@ class StockEventController extends Controller
         ]);
     }
 
+    public function actionUpdate($id)
+    {
+        $model= $this->findModel($id);
+        $old = $model->data_json;
+        if ($model->load(Yii::$app->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->data_json = ArrayHelper::merge($old, $model->data_json);
+            if($model->save()){
+               return [
+                'status' => 'success',
+               ];
+            }else{
+               return [
+                'status' => 'error',
+                'message' => 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีก'
+               ];
+            }
+        }
+        
+        if($this->request->isAJax){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title', 'แก้ไขรายการขอเบิก'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+
+        }else{
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
+    }
     //แสดงรายหารขอเบิกคลังหลัก
     public function actionReuqestOrder()
     {
