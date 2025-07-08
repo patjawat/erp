@@ -1,3 +1,7 @@
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
+<?php $this->endBlock(); ?>
+
 <div
     class="alert alert-warning alert-dismissible fade show"
     role="alert"
