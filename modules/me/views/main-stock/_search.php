@@ -42,7 +42,7 @@ $product = ArrayHelper::map(Categorise::find()
     <div>
         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-            'options' => ['placeholder' => 'เลือกคลัง','value' =>$getWarehouse ? $getWarehouse->id : ''],
+            'options' => ['placeholder' => 'เลือกคลัง','value' =>$getWarehouse ? $getWarehouse->id : $model->warehouse_id],
             'disabled' => ($getWarehouse ?  true : false),
             'pluginEvents' => [
                 "select2:unselect" => "function() { 

@@ -27,7 +27,7 @@ class StoreV2Controller extends \yii\web\Controller
 {
     public function actionSetWarehouse()
     {
-        $storeUrl = Yii::$app->request->get('store');
+        $callbackUrl = Yii::$app->request->get('callback');
         try {
             $emp = UserHelper::GetEmployee();
             $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
@@ -43,8 +43,9 @@ class StoreV2Controller extends \yii\web\Controller
                 'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
             ]);
         }
-        if ($storeUrl == 'main-stock') {
-            return $this->redirect(['/me/main-stock/store']);
+        if ($callbackUrl) {
+            // return $this->redirect(['/me/main-stock/store']);
+            return $this->redirect([$callbackUrl]);
         }else{
             return $this->redirect(['/me/store-v2/index']);
         }
@@ -97,7 +98,7 @@ class StoreV2Controller extends \yii\web\Controller
     {
         $warehouse = Yii::$app->session->get('sub-warehouse');
         if (!$warehouse) {
-            return $this->redirect(['/me/store-v2/set-warehouse']);
+            return $this->redirect(['/me/store-v2/set-warehouse','callback' => '/me/store-v2/dashboard']);
         }
         $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();

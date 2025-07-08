@@ -44,7 +44,7 @@ use app\modules\inventory\models\StockEvent;
                             <td>
                                 <?php
                                 try {
-                                   echo $item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
+                                   echo $item->UserReq($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
                                 } catch (\Throwable $th) {
                                 }
                                 ?>

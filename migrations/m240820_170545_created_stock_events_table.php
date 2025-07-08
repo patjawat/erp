@@ -15,6 +15,7 @@ class m240820_170545_created_stock_events_table extends Migration
         $this->createTable('{{%stock_events}}', [
             'id' => $this->primaryKey()->comment('รหัสการเคลื่อนไหวสินค้า'),
             'helpdesk_id' => $this->integer()->comment('รหัสงาน'),
+            'emp_id' => $this->integer()->comment('ผู้ขอเบิก'),
             'name' => $this->string(50)->comment('ชื่อการเก็บของข้อมูล เช่น order, item'),
             'code' => $this->string(50)->comment('รหัส'),
             'transaction_type' => $this->string(255)->comment('ธุรกรรม'),
@@ -52,3 +53,10 @@ class m240820_170545_created_stock_events_table extends Migration
         $this->dropTable('{{%stock_events}}');
     }
 }
+
+// ALTER TABLE `stock_events` ADD `emp_id` INT NULL COMMENT 'ผู้ขอ' AFTER `id`;
+// UPDATE stock_events
+// JOIN employees e ON e.user_id = stock_events.created_by
+// SET stock_events.emp_id = e.id
+// WHERE stock_events.name = 'order'
+//   AND stock_events.transaction_type = 'OUT';

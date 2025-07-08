@@ -71,8 +71,29 @@ class StockEvent extends Yii\db\ActiveRecord
             // [['vendor_id'], 'required'],
             [['warehouse_id', 'from_warehouse_id', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['total_price', 'unit_price'], 'number'],
-            [['movement_date', 'data_json', 'created_at', 'updated_at', 'auto_lot', 'po_number', 'checker', 'category_code', 'warehouse_name', 'total', 'asset_type_name', 'q', 'date_start','q_month','receive_month',
-                'date_end','transaction_type', 'category_id', 'qty','date_filter'], 'safe'],
+            [[
+                'emp_id',
+                'movement_date',
+                'data_json',
+                'created_at',
+                'updated_at',
+                'auto_lot',
+                'po_number',
+                'checker',
+                'category_code',
+                'warehouse_name',
+                'total',
+                'asset_type_name',
+                'q',
+                'date_start',
+                'q_month',
+                'receive_month',
+                'date_end',
+                'transaction_type',
+                'category_id',
+                'qty',
+                'date_filter'
+            ], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
         ];
@@ -144,8 +165,15 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
+    //เชื่อมขอ้มูลพนักงาน
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
 
-        // แสดงปีงบประมานทั้งหมด
+
+
+    // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
     {
         $model = self::find()
@@ -162,9 +190,9 @@ class StockEvent extends Yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-    
 
-     public function afterDelete()
+
+    public function afterDelete()
     {
         parent::afterDelete();
 
@@ -210,28 +238,28 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Order::class, ['id' => 'category_id']);
     }
 
-        // ผู้ตรวจสอบ
+    // ผู้ตรวจสอบ
     public function getEmpChecker()
-        {
-            return $this->hasOne(Employees::class, ['id' => 'checker']);
-        }
+    {
+        return $this->hasOne(Employees::class, ['id' => 'checker']);
+    }
 
 
-            // หารอนุมัติจากหัวหน้า
+    // หารอนุมัติจากหัวหน้า
     public function leaderApprove()
     {
 
-        $model = Approve::findOne(['from_id' => $this->id,'name' => 'main_stock']);
-        if($model){
+        $model = Approve::findOne(['from_id' => $this->id, 'name' => 'main_stock']);
+        if ($model) {
             return $model;
-        }else{
+        } else {
             return 0;
         }
     }
 
 
 
-        /**
+    /**
      * คำนวณราคาต่อหน่วย (price_per_unit)
      */
     public function getPricePerUnit()
@@ -249,7 +277,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return round($this->getPricePerUnit() * $this->total_volume, 2);
     }
-    
+
     // นีับจำนวน stock คงเหลือในคลังที่เลือก
     public static function SumStockWarehouse()
     {
@@ -330,7 +358,7 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return Warehouse::findOne($this->from_warehouse_id)->warehouse_name ?? '-';
     }
-    
+
     // ตรวจสอบค่าวาง qty
     public function countNullQty()
     {
@@ -519,23 +547,23 @@ class StockEvent extends Yii\db\ActiveRecord
             ->orderBy(['id' => SORT_ASC])
             ->all();
     }
-    
 
-        // รายชื่อคลังสินค้าย่อยตามผู้รับผิดชอบมีสิทธิ์
-        public function listWareHouseSub(): array
-        {
-            $id = \Yii::$app->user->id;
-            return ArrayHelper::map(
-                Warehouse::find()->where(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"))
-                    ->all(),
-                'id',
-                'warehouse_name'
-            );
-        }
+
+    // รายชื่อคลังสินค้าย่อยตามผู้รับผิดชอบมีสิทธิ์
+    public function listWareHouseSub(): array
+    {
+        $id = \Yii::$app->user->id;
+        return ArrayHelper::map(
+            Warehouse::find()->where(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"))
+                ->all(),
+            'id',
+            'warehouse_name'
+        );
+    }
     public function listFormWarehouse(): array
     {
         // $fromWarehouseList = self::find()->select('from_warehouse_id')->where(['name' => 'order'])->column();
-        return ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'SUB' ])->all(), 'id', 'warehouse_name');
+        return ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'SUB'])->all(), 'id', 'warehouse_name');
     }
 
     // แสดงรายละเอียดของแต่ละ lot
@@ -570,54 +598,54 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
 
-//สรุปราคาและจำนวนคลังหลัก
-public function mainOrderSummary($status = null)
-{
-    try {
-        $dateStart = AppHelper::convertToGregorian($this->date_start);
-        $dateEnd = AppHelper::convertToGregorian($this->date_end);
-    } catch (\Throwable $th) {
-        $dateStart = null;
-        $dateEnd = null;
+    //สรุปราคาและจำนวนคลังหลัก
+    public function mainOrderSummary($status = null)
+    {
+        try {
+            $dateStart = AppHelper::convertToGregorian($this->date_start);
+            $dateEnd = AppHelper::convertToGregorian($this->date_end);
+        } catch (\Throwable $th) {
+            $dateStart = null;
+            $dateEnd = null;
+        }
+
+        // Query นับจำนวนออเดอร์
+        $queryTotalOrder = self::find()
+            ->where([
+                'name' => 'order',
+                'warehouse_id' => $this->warehouse_id
+            ])
+            ->andFilterWhere(['from_warehouse_id' => $this->from_warehouse_id])
+            ->andFilterWhere(['transaction_type' => $this->transaction_type])
+            ->andFilterWhere(['order_status' => $status])
+            ->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
+
+        $totalOrder = $queryTotalOrder->count();
+        $totalOrderSql = $queryTotalOrder->createCommand()->getRawSql(); // ดึง SQL ออกมา
+
+        // Query คำนวณยอดรวม
+        $queryTotalPrice = self::find()
+            ->select(['total' => new \yii\db\Expression('SUM(stock_events.qty * stock_events.unit_price)')])
+            ->leftJoin('categorise i', 'i.code = stock_events.asset_item')
+            ->where(['warehouse_id' => $this->warehouse_id])
+            ->andFilterWhere(['stock_events.from_warehouse_id' => $this->from_warehouse_id])
+            ->andFilterWhere(['stock_events.transaction_type' => $this->transaction_type])
+            ->andFilterWhere(['stock_events.order_status' => $status])
+            ->andFilterWhere(['between', 'stock_events.created_at', $dateStart, $dateEnd])
+            ->groupBy('stock_events.transaction_type');
+
+        $totalPrice = $queryTotalPrice->scalar();
+        $totalPriceSql = $queryTotalPrice->createCommand()->getRawSql(); // ดึง SQL ออกมา
+
+        return [
+            'totalPrice' => $totalPrice,
+            'totalOrder' => $totalOrder,
+            'totalPriceSql' => $totalPriceSql,
+            'totalOrderSql' => $totalOrderSql
+        ];
     }
-    
-    // Query นับจำนวนออเดอร์
-    $queryTotalOrder = self::find()
-        ->where([
-            'name' => 'order',
-            'warehouse_id' => $this->warehouse_id
-        ])
-        ->andFilterWhere(['from_warehouse_id' => $this->from_warehouse_id])
-        ->andFilterWhere(['transaction_type' => $this->transaction_type])
-        ->andFilterWhere(['order_status' => $status])
-        ->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
 
-    $totalOrder = $queryTotalOrder->count();
-    $totalOrderSql = $queryTotalOrder->createCommand()->getRawSql(); // ดึง SQL ออกมา
 
-    // Query คำนวณยอดรวม
-    $queryTotalPrice = self::find()
-        ->select(['total' => new \yii\db\Expression('SUM(stock_events.qty * stock_events.unit_price)')])
-        ->leftJoin('categorise i', 'i.code = stock_events.asset_item')
-        ->where(['warehouse_id' => $this->warehouse_id])
-        ->andFilterWhere(['stock_events.from_warehouse_id' => $this->from_warehouse_id])
-        ->andFilterWhere(['stock_events.transaction_type' => $this->transaction_type])
-        ->andFilterWhere(['stock_events.order_status' => $status])
-        ->andFilterWhere(['between', 'stock_events.created_at', $dateStart, $dateEnd])
-        ->groupBy('stock_events.transaction_type');
-
-    $totalPrice = $queryTotalPrice->scalar();
-    $totalPriceSql = $queryTotalPrice->createCommand()->getRawSql(); // ดึง SQL ออกมา
-
-    return [
-        'totalPrice' => $totalPrice,
-        'totalOrder' => $totalOrder,
-        'totalPriceSql' => $totalPriceSql,
-        'totalOrderSql' => $totalOrderSql
-    ];
-}
-
-    
     public function viewStatus()
     {
         switch ($this->order_status) {
@@ -634,9 +662,9 @@ public function mainOrderSummary($status = null)
             case 'cancel':
                 $msg = '<div class="badge rounded-pill badge-soft-danger text-danger fs-13"> <i class="fa-solid fa-xmark fs-6 text-danger"></i> ยกเลิก </div>';
                 break;
-                case 'success':
-                    $msg = '<div class="badge rounded-pill badge-soft-success text-success fs-13"> <i class="bi bi-check2-circle text-success"></i> สำเร็จ </div>';
-                    // $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
+            case 'success':
+                $msg = '<div class="badge rounded-pill badge-soft-success text-success fs-13"> <i class="bi bi-check2-circle text-success"></i> สำเร็จ </div>';
+                // $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
                 break;
 
             default:
@@ -648,45 +676,45 @@ public function mainOrderSummary($status = null)
     }
 
 
-public function getStatus()
-{
-    return AppHelper::viewStatus($this->order_status);
-}
+    public function getStatus()
+    {
+        return AppHelper::viewStatus($this->order_status);
+    }
     // แสดงผู้ตรวจสอบ
     public function viewChecker($msg = null)
     {
         // try {
-            $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'level' => 1]);
-            $status = $approve->status;
-            switch ($status) {
-                case 'Pass':
-                    $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
-                    break;
+        $approve = Approve::findOne(['name' => 'main_stock', 'from_id' => $this->id, 'level' => 1]);
+        $status = $approve->status;
+        switch ($status) {
+            case 'Pass':
+                $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
+                break;
 
-                case 'Reject':
-                    $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
-                    break;
+            case 'Reject':
+                $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
+                break;
 
-                default:
-                    $status = '<span class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-regular fa-clock"></i> รออนุมัติ </span>';
-                    break;
-            }
+            default:
+                $status = '<span class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-regular fa-clock"></i> รออนุมัติ </span>';
+                break;
+        }
 
-            $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
-            // $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
+        $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
+        // $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
 
-            return
-                [
-                    'status' => $status,
-                    // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
-                    // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
-                    'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
-                    'position' => $this->getAvatar($approve->emp_id)['position_name'],
-                    'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
-                    'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
-                    'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
-                    // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
-                ];
+        return
+            [
+                'status' => $status,
+                // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
+                // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
+                'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
+                'position' => $this->getAvatar($approve->emp_id)['position_name'],
+                'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
+                'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">' . $msg . '</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
+                'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
+                // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
+            ];
         // } catch (\Throwable $th) {
         //     return
         //         [
@@ -703,21 +731,20 @@ public function getStatus()
     public function viewRecipient()
     {
         try {
-            $dateTime = $this->data_json['recipient_date'].' '.$this->data_json['recipient_time'];
+            $dateTime = $this->data_json['recipient_date'] . ' ' . $this->data_json['recipient_time'];
             return  \Yii::$app->thaiDate->toThaiDate($dateTime, true, false);
         } catch (\Throwable $th) {
             return null;
         }
     }
-// ผู้รับวสดุ
+    // ผู้รับวสดุ
     public function Recipient()
     {
-        try{
-           
-            $msg = 'ผู้รับวัสดุ'.' | '.$this->viewRecipient();
-            return $this->getAvatar($this->data_json['recipient'],$msg);
+        try {
 
-        }catch (\Throwable $th) {
+            $msg = 'ผู้รับวัสดุ' . ' | ' . $this->viewRecipient();
+            return $this->getAvatar($this->data_json['recipient'], $msg);
+        } catch (\Throwable $th) {
             return [
                 'avatar' => '',
                 'img' => '',
@@ -762,39 +789,38 @@ public function getStatus()
         return $this->getAvatar($emp->id, $msg);
     }
 
-        // ผู้ขอเบิก
-        public function UserReq($msg = null)
-        {
-            try {
+    // ผู้ขอเบิก
+    public function UserReq($msg = null)
+    {
+        // try {
+            // $emp = UserHelper::GetEmployee($this->data_json['user_req']);
+            return $this->getAvatar($this->emp_id, $msg);
+            //code...
+        // } catch (\Throwable $th) {
+        //     return [
+        //         'avatar' => ''
+        //     ];
+        // }
+    }
 
-            $emp = UserHelper::GetEmployee($this->data_json['user_req']);
-            return $this->getAvatar($emp->id, $msg);
-                            //code...
-                        } catch (\Throwable $th) {
-                           return [
-                            'avatar' => ''
-                           ];
-                        }
-        }
-        
 
     // ผู้สั่งจ่ายวัสดุ
     public function ShowPlayer($data = '')
     {
         try {
             $datetime = \Yii::$app->thaiDate->toThaiDate($this->data_json['player_date'], true, false);
-            if($data){
+            if ($data) {
                 $msg = $data;
-            }else{
+            } else {
                 $msg = 'ผู้จ่าย' . ' | ' . $datetime;
             }
             return $this->getAvatar($this->data_json['player'], $msg);
         } catch (\Throwable $th) {
-           return [
-            'fullname' => 'ไม่ระบุผู้จ่าย',
-            'position_name' => '',
-            'avatar' => ''
-           ];
+            return [
+                'fullname' => 'ไม่ระบุผู้จ่าย',
+                'position_name' => '',
+                'avatar' => ''
+            ];
         }
     }
 
@@ -828,27 +854,27 @@ public function getStatus()
         $totalPrice = self::find()
             ->where(['name' => 'order_item', 'category_id' => $this->id])
             ->sum('qty * unit_price');
-         $totalItem =    self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->sum('qty');
+        $totalItem =    self::find()->where(['name' => 'order_item', 'category_id' => $this->id])->sum('qty');
         return [
-                'total' => $totalPrice,
-                'total_item' => $totalItem 
+            'total' => $totalPrice,
+            'total_item' => $totalItem
         ];
     }
 
 
-     // ตรวจสอบว่ามีพอให้เบิกหรือไม่
+    // ตรวจสอบว่ามีพอให้เบิกหรือไม่
     public function checkBalance()
     {
-                $balanced=0;
-                foreach ($this->getItems() as $item){
-                    if($item->qty > $item->SumlotQty()){
-                        $balanced +=1;
-                    }
-                    // if($item->qty == 0 && $item->SumlotQty() == 0){
-                    //     $balanced -=1;
-                    // }
-                }
-            return $balanced;
+        $balanced = 0;
+        foreach ($this->getItems() as $item) {
+            if ($item->qty > $item->SumlotQty()) {
+                $balanced += 1;
+            }
+            // if($item->qty == 0 && $item->SumlotQty() == 0){
+            //     $balanced -=1;
+            // }
+        }
+        return $balanced;
     }
     // รวมเงินทั้งหมด
     public function SummaryTotal($status = true)
@@ -856,44 +882,42 @@ public function getStatus()
 
 
         $query = self::find()
-        ->select([
-            new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')
-        ])
-        ->alias('e')
-        ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
-        ->andFilterWhere(['e.thai_year' => $this->thai_year])
-        ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
-        ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
-    
-    // เพิ่มเงื่อนไขการตรวจสอบสถานะเมื่อ $status เป็น true
-    if ($status === true) {
-        $query->andFilterWhere(['e.order_status' => 'success']);
-        $query->andFilterWhere(['i.order_status' => 'success']);
-    }
-    
-    // กรองตามข้อมูล JSON ที่ต้องการ
-    $query->andFilterWhere([
-        '=',
-        new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"),
-        $this->asset_type_name
-    ]);
-    
-    // กรองข้อมูลตามคำค้นหา $this->q
-    $query->andFilterWhere([
-        'or',
-        ['like', 'e.code', $this->q],
-        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $this->q],
-        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.pq_number')"), $this->q],
-        ['like', new Expression("JSON_EXTRACT(e.data_json, '$.po_number')"), $this->q],
-    ]);
-    
-    // ดึงข้อมูลเพียงแถวเดียว
-    $result = $query->one();
-    
-    // ตรวจสอบผลลัพธ์
-    return $result['total'] ?: 0;
-    
-       
+            ->select([
+                new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')
+            ])
+            ->alias('e')
+            ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
+            ->andFilterWhere(['e.thai_year' => $this->thai_year])
+            ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
+            ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
+
+        // เพิ่มเงื่อนไขการตรวจสอบสถานะเมื่อ $status เป็น true
+        if ($status === true) {
+            $query->andFilterWhere(['e.order_status' => 'success']);
+            $query->andFilterWhere(['i.order_status' => 'success']);
+        }
+
+        // กรองตามข้อมูล JSON ที่ต้องการ
+        $query->andFilterWhere([
+            '=',
+            new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"),
+            $this->asset_type_name
+        ]);
+
+        // กรองข้อมูลตามคำค้นหา $this->q
+        $query->andFilterWhere([
+            'or',
+            ['like', 'e.code', $this->q],
+            ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $this->q],
+            ['like', new Expression("JSON_EXTRACT(e.data_json, '$.pq_number')"), $this->q],
+            ['like', new Expression("JSON_EXTRACT(e.data_json, '$.po_number')"), $this->q],
+        ]);
+
+        // ดึงข้อมูลเพียงแถวเดียว
+        $result = $query->one();
+
+        // ตรวจสอบผลลัพธ์
+        return $result['total'] ?: 0;
     }
 
     public function ListOrderType()
@@ -953,28 +977,27 @@ public function getStatus()
         //     ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
         //     ->scalar();
         //     return $total;
-            
-            // $year = ($this->thai_year) ? ($this->thai_year - 1) : '';
-            $where = ['and'];
-            if($this->thai_year){
-                $where[] = ['thai_year' => ($this->thai_year - 1)];  // ใช้กรองถ้าค่ามี
 
-            }
-            
-            $query = self::find()->select([
-                    // 'asset_item',
-                    // 'total_in_value' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN qty * unit_price ELSE 0 END), 2)',
-                    // 'total_out_value' => 'ROUND(SUM(CASE WHEN transaction_type = "out" THEN qty * unit_price ELSE 0 END), 2)',
-                  'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
-                ])
-                ->where($where)
-                ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
-                if($query){
-                   return $query; 
-                }else{
-                    return 0;
-                }
-    
+        // $year = ($this->thai_year) ? ($this->thai_year - 1) : '';
+        $where = ['and'];
+        if ($this->thai_year) {
+            $where[] = ['thai_year' => ($this->thai_year - 1)];  // ใช้กรองถ้าค่ามี
+
+        }
+
+        $query = self::find()->select([
+            // 'asset_item',
+            // 'total_in_value' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN qty * unit_price ELSE 0 END), 2)',
+            // 'total_out_value' => 'ROUND(SUM(CASE WHEN transaction_type = "out" THEN qty * unit_price ELSE 0 END), 2)',
+            'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
+        ])
+            ->where($where)
+            ->andFilterWhere(['warehouse_id' => $this->warehouse_id])->scalar();
+        if ($query) {
+            return $query;
+        } else {
+            return 0;
+        }
     }
 
     // 0จำนวนรับเข้าปีงบประมานนี้
@@ -1003,9 +1026,8 @@ public function getStatus()
 
     public function SumSubStock()
     {
-        $query =  \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock where warehouse_id = :warehouse_id",[':warehouse_id' => $this->warehouse_id])->queryScalar();
+        $query =  \Yii::$app->db->createCommand("SELECT ROUND(sum(qty*unit_price),2) FROM stock where warehouse_id = :warehouse_id", [':warehouse_id' => $this->warehouse_id])->queryScalar();
         return $query ?? 0;
-        
     }
 
     public function TotalPrice()
@@ -1073,37 +1095,37 @@ public function getStatus()
     //     if ($this->warehouse_id) {
     //         $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
     //     }
-        
+
     //     $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
     //     return $total;
     // }
 
 
-     // จำนวนที่ใช้
-     public function OutSummary($type =null)
-     {
-         $query = StockEvent::find()
-             ->alias('se')
-             ->joinWith('warehouse w')
-             ->where([
-                 'se.thai_year' => $this->thai_year,
-                 'se.transaction_type' => 'OUT',
-                 'order_status' => 'success'
-             ]);
- 
-         if ($this->warehouse_id) {
-             $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
-         }
-         
-         if ($type) {
-             $query->andWhere(['w.warehouse_type' => $type]);
-         }
-         
-         $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
+    // จำนวนที่ใช้
+    public function OutSummary($type = null)
+    {
+        $query = StockEvent::find()
+            ->alias('se')
+            ->joinWith('warehouse w')
+            ->where([
+                'se.thai_year' => $this->thai_year,
+                'se.transaction_type' => 'OUT',
+                'order_status' => 'success'
+            ]);
+
+        if ($this->warehouse_id) {
+            $query->andWhere(['se.warehouse_id' => $this->warehouse_id]);
+        }
+
+        if ($type) {
+            $query->andWhere(['w.warehouse_type' => $type]);
+        }
+
+        $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->scalar();
         //  $total = $query->select(['total' => new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2)')])->createCommand()->getRawSql();
-         return $total;
-     }
-     
+        return $total;
+    }
+
 
     // ยอดรวมที่จ่ายออก
     public function SummaryOut()
@@ -1114,9 +1136,8 @@ public function getStatus()
                 WHERE i.name = 'order_item' AND i.transaction_type = 'OUT' AND w.warehouse_type = 'SUB'";
 
         $query = Yii::$app->db->createCommand($sql)->queryScalar();
-            
+
         return $query ?? 0;
-            
     }
 
     // สถิติมูลค่าการับเข้าจ่ายออกตามปีงบประมาณ
@@ -1174,7 +1195,7 @@ public function getStatus()
     }
 
 
-    
+
     // ข้อมูล  chart summary แบบรายเดือนและปี
 
     public function SummaryChart($warehouseType = null)
@@ -1219,5 +1240,4 @@ public function getStatus()
             ->asArray()
             ->one();
     }
-
 }

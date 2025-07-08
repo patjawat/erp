@@ -75,7 +75,6 @@ class WarehouseController extends Controller
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
-
         } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
@@ -83,7 +82,7 @@ class WarehouseController extends Controller
             ]);
         }
     }
-    
+
 
 
     public function actionOrderRequest($all = null)
@@ -95,28 +94,29 @@ class WarehouseController extends Controller
         if ($warehouse) {
             $searchModel = new StockEventSearch([
                 'thai_year' => AppHelper::YearBudget(),
+                'date_filter' => 'today',
                 'order_status' =>   ['pending'],
                 'warehouse_id' => $warehouse->id,
                 'transaction_type' => 'OUT'
             ]);
-            
+
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order']);
             $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
-            
+
             if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+                $range = DateFilterHelper::getRange($searchModel->date_filter);
+                $searchModel->date_start = AppHelper::convertToThai($range[0]);
+                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+            }
 
-        // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        // }
-        
+            // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+            // }
 
-        $dataProvider->query->andFilterWhere(['between', 'created_at', AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
+
+
             // try {
             // //ค้นหาตามช่วงของวันที่
             // $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
@@ -131,6 +131,13 @@ class WarehouseController extends Controller
                 ['like', 'thai_year', $searchModel->q],
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
+            $dataProvider->query->andFilterWhere([
+                'between',
+                'created_at',
+                AppHelper::convertToGregorian($searchModel->date_start) . ' 00:00:00',
+                AppHelper::convertToGregorian($searchModel->date_end) . ' 23:59:59',
+            ]);
+
             if ($all) {
                 $dataProvider->pagination = false; // ปิดการแบ่งหน้า
             }
@@ -140,14 +147,12 @@ class WarehouseController extends Controller
                 'dataProvider' => $dataProvider,
                 // 'model' => $this->findModel($warehouse->id),
             ]);
-
         } else {
-          
         }
     }
-    
 
-    
+
+
     public function actionList()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
@@ -273,7 +278,7 @@ class WarehouseController extends Controller
     public function setWarehouse($id)
     {
         $model = Warehouse::find()->where(['id' => $id])->One();
-        \Yii::$app->session->set('warehouse',$model);
+        \Yii::$app->session->set('warehouse', $model);
         return [
             'status' => 'success',
             'container' => '#warehouse',

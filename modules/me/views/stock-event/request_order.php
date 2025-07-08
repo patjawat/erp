@@ -76,7 +76,9 @@ $products = $cart->getItems();
                             <td>
                                 <?php
                                 try {
-                                   echo $item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
+                                    echo $item->UserReq()['avatar'];
+                                    // echo $item->UserReq()['avatar'];
+                                //    echo $item->CreateBy($item->fromWarehouse->warehouse_name.' | '.$item->viewCreated())['avatar'];
                                 } catch (\Throwable $th) {
                                 }
                                 ?>

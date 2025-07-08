@@ -66,9 +66,11 @@ class MainStockController extends Controller
                     $transaction = \Yii::$app->db->beginTransaction();
                     // $transaction->commit();
                     // สร้างรหัสขอเบิก
+                     $emp = UserHelper::GetEmployee();
                     $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->name = 'order';
                     $model->transaction_type = 'OUT';
+                    $model->emp_id = $emp->id;
 
                     $model->thai_year = AppHelper::YearBudget();
                     $model->order_status = 'pending';
@@ -204,12 +206,12 @@ class MainStockController extends Controller
         $warehouse = Yii::$app->session->get('sub-warehouse');
         
         if(!$warehouse){
-            return $this->redirect(['/me/store-v2/set-warehouse','store' => 'main-stock']);
+            return $this->redirect(['/me/store-v2/set-warehouse','callback' => '/me/main-stock/store']);
         }
         $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouseModel->data_json['item_type'];
         
-        $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
+        // $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
 
         $searchModel = new StockSearch([
             'warehouse_id' => isset($mainWarehouse->id) ? $mainWarehouse->id : '',

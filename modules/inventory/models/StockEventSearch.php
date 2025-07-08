@@ -18,7 +18,7 @@ class StockEventSearch extends StockEvent
     {
         return [
             [['id', 'warehouse_id', 'from_warehouse_id', 'qty', 'thai_year', 'created_by', 'updated_by'], 'integer'],
-            [['name', 'code', 'asset_item', 'receive_type', 'movement_date', 'lot_number', 'category_id', 'order_status', 'ref', 'data_json', 'created_at', 'updated_at','q','asset_type_name', 'date_start',
+            [['name','emp_id', 'code', 'asset_item', 'receive_type', 'movement_date', 'lot_number', 'category_id', 'order_status', 'ref', 'data_json', 'created_at', 'updated_at','q','asset_type_name', 'date_start',
             'date_end','transaction_type','q_month','receive_month','date_filter'], 'safe'],
             [['total_price', 'unit_price'], 'number'],
         ];
@@ -70,6 +70,7 @@ class StockEventSearch extends StockEvent
             'from_warehouse_id' => $this->from_warehouse_id,
             'transaction_type' => $this->transaction_type,
             'qty' => $this->qty,
+            'emp_id' => $this->emp_id,
             'total_price' => $this->total_price,
             'unit_price' => $this->unit_price,
             'movement_date' => $this->movement_date,
