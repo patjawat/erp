@@ -1,4 +1,4 @@
- <p class="mb-0"> <?=$model->viewTime()?> 
+ <p class="mb-0 fw-semibold"> <?=$model->viewTime()?> 
 <?=$model->locationOrg->title?> 
 </p>
     

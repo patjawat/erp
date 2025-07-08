@@ -317,7 +317,8 @@ $group = Yii::$app->request->get('group');
                             <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
                         </div>
                         <div class="col-6">
-                            <?= $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
+                            <?php // $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
+                            <?= $form->field($model, 'license_plate')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
                         </div>
                         <div class="col-md-6">
                             <?php
