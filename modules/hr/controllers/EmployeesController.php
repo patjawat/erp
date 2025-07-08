@@ -6,12 +6,10 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
-use app\models\Categorise;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\SiteHelper;
 use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
 use yii\web\NotFoundHttpException;
@@ -19,17 +17,13 @@ use ruskid\csvimporter\CSVImporter;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\UploadCsv;
 use app\modules\hr\models\Organization;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use app\modules\hr\models\EmployeesSearch;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\dms\models\DocumentsDetail;
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\StockEvent;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use app\modules\inventory\models\StockSummary;
 use ruskid\csvimporter\MultipleImportStrategy;
 use app\modules\hr\models\EmployeeDetailSearch;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -90,7 +84,7 @@ class EmployeesController extends Controller
         // ค้นหาคามกลุ่มโครงสร้าง
         $org1 = Organization::findOne($searchModel->q_department);
         // ถ้ามีกลุ่มย่อย
-        if (isset($org1) && $org1->lvl == 1) {
+        if (isset($org1) && $org1->lvl == 2) {
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1

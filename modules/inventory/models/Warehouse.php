@@ -14,6 +14,7 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Organization;
 
 /**
  * This is the model class for table "warehouses".
@@ -182,7 +183,34 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
 
+    public function viewWarehouseType()
+    {
+
+        switch ($this->warehouse_type) {
+            case 'MAIN':
+                return '<span class="badge bg-warning text-dark"><i class="fa-solid fa-crown"></i> คลังหลัก</span>';
+                break;
+            case 'SUB':
+                return '<span class="badge bg-secondary text-white">คลังย่อย</span>';
+                break;
+            case 'BRANCH':
+                return '<span class="badge bg-info">สาขา รพสต.</span>';
+                break;
+            default:
+                return '<span class="badge bg-light text-dark">ไม่ระบุ</span>';
+                break;
+        }
+    }   
    
+    public function departmentName()
+    {
+        $department = Organization::findOne(['id' => $this->department]);
+        if ($department) {
+            return $department->name;
+        } else {
+            return 'ไม่ระบุ';
+        }
+    }
 
 //แสดงจำนวนรายการที่ขอเบิก
     public function countOrderRequest()

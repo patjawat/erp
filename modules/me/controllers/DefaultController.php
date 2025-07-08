@@ -20,6 +20,12 @@ class DefaultController extends Controller
     public function actionIndex()
     {
         // $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+
+        // clear session คลัง
+        Yii::$app->session->remove('sub-warehouse');
+        Yii::$app->session->remove('main-warehouse');
+        Yii::$app->session->remove('asset_type');
+
         $model = UserHelper::GetEmployee();
 
         $searchModel = new LeaveSearch([

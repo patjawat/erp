@@ -47,6 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th scope="col" style="width:50px">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
+                    <th scope="col">หน่วยงาน</th>
                     <th scope="col">ประเภทคลัง</th>
                     <th scope="col">ผู้รับผิดชอลคลัง</th>
                     <th scope="col" style="width:150px">ดำเนินการ</th>
@@ -57,7 +58,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr class="">
                     <td scope="row"><?=$model->id ?></td>
                     <td><?=$model->warehouse_name ?></td>
-                    <td><?=($model->warehouse_type == 'MAIN' ? 'คลังหลัก <i class="fa-solid fa-crown text-warning"></i>' : 'คลังย่อย') ?>
+                    <td><?=$model->departmentName() ?></td>
+                    <td><?=$model->viewWarehouseType() ?>
                     </td>
                     <td><?= $model->avatarStack() ?></td>
                     <td class="d-flex justify-content-center gap-2">

@@ -71,6 +71,21 @@ $modules['dms'] = ['class' => 'app\modules\dms\Module'];  // document mannger sy
 $modules['finance'] = ['class' => 'app\modules\finance\Module'];  // การเงิน
 $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backoffice เดิม
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
+
+// $modules['treemanager'] = [
+//     'class' => '\kartik\tree\Module',
+//     'treeViewSettings' => [
+//         'nodeView' => '@app/modules/hr/views/organization/diagram/_form',
+//         'displayValue' => 0, // หรือ id ของ root node
+//         'cacheSettings' => ['enableCache' => true],
+//         'softDelete' => true,
+//         'nodeAddlViews' => [
+//             \kartik\tree\Module::VIEW_PART_1 => '@app/modules/hr/views/organization/diagram/_form'
+//         ],
+//         'showIDAttribute' => false,
+//         'showNameAttribute' => true,
+//     ],
+// ];
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง

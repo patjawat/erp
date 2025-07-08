@@ -28,7 +28,8 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     </a>
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
         <?=Html::a('<i class="fa-solid fa-gauge me-2"></i> Dashboard ',['/me/store-v2/dashboard'],['class' => 'dropdown-item'])?>
-        <?=Html::a('<i class="fa-solid fa-cube me-2"></i> เบิกวัสดุคลังหลัก ',['/me/main-stock/store'],['class' => 'dropdown-item'])?>
+        <?= Html::a('<i class="fa-solid fa-cube me-2"></i> เบิกวัสดุคลังหลัก ',['/me/main-stock/store'],['class' => 'dropdown-item'])?>
+        <?php // Html::a('<i class="fa-solid fa-cube me-2"></i> เบิกวัสดุคลังหลัก ',['/me/store-v2/set-warehouse'],['class' => 'dropdown-item'])?>
         <?=Html::a('<i class="bi bi-shop me-2"></i> สต๊อก/เบิกใช้งาน ',['/me/store-v2/index'],['class' => 'dropdown-item'])?>
     </div>
 </li>
