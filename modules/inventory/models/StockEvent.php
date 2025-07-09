@@ -683,7 +683,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // แสดงผู้ตรวจสอบ
     public function viewChecker($msg = null)
     {
-        // try {
+        try {
         $approve = Approve::findOne(['name' => 'main_stock', 'from_id' => $this->id, 'level' => 1]);
         $status = $approve->status;
         switch ($status) {
@@ -715,16 +715,16 @@ class StockEvent extends Yii\db\ActiveRecord
                 'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
                 // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
             ];
-        // } catch (\Throwable $th) {
-        //     return
-        //         [
-        //             'status' => '',
-        //             'fullname' => '',
-        //             'position' => '',
-        //             'approve_date' => '',
-        //             'avatar' => '',
-        //         ];
-        // }
+        } catch (\Throwable $th) {
+            return
+                [
+                    'status' => '',
+                    'fullname' => '',
+                    'position' => '',
+                    'approve_date' => '',
+                    'avatar' => '',
+                ];
+        }
     }
 
     //แสดงวันเวลารับวัสดุ
