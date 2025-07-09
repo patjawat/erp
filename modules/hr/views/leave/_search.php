@@ -30,7 +30,8 @@ use app\modules\hr\models\Organization;
 
 <div class="d-flex justify-content-between align-items-center gap-2">
 
-    <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
+    <?php // echo $form->field($model, 'emp_id')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
+    <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
             <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
