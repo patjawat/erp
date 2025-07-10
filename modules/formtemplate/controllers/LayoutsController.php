@@ -1,6 +1,7 @@
 <?php
 
 namespace app\modules\formtemplate\controllers;
+
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
@@ -12,7 +13,7 @@ use yii\web\NotFoundHttpException;
 /**
  * LeaveController implements the CRUD actions for Categorise model.
  */
-class LeaveTemplateController extends Controller
+class LayoutsController extends Controller
 {
     /**
      * @inheritDoc
@@ -31,6 +32,55 @@ class LeaveTemplateController extends Controller
             ]
         );
     }
+
+  public function actionGetLayout($formName)
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $layout = Categorise::find()->where(['name' => $formName])->one();
+    
+    if (!$layout) {
+        // Default layout
+        return [
+            [
+                'field' => 'full_name',
+                'x' => 273,
+                'y' => 278,
+                'fontSize' => 15
+            ],
+            [
+                'field' => 'date',
+                'x' => 100,
+                'y' => 150,
+                'fontSize' => 18
+            ]
+        ];
+    }
+
+    return $layout->data_json;
+}
+
+    public function actionSaveLayout()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $data = Yii::$app->request->post();
+        $formName = $data['name'] ?? 'default';
+        $layoutData = json_encode($data['layout'], JSON_UNESCAPED_UNICODE);
+
+        $layout = Categorise::findOne(['name' => $formName]);
+        if (!$layout) {
+            $layout = new Categorise();
+            $layout->name = $formName;
+            $layout->created_at = date('Y-m-d H:i:s');
+        }
+        $layout->data_json = $layoutData;
+        $layout->updated_at = date('Y-m-d H:i:s');
+        $layout->save();
+
+        return ['success' => true];
+    }
+
+
 
     /**
      * Lists all Categorise models.
@@ -71,8 +121,8 @@ class LeaveTemplateController extends Controller
     {
         $model = new Categorise(['name' => 'leave_form']);
 
-          if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->code = $model->NextId();
                 $model->save();
@@ -82,10 +132,9 @@ class LeaveTemplateController extends Controller
             }
         } else {
             $model->loadDefaultValues();
-          
         }
 
-         if ($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),

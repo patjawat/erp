@@ -34,58 +34,62 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel,'vehicleType' => 'officail']) ?>
+<div class="card">
+    <div class="card-body d-flex justify-content-center align-items-center">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-header">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
                     class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
         </div>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive pb-5">
-            <table class="table table-hover pb-5">
+        <div class="table-responsive">
+            <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
-                        <th class="fw-semibold">ผู้ขอ</th>
-                        <th class="fw-semibold">เหตุผล/จุดหมาย</th>
-                        <th class="fw-semibold">พขร.</th>
-                        <th class="fw-semibold">สถานะ</th>
-                        <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
+                        <th>รหัสการจอง</th>
+                        <th>ความเร่งด่วน</th>
+                        <th>ทะเบียนรถ</th>
+                        <th>ผู้จอง</th>
+                        <th>วันที่ใช้</th>
+                        <th>เวลา</th>
+                        <th>จุดหมาย</th>
+                        <th>สถานะ</th>
+                        <th>จัดการ</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle table-group-divider">
+                  <tbody class="align-middle table-group-divider">
                     <?php foreach($dataProvider->getModels() as $key => $item):?>
                     <tr>
                         <td class="text-center fw-semibold"><?=(($dataProvider->pagination->offset + 1)+$key)?></td>
-                        <td>
-                            <p class="text-muted mb-0 fs-13"><?php echo $item->viewUrgent()?></p>
-                            <p class="mb-0 fw-semibold fs-13"><?=$item->code?></p>
-                        </td>
-                        <td> <?=$item->userRequest()['avatar']?></td>
-                        <td>
-                            <div class="avatar-detail text-truncate">
-                                <p class="fs-13 mb-0"><i class="fa-solid fa-calendar-day"></i> <?php echo $item->showDateRange()?> เวลา <?php echo $item->viewTime()?> <?php echo $item->viewGoType() ?> : <?php echo $item->locationOrg?->title ?? '-' ?></p>
-                                <h6 class="text-muted mb-0 fs-13"><i class="fa-solid fa-circle-info text-primary"></i> <?= $item->reason; ?></h6>
-                              
-                            </div>
-                        </td>
-                        <td><?=$item->StackDriver()?></td>
-                        <td><?php echo $item->viewStatus()['view'] ?? '-'?></td>
-
+                        <td><?=$item->code?></td>
+                        <td><?php echo $item->viewUrgent()?></td>
+                        <td>กข-1234</td>
+                        <td><?=$item->userRequest()['avatar']?></td>
+                        <td><?php echo $item->showDateRange()?></td>
+                        <td><?php echo $item->viewTime()?></td>
+                        <td><?php echo $item->locationOrg?->title ?? '-' ?></td>
+                        <td><?php echo $item->viewStatus()['view'] ?? '-'?> </td>
                         <td class="fw-light text-end">
                             <div class="btn-group">
                                 <?php echo Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal', 'data' => [ 'size' => 'modal-lg']])?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                <i class="bi bi-caret-down-fill"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                    <li><?php echo Html::a('<i class="fa-solid fa-user-tag me-1"></i> จัดสรร', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
-                                    <li><?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',['/me/booking-vehicle/print','id' => $item->id,'title' => 'แสดงข้มูลขอใช้รถ'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
-                                    <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?></li>
+                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><?php echo Html::a('<i class="fa-solid fa-user-tag me-1"></i> จัดสรร', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                                    </li>
+                                    <li><?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',['/booking/vehicle/print','id' => $item->id,'title' => 'ใบขอรถยนต์'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?>
+                                    </li>
+                                    <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?>
+                                    </li>
                                 </ul>
                             </div>
                         </td>
@@ -94,6 +98,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tbody>
             </table>
         </div>
+
 
     </div>
 </div>

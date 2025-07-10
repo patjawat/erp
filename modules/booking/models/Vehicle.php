@@ -4,6 +4,7 @@ namespace app\modules\booking\models;
 
 use Yii;
 use DateTime;
+use yii\helpers\Url;
 use yii\db\Expression;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
@@ -16,7 +17,6 @@ use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\booking\models\Vehicle;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;
 use app\modules\booking\models\BookingDetail;
@@ -172,6 +172,19 @@ class Vehicle extends \yii\db\ActiveRecord
         return $this->hasMany(VehicleDetail::class, ['vehicle_id' => 'id']);
     }
 
+
+    public function getTemplate()
+    {
+        // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
+        $formName = 'vehicle_layout_form'; 
+        $template = Categorise::find()->where(['name' => $formName])->one();
+        if($template){
+            return  Url::to(['/dms/documents/show', 'ref' => $template->ref]);
+        }else{
+            return false;
+        }
+
+    }
     // ผู้ขอบริการ
     public function userRequest()
     {

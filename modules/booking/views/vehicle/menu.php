@@ -32,6 +32,12 @@ $menus = [
     'url' => ['/booking/vehicle/work'],
     'icon' => '<i class="fa-solid fa-user-tag text-primary me-2"></i>'
     ],
+        [
+    'title' => 'ตั้งค่าแบบฟอร์ม',
+    'active' => 'setting',
+    'url' => ['/booking/vehicle-form-layout'],
+    'icon' => '<i class="fa-solid fa-gear text-primary me-2"></i>'
+    ],
 
 ];
 ?>
