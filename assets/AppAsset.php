@@ -57,6 +57,9 @@ class AppAsset extends AssetBundle
         // 'https://code.highcharts.com/highcharts.js',
         // 'https://code.highcharts.com/modules/exporting.js',
         'https://unpkg.com/nprogress@0.2.0/nprogress.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         // 'js/tour.js'
         // 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
     ];
