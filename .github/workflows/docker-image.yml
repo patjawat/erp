@@ -7,14 +7,17 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
     - name: Build Image
       run: docker build . --file Dockerfile --tag patjawat/erp:latest
+
     - name: Push Image
       run: docker push patjawat/erp:latest
