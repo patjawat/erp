@@ -10,15 +10,15 @@ use app\modules\am\models\Asset;
 <h6>เลือกรถหากต้องการ</h6>
 <div id="car-container">
 <?php foreach($dataProvider->getModels() as $item):?>
-        <a href="#" data-license_plate="<?php  echo $item->license_plate?>" class="select-car">
+        <a href="#" data-license_plate="<?php echo $item->license_plate?>" class="select-car">
         <div class="card mb-3 hover-card">
             <div class="row g-0">
                 <div class="col-md-3">
-                        <?php  echo  Html::img($item->showImg(),['class' => 'img-fluid rounded'])?>
+                        <?php echo Html::img($item->showImg()['image'],['class' => 'img-fluid rounded'])?>
                 </div>
                 <div class="col-md-9">
                 <div class="card-body">
-                    <h5 class="card-title"><?php  echo $item->license_plate?></h5>
+                    <h5 class="card-title"><?php echo $item->license_plate?></h5>
                     <p class="card-text"><small class="text-muted">จำนวนที่นั่ง <?php echo $item->data_json['seat_size'] ?? '-'?></small></p>
                 </div>
                 </div>

@@ -12,23 +12,44 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 
-<div class="mb-3 badge-soft-primary p-3 rounded">
-<label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label> <span><?=$model->viewStatus()['view']?></span>
-    <p class="mb-0"><?php echo $model->userRequest()['fullname'];?>
-        ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
-        <?php echo $model->showDateRange()?></p>
-    <p class="text-muted mb-0 fs-13">เวลา <?=$model->viewTime()?></p>
+<div class="mb-3 p-3 rounded">
+    <div class="d-flex justify-content-between align-items-center mb-2">
 
-
+        <h5 class="mb-0">
+            ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> </h5>
+        <p class="text-muted mb-0 fs-13"></p>
+       
+    </div>
+    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()?></p>
 </div>
+    
+    <div class="row">
+        <div class="col-6">
+            <?php echo $model->userRequest()['avatar'];?>
+        </div>
+        <div class="col-6">โทร : <?php echo $model->userRequest()['phone'];?></div>
+        <div class="col-12"></div>
+    </div>
 
-<div class="booking-details">
-    <label class="form-label">จัดสรรรถ</label>
+    <div
+        class="alert alert-light mt-3"
+        role="alert"
+    >
+        <strong>หมายเหตุ</strong> ***
+        <p><?=isset($model->data_json['coment']) ? $model->data_json['coment'] : '-'?></p>
+    </div>
+    
+
+<div class="booking-details mt-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <label class="form-label">ข้อมูลการจัดสรรจัดสรรรถ</label>
+         <span><?=$model->viewStatus()['view']?></span>
+    </div>
     <table class="table table-bordered" id="details-table">
         <thead class="table-light">
             <tr>
                 <th>วันที่</th>
-                <th>รถ</th>
+                <th>รถทะเบียน</th>
                 <th>พนักงานขับรถ</th>
             </tr>
         </thead>

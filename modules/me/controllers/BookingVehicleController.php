@@ -90,38 +90,30 @@ class BookingVehicleController extends Controller
                 ->all();
                 $data = [];
 
-                foreach($bookings as $item)
-                {
-                    $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-                    $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
-                    $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$timeStart), "php:Y-m-d\TH:i");
-                    $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$timeEnd), "php:Y-m-d\TH:i");
-                    $title = 'ขอใช้'.$item->carType?->title.' ไป'.($item->locationOrg?->title ?? '-');
-                    $data[] = [
-                        'id'               => $item->id,
-                        'title'            => $item->reason,
-                        'start'            => $dateStart,
-                        'end'            => $dateEnd,
-                        // 'display' => 'auto',
-                        'allDay' => false,
-                        'source' => 'vehicle',
-                        'extendedProps' => [
-                            'title' => $item->reason,
-                            'avatar' => $this->renderAjax('@app/modules/booking/views/vehicle/avatar', ['model' => $item]),
-                            'fullname' => $item->employee?->fullname,
-                            'dateTime' => 'ttttt',
-                            'dateTime' => $item->viewTime(),
-                            'status' => $item->viewStatus()['view'],
-                            'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
-                            'description' => 'คำอธิบาย',
-                        ],
-                         'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
-                        'description' => 'description for All Day Event',
-                        'textColor' => 'black',
-                        'backgroundColor' => '#eee',
-                        'url' => Url::to(['/event/view', 'id' => $item->id]),
-                    ];
-                }
+                       foreach ($bookings as $item) {
+                $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+                $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+                $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+                $title = 'ขอใช้' . $item->carType?->title . ' ไป' . ($item->locationOrg?->title ?? '-');
+                $data[] = [
+                    'id'               => $item->id,
+                    'title'            => $item->reason,
+                    'start'            => $dateStart,
+                    'end'            => $dateEnd,
+                    // 'display' => 'auto',
+                    'allDay' => false,
+                    'source' => 'vehicle',
+                    'extendedProps' => [
+                        'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
+                        'code' => $item->code
+                    ],
+                    'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
+                    'description' => 'description for All Day Event',
+                    'textColor' => 'black',
+                    // 'backgroundColor' => '#eee',
+                ];
+            }
 
             return  $data;
        
@@ -140,13 +132,13 @@ class BookingVehicleController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('view', [
+                'title' => 'ขอใช้ยานพาหนะ',
+                'content' => $this->renderAjax('@app/modules/booking/views/vehicle/view', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('view', [
+            return $this->render('@app/modules/booking/views/vehicle/view', [
                 'model' => $model
             ]);
         }

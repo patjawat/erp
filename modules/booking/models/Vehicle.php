@@ -186,20 +186,15 @@ class Vehicle extends \yii\db\ActiveRecord
 
     }
     // ผู้ขอบริการ
-    public function userRequest()
+    public function userRequest($reqMsg = null)
     {
         try {
-            $emp = Employees::findOne(['user_id' => $this->created_by]);
-        $msg = $emp->departmentName();
-        return [
-            'avatar' => $emp->getAvatar(false, $msg),
-            'fullname' => $emp->fullname
-        ];
+            $emp = Employees::findOne($this->emp_id);
+
+         return  $emp->getInfo();
+      
         } catch (\Throwable $th) {
-            return [
-                'avatar' => '',
-                'fullname' => ''
-            ];
+           
         }
         
     }
@@ -271,7 +266,7 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewTime()
     {
-        return $this->time_start . ' - ' . $this->time_end . ' น.';
+        return $this->time_start . '-' . $this->time_end . ' น.';
     }
 
     public function showStartTime()
@@ -357,60 +352,11 @@ class Vehicle extends \yii\db\ActiveRecord
             'percent' => $percent,
             'title' => $data['title'],
             'color' => $data['color'],
-            'view' => $data['view']
+            'view' => $data['view'],
+            'icon' => $data['icon']
         ];
     }
     
-
-    // public static function getStatus($status)
-    // {
-    //     $title = '';
-    //     $color = '';
-    //     $view = '';
-    //     $count = Vehicle::find()->where(['status' => $status])->count();
-    //     $total = self::find()->count();
-    //     switch ($status) {
-    //         case 'Pending':
-    //             $title = 'รอการอนุมัติ';
-    //             $color = 'warning';
-    //             $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-hourglass-start"></i> ' . $title . '</span>';
-    //             break;
-    //         case 'Pass':
-    //             $title = 'จัดสรร';
-    //             $color = 'primary';
-    //             $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-check"></i> ' . $title . '</span>';
-    //             break;
-    //         case 'Success':
-    //             $title = 'เสร็จสิ้นภารกิจ';
-    //             $color = 'primary';
-    //             $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-check"></i> ' . $title . '</span>';
-    //             break;
-    //         case 'Approve':
-    //             $title = 'ผอ.อนุมัติ';
-    //             $color = 'success';
-    //             $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-star"></i> ' . $title . '</span>';
-    //             break;
-    //         case 'Cancel':
-    //             $title = 'ยกเลิก';
-    //             $color = 'secondary';
-    //             $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-solid fa-circle-stop"></i> ' . $title . '</span>';
-    //             break;
-    //         default:
-    //             $title = 'ไม่ระบุ';
-    //             $color = 'light';
-    //             $view = '<span class="badge-soft-' . $color . ' rounded-pill">' . $title . '</span>';
-    //             break;
-    //     }
-    //     return [
-    //         'total' => $total,
-    //         'count' => $count,
-    //         'percent' => $count / $total * 100,
-    //         'title' => $title,
-    //         'color' => $color,
-    //         'view' => $view,
-    //         'status' => $status,
-    //     ];
-    // }
 
     public function viewCarType()
     {

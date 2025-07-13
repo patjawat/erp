@@ -4,6 +4,8 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\models\Categorise;
+use app\modules\booking\models\Vehicle;
 
 
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
@@ -65,11 +67,25 @@ $this->params['breadcrumbs'][] = $this->title;
     text-align: center; /* จัดข้อความให้อยู่ตรงกลาง */
     font-size: 14px; /* ปรับขนาดฟอนต์ให้เหมาะสม */
 }
+.fc-daygrid-event-harness{
+    margin-bottom: 5px;
+}
 
 </style>
 <div class="card">
     <div class="card-body">
         <div id="calendar"></div>
+    </div>
+    <div class="card-footer">
+       <?php 
+       $listStatus = Categorise::find()
+            ->where(['name' => 'vehicle_status'])
+            ->all();
+       foreach ($listStatus as $statusItem) {
+        $status = new Vehicle;
+           echo $status->getStatus($statusItem->code)['view'];
+       }
+       ?>
     </div>
 </div>
 
@@ -139,31 +155,25 @@ $js = <<<JS
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
                         const title = arg.event.extendedProps.title || '';
-                        const avatar = arg.event.extendedProps.avatar || '';
-                        const dateTime = arg.event.extendedProps.dateTime || '';
-                        const status = arg.event.extendedProps.status || '';
-                        const viewGoType = arg.event.extendedProps.viewGoType || '';
-                        const showDateRange = arg.event.extendedProps.showDateRange || '';
-
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${avatar}</div>`;
+                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
 
 
                         return { domNodes: [container] };
                     },
-                    eventDidMount: function(info) {
-                        info.el.addEventListener('dblclick', function() {
-                        document.getElementById('modalEventContent').innerHTML =
-                            `<strong>Title:</strong> \${info.event.title}<br>
-                            <strong>Description:</strong> \${info.event.extendedProps.description}`;
-                        $('#main-modal').modal('show');
-                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                        $(".modal-dialog").addClass('modal-lg');
-                        });
-                },
+                //     eventDidMount: function(info) {
+                //         info.el.addEventListener('dblclick', function() {
+                //         document.getElementById('modalEventContent').innerHTML =
+                //             `<strong>Title:</strong> \${info.event.title}<br>
+                //             <strong>Description:</strong> \${info.event.extendedProps.description}`;
+                //         $('#main-modal').modal('show');
+                //         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                //         $(".modal-dialog").addClass('modal-lg');
+                //         });
+                // },
                 select: function(info) {
 
                         const dateStart = info.startStr;
@@ -215,16 +225,24 @@ $js = <<<JS
                   
                 eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        let viewHtml = info.event.extendedProps.view;
+                        // let viewHtml = info.event.extendedProps.view;
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '$url'+'view?id=' + info.event.id;
+                       var code = info.event.extendedProps.code || '';
+                        var url = '$url/'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
-                            \$('#main-modal').modal('show')
-                            \$("#main-modal-label").html('รายละเอียดการจอง');
-                            \$(".modal-body").html(viewHtml);
-                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                            $(".modal-dialog").addClass("modal-lg");
-                            console.log(JSON.stringify(viewHtml));
+                            $.ajax({
+                                type: "get",
+                                url: url,
+                                dataType: "json",
+                                success: function (res) {
+                                      \$('#main-modal').modal('show')
+                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">CAR250703-028            </span></label>');
+                                        \$(".modal-body").html(res.content);
+                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                        $(".modal-dialog").addClass("modal-lg");
+                                }
+                            });
+
                             
                     },
             });

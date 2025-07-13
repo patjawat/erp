@@ -240,6 +240,11 @@ $resultsJs = <<<JS
 <div class="">
     <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
 </div>
+
+<div class="">
+    <?= $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
+</div>
+
 <div class="row">
     <div class="col-6">
 

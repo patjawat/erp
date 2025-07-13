@@ -96,7 +96,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status'], 'required'],
-            [['q_department','asset_group_id','asset_type_id','asset_category_id','deleted_at','deleted_by','on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get','po_number','q_lastDay', 'item_options','group_id','license_plate','car_type'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type'], 'safe'],
             [['price'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],
@@ -136,7 +136,7 @@ class Asset extends \yii\db\ActiveRecord
 
 
 
-        public function listAssetType()
+    public function listAssetType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
     }
@@ -146,50 +146,59 @@ class Asset extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(), 'code', 'title');
     }
 
-    
-//ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
+
+    //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
     public function updateFsn()
     {
-        $checkAssetFsn =AssetItem::find()
-                ->where(['id' => $this->asset_item])
-                ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
-                ->one();
-                if(!empty($checkAssetFsn)){
-                        $checkAssetFsn->fsn = $this->fsn_number;
-                        $checkAssetFsn->save();
-
-
-                }
+        $checkAssetFsn = AssetItem::find()
+            ->where(['id' => $this->asset_item])
+            ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
+            ->one();
+        if (!empty($checkAssetFsn)) {
+            $checkAssetFsn->fsn = $this->fsn_number;
+            $checkAssetFsn->save();
+        }
     }
 
-//แสดงรูปภาพแบบวงกลม
-    public function Avatar(){
+    //แสดงรูปภาพแบบวงกลม
+    public function Avatar()
+    {
         return '<div class="d-flex">
-        '.Html::img($this->ShowImg()['image'],['class' => 'avatar border border-secondary']).'
+        ' . Html::img($this->ShowImg()['image'], ['class' => 'avatar border border-secondary']) . '
                                 <div class="avatar-detail">
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                                        '.$this->AssetitemName().'
+                                        ' . $this->AssetitemName() . '
                                     </h6>
-                                    <p class="text-primary mb-0 fs-13">'. $this->code.'</p>
+                                    <p class="text-primary mb-0 fs-13">' . $this->code . '</p>
                                 </div>
                             </div>';
     }
 
     // แสดงรูปภาพ
-        public function ShowImg(){
-            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
-            if($model){
-                return [
-                    'image' => FileManagerHelper::getImg($model->id),
-                    'isFile' => true,
-                ];
-            }else{
-                 return [
-                    'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
-                    'isFile' => false,
-                ];
-            }
+    public function ShowImg()
+    {
+        try {
+                   $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
+        if ($model) {
+            return [
+                'image' => FileManagerHelper::getImg($model->id),
+                'isFile' => true,
+            ];
+        } else {
+            return [
+                'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
+                'isFile' => false,
+            ];
+        }
+        } catch (\Throwable $th) {
+          return [
+            'image' => '',
+            'isFile' => false,
+          ];
+        }
+
     }
+
     // public function ShowImg()
     // {
     //     try {
@@ -206,7 +215,7 @@ class Asset extends \yii\db\ActiveRecord
 
     //
     // ค่าเสื่อม
- 
+
     // อายุ
 
     public function behaviors()
@@ -325,12 +334,11 @@ class Asset extends \yii\db\ActiveRecord
 
     public function budgetTypeName()
     {
-       try {
-       return CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title;
-       } catch (\Throwable $th) {
-        return '-';
-       }
-
+        try {
+            return CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title;
+        } catch (\Throwable $th) {
+            return '-';
+        }
     }
     // Relationships
     // public function getAssetItem()
@@ -338,7 +346,7 @@ class Asset extends \yii\db\ActiveRecord
     //     return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
     // }
 
-      public function getAssetItem()
+    public function getAssetItem()
     {
         return $this->hasOne(AssetItem::class, ['id' => 'asset_item']);
     }
@@ -403,14 +411,14 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
-        public function vendorName()
+    public function vendorName()
     {
         $model = CategoriseHelper::CategoriseByCodeName($this->data_json['vendor_id'], 'vendor');
         if ($model) {
             return $model->title;
         }
     }
-    
+
 
 
     public function viewStatus()
@@ -443,7 +451,7 @@ class Asset extends \yii\db\ActiveRecord
     }
 
     public function QrCode()
-{
+    {
         $qr = new QRCode();
         return $qr->render($this->code);
     }
@@ -463,21 +471,25 @@ class Asset extends \yii\db\ActiveRecord
     }
 
     //หน่วยนับ
-    public function listUnit(){
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(),'title','title');
+    public function listUnit()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
     }
 
-        //ยี่ห้อ
-    public function listBand(){
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'band'])->all(),'title','title');
+    //ยี่ห้อ
+    public function listBand()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'band'])->all(), 'title', 'title');
     }
     //ยี่ห้อ
-    public function listModel(){
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'model'])->all(),'title','title');
+    public function listModel()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'model'])->all(), 'title', 'title');
     }
     //สี
-    public function listColor(){
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'color'])->all(),'title','title');
+    public function listColor()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'color'])->all(), 'title', 'title');
     }
 
     public function ListType()
@@ -487,7 +499,7 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListAssetitem()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item','group_id' => 3])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 3])->all(), 'code', 'title');
     }
 
     // แสดงรายการอาคารสิ่งก่อสร้าง

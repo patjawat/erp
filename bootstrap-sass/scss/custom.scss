@@ -1671,7 +1671,7 @@ a {
   align-items: center;
   justify-content: center;
   color: $white;
-  margin-right: 1rem;
+  margin-right: 8px;
   font-weight: 600;
   font-size: 1.15rem;
 }
@@ -1699,8 +1699,8 @@ a {
 }
 
 .avatar-sm {
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2.0rem;
+  width: 2.0rem;
   font-size: 1rem;
 
   .contact-status {
@@ -1875,7 +1875,12 @@ h6 {
   font-weight: 600;
 }
 
-
+.fs-9 {
+  font-size: .4rem
+}
+.fs-10 {
+  font-size: .5rem
+}
 
 .fs-11 {
   font-size: .6875rem

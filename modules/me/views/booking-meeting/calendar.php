@@ -64,8 +64,12 @@ $this->params['breadcrumbs'][] = $this->title;
 }
 
 </style>
+
 <div class="card">
     <div class="card-body">
+    <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
+    <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
+</div>
         <div id="calendar"></div>
     </div>
 </div>
@@ -113,6 +117,20 @@ $js = <<<JS
                 editable: true,
                 selectable: true,
                 droppable: true,
+                moreLinkClick: 'popover',
+                dayMaxEvents: 3, // จำกัดให้แสดงสูงสุด 3 event ต่อวัน
+                    moreLinkContent: function(args) {
+                        return '+' + args.num + ' more';
+                    },
+                    loading: function(isLoading) {
+                        if (isLoading) {
+                            // กำลังโหลดข้อมูลจาก AJAX
+                            $('#calendar-loading').show();  // แสดง loading spinner
+                        } else {
+                            // โหลดเสร็จแล้ว
+                            $('#calendar-loading').hide();
+                        }
+                    },
                 events: async function(fetchInfo, successCallback, failureCallback) {
                     await $.ajax({
                         url: '$url'+'/events',
@@ -223,7 +241,6 @@ $js = <<<JS
                         var url = '$url'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
                             \$('#main-modal').modal('show')
-                            \$("#main-modal-label").html('รายละเอียดการจอง');
                             \$(".modal-body").html(viewHtml);
                             $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                             $(".modal-dialog").addClass("modal-lg");

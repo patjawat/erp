@@ -136,7 +136,7 @@ $js = <<<JS
                 selectable: true,
                 droppable: true,
                 moreLinkClick: 'popover',
-                dayMaxEvents: 3, // จำกัดให้แสดงสูงสุด 3 event ต่อวัน
+                dayMaxEvents: 5, // จำกัดให้แสดงสูงสุด 3 event ต่อวัน
                     moreLinkContent: function(args) {
                         return '+' + args.num + ' more';
                     },
@@ -172,17 +172,11 @@ $js = <<<JS
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
                         const title = arg.event.extendedProps.title || '';
-                        const code = arg.event.extendedProps.code || '';
-                        const dateTime = arg.event.extendedProps.dateTime || '';
-                        const status = arg.event.extendedProps.status || '';
-                        const viewGoType = arg.event.extendedProps.viewGoType || '';
-                        const showDateRange = arg.event.extendedProps.showDateRange || '';
-
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
+                        container.innerHTML = `<div class="mb-0 p-1 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
                         return { domNodes: [container] };
                     },
                     eventDidMount: function(info) {
@@ -217,18 +211,25 @@ $js = <<<JS
                     console.log('New End: ' + formatDate(info.event.end));
                 },
                   
-                eventClick: function(info) {
+               eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        let viewHtml = info.event.extendedProps.view;
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '$url'+'view?id=' + info.event.id;
+                       var code = info.event.extendedProps.code || '';
+                        var url = '$url/'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
-                            \$('#main-modal').modal('show')
-                            \$("#main-modal-label").html('รายละเอียดการจอง');
-                            \$(".modal-body").html(viewHtml);
-                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                            $(".modal-dialog").addClass("modal-lg");
-                            console.log(JSON.stringify(viewHtml));
+                            $.ajax({
+                                type: "get",
+                                url: url,
+                                dataType: "json",
+                                success: function (res) {
+                                      \$('#main-modal').modal('show')
+                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">CAR250703-028            </span></label>');
+                                        \$(".modal-body").html(res.content);
+                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                        $(".modal-dialog").addClass("modal-lg");
+                                }
+                            });
+
                             
                     },
             });

@@ -254,6 +254,35 @@ class Employees extends Yii\db\ActiveRecord
     // ข้อมูลเบื้องต้นของบุคลากร
     public function getInfo()
     {
+        try {
+            return[
+            'id' => $this->id,
+            'fullname' => $this->fullname,
+            'img' => $this->getImg(),
+            'photo' => $this->showAvatar(),
+            'avatar' => $this->getAvatar(false),
+            'position' => $this->positionName(),
+            'position_type' => $this->positionTypeName(),
+            'department' => $this->department,
+            'department_name' => $this->departmentName(),
+            'phone' => $this->phone,
+            // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
+            // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
+        ];
+        } catch (\Throwable $th) {
+            return[
+            'id' => '',
+            'fullname' =>'',
+            'photo' => '',
+            'avatar' => '',
+            'position' => '',
+            'position_type' => '',
+            'department' => '',
+            'department_name' => ''
+            // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
+            // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
+        ];
+        }
         return[
             'id' => $this->id,
             'fullname' => $this->fullname,

@@ -13375,7 +13375,7 @@ a {
   align-items: center;
   justify-content: center;
   color: #fff;
-  margin-right: 1rem;
+  margin-right: 8px;
   font-weight: 600;
   font-size: 1.15rem;
 }
@@ -13401,8 +13401,8 @@ a {
 }
 
 .avatar-sm {
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2rem;
+  width: 2rem;
   font-size: 1rem;
 }
 .avatar-sm .contact-status {
@@ -13558,6 +13558,14 @@ h6 {
   text-transform: uppercase;
   color: #4b4b5a;
   font-weight: 600;
+}
+
+.fs-9 {
+  font-size: 0.4rem;
+}
+
+.fs-10 {
+  font-size: 0.5rem;
 }
 
 .fs-11 {
