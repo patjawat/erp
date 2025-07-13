@@ -390,7 +390,7 @@ class ImportVehicleController extends Controller
 
     public function actionFixYear()
     {
-        $lists = Vehicle::find()->where(['thai_year' =>'3107'])->all();
+        $lists = Vehicle::find()->all();
 
         foreach ($lists as $item) {
             $model = Vehicle::findOne($item->id);
