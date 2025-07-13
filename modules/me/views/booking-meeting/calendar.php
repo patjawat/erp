@@ -1,6 +1,5 @@
-
-
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -21,55 +20,62 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?=$this->render('menu',['active' => 'calendar'])?>
+<?= $this->render('menu', ['active' => 'calendar']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/me//menu',['active' => 'meeting']) ?>
+<?php echo $this->render('@app/modules/me//menu', ['active' => 'meeting']) ?>
 <?php $this->endBlock(); ?>
 
 <style>
     /* ปรับสีพื้นหลังของ header */
-.fc .fc-toolbar-title {
-    color: #007bff; /* สีฟ้า */
-    font-size: 20px;
-}
+    .fc .fc-toolbar-title {
+        color: #007bff;
+        /* สีฟ้า */
+        font-size: 20px;
+    }
 
-/* ปรับสีปุ่มใน header */
-.fc-button {
-    background-color: #28a745; /* สีเขียว */
-    color: white;
-}
+    /* ปรับสีปุ่มใน header */
+    .fc-button {
+        background-color: #28a745;
+        /* สีเขียว */
+        color: white;
+    }
 
-.fc-button:hover {
-    background-color: #218838; /* สีเขียวเข้มเมื่อ hover */
-}
+    .fc-button:hover {
+        background-color: #218838;
+        /* สีเขียวเข้มเมื่อ hover */
+    }
 
-/* ปรับสีของ event */
-.fc-event {
-    background-color: #f0f8ff;
-    color: black;  /* ตัวอักษรสีดำ */
-}
+    /* ปรับสีของ event */
+    .fc-event {
+        background-color: #f0f8ff;
+        color: black;
+        /* ตัวอักษรสีดำ */
+    }
 
-/* ปรับขนาดฟอนต์ในปฏิทิน */
-.fc-daygrid-day-number {
-    font-size: 14px;
-}
-/* ปรับขนาด event ให้แสดงเต็มพื้นที่แนวนอน */
-.fc-event {
-   
-    white-space: normal; /* เพื่อให้ข้อความแสดงได้เต็มบรรทัด */
-    text-align: center; /* จัดข้อความให้อยู่ตรงกลาง */
-    font-size: 14px; /* ปรับขนาดฟอนต์ให้เหมาะสม */
-}
+    /* ปรับขนาดฟอนต์ในปฏิทิน */
+    .fc-daygrid-day-number {
+        font-size: 14px;
+    }
 
+    /* ปรับขนาด event ให้แสดงเต็มพื้นที่แนวนอน */
+    .fc-event {
+
+        white-space: normal;
+        /* เพื่อให้ข้อความแสดงได้เต็มบรรทัด */
+        text-align: center;
+        /* จัดข้อความให้อยู่ตรงกลาง */
+        font-size: 14px;
+        /* ปรับขนาดฟอนต์ให้เหมาะสม */
+    }
 </style>
 
 <div class="card">
     <div class="card-body">
-    <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
-    <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
-</div>
+        <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
+            <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
+        </div>
         <div id="calendar"></div>
     </div>
 </div>
@@ -154,38 +160,16 @@ $js = <<<JS
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
                         const title = arg.event.extendedProps.title || '';
-                        const dateTime = arg.event.extendedProps.dateTime || '';
-                        const status = arg.event.extendedProps.status || '';
-                        const viewGoType = arg.event.extendedProps.viewGoType || '';
-                        const showDateRange = arg.event.extendedProps.showDateRange || '';
-
                         // สร้าง custom DOM element
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `
-                        <div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">
-                           <div class="avatar-detail">
-                                    <h6 class="mb-0 fs-13">\${viewGoType} : \${title}</h6>
-                                    <p class="text-muted mb-0 fs-13">\${showDateRange} เวลา \${dateTime}</p>
-                                    <span class="mt-3">\${status}</span>
-                                </div>
-                                </div>
-                        `;
-
-
+                            container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
                         return { domNodes: [container] };
                     },
-                    eventDidMount: function(info) {
-                        info.el.addEventListener('dblclick', function() {
-                        document.getElementById('modalEventContent').innerHTML =
-                            `<strong>Title:</strong> \${info.event.title}<br>
-                            <strong>Description:</strong> \${info.event.extendedProps.description}`;
-                        $('#main-modal').modal('show');
-                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                        $(".modal-dialog").addClass('modal-lg');
-                        });
-                },
+                        eventDidMount: function(info) {
+                            info.el.style.borderLeft = '5px solid red';
+                        },
                 select: function(info) {
 
                         const dateStart = info.startStr;
@@ -256,4 +240,3 @@ $js = <<<JS
 
 $this->registerJS($js, View::POS_END);
 ?>
-

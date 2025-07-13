@@ -442,50 +442,6 @@ public function actionGetRoom($id)
     }
 
 
-    // public function actionEvents()
-	// {
-    //     $start = $this->request->get('start');
-    //     $end = $this->request->get('end');
-        
-	// 	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-
-    //         $bookings = Meeting::find()
-    //         ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
-    //         ->orderBy(['id' => SORT_DESC])
-    //         ->limit(10)
-    //         ->all();
-    //             $data = [];
-
-    //             foreach($bookings as $item)
-    //             {
-    //                 $dateStart = Yii::$app->formatter->asDatetime(($item->date_start.' '.$item->time_start), "php:Y-m-d\TH:i:s");
-    //                 $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end.' '.$item->time_end), "php:Y-m-d\TH:i:s");
-    //                 $data[] = [
-    //                     'id'               => $item->id,
-    //                     'title'            => $item->room->title,
-    //                     'start'            => $dateStart,
-    //                     'end'            => $dateStart,
-    //                     'extendedProps' => [
-    //                         'title' => $item->title,
-    //                         'dateTime' => $item->viewMeetingTime(),
-    //                         'status' => $item->viewStatus()['view'],
-    //                         // 'view' => $this->renderAjax('view', ['model' => $item,'action' => false]),
-    //                         'description' => 'คำอธิบาย',
-    //                     ],
-    //                      'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-'.$item->viewStatus()['color'],
-    //                     'description' => 'description for All Day Event',
-    //                     'textColor' => 'black',
-    //                     'backgroundColor' => '#3aa3e3',
-    //                     // 'url' => Url::to(['/event/view', 'id' => $item->id]),
-    //                 ];
-    //             }
-
-    //         return  $data;
-       
-	// }
-
-
     public function actionEvents()
     {
         $start = $this->request->get('start');
@@ -514,12 +470,10 @@ public function actionGetRoom($id)
                 'start' => $dateStart,
                 'end' => $dateStart,
                 'extendedProps' => [
-                    'title' => $item->title,
-                    'dateTime' => $item->viewMeetingTime(),
-                    'status' => $item->viewStatus()['view'],
-                    'calendar_content' => $this->renderAjax('@app/modules/booking/views/meeting/calendar_content', ['model' => $item, 'action' => false]),
-                    'view' => $this->renderAjax('view', ['model' => $item, 'action' => false]),
-                    'description' => 'คำอธิบาย',
+                    'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', [
+                        'model' => $item
+                    ]), // Render the content for the event
+                    // calendar_content
                 ],
                 'className' => 'text-truncate px-2 border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
                 'description' => 'description for All Day Event',

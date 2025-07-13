@@ -160,20 +160,8 @@ $js = <<<JS
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
                         container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
-
-
                         return { domNodes: [container] };
                     },
-                //     eventDidMount: function(info) {
-                //         info.el.addEventListener('dblclick', function() {
-                //         document.getElementById('modalEventContent').innerHTML =
-                //             `<strong>Title:</strong> \${info.event.title}<br>
-                //             <strong>Description:</strong> \${info.event.extendedProps.description}`;
-                //         $('#main-modal').modal('show');
-                //         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                //         $(".modal-dialog").addClass('modal-lg');
-                //         });
-                // },
                 select: function(info) {
 
                         const dateStart = info.startStr;
