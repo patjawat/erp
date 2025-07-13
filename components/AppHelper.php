@@ -748,13 +748,13 @@ class AppHelper extends Component
                 $color = 'warning';
                 $icon = '<i class="fa-solid fa-hourglass-start me-1  me-1 text-'.$color.'"></i>';
                 $title = 'รอการอนุมัติ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">'.$icon. $title . '</span>';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">'.$icon. $title . '</span>';
                 break;
             case 'Pass':
                 $color = 'primary';
                 $icon = '<i class="fa-solid fa-circle-check  me-1 text-'.$color.'"></i>';
                 $title = 'อนุมัติ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color. ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             case 'Approve':
                 $color = 'success';

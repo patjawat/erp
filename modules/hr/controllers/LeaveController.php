@@ -16,22 +16,17 @@ use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\hr\models\Calendar;
 use app\components\DateFilterHelper;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\hr\components\LeaveHelper;
-use app\modules\hr\models\LeavePermission;
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\StockEvent;
 use app\modules\hr\models\LeaveSummarySearch;
 
 /**

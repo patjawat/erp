@@ -4,19 +4,17 @@ namespace app\modules\booking\controllers;
 
 use Yii;
 use DateTime;
-use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
-use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
-use app\components\ThaiDateHelper;
 use app\components\UserHelper;
+use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
-use app\modules\hr\models\Organization;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 use app\modules\booking\models\VehicleDetailSearch;
@@ -68,12 +66,11 @@ class VehicleController extends Controller
     public function actionIndex()
     {
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
-        $status = $this->request->get('status');
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
-            'status' =>   $status ? [$status] : ['Pending'],
+            'status' =>   'Pending',
             'vehicle_type_id' => 'official'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -83,47 +80,18 @@ class VehicleController extends Controller
             ['like', 'code', $searchModel->q],
         ]);
 
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
 
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
-
-        // search employee department
-        // ค้นหาคามกลุ่มโครงสร้าง
-        //  $org1 = Organization::findOne($searchModel->q_department);
-        //  // ถ้ามีกลุ่มย่อย
-        //  if (isset($org1) && $org1->lvl == 1) {
-        //      $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
-        //      FROM tree t1
-        //      JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-        //      WHERE t2.name = :name;';
-        //      $querys = Yii::$app
-        //          ->db
-        //          ->createCommand($sql)
-        //          ->bindValue(':name', $org1->name)
-        //          ->queryAll();
-        //      $arrDepartment = [];
-        //      foreach ($querys as $tree) {
-        //          $arrDepartment[] = $tree['id'];
-        //      }
-        //      if (count($arrDepartment) > 0) {
-        //          $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
-        //      } else {
-        //          $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-        //      }
-        //  } else {
-        //      $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-        //  }
-
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -401,12 +369,27 @@ class VehicleController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'success',
+                'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
+            ];
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model
+            ]);
+        }
     }
 
     /**

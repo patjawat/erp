@@ -199,21 +199,6 @@ class Asset extends \yii\db\ActiveRecord
 
     }
 
-    // public function ShowImg()
-    // {
-    //     try {
-    //         $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
-    //         if ($model) {
-    //             return FileManagerHelper::getImg($model->id);
-    //         } else {
-    //             return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
-    //         }
-    //     } catch (\Throwable $th) {
-    //         return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
-    //     }
-    // }
-
-    //
     // ค่าเสื่อม
 
     // อายุ

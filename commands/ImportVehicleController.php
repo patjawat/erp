@@ -387,4 +387,22 @@ class ImportVehicleController extends Controller
             return $emp;
         }
     }
+
+    public function actionFixYear()
+    {
+        $lists = Vehicle::find()->where(['thai_year' =>'3107'])->all();
+
+        foreach ($lists as $item) {
+            $model = Vehicle::findOne($item->id);
+            if($model){
+                // echo $model->date_start. "\n";
+                 $model->thai_year = AppHelper::YearBudget($model->date_start) . "\n";
+                if($model->save(false)){
+                    echo "แก้ไขปีงบประมาณของ {$model->code} เป็น {$model->thai_year}\n";
+                }else{
+                    echo "ไม่สามารถแก้ไขปีงบประมาณของ {$model->code}\n";
+                }
+        }
+    }
+    }
 }

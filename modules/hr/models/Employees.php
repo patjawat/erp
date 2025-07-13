@@ -319,20 +319,20 @@ class Employees extends Yii\db\ActiveRecord
         if ($msg != '') {
             return '<div class="d-flex align-items-center" >'.$img.'
             <div class="avatar-detail">
-                <h6 class="mb-0 fs-11">'.$this->fullname.'</h6>
-                <p class="text-muted mb-0 fs-13">'.$msg.'</p>
+                <h6 class="mb-0 fs-13">'.$this->fullname.'</h6>
+                <p class="text-muted mb-0 fs-12">'.$msg.'</p>
             </div>
         </div>';
         } else {
             return '<div class="d-flex align-items-center" style="margin-top: -5px;">'
                 .$img.'
         <div class="avatar-detail">
-            <h6 class="mb-0 fs-15"  data-bs-toggle="tooltip" data-bs-placement="top"
+            <p class="mb-0 fs-13"  data-bs-toggle="tooltip" data-bs-placement="top"
             data-bs-custom-class="custom-tooltip"
             data-bs-title="ดูเพิ่มเติม...">'
                 .$this->fullname.'
-            </h6>
-            <p class="text-muted mb-0 fs-13">'.$this->departmentName().'</p>
+            </p>
+            <p class="text-muted mb-0 fs-12">'.$this->departmentName().'</p>
             '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '.$this->age.'</p>' : '').'
         </div>
     </div>';
