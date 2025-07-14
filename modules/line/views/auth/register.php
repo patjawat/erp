@@ -81,9 +81,6 @@ input::placeholder {
                             <i class="bi bi-box"></i> ERP Hospital
                         </h1>
                         <hr class="border-primary-subtle">
-                        <div class="d-flex justify-content-center fs-3 gap-2 mb-0">
-                            <?=SiteHelper::getInfo()['company_name'] !='' ?  (SiteHelper::getInfo()['company_name']) : ''?>
-                        </div>
                     </div>
                 </div>
             </div>

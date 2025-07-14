@@ -177,6 +177,7 @@ $js = <<<JS
     }
 
     main();
+})
 JS;
 
 $this->registerJs($js);

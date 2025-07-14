@@ -18,9 +18,28 @@ $this->title = $model->document->topic;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
+
+
 <?php $this->beginBlock('page-title'); ?>
 
-<div class="container-fluid text-white mt-5">
+
+<div class="page-title-box">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-5 col-xl-4">
+                <div class="page-title">
+                </div>
+            </div>
+            <div class="col-sm-7 col-xl-8">
+				<div class="d-flex justify-content-sm-end">
+
+			</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid text-white">
 
     <div class=" d-flex flex-column" style="max-width:1000px">
         <div class="mt--45">
@@ -59,6 +78,8 @@ $this->title = $model->document->topic;
     font-size: 1.5rem;
     }
 </style>
+
+
 <div class="card">
     <div class="card-body">
 
