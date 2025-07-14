@@ -352,7 +352,7 @@ class VehicleController extends Controller
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
+        return $this->render('@app/modules/me/views/booking-vehicle/_form', [
             'model' => $model,
         ]);
     }
@@ -381,12 +381,12 @@ class VehicleController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
+                'content' => $this->renderAjax('@app/modules/me/views/booking-vehicle/_form', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('@app/modules/me/views/booking-vehicle/_form', [
                 'model' => $model
             ]);
         }
