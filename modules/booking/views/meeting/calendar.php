@@ -189,18 +189,23 @@ $js = <<<JS
                     console.log('New End: ' + formatDate(info.event.end));
                 },
                   
-                eventClick: function(info) {
+               eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        let viewHtml = info.event.extendedProps.view;
-                        // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '$url'+'view?id=' + info.event.id;
-                        // โหลดเนื้อหามาแสดงใน Modal
-                            \$('#main-modal').modal('show')
-                            \$("#main-modal-label").html('รายละเอียดการจอง');
-                            \$(".modal-body").html(viewHtml);
-                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                            $(".modal-dialog").addClass("modal-lg");
-                            console.log(JSON.stringify(viewHtml));
+                       var code = info.event.extendedProps.code || '';
+                        var url = '$url/'+'view?id=' + info.event.id;
+                            $.ajax({
+                                type: "get",
+                                url: url,
+                                dataType: "json",
+                                success: function (res) {
+                                      \$('#main-modal').modal('show')
+                                        \$("#main-modal-label").html(res.title);
+                                        \$(".modal-body").html(res.content);
+                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                        $(".modal-dialog").addClass("modal-lg");
+                                }
+                            });
+
                             
                     },
             });

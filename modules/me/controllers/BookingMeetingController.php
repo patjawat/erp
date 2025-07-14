@@ -108,7 +108,7 @@ class BookingMeetingController extends \yii\web\Controller
             if ($this->request->isAJax) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'รายละเอียดการจอง',
+                'title' =>$model->getUserReq()['avatar'],
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                     'action' => false
@@ -473,7 +473,7 @@ public function actionGetRoom($id)
                     'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', [
                         'model' => $item
                     ]), // Render the content for the event
-                    // calendar_content
+                    'code' => $item->code,
                 ],
                 'className' => 'text-truncate px-2 border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
                 'description' => 'description for All Day Event',

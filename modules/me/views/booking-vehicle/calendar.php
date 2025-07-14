@@ -163,12 +163,10 @@ $js = <<<JS
                         return { domNodes: [container] };
                     },
                 select: function(info) {
-
                         const dateStart = info.startStr;
                         // แปลง dateEnd เป็น Date แล้วลบ 1 วัน
                             const endDateObj = new Date(info.endStr);
                             endDateObj.setDate(endDateObj.getDate() - 1);
-                            
                             // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
                             const dateEnd = endDateObj.toISOString().split('T')[0];
                             beforLoadModal();
@@ -224,7 +222,7 @@ $js = <<<JS
                                 dataType: "json",
                                 success: function (res) {
                                       \$('#main-modal').modal('show')
-                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">CAR250703-028            </span></label>');
+                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">'+code+'</span></label>');
                                         \$(".modal-body").html(res.content);
                                         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                                         $(".modal-dialog").addClass("modal-lg");

@@ -133,12 +133,13 @@ class BookingVehicleController extends Controller
 
             return [
                 'title' => 'ขอใช้ยานพาหนะ',
-                'content' => $this->renderAjax('@app/modules/booking/views/vehicle/view', [
+                'content' => $this->renderAjax('view', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/booking/views/vehicle/view', [
+            // return $this->render('@app/modules/booking/views/vehicle/view', [
+            return $this->render('view', [
                 'model' => $model
             ]);
         }
@@ -228,6 +229,8 @@ class BookingVehicleController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
+
+
             return [
                 'status' => 'success',
                 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
@@ -262,7 +265,17 @@ class BookingVehicleController extends Controller
     {
         $model = $this->findModel($id);
         $model->status = 'Cancel';
-        $model->save(false);
+        if($model->save(false)){
+            
+     $msg  = "
+        🚫 <b>ยกเลิกการจองรถ</b>
+        👤 <b>ผู้ยกเลิก:</b> ".$model->userRequest()['fullname']."
+        📍 <b>สถานที่:</b> ".($model->locationOrg?->title ?? '-')."
+        📅 <b>วันที่:</b> ".$model->showDateRange()."
+        🕘 <b>เวลา:</b> ".$model->viewTime();
+                        $model->sendMessage($msg);
+            
+        }
         \Yii::$app->response->format = Response::FORMAT_JSON;
         return [
             'status' => 'success',

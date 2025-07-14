@@ -17,14 +17,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-sm-8"><?=$model->title;?></div>
 </div>
 <div class="row mb-0 align-items-center">
-    <label class="col-sm-4 col-form-label text-end fw-medium">ผู้จอง:</label>
-    <div class="col-sm-8">  <?=$model->getUserReq()['fullname']?></div>
-</div>
-<div class="row mb-0 align-items-center">
-    <label class="col-sm-4 col-form-label text-end fw-medium">แผนก:</label>
-    <div class="col-sm-8"><?=$model->getUserReq()['department']?></div>
-</div>
-<div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">ห้องประชุม:</label>
     <div class="col-sm-8"><?=$model->room->title;?></div>
 </div>

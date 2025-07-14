@@ -205,6 +205,35 @@ class TelegramController extends Controller
             ];
         }
     }
+
+    public function actionTest()
+    {
+$botToken = '7760493857:AAGIE584sRgJkxuBR4qVDz633VgwpJLHSDo';
+$chatId = '8177437409'; // ID ของผู้ใช้ที่คุณต้องการส่งหา
+
+$text = "🚗 <b>ทดสอบข้อความ</b>\nระบบจองรถโรงพยาบาล";
+
+$url = "https://api.telegram.org/bot$botToken/sendMessage";
+
+$data = [
+    'chat_id' => $chatId,
+    'text' => $text,
+    'parse_mode' => 'HTML'
+];
+
+$options = [
+    'http' => [
+        'method'  => 'POST',
+        'header'  => "Content-Type:application/x-www-form-urlencoded\r\n",
+        'content' => http_build_query($data)
+    ]
+];
+
+$context  = stream_context_create($options);
+$result = file_get_contents($url, false, $context);
+
+echo $result;
+    }
     /**
      * Finds the Categorise model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

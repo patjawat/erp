@@ -44,6 +44,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public $urgency;
     public $asset_type_name;
     public $auth_item;
+    public $date_filter;
 
     public static function tableName()
     {
@@ -53,7 +54,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item'], 'safe'],
+            [['emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item','date_filter'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];

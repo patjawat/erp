@@ -10,6 +10,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
 
@@ -26,8 +27,9 @@ class ComputerController extends \yii\web\Controller
         $searchModel = new HelpdeskSearch([
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 2,
+            'date_filter' => 'this_month',
+            'status' => 1
             // 'auth_item' => 'computer',
-            'status' => [1,2,3]
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
@@ -39,6 +41,22 @@ class ComputerController extends \yii\web\Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
+
+
+       
+        
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 

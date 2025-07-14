@@ -58,7 +58,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $model->listRepairStatus(),
+                'data' => $model->listStatus(),
                     'options' => ['placeholder' => 'สถานะทั้งหทด'],
                     'pluginOptions' => [
                         'allowClear' => true,
@@ -73,7 +73,35 @@ use iamsaint\datetimepicker\Datetimepicker;
             aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
                 class="fa-solid fa-filter"></i></button>
     </div>
+    
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <?=$form->field($model, 'urgency')->widget(Select2::classname(), [
+                                    'data' => $model->listUrgency(),
+                                    'options' => ['placeholder' => 'เลือกความเร่งด่วน ...'],
+                                    'pluginOptions' => [
+                                        'width' => '200px',
+                                    'allowClear' => true,
+                                    ],
+                                    'pluginEvents' => [
+                                        'select2:select' => "function(result) { 
+                                                  $(this).submit()
+                                                }",
+                                                'select2:unselecting' => "function(result) { 
+                                                    $(this).submit()
+                                                  }", 
+                                    ]
+                                ])->label('ความเร่งด่วน');
+                        ?>
 
+            <?php echo $form->field($model, 'status')->checkboxList($model->listRepairStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline'])->label('สถานะ'); ?>
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light mt-3']);?>
+        </div>
+    </div>
 
 
 

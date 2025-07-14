@@ -234,26 +234,36 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function sendMessage($msg = null)
     {
-        $message = $msg . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
         
+        
+        $telegramMessage = $msg ? $msg : "
+        🚗 <b>แจ้งเตือนการจองรถ</b>
+        👤 <b>ผู้จอง:</b> ".$this->userRequest()['fullname']."
+        📝 <b>วัตถุประสงค์:</b> ".$this->reason."
+        📍 <b>สถานที่:</b> ".($this->locationOrg?->title ?? '-')."
+        📅 <b>วันที่เดินทาง:</b> ".$this->showDateRange()."
+        🕘 <b>เวลา:</b> ".$this->viewTime()."
+        
+        ";
         //ส่ง telegram
         try {
-
-        $response = Yii::$app->telegram->sendMessage('vehicle', $message, [
+            
+            $response = Yii::$app->telegram->sendMessage('vehicle', $telegramMessage, [
                 'parse_mode' => 'HTML',
                 'disable_web_page_preview' => true,
             ]);
         } catch (\Throwable $th) {
             //throw $th;
         }
+        $lineMessage = $msg . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
         
         try {
-
-        $data = [];
-        foreach ($this->listMembers as $item) {
-            if (isset($item->employee->user->line_id)) {
-                $lineId = $item->employee->user->line_id;
-                LineMsg::sendMsg($lineId, $message);
+            
+            $data = [];
+            foreach ($this->listMembers as $item) {
+                if (isset($item->employee->user->line_id)) {
+                    $lineId = $item->employee->user->line_id;
+                    LineMsg::sendMsg($lineId, $lineMessage);
             }
         }
         // return $data;

@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\components\DateFilterHelper;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
 
@@ -22,11 +23,10 @@ class RepairController extends Controller
          $emp = UserHelper::GetEmployee();
         $searchModel = new HelpdeskSearch([
             'created_by' => $userId,
-            'emp_id' => $emp->id
+            'emp_id' => $emp->id,
+            'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andFilterWhere(['name' => 'repair', 'created_by' => $userId]);
-        // $dataProvider->query->andFilterWhere(['in', 'status', [1, 2, 3]]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'title', $searchModel->q],
@@ -34,6 +34,14 @@ class RepairController extends Controller
         ]);
         // $dataProvider->query->andFilterWhere(['between', 'created_at', '2024-01-01', '2024-01-03']);
 
+             if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

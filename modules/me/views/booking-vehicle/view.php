@@ -12,21 +12,44 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 
-<div class="mb-3 badge-soft-primary p-3 rounded">
-    <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label> <span><?=$model->viewStatus()['view']?></span>
-    <p><?php echo $model->userRequest()['fullname'];?> ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่ <?php echo $model->showDateRange()?></p>
-    
+<div class="mb-3 p-3 rounded">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+
+        <h5 class="mb-0">
+            ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> </h5>
+        <p class="text-muted mb-0 fs-13"></p>
        
-
+    </div>
+    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()?></p>
 </div>
+    
+    <div class="row">
+        <div class="col-6">
+            <?php echo $model->userRequest()['avatar'];?>
+        </div>
+        <div class="col-6">โทร : <?php echo $model->userRequest()['phone'];?></div>
+        <div class="col-12"></div>
+    </div>
 
-<div class="booking-details">
-    <label class="form-label">จัดสรรรถ</label>
+    <div
+        class="alert alert-light mt-3"
+        role="alert"
+    >
+        <strong>หมายเหตุ</strong> ***
+        <p><?=isset($model->data_json['coment']) ? $model->data_json['coment'] : '-'?></p>
+    </div>
+    
+
+<div class="booking-details mt-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <label class="form-label">ข้อมูลการจัดสรรจัดสรรรถ</label>
+         <span><?=$model->viewStatus()['view']?></span>
+    </div>
     <table class="table table-bordered" id="details-table">
         <thead class="table-light">
             <tr>
                 <th>วันที่</th>
-                <th>รถ</th>
+                <th>รถทะเบียน</th>
                 <th>พนักงานขับรถ</th>
             </tr>
         </thead>
@@ -38,22 +61,24 @@ $this->params['breadcrumbs'][] = $this->title;
                     <input type="hidden" name="vehicleDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
                 </td>
                 <td class="">
-                    <?php if($detail->car):?>
-                            <div class="d-flex">
-                                <?=Html::img($detail->car->ShowImg(),['class' => 'avatar rounded border-secondary'])?>
-                                <div class="avatar-detail">
-                                    <div class="d-flex flex-column">
-                                        <p class="mb-0"><?=$detail->car->data_json['brand'];?></p>
-                                        <p class="mb-0 fw-semibold text-primary"><?=$detail->license_plate?></p>
-                                    </div>
-                                </div>
+                    <div class="d-flex">
+                        <?php
+                        try {
+                            echo $detail->car ? Html::img($detail->car?->ShowImg(),['class' => 'avatar rounded border-secondary']) : '';
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                        }
+                        ?>
+                        <div class="avatar-detail">
+                            <div class="d-flex flex-column">
+                                <p class="mb-0"><?=$detail->car?->data_json['brand'];?></p>
+                                <p class="mb-0 fw-semibold text-primary"><?=$detail->license_plate?></p>
                             </div>
-                            <?php else:?>
-                            <?=$detail->license_plate;?>
-                            <?php endif;?>
-                        </td>
+                        </div>
+                    </div>
+                </td>
                 <td>
-                    <?=$detail->driver?->getAvatar(false,($detail->driver->phone))?>
+                    <?=$detail->driver?->getAvatar(false,($detail->driver?->phone))?>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -63,21 +88,21 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="form-group">
     <?php echo $model->data_json['remarks'] ?? '-'; ?>
 </div>
-<?php if($model->status == 'Pending'):?>
+
+
+
+<?php if($model->status == 'Pending' && Yii::$app->user->id == $model->created_by):?>
 <div class="d-flex justify-content-center gap-2">
         <?= Html::a('<i class="bi bi-pencil"></i> แก้ไข', ['/me/booking-vehicle/update','id' => $model->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
         <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิกการจอง', ['/me/booking-vehicle/cancel', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill cancel-booking']) ?>
 </div>
 <?php endif;?>
 
-
 <?php
 $js = <<<JS
-
 $('.cancel-booking').click(function (e) { 
     e.preventDefault();
     var url = $(this).attr('href');
-    console.log($(this).attr('href'));
     
     Swal.fire({
         title: 'ยืนยันการยกเลิกการจอง?',
@@ -88,8 +113,19 @@ $('.cancel-booking').click(function (e) {
         cancelButtonColor: '#d33',
         confirmButtonText: 'ยืนยัน',
         cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
+    }).then((result) => {
         if (result.isConfirmed) {
+            $('#main-modal').hide()
+            // แสดง loading
+            Swal.fire({
+                title: 'กำลังยกเลิกการจอง...',
+                html: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -100,7 +136,8 @@ $('.cancel-booking').click(function (e) {
                             title: 'สำเร็จ!',
                             text: response.message,
                             icon: 'success',
-                            timer: 1000
+                            timer: 1000,
+                            showConfirmButton: false
                         }).then(() => {
                             window.location.reload();
                         });
@@ -123,6 +160,7 @@ $('.cancel-booking').click(function (e) {
         }
     }); 
 });
+
 
 
 

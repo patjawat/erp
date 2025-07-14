@@ -29,69 +29,69 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('menu',['active' => 'index']) ?>
 <?php $this->endBlock(); ?>
 
-
-
 <?php  Pjax::begin(['id' => 'helpdesk-container','timeout' => 5000 ]); ?>
-<?php // echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
-
 <div class="card">
     <div class="card-body">
-        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+        <div class="d-flex justify-content-center">
+            <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+        </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-    <div class="d-flex justify-content-between">
-        <div class="d-flex flex-column">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
+        <div class="d-flex justify-content-between">
+            <div class="d-flex flex-column">
+                <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
+                        class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+                </h6>
+            </div>
         </div>
-    </div>
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th class="fw-semibold" scope="col">#</th>
                     <th class="fw-semibold" scope="col">รายการ</th>
                     <th class="fw-semibold" scope="col">ผู้แจ้งซ่อม</th>
-                    <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th>
-                    <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
-                    <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
+                    <th class="fw-semibold" scope="col">ประเภท</th>
+                    <th class="fw-semibold">ผู้ร่วมงานซ่อม </th>
+                    <th class="fw-semibold text-center">สถานะ</th>
+                    <th class="fw-semibold text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody>
-            <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr class="align-middle">
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-            <td>
-                            <div class="d-flex">
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td>
+                        <div class="d-flex">
                             <?php echo $item->RepairType()['image']?>
                             <div class="avatar-detail">
-                                
-                                <p class="text-primary fw-semibold fs-13 mb-0">
-                                    <span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i>
-                                    <?php echo $item->RepairType()['title']?>
-                                </span>
-                            </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo $item->title?></p>
+                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                    <?php echo $item->title?></p>
                                 <p class="text-primary fs-13 mb-0">
                                     <?php echo $item->viewCreateDateTime()?>
                                 </p>
+                            </div>
                         </div>
-                        </div>
+                    </td>
+                    <td>
+                        <p class="text-primary fw-semibold fs-13 mb-0">
+                            <span class="badge text-bg-primary fs-13"> <i class="fa-solid fa-circle-exclamation me-1"></i><?php echo $item->RepairType()['title']?></span>
+                        </p>
                     </td>
                     <td> <?= $item->showAvatarCreate(); ?></td>
                     <td><?= $item->StackTeam() ?></td>
                     <td class="text-center"> <?= $item->viewStatus() ?></td>
                     <td class="text-center">
                         <?php if($item->status == 1):?>
-                            <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $item->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
-                            <?php // echo Html::a('<i class="fa-regular fa-hourglass-half"></i> รับเรื่อง',['/helpdesk/general/update','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
+                        <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $item->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
                         <?php else:?>
                         <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>',['update','id' => $item->id],['class' => 'open-modal-x','data' => ['size' => 'modal-lg']])?>
-                    <?php endif;?>
+                        <?php endif;?>
                     </td>
                 </tr>
-    
+
                 <?php endforeach; ?>
             </tbody>
         </table>

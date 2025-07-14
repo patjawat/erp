@@ -60,7 +60,7 @@ $label = $label ?? 'บุคลากร';
                 'options' => ['placeholder' => 'เลือกบุคลากร ...'],
                 'pluginOptions'=>[
                     'dropdownParent' => (isset($modal) ? '#main-modal' : false),
-                    'width' => '350px',
+                    'width' => '280px',
                     'allowClear'=>true,
                     'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
                     'ajax'=>[

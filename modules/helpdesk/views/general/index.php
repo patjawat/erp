@@ -33,7 +33,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
+       <div class="d-flex justify-content-center">
         <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    </div>
     </div>
 </div>
 <div class="card">

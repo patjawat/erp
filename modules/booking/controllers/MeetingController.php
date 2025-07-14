@@ -105,7 +105,7 @@ class MeetingController extends Controller
              if ($this->request->isAJax) {
                  \Yii::$app->response->format = Response::FORMAT_JSON;
              return [
-                 'title' => 'รายละเอียดการจอง',
+                 'title' => $model->getUserReq()['avatar'],
                  'content' => $this->renderAjax('view', [
                      'model' => $model,
                      'action' => true

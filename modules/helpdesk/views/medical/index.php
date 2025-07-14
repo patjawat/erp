@@ -32,12 +32,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
+       <div class="d-flex justify-content-center">
+        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
     <div class="d-flex justify-content-between">
             <div>
                 <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
                         class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
                 </h6>
-                <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
             </div>
         </div>
         <table class="table table-striped">

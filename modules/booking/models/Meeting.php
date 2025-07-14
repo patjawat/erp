@@ -221,7 +221,8 @@ class Meeting extends \yii\db\ActiveRecord
           'percent' => $total > 0 ? ($count / $total * 100) : 0,
           'title' => $data['title'],
           'color' => $data['color'],
-          'view' => $data['view']
+          'view' => $data['view'],
+          'icon' => $data['icon']
       ];
        
     }

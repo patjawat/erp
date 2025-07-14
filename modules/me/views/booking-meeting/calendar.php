@@ -220,15 +220,24 @@ $js = <<<JS
                   
                 eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        let viewHtml = info.event.extendedProps.view;
+                        // let viewHtml = info.event.extendedProps.view;
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
-                        var url = '$url'+'view?id=' + info.event.id;
+                       var code = info.event.extendedProps.code || '';
+                        var url = '$url/'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
-                            \$('#main-modal').modal('show')
-                            \$(".modal-body").html(viewHtml);
-                            $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                            $(".modal-dialog").addClass("modal-lg");
-                            console.log(JSON.stringify(viewHtml));
+                            $.ajax({
+                                type: "get",
+                                url: url,
+                                dataType: "json",
+                                success: function (res) {
+                                      \$('#main-modal').modal('show')
+                                        \$("#main-modal-label").html(res.title);
+                                        \$(".modal-body").html(res.content);
+                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                                        $(".modal-dialog").addClass("modal-lg");
+                                }
+                            });
+
                             
                     },
             });
