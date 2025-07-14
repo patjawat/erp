@@ -536,6 +536,7 @@ class VehicleController extends Controller
             $model->save(false);
 
             $info = SiteHelper::getInfo();
+            
 
                 $modelData = [
                     'director' => $info['company_name'],
@@ -560,9 +561,9 @@ class VehicleController extends Controller
                     'driver_leader_name' => 'นายหัวหน้า พขร.',
                     'mileage_start' => '10000',
                     'mileage_end' => '10100',
-                    'emp_signature' => Yii::getAlias('@web') . '/images/signature.png',
-                    'leader_signature' => Yii::getAlias('@web') . '/images/signature.png',
-                    'driver_signature' => Yii::getAlias('@web') . '/images/signature.png',
+                    'emp_signature' => $model->userRequest()['signature'],
+                    'leader_signature' => $model->leader?->getInfo()['signature'],
+                    'driver_signature' => $model->driver?->getInfo()['signature'],
                     'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
 
                 ];

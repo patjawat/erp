@@ -265,6 +265,7 @@ class Employees extends Yii\db\ActiveRecord
             'position_type' => $this->positionTypeName(),
             'department' => $this->department,
             'department_name' => $this->departmentName(),
+            'signature' => $this->signature(),
             'phone' => $this->phone,
             // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
             // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
@@ -1302,7 +1303,8 @@ class Employees extends Yii\db\ActiveRecord
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
             if ($model) {
-                $filepath = FileManagerHelper::getUploadPath() . $this->ref . '/' . $model->real_filename;
+                // $filepath = FileManagerHelper::getUploadPath() . $this->ref . '/' . $model->real_filename;
+                 return FileManagerHelper::getImg($model->id);
                 return $filepath;
             } else {
                 return null;

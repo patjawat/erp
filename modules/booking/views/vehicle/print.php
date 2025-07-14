@@ -13,9 +13,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="d-flex">
-    <canvas id="pdfCanvas" width="794" height="1123" style="border:1px solid #ccc"></canvas>
-    <div class="">
+    <div class="w-75">
+
+        <canvas id="pdfCanvas" width="794" height="1123" style="border:1px solid #ccc"></canvas>
+    </div>
+    <div class="w-25">
+        <div class="d-grid gap-2">
 <button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
+
+<button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
+
+</div>
 </div>
 
 
@@ -156,6 +164,72 @@ function getLayout() {
 }
 
 
+
+
+    // Export Layout
+   $('#exportLayout').on('click', function() {
+    const objects = canvas.getObjects();
+
+    const layout = objects.map(obj => {
+        // ถ้าเป็นข้อความ
+        if (obj.type === 'text') {
+            let field = obj.field || null;
+
+            // พยายามเดา field ถ้าไม่มีฝังไว้
+            if (!field) {
+                for (const key in window.modelData) {
+                    if (window.modelData[key] === obj.text) {
+                        field = key;
+                        break;
+                    }
+                }
+            }
+
+            if (!field) {
+                field = obj.text.replace(/[{}]/g, '');
+            }
+
+            return {
+                type: 'text',
+                field: field,
+                x: obj.left,
+                y: obj.top,
+                fontSize: obj.fontSize,
+                fontFamily: obj.fontFamily || 'Arial',
+                fontWeight: obj.fontWeight || 'normal',
+                scale: obj.scaleX || 1
+            };
+        }
+
+        // ถ้าเป็นรูปภาพ (เช่น ลายเซ็น)
+        if (obj.type === 'image') {
+            return {
+                type: 'image',
+                field: obj.field || 'signature',
+                x: obj.left,
+                y: obj.top,
+                scale: obj.scaleX || 1
+            };
+        }
+
+        return null;
+    }).filter(Boolean); // ลบค่า null ออก
+
+    $('#output').text(JSON.stringify(layout, null, 2));
+
+                    $.post('/booking/vehicle-form-layout/save-layout', {
+                    layout: layout,
+                    form_name: '$formName'
+                }, function (res) {
+                    if (res.success) {
+                        alert('บันทึก Layout เรียบร้อยแล้ว');
+                    }
+                });
+
+});
+
+
+
     $('#addDate').on('click', function() {
         const text = new fabric.Text('{{date}}', {
             left: 100,
@@ -187,6 +261,8 @@ function getLayout() {
         // บันทึก
         pdf.save('form-layout.pdf');
     });
+
+
 
 
 JS;

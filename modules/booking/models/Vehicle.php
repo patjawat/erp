@@ -17,6 +17,7 @@ use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;
 use app\modules\booking\models\BookingDetail;
@@ -149,6 +150,17 @@ class Vehicle extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
+    public function getLeader()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'leader_id']);
+    }
+
+       public function getDriver()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'driver_id']);
+    }
+
 
     // ประเภทของการจองรถ
     public function getCarType()
@@ -511,6 +523,7 @@ class Vehicle extends \yii\db\ActiveRecord
                     'avatar' => $leader ? $leader->getAvatar(false) : '',
                     'fullname' => $leader ? $leader->fullname : '',
                     'position' => $leader ? $leader->positionName() : '',
+                    'signature' => $leader ? $leader->signature() : '',
                     'title' => 'หัวหน้างาน'
                 ] : [],
                 'approve_2' => ($leaderGroup) ? [
@@ -518,6 +531,7 @@ class Vehicle extends \yii\db\ActiveRecord
                     'avatar' => $leaderGroup ? $leaderGroup->getAvatar(false) : '',
                     'fullname' => $leaderGroup ? $leaderGroup->fullname : '',
                     'position' => $leaderGroup ? $leaderGroup->positionName() : '',
+                    'signature' => $leaderGroup ? $leaderGroup->signature() : '',
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ] : [],
                 'approve_3' => ($director) ? [
@@ -525,6 +539,7 @@ class Vehicle extends \yii\db\ActiveRecord
                     'avatar' => $director ? $director->getAvatar(false) : '',
                     'fullname' => $director ? $director->fullname : '',
                     'position' => $director ? $director->positionName() : '',
+                    'signature' => $director ? $director->signature() : '',
                     'title' => 'ผู้อำนวยการ'
                 ] : []
             ];

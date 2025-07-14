@@ -73,7 +73,18 @@ $this->params['breadcrumbs'][] = $this->title;
                             </p>
                     </td>
                         <td><?= $item->locationOrg?->title ?? '-' ?></td>
-                        <td><?= $item->userRequest()['avatar'] ?></td>
+                        <td><?= $item->userRequest()['avatar'] ?>
+                    
+                    <?php
+                    try {
+                        //code...
+                        echo $item->Approve()[''];
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                    ?>
+                    
+                    </td>
                         <td><?= $item->viewStatus()['view'] ?? '-' ?></td>
                         <td class="fw-light text-end">
                             <div class="btn-group">
