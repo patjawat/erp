@@ -50,7 +50,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-
+  <div>
+                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
+                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
+                </div>
     </div>
     <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -73,10 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                 <button id="download-button" class="btn btn-success shadow"><i
                         class="fa-solid fa-file-export me-1"></i>Excel</button>
-                <div>
-                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-                </div>
+              
             </div>
         </div>
     </div>
@@ -100,9 +100,6 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
         <button id="download-button" class="btn btn-success shadow"><i
                 class="fa-solid fa-file-export me-1"></i>Excel</button>
-
-        <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-        <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
 
     </div>
 </div>
