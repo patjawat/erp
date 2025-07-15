@@ -15,9 +15,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                         <th class="fw-semibold" scope="col" style="width:100px">ชื่อ-นามสกุล</th>
                         <th class="fw-semibold" scope="col">ประเภท</th>
-                        <th class="fw-semibold" scope="col" class="text-center">เริ่มงาน</th>
+                        <th class="fw-semibold" scope="col" class="text-center" style="width: 280px;">สถานะ | เริ่มงาน</th>
                         <th class="fw-semibold" scope="col">อายุราชการ</th>
-                        <th class="fw-semibold" scope="col">สถานะ</th>
                         <th class="fw-semibold" scope="col">เหลืออีก | สิ้นสุดสัญญาจ้าง | เกษียรอายุ</th>
                     </tr>
                 </thead>
@@ -27,16 +26,26 @@ $this->params['breadcrumbs'][] = $this->title;
             <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                         <td class="text-truncate"><?= $item->getAvatar(false) ?></td>
                         <td><?=$item->positionType->title?></td>
-                        <td class="align-middle"><?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?></td>
                         <td class="align-middle">
-                             <?= $item->age_join_date['full'] ?>                   
-                        </td>
+                            <div class="d-flex flex-column">
+                                <span>
+                                    <label class="badge rounded-pill text-primary-emphasis bg-success-subtle me-1"><i
+                                            class="bi bi-clipboard-check"></i> <?= $item->statusName() ?></label>
+                                    | <i class="bi bi-calendar-check-fill"></i>
+                                    <?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?>
+                                </span>
 
-                                                <td class="align-middle">
-                           <label class="badge rounded-pill text-primary-emphasis bg-success-subtle me-1"><i
-                                            class="bi bi-clipboard-check"></i> <?= $item->statusName() ?></label>               
+                            </div>
                         </td>
-                        
+                        <td class="align-middle">
+                            <div class="d-flex flex-column">
+                                <span>
+                                    <!-- <i class="bi bi-clock text-primary"></i> 1 ปี 2 เดือน 3 วัน -->
+                                    <i class="bi bi-clock text-primary"></i> <?= $item->age_join_date['full'] ?>
+                                </span>
+                            </div>
+
+                        </td>
                         <td class="align-middle">
                             <!-- กำหนดวันหมดอายุ -->
                             <div class="d-flex justify-content-between">

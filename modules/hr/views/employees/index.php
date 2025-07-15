@@ -15,9 +15,10 @@ use app\modules\hr\models\Employees;
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ทะเบียนบุคลากร';
+$this->title = 'บุคลากร';
 $this->params['breadcrumbs'][] = $this->title;
-
+// ออกแบบ
+// https://www.canva.com/ai/code/thread/4c1031df-3a56-4eff-8b71-df1a519ca530
 ?>
 
 <?php Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
@@ -28,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 }
 </style>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?> <span id="total-count"><?= $dataProvider->getTotalCount() ?></span> รายการ
+<i class="bi bi-people-fill"></i> <?= $this->title; ?> 
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
@@ -47,29 +48,56 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center align-self-center">
-            <div>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-              
-
-            </div>
+        <div class="d-flex justify-content-center align-items-center align-self-center gap-2">
             <?= $this->render('_search', ['model' => $searchModel]); ?>
             <div>
-                 <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
+                <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
                 <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>Excel</button>
+
             </div>
         </div>
     </div>
 </div>
 
 <?php if (SiteHelper::getDisplay() == 'list'): ?>
-<?= $this->render('display/list', [
-        'searchModel' => $searchModel,
-        'dataProvider' => $dataProvider,
-    ]); ?>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3">
+            <h6>
+                <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
+                <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+            </h6>
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <button id="download-button" class="btn btn-success shadow"><i
+                        class="fa-solid fa-file-export me-1"></i>Excel</button>
+            </div>
+        </div>
+
+            <?= $this->render('display/list', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]); ?>
+    </div>
+</div>
+
+
 
 <?php else: ?>
+
+    <div class="d-flex justify-content-between mb-3">
+            <h6>
+                <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
+                <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+            </h6>
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <button id="download-button" class="btn btn-success shadow"><i
+                        class="fa-solid fa-file-export me-1"></i>Excel</button>
+            </div>
+        </div>
+
 <?= $this->render('display/grid', [
         'searchModel' => $searchModel,
         'dataProvider' => $dataProvider,
