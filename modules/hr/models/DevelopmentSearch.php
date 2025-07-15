@@ -18,7 +18,7 @@ class DevelopmentSearch extends Development
     {
         return [
             [['id', 'document_id', 'thai_year', 'assigned_to', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['response_status','development_type_id','topic', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'vehicle_type_id', 'vehicle_date_start', 'vehicle_date_end', 'driver_id', 'leader_id', 'leader_group_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
+            [['response_status','development_type_id','topic', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'vehicle_type_id', 'vehicle_date_start', 'vehicle_date_end', 'driver_id', 'leader_id', 'leader_group_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department','date_filter'], 'safe'],
         ];
     }
 
@@ -85,7 +85,7 @@ class DevelopmentSearch extends Development
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])
             ->andFilterWhere(['like', 'leader_id', $this->leader_id])
             ->andFilterWhere(['like', 'leader_group_id', $this->leader_group_id])
-            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
+            // ->andFilterWhere(['like', 'development.emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

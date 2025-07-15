@@ -7,7 +7,7 @@ use app\modules\hr\models\EmployeeDetail;
 
 ?>
 <style>
-    .avatar-xxl {
+.avatar-xxl {
     height: 8rem;
     width: 8rem;
 }
@@ -17,29 +17,28 @@ use app\modules\hr\models\EmployeeDetail;
     <div class="card-body">
         <div class="d-flex flex-column mb-3 ">
             <div class="position-relative">
-            <div class="d-flex justify-content-center">
-                <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xxl border border-primary-subtl card-img-top mt--45 shadow']) ?>
+                <div class="d-flex justify-content-center">
+                    <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xxl border border-primary-subtl card-img-top mt--45 shadow']) ?>
+                </div>
             </div>
-             <input type="file" class="file-upload-input" id="my_file" accept="image/*">
-</div>
             <div class="d-flex justify-content-center">
                 <div class="d-flex flex-column">
                     <h2><?=$model->fullname?></h2>
-                    
+
                     <h6> <i class="bi bi-check2-circle text-primary me-1"></i><?= $model->departmentName() ?></h6>
-                    <h6>  <?= $model->positionName(['icon' => true]) ?></h6>
+                    <h6> <?= $model->positionName(['icon' => true]) ?></h6>
                     <h6>
-                    <?php if ($model->joinDate()): ?>
-                    <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                        <code><?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?></code>
-                    </p>
-                    <?php endif;?>
+                        <?php if ($model->joinDate()): ?>
+                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                            <code><?php echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium') ?></code>
+                        </p>
+                        <?php endif;?>
                     </h6>
 
                     <p>
-                    <i class="fa-solid fa-business-time"></i>
-                    อายุราชการ <?php // $model->workLife()['full'] ?>
-                </p>
+                        <i class="fa-solid fa-business-time"></i>
+                        อายุราชการ <?php // $model->workLife()['full'] ?>
+                    </p>
                 </div>
             </div>
         </div>

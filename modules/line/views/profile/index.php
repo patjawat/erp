@@ -12,7 +12,6 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         <div class="row align-items-center">
             <div class="col-sm-5 col-xl-4">
                 <div class="page-title">
-                    <!-- <h5 class="mb-1 text-white">Profile</h5> -->
                 </div>
             </div>
             <div class="col-sm-7 col-xl-8">
@@ -34,6 +33,9 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
         </div>
 </div>
 
+
+
+
 <?php
 
 
@@ -42,6 +44,7 @@ $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
 $liffLoginUrl = 'https://liff.line.me/' . SiteHelper::getInfo()['line_liff_login'];
 
 $js = <<< JS
+
 
 // ฟังก์ชันตรวจสอบสิทธิ์และยืนยันตัวตน
 async function checkProfile(userId) {
