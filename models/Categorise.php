@@ -92,7 +92,6 @@ class Categorise extends \yii\db\ActiveRecord
             // return $this->ref;
             // return FileManagerHelper::getImg($model->id);
             if ($model) {
-                // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
                 return FileManagerHelper::getImg($model->id);
             } else {
                 return \Yii::getAlias('@web').'/img/placeholder-img.jpg';

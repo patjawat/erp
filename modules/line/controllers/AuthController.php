@@ -29,9 +29,9 @@ class AuthController extends \yii\web\Controller
     {
 
         $model = new SignupForm([
-            'cid' => '0000000000000',
-            'email' => 'admin@local.com',
-            'password' => '112233'
+            // 'cid' => '0000000000000',
+            // 'email' => 'admin@local.com',
+            // 'password' => '112233'
         ]);
 
 

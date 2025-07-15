@@ -6,51 +6,18 @@ use app\components\SiteHelper;
 $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
-<style>
-    /* HTML: <div class="loader"></div> */
-.loader {
-  width: 100px;
-  height: 40px;
-  --g: radial-gradient(farthest-side,#0000 calc(95% - 3px),#fff calc(100% - 3px) 98%,#0000 101%) no-repeat;
-  background: var(--g), var(--g), var(--g);
-  background-size: 30px 30px;
-  animation: l9 1s infinite alternate;
-}
-@keyframes l9 {
-  0% {
-    background-position: 0 50%, 50% 50%, 100% 50%;
-  }
-  20% {
-    background-position: 0 0, 50% 50%, 100% 50%;
-  }
-  40% {
-    background-position: 0 100%, 50% 0, 100% 50%;
-  }
-  60% {
-    background-position: 0 50%, 50% 100%, 100% 0;
-  }
-  80% {
-    background-position: 0 50%, 50% 50%, 100% 100%;
-  }
-  100% {
-    background-position: 0 50%, 50% 50%, 100% 50%;
-  }
-}
-</style>
 
 <div class="page-title-box">
     <div class="container-fluid">
         <div class="row align-items-center">
             <div class="col-sm-5 col-xl-4">
                 <div class="page-title">
-                    <h5 class="mb-1 text-white">Profile</h5>
-
+                    <!-- <h5 class="mb-1 text-white">Profile</h5> -->
                 </div>
             </div>
             <div class="col-sm-7 col-xl-8">
 				<div class="d-flex justify-content-sm-end">
 
-				
 			</div>
             </div>
         </div>
