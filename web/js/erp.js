@@ -27,6 +27,13 @@ jQuery(document).on("pjax:end", function () {
 
 });
 
+//แก้ treeview ไม่ปิดเวลาเลือก
+$("#treeID").on('treeview:change', function(event, key, name) {
+                        $('body').find('.kv-tree-input').removeClass('show')
+                        $('body').find('.kv-tree-dropdown').removeClass('show')
+
+});
+
 
 /**
  * Handle AJAX form submission with confirmation and success feedback.

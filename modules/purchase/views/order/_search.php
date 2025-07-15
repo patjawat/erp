@@ -71,17 +71,17 @@ use iamsaint\datetimepicker\Datetimepicker;
                                                   <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']);?>
                                                   
 
-        <div class="right-setting" id="filter-emp">
-            <div class="card mb-0 w-100">
-                <div class="card-header">
-                    <h5 class="card-title d-flex justify-content-between">
-                        ค้นหาข้อมูล
-                        <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
-                    </h5>
-                </div>
-                <div class="p-2">
 
-                    <?php
+
+   <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+    </div>
+
+    <div class="collapse mt-3" id="collapseFilter">
+
+ <?php
                 
                 echo $form->field($model, 'date_between')->widget(Select2::classname(), [
                     'data' => [
@@ -101,18 +101,6 @@ use iamsaint\datetimepicker\Datetimepicker;
                             ])->label('ประเภท');
                             ?>
 
-                    <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
-
-                </div>
-            </div>
-        </div>
-
-
-        <span class="filter-emp btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-            <i class="fa-solid fa-filter"></i>
-        </span>
-
     </div>
     <?php ActiveForm::end(); ?>
 
@@ -128,10 +116,10 @@ $(".filter-emp").on("click", function(){
   localStorage.setItem('right-setting','show')
 })
 
-$(".filter-emp-close").on("click", function(){
-    $(".right-setting").removeClass("show");
-    localStorage.setItem('right-setting','hide')
-})
+// $(".filter-emp-close").on("click", function(){
+//     $(".right-setting").removeClass("show");
+//     localStorage.setItem('right-setting','hide')
+// })
 
 var thaiYear = function (ct) {
     var leap=3;  

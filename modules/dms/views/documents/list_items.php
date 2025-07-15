@@ -3,18 +3,6 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 ?>
 
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-
-            <h6> <i class="bi bi-ui-checks"></i> ทะเบียนss<?php echo $this->title?>
-                <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-                รายการ
-            </h6>
-        </div>
-
-        <div class="table-responsive">
             <table class="table table-striped table-fixed">
                 <thead>
                     <tr>
@@ -83,10 +71,6 @@ use yii\helpers\Html;
                     <?php endforeach;?>
                 </tbody>
             </table>
-        </div>
-
-    </div>
-</div>
 
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([

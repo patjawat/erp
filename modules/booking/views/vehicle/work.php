@@ -31,12 +31,20 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'vehicles-container', 'timeout' => 500000]); ?>
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+       <?php echo $this->render('_search_work', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
 <div class="card shadow-sm">
-<div class="card-header bg-white">
+<div class="card-header bg-primary-gradient">
        <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
-                    class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php echo $this->render('_search_work', ['model' => $searchModel]); ?>
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> กาจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
         </div>
     </div>
     <div class="card-body p-0">

@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill fs-1"></i> <?= $this->title; ?>
+<i class="bi bi-people-fill"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 
@@ -22,25 +22,30 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'team-group'])?>
+<?php $this->endBlock(); ?>
+
 
 <div class="card">
-    <div class="card-body">
-    <div class="d-flex justify-content-between">
-            <h6>
-                <i class="bi bi-ui-checks"></i> ประวัติคำสั่งแต่งตั้ง<?=$this->title?> รายการ
-                <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format(0, 0) ?></span>
+
+<div class="card-header bg-primary-gradient text-white">
+           <div class="d-flex justify-content-between">
+            <h6 class="text-white">
+                <i class="bi bi-ui-checks"></i> ประวัติคำสั่งแต่งตั้ง<?=$this->title?>
             </h6>
-            <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างคำสั่งใหม่',['/hr/team-group-detail/create','name' => 'appointment','category_id' => $model->id,'title' => 'เพิ่มคำสั่ง'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
+            <?=Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างคำสั่งใหม่',['/hr/team-group-detail/create','name' => 'appointment','category_id' => $model->id,'title' => 'เพิ่มคำสั่ง'],['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-lg']])?>
         </div>
+    </div>
+
+    <div class="card-body">
+
         <?php
 use yii\widgets\DetailView;
 ?>
-<div
-    class="table-responsive"
->
+
     <table
-        class="table table-primary mb-5"
+        class="table mb-5"
     >
         <thead>
             <tr>
@@ -78,8 +83,6 @@ use yii\widgets\DetailView;
             <?php endforeach;?>
         </tbody>
     </table>
-</div>
-
 
     </div>
 </div>

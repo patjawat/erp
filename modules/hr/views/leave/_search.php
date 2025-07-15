@@ -30,7 +30,6 @@ use app\modules\hr\models\Organization;
 
 <div class="row">
     <div class="col-3">
-
         <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
     </div>
     <div class="col-2">

@@ -20,59 +20,35 @@ use app\components\DateFilterHelper;
 ]); ?>
 <?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 
-<div class="d-flex justify-content-between align-top align-items-center gap-2">
-    <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+<div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-12">
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
 
+    <div class="col-lg-2 col-md-2 col-sm-12">
         <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' => DateFilterHelper::getDropdownItems(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
             'pluginOptions' => [
                 'allowClear' => true,
-                'width' => '130px',
             ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    // $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    // $(this).submit()
-                }',
-            ]
         ])->label(false) ?>
+    </div>
 
-        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '130px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    // $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    // $(this).submit()
-                }',
-            ]
-        ])->label(false) ?>
 
-        <?= $form->field($model, 'date_start')->textInput([
-            'class' => 'form-control',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
+    <div class="col-lg-2 col-md-2 col-sm-12">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-12">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
 
-        <?= $form->field($model, 'date_end')->textInput([
-            'class' => 'form-control',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
-
+    <div class="col-lg-2 col-md-2 col-sm-12">
         <?= $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'options' => ['placeholder' => 'สถานะทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
-                'width' => '170px',
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
@@ -83,22 +59,39 @@ use app\components\DateFilterHelper;
                 }',
             ]
         ])->label(false) ?>
-
+    </div>
+    <div class="col-lg-1 col-md-1 col-sm-12">
         <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            aria-expanded="false" aria-controls="collapseFilter">
+            <i class="fa-solid fa-filter"></i>
+        </button>
+    </div>
+
+
+
+    <div class="collapse mt-3" id="collapseFilter">
+        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+            'data' => $model->ListThaiYear(),
+            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+            'pluginEvents' => [
+                'select2:select' => 'function(result) { 
+                    // $(this).submit()
+                }',
+                'select2:unselecting' => 'function() {
+                    // $(this).submit()
+                }',
+            ]
+        ])->label(false) ?>
     </div>
     
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
+    <?php ActiveForm::end(); ?>
 </div>
 
-<?php ActiveForm::end(); ?>
-
 <?php
-
 $js = <<< JS
 
     thaiDatepicker('#vehiclesearch-date_start,#vehiclesearch-date_end')

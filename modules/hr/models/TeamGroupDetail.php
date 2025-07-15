@@ -129,7 +129,7 @@ class TeamGroupDetail extends \yii\db\ActiveRecord
             // $emp = Employees::findOne(['id' => $item->emp_id]);
             $emp = $item->employee;
             $data .= Html::a(
-                Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                Html::img('@web/img/loading.gif', ['class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',

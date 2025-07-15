@@ -2,7 +2,10 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-$this->title = 'รายงานระบบลา';
+$this->title = 'รายงานวันลา';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['index']];
+$this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-chart-simple fs-1"></i> <?= $this->title; ?>
@@ -10,35 +13,40 @@ $this->title = 'รายงานระบบลา';
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
-<?php $this->endBlock(); ?>
-
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'report'])?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-
-            <span class="btn btn-success rounded-pill shadow export-report"><i
-                    class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
-
-                    <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
-                    
-        </div>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
+
 <div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6>
+ <div class="card-header bg-primary-gradient text-white">
+    <div class="d-flex justify-content-between">
+
+    <h6 class="text-white">
                 <i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา
-                <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
+                 <span class="badge text-bg-light"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                 รายการ
             </h6>
+
+         <span class="btn btn-success shadow export-report"><i
+                    class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
+
+    </div>
+    </div>
+
+
+
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            
             
         </div>
 

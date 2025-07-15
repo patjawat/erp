@@ -46,6 +46,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
     public $q;
     public $emp_id;
     public $thai_year;
+    public $date_filter;
     public static function tableName()
     {
         return 'vehicle_detail';
@@ -60,7 +61,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
             [['vehicle_id'], 'required'],
             [['vehicle_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','emp_id','thai_year'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','emp_id','thai_year','date_filter'], 'safe'],
             [['ref', 'license_plate', 'status', 'time_start', 'time_end', 'driver_id'], 'string', 'max' => 255],
         ];
     }

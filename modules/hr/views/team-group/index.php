@@ -29,14 +29,27 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
- <div class="d-flex justify-content-between  align-top align-items-center">
-     <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title,['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้าง'.$this->title],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-        </div>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
+
 <div class="card">
+<div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+            </h6>
+            <div class="d-flex justify-content-between">
+                  <?=Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่',['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'],['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-md']])?>
+            </div>
+        </div>
+    </div>
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6>

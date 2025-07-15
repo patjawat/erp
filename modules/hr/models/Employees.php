@@ -333,7 +333,7 @@ class Employees extends Yii\db\ActiveRecord
             data-bs-title="ดูเพิ่มเติม...">'
                 .$this->fullname.'
             </p>
-            <p class="text-muted mb-0 fs-12">'.$this->departmentName().'</p>
+            <p class="text-muted mb-0 fs-12">'.$this->positionName().'</p>
             '.($showAge ? '<p class="text-muted mb-0 fs-13">อายุ '.$this->age.'</p>' : '').'
         </div>
     </div>';

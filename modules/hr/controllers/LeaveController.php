@@ -164,6 +164,7 @@ class LeaveController extends Controller
 
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);

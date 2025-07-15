@@ -1,23 +1,23 @@
 <?php
-
 use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
+use yii\web\JsExpression;
+use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
 use app\components\DateFilterHelper;
-use iamsaint\datetimepicker\Datetimepicker;
+use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
-/** @var app\modules\sm\models\OrderSearch $model */
+/** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-.right-setting {
-    width: 500px !important;
+.offcanvas-footer {
+    padding: 1rem 1rem;
+    border-top: 1px solid #dee2e6;
 }
 </style>
-
 <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
@@ -26,77 +26,100 @@ use iamsaint\datetimepicker\Datetimepicker;
             'data-pjax' => 0
         ],
     ]); ?>
-    <div class="d-flex justify-content-center align-items-center gap-2">
 
-
-
-<?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
- <?=$form->field($model, 'room_id')->widget(Select2::classname(), [
-                'data' => $model->listRooms(),
-                    'options' => ['placeholder' => 'ห้องประชุมทั้งหทด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'width' => '150px',
-                    ],
-                ])->label(false);?>
-            <?php
+<div class="row">
+    <div class="col-3">
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
+    <div class="col-2">
+        <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหทด'],
             'pluginOptions' => [
                 'allowClear' => true,
-                'width' => '130px',
+                // 'width' => '130px',
             ],
-        ])->label(false);
-        ?>
+            ])->label(false);
+            ?>
 
+    </div>
 
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?=$form->field($model, 'status')->widget(Select2::classname(), [
+        'data' => $model->listStatus(),
+        'options' => ['placeholder' => 'สถานะทั้งหทด'],
+        'pluginOptions' => [
+            'allowClear' => true,
+            // 'width' => '150px',
+        ],
+        ])->label(false);?>
+    </div>
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-12">
+<?= $form->field($model, 'title')->textInput(['placeholder' => 'เรื่องการประชุ'])->label(false) ?>
+        </div>
+        <div class="col-3">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
                     'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
                     'pluginOptions' => [
                         'allowClear' => true,
-                        'width' => '120px',
+                        // 'width' => '120px',
                     ],
         ])->label(false);?>
-        
 
-    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        </div>
 
-    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
+        <div class="col-4">
+
+          
+        </div>
+    </div>
 
 
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $model->listStatus(),
-                    'options' => ['placeholder' => 'สถานะทั้งหทด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'width' => '150px',
-                    ],
-                ])->label(false);?>
-                   <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-
-         </div>           
+</div>
 
 <?php ActiveForm::end(); ?>
 
+
 <?php
 
+$js = <<< JS
 
-$js = <<<JS
-thaiDatepicker('#meetingsearch-date_start,#meetingsearch-date_end')
+    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
 
-    $("#meetingsearch-date_start").on('change', function() {
-            $('#meetingsearch-thai_year').val(null).trigger('change');
+    $("#leavesearch-date_start").on('change', function() {
+            $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#meetingsearch-date_end").on('change', function() {
-            $('#meetingsearch-thai_year').val(null).trigger('change');
+    $("#leavesearch-date_end").on('change', function() {
+            $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-
 
 JS;
-$this->registerJS($js, View::POS_END)
+$this->registerJS($js, View::POS_END);
+
 ?>

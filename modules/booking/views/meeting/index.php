@@ -19,29 +19,33 @@ $this->params['breadcrumbs'][] = '<i class="bi bi-ui-checks me-1"></i>'.$this->t
 
 <!-- https://www.canva.com/ai/code/thread/52a8afb0-5caf-4151-a563-8a2106920508 -->
 
-<?=$this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) ?>
+<?php // $this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) ?>
 
 <div class="card">
-  <div class="card-body">
- <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-  </div>
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
 </div>
 
 
     <div class="card">
-        <div class="card-body">
+      <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+            </h6>
             <div class="d-flex justify-content-between">
-                <h6>
-                    <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
-                    <span
-                        class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-                    รายการ
-                </h6>
-                <div class="d-flex justify-content-end">
-                 
-                </div>
+                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
             </div>
-   
+        </div>
+    </div>
+
+        <div class="card-body">
             <?= $this->render('list',[
                   'searchModel' => $searchModel,
                   'dataProvider' => $dataProvider,

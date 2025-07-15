@@ -15,18 +15,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                         <th class="fw-semibold" scope="col" style="width:100px">ชื่อ-นามสกุล</th>
                         <th class="fw-semibold" scope="col">ประเภท</th>
+                        <th class="fw-semibold" scope="col">แผนก/ฝ่าย</th>
                         <th class="fw-semibold" scope="col" class="text-center">เริ่มงาน</th>
                         <th class="fw-semibold" scope="col">อายุราชการ</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>
-                        <th class="fw-semibold" scope="col">เหลืออีก | สิ้นสุดสัญญาจ้าง | เกษียรอายุ</th>
+                        <th class="fw-semibold" scope="col" style="width:250px">เหลืออีก | สิ้นสุดสัญญาจ้าง</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
         <tr>
             <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                        <td class="text-truncate"><?= $item->getAvatar(false) ?></td>
+                        <td class="text-truncate">
+                            <?= Html::a($item->getAvatar(false),['/hr/employees/view','id' => $item->id]) ?></td>
                         <td><?=$item->positionType->title?></td>
+                        <td class="text-truncate"><?= $item->departmentName() ?></td>
                         <td class="align-middle"><?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?></td>
                         <td class="align-middle">
                              <?= $item->age_join_date['full'] ?>                   
@@ -42,9 +45,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <?= AppHelper::CountDown($item->Retire()['date']) ?>
-                                </div>
-                                <div>
-                                    <i class="bi bi-calendar2-event"></i> <?= $item->Retire()['date']; ?>
                                 </div>
 
                             </div>

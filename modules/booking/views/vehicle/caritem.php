@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 ?>
-<div class="d-flex align-items-center" style="margin-top: -5px;">
+<div class="d-flex align-items-center gap-2" style="margin-top: -5px;">
      <?php echo isset($item->car) ? Html::img($item->car?->ShowImg()['image'], ['class' => 'img-fluid rounded','style' => 'max-width: 80px;']) : '-'; ?>
      <!-- $item->car?->license_plate ?? '-' -->
         <div class="avatar-detail">

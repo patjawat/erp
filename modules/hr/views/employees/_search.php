@@ -29,7 +29,6 @@ use app\modules\hr\models\Organization;
 .field-employeessearch-position_name {
     width: 300px !important;
 }
-
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -43,143 +42,117 @@ use app\modules\hr\models\Organization;
 ]); ?>
 
 
-<div class="d-flex gap-2  align-items-center">
+<div class="row">
 
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
-
-    <div style="width:180px">
-      <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
+    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
+    </div>
+    <div class="col-xl-2 col-lg-2 col-md-2 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
                     'data' => $model->ListPositionType(),
                     'options' => ['placeholder' => 'ประเภททั้งหมด ...'],
                     'pluginOptions' => [
-                         'width' => '100%',
                         // 'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
-    //                   'pluginEvents' => [
-    //     'select2:select' => 'function() { $(this).closest("form").submit(); }',
-    //     'select2:clear' => 'function() { $(this).closest("form").submit(); }'
-    // ]
                 ])->label(false) ?>
-
-</div>
-    <?php
-echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
-    'options' => [
-        'placeholder' => 'ตำแหน่งทั้งหมด ...',
-    ],
-    'type' => DepDrop::TYPE_SELECT2,
-    'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-    'pluginOptions' => [
-        'width' => '100%', // หรือใช้ค่าอื่น เช่น '300px', '50%'
-        'depends' => ['employeessearch-position_type'],
-        'url' => Url::to(['/hr/employees/get-position-name']),
-        'loadingText' => 'กำลังโหลด ...',
-        'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
-        'initDepends' => ['employeessearch-position_type'],
-        'initialize' => true,
-    ],
-    //                   'pluginEvents' => [
-    //     'select2:select' => 'function() { $(this).closest("form").submit(); }',
-    //     'select2:clear' => 'function() { $(this).closest("form").submit(); }'
-    // ]
-        
-        ])->label(false);?>
- <div style="width: 300px;">
-<?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'id' => 'treeID',
-    'query' => Organization::find()->addOrderBy('root, lft'),
-    'value' => null,  // ไม่ตั้งค่าเริ่มต้น
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => [
-        'class' => 'close',
-        'allowClear' => true,
-    ],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'placeholder' => 'เลือกหน่วยงาน...',
-    ],
-])->label(false); ?>
-
-                </div>
-                  <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
-        <i class="fa-solid fa-filter"></i>
-    </button>
-
-</div>
-    
-        
-
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="offcanvasExample"
-    aria-labelledby="offcanvasExampleLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasExampleLabel">กรองเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body position-relative">
-        
-        <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
-            <?php //  $form->field($model, 'show')->textInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
-            <?= $form->field($model, 'gender')->widget(Select2::classname(), [
+    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?php
+            echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
+                'options' => [
+                    'placeholder' => 'ตำแหน่งทั้งหมด ...',
+                ],
+                'type' => DepDrop::TYPE_SELECT2,
+                'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+                'pluginOptions' => [
+                    'depends' => ['employeessearch-position_type'],
+                    'url' => Url::to(['/hr/employees/get-position-name']),
+                    'loadingText' => 'กำลังโหลด ...',
+                    'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
+                    'initDepends' => ['employeessearch-position_type'],
+                    'initialize' => true,
+                ],
+            
+            ])->label(false);?>
+    </div>
+
+    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'status')->widget(Select2::classname(), [
+                'data' => $model->ListStatus(),
+                'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+            ])->label(false) ?>
+
+    </div>
+    <div class="col-xl-1 col-lg-1 col-md-1 col-sm-12 col-sx-12">
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            aria-expanded="false" aria-controls="collapseFilter">
+            <i class="fa-solid fa-filter"></i>
+        </button>
+
+    </div>
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+
+    <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...','id' => 'show'])->label(false) ?>
+
+    <div class="row">
+        <div class="col-5">
+            <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+                'name' => 'department',
+                'id' => 'treeID',
+                'query' => Organization::find()->addOrderBy('root, lft'),
+                'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                'fontAwesome' => true,
+                'asDropdown' => true,
+                'multiple' => false,
+                'options' => [
+                    'class' => 'close',
+                    'allowClear' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'placeholder' => 'เลือกหน่วยงาน...',
+                ],
+            ])->label(false); ?>
+        </div>
+
+        <div class="col-3">
+
+            <?= $form->field($model, 'range1')->textInput(['type' => 'number','placeholder' => 'ช่วงอายุเริ่มตั้น'])->label(false) ?>
+        </div>
+        <div class="col-3">
+
+            <?= $form->field($model, 'range2')->textInput(['type' => 'number','placeholder' => 'จนถึงอายุ'])->label(false) ?>
+        </div>
+        <div class="col-3">
+    <?= $form->field($model, 'gender')->widget(Select2::classname(), [
                 'data' => ['ชาย'=> 'ชาย','หญิง' => 'หญิง'],
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
-                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
             ])->label('เพศ') ?>
-
-
-            <?php $form->field($model, 'department')->widget(Select2::classname(), [
-                    'data' => $model->ListDepartment(),
-                    'options' => ['placeholder' => 'เลือก ...'],
-                    'pluginOptions' => [
-                        'dropdownParent' => '#offcanvasExample',
-                        'allowClear' => true
-                    ],
-                ])->label('หน่วยงาน') ?>
-
-            <?= $form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $model->ListStatus(),
-                'options' => ['placeholder' => 'เลือก ...'],
-                    'pluginOptions' => [
-                        'dropdownParent' => '#offcanvasExample',
-                        'allowClear' => true
-                    ],
-            ])->label('สถานะ') ?>
-
-            <div class="row">
-                <div class="col-6">
-
-                    <?= $form->field($model, 'range1')->textInput(['type' => 'number'])->label('อายุ') ?>
-                </div>
-                <div class="col-6">
-
-                    <?= $form->field($model, 'range2')->textInput(['type' => 'number'])->label('จนถึงอายุ') ?>
-                </div>
-                <div>
-                    <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
+        </div>
+  <div class="col-2">
+            <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
                 'data' => [1=>'ลงทะเบียนสำเร็จ', 0=>'ยังไม่ลงทะเบียน'],
                 'options' => ['placeholder' => 'เลือก ...'],
                     'pluginOptions' => [
-                        'dropdownParent' => '#offcanvasExample',
                         'allowClear' => true
                     ],
             ])->label('สถานนะการลงทะเบียน') ?>
-                </div>
-            </div>
-
-            <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
-
-            <?=AppHelper::BtnSave('ค้นหา')?>
-            
+        </div>
+        <div class="col-3 d-flex align-items-center align-self-center">
+                <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
+        </div>
     </div>
 </div>
 
@@ -188,27 +161,6 @@ echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
 
 <?php
 $js = <<< JS
-
-
-
-// $('#offcanvasExample').on('shown.bs.offcanvas', function () {
-//     $('#model-position_name').select2({
-//         dropdownParent: $('#offcanvasExample') // ให้ dropdown อยู่ภายใน offcanvas
-//     });
-// });
-
-// $("#w0-tree-input").treeview("expandAll");
-// $("#treeID").treeview("collapseAll");
-// $("#w0-tree-input").treeview("uncheckAll");
-// $("#w0-tree").treeview("uncheckAll");
-// $("#w0-tree-input-menu").treeview("uncheckAll");
-
- 
-// $("#treeID").on('treeview:change', function(event, key, name) {
-//                         $('body').find('.kv-tree-input').removeClass('show')
-//                         $('body').find('.kv-tree-dropdown').removeClass('show')
-
-// });
 
 
 $('#show').val(localStorage.getItem('right-setting'))

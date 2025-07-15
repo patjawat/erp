@@ -18,7 +18,7 @@ class VehicleDetailSearch extends VehicleDetail
     {
         return [
             [['id', 'vehicle_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'license_plate', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','emp_id','q','thai_year'], 'safe'],
+            [['ref', 'license_plate', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','emp_id','q','thai_year','date_filter'], 'safe'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
         ];
     }
