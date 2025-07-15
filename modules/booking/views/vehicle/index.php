@@ -73,7 +73,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             </p>
                     </td>
                         <td><?= $item->locationOrg?->title ?? '-' ?></td>
-                        <td><?= $item->userRequest()['avatar'] ?></td>
+                        <td>
+                            <?php
+                            
+                            echo $item->userRequest()['avatar'];
+                            echo $item->userRequest()['signature'];
+                            ?>
+                        </td>
                         <td><?= $item->viewStatus()['view'] ?? '-' ?></td>
                         <td class="fw-light text-end">
                             <div class="btn-group">
