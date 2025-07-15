@@ -52,33 +52,37 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php endif;?>
 
-
 <div class="card">
-    <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-primary rounded-pill']) ?>
-                <?= $this->render('_search', ['model' => $searchModel]); ?>
-                <div>
-                      <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                <?=Html::a('<i class="fa-solid fa-file-import me-1"></i>',['/am/asset/import-csv'],['class' => 'btn btn-outline-primary','title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
-            'data' => [
-                'bs-placement' => 'top',
-                'bs-toggle' => 'tooltip',
-                ]])?>
+    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+  <div>
+                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
+                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
                 </div>
-            </div>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
 
         <?php if(SiteHelper::getDisplay() == 'list'):?>
 <div class="card">
-    <div class="card-body">
+    <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน <span class="badge rounded-pill text-bg-primary"> <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+            </h6>
+            <div class="d-flex justify-content-between gap-3">
+                  <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-light']) ?>
+                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
+            </div>
         </div>
-    
+    </div>
+
+    <div class="card-body">
         <?=$this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,

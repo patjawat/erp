@@ -46,11 +46,13 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
          'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
-<div class="d-flex gap-/">
-    <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...','width' => '100'])->label(false)->label(false) ?>
+<div class="row">
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
+    </div>
 
-
-  <?php
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?php
 
   echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
     'data' => $model->listAssetType(),
@@ -60,7 +62,6 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
     ],
         'pluginOptions' => [
         'allowClear' => true,
-         'width' => '300px',
     ],
                   'pluginEvents' => [
                         "select2:select" => "function() { 
@@ -69,8 +70,10 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
                     ],
 ])->label(false);
 ?>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-12">
 
-<?php
+        <?php
 echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
     'options' => [
         'placeholder' => 'ทุกหมวดหมู่',
@@ -78,7 +81,6 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
     'type' => DepDrop::TYPE_SELECT2,
     'select2Options' => ['pluginOptions' => ['allowClear' => true]],
     'pluginOptions' => [
-        'width' => '100%', // หรือใช้ค่าอื่น เช่น '300px', '50%'
         'depends' => ['asset_type_id'],
         'url' => Url::to(['/am/asset-item/get-asset-category']),
         'loadingText' => 'กำลังโหลด ...',
@@ -88,15 +90,33 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
     ],
                   'pluginEvents' => [
                         "select2:select" => "function() { 
-                            // $(this).submit(); 
+
                         }",
                     ],
 
 ])->label(false);?>
+    </div>
 
 
-<div style="width:300px">
-<?php
+
+ <div class="col-lg-1 col-md-1 col-sm-12">
+    <div class="d-flex flex-row align-items-center gap-2">
+        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            aria-expanded="false" aria-controls="collapseFilter">
+            <i class="fa-solid fa-filter"></i>
+        </button>
+    </div>
+    </div>
+
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <?= $form->field($model, 'asset_group')->hiddenInput()->label(false);
+                                    
+                                    ?>
+                                        <div class="col-lg-4 col-md-4 col-sm-12">
+        <?php
  echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',
     'id' => 'treeID',
@@ -118,32 +138,9 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 ])->label(false);
 ?>
 
-            </div>
-
-
-    <div class="d-flex flex-row align-items-center gap-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-            aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
-                class="fa-solid fa-filter"></i></button>
-      
     </div>
 
-</div>
-
-
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <?= $form->field($model, 'asset_group')->hiddenInput()->label(false);
-                                    
-                                    ?>
-                                  
-                                   <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
+    <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
                                         'data' => $listAssetType,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
                                         'pluginOptions' => [
@@ -167,9 +164,9 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 
 
 
-        <div class="row">
-            <div class="col-6">
-                <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
+    <div class="row">
+        <div class="col-6">
+            <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
                                         'data' => $model->ListMethodget(),
                                         'options' => ['placeholder' => 'เลือกวิธีได้มา'],
                                         'pluginOptions' => [
@@ -177,9 +174,9 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                         ],
                                     ])->label('วิธีได้มา');
                                     ?>
-            </div>
-            <div class="col-6">
-                <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
+        </div>
+        <div class="col-6">
+            <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
                                         'data' => $model->ListBudgetdetail(),
                                         'options' => ['placeholder' => 'เลือกประเภทเงิน'],
                                         'pluginOptions' => [
@@ -187,11 +184,11 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                         ],
                                     ])->label('ประเภทเงิน');
                                     ?>
-            </div>
-            <div class="col-6">
+        </div>
+        <div class="col-6">
 
 
-                <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
+            <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
                                         'data' => $model->ListOnYear(),
                                         'options' => ['placeholder' => 'เลือกปีงบประมาณ'],
                                         'pluginOptions' => [
@@ -200,11 +197,11 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                         ],
                                     ])->label('งบประมาณ');
                                     ?>
-            </div>
-            <div class="col-6">
+        </div>
+        <div class="col-6">
 
 
-                <?php
+            <?php
                         $url = \yii\helpers\Url::to(['/depdrop/employee']);
                         $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
                                 echo $form->field($model, 'owner')->widget(Select2::classname(), [
@@ -234,15 +231,15 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                     ]
                                 ])->label('ผู้รับผิดชอบ');
                         ?>
-            </div>
-            <div class="col-6">
-                <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
+        </div>
+        <div class="col-6">
+            <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
         'mask' => '99/99/9999',
     ])->label('วันที่รับเข้า');
                         ?>
-            </div>
-            <div class="col-6">
-                <?php
+        </div>
+        <div class="col-6">
+            <?php
                                 echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
                                     'data' => $model->ListAssetStatus(),
                                     'options' => ['placeholder' => 'กรุณาเลือก...'],
@@ -257,38 +254,24 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                     ]
                                 ])->label('สถานะ');
                         ?>
-            </div>
-
         </div>
 
-        <div class="row">
-            <div class="col-6">
-
-                <?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
-            </div>
-            <div class="col-6">
-
-                <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
-            </div>
-            <div class="col-12">
-                <?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
-            </div>
-        </div>
-
-
-
-
-
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light']);?>
-        <?=app\components\AppHelper::Btn([
-                    'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
-                    'url' => ['/am/asset/omit'],
-                    'modal' => true, 
-                    'size' => 'lg',
-                    'class' => 'btn btn-danger mt-3'
-                    ]
-                    )?>
     </div>
+
+    <div class="row">
+        <div class="col-6">
+
+            <?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
+        </div>
+        <div class="col-6">
+
+            <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
+        </div>
+        <div class="col-12">
+            <?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
+        </div>
+    </div>
+
 </div>
 
 <?php ActiveForm::end(); ?>
