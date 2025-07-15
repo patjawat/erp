@@ -47,7 +47,7 @@ class DevelopmentController extends Controller
      */
     public function actionIndex()
     {
-       $me = UserHelper::GetEmployee();
+        $me = UserHelper::GetEmployee();
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $searchModel = new DevelopmentSearch([
@@ -59,14 +59,6 @@ class DevelopmentController extends Controller
             // 'status' =>   $status ? [$status] : ['Pending']
         ]);
 
-        // $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
-        // $searchModel = new DevelopmentSearch([
-        //     'thai_year' => AppHelper::YearBudget(),
-        //     'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-        //     'date_end' => AppHelper::convertToThai($lastDay),
-        //     'status' => ['Pending']
-        // ]);
-        // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
         $dataProvider->query->andFilterWhere([
@@ -74,8 +66,8 @@ class DevelopmentController extends Controller
             ['like', 'topic', $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        
- if ($searchModel->date_filter) {
+
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -95,7 +87,7 @@ class DevelopmentController extends Controller
 
     public function actionDashboard()
     {
-         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $searchModel = new DevelopmentSearch([
             'thai_year' => AppHelper::YearBudget(),
@@ -103,12 +95,12 @@ class DevelopmentController extends Controller
             'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending']
         ]);
-         $dataProvider = $searchModel->search($this->request->queryParams);
-        return $this->render('dashboard',[
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
-    }   
+    }
 
     /**
      * Displays a single Development model.
@@ -127,7 +119,7 @@ class DevelopmentController extends Controller
                     'model' => $model,
                 ]),
             ];
-        }else{
+        } else {
             return $this->render('view', [
                 'model' => $model,
             ]);
@@ -176,7 +168,7 @@ class DevelopmentController extends Controller
         ]);
     }
 
-        public function actionCheck($id)
+    public function actionCheck($id)
     {
         $model = $this->findModel($id);
 
@@ -184,7 +176,7 @@ class DevelopmentController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-         if ($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -192,13 +184,13 @@ class DevelopmentController extends Controller
                     'model' => $model,
                 ]),
             ];
-        }else{
+        } else {
             return $this->render('check', [
                 'model' => $model,
             ]);
         }
     }
-    
+
     /**
      * Deletes an existing Development model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
