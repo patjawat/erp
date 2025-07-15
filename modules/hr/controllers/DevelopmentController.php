@@ -54,7 +54,7 @@ class DevelopmentController extends Controller
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
-            // 'status' =>   'Pending',
+            'status' =>   'Pending',
             'date_filter' => 'this_month'
             // 'status' =>   $status ? [$status] : ['Pending']
         ]);
