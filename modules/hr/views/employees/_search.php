@@ -204,11 +204,11 @@ $js = <<< JS
 // $("#w0-tree-input-menu").treeview("uncheckAll");
 
  
-$("#treeID").on('treeview:change', function(event, key, name) {
-                        $('body').find('.kv-tree-input').removeClass('show')
-                        $('body').find('.kv-tree-dropdown').removeClass('show')
+// $("#treeID").on('treeview:change', function(event, key, name) {
+//                         $('body').find('.kv-tree-input').removeClass('show')
+//                         $('body').find('.kv-tree-dropdown').removeClass('show')
 
-});
+// });
 
 
 $('#show').val(localStorage.getItem('right-setting'))

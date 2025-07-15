@@ -23,9 +23,10 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
             <th class="fw-semibold">ระหว่างวันที่</th>
             <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
-            <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
+            <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
             <th class="fw-semibold text-start">ความคืบหน้า</th>
             <th class="fw-semibold text-start">สถานะ</th>
+            <th class="fw-semibold text-center">ดำเนินการ</th>
             <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>
     </thead>
@@ -113,7 +114,40 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                 </div>
             </td>
 
-            
+            <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center">
+                    <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/me/leave/view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                    <!-- ถ้า ผอ. อนุมัติแล้ว ไม่สามารถแก้ไขได้-->
+                    <?php if($item->status == 'Approve'):?>
+
+                    <!-- แต่เป็น admin แก้ไขได้ -->
+                    <?php if(Yii::$app->user->can('admin')):?>
+                    <?php echo Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/hr/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                    <?php else:?>
+                    <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
+                    <?php endif;?>
+
+                    <?php else:?>
+                    <!-- ถ้าเป็นเจ้าของวันลา -->
+                    <?php echo ($me->id == $item->emp_id) ? Html::a('<i class="fa-solid fa-pencil fa-2x text-warning"></i>',['/me/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'open-modal','data' => ['size' => 'modal-xl']]) : ''?>
+                    <?php endif?>
+
+                    <!-- การพิมพ์ใบลา ถ้า ผอ.อนุมัติแล้ว ให้พิมได้ -->
+                    <?php if($item->status == 'Approve'):?>
+
+                    <?php echo Html::a('<i class="fa-solid fa-file-arrow-down fa-2x text-success"></i>', 
+                            [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
+                            ['class' => 'open-modal','data' => [
+                                'size' => 'modal-xl',
+                                'filename' => $item->leaveType?->title ?? '-'.'-'.$item->employee->fullname
+                            ]]) ?>
+
+                    <?php else:?>
+
+                    <i class="fa-solid fa-file-arrow-down fa-2x text-secondary ms-1"></i>
+                    <?php endif;?>
+                </div>
+            </td>
         </tr>
         <?php endforeach;?>
     </tbody>

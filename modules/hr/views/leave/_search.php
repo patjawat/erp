@@ -28,77 +28,70 @@ use app\modules\hr\models\Organization;
      'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<div class="d-flex justify-content-between align-items-center gap-2">
+<div class="row">
+    <div class="col-3">
 
-    <?php // echo $form->field($model, 'emp_id')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
-    <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
-            <?php
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
+    <div class="col-2">
+        <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหทด'],
             'pluginOptions' => [
                 'allowClear' => true,
-                'width' => '130px',
+                // 'width' => '130px',
             ],
-        ])->label(false);
-        ?>
+            ])->label(false);
+            ?>
 
+    </div>
 
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?=$form->field($model, 'status')->widget(Select2::classname(), [
+        'data' => $model->listStatus(),
+        'options' => ['placeholder' => 'สถานะทั้งหทด'],
+        'pluginOptions' => [
+            'allowClear' => true,
+            // 'width' => '150px',
+        ],
+        ])->label(false);?>
+    </div>
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    <div class="row">
+        <div class="col-3">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
                     'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
                     'pluginOptions' => [
                         'allowClear' => true,
-                        'width' => '120px',
+                        // 'width' => '120px',
                     ],
         ])->label(false);?>
-        
 
-    <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-
-    <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => '__/__/____'])->label(false);?>
-
-
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $model->listStatus(),
-                    'options' => ['placeholder' => 'สถานะทั้งหทด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'width' => '150px',
-                    ],
-                ])->label(false);?>
-
-     <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                'data' => $model->listLeaveType(),
-                    'options' => ['placeholder' => 'ประเภททั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'width' => '150px',
-                    ],
-                ])->label(false);?>
-
-
-
-
-    <div class="d-flex flex-row align-items-center gap-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-            aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
-                class="fa-solid fa-filter"></i></button>
-    </div>
-
-
-</div>
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-       
-                 <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+        </div>
+        <div class="col-4">
+            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
                     'query' => Organization::find()->addOrderBy('root, lft'),
@@ -112,20 +105,21 @@ use app\modules\hr\models\Organization;
                     'pluginOptions' => [
                         'allowClear' => true
                     ],
-                ])->label('หน่วยงานตามโครงสร้าง'); ?>
-        <div class="offcanvas-footer">
-            <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
-                        [
-                            'class' => 'btn btn-light',
-                            // 'data-bs-backdrop' => 'static',
-                            'tabindex' => '-1',
-                            'id' => 'offcanvasExample',
-                            'aria-labelledby' => 'offcanvasExampleLabel',
-                        ]
-                    ); ?>
+                ])->label(false); ?>
+        </div>
+        <div class="col-4">
+
+            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                'data' => $model->listLeaveType(),
+                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false);?>
         </div>
     </div>
+
+
 </div>
 
 <?php ActiveForm::end(); ?>
@@ -136,6 +130,7 @@ use app\modules\hr\models\Organization;
 $js = <<< JS
 
     thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+
     $("#leavesearch-date_start").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
             // $(this).submit();

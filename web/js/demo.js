@@ -1,4 +1,5 @@
 "use strict";
+
 !(function () {
   let e, t, o, r;
   o = isDarkStyle

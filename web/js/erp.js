@@ -1,4 +1,3 @@
-
 window.onbeforeunload = function () {
 
   showTableLoading()

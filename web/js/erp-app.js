@@ -28,6 +28,15 @@ $(document).ready(function(){
 
 		return false;
 });
+
+//แก้ treeview ไม่ปิดเวลาเลือก
+$("#treeID").on('treeview:change', function(event, key, name) {
+                        $('body').find('.kv-tree-input').removeClass('show')
+                        $('body').find('.kv-tree-dropdown').removeClass('show')
+
+});
+
+
 	$("body").on("click", function(e) {
 		if ($(e.target).closest('.side-navbar').length > 0 || $(e.target).closest('[data-sidebar="mobile"]').length > 0) {
 			return;
