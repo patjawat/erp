@@ -863,11 +863,9 @@ class DocumentsController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
+            try {
             //## ตรวจสอบสถานะส่งเสนอ ผอ.
             $director = SiteHelper::getInfo()['director']->id;
-
-            try {
-
                 //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
                 if (in_array($director, $model->tags_employee)) {
                     $docStatus =  $model->document;
