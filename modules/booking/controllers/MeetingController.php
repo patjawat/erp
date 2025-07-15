@@ -205,7 +205,7 @@ class MeetingController extends Controller
             $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
             $data[] = [
                 'id' => $item->id,
-                'title' => $this->renderAjax('title', ['model' => $item, 'action' => false]),
+                'title' => $this->renderAjax('view_title', ['model' => $item, 'action' => false]),
                 'start' => $dateStart,
                 'end' => $dateStart,
                 'extendedProps' => [
