@@ -40,8 +40,72 @@ $this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', 
 $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 $liffProfile = SiteHelper::getInfo()['line_liff_profile'];
 $liffLoginUrl = 'https://liff.line.me/' . SiteHelper::getInfo()['line_liff_login'];
-
+$urlUpload = Url::to('/filemanager/uploads/upload-signgle');
 $js = <<< JS
+
+
+
+// อัปโหลด PDF
+$('#my_file').on('change', function (e) {
+
+    const file = this.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        Swal.fire({
+            icon: 'error',
+            title: 'ผิดพลาด',
+            text: 'กรุณาเลือกไฟล์ PDF เท่านั้น'
+        });
+        $(this).val('');
+        return;
+    }
+
+    Swal.fire({
+        title: 'ยืนยันการอัปโหลด?',
+        text: 'คุณต้องการอัปโหลดไฟล์ PDF นี้หรือไม่',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, อัปโหลด',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append("$formName", file);
+            formData.append("id", 1);
+            formData.append("ref", '$ref');
+            formData.append("name", '$formName');
+
+            $.ajax({
+                url: '$urlUpload',
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'อัปโหลดสำเร็จ',
+                        showConfirmButton: false,
+                        timer: 1200
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถอัปโหลดไฟล์ได้'
+                    });
+                }
+            });
+        } else {
+            $('#my_file').val('');
+        }
+    });
+});
+
 
 // ฟังก์ชันตรวจสอบสิทธิ์และยืนยันตัวตน
 async function checkProfile(userId) {

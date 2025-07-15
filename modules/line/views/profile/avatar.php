@@ -16,10 +16,12 @@ use app\modules\hr\models\EmployeeDetail;
 <div class="card">
     <div class="card-body">
         <div class="d-flex flex-column mb-3 ">
+            <div class="position-relative">
             <div class="d-flex justify-content-center">
                 <?= Html::img($model->showAvatar(), ['class' => 'avatar avatar-xxl border border-primary-subtl card-img-top mt--45 shadow']) ?>
             </div>
-
+             <input type="file" class="file-upload-input" id="my_file" accept="image/*">
+</div>
             <div class="d-flex justify-content-center">
                 <div class="d-flex flex-column">
                     <h2><?=$model->fullname?></h2>

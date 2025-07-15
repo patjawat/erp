@@ -30,13 +30,18 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('menu',['active' => 'ambulance'])?>
 <?php $this->endBlock(); ?>
 
-<?=$this->render('@app/modules/booking/views/vehicle/summary',['model' => $searchModel]) ?>
+
+<div class="card">
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel,'action' => 'ambulance']); ?>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks me-1"></i> คำขอรอจัดสรร <span
                     class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-            <?php echo $this->render('_search', ['model' => $searchModel,'action' => 'ambulance']); ?>
         </div>
     </div>
     <div class="card-body p-0">

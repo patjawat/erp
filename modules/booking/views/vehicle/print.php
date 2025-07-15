@@ -90,6 +90,7 @@ $js = <<< JS
     });
     
     getLayout()
+    
 function getLayout() {
     $.ajax({
         type: "get",

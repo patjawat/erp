@@ -555,14 +555,16 @@ class VehicleController extends Controller
                     'time_end' => $model->time_start,
                     'vehicle_type' => $model->vehicle_type_id,
                     'license_plate' => $model->license_plate,
-                    'driver_name' => 'นายสมชาย ขับรถ',
-                    'driver_name_' => 'นายสมชาย ขับรถ',
-                    'leader_name' => 'นายหัวหน้า ผู้ขอใช้รถ',
+                    'driver_name' => $model->driver?->fullname ?? '-',
+                    'driver_name_' => $model->driver?->fullname ?? '-',
+                    //หัวหน้างาน
+                    'leader_name' => $model->leader?->getInfo()['fullname'],
+                    'leader_signature' => $model->leader?->getInfo()['signature'],
+
                     'driver_leader_name' => 'นายหัวหน้า พขร.',
                     'mileage_start' => '10000',
                     'mileage_end' => '10100',
                     'emp_signature' => $model->userRequest()['signature'],
-                    'leader_signature' => $model->leader?->getInfo()['signature'],
                     'driver_signature' => $model->driver?->getInfo()['signature'],
                     'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
 

@@ -18,20 +18,34 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="ms-5 mt-5 w-25">
         <div class="d-grid gap-2">
-            <div class="d-grid gap-2 mx-auto  btn btn-primary shadow w-100">
-                <div class="position-relative">
-                    <div class="file-upload-btnxx">
-                        <i class="fa-solid fa-upload"></i>
-                        <span>คลิกอัปโหลดไฟล์ที่นี่</span>
-                    </div>
-                    <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
+          <div class="d-grid gap-2 mx-auto">
+            <div class="position-relative">
+                <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>คลิกอัปโหลดไฟล์ที่นี่</span>
                 </div>
+                <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
+            </div>
+        </div>
+
+  <button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
+  <button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
+</div>
+
+
+<pre id="output"></pre>
+
+        <div class="conteiner d-flex gap-3">
+            <div>
+                
             </div>
 
-            <button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
-            <button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
+
+            
         </div>
     </div>
+
+
 </div>
 
 <?php

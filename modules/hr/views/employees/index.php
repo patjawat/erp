@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div>
                  <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-primary setview']) ?>
                 <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-primary setview']) ?>
-                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>ส่งออกข้อมูลบุคลากร</button>
+                   <button id="download-button" class="btn btn-success shadow"><i class="fa-solid fa-file-export me-1"></i>Excel</button>
             </div>
         </div>
     </div>
