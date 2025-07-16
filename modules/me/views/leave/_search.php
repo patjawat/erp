@@ -81,20 +81,15 @@ use app\modules\hr\models\Organization;
 
     <div class="d-flex flex-row align-items-center gap-2">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-            aria-controls="offcanvasRight" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม..."><i
-                class="fa-solid fa-filter"></i></button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
     </div>
 
 
 </div>
-<!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
+<div class="collapse mt-3" id="collapseFilter">
        
                 <?php
                 echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::class, [
@@ -117,36 +112,9 @@ use app\modules\hr\models\Organization;
                     ],
                 ])->label('หน่วยงานตามโครงสร้าง');
                 ?>
-                <?php
-                // Auto close offcanvas when department is selected
-                $js = <<<JS
-                $('#treeview-q-department').on('change', function() {
-                    var val = $(this).val();
-                    if(val) {
-                        $('body').find('.kv-tree-input').removeClass('show')
-                        $('body').find('.kv-tree-dropdown').removeClass('show')
-                        // var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
-                        // offcanvas.hide();
-                    }
-                });
-                JS;
-                $this->registerJs($js, \yii\web\View::POS_READY);
-                ?>
 
-        <div class="offcanvas-footer">
-            <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
-                        [
-                            'class' => 'btn btn-light',
-                            // 'data-bs-backdrop' => 'static',
-                            'tabindex' => '-1',
-                            'id' => 'offcanvasExample',
-                            'aria-labelledby' => 'offcanvasExampleLabel',
-                        ]
-                    ); ?>
+
         </div>
-    </div>
-</div>
 
 <?php ActiveForm::end(); ?>
 
