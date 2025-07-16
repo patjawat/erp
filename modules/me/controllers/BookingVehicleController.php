@@ -17,6 +17,7 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use mdm\autonumber\AutoNumber;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
@@ -55,7 +56,9 @@ class BookingVehicleController extends Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        $searchModel = new VehicleSearch();
+        $searchModel = new VehicleSearch([
+            'date_filter' => 'this_month'
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere([
@@ -63,6 +66,19 @@ class BookingVehicleController extends Controller
             ['like', 'reason', $searchModel->q],
             ['like', 'code', $searchModel->q],
         ]);
+        
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
@@ -73,51 +89,50 @@ class BookingVehicleController extends Controller
 
     public function actionCalendar()
     {
-        return $this->render('calendar',['url' => '/me/booking-vehicle/']);
+        return $this->render('calendar', ['url' => '/me/booking-vehicle/']);
     }
-    
+
 
 
     public function actionEvents()
-	{
+    {
         $start = $this->request->get('start');
         $end = $this->request->get('end');
-        
-		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            $bookings = Vehicle::find()
-                ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
-                ->orderBy(['id' => SORT_DESC])
-                ->all();
-                $data = [];
 
-                       foreach ($bookings as $item) {
-                $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-                $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
-                $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
-                $title = 'ขอใช้' . $item->carType?->title . ' ไป' . ($item->locationOrg?->title ?? '-');
-                $data[] = [
-                    'id'               => $item->id,
-                    'title'            => $item->reason,
-                    'start'            => $dateStart,
-                    'end'            => $dateEnd,
-                    // 'display' => 'auto',
-                    'allDay' => false,
-                    'source' => 'vehicle',
-                    'extendedProps' => [
-                        'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
-                        'code' => $item->code
-                    ],
-                    'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
-                    'description' => 'description for All Day Event',
-                    'textColor' => 'black',
-                    // 'backgroundColor' => '#eee',
-                ];
-            }
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $bookings = Vehicle::find()
+            ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+        $data = [];
 
-            return  $data;
-       
-	}
+        foreach ($bookings as $item) {
+            $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+            $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+            $title = 'ขอใช้' . $item->carType?->title . ' ไป' . ($item->locationOrg?->title ?? '-');
+            $data[] = [
+                'id'               => $item->id,
+                'title'            => $item->reason,
+                'start'            => $dateStart,
+                'end'            => $dateEnd,
+                // 'display' => 'auto',
+                'allDay' => false,
+                'source' => 'vehicle',
+                'extendedProps' => [
+                    'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
+                    'code' => $item->code
+                ],
+                'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
+                'description' => 'description for All Day Event',
+                'textColor' => 'black',
+                // 'backgroundColor' => '#eee',
+            ];
+        }
+
+        return  $data;
+    }
 
     /**
      * Displays a single Vehicle model.
@@ -143,7 +158,6 @@ class BookingVehicleController extends Controller
                 'model' => $model
             ]);
         }
-        
     }
 
     /**
@@ -155,8 +169,8 @@ class BookingVehicleController extends Controller
     public function actionCreate()
     {
         $me = UserHelper::GetEmployee();
-        $dateStart = $this->request->get('date_start'); 
-        $dateEnd = $this->request->get('date_end'); 
+        $dateStart = $this->request->get('date_start');
+        $dateEnd = $this->request->get('date_end');
         $model = new Vehicle([
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
@@ -174,22 +188,22 @@ class BookingVehicleController extends Controller
                 $model->status =  $model->vehicle_type_id == "personal" ? 'Pass' : 'Pending';
                 $model->emp_id = $me->id;
                 // $model->code  = CARREQ-20250101-001
-                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' .date('ymd') . '-???');
-               
+                $model->code  = \mdm\autonumber\AutoNumber::generate('REQ-CAR' . date('ymd') . '-???');
+
                 if ($model->save(false)) {
                     // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
                     $this->checkLocation($model);
 
                     // ถ้าเป็นการไปกลับสร้างตารางจรรสรรของแต่ละวัน
-                   
-                        $this->createDetail($model);
-                        $model->sendMessage();
-                        
-                      
-                        //สร้างการอนุมัติ
-                        
-                        // $this->createApprove($model);
-                        
+
+                    $this->createDetail($model);
+                    $model->sendMessage();
+
+
+                    //สร้างการอนุมัติ
+
+                    // $this->createApprove($model);
+
                     // return $this->redirect(['/me/booking-vehicle/index', 'id' => $model->id]);
                     return [
                         'status' => 'success',
@@ -214,7 +228,7 @@ class BookingVehicleController extends Controller
             ]);
         }
     }
-    
+
 
     /**
      * Updates an existing Vehicle model.
@@ -261,28 +275,25 @@ class BookingVehicleController extends Controller
      * @throws NotFoundHttpException if the model cannot be found
      */
     //ยกเลิกการจอง
-     public function actionCancel($id)
+    public function actionCancel($id)
     {
         $model = $this->findModel($id);
         $model->status = 'Cancel';
-        if($model->save(false)){
-            
-     $msg  = "
+        if ($model->save(false)) {
+
+            $msg  = "
         🚫 <b>ยกเลิกการจองรถ</b>
-        👤 <b>ผู้ยกเลิก:</b> ".$model->userRequest()['fullname']."
-        📍 <b>สถานที่:</b> ".($model->locationOrg?->title ?? '-')."
-        📅 <b>วันที่:</b> ".$model->showDateRange()."
-        🕘 <b>เวลา:</b> ".$model->viewTime();
-                        $model->sendMessage($msg);
-            
+        👤 <b>ผู้ยกเลิก:</b> " . $model->userRequest()['fullname'] . "
+        📍 <b>สถานที่:</b> " . ($model->locationOrg?->title ?? '-') . "
+        📅 <b>วันที่:</b> " . $model->showDateRange() . "
+        🕘 <b>เวลา:</b> " . $model->viewTime();
+            $model->sendMessage($msg);
         }
         \Yii::$app->response->format = Response::FORMAT_JSON;
         return [
             'status' => 'success',
             'message' => 'ยกเลิกการจองเรียบร้อยแล้ว',
-        ]; 
-        
-
+        ];
     }
 
     /**
@@ -300,46 +311,47 @@ class BookingVehicleController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
- public function actionTest(){
-    \Yii::$app->response->format = Response::FORMAT_JSON;
+    public function actionTest()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
-   return  LineMsg::BookVehicle(1060,1);
- }
+        return  LineMsg::BookVehicle(1060, 1);
+    }
 
     protected function createApprove($model)
     {
         // try {
-            // หัวหน้างาน
-            $leader = new Approve();
-            $leader->from_id = $model->id;
-            $leader->title = 'ขออนุมัติใช้รถ';
-            $leader->name = 'vehicle';
-            $leader->status = 'Pending';
-            $leader->emp_id = $model->leader_id;
-            $leader->level = 1;
-            $leader->data_json = ['label' => 'อนุมัติ'];
-            $leader->save(false);
-            $id = $model->id;
-            LineMsg::BookVehicle($id,1);
-            
+        // หัวหน้างาน
+        $leader = new Approve();
+        $leader->from_id = $model->id;
+        $leader->title = 'ขออนุมัติใช้รถ';
+        $leader->name = 'vehicle';
+        $leader->status = 'Pending';
+        $leader->emp_id = $model->leader_id;
+        $leader->level = 1;
+        $leader->data_json = ['label' => 'อนุมัติ'];
+        $leader->save(false);
+        $id = $model->id;
+        LineMsg::BookVehicle($id, 1);
+
         // } catch (\Throwable $th) {
         // }
         // ผู้อำนวยการอนุมัติ
         $getDirector = SiteHelper::viewDirector();
         // try {
-            $director = new Approve();
-            $director->from_id = $model->id;
-            $director->name = 'vehicle';
-            $director->emp_id = $director['id'];
-            $director->title = 'ขออนุมัติใช้รถ';
-            $director->data_json = ['label' => 'อนุมัติ'];
-            $director->level = 2;
-            $director->status = 'None';
-            $director->save(false);
+        $director = new Approve();
+        $director->from_id = $model->id;
+        $director->name = 'vehicle';
+        $director->emp_id = $director['id'];
+        $director->title = 'ขออนุมัติใช้รถ';
+        $director->data_json = ['label' => 'อนุมัติ'];
+        $director->level = 2;
+        $director->status = 'None';
+        $director->save(false);
         // } catch (\Throwable $th) {
         // }
 
-        
+
     }
 
     protected function createDetail($model)
@@ -351,21 +363,21 @@ class BookingVehicleController extends Controller
         $interval = new DateInterval('P1D');  // ระยะห่าง 1 วัน
         $period = new DatePeriod($startDate, $interval, $endDate);
         //ถ้าเป็นรถยนต์ส่วนตัว
-        if($model->vehicle_type_id == "personal"){
+        if ($model->vehicle_type_id == "personal") {
             $me = UserHelper::GetEmployee();
-            if($model->go_type == "1"){
+            if ($model->go_type == "1") {
                 $dates = [];
                 foreach ($period as $date) {
                     $newDetail = new VehicleDetail;
-                $newDetail->date_start = $date->format('Y-m-d');
-                $newDetail->date_end = $date->format('Y-m-d');
-                $newDetail->vehicle_id = $model->id;
-                $newDetail->driver_id = $me->id;
-                $newDetail->license_plate = $model->license_plate;
-                $newDetail->status = 'Pass';
-                $newDetail->save(false);
+                    $newDetail->date_start = $date->format('Y-m-d');
+                    $newDetail->date_end = $date->format('Y-m-d');
+                    $newDetail->vehicle_id = $model->id;
+                    $newDetail->driver_id = $me->id;
+                    $newDetail->license_plate = $model->license_plate;
+                    $newDetail->status = 'Pass';
+                    $newDetail->save(false);
                 }
-            }else{
+            } else {
                 $newDetail = new VehicleDetail;
                 $newDetail->date_start = $model->date_start;
                 $newDetail->date_end = $model->date_end;
@@ -375,8 +387,8 @@ class BookingVehicleController extends Controller
                 $newDetail->status = 'Pass';
                 $newDetail->save(false);
             }
-            
-          
+
+
 
             $info = SiteHelper::getInfo();
             $newAprove = new Approve();
@@ -387,9 +399,8 @@ class BookingVehicleController extends Controller
             $newAprove->data_json = ['label' => 'อนุมัติ'];
             $newAprove->level = 1;
             $newAprove->status = 'Pending';
-            $newAprove->save(false);            
-
-        }else{
+            $newAprove->save(false);
+        } else {
 
             if ($model->go_type == "1") {
                 $dates = [];
@@ -401,7 +412,7 @@ class BookingVehicleController extends Controller
                     $newDetail->date_end = $date->format('Y-m-d');
                     $newDetail->save(false);
                 }
-            }else{
+            } else {
                 $newDetail = new VehicleDetail;
                 $newDetail->vehicle_id = $model->id;
                 $newDetail->date_start = $model->date_start;
@@ -436,12 +447,13 @@ class BookingVehicleController extends Controller
 
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['AND',
-        ['IS NOT', 'license_plate', null],
-        ['<>', 'license_plate', ''],
-        ['<>', 'license_plate', ' ']
-    ]);
-        
+        $dataProvider->query->andWhere([
+            'AND',
+            ['IS NOT', 'license_plate', null],
+            ['<>', 'license_plate', ''],
+            ['<>', 'license_plate', ' ']
+        ]);
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -459,6 +471,4 @@ class BookingVehicleController extends Controller
             ]);
         }
     }
-    
-    
 }

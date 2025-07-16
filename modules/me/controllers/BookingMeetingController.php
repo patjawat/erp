@@ -40,19 +40,6 @@ class BookingMeetingController extends \yii\web\Controller
         );
     }
 
-    public function actionDashboard()
-    {
-        $searchModel = new MeetingSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        // รายการจองห้องประชุมที่กำลังจะถึงใน 7 วันข้างหน้า
-        $dataProvider->query->andFilterWhere(['between', 'date_start', new Expression('CURDATE()'), new Expression('DATE_ADD(CURDATE(), INTERVAL 7 DAY)')]);
-        // $dataProvider->pagination->pageSize = 7;
-        return $this->render('dashboard',[
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-    
     public function actionIndex()
     { 
         $me = UserHelper::GetEmployee();
@@ -62,6 +49,7 @@ class BookingMeetingController extends \yii\web\Controller
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
+            'date_filter' => 'this_month',
             'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

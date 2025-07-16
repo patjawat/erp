@@ -21,14 +21,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('@app/modules/me/menu',['active' => 'meeting'])?>
 <?php $this->endBlock(); ?>
 
-
-    <div class="card">
-        <div class="card-body d-flex justify-content-between align-items-center">
-            <?php echo Html::a('<i class="bi bi-plus-circle me-1"></i>สร้างใหม่',['/me/booking-meeting/create','title' => 'แบบขอใช้ห้องประชุม'],['class' => 'btn btn-primary open-modal rounded-pill shadow','data' => ['size' => 'modal-xl']])?>
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            
-        </div>
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
+    <div class="card-body">
+        <?= $this->render('@app/modules/booking/views/meeting/_search', ['model' => $searchModel,'action' => ['/me/booking-meeting/index']]); ?>
+    </div>
+</div>
+
     
 
     <div class="card">

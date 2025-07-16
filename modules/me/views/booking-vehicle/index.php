@@ -11,7 +11,7 @@ use app\modules\booking\models\Vehicle;
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ระบบขอใช้ยานพาหนะ/ทะเบียนประวัติ';
+$this->title = 'ระบบขอใช้ยานพาหนะ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -27,34 +27,40 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me//menu', ['active' => 'vehicle']) ?>
+<?php echo $this->render('@app/modules/me/menu', ['active' => 'vehicle']) ?>
 <?php $this->endBlock(); ?>
 
-<?php //  $this->render('@app/modules/booking/views/vehicle/summary', ['model' => $searchModel]) ?>
 
 <div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <?= Html::a(
-            '<i class="bi bi-plus-circle me-1"></i>สร้างคำขอใหม่',
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?= $this->render('@app/modules/booking/views/vehicle/_search', ['model' => $searchModel,'action' => ['/me/booking-vehicle/index']]); ?>
+    </div>
+</div>
+
+
+<div class="card shadow-sm">
+        <div class="card-header bg-primary-gradient text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span
+                        class="badge bg-light">
+                        <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+
+                        <?= Html::a(
+            '<i class="bi bi-plus-circle me-1"></i>สร้างใหม่',
             ['/me/booking-vehicle/create', 'title' => 'แบบขอใช้รถยนต์'],
             [
-                'class' => 'btn btn-primary open-modal rounded-pill shadow',
+                'class' => 'btn btn-light open-modal  shadow',
                 'data' => ['size' => 'modal-lg']
             ]
         ) ?>
-        <?= $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
-</div>
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span
-                        class="badge rounded-pill text-bg-primary">
-                        <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            </div>
 
         </div>
+    </div>
+    <div class="card-body">
+
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
