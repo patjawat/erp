@@ -64,7 +64,7 @@ if($searchModel->date_between == 'pr_create_date'){
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง
                 <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between">
                  <?= Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่ ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>

@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนประวัติการลา
                 <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between gap-3">
                  <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/me/leave/create','title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-lg']]) ?>

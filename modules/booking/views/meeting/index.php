@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = '<i class="bi bi-ui-checks me-1"></i>'.$this->t
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
                 <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between">
                 <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
