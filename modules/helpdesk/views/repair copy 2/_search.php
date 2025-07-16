@@ -38,7 +38,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหทด'],
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
                 // 'width' => '130px',
@@ -57,7 +57,7 @@ use iamsaint\datetimepicker\Datetimepicker;
     <div class="col-2">
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
         'data' => $model->listRepairStatus(),
-        'options' => ['placeholder' => 'สถานะทั้งหทด'],
+        'options' => ['placeholder' => 'สถานะทั้งหมด'],
         'pluginOptions' => [
             'allowClear' => true,
             // 'width' => '150px',

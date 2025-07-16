@@ -13,7 +13,7 @@ use yii\bootstrap5\Html;
             <th scope="col">จากวันที่</th>
             <th scope="col">ถึงวันที่</th>
             <th scope="col">ปีงบประมาณ</th>
-            <th class="text-start" scope="col">หนวยงาน</th>
+            <th class="text-start" scope="col">หน่วยงาน</th>
             <th scope="col">มอบหมาย</th>
             <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
             <th class="text-start">ความคืบหน้า</th>

@@ -32,7 +32,7 @@ use app\modules\hr\models\Organization;
         <?php
         echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหทด'],
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
                 // 'width' => '130px',
@@ -51,7 +51,7 @@ use app\modules\hr\models\Organization;
         <div class="col-lg-2 col-md-2 col-sm-12">
       <?=$form->field($model, 'status')->widget(Select2::classname(), [
         'data' => $model->listStatus(),
-        'options' => ['placeholder' => 'สถานะทั้งหทด'],
+        'options' => ['placeholder' => 'สถานะทั้งหมด'],
         'pluginOptions' => [
             'allowClear' => true,
             // 'width' => '150px',

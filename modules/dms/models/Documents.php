@@ -432,7 +432,7 @@ class Documents extends \yii\db\ActiveRecord
         // }
     }
 
-    // แสดงรายชื่อหนวยงานที่ Tags ไป
+    // แสดงรายชื่อหน่วยงานที่ Tags ไป
     public function viewTagsDepartment()
     {
         $departments = DocumentsDetail::find()

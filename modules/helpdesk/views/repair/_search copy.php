@@ -59,7 +59,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
                 'data' => $model->listStatus(),
-                    'options' => ['placeholder' => 'สถานะทั้งหทด'],
+                    'options' => ['placeholder' => 'สถานะทั้งหมด'],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'width' => '150px',

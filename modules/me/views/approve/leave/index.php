@@ -29,7 +29,7 @@ $msg = 'ขอ';
                     <th class="text-center" scope="col">วัน</th>
                     <th scope="col">จากวันที่</th>
                     <th scope="col">ถึงวันที่</th>
-                    <th class="text-start" scope="col">หนวยงาน</th>
+                    <th class="text-start" scope="col">หน่วยงาน</th>
                     <!-- <th scope="col">มอบหมาย</th> -->
                     <th scope="col">ผู้ตรวจสอบและอนุมัติ</th>
                     <th class="text-center">ดำเนินการ</th>

@@ -16,7 +16,7 @@ use app\components\DateFilterHelper;
     'options' => [
         'data-pjax' => 1
     ],
-     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']]
+      'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
 ]); ?>
 <?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
 

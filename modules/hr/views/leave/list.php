@@ -22,7 +22,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
             <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
             <th class="fw-semibold">ระหว่างวันที่</th>
-            <th class="fw-semibold text-start" scope="col">หนวยงาน</th>
+            <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
             <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
             <th class="fw-semibold text-start">ความคืบหน้า</th>
             <th class="fw-semibold text-start">สถานะ</th>

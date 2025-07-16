@@ -43,7 +43,7 @@ $msg = 'ขอ';
                     <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
                     <th class="fw-semibold" scope="col">เหตุผล/วันที่</th>
                     <th class="fw-semibold text-center" scope="col">วัน</th>
-                    <th class="text-start fw-semibold" scope="col">หนวยงาน</th>
+                    <th class="text-start fw-semibold" scope="col">หน่วยงาน</th>
                     <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
                     <th class="text-start fw-semibold" scope="col">สถานะ</th>
                     <th class="fw-semibold text-center">ดำเนินการ</th>

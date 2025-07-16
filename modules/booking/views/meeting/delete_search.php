@@ -33,7 +33,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...','class' => 'form-control'])->label(false) ?>
  <?=$form->field($model, 'room_id')->widget(Select2::classname(), [
                 'data' => $model->listRooms(),
-                    'options' => ['placeholder' => 'ห้องประชุมทั้งหทด'],
+                    'options' => ['placeholder' => 'ห้องประชุมทั้งหมด'],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'width' => '150px',
@@ -69,7 +69,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
                 'data' => $model->listStatus(),
-                    'options' => ['placeholder' => 'สถานะทั้งหทด'],
+                    'options' => ['placeholder' => 'สถานะทั้งหมด'],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'width' => '150px',
