@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                         <td class="text-truncate">
                             <?= Html::a($item->getAvatar(false),['/hr/employees/view','id' => $item->id]) ?></td>
-                        <td><?=$item->positionType->title?></td>
+                        <td><?=$item->positionType?->title ?? 'ไม่ระบุ'?></td>
                         <td class="text-truncate"><?= $item->departmentName() ?></td>
                         <td class="align-middle"><?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?></td>
                         <td class="align-middle">

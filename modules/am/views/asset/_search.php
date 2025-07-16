@@ -97,8 +97,6 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 ])->label(false);?>
     </div>
 
-
-
  <div class="col-lg-1 col-md-1 col-sm-12">
     <div class="d-flex flex-row align-items-center gap-2">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
