@@ -32,17 +32,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php // Pjax::begin(['id' => 'purchase-container','timeout' => 5000]); ?>
 
+
 <div class="card">
-    <div class="card-body">
-         <div class="d-flex justify-content-between">
-        <?=Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อมใหม่', ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> แจ้งซ่อมใหม่ New',['/me/repair/create'],['class' => 'btn btn-primary rounded-pill shadow'])?>
-        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
+    <div class="card-body">
+       <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
     </div>
 </div>
 
+
 <div class="card">
+
+        <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> ระบบการ
+            </h6>
+            <div class="d-flex justify-content-between gap-3">
+                  <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-md']])?>
+            </div>
+        </div>
+    </div>
+
     <div class="card-body">
     <div class="d-flex justify-content-between">
     <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>

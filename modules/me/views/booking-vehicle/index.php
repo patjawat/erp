@@ -55,7 +55,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
 
         </div>
-        <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -137,7 +136,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <li>
                                         <?= Html::a(
                                                 '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',
-                                                ['/me/booking-vehicle/print', 'id' => $item->id, 'title' => 'แสดงข้มูลขอใช้รถ'],
+                                                ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'แสดงข้มูลขอใช้รถ'],
                                                 [
                                                     'class' => 'dropdown-item open-modal',
                                                     'data' => ['size' => 'modal-lg']
@@ -182,7 +181,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">

@@ -32,6 +32,16 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]);?>
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+
+<div class="card">
     <div class="card-body">
        <div class="d-flex justify-content-center">
         <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
