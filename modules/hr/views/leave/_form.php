@@ -378,8 +378,9 @@ $js = <<<JS
         
         
         let totalDays = parseInt(\$('#leave-total_days').val(), 10);
+        
        
-        if (totalDays < 0) {
+        if (totalDays <= 0) {
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
