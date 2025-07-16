@@ -49,11 +49,11 @@ if($searchModel->date_between == 'pr_create_date'){
 
 
 <div class="card">
-        <div class="card-header bg-primary-gradient text-white">
+    <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-      <?=$this->render('_search', ['model' => $searchModel])?>
+        <?=$this->render('_search', ['model' => $searchModel])?>
     </div>
 </div>
 
@@ -67,23 +67,21 @@ if($searchModel->date_between == 'pr_create_date'){
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between">
-                 <?= Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่ ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่ ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
     </div>
-    
+
     <div class="card-body">
         <div class="d-flex justify-content-between">
-                <div>
-                    มูลค่า <span class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
-                </div>
-           
+            <div>
+                มูลค่า <span
+                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
+            </div>
+
         </div>
         <div>
-
         </div>
-
-
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -169,8 +167,6 @@ if($searchModel->date_between == 'pr_create_date'){
                             <?php if($item->status !== 7):?>
                             <ul class="dropdown-menu">
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-
-
                                     <?php if ($item->status >= 2): ?>
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php endif;?>
