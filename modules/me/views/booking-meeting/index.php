@@ -33,16 +33,17 @@ $this->params['breadcrumbs'][] = $this->title;
     
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-header bg-primary-gradient text-white">
             <div class="d-flex justify-content-between">
-                <h6>
+                <h6 class="text-white">
                     <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
                     <span
                         class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
                 </h6>
             </div>
-            <div class="table-responsive pb-5">
+</div>
+        <div class="card-body">
                 <table class="table table-striped table-hover">
                 <thead class="table-light">
                         <tr>
@@ -101,9 +102,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     'class' => 'pagination-sm',
                 ],
             ]); ?>
-                </div>
-
-
             </div>
         </div>
     </div>
