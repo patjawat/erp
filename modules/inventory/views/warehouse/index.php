@@ -33,15 +33,31 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php Pjax::begin(['id' => 'inventory']); ?>
 
+
+
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+<div class="card">
+        <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6><i class="bi bi-ui-checks"></i> จำนวนคลัง <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?></span> รายการ</h6>
-            <div class="d-flex flex-row align-items-center gap-3">
-                <?= $this->render('_search', ['model' => $searchModel]); ?>
-                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่', ['/inventory/warehouse/create', 'title' => '<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-primary open-modal mt-2', 'data' => ['size' => 'modal-xl']]); ?>
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> จำนวนคลัง
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+            </h6>
+            <div class="d-flex justify-content-between">
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['/inventory/warehouse/create', 'title' => '<i class="fa-solid fa-circle-plus me-1"></i> สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-light open-modal mt-2', 'data' => ['size' => 'modal-xl']]); ?>
             </div>
         </div>
+    </div>
+    <div class="card-body">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -49,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">ชื่อรายการ</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">ประเภทคลัง</th>
-                    <th scope="col">ผู้รับผิดชอลคลัง</th>
+                    <th scope="col">ผู้รับผิดชอบคลัง</th>
                     <th scope="col" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>

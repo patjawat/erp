@@ -3,6 +3,7 @@
 namespace app\modules\am\models;
 
 use Yii;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -66,11 +67,13 @@ class Fsn extends \yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
-
-       
-
         return parent::beforeSave($insert);
     }
 
+        //หน่วยนับ
+    public function listUnit()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
+    }
 
 }

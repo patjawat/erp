@@ -26,17 +26,24 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('../default/menu',['active' => 'asset'])?>
 <?php $this->endBlock(); ?>
 
-
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/land/create'], ['class' => 'btn btn-primary rounded-pill shadow']) ?>
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
-        </div>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
 
+<div class="d-flex justify-content-between mb-3">
+    <h6>
+        <i class="bi bi-ui-checks"></i> ทะเบียน<?=$this->title?>
+        <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+    </h6>
+    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/land/create'], ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+
+</div>
 
 <div class="row g-4">
     <?php foreach($dataProvider->getModels() as $item):?>
@@ -105,12 +112,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-        </div>
-        <div class="card-footer d-flex justify-content-between">
-            <?=Html::a('<i class="fa-solid fa-eye"></i> ดูรายละเอียด',['/am/land/view','id' => $item->id],['class' => 'btn btn-outline-primary'])?>
-            <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข',['/am/land/update','id' => $item->id],['class' => 'btn btn-primary'])?>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <?=Html::a('<i class="fa-solid fa-eye"></i> ดูรายละเอียด',['/am/land/view','id' => $item->id],['class' => 'btn btn-outline-primary'])?>
+                <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข',['/am/land/update','id' => $item->id],['class' => 'btn btn-primary'])?>
+            </div>
         </div>
     </div>
-</div>
-<?php endforeach;?>
+    <?php endforeach;?>
 </div>

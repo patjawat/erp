@@ -22,25 +22,58 @@ use unclead\multipleinput\MultipleInput;
 <?php $form->field($model, 'data_json[title]')->textInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput(['value'=>'asset_item','maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-<?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
 <div class="row">
-    <div class="col-12">
+    <div class="col-7">
+        <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                    'data' => [],
+                    'options' => ['placeholder' => 'ระบุประเภทรัพย์สิน...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                   
+                ])->label("ประเภททรัพย์สิน");
+                ?>
+
+        <?=$form->field($model, 'code')->textInput()->label("รหัส FSN")?>
 
         <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อทรัพย์สิน...'])->label("ชื่อทรัพย์สิน") ?>
-        <?=$form->field($model, 'code')->textInput()->label("รหัส FSN")?>
+
         <?php
-                // echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-                //     'data' => $model->listUnit(),
-                //     'options' => ['placeholder' => 'ระบุ...'],
-                //     'pluginOptions' => [
-                //         'allowClear' => true,
-                //          'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                //         'dropdownParent' => '#main-modal',
-                //     ],
-                // ])->label("หน่วยนับ")
+                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                    // 'data' => $model->listUnit(),
+                    'data' => [],
+                    'options' => ['placeholder' => 'ระบุ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label("หน่วยนับ")
                 ?>
     </div>
+    <div class="col-5">
 
+        <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
+        <div class="mb-3">
+            <div class="file-single-preview" id="editImagePreview" data-isfile="<?php // $model->showImg()['isFile']?>" data-newfile="false">
+                <?php //  Html::img($model->showImg()['image'],['id' => 'editPreviewImg']) ?>
+                <div class="file-remove" id="editRemoveImage">
+                    <i class="bi bi-x"></i>
+                </div>
+            </div>
+            
+            <div class="file-upload">
+                <div class="file-upload-btn" id="editUploadBtn">
+                    <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
+                    <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
+                    <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
+                </div>
+                <input type="file" class="file-upload-input" id="my_file" accept="image/*">
+            </div>
+        </div>
+        
+    </div>
 
 </div>
 

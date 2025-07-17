@@ -46,8 +46,12 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
-        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ครุุภัณฑ์',['/am/asset-item'],['class' => 'dropdown-item'])?>
-        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> วัสดุ',['/am/asset-item'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม',['/am/asset-group'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท',['/am/asset-type'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่',['/am/asset-category'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN',['/am/fsn'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์',['/am/asset-item'],['class' => 'dropdown-item'])?>
+
 
 
     </div>

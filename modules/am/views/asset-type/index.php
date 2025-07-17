@@ -11,7 +11,7 @@ use app\modules\am\models\AssetItem;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 
-$this->title = 'ประเภทครุภัณฑ์';
+$this->title = 'ประเภททรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title');?>
@@ -23,26 +23,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('@app/modules/am/views/default/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<?=$this->render('@app/modules/am/views/default/_sub_menu',['active' => 'type'])?>
-<?php $this->endBlock(); ?>
-
-
 
 <div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-item-center">
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-
-        </div>
+        <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="bi bi-ui-checks me-1"></i><?=$this->title;?> <span class="badge bg-light"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h6>
     </div>
-</div>
-
-
-<div class="card">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i><?=$this->title;?> <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
-
         <table class="table">
             <thead>
                 <tr>

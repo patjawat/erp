@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use yii\bootstrap4\Toast;
 use yii\widgets\ActiveForm;
-$this->title = 'นำเข้าข้อมูล';
+$this->title = 'นำเข้าข้อมูลผู้แทนจำหน่วย';
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?=$this->title;?>

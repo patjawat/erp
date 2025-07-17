@@ -34,36 +34,37 @@ $months = [
         ],
     ]); ?>
 
-<div class="d-flex align-items-center gap-3">
-<?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-            'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-            // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
-            'options' => ['placeholder' => 'เลือกคลัง'],
-            'pluginEvents' => [
-                "select2:unselect" => "function() { 
-                    $(this).submit()
-                            }",
-                            "select2:select" => "function() {
-                                $(this).submit()
-                                }",
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'width' => '300px',
-                            ],
-                            ])->label('คลัง');
-                            
-                                    ?>
+<div class="row">
 
+<div class="col-lg-4 col-lg-4 col-sm-12">
 
-            <?php
-            echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                // 'data' => $model->ListGroupYear(),
-                'data' => [2567 => '2567',2568 => '2568'],
-                'options' => ['placeholder' => 'ปีงบประมาณ'],
+    <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+        'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
+        // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
+        'options' => ['placeholder' => 'คลังทั้งหมด'],
+        'pluginEvents' => [
+            "select2:unselect" => "function() { 
+                }",
+                "select2:select" => "function() {
+
+                    }",
+                ],
                 'pluginOptions' => [
                     'allowClear' => true,
-                    'width' => '200px',
+                ],
+                ])->label(false);
+                
+                ?>
+                </div>
+<div class="col-lg-3 col-md-3 col-sm-12">
+
+    
+    <?php
+            echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                'data' => $model->ListGroupYear(),
+                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                'pluginOptions' => [
+                    'allowClear' => true,
                 ],
                 'pluginEvents' => [
                     'select2:select' => "function(result) { 
@@ -73,11 +74,19 @@ $months = [
                             $(this).submit()
                             }",
                             ]
-                            ])->label('ปีงบประมาน');
+                            ])->label(false);
                             ?>
-                <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label('ช่วงวันที่'); ?>
-                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label('ถึงวันที่'); ?>
-                <?php echo Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary rounded-pill shadow mt-3', 'id' => 'summit']) ?>
+                            </div>
+                  <div class="col-2">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
+    
+    <div class="col-1">
+        <?php echo Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+    </div>
                 
 </div>
     <?php ActiveForm::end(); ?>

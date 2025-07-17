@@ -37,7 +37,7 @@ $this->title = 'ตั้งค่าระบบคลัง';
                     <th scope="col" style="width:50px">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
                     <th scope="col">ประเภทคลัง</th>
-                    <th scope="col">ผู้รับผิดชอลคลัง</th>
+                    <th scope="col">ผู้รับผิดชอบคลัง</th>
                     <th scope="col" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>

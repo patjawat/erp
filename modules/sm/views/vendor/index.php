@@ -28,121 +28,102 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php Pjax::begin(['id' => 'sm-container']); ?>
 
+
 <div class="card">
-    <div
-        class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
-        <div class="d-flex justify-content-start">
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'name' => 'order', 'title' => ''], ['class' => 'btn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-        </div>
-        <div class="d-flex gap-2">
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['#', 'view' => 'list'], ['class' => 'btn btn-outline-primary',
-                        'title' => 'แสกงผลแบบรายการ',
-                        'data' => [
-                            'bs-placement' => 'top',
-                            'bs-toggle' => 'tooltip',
-                        ]]) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['#', 'view' => 'grid'], ['class' => 'btn btn-outline-primary',
-                    'title' => 'แสดงผลแบบกลุ่ม',
-                    'data' => [
-                        'bs-placement' => 'top',
-                        'bs-toggle' => 'tooltip',
-                    ]]) ?>
-            <?= Html::a('<i class="fa-solid fa-file-import me-1"></i>', ['/sm/vendor/import-csv'], [
-                'class' => 'btn btn-outline-primary',
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการผู้แทนจำหน่าย</h6>
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'name' => 'order', 'title' => ''], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <?= Html::a('<i class="fa-solid fa-file-import me-1"></i> Import', ['/sm/vendor/import-csv'], [
+                'class' => 'btn btn-warning',
                 'title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
                 'data' => [
                     'bs-placement' => 'top',
                     'bs-toggle' => 'tooltip',
                 ],
-            ]) ?>
+                ]) ?>
+            </div>
         </div>
-
     </div>
-</div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <?= GridView::widget([
-            'dataProvider' => $dataProvider,
-            'filterModel' => $searchModel,
-            'layout' => '{items}',
-            'columns' => [
-                [
-                    'class' => 'kartik\grid\SerialColumn',
-                    'contentOptions' => ['class' => 'kartik-sheet-style'],
-                    'width' => '36px',
-                    'pageSummary' => 'Total',
-                    'pageSummaryOptions' => ['colspan' => 6],
-                    'header' => '',
-                    'headerOptions' => ['class' => 'kartik-sheet-style'],
-                ],
-                [
-                    'attribute' => 'title',
-                    'header' => 'รายการ',
-                    'format' => 'raw',
-                    'value' => function ($model) {
-                        return html::a($model->title, ['view', 'id' => $model->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]);;
-                    },
-                ],
-                [
-                    'attribute' => 'address',
-                    'header' => 'ที่อยู่',
-                    'width' => '400px',
-                    'value' => function ($model) {
-                        return $model->address;
-                    },
-                ],
-                [
-                    'attribute' => 'code',
-                    'header' => 'เลขประจำตัวผู้เสียภาษี',
-                    'width' => '200px',
-                    'vAlign' => 'middle',
-                    'value' => function ($model) {
-                        return $model->code;
-                    },
-                ],
-                [
-                    'attribute' => 'contact_name',
-                    'header' => 'ชื่อผู้ติดต่อ',
-                    'width' => '300px',
-                    'value' => function ($model) {
-                        return $model->contact_name;
-                    },
-                ],
-                [
-                    'attribute' => 'phone',
-                    'header' => 'โทรศัพท์',
-                    'width' => '250px',
-                    'value' => function ($model) {
-                        return $model->phone;
-                    },
-                ],
-                [
-                    'attribute' => 'email',
-                    'header' => 'อีเมล',
-                    'width' => '200px',
-                    'value' => function ($model) {
-                        return $model->email;
-                    },
-                ],
-            ],
-        ]); ?>
+    <div class="card-body">
 
-    </div>
-</div>
 
-<div class="d-flex justify-content-center">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="fw-semibold text-start">รายการ</th>
+                    <th class="fw-semibold text-start">โทรศัพท์</th>
+                    <th class="fw-semibold text-center">ดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
+                <?php foreach($dataProvider->getModels() as $key => $item):?>
+                <tr>
+                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                    </td>
+                    <td>
+                        <p class="fw-semibold mb-0"><?php echo $item->title?></p>
+                        <p class="fs-12 mb-0"><?php echo $item->data_json['address'] ?? '-'?></p>
+                    </td>
+                    <td>
+                        <p class="fw-semibold mb-0"><?php echo $item->data_json['phone'] ?? '-'?></p>
+                    </td>
 
-    <div class="text-muted">
-        <?= LinkPager::widget([
-            'pagination' => $dataProvider->pagination,
-            'firstPageLabel' => 'หน้าแรก',
-            'lastPageLabel' => 'หน้าสุดท้าย',
-            'options' => [
-                'listOptions' => 'pagination pagination-sm',
-                'class' => 'pagination-sm',
-            ],
-        ]); ?>
+                    <td class="fw-light text-end">
+                        <div class="btn-group">
+                            <?=html::a('<i class="fa-solid fa-pen-to-square"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]);;?>
+
+                            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง',
+                                            ['view','id' => $item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']]
+                                        ) ?>
+                                </li>
+                                <li>
+                                    <?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบ',
+                                            ['delete','id' => $item->id],['class' => 'dropdown-item delete-item']
+                                        ) ?>
+                                </li>
+
+
+                            </ul>
+                        </div>
+                    </td>
+
+
+                </tr>
+                <?php endforeach;?>
+            </tbody>
+        </table>
+
+        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
+        </div>
     </div>
 </div>
 

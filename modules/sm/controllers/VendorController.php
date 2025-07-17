@@ -5,6 +5,7 @@ namespace app\modules\sm\controllers;
 use Yii;
 use yii\helpers\Json;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 use app\models\Categorise;
@@ -52,6 +53,13 @@ class VendorController extends Controller
         $searchModel = new VendorSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'vendor']);
+                $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $searchModel->q],
+
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.address'))"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.phone'))"), $searchModel->q],
+        ]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

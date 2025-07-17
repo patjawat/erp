@@ -30,7 +30,14 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 </style>
 <?php Pjax::begin(['id' => 'am-container', 'enablePushState' => true, 'timeout' => 5000]);?>
-
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
 <?php
 echo GridView::widget([
     'id' => 'kv-grid-demo',
@@ -51,10 +58,12 @@ echo GridView::widget([
     'showPageSummary' => true,
     'panel' => [
         'after' => '<div class="float-right float-end"><button type="button" class="btn btn-primary"><i class="fas fa-download"></i> ดาวน์โหลด </button></div><div style="padding-top: 5px;"><em>* สรุปค่าเสื่อมทรัพย์สิน '.Yii::$app->thaiFormatter->asDate($searchModel->q_lastDay, 'long').'</em></div><div class="clearfix"></div>',
-        'heading' => '<i class="fa-solid fa-chart-line"></i>  ค่าเสื่อมทรัพย์สิน',
-        'type' => 'light',
+        'heading' => '<h6 class="text-white"><i class="fa-solid fa-chart-line"></i>  ค่าเสื่อมทรัพย์สิน</h6>',
+        'type' => 'primary',
         'before' => '<div style="padding-top: 7px;"><em>*</em></div>',
+
     ],
+    
     // set export properties
     'export' => [
         'fontAwesome' => true
@@ -70,7 +79,7 @@ echo GridView::widget([
     // set your toolbar
     'toolbar' =>  [
         [
-            'content' => $this->render('_search',['model' => $searchModel]), 
+            // 'content' => $this->render('_search',['model' => $searchModel]), 
             'options' => ['class' => 'btn-group mr-2 me-2']
         ],
     ],

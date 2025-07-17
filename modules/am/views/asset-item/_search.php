@@ -23,12 +23,12 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
     
-<div class="d-flex justify-content-between align-items-center gap-2">
+<div class="row">
 
+<div class="col-lg-3 col-md-3 col-sm-12">
     <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
-
-
-
+</div>
+<div class="col-lg-4 col-md-4 col-sm-12">
   <?php
 
   echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
@@ -38,15 +38,12 @@ use yii\widgets\ActiveForm;
     ],
         'pluginOptions' => [
         'allowClear' => true,
-         'width' => '300px',
     ],
-                  'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            // $(this).submit(); 
-                        }",
-                    ],
 ])->label(false);
 ?>
+
+</div>
+<div class="col-lg-4 col-md-4 col-sm-12">
 
 <?php
 echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
@@ -64,13 +61,16 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
         'initDepends' => ['assetitemsearch-asset_type_id'],
         'initialize' => true,
     ],
-                  'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            // $(this).submit(); 
-                        }",
-                    ],
 
 ])->label(false);?>
+</div>
+<div class="col-lg-1 col-md-1 col-sm-12">
+ <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']) ?>
+</div>
+
+
+
+
 
     <?php
                 // echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
@@ -104,9 +104,6 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                 //     ])->label(false);
                     ?>
 
-<div class="form-group">
-    <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']) ?>
-</div>
 
 </div>
     <?php ActiveForm::end(); ?>

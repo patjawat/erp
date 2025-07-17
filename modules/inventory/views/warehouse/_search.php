@@ -10,35 +10,43 @@ use kartik\widgets\ActiveForm;
 ?>
 
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
-<div class="d-flex justify-content-between gap-3">
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
+<div class="row">
+    <div class="col-lg-7 col-md-7 col-sm-12">
+        <?= $form->field($model, 'warehouse_name')->textInput(['placeholder' => 'ระบุชื่อคลังที่ต้องการค้นหา...'])->label(false) ?>
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-12">
 
-    <?= $form->field($model, 'warehouse_name')->textInput(['placeholder' => 'ระบุชื่อคลังที่ต้องการค้นหา...'])->label('ชื่อคลัง') ?>
-    <?php
-                                echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
-                                    'data' => ['MAIN' => 'คลังหลัก','SUB' => 'คลังย่อย','BRANCH' => 'รพ.สต.'],
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
-                                    'pluginOptions' => [
-                                        'width' => '200px',
-                                    'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        'select2:select' => "function(result) { 
-                                                  $(this).submit()
-                                                }",
-                                    ]
-                                ])->label('ประเภทคลัง');
-                        ?>
-    <div class="form-group mt-4">
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-1']) ?>
+        <?php
+        echo $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
+            'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย', 'BRANCH' => 'รพ.สต.'],
+            'options' => ['placeholder' => 'ประเภทคลังทั้หมด'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+
+    </div>
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
     </div>
 </div>
 
-    <?php ActiveForm::end(); ?>
+<div class="collapse mt-3" id="collapseFilter">
+</div>
 
+
+<?php ActiveForm::end(); ?>

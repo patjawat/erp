@@ -18,7 +18,7 @@ class VendorSearch extends Vendor
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','address','contact_name','tel','email'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','address','contact_name','tel','email','q'], 'safe'],
         ];
     }
 

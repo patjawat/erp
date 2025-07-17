@@ -26,12 +26,24 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php Pjax::begin(['timeout' => 88888888]); ?>
 
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+ <h6 class="text-white"><i class="fa-solid fa-chart-pie"></i> สรุปงานวัสดุคงคลัง</h6>
+</div>
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
-            <h6><i class="fa-solid fa-chart-pie"></i> สรุปงานวัสดุคงคลัง</h6>
-            <?= $this->render('_search', ['model' => $searchModel]) ?>
+           
         </div>
             <table class="table table-bordered table-striped mt-3">
                 <thead class="align-middle text-center">

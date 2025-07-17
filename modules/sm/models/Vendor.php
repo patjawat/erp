@@ -23,7 +23,7 @@ class Vendor extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public $phone,$email,$add,$contact_name,$address,$account_name,$account_number,$bank_name;
+    public $phone,$email,$add,$contact_name,$address,$account_name,$account_number,$bank_name,$q;
     public static function tableName()
     {
         return 'categorise';
@@ -36,7 +36,7 @@ class Vendor extends \yii\db\ActiveRecord
     {
         return [
             [['name','code','title'], 'required'],
-            [['data_json','phone','email','contact_name','address','account_name','account_number','bank_name'], 'safe'],
+            [['data_json','phone','email','contact_name','address','account_name','account_number','bank_name','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];

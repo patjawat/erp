@@ -7,10 +7,7 @@ use yii\widgets\ActiveForm;
 /** @var app\modules\sm\models\SupVendorSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-
-<div class="sup-vendor-search">
-
-    <?php $form = ActiveForm::begin([
+<?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
         'options' => [
@@ -18,33 +15,15 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'vendor_name') ?>
-
-    <?= $form->field($model, 'vendor_tel') ?>
-
-    <?= $form->field($model, 'vendor_add') ?>
-
-    <?php // echo $form->field($model, 'vendor_contact') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-
+<div class="row">
+    <div class="col-lg-11 col-md-11 col-sm-12">
+    <?= $form->field($model, 'q')->label(false) ?>
 </div>
+<div class="col-lg-1 col-md-1 col-sm-12">
+    <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']) ?>
+</div>
+</div>
+
+
+
+<?php ActiveForm::end(); ?>
