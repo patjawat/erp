@@ -233,8 +233,6 @@ class VehicleController extends Controller
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle_detail.driver_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['vehicle_detail.driver_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
         // $dataProvider->query->joinWith('vehicle');
         $dataProvider->query->andFilterWhere([
