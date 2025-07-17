@@ -54,11 +54,11 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" scope="col" style="width:500px">รายละเอียด</th>
-                    <th class="fw-semibold" scope="col" style="width:300px">ผู้แจ้ง</th>
+                    <th class="fw-semibold" scope="col">รายละเอียด</th>
+                    <th class="fw-semibold" scope="col">ผู้แจ้ง</th>
                     <!-- <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th> -->
-                    <th style="width:150px">ความสำคัญ</th>
-                    <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
+                    <th>ความสำคัญ</th>
+                    <th class="fw-semibold text-center">สถานะ</th>
                     <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
                 </tr>
             </thead>

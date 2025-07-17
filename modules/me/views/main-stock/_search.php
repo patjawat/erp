@@ -24,6 +24,12 @@ $product = ArrayHelper::map(Categorise::find()
 /** @var yii\widgets\ActiveForm $form */
 
 ?>
+<h1>
+
+<?php
+echo $warehouseModel->warehouse_name;
+?>
+</h1>
 
 <div class="order-search">
 
