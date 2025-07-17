@@ -35,23 +35,31 @@ class PurchaseController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();
-        $model = Approve::findOne(['id' => $id, 'emp_id' => $me->id]);
+        $model = Approve::findOne(['id' => $id,'name' => 'purchase', 'emp_id' => $me->id]);
         if ($this->request->isPost) {
             $status = $this->request->post('status');
+
              // ระบบอนุมัติเบิกคลัง
              $old = $model->data_json;
              $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
              $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
              $model->status = $status;
+             \Yii::$app->response->format = Response::FORMAT_JSON;
              //ถ้าบันทุกเรียบร้อย
              if($model->save(false))
              {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                if($model->maxLevel() && $model->status == 'Pass'){
+                if($model->level == 3 && $model->status == 'Pass'){
                     $model->purchase->status = 2;
                     $model->purchase->save();
+                }else{
+                    // ถ้ามีสถานะถัดไป
+                    $nextApprove = Approve::findOne(['from_id' => $model->from_id,'name' => 'purchase',  'level' => ($model->level + 1)]);
+                    if($nextApprove){
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save();
+                    }
                 }
-                return ['status' => 'success'];       
+                    return ['status' => 'success'];       
         }
         
     }

@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use app\modules\approve\models\Approve;
+//เจ้าหน้าที่พัสดุ
 $checker = Approve::find()->where(['name' => 'purchase', 'from_id' => $model->id,'level' => 2])->andWhere(['IN','status',['Approve','Reject','Pending']])->one();
 $checkerStatus = Approve::find()->where(['name' => 'purchase', 'from_id' => $model->id,'level' => 3])->one();
 ?>
