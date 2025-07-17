@@ -58,7 +58,7 @@ class AssetController extends Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-             'asset_group' => 3
+             'asset_group' => 'EQUIP'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
