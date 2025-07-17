@@ -177,7 +177,7 @@ class BookingVehicleController extends Controller
             // 'time_start' => '08:00',
             // 'time_end' => '16:30',
         ]);
-        $model->leader_id = $model->Approve()['approve_1']['id'];
+        $model->leader_id = isset($model->Approve()['approve_1']['id']) ?$model->Approve()['approve_1']['id'] : '' ;
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
