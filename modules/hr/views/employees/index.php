@@ -100,7 +100,6 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
         <button id="download-button" class="btn btn-success shadow"><i
                 class="fa-solid fa-file-export me-1"></i>Excel</button>
-
     </div>
 </div>
 

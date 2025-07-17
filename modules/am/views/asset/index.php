@@ -90,6 +90,18 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
         <?php else:?>
+
+            <div class="d-flex justify-content-between mb-3">
+    <h6>
+        <i class="bi bi-ui-checks"></i> <?=$this->title?>
+        <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+    </h6>
+    <div>
+          <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-primary']) ?>
+                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
+    </div>
+</div>
+
         <?=$this->render('show/grid', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
