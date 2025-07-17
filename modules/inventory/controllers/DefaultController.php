@@ -39,6 +39,7 @@ class DefaultController extends Controller
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['delete' => null]);
+        $dataProvider->query->andFilterWhere(['warehouse_type' => 'MAIN']);
         $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
         $dataProvider->pagination->pageSize = 100;
