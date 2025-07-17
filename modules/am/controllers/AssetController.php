@@ -60,6 +60,7 @@ class AssetController extends Controller
         $searchModel = new AssetSearch([
              'asset_group' => 'EQUIP'
         ]);
+
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
         // Join กับ relation assetItem (ควรมีใน model Asset เช่น getAssetItem())
@@ -68,11 +69,6 @@ class AssetController extends Controller
          $dataProvider->query->andFilterWhere(['asset_items.asset_type_id' => $searchModel->asset_type_id]);
          $dataProvider->query->andFilterWhere(['asset_items.asset_category_id' => $searchModel->asset_category_id]);
 
-        if (!isset($this->request->queryParams['AssetSearch'])) {
-            // หายังไม่มีการค้นหาใดๆ ให้ แสดงเฉพาะทรัพย์สินที่ตัวเองรับผิดชอบ
-            $user = UserHelper::GetEmployee();
-            $dataProvider->query->andFilterWhere(['owner' => $user->cid]);
-        } else {
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
@@ -130,7 +126,7 @@ class AssetController extends Controller
             if ($this->request->get('view')) {
                 SiteHelper::setDisplay($this->request->get('view'));
             }
-        }
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

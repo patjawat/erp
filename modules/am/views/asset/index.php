@@ -97,19 +97,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <?php endif?>
 
-        <?php if(count(($dataProvider->getModels())) == 0):?>
-        <div class="row d-flex justify-content-center">
-            <div class="col-6">
-                <div
-                    class="f-flex justify-content-center align-items-center mt-5 bg-primary bg-opacity-10  p-3 rounded-2">
-                    <h4 class="text-center"> <i class="fa-solid fa-circle-exclamation text-primary"></i>
-                        ไม่มีทรัพย์สินที่ได้รับผิดชอบ</h4>
-                    <p class="text-center">หากต้องการสืบค้นสามารถใช้ตัวกรองเพื่อค้นหาข้อมูลได้</p>
-                </div>
-            </div>
-        </div>
-        <?php endif;?>
-
 
 
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
