@@ -191,7 +191,11 @@ class Meeting extends \yii\db\ActiveRecord
 
     public function viewMeetingTime()
     {
-        return $this->time_start . ' - ' . $this->time_end.' น.';
+        try {
+            return $this->time_start . ' - ' . $this->time_end.' น.';
+        } catch (\Throwable $th) {
+            return '-';
+        }
     }
 
     public function viewMeetingDateTime()
