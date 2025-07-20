@@ -40,9 +40,7 @@ $moduleId = Yii::$app->controller->module->id;
 #nprogress .bar {
     background: linear-gradient(90deg, #fce9af 0%, #f7c873 100%) !important;
 }
-</style>
 
-<style>
 /* Table container with relative positioning */
 .table-container {
     position: relative;

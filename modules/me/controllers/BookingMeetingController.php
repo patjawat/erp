@@ -450,6 +450,8 @@ public function actionGetRoom($id)
         $data = [];
 
         foreach ($bookings as $item) {
+            try {
+
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_start), "php:Y-m-d\TH:i:s");
             $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
             $data[] = [
@@ -468,6 +470,9 @@ public function actionGetRoom($id)
                 'textColor' => 'black',
                 'backgroundColor' => '#3aa3e3',
             ];
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
 
         return $data;

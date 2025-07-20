@@ -3,64 +3,50 @@ use Yii;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\UserHelper;
-
 ?>
+
 <!-- Begin Header -->
-      <!-- Begin Header -->
-      <header id="page-topbar" class="topbar-header">
-         <div class="navbar-header">
-            <div class="left-bar">
-               <div class="navbar-brand-box">
-                  <a href="<?=Url::to(['/'])?>" class="logo logo-dark">
-
-                     <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                     <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                  </a>
-                  <a href="<?=Url::to(['/'])?>" class="logo logo-light">
-                       <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                     <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                  </a>
-               </div>
-               <a class="navbar-toggle collapsed" href="javascript:void(0)" data-bs-toggle="collapse"
-                  data-bs-target="#topnav-menu-content" aria-expanded="false">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-               </a>
-               
+<header id="page-topbar" class="topbar-header">
+    <div class="navbar-header">
+        <div class="left-bar">
+            <div class="navbar-brand-box">
+                <a href="<?=Url::to(['/'])?>" class="logo logo-dark">
+                    <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
+                    <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
+                </a>
+                <a href="<?=Url::to(['/'])?>" class="logo logo-light">
+                    <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
+                    <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
+                </a>
             </div>
-            <div class="right-bar d-flex gap-3">
-               <!-- <form class="app-search me-2 d-none d-lg-block">
-                  <div class="search-box position-relative">
-                     <input type="text" placeholder="Search..." class="form-control">
-                     <span class="bx bx-search"></span>
-                  </div>
-               </form> -->
-               <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">
-                  <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-search-dropdown"
-                     aria-expanded="false" class="btn header-item notify-icon">
-                     <i class="bx bx-search"></i>
-                  </button>
-                  <div aria-labelledby="page-header-search-dropdown"
-                     class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu">
-                     <form class="p-3">
+            <a class="navbar-toggle collapsed" href="javascript:void(0)" data-bs-toggle="collapse"
+                data-bs-target="#topnav-menu-content" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </a>
+        </div>
+        <div class="right-bar d-flex gap-3">
+            <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">
+                <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-search-dropdown"
+                    aria-expanded="false" class="btn header-item notify-icon">
+                    <i class="bx bx-search"></i>
+                </button>
+                <div aria-labelledby="page-header-search-dropdown"
+                    class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu">
+                    <form class="p-3">
                         <div class="search-box">
-                           <div class="position-relative">
-                              <input type="text" placeholder="Search..." class="form-control">
-                              <i class="bx bx-search icon"></i>
-                           </div>
+                            <div class="position-relative">
+                                <input type="text" placeholder="Search..." class="form-control">
+                                <i class="bx bx-search icon"></i>
+                            </div>
                         </div>
-                     </form>
-                  </div>
-               </div>
-                <?=$this->render('../app_service')?>
+                    </form>
+                </div>
+            </div>
+            <?=$this->render('../app_service')?>
             <?=$this->render('../app_manage')?>
-               
-
-
-            
-               <div class="d-none d-lg-inline-flex gap-2">
-
+            <div class="d-none d-lg-inline-flex gap-2">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>
@@ -69,7 +55,6 @@ use app\components\UserHelper;
                             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>',['/settings'],['class' => 'btn header-item notify-icon']) : ''?>
-
 
                 <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
                     <?php if(!Yii::$app->user->isGuest):?>
@@ -107,12 +92,12 @@ use app\components\UserHelper;
                 </div>
 
             </div>
-               <div class="d-inline-flex">
-                  <button type="button" id="layout" class="btn header-item notify-icon">
-                     <i class="bx bx-cog bx-spin"></i>
-                  </button>
-               </div>
+            <div class="d-inline-flex">
+                <button type="button" id="layout" class="btn header-item notify-icon">
+                    <i class="bx bx-cog bx-spin"></i>
+                </button>
             </div>
-         </div>
-      </header>
-      <!-- Header End -->
+        </div>
+    </div>
+</header>
+<!-- Header End -->
