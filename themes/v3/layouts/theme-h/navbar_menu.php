@@ -24,14 +24,20 @@
 <div class="horizontal-topnav shadow-sm">
     <div class="container-fluid">
         <nav class="navbar navbar-expand-lg topnav-menu">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav-menu-content"
+                aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
             <div id="topnav-menu-content" class="collapse navbar-collapse">
-                <?php if(isset($this->blocks['navbar_menu']) && $this->blocks['navbar_menu']):?>
-                <ul id="side-menu" class="navbar-nav d-flex gap-2">
-                    <?= $this->blocks['navbar_menu'];?>
-                    <?php endif?>
-                </ul>
+                <?php if (isset($this->blocks['navbar_menu']) && $this->blocks['navbar_menu']): ?>
+                    <ul id="side-menu" class="navbar-nav d-flex gap-2">
+                        <?= $this->blocks['navbar_menu']; ?>
+                    </ul>
+                <?php endif ?>
             </div>
         </nav>
     </div>
 </div>
+
 <!-- Left Navigation End -->

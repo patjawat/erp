@@ -27,8 +27,6 @@ $this->title = 'ทะเบียนหนังสือ';
     <div class="card-body">
         <div class="d-flex justify-content-center align-top align-items-center">
             <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
-
-
         </div>
     </div>
 </div>

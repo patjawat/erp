@@ -41,12 +41,16 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="card">
+     <div class="card-header bg-primary-gradient text-white">
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
+                        class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
+                </h6>
+    </div>
+
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <div>
-                <h6><i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม <span
-                        class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
-                </h6>
+            
 
             </div>
         </div>

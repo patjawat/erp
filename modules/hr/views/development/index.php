@@ -31,23 +31,23 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
-  <div class="d-flex justify-content-center  align-top align-items-center">
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-        </div>
+        <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
     </div>
 </div>
-
 <div class="card">
-    <div class="card-body">
+    <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6>
-                <i class="bi bi-ui-checks"></i> ทะเบียน<?=$this->title?>
-                <span
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?=$this->title?> <span
                     class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-            </h6>
+                รายการ</h6>
         </div>
-      
+
+    </div>
+    <div class="card-body">
 
         <?php
         echo $this->render('list', [

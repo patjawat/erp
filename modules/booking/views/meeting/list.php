@@ -10,6 +10,7 @@ use yii\helpers\Html;
             <th class="fw-semibold">ห้องประชุม</th>
             <th class="fw-semibold">หัวข้อการประชุม</th>
             <th class="fw-semibold">ผู้ขอ</th>
+            <th class="fw-semibold">วัน/เวลาจอง</th>
             <th class="fw-semibold">สถานะ</th>
             <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>
@@ -38,6 +39,7 @@ use yii\helpers\Html;
                 </div>
             </td>
             <td><?= $item->getUserReq()['avatar'] ?></td>
+            <td><?= $item->viewCreated()['full'] ?></td>
             <td><?= $item->viewStatus()['view'] ?>
             </td>
 

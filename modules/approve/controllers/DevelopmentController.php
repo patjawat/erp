@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\development;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
@@ -22,6 +23,8 @@ class DevelopmentController extends \yii\web\Controller
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month',
             'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -33,20 +36,20 @@ class DevelopmentController extends \yii\web\Controller
             'or',
             ['like','title', $searchModel->q],
         ]);
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+       
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
-        
-        try {
-         
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-           
-    } catch (\Throwable $th) {
-        //throw $th;
-    }
+
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
     
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 

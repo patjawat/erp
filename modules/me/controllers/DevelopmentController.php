@@ -17,6 +17,7 @@ use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
@@ -56,10 +57,10 @@ class DevelopmentController extends Controller
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new DevelopmentSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
+            'date_filter' => 'this_month',
             'status' => ['Pending']
         ]);
+
         // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
@@ -73,12 +74,21 @@ class DevelopmentController extends Controller
         //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         // }
 
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            // $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
+       if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+    
+        
         $dataProvider->query->groupBy('development_detail.id');
 
         return $this->render('index', [

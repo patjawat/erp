@@ -11,6 +11,9 @@ use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\booking\models\Meeting;
 use app\modules\booking\models\MeetingDetail;
 
 /**
@@ -95,6 +98,25 @@ class Meeting extends \yii\db\ActiveRecord
         ];
     }
 
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
+    
     // ห้องประชุม
     public function getRoom()
     {
@@ -306,8 +328,28 @@ return $data;
             ]);
         } catch (\Throwable $th) {
             //throw $th;
+        } 
+    }
+
+    //แสดงวันเวลาที่แสดง
+    public function viewCreated()
+    {
+        try {
+        $datetime = explode(' ',$this->created_at);
+        $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+        $time = $datetime[1].'.น';
+        return [
+            'full' => $date.' '.$time,
+            'date' => $date,
+            'time' => $time
+        ];
+
+        } catch (\Throwable $th) {
+           return [
+            'full' => '',
+            'date' =>'',
+            'time' => ''
+        ];
         }
-       
-            
     }
 }

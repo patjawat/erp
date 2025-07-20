@@ -14,11 +14,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
-<div class="container-fluid">
-
-    <!-- สถานะการพัฒนา -->
-
-
     <!-- ข้อมูลทั่วไป -->
     <div class="row">
         <div class="col-md-3">
@@ -366,15 +361,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
         </div> -->
-
-</div>
-<!-- 
-        <div class="d-flex align-items-center">
-                                            <div class="avatar-small me-2">
-                                                <i class="bi bi-person"></i>
-                                            </div>
-                                            ทดสอบ
-                                        </div> -->
 
 <style>
 .avatar-circle {

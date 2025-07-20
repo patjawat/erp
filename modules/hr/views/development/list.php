@@ -8,6 +8,7 @@ use yii\helpers\Html;
         <tr>
             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
             <th>เรื่อง</th>
+            <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
             <th class="fw-semibold" scope="col">คณะเดินทาง</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
@@ -22,9 +23,10 @@ use yii\helpers\Html;
             </td>
             <td>
                 <p class="mb-0"><?= $item->topic ?></p>
-
                     <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
-                    <?php // $item->developmentType?->title?>                
+                </td>
+                <td>
+                <?=$item->developmentType?->title ?? '-'?>                
             </td>
             <td>
                 <p class="mb-0 fw-semibold"> <?= $item->showDateRange() ?></p>
@@ -37,13 +39,13 @@ use yii\helpers\Html;
                 <?=$item->getStatus($item->status)['view'] ?? '-'?></td>
             <td style="width:120px">
                 <div class="btn-group">
-                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100']) ?>
                     <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                         data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                         <i class="bi bi-caret-down-fill"></i>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
+                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </li>
                         <li><?=$item->development_type_id == 'dev3' ? Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['/me/development/response-dev', 'id' => $item->id,'title' => '<i class="fa-solid fa-user-check"></i> การตอบรับเป็นวิทยากร'], ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']]) : ''?>
                         </li>

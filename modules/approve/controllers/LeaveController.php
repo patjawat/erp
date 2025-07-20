@@ -13,6 +13,7 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
 
@@ -21,21 +22,22 @@ class LeaveController extends \yii\web\Controller
     public function actionIndex()
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
-         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $me = UserHelper::GetEmployee();
-        
+
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
-          'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_filter' => 'this_month',
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending']
         ]);
 
-        
+
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('leave');
-        $dataProvider->query->andFilterWhere(['leave.leave_type_id' =>$searchModel->leave_type_id]);
+        $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         // $dataProvider->query->andFilterWhere(['NOT IN', 'approve.status',['None']]);
@@ -44,21 +46,22 @@ class LeaveController extends \yii\web\Controller
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
-        
-        try {
-         
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-           
-    } catch (\Throwable $th) {
 
-    }
-    
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 
         return $this->render('index', [
@@ -108,44 +111,38 @@ class LeaveController extends \yii\web\Controller
                 }
 
 
-                $nextApprove = Approve::findOne(['from_id' => $model->from_id,'name' => 'leave',  'level' => ($model->level + 1)]);
-                    // เงื่อนไขระบบลา
-                    if($nextApprove){
+                $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'name' => 'leave',  'level' => ($model->level + 1)]);
+                // เงื่อนไขระบบลา
+                if ($nextApprove) {
 
-                        if ($model->level == 1 && $model->status == 'Pass') {
-                            $model->leave->status = 'Checking';
-                            $model->leave->save();
-                            
-                            $nextApprove->status = 'Pending';
-                            $nextApprove->save();
-                           
-                        }
+                    if ($model->level == 1 && $model->status == 'Pass') {
+                        $model->leave->status = 'Checking';
+                        $model->leave->save();
 
-
-                        if ($model->level == 2 && $model->status == 'Pass') {
-                            $model->leave->status = 'Checking';
-                            $model->leave->save();
-                            
-                            $nextApprove->status = 'Pending';
-                            $nextApprove->save();
-                           
-                        }
-                        
-                        if ($model->level == 3 && $model->status == 'Pass') {
-                            $model->leave->status = 'Verify';
-                            $model->leave->save();
-                            $nextApprove->status = 'Pending';
-                            $nextApprove->save();
-                           
-                        }
-                      
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save();
                     }
-                    
-                    return [
-                        'status' => 'success'
-                    ];
-                
 
+
+                    if ($model->level == 2 && $model->status == 'Pass') {
+                        $model->leave->status = 'Checking';
+                        $model->leave->save();
+
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save();
+                    }
+
+                    if ($model->level == 3 && $model->status == 'Pass') {
+                        $model->leave->status = 'Verify';
+                        $model->leave->save();
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save();
+                    }
+                }
+
+                return [
+                    'status' => 'success'
+                ];
             }
         }
 
@@ -162,7 +159,6 @@ class LeaveController extends \yii\web\Controller
                 'model' => $model,
             ]);
         }
-        
     }
 
     public function actionApproveAll()
@@ -176,7 +172,7 @@ class LeaveController extends \yii\web\Controller
             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
             $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
             if ($model->save()) {
-                $nextApprove = Approve::findOne(['name' => 'leave','from_id' => $model->from_id, 'level' => ($model->level + 1)]);
+                $nextApprove = Approve::findOne(['name' => 'leave', 'from_id' => $model->from_id, 'level' => ($model->level + 1)]);
                 if ($nextApprove && $model->status !== 'Reject') {
                     // เงื่อนไขระบบลา
                     if ($model->name == 'leave') {
@@ -221,37 +217,34 @@ class LeaveController extends \yii\web\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
+
 
     public function actionGetEvents()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $start = Yii::$app->request->get('start');
         $end = Yii::$app->request->get('end');
-        
+
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
-        
+
         $result = [];
         foreach ($dataProvider->getModels() as $event) {
             $result[] = [
                 'id' => $event->id,
                 'title' => $event->leave->data_json['reason'] ?? '-',
-                'start' => $event->leave->date_start. ' 08:00',
-                'end' => $event->leave->date_end. ' 16:00',
+                'start' => $event->leave->date_start . ' 08:00',
+                'end' => $event->leave->date_end . ' 16:00',
                 // 'start' => $event->date_start . ' ' . $event->start_time,
                 // 'end' => $event->date_end . ' ' . $event->end_time,
                 // 'description' => $event->description,
                 // 'color' => $event->color,
             ];
         }
-        
+
         return $result;
     }
-    
-
-    
 }

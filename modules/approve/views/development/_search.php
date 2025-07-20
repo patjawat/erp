@@ -5,10 +5,8 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
-use app\widgets\FlatpickrWidget;
-use app\modules\hr\models\Employees;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
-use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $model */
@@ -23,59 +21,104 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
     'method' => 'get',
+    'id' => 'search-leave',
     'options' => [
         'data-pjax' => 1
     ],
+     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
-<div class="d-flex justify-content-between align-items-center gap-2">
-<?=$this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
-</div>
-    <!-- Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
 
-            <div class="d-flex flex-row gap-4">
-                <?php echo $form->field($model, 'status')->checkboxList(['Pending' => 'รออนุมัติ', 'Pass' => 'อนุมัติ'], ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-            </div>
+<div class="row">
+    <div class="col-3">
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
+    <div class="col-2">
+        <?php
+        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+            'data' =>  DateFilterHelper::getDropdownItems(),
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                // 'width' => '130px',
+            ],
+            ])->label(false);
+            ?>
 
-            <div class="offcanvas-footer">
-                <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
-                        [
-                            'class' => 'btn btn-light',
-                            'data-bs-backdrop' => 'static',
-                            'tabindex' => '-1',
-                            'id' => 'offcanvasExample',
-                            'aria-labelledby' => 'offcanvasExampleLabel',
-                        ]
-                    ); ?>
-            </div>
+    </div>
+
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
+    <div class="col-2">
+        <?=$form->field($model, 'status')->widget(Select2::classname(), [
+        'data' => $model->listStatus(),
+        'options' => ['placeholder' => 'สถานะทั้งหมด'],
+        'pluginOptions' => [
+            'allowClear' => true,
+            // 'width' => '150px',
+        ],
+        ])->label(false);?>
+    </div>
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
         </div>
     </div>
 
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    <div class="row">
+        <div class="col-3">
+
+            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
+                    'data' => $model->ListThaiYear(),
+                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        // 'width' => '120px',
+                    ],
+        ])->label(false);?>
+
+        </div>
+        <div class="col-4">
+            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+                    'name' => 'department',
+                    'id' => 'treeID',
+                    'query' => Organization::find()->addOrderBy('root, lft'),
+                    'value' => 1,
+                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                    'fontAwesome' => true,
+                    'asDropdown' => true,
+                    'multiple' => false,
+                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ])->label(false); ?>
+        </div>
+        <div class="col-4">
+
+        </div>
+    </div>
+</div>
+
 <?php ActiveForm::end(); ?>
 
-
 <?php
-
 $js = <<< JS
 
-    thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
-    $("#approvesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#approvesearch-date_end").on('change', function() {
-            $('#approvesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
+thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
 
-
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
-
 ?>

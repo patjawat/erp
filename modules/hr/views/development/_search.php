@@ -1,18 +1,13 @@
 <?php
-
 use yii\web\View;
 use yii\helpers\Html;
-use kartik\select2\Select2;
-use yii\widgets\ActiveForm;
-use kartik\tree\TreeViewInput;
+use kartik\widgets\Select2;
+use kartik\widgets\ActiveForm;
+use app\components\CategoriseHelper;
 use app\components\DateFilterHelper;
-use app\modules\hr\models\Organization;
-
-/** @var yii\web\View $this */
-/** @var app\modules\hr\models\DevelopmentSearch $model */
-/** @var yii\widgets\ActiveForm $form */
 ?>
 
+<div class="development-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -20,125 +15,103 @@ use app\modules\hr\models\Organization;
         'options' => [
             'data-pjax' => 1
         ],
+          'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
-    
-<div class="d-flex justify-content-between align-top align-items-center gap-2">
-    <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
 
-        <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' => DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '130px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    // $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    // $(this).submit()
-                }',
-            ]
-        ])->label(false) ?>
-
-        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '130px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    // $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    // $(this).submit()
-                }',
-            ]
-        ])->label(false) ?>
-
-        <?= $form->field($model, 'date_start')->textInput([
-            'class' => 'form-control',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
-
-        <?= $form->field($model, 'date_end')->textInput([
-            'class' => 'form-control',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
-
-        <?php echo $form->field($model, 'status')->widget(Select2::classname(), [
-            'data' => $model->listStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'width' => '170px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-
-                }',
-                'select2:unselecting' => 'function() {
-
-                }',
-            ]
-        ])->label(false) ?>
-
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
-    </div>
-    
-    
-    <!-- Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasRightLabel">เลือกเงื่อนไขของการค้นหาเพิ่มเติม</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-12">
+            <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
         </div>
-        <div class="offcanvas-body">
-            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+        <div class="col-2">
+            <?php
+        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+            'data' =>  DateFilterHelper::getDropdownItems(),
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                // 'width' => '130px',
+            ],
+            ])->label(false);
+            ?>
 
+        </div>
 
-            <div class="d-flex flex-row gap-4">
-                 <?php // echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
-                <?php // echo $form->field($model, 'status')->checkboxList($model->listStatus(), ['custom' => true, 'inline' => false, 'id' => 'custom-checkbox-list-inline']); ?>
+        <div class="col-2">
+            <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+        </div>
+        <div class="col-2">
+            <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-12">
+            <?=$form->field($model, 'status')->widget(Select2::classname(), [
+        'data' => $model->listStatus(),
+        'options' => ['placeholder' => 'สถานะทั้งหมด'],
+        'pluginOptions' => [
+            'allowClear' => true,
+            // 'width' => '150px',
+        ],
+        ])->label(false);?>
+
+        </div>
+
+        <div class="col-1">
+            <div class="d-flex flex-row align-items-center gap-2">
+                <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                    aria-expanded="false" aria-controls="collapseFilter">
+                    <i class="fa-solid fa-filter"></i>
+                </button>
             </div>
+        </div>
+    </div>
 
-            <div class="offcanvas-footer">
-                <?php echo Html::submitButton(
-                        '<i class="fa-solid fa-magnifying-glass"></i> ค้นหา',
-                        [
-                            'class' => 'btn btn-light',
-                            'data-bs-backdrop' => 'static',
-                            'tabindex' => '-1',
-                            'id' => 'offcanvasExample',
-                            'aria-labelledby' => 'offcanvasExampleLabel',
+    <div class="collapse mt-3" id="collapseFilter">
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-12">
+                <?php
+                    echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                        'data' => $model->ListThaiYear(),
+                        'options' => ['placeholder' => 'ปีงบประมาณ'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
+                                    $(this).submit()
+                                    }',
+                            'select2:unselecting' => "function() {
+                                        $(this).submit()
+                                        $('#developmentsearch-date_start').val('');
+                                        $('#developmentsearch-date_end').val('');
+                                        
+                                    }",
                         ]
-                    ); ?>
+                    ])->label(false);
+                    ?>
             </div>
+
+              <div class="col-lg-3 col-md-3 col-sm-12">
+
+              <?php
+                            echo $form->field($model, 'development_type_id')->widget(Select2::classname(), [
+                                'data' => CategoriseHelper::DevelopmentType(),
+                                'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
+                                'pluginOptions' => [
+                                    // 'dropdownParent' => '#main-modal',
+                                    'allowClear' => true,
+                                ],
+                            ])->label(false);
+                            ?>
+        </div>
+
         </div>
     </div>
 
     <?php ActiveForm::end(); ?>
 
-
-    <?php
+</div>
+<?php
 
 $js = <<< JS
 

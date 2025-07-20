@@ -81,7 +81,7 @@ class MeetingController extends Controller
         }
         $dataProvider->query
             ->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])
-            ->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)])
+            ->andFilterWhere(['<=', 'date_start', AppHelper::convertToGregorian($searchModel->date_end)])
             ->orderBy(['date_start' => SORT_DESC]);
 
 

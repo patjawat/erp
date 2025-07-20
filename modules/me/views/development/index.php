@@ -41,7 +41,7 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
                         class="badge bg-light"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
                     รายการ
                 </h6>
-                <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/me/development/create','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-light rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
+                <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',['/me/development/create','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-light shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
             </div>
     </div>
     <div class="card-body">
