@@ -45,6 +45,20 @@ $group = Yii::$app->request->get('group');
 
                     </h5>
                     <div class="row g-3">
+                        <div class="col-md-12">
+                             <?php
+                                echo $form->field($model, 'asset_name', [
+                                            'addon' => [
+                                                'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-item/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
+                                            ]
+                                    ])->textInput([
+                                    'maxlength' => true, 
+                                    'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
+                                    'readonly' => false,  // Make field readonly
+                                    'class' => 'form-control'  // Add background color
+                                ])->label('ชื่อครุภัณฑ์');
+                                ?>
+                        </div>
                         <div class="col-lg-6 col-md-6 col-sm-12">
                                 <?php
                                 // Select2 - ประเภทครุภัณฑ์
@@ -81,20 +95,7 @@ $group = Yii::$app->request->get('group');
 
                               
                         </div>
-                        <div class="col-md-12">
-                             <?php
-                                echo $form->field($model, 'asset_name', [
-                                            'addon' => [
-                                                'append' => ['content'=>Html::a('<i class="fa-solid fa-magnifying-glass"></i>',['/am/asset-item/list-item','title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-xl']]), 'asButton'=>true]
-                                            ]
-                                    ])->textInput([
-                                    'maxlength' => true, 
-                                    'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
-                                    'readonly' => false,  // Make field readonly
-                                    'class' => 'form-control'  // Add background color
-                                ])->label('ชื่อครุภัณฑ์');
-                                ?>
-                        </div>
+                        
                            <div class="col-md-6">
                             <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์') ?>
                         </div>
