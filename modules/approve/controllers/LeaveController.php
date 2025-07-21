@@ -247,4 +247,9 @@ class LeaveController extends \yii\web\Controller
 
         return $result;
     }
+
+    public function actionCalendar()
+    {
+        return $this->render();
+    }
 }

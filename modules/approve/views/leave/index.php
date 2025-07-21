@@ -108,7 +108,7 @@ $msg = 'ขอ';
 </div>
 
 <?php // Pjax::end(); ?>
-
+<?=$this->render('calendar')?>
 
 
 <?php

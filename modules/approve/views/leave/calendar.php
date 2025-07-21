@@ -19,27 +19,6 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
 $this->title = 'ปฏิทินการลา';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('sub-title'); ?>
-ปฏิทินการใช้รถยนต์
-<?php $this->endBlock(); ?>
-
-
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu', ['active' => 'vehicle']) ?>
-<?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/me/views/leave/_sub_menu', ['active' => 'calendar']) ?>
-<?php $this->endBlock(); ?>
-
-
-
 
 <style>
     .fc-theme-standard .fc-scrollgrid {

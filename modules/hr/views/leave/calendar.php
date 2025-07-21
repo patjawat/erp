@@ -62,7 +62,6 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.gl
 
 
 <?php
-// $calDaysUrl = Url::to(['/lm/leave/cal-days']);
 $js = <<< JS
 
 
