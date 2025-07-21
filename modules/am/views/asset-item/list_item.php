@@ -54,6 +54,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="fw-semibold text-end"><?= $item->price?></td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-primary select-item" 
+                        data-group="<?=$item->asset_group_id?>" 
+                        data-type="<?=$item->asset_type_id?>" 
+                        data-category="<?=$item->asset_category_id?>" 
                         data-code="<?=$item->id?>" 
                         data-fsn="<?=$item->fsn?>" 
                         data-title="<?=$item->title?>"
@@ -83,12 +86,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-
 $("body").on("click", ".select-item", function (e) {
+    var group = $(this).data('group');
+    var type = $(this).data('type');
+    var category = $(this).data('category');
     var code = $(this).data('code');
     var fsn = $(this).data('fsn');
     var fsnNext = $(this).data('fsn-next');
     var title = $(this).data('title');
+
     Swal.fire({
         title: 'ยืนยันการเลือก?',
         text: "คุณต้องการเลือกทรัพย์สิน: " + title + " (" + code + ")",
@@ -98,20 +104,41 @@ $("body").on("click", ".select-item", function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
-            // ดำเนินการหลังจากยืนยัน
-            // ตัวอย่าง: ส่งค่าไปยัง parent หรือปิด modal
-            // window.parent.postMessage({code: code, title: title}, '*');
-            $('#asset-asset_item').val(code)
-            // $('#asset-code').val(fsnNext)
-            $('#asset-asset_name').val(title)
-            if(fsn !== undefined && fsn !== null && fsn !== ''){
-                $('#asset-fsn_number').val(fsn)
-            }
-             $("#main-modal").modal("toggle");
 
+
+            // ตรวจสอบว่า plugin ผูกอยู่กับ element จริงไหม
+console.log($('#asset_type_id').data('depdrop')); // ต้องไม่ undefined
+
+if ($('#asset_type_id').data('depdrop')) {
+    $('#asset_type_id').val(type).depdrop('change');
+} else {
+    console.error('DepDrop plugin ยังไม่ถูก initialize');
+}
+
+       // STEP 1: ผูก event depdrop:afterChange ที่ dropdown หมวดหมู่ (ตัวลูก) ก่อน
+        $('#asset_category_id').one('depdrop:afterChange', function () {
+            console.log('depdrop:afterChange fired');
+            // เมื่อหมวดหมู่โหลดเสร็จแล้ว ค่อย set ค่า category และ trigger change ถ้าจำเป็น
+            $('#asset_category_id').val(category).trigger('change');
+        });
+
+        // STEP 2: ตั้งค่า asset_type_id และสั่ง DepDrop โหลดข้อมูลหมวดหมู่
+        setTimeout(() => {
+            $('#asset_type_id').val(type).depdrop('change');
+        }, 200);
+
+
+            // ✅ STEP 3: อื่นๆ
+            $('#asset-asset_name').val(title);
+            if (fsn) {
+                $('#asset-fsn_number').val(fsn);
+            }
+
+            $("#main-modal").modal("toggle");
         }
     });
 });
+
     
 JS;
 $this->registerJs($js,View::POS_END);

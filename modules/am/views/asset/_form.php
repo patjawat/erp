@@ -5,12 +5,9 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
+use kartik\depdrop\DepDrop;
 use yii\widgets\MaskedInput;
-use app\components\AppHelper;
-use app\modules\am\models\Asset;
 use app\modules\hr\models\Employees;
-use unclead\multipleinput\MultipleInput;
 use kartik\editors\Summernote;
 
 $title = Yii::$app->request->get('title');
@@ -25,8 +22,6 @@ $group = Yii::$app->request->get('group');
 .modal-footer {
     display: none !important;
 }
-
-
 </style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-asset',
@@ -35,15 +30,57 @@ $group = Yii::$app->request->get('group');
      'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<?=$form->field($model, 'asset_item')->hiddenInput()->label(false);?>
+<?=$form->field($model, 'asset_item_id')->hiddenInput()->label(false);?>
 <div class="row">
     <div class="col-8">
         <div class="card">
             <div class="card-body">
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
-                    <h5 class="section-title">ข้อมูลทั่วไป</h5>
+                    <h5 class="section-title">
+                        <div class="d-flex justify-content-between">
+                        <p>ข้อมูลทั่วไป</p>
+                        <button class="btn btn-primary rounded-pill shadow" id="LoadTest">Load</button>
+                    </div>
+
+                    </h5>
                     <div class="row g-3">
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                                <?php
+                                // Select2 - ประเภทครุภัณฑ์
+                                echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                                    'data' => $model->listAssetType(),
+                                    'options' => [
+                                        'placeholder' => 'เลือกประเภท...',
+                                        'id' => 'asset_type_id'
+                                    ],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                    ],
+                                ])->label('ประเภทครุภัณฑ์');
+                                ?>
+
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+
+                         <?php
+                    // DepDrop - หมวดหมู่ครุภัณฑ์
+                    echo $form->field($model, 'asset_category_id')->widget(DepDrop::class, [
+                        'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวดรัพย์สิน ...'],
+                        'type' => DepDrop::TYPE_SELECT2,
+                        'select2Options' => [
+                            'pluginOptions' => ['allowClear' => true],
+                        ],
+                        'pluginOptions' => [
+                            'depends' => ['asset_type_id'], // ต้องตรงกับ id ของ dropdown แรก
+                            'url' => Url::to(['/am/asset-item/get-asset-category']),
+                            'loadingText' => 'กำลังโหลด ...',
+                            'initialize' => true, // กรณีแก้ไขข้อมูล ต้องโหลดค่าปัจจุบัน
+                        ],
+                    ])->label('หมวดหมู่');?>
+
+                              
+                        </div>
                         <div class="col-md-12">
                              <?php
                                 echo $form->field($model, 'asset_name', [
@@ -402,7 +439,7 @@ $group = Yii::$app->request->get('group');
 
 
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'asset_group')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'asset_group_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
 <?php //  $this->render('_form_detail3',['model' => $model, 'form' => $form]) ?>
@@ -427,6 +464,14 @@ $urlUpload = Url::to('/filemanager/uploads/single');
 $js = <<< JS
  //กำหนดให้ปฏิทินแสดงวันที่
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
+
+ $('#LoadTest').click(function (e) { 
+    e.preventDefault();
+//    $('#asset_type_id').val('COM').trigger('change');
+    $('#asset_type_id').val('COM').trigger('change.select2'); 
+    
+ });
+ 
 
  isFile()
 \$('#form-asset').on('beforeSubmit', function (e) {

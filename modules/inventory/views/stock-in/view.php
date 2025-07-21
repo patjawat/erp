@@ -157,7 +157,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="d-flex justify-content-center gap-2">
                                     <?php if($item->order_status == 'pending'):?>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-in/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-order-item']) ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
                                     <?php else:?>
                                     <span>ดำเนินการแล้ว</span>
                                     <?php endif?>

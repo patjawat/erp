@@ -486,13 +486,14 @@ class StockInController extends Controller
     public function actionDelete($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = $this->findModel($id);
-        $model->delete();
-
-        return [
-            'status' => 'success',
-            'container' => '#inventory-container',
-        ];
+        $model = StockEvent::findOne(['id' => $id]);
+        
+        if($model && $model->delete()){   
+            return [
+                'status' => 'success',
+                'container' => '#inventory-container',
+            ];
+        }
     }
 
     public function actionConfirmOrder($id)

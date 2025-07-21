@@ -58,7 +58,7 @@ class AssetController extends Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-             'asset_group' => 'EQUIP'
+             'asset_group_id' => 'EQUIP'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -160,7 +160,7 @@ class AssetController extends Controller
             // ตรวจสอลการลงปีงบประมาณ
             // return $model;
 
-            if ($model->asset_group != 1 && $model->asset_group != 2) {  // ถ้าเป็นที่ดินไม่ต้องตรวจสอบปีงบประมาณ
+            if ($model->asset_group_id != 1 && $model->asset_group_id != 2) {  // ถ้าเป็นที่ดินไม่ต้องตรวจสอบปีงบประมาณ
                 $model->data_json['budget_type'] == '' ? $model->addError('data_json[budget_type]', $requiredName) : null;
                 $model->on_year == '' ? $model->addError('on_year', $requiredName) : null;
                 $model->purchase == '' ? $model->addError('purchase', $requiredName) : null;
@@ -240,7 +240,7 @@ class AssetController extends Controller
     public function actionCreate()
     {
         $model = new Asset([
-            'asset_group' => 'EQUIP',
+            'asset_group_id' => 4,
             'asset_item' => 0,
             'asset_status' => 0,
             'price' => 0,
@@ -320,7 +320,7 @@ class AssetController extends Controller
 
         return $this->render('update', [
             'model' => $model,
-            // 'group' => $model->asset_group
+            // 'group' => $model->asset_group_id
         ]);
     }
 
@@ -479,8 +479,8 @@ try {
         $sql = "SELECT a.id,g.title as group_name,a.code as asset_code,a.data_json->>'\$.asset_name' as asset_name,t.code as type_code,t.title as type_title,i.code as item_code,i.title as item_title FROM asset a
          LEFT JOIN categorise i ON i.code = a.asset_item AND i.name = 'asset_item'
          LEFT JOIN categorise t ON t.code = i.category_id AND t.name = 'asset_type'
-         LEFT JOIN categorise g ON g.code = a.asset_group AND g.name = 'asset_group'
-         WHERE a.asset_group <> 1 AND t.code IS NULL
+         LEFT JOIN categorise g ON g.code = a.asset_group_id AND g.name = 'asset_group_id'
+         WHERE a.asset_group_id <> 1 AND t.code IS NULL
          LIMIT 10000;";
 
         $models = Yii::$app->db->createCommand($sql)->queryAll();
@@ -588,7 +588,7 @@ try {
 
                 // สมมติว่าคุณมี Model ชื่อ YourModel
                 $model = $checkAsset ?? new Asset();
-                $model->asset_group = 3;
+                $model->asset_group_id = 3;
                 $model->asset_item = isset($assetItem->code) ? $assetItem->code : null;
                 $model->code = $assetCode;
                 $model->data_json = [
@@ -689,7 +689,7 @@ try {
     //                     ],
     //                     [
     //                         //ประเภทครุภัณฑ์
-    //                         'attribute' => 'asset_group',
+    //                         'attribute' => 'asset_group_id',
     //                         'value' => function ($data) {
     //                             return 3;
     //                         },

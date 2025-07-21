@@ -80,9 +80,7 @@ class Asset extends \yii\db\ActiveRecord
     public $q_lastDay;
     public $item_options;
     public $fsn_auto;  // กำหนดการให้หมายเลขอัตโนมัติถ้า true;
-    public $asset_group_id;
     public $asset_type_id;
-    public $asset_category_id;
 
     public static function tableName()
     {
@@ -96,7 +94,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type'], 'safe'],
             [['price'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],
@@ -114,7 +112,7 @@ class Asset extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'name' => 'ชื่อครุภัณฑ์',
             'fsn' => 'ครุภัณฑ์',
-            'asset_item' => 'ชื่อครุภัณฑ์',
+            'asset_item_id' => 'ชื่อครุภัณฑ์',
             'fsn_number' => 'หมายเลขครุภัณฑ์',
             'receive_date' => 'วันที่รับเข้า',
             'on_year' => 'ปีงบประมาณ',
@@ -151,7 +149,7 @@ class Asset extends \yii\db\ActiveRecord
     public function updateFsn()
     {
         $checkAssetFsn = AssetItem::find()
-            ->where(['id' => $this->asset_item])
+            ->where(['id' => $this->asset_item_id])
             ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
             ->one();
         if (!empty($checkAssetFsn)) {
@@ -248,11 +246,11 @@ class Asset extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         try {
-            if ($this->asset_group == 2) {
+            if ($this->asset_group_id == 2) {
                 // try {
 
                 $vendor = isset($this->data_json['vendor_id']) ? Categorise::find()->where(['code' => $this->data_json['vendor_id'], 'name' => 'vendor'])->one() : '';
-                // $Assetitem = AssetItem::find()->where(['code' => $this->asset_item,'name' => 'asset'])->one();
+                // $Assetitem = AssetItem::find()->where(['code' => $this->asset_item_id,'name' => 'asset'])->one();
                 $department = Organization::find()->where(['id' => $this->department])->one();
                 $array2 = [
                     'vendor_id' => isset($this->data_json['vendor_id']) ? $this->data_json['vendor_id'] : '',
@@ -274,11 +272,11 @@ class Asset extends \yii\db\ActiveRecord
                 // code...
             }
 
-            if ($this->asset_group == 3) {
+            if ($this->asset_group_id == 3) {
                 // try {
 
                 $vendor = isset($this->data_json['vendor_id']) ? Categorise::find()->where(['code' => $this->data_json['vendor_id'], 'name' => 'vendor'])->one() : '';
-                $Assetitem = AssetItem::find()->where(['code' => $this->asset_item, 'name' => 'asset_item'])->one();
+                $Assetitem = AssetItem::find()->where(['code' => $this->asset_item_id, 'name' => 'asset_item_id'])->one();
                 $department = Organization::find()->where(['id' => $this->department])->one();
                 $array2 = [
                     'vendor_id' => isset($this->data_json['vendor_id']) ? $this->data_json['vendor_id'] : '',
@@ -301,7 +299,7 @@ class Asset extends \yii\db\ActiveRecord
                 // สร้างรหัสอัตโนมัติ
                 if ($this->fsn_auto == '1') {
                     $year = substr(AppHelper::YearBudget(), -2, 2);
-                    $number = $this->asset_item . '/' . $year . '.';
+                    $number = $this->asset_item_id . '/' . $year . '.';
                     $this->code = \mdm\autonumber\AutoNumber::generate($number . '?');
                 }
 
@@ -328,12 +326,12 @@ class Asset extends \yii\db\ActiveRecord
     // Relationships
     // public function getAssetItem()
     // {
-    //     return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+    //     return $this->hasOne(Categorise::class, ['code' => 'asset_item_id'])->andOnCondition(['name' => 'asset_item_id']);
     // }
 
     public function getAssetItem()
     {
-        return $this->hasOne(AssetItem::class, ['id' => 'asset_item']);
+        return $this->hasOne(AssetItem::class, ['id' => 'asset_item_id']);
     }
 
     // วิธีการได้มา
@@ -357,7 +355,7 @@ class Asset extends \yii\db\ActiveRecord
     // มูลค่าครุภัณฑ์
     public function TotalPriceByGroup2()
     {
-        return self::find()->select('price')->where(['asset_group' => 2])->sum();
+        return self::find()->select('price')->where(['asset_group_id' => 2])->sum();
     }
 
     // นับจำนวนรายการที่อยู่ในประเภท
@@ -366,7 +364,7 @@ class Asset extends \yii\db\ActiveRecord
         $id = $this->code;
         $sql = "SELECT count(c.id) FROM categorise c
           LEFT JOIN categorise t ON t.code = c.category_id
-           WHERE c.name = 'asset_item'
+           WHERE c.name = 'asset_item_id'
            AND t.category_id = :id";
         $query = Yii::$app
             ->db
@@ -484,14 +482,14 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListAssetitem()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 3])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item_id', 'group_id' => 3])->all(), 'code', 'title');
     }
 
     // แสดงรายการอาคารสิ่งก่อสร้าง
     public function ListBuildingItems()
     {
         return ArrayHelper::map(Categorise::find()
-            ->where(['name' => 'asset_item'])
+            ->where(['name' => 'asset_item_id'])
             ->andWhere(['category_id' => 1])
             ->all(), 'code', 'title');
     }
@@ -706,15 +704,15 @@ class Asset extends \yii\db\ActiveRecord
     public function isCar()
     {
         $sql = "SELECT count(a.id) FROM asset a
-        INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item'
-        INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type'
+        INNER JOIN categorise asset_item_id ON asset_item_id.code = a.asset_item_id AND asset_item_id.name = 'asset_item_id'
+        INNER JOIN categorise asset_type ON asset_type.code = asset_item_id.category_id AND asset_type.name = 'asset_type'
         WHERE asset_type.code = 4 AND a.code = :code";
         $query = Yii::$app
             ->db
             ->createCommand($sql)
             ->bindValue(':code', $this->code)
             ->queryScalar();
-        // return $this->asset_item == '2310-001-0003' ? true : false;
+        // return $this->asset_item_id == '2310-001-0003' ? true : false;
         return $query > 0 ? true : false;
         // }
     }
@@ -723,7 +721,7 @@ class Asset extends \yii\db\ActiveRecord
     public function isComputer()
     {
         try {
-            $data = explode('-', $this->asset_item);
+            $data = explode('-', $this->asset_item_id);
             $code = $data[0] . '-' . $data[1];
             return $code == '7440-001' ? true : false;
         } catch (\Throwable $th) {
@@ -735,7 +733,7 @@ class Asset extends \yii\db\ActiveRecord
     public function isMedical()
     {
         try {
-            $data = explode('-', $this->asset_item);
+            $data = explode('-', $this->asset_item_id);
             return $data[0] == '6515' ? true : false;
         } catch (\Throwable $th) {
             return false;
@@ -746,7 +744,7 @@ class Asset extends \yii\db\ActiveRecord
     public function isRepair()
     {
         try {
-            $data = explode('-', $this->asset_item);
+            $data = explode('-', $this->asset_item_id);
             return $data[0] == '6515' ? true : false;
         } catch (\Throwable $th) {
             return false;
