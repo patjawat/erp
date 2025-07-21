@@ -21,21 +21,17 @@ use yii\helpers\Html;
         <tr>
             <td class="text-center fw-semibold">
                 <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-            <td>
-                <div class="avatar-detail">
-                    <h6 class="mb-0 fs-13"><?= $item->room?->title ?? '-' ?></h6>
-                   
-                </div>
-            </td>
-            <td> <p class="text-muted mb-0 fs-13">
-                        <?= $item->viewMeetingDate() ?>
-                    </p></td>
+                <td>
+                    <?= $item->viewMeetingDate() ?>
+             <p class="text-muted mb-0 fs-13">
+                        เริ่มเวลา <?= $item->viewMeetingTime() ?>
+                    </p>
+                </td>
+            <td><?= $item->room?->title ?? '-' ?></td>
             <td>
                 <div class="avatar-detail">
                     <h6 class="mb-0 fs-13"><?= $item->title ?></h6>
-                    <p class="text-muted mb-0 fs-13">
-                        เริ่มเวลา <?= $item->viewMeetingTime() ?>
-                    </p>
+                   
                 </div>
             </td>
             <td><?= $item->getUserReq()['avatar'] ?></td>
