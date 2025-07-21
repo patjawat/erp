@@ -56,7 +56,7 @@ class ReportController extends \yii\web\Controller
                                                                           asset_type.code as type_code,
                                                                           a.data_json->'$.service_life' as service_life,
                                                                           CAST(a.data_json->'$.depreciation'as DECIMAL(4,2)) as depreciation,
-                                                                          asset_group,
+                                                                          asset_group_id,
                                                                           receive_date,
                                                                           ('" . $searchModel->q_lastDay . "') as date,
                                                                           price,

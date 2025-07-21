@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php
-$querys = Yii::$app->db->createCommand("SELECT data_json->'$.asset_name',on_year FROM `asset` WHERE asset_group = 3
+$querys = Yii::$app->db->createCommand("SELECT data_json->'$.asset_name',on_year FROM `asset` WHERE asset_group_id = 3
 GROUP BY on_year
 ORDER BY on_year DESC LIMIT 10")->queryAll();
 ?>

@@ -43,33 +43,33 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         'options' => [
             'data-pjax' => 0
         ],
-         'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+        //  'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
 <div class="row">
-    <div class="col-lg-4 col-md-4 col-sm-12">
+    <div class="col-lg-3 col-md-4 col-sm-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
     </div>
 
-    <div class="col-lg-4 col-md-4 col-sm-12">
+    <div class="col-lg-3 col-md-3 col-sm-12">
         <?php
 
-  echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-    'data' => $model->listAssetType(),
-        'options' => [
-        'placeholder' => 'ทุกประเภท',
-        'id' => 'asset_type_id'
-    ],
-        'pluginOptions' => [
-        'allowClear' => true,
-    ],
-                  'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            // $(this).submit(); 
-                        }",
-                    ],
-])->label(false);
-?>
+            echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                'data' => $model->listAssetType(),
+                    'options' => [
+                    'placeholder' => 'ทุกประเภท',
+                    'id' => 'asset_type_id'
+                ],
+                    'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                            'pluginEvents' => [
+                                    "select2:select" => "function() { 
+                                        // $(this).submit(); 
+                                    }",
+                                ],
+            ])->label(false);
+            ?>
     </div>
     <div class="col-lg-3 col-md-3 col-sm-12">
 
@@ -96,116 +96,101 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 
 ])->label(false);?>
     </div>
-
- <div class="col-lg-1 col-md-1 col-sm-12">
-    <div class="d-flex flex-row align-items-center gap-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-filter"></i>
-        </button>
+    <div class="col-lg-2 col-md-2 col-sm-12">
+        <?php
+                                echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+                                    'data' => $model->ListAssetStatus(),
+                                    'options' => ['placeholder' => 'สถานะทั้งหมด...'],
+                                    'pluginOptions' => [
+                                    'allowClear' => true,
+                                    ],
+                                    'pluginEvents' => [
+                                        "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                                    ]
+                                ])->label(false);
+                        ?>
     </div>
+    <div class="col-lg-1 col-md-1 col-sm-12">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
     </div>
-
 </div>
 
-<div class="collapse mt-3" id="collapseFilter">
-    <?= $form->field($model, 'asset_group_id')->hiddenInput()->label(false);
-                                    
-                                    ?>
-                                        <div class="col-lg-4 col-md-4 col-sm-12">
-        <?php
- echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'id' => 'treeID',
-    'query' => Organization::find()->addOrderBy('root, lft'),
-    'value' => null,  // ไม่ตั้งค่าเริ่มต้น
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => [
-        'class' => 'close',
-        'allowClear' => true,
-    ],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'placeholder' => 'เลือกหน่วยงาน...',
-    ],
-])->label(false);
-?>
 
-    </div>
-
-    <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
-                                        'data' => $listAssetType,
-                                        'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
-                                        'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'width' => '500px',
-                                        ],
-                                    ])->label(false);
-                                    
-                                    ?>
-
-    <?= $form->field($model, 'asset_item_id')->widget(Select2::classname(), [
-                                        'data' => $listAssetitem,
-                                        'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
-                                        'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'width' => '350px',
-                                        ],
-                                    ])->label('ชื่อทรัพย์สิน');
-                                    
-                                    ?>
-
-
-
+<div class="collapse" id="collapseFilter">
     <div class="row">
-        <div class="col-6">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+            'name' => 'department',
+            'id' => 'treeID',
+            'query' => Organization::find()->addOrderBy('root, lft'),
+            'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+            'fontAwesome' => true,
+            'asDropdown' => true,
+            'multiple' => false,
+            'options' => [
+                'class' => 'close',
+                'allowClear' => true,
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'placeholder' => 'เลือกหน่วยงาน...',
+            ],
+            ])->label(false);
+            ?>
+
+        </div>
+
+        <div class="col-lg-3 col-md-3 col-sm-12">
             <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
                                         'data' => $model->ListMethodget(),
-                                        'options' => ['placeholder' => 'เลือกวิธีได้มา'],
+                                        'options' => ['placeholder' => 'วิธีได้มาทั้งหมด'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
                                         ],
-                                    ])->label('วิธีได้มา');
+                                    ])->label(false);
                                     ?>
         </div>
-        <div class="col-6">
+        <div class="col-lg-3 col-md-3 col-sm-12">
             <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
                                         'data' => $model->ListBudgetdetail(),
-                                        'options' => ['placeholder' => 'เลือกประเภทเงิน'],
+                                        'options' => ['placeholder' => 'ประเภทเงินทั้งหมด'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
                                         ],
-                                    ])->label('ประเภทเงิน');
+                                    ])->label(false);
                                     ?>
         </div>
-        <div class="col-6">
-
-
+    </div>
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-12">
             <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
                                         'data' => $model->ListOnYear(),
-                                        'options' => ['placeholder' => 'เลือกปีงบประมาณ'],
+                                        'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
                                         'pluginOptions' => [
                                         'allowClear' => true,
-                                        'width' => '150px',
                                         ],
-                                    ])->label('งบประมาณ');
+                                    ])->label(false);
                                     ?>
         </div>
-        <div class="col-6">
-
-
+        <div class="col-lg-3 col-md-3 col-sm-12">
             <?php
                         $url = \yii\helpers\Url::to(['/depdrop/employee']);
                         $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
                                 echo $form->field($model, 'owner')->widget(Select2::classname(), [
                                     // 'data' => $model->ListEmployees(),
                                     'initValueText'=>$owner,
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
+                                    'options' => ['placeholder' => 'ผู้รับผิดชอบ'],
                                     'pluginOptions' => [
                                         'allowClear' => true,
                                         'minimumInputLength' => 1,
@@ -227,48 +212,28 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                         //     $('#asset-data_json-method_get_text').val(data.text)
                                         //  }",
                                     ]
-                                ])->label('ผู้รับผิดชอบ');
-                        ?>
+                                ])->label(false);?>
         </div>
-        <div class="col-6">
-            <?=$form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
-        'mask' => '99/99/9999',
-    ])->label('วันที่รับเข้า');
-                        ?>
+        <div class="col-lg-3 col-md-3 col-sm-12">
+            <?=$form->field($model, 'q_receive_date')->textInput(['placeholder' => 'วันที่รับเข้า'])->label(false);?>
         </div>
-        <div class="col-6">
-            <?php
-                                echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                                    'data' => $model->ListAssetStatus(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก...'],
-                                    'pluginOptions' => [
-                                    'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-method_get_text').val(data.text)
-                                         }",
-                                    ]
-                                ])->label('สถานะ');
-                        ?>
-        </div>
-
+            <div class="col-lg-3 col-md-3 col-sm-12">
+        <?= $form->field($model, 'po_number')->textInput(['placeholder' => 'เลขที่สั่งซื้อ'])->label(false) ?>
+    </div>
     </div>
 
-    <div class="row">
-        <div class="col-6">
 
-            <?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
-        </div>
-        <div class="col-6">
+<div class="row">
+    <div class="col-lg-3 col-md-3 col-sm-12">
 
-            <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
-        </div>
-        <div class="col-12">
-            <?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
-        </div>
+        <?= $form->field($model, 'price1')->textInput(['type' => 'number','placeholer' => 'ระบุราคาต่ำสุด'])->label('ระบุราคาต่ำสุด') ?>
     </div>
+    <div class="col-lg-3 col-md-3 col-sm-12">
+
+        <?= $form->field($model, 'price2')->textInput(['type' => 'number','placeholer' => 'ระบุราคาสูงสุด'])->label('ระบุราคาสูงสุด') ?>
+    </div>
+
+</div>
 
 </div>
 
@@ -277,6 +242,9 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 
 <?php
 $js = <<< JS
+
+thaiDatepicker('#assetsearch-q_receive_date')
+
 $('#show').val(localStorage.getItem('right-setting'))
 console.log(localStorage.getItem('right-setting'));
 $("#filter-asset").addClass(localStorage.getItem('right-setting'));

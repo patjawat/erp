@@ -62,12 +62,12 @@ class AssetController extends Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
+        // $dataProvider->query->leftJoin('categorise at', 'at.code=asset.fsn_number');
         // Join กับ relation assetItem (ควรมีใน model Asset เช่น getAssetItem())
-        $dataProvider->query->joinWith('assetItem');
+        // $dataProvider->query->joinWith('assetItem');
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
-         $dataProvider->query->andFilterWhere(['asset_items.asset_type_id' => $searchModel->asset_type_id]);
-         $dataProvider->query->andFilterWhere(['asset_items.asset_category_id' => $searchModel->asset_category_id]);
+        //  $dataProvider->query->andFilterWhere(['asset_items.asset_type_id' => $searchModel->asset_type_id]);
+        //  $dataProvider->query->andFilterWhere(['asset_items.asset_category_id' => $searchModel->asset_category_id]);
 
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);

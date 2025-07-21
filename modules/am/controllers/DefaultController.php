@@ -22,20 +22,20 @@ class DefaultController extends Controller
         ->sum('price');
         // มูลค่าสิ่งปลูกสร้าง
          $totalPriceGroup2 = Asset::find()
-        ->where(['asset_group' => 2])
+        ->where(['asset_group_id' => 2])
         // ->andWhere(['NOT IN','asset_status',[2]])
         ->sum('price');
 
          // มูลค่าครุภัณฑ?ทั้งหมด
         $totalPriceGroup3 = Asset::find()
-        ->where(['asset_group' => 3])
+        ->where(['asset_group_id' => 4])
         // ->andWhere(['NOT IN','asset_status',[2]])
         ->sum('price');
 
         //มูลค่าครุภัณฑ์ (ย้อนหลัง 5 ปี)
-        $priceLastOfYear = Yii::$app->db->createCommand("SELECT ROUND(sum(price),0) as total ,on_year FROM `asset` WHERE asset_group = 3 GROUP by on_year ORDER BY on_year desc limit 10")->queryAll();
-        $totalGroup2 = Yii::$app->db->createCommand("SELECT count(id) as total FROM asset WHERE asset_group = 2")->queryScalar();
-        $totalGroup3 = Yii::$app->db->createCommand("SELECT count(id) as total FROM asset WHERE asset_group = 3")->queryScalar();
+        $priceLastOfYear = Yii::$app->db->createCommand("SELECT ROUND(sum(price),0) as total ,on_year FROM `asset` WHERE asset_group_id = 3 GROUP by on_year ORDER BY on_year desc limit 10")->queryAll();
+        $totalGroup2 = Yii::$app->db->createCommand("SELECT count(id) as total FROM asset WHERE asset_group_id = 2")->queryScalar();
+        $totalGroup3 = Yii::$app->db->createCommand("SELECT count(id) as total FROM asset WHERE asset_group_id = 3")->queryScalar();
         return $this->render('index',[
             'totalPrice' => isset($totalPrice) ? $totalPrice : 0,
             'totalPriceGroup2' => isset($totalPriceGroup2) ? $totalPriceGroup2 : 0,
