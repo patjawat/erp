@@ -124,6 +124,7 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair/update', 'type' => 2,'description' =>''],
             ['name' => '/helpdesk/repair/rating', 'type' => 2,'description' =>''],
             ['name' => '/helpdesk/repair/*', 'type' => 2,'description' =>''],
+            ['name' => '/helpdesk/team/*', 'type' => 2,'description' =>''],
             ['name' => '/hr/default/index', 'type' => 2,'description' =>''],
             ['name' => '/hr/employees/view', 'type' => 2,'description' =>''],
             //Router
@@ -234,9 +235,12 @@ class UpdateTableController extends Controller
             ['child' => '/depdrop/*', 'parent' => 'user'],
             // ซ่อมบำรุง
             ['child' => '/helpdesk/computer/*', 'parent' => 'computer'],
+            ['child' => '/helpdesk/team/*', 'parent' => 'computer'],
             ['child' => '/helpdesk/default/repair-select', 'parent' => 'user'],
+            ['child' => '/helpdesk/team/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/general/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/medical/*', 'parent' => 'medical'],
+            ['child' => '/helpdesk/team/*', 'parent' => 'medical'],
             ['child' => '/helpdesk/repair/create', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/timeline', 'parent' => 'user'],
             ['child' => '/helpdesk/repair/view', 'parent' => 'user'],

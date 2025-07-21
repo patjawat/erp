@@ -330,7 +330,7 @@ $resultsJs = <<<JS
 <?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[off_days]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'total_days')->textInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
@@ -349,7 +349,7 @@ $resultsJs = <<<JS
 $calDaysUrl = Url::to(['/hr/leave/cal-days','emp_id' => $model->emp_id]);
 $js = <<<JS
 
-
+    calDays()
       thaiDatepicker('#leave-date_start,#leave-date_end')
 
 
@@ -377,14 +377,15 @@ $js = <<<JS
         var form = \$(this);
         
         
-        let totalDays = parseInt(\$('#leave-total_days').val(), 10);
-        
-       
-       if (totalDays === 0) {
+        // let totalDays = parseInt(\$('#leave-total_days').val(), 10);
+        let totalDays = parseFloat($('#leave-total_days').val());
+        console.log(totalDays);
+
+        if (isNaN(totalDays) || totalDays <= 0) {
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
-                text: 'วันลาต้องไม่เป็น 0 วัน!',
+                text: 'วันลาต้องมากกว่า 0!',
                 confirmButtonText: 'ตกลง'
             });
             return false;

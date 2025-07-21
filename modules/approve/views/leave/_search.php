@@ -128,14 +128,14 @@ use app\modules\hr\models\Organization;
 
 $js = <<< JS
 
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+    thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
 
-    $("#leavesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    $("#approvesearch-date_start").on('change', function() {
+            $('#approvesearch-date_filter').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
+    $("#approvesearch-date_end").on('change', function() {
+            $('#approvesearch-date_filter').val(null).trigger('change');
             // $(this).submit();
     });
 
