@@ -80,7 +80,6 @@ class Asset extends \yii\db\ActiveRecord
     public $q_lastDay;
     public $item_options;
     public $fsn_auto;  // กำหนดการให้หมายเลขอัตโนมัติถ้า true;
-    public $asset_type_id;
 
     public static function tableName()
     {

@@ -40,7 +40,7 @@ $group = Yii::$app->request->get('group');
                     <h5 class="section-title">
                         <div class="d-flex justify-content-between">
                         <p>ข้อมูลทั่วไป</p>
-                        <button class="btn btn-primary rounded-pill shadow" id="LoadTest">Load</button>
+
                     </div>
 
                     </h5>
@@ -61,6 +61,7 @@ $group = Yii::$app->request->get('group');
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-12">
                                 <?php
+                             
                                 // Select2 - ประเภทครุภัณฑ์
                                 echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
                                     'data' => $model->listAssetType(),
@@ -463,15 +464,31 @@ $ref = Json::encode($model->ref); // ปลอดภัยแม้มีอั�
 $urlUpload = Url::to('/filemanager/uploads/single');
 
 $js = <<< JS
+
  //กำหนดให้ปฏิทินแสดงวันที่
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
 
- $('#LoadTest').click(function (e) { 
+$('#LoadTest').click(function (e) { 
     e.preventDefault();
-//    $('#asset_type_id').val('COM').trigger('change');
-    $('#asset_type_id').val('COM').trigger('change.select2'); 
-    
- });
+
+    $('#asset_type_id').val('COM').trigger('change.select2');
+    $('#asset_category_id').val('COM').trigger('change.select2');
+
+    $('#asset_category_id').on('depdrop:afterChange', function () {
+
+});
+
+
+    // ✅ 1. bind event ก่อน
+    // $('#asset_category_id').one('depdrop:afterChange', function() {
+    //     // ✅ 2. ตั้งค่าค่าที่ต้องการใน dropdown ลูก
+    //     $('#asset_category_id').val('COM').trigger('change.select2');
+    // });
+
+    // ✅ 3. แล้วค่อย trigger parent
+    // $('#asset_type_id').val('COM').trigger('change');
+});
+
  
 
  isFile()

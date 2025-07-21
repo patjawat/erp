@@ -61,6 +61,7 @@ class AssetSearch extends Asset
         $query->andFilterWhere([
             'id' => $this->id,
             'asset.asset_group_id' => $this->asset_group_id,
+            'asset.asset_type_id' => $this->asset_type_id,
             'license_plate' => $this->license_plate,
             'receive_date' => $this->receive_date,
             'price' => $this->price,

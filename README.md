@@ -253,3 +253,13 @@ ALTER TABLE `asset` CHANGE `asset_item` `asset_item_id` VARCHAR(255) CHARACTER S
 ALTER TABLE `asset` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ประเภทครุภัฯฑ์' AFTER `asset_group_id`;
 
 ALTER TABLE `asset` ADD `asset_category_id` VARCHAR(255) NULL COMMENT 'หมวดหมู่ของประเภททรัพสินย์' AFTER `asset_type_id`;
+
+
+## update ประเภ ทรรัพสินย์
+UPDATE `asset` a
+INNER JOIN `categorise` c 
+  ON c.title = a.data_json->>'$.asset_type_text' 
+  AND c.name = 'asset_type' 
+  AND c.group_id = 'EQUIP'
+SET a.asset_type_id = c.code
+WHERE a.asset_group_id = 4;
