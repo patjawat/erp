@@ -58,7 +58,7 @@ class AssetController extends Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-             'asset_group_id' => 'EQUIP'
+             'asset_group_id' => 4
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);

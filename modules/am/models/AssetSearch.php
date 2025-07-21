@@ -18,7 +18,7 @@ class AssetSearch extends Asset
     {
         return [
             [['id', 'life', 'department', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group','asset_type','q','purchase','on_year','owner','price1','price2','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id'], 'safe'],
+            [['q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group_id','asset_type','q','purchase','on_year','owner','price1','price2','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id'], 'safe'],
             [['price'], 'number'],
         ];
     }
@@ -60,7 +60,7 @@ class AssetSearch extends Asset
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'asset_group' => $this->asset_group,
+            'asset.asset_group_id' => $this->asset_group_id,
             'license_plate' => $this->license_plate,
             'receive_date' => $this->receive_date,
             'price' => $this->price,

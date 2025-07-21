@@ -16,7 +16,7 @@ use app\modules\hr\models\Organization;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetSearch $model */
 /** @var yii\widgets\ActiveForm $form */
-$listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item'])->all(),'code','title');
+$listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item_id'])->all(),'code','title');
 $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(),'code','title');
 
 ?>
@@ -110,7 +110,7 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
 </div>
 
 <div class="collapse mt-3" id="collapseFilter">
-    <?= $form->field($model, 'asset_group')->hiddenInput()->label(false);
+    <?= $form->field($model, 'asset_group_id')->hiddenInput()->label(false);
                                     
                                     ?>
                                         <div class="col-lg-4 col-md-4 col-sm-12">
@@ -149,7 +149,7 @@ echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
                                     
                                     ?>
 
-    <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
+    <?= $form->field($model, 'asset_item_id')->widget(Select2::classname(), [
                                         'data' => $listAssetitem,
                                         'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
                                         'pluginOptions' => [
