@@ -2,11 +2,18 @@
 
 namespace app\modules\me\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\db\Expression;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\am\models\Asset;
+use app\components\DateFilterHelper;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * RepairV2Controller implements the CRUD actions for Helpdesk model.
@@ -36,14 +43,34 @@ class RepairV2Controller extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+ public function actionIndex()
     {
-        $searchModel = new HelpdeskSearch();
+        $userId = \Yii::$app->user->id;
+         $emp = UserHelper::GetEmployee();
+        $searchModel = new HelpdeskSearch([
+            'created_by' => $userId,
+            'emp_id' => $emp->id,
+            'date_filter' => 'this_month',
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '\$.repair_note')"), $searchModel->q],
+        ]);
 
+             if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'summary' => $dataProvider->getTotalCount(),
         ]);
     }
 
