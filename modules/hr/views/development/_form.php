@@ -236,7 +236,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'templateSelection'=>new JsExpression('function(emp) {return emp.text;}'),
                 ],
 
-                    ])->label('หัวหน้าฝ่าย/ผู้บังคับบัญชา');
+                    ])->label('หัวหน้างาน');
                     ?>   
 
 
