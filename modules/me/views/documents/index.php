@@ -17,35 +17,33 @@ $this->title = 'ทะเบียนหนังสือ';
 <?php echo $this->render('@app/modules/me/views/documents/menu', ['action' => $action]) ?>
 <?php $this->endBlock(); ?>
 
-
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 <?php if (!isset($list)): ?>
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
-        <div class="d-flex justify-content-center align-top align-items-center">
-            <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
-        </div>
+        <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
     </div>
 </div>
 <?php endif; ?>
 
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white"> <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ <span
+                class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
+            รายการ</h6>
+    </div>
     <div class="card-body">
         <div class="d-flex justify-content-between align-top align-items-center">
-            <h6>
-                <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
-                <span
-                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span>
-                รายการ
-            </h6>
             <?php if (isset($list)): ?>
             <?= Html::a('แสดงทั้งหมด', ['/me/documents'], ['class' => 'btn btn-sm btn-light rounded-pill', 'data' => ['pjax' => 0]]) ?>
             <?php endif; ?>
         </div>
-
         <table class="table table-striped table-fixed">
             <thead>
                 <tr>
@@ -78,20 +76,21 @@ $this->title = 'ทะเบียนหนังสือ';
                             </span>
                             <?php endif; ?>
                             <?php if (isset($item->documentTags)): ?>
-                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>" class="open-modal" data-size="modal-xxl">
+                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentTags->id]) ?>"
+                                class="open-modal" data-size="modal-xxl">
                                 เรื่อง : <?php echo $item->topic ?>
                             </a>
                             <?php endif; ?>
 
                             <?php if (isset($item->documentDepartment)): ?>
-                            <a
-                                href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>" class="open-modal" data-size="modal-xxl">
+                            <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->documentDepartment->id]) ?>"
+                                class="open-modal" data-size="modal-xxl">
                                 เรื่อง : <?php echo $item->topic ?>
                             </a>
                             <?php endif; ?>
 
                             <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?>
-                            </h6>
+                        </h6>
                     </div>
                     <p class="fw-normal fs-13 mb-0">
                         <?= $item->data_json['des'] ?? '' ?>
@@ -109,8 +108,6 @@ $this->title = 'ทะเบียนหนังสือ';
                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
                         </span>
                     </span>
-
-
                     <?php echo $item->StackDocumentTags('comment') ?>
                 </td>
                 <td class="fw-light align-middle">
@@ -119,7 +116,6 @@ $this->title = 'ทะเบียนหนังสือ';
                     </div>
                 </td>
                 <td>
-
                     <?php if (isset($item->documentTags)): ?>
                     <?php echo Html::a(($item->documentTags->docRead('fs-3')['view']), ['/me/documents/bookmark', 'id' => $item->documentTags->id], ['class' => 'bookmark bookmark-star-'.$item->documentTags->id, 'id' => $item->documentTags->id]) ?>
                     <?php echo $item->documentStatus->title ?? '-' ?>
@@ -136,17 +132,14 @@ $this->title = 'ทะเบียนหนังสือ';
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentTags->id],['class' => 'open-modal','data' => ['size' => 'modal-xxl']]) ?>
                     <?php endif; ?>
                     <?php if (isset($item->documentDepartment)): ?>
-                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id]) ?>
+                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['view', 'id' => $item->documentDepartment->id],['class' => 'open-modal','data' => ['size' => 'modal-xxl']]) ?>
                     <?php endif; ?>
                 </td>
                 </tr>
                 <?php endforeach; ?>
-
             </tbody>
         </table>
-
         <div class="d-flex justify-content-center">
-
             <div class="text-muted">
                 <?= LinkPager::widget([
                     'pagination' => $dataProvider->pagination,
@@ -161,12 +154,3 @@ $this->title = 'ทะเบียนหนังสือ';
         </div>
     </div>
 </div>
-<?php
-$js = <<< JS
-
-     
-
-JS;
-$this->registerJS($js);
-
-?>

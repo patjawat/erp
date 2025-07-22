@@ -22,3 +22,5 @@ class Module extends \yii\base\Module
         // custom initialization code goes here
     }
 }
+
+// https://www.canva.com/ai/code/thread/30957746-e174-4de9-8db7-81fd7abcc452
