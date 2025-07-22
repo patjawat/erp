@@ -105,7 +105,7 @@ class Uploads extends \yii\db\ActiveRecord
         }
 
     }
-    public function getEvent() {
-        return $this->hasOne(Events::className(), ['ref' => 'ref']);
-    }
+    // public function getEvent() {
+    //     return $this->hasOne(Events::className(), ['ref' => 'ref']);
+    // }
 }

@@ -333,33 +333,33 @@ class RepairController extends Controller
         $code = $this->request->get('code');
 
         // ตรวจสอบว่าเป็นครุภัณ์หรืแไม่
-        $sqlCheckAssetType = "SELECT asset_item.title,asset_type.title,asset_type.code FROM asset a INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item' INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type' WHERE a.code = :code;";
-        $checkAssetType = Yii::$app
-            ->db
-            ->createCommand($sqlCheckAssetType)
-            ->bindValue(':code', $code)
-            ->queryOne();
+        // $sqlCheckAssetType = "SELECT asset_item.title,asset_type.title,asset_type.code FROM asset a INNER JOIN categorise asset_item ON asset_item.code = a.asset_item AND asset_item.name = 'asset_item' INNER JOIN categorise asset_type ON asset_type.code = asset_item.category_id AND asset_type.name = 'asset_type' WHERE a.code = :code;";
+        // $checkAssetType = Yii::$app
+        //     ->db
+        //     ->createCommand($sqlCheckAssetType)
+        //     ->bindValue(':code', $code)
+        //     ->queryOne();
 
-        // return $checkAssetType;
-        $repair_group = '';
-        try {
-            if (isset($checkAssetType) && $checkAssetType['code'] == 11) {
-                $repair_group = 3;
-            } elseif ($checkAssetType['code'] == 12) {
-                $repair_group = 2;
-            } else {
-                $repair_group = 1;
-            }
-            // code...
-        } catch (\Throwable $th) {
-            $repair_group = '';
-        }
+        // // return $checkAssetType;
+        // $repair_group = '';
+        // try {
+        //     if (isset($checkAssetType) && $checkAssetType['code'] == 11) {
+        //         $repair_group = 3;
+        //     } elseif ($checkAssetType['code'] == 12) {
+        //         $repair_group = 2;
+        //     } else {
+        //         $repair_group = 1;
+        //     }
+        //     // code...
+        // } catch (\Throwable $th) {
+        //     $repair_group = '';
+        // }
 
         $emp = UserHelper::GetEmployee();
         $model = new Helpdesk([
             'name' => 'repair',
             'code' => $code,
-            'repair_group' => $repair_group,
+            // 'repair_group' => $repair_group,
             'data_json' => [
                 'send_type' => $this->request->get('send_type'),
                 'location' => $emp->departmentName()

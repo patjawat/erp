@@ -146,9 +146,6 @@ $resultsJs = <<<JS
 
                     </div>
                 </div>
-
-
-
                 <?php
                 echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
                     'data' => $model->listLeavetype(),
@@ -159,15 +156,7 @@ $resultsJs = <<<JS
                     ],
                 ])->label('ประเภท');
                 ?>
-
-
-
-
-
-
-
             </div>
-
             <div class="col-6">
 
                 <div class="bg-primary bg-opacity-10 p-3 rounded mb-3">

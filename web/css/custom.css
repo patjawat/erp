@@ -14722,4 +14722,10 @@ small, .small {
   color: #f44336;
 }
 
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .modal-dialog {
+    max-width: 90%;
+  }
+}
+
 /*# sourceMappingURL=custom.css.map */

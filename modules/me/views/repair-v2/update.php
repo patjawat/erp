@@ -28,4 +28,4 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'repair']) ?>
 <?php $this->endBlock(); ?>
-<?=$this->render('_form',['model' => $model])?>
+<?=$this->render('@app/modules/helpdesk2/views/service/_form',['model' => $model])?>

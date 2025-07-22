@@ -80,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             class="fa-solid fa-circle-exclamation"></i>
                                         <?php echo $model->RepairType()['title']?>
                                     </span>
-                                    <?= $model->viewUrgency() ?>
+                                    <?= $model->viewUrgent()['view'] ?>
                                     <?php echo $model->viewCreateDateTime()?>
                                 </p>
                                 <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </td>
                     <td> <?= $model->showAvatarCreate(); ?></td>
                     <td><?= $model->StackTeam() ?></td>
-                    <td class="text-center"> <?= $model->viewStatus() ?></td>
+                    <td class="text-center"> <?=$item->repairStatus?->title ?? '-'?></td>
                     <td class="text-center">
                         <?=Html::a('<i class="fa-solid fa-eye fs-1"></i>',['/me/repair/view','id' => $model->id,'title' => '<i class="fa-solid fa-circle-exclamation text-danger"></i> แจ้งซ่อม'],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                     </td>

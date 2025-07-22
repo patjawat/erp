@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
@@ -82,9 +83,20 @@ class RepairV2Controller extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        $model = $this->findModel($id);
+                if($this->request->isAjax){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                'model' => $model,
+        ])
+            ];
+        }else{
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -94,20 +106,68 @@ class RepairV2Controller extends Controller
      */
     public function actionCreate()
     {
-        $model = new Helpdesk();
-
+        $me = UserHelper::GetEmployee();
+        $model = new Helpdesk([
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'emp_id' => $me->id
+        ]);
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                try {
+                    $model->request_repair_date = AppHelper::convertToGregorian($model->request_repair_date);
+                } catch (\Throwable $th) {
+                }
+                $model->status = 'pending';
+                if($model->save()){
+                    return [
+                        'status' => 'success' 
+                    ];
+                }
             }
         } else {
             $model->loadDefaultValues();
         }
-
-        return $this->render('create', [
+        
+        if($this->request->isAjax){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
             'model' => $model,
-        ]);
+        ])
+            ];
+        }else{
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
+
+    // ตรวจสอบความถูกต้อง
+    public function actionCreateValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Helpdesk();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $requiredName = 'ต้องระบุ';
+
+            $model->title == '' ? $model->addError('title', 'ต้องระบุอาการ...') : null;
+            $model->data_json['urgency'] == '' ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
+            $model->data_json['location'] == '' ? $model->addError('data_json[location]', 'ต้องระบุสถานะที่...') : null;
+            // $model->data_json['technician_req'] == '' ? $model->addError('data_json[technician_req]', 'ต้องระบุช่างเพื่อรับการแจ้งเตือน...') : null;
+            $model->repair_group == '' ? $model->addError('repair_group', 'ต้องระบุ...') : null;
+
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
 
     /**
      * Updates an existing Helpdesk model.
@@ -116,18 +176,44 @@ class RepairV2Controller extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($id)
+public function actionUpdate($id)
     {
+        $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        $model->request_repair_date = AppHelper::convertToThai($model->request_repair_date);
+        if ($this->request->isPost) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                try {
+                    $model->request_repair_date = AppHelper::convertToGregorian($model->request_repair_date);
+                } catch (\Throwable $th) {
+                }
+                
+                if($model->save()){
+                    return [
+                        'status' => 'success' 
+                    ];
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
         }
-
-        return $this->render('update', [
+        
+        if($this->request->isAjax){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
             'model' => $model,
-        ]);
+        ])
+            ];
+        }else{
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
+
 
     /**
      * Deletes an existing Helpdesk model.
@@ -136,9 +222,13 @@ class RepairV2Controller extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
+    public function actionCancel($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $model->status = 'cancel';
+        if($model->save())
+
+
 
         return $this->redirect(['index']);
     }

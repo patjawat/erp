@@ -54,7 +54,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item','date_filter'], 'safe'],
+            [['title','emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item','date_filter','device_type_id','request_repair_date','repair_number'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -72,6 +72,9 @@ class Helpdesk extends Yii\db\ActiveRecord
             'title' => 'Title',
             'thai_year' => 'ปีงบประมาณ',
             'move_out' => 'จำหน่าย',
+            'device_type_id' => 'ประเภทอุปกรณ์',
+            'request_repair_date' => 'วันที่ต้องการให้ซ่อม',
+            'fsn_number' => 'หมายเลขครุภัณฑ์',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -122,6 +125,24 @@ class Helpdesk extends Yii\db\ActiveRecord
         parent::afterFind();
     }
 
+    //แสดงรูปภาพประกอบ
+   public function getImageRequest()
+{
+    $models = Uploads::find()->where(['ref' => $this->ref, 'name' => 'repair_request'])->all();
+    $html = '';
+
+    foreach ($models as $model) {
+        $imgUrl = FileManagerHelper::getImg($model->id);
+        $html .= Html::img($imgUrl, [
+            'class' => 'img-thumbnail me-2 mb-2',
+            'style' => 'max-width: 200px; max-height: 200px;',
+            'alt' => 'รูปแจ้งซ่อม',
+        ]);
+    }
+
+    return $html ?: '<p><i>ไม่มีรูปภาพประกอบ</i></p>';
+}
+
     // แสดงรูปภาพ
     public function ShowImg()
     {
@@ -155,9 +176,23 @@ class Helpdesk extends Yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['helpdesk_id' => 'id']);
     }
 
-    public function getEmpTeam()
+    public function getEmp()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+        public function getEmpTeam()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+
+        public function getDeviceType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'device_type_id'])->andOnCondition(['name' => 'device_type']);
+    }
+
+    public function getRepairStatus()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'repair_status']);
     }
 
     // ผู้แจ่งซ่อม
@@ -211,9 +246,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             'image' => '',
         ]
     };
-}
-
-    
+}   
 
     // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
     public function listTecName()
@@ -273,6 +306,13 @@ class Helpdesk extends Yii\db\ActiveRecord
 
     }
 
+//รายการอุกรณ์
+public function listDeviceType()
+{
+     $list = Categorise::find()->andWhere(['name' => 'device_type'])->all();
+    return ArrayHelper::map($list, 'code', 'title');
+}
+ 
 
     public function ListStatus()
     {
@@ -302,7 +342,10 @@ class Helpdesk extends Yii\db\ActiveRecord
     // ความเร่งด่วน
     public static function listUrgency()
     {
-        return ArrayHelper::map(CategoriseHelper::Categorise('urgency'), 'code', 'title');
+        $list = Categorise::find()->andWhere(['name' => 'helpdesk_urgency'])->all();
+        return ArrayHelper::map($list, 'code', function($model){
+            return $model->title.' - '.$model->data_json['description'];
+        });
     }
 
     // การใช้คะแนน
@@ -391,7 +434,26 @@ class Helpdesk extends Yii\db\ActiveRecord
     }
 
     // แสดงสถานะ
-    public function viewStatus()
+    public function viewUrgent()
+    {
+        try {
+        $model = Categorise::find()->where(['name' => 'helpdesk_urgency','code' => $this->data_json['urgency']])->one();
+        return [
+            'title' => $model->title,
+            'description' => $model->title.' - '.$model->code,
+            'view' => '<span class="badge bg-'.$model->data_json['color'].'">'.$model->title.'</span>'
+        ];
+
+        } catch (\Throwable $th) {
+            return [
+            'title' => '',
+            'description' =>'',
+            'view' => ''
+        ];
+        }
+    }
+    
+    public function viewStatusOld()
     {
         try {
         if (isset($this->data_json['urgency'])) {
@@ -419,37 +481,37 @@ class Helpdesk extends Yii\db\ActiveRecord
                 }
     }
 
-    public function UrgencyName()
-    {
-        $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
-        if ($model) {
-            return $model->title;
-        }
-    }
+    // public function UrgencyName()
+    // {
+    //     $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+    //     if ($model) {
+    //         return $model->title;
+    //     }
+    // }
 
     // แสดงความเร่งด่วน
-    public function viewUrgency()
-    {
-        try {
-            if (isset($this->data_json['urgency'])) {
-                $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
-                if ($model->code == 1) {
-                    return '<span class="badge text-bg-light fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 2) {
-                    return '<span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 3) {
-                    return '<span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 4) {
-                    return '<span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-                }
-            }
-        } catch (\Throwable $th) {
-            return null;
-        }
-    }
+    // public function viewUrgency()
+    // {
+    //     try {
+    //         if (isset($this->data_json['urgency'])) {
+    //             $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+    //             if ($model->code == 1) {
+    //                 return '<span class="badge text-bg-light fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+    //             }
+    //             if ($model->code == 2) {
+    //                 return '<span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+    //             }
+    //             if ($model->code == 3) {
+    //                 return '<span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+    //             }
+    //             if ($model->code == 4) {
+    //                 return '<span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+    //             }
+    //         }
+    //     } catch (\Throwable $th) {
+    //         return null;
+    //     }
+    // }
 
     // แสดงผู้ส่งซ่อม
     public function viewCreateUser()

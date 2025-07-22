@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="card-body">
-            <table class="table table-hover table-striped">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th scope="col" class="text-center fw-semibold">ลำดับ</th>
@@ -87,9 +87,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
-                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>ดูรายละเอียด',['/me/repair-v2/view','id' => $item->id,'title' => 'รายละเอียดงานซ่อม #MR-2023-001'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
-                                    <li><?=Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข',['/me/repair-v2/update','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
-                                    <li><?=Html::a('<i class="fa-solid fa-ban me-2"></i>ยกเลิก',['/me/repair-v2/cancel','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item cancel-order'])?></li>
+                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>ดูรายละเอียด',['/helpdesk2/service/view','id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #MR-2023-001'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?=Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข',['/helpdesk2/service/update','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-ban me-2"></i>ยกเลิก',['/helpdesk2/service/cancel','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item cancel-order'])?></li>
                                 </ul>
                             </div>
                         </td>
