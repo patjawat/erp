@@ -144,6 +144,15 @@ class ServiceController extends \yii\web\Controller
         return ['status' => 'success'];
         
     }
+        public function actionDelete($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->delete();
+        return ['status' => 'success'];
+        
+    }
+
     
     protected function findModel($id)
     {

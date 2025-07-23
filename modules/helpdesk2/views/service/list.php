@@ -90,6 +90,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                                     <li><?=Html::a('<i class="fa-regular fa-file-lines me-2"></i>เบิกอะไหล่',['/helpdesk/repair-parts/create','helpdesk_id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item','data' => ['size' => 'modal-xl']])?></li>
                                     <li><?=Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข',['/helpdesk/service/update','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
                                     <li><?=Html::a('<i class="fa-solid fa-ban me-2"></i>ยกเลิก',['/helpdesk/service/cancel','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item cancel-order'])?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-trash me-2"></i>ลบ',['/helpdesk/service/delete','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item delete-repair-item'])?></li>
                                 </ul>
                             </div>
                             <?php endif;?>
@@ -157,6 +158,50 @@ $('body').on('click', '.receive-order', function (e) {
         }
     });
 });
+
+
+$("body").on("click", ".delete-repair-item", async function (e) {
+  e.preventDefault();
+  var url = $(this).attr("href");
+  // console.log('delete',url);
+  // $('#main-modal').modal('show');
+
+  await Swal.fire({
+    title: "คุณแน่ใจไหม?",
+    text: "ลบรายการที่เลือก!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ลบเลย!",
+    cancelButtonText: "ยกเลิก",
+  }).then(async (result) => {
+    console.log("result", result.value);
+    if (result.value == true) {
+      await $.ajax({
+        type: "post",
+        url: url,
+        dataType: "json",
+        success: function (response) {
+          if (response.status == "success") {
+             location.reload();
+            // $.pjax.reload({
+            //   container: response.container,
+            //   history: false,
+            //   url: response.url,
+            // });
+
+            success("ดำเนินการลบสำเร็จ!.");
+            if (response.close) {
+              $("#main-modal").modal("hide");
+            }
+          }
+        },
+      });
+    }
+  });
+});
+
 
 
 JS;
