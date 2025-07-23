@@ -8,7 +8,7 @@ use app\components\AppHelper;
 use app\components\DateFilterHelper;
 use app\modules\helpdesk2\models\HelpdeskSearch;
 
-class MedicationController extends \yii\web\Controller
+class MedicalController extends \yii\web\Controller
 {
     public function actionIndex()
     {
@@ -39,8 +39,8 @@ class MedicationController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
          return $this->render('@app/modules/helpdesk2/views/service/list', [
-                'title' => 'ศูนย์งานซ่อมบำรุง',
-                'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+                'title' => 'ศูนย์เครื่องมือแพทย์',
+                'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 
@@ -68,8 +68,8 @@ class MedicationController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
-            'title' => 'ศูนย์งานซ่อมบำรุง',
-            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+           'title' => 'ศูนย์เครื่องมือแพทย์',
+                'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
 

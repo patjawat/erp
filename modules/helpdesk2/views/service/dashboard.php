@@ -3,11 +3,11 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-$this->title = 'งานซ่อมบำรุง';
+$this->title = $title;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-screwdriver-wrench fs-1"></i> <?= $this->title; ?>
+<?=$icon?> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 
@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?= $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]) ?>
-
+<h1><?=$title?></h1>
 <div class="row">
     <div class="col-8">
         <?php echo $this->render('@app/modules/helpdesk/views/repair/_chart_summary',[ 'searchModel' => $searchModel,])?>
