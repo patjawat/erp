@@ -23,41 +23,22 @@ use app\modules\filemanager\components\FileManagerHelper;
 /**
  * This is the model class for table "helpdesk".
  *
- * @property int $id
- * @property string|null $repair_number รหัสงานซ่อม
- * @property string|null $device_type_id ประเภทอุปกรณ์
- * @property string|null $asset_number หมายเลขครุภัณฑ์
- * @property string|null $request_repair_date วันที่ต้องการให้ซ่อม
- * @property string|null $repair_result ผลการซ่อม (ซ่อมได้/ซ่อมไม่ได้)
- * @property string|null $repair_type ประเภทการซ่อม
- * @property int $category_id
- * @property int|null $emp_id
+ * @property int         $id
  * @property string|null $ref
  * @property string|null $code
- * @property string|null $receive_date วันที่ต้องการให้ซ่อม
  * @property string|null $date_start
  * @property string|null $date_end
- * @property string|null $name ชื่อการเก็บข้อมูล
- * @property string|null $title รายการ
- * @property string|null $data_json การเก็บข้อมูลชนิด JSON
- * @property string|null $status สถานะ
- * @property string|null $rating คะแนน
- * @property int|null $move_out จำหน่าย
- * @property string|null $repair_group หน่วยงานที่ส่งซ่่อม
- * @property int|null $thai_year ปีงบประมาณ
+ * @property string|null $name       ชื่อการเก็บข้อมูล
+ * @property string|null $title      รายการ
+ * @property string|null $data_json  การเก็บข้อมูลชนิด JSON
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
- * @property int|null $created_by ผู้สร้าง
- * @property int|null $updated_by ผู้แก้ไข
+ * @property int|null    $created_by ผู้สร้าง
+ * @property int|null    $updated_by ผู้แก้ไข
  */
-class Helpdesk extends \yii\db\ActiveRecord
+class Helpdesk extends Yii\db\ActiveRecord
 {
-
-
-    /**
-     * {@inheritdoc}
-     */
-      public $q;
+    public $q;
     public $asset_name;
     public $date_between;
     public $urgency;
@@ -70,56 +51,39 @@ class Helpdesk extends \yii\db\ActiveRecord
         return 'helpdesk';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['repair_number', 'device_type_id', 'asset_number', 'request_repair_date', 'repair_result', 'repair_type', 'emp_id', 'ref', 'code', 'receive_date', 'date_start', 'date_end', 'name', 'title', 'data_json', 'status', 'rating', 'move_out', 'repair_group', 'thai_year', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'default', 'value' => null],
-            [['category_id'], 'default', 'value' => 0],
-            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at'], 'safe'],
-            [['category_id', 'emp_id', 'move_out', 'thai_year', 'created_by', 'updated_by'], 'integer'],
-            [['repair_number', 'device_type_id', 'asset_number', 'repair_result', 'repair_type'], 'string', 'max' => 100],
-            [['ref', 'code', 'name', 'title', 'status', 'rating', 'repair_group'], 'string', 'max' => 255],
+            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type','repair_result','asset_number'], 'safe'],
+            [['created_by', 'updated_by'], 'integer'],
+            [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
-            'repair_number' => 'รหัสงานซ่อม',
-            'device_type_id' => 'ประเภทอุปกรณ์',
-            'asset_number' => 'หมายเลขครุภัณฑ์',
-            'request_repair_date' => 'วันที่ต้องการให้ซ่อม',
-            'repair_result' => 'ผลการซ่อม (ซ่อมได้/ซ่อมไม่ได้)',
-            'repair_type' => 'ประเภทการซ่อม',
-            'category_id' => 'Category ID',
-            'emp_id' => 'Emp ID',
             'ref' => 'Ref',
             'code' => 'Code',
-            'receive_date' => 'วันที่ต้องการให้ซ่อม',
+            'receive_date' => 'วันที่รับเรื่อง',
+            'repair_result' => 'ผลการซ่อม',
             'date_start' => 'Date Start',
             'date_end' => 'Date End',
-            'name' => 'ชื่อการเก็บข้อมูล',
-            'title' => 'รายการ',
-            'data_json' => 'การเก็บข้อมูลชนิด JSON',
-            'status' => 'สถานะ',
-            'rating' => 'คะแนน',
-            'move_out' => 'จำหน่าย',
-            'repair_group' => 'หน่วยงานที่ส่งซ่่อม',
+            'name' => 'Name',
+            'title' => 'Title',
             'thai_year' => 'ปีงบประมาณ',
-            'created_at' => 'วันที่สร้าง',
-            'updated_at' => 'วันที่แก้ไข',
-            'created_by' => 'ผู้สร้าง',
-            'updated_by' => 'ผู้แก้ไข',
+            'move_out' => 'จำหน่าย',
+            'device_type_id' => 'ประเภทอุปกรณ์',
+            'request_repair_date' => 'วันที่ต้องการให้ซ่อม',
+            'asset_number' => 'หมายเลขครุภัณฑ์',
+            'data_json' => 'Data Json',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
+            'created_by' => 'Created By',
+            'updated_by' => 'Updated By',
         ];
     }
-
 
     public function behaviors()
     {
@@ -838,5 +802,4 @@ FROM (
 
         return $query;
     }
-    
 }
