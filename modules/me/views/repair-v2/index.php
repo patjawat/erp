@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+        <?=$this->render('@app/modules/helpdesk2/views/service/_search', ['model' => $searchModel])?>
     </div>
 </div>
 
