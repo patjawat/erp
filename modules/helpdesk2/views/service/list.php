@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col" class="text-start fw-semibold">ลำดับ</th>
+                        <th scope="col" class="text-start fw-semibold">รหัสงานซ่อม</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
