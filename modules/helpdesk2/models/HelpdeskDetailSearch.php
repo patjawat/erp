@@ -4,7 +4,7 @@ namespace app\modules\helpdesk2\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\helpdesk\models\HelpdeskDetail;
+use app\modules\helpdesk2\models\HelpdeskDetail;
 
 /**
  * HelpdeskDetailSearch represents the model behind the search form of `app\modules\helpdesk\models\HelpdeskDetail`.

@@ -39,8 +39,8 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
            return $this->render('@app/modules/helpdesk2/views/service/list', [
-                'title' => 'ศูนย์งานซ่อมบำรุง',
-                'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+                'title' => 'ศูนย์คอมพิวเตอร์',
+                'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 
@@ -68,8 +68,8 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
-            'title' => 'ศูนย์งานซ่อมบำรุง',
-            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+            'title' => 'ศูนย์คอมพิวเตอร์',
+                'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
 

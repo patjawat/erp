@@ -12,18 +12,15 @@ use app\modules\sm\models\Order;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ทะเบียนประวัติแจ้งซ่อม';
-$this->params['breadcrumbs'][] = ['label' => 'แจ้งซ่อม', 'url' => ['/me/repair']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->title = $title;
+$this->params['breadcrumbs'][] = ['label' => $title, 'url' => ['index']];
+$this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
 
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-screwdriver-wrench"></i> <?= $this->title; ?>
+<?=$icon?> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'repair']) ?>
@@ -34,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?=$this->render('@app/modules/helpdesk/views/repair/_search', ['model' => $searchModel])?>
+        <?=$this->render('@app/modules/helpdesk2/views/service/_search', ['model' => $searchModel])?>
     </div>
 </div>
 

@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 $this->title = $title;
 $this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = 'Dashboard';
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <?=$icon?> <?= $this->title; ?>
@@ -15,12 +16,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'repair']) ?>
 <?php $this->endBlock(); ?>
 
-<?= $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]) ?>
+<?= $this->render('@app/modules/helpdesk2/views/service/summary_status', ['model' => $searchModel]) ?>
 <div class="row">
     <div class="col-8">
-        <?php echo $this->render('@app/modules/helpdesk/views/repair/_chart_summary',[ 'searchModel' => $searchModel,])?>
+        <?php echo $this->render('@app/modules/helpdesk2/views/service/_chart_summary',[ 'searchModel' => $searchModel,])?>
     </div>
-    <div class="col-4"> <?php echo  $this->render('../default/progress', ['model' => $searchModel]) ?></div>
+    <div class="col-4"> <?php echo  $this->render('@app/modules/helpdesk2/views/service/progress', ['model' => $searchModel]) ?></div>
 </div>
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/list_order', ['searchModel' => $searchModel,'dataProvider' => $dataProvider])?>
 <div class="row">
@@ -29,13 +30,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
                 <div id="viewUserJob"></div>
-                <?php  echo $this->render('@app/modules/helpdesk/views/repair/user_job', ['searchModel' =>  $searchModel]) ?>
+                <?php  echo $this->render('@app/modules/helpdesk2/views/service/user_job', ['searchModel' =>  $searchModel]) ?>
                 
             </div>
         </div>
     </div>
     <div class="col-4">
-        <?php  echo $this->render('@app/modules/helpdesk/views/repair/view_rating', ['repair_group' =>  $searchModel->repair_group]) ?>
+        <?php  echo $this->render('@app/modules/helpdesk2/views/service/view_rating', ['repair_group' =>  $searchModel->repair_group]) ?>
     </div>
 </div>
 

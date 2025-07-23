@@ -7,9 +7,9 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\helpdesk\models\HelpdeskDetail;
-use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\helpdesk2\models\HelpdeskDetail;
+use app\modules\helpdesk2\models\HelpdeskSearch;
 
 /**
  * TeamController implements the CRUD actions for Helpdesk model.

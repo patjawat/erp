@@ -686,7 +686,7 @@ FROM (
         x1.*,
         (
             SELECT COUNT(h.id)
-            FROM helpdesk h
+            FROM helpdesk_detail h
             WHERE 
                 h.name = 'repair_team'
              	AND h.emp_id = x1.emp_id
