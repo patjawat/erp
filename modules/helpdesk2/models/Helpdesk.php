@@ -233,6 +233,8 @@ public static function getRepairResultList()
 
    public function ResetHelpdeskGenNumber()
 {
+    try {
+    
     switch ($this->repair_group) {
         case '1':
             $depCode = 'GEN';
@@ -264,6 +266,10 @@ public static function getRepairResultList()
     $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
     return "$prefix-$yearMonth-$departmentCode-$nextNumber";
+        //code...
+    } catch (\Throwable $th) {
+       return '';
+    }
 }
 
 

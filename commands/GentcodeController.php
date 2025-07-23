@@ -33,8 +33,6 @@ class GentcodeController extends Controller
     public function actionIndex()
     {
         foreach (Helpdesk::find()->where(['<>', 'repair_group', ''])->orderBy(['id' => SORT_ASC])->all() as $model) {
-            // echo $model->id . "\n";
-            // echo $this->code($model) . "\n";
             $model->repair_number  = $this->code($model);
             $model->save();
         }

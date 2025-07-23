@@ -28,6 +28,13 @@ class Module extends \yii\base\Module
 
 // update database
 
+// ALTER TABLE `categorise` ADD `sort` VARCHAR(255) NULL AFTER `id`;
+
+// UPDATE `helpdesk` SET `status` = 'pending'     WHERE status = '1';
+// UPDATE `helpdesk` SET `status` = 'receive'     WHERE status = '2';
+// UPDATE `helpdesk` SET `status` = 'in_progress' WHERE status = '3';
+// UPDATE `helpdesk` SET `status` = 'success'     WHERE status = '4';
+
 // UPDATE `helpdesk`
 // SET data_json = JSON_SET(data_json, '$.urgency', 'low')
 // WHERE name = 'repair' 
