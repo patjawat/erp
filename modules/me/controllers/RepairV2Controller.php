@@ -139,7 +139,7 @@ class RepairV2Controller extends Controller
                 if ($model->save()) {
                     $this->changAssetStatus($model->asset_number);
                     //ส่งการแจ้งเตือน
-                    // $this->sendMsg($model);
+                    $this->sendMsg($model);
                     return [
                         'status' => 'success'
                     ];
