@@ -136,7 +136,7 @@ class m250611_095411_create_asset_items_table extends Migration
 
         $table = $this->db->getTableSchema('asset', true);
         if ($table !== null && !isset($table->columns['asset_name'])) {
-            $this->addColumn('asset', 'asset_name', $this->string(255)->comment('ชื่อของครุภัณฑ์')->after('asset_group'));
+            $this->addColumn('asset', 'asset_name', $this->string(255)->comment('ชื่อของครุภัณฑ์')->after('asset_group_id'));
         }
 
         $table = $this->db->getTableSchema('asset', true);
