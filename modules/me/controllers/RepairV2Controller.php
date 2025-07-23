@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -13,6 +14,7 @@ use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use app\modules\hr\models\Employees;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskSearch;
 
@@ -137,7 +139,9 @@ class RepairV2Controller extends Controller
                 }
                 $model->repair_number = $model->HelpdeskGenNumber($depCode);;
                 if ($model->save()) {
+                if($model->asset_number !==''){
                     $this->changAssetStatus($model->asset_number);
+                }
                     //ส่งการแจ้งเตือน
                     $this->sendMsg($model);
                     return [
@@ -164,6 +168,34 @@ class RepairV2Controller extends Controller
         }
     }
 
+
+    // ส่งข้อความแจ้งเตือน
+    protected function sendMsg($model)
+    {
+        // template message
+        $emp = Yii::$app->employee::GetEmployee();
+        $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $model->asset_number : '') . "\nอาการ : " . $model->title . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
+
+        // try {
+            if($model->repair_group == 1){
+            $sendTo = 'repair';
+            } else if($model->repair_group == 2){
+            $sendTo = 'computer_service';
+            } else if($model->repair_group == 3){
+            $sendTo = 'medical_service';
+            } else {
+            $sendTo = '';
+            }
+            $response = Yii::$app->telegram->sendMessage($sendTo, $message, [
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+            ]);
+        // } catch (\Exception $e) {
+        // }
+    }
+
+
+    
     protected function changAssetStatus($code)
     {
         $model = Asset::findOne(['code' => $code]);
