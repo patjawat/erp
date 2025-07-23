@@ -113,26 +113,8 @@ class ServiceController extends \yii\web\Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         //บันทึกเปลี่ยนสถานะและออกเลขใขรับซ่อม
         $model = $this->findModel($id);
-       
-        switch ($model->repair_group) {
-            case '1':
-               $depCode = 'GEN';
-                break;
-            
-                 case '2':
-               $depCode = 'IT';
-                break;
-                 case '3':
-               $depCode = 'MED';
-                break;
-
-            default:
-                $depCode = '';
-                break;
-        }
         $model->status = 'receive';
         //ออกระหัสรับงานซ่อม
-        $model->repair_number = $model->HelpdeskGenNumber($depCode);
         $model->receive_date = date('Y-m-d H:i:s');
         $model->save();
 

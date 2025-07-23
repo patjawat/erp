@@ -47,7 +47,16 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     </div>
 
     <div class="col-12 col-md-6">
-        <?= $form->field($model, 'fsn_number')->textInput(['placeholder'=>'เช่น 7440-0001-0001/68.1'])->label('รหัสครุภัณฑ์') ?>
+          <?=$form->field($model, 'asset_number')->widget(Select2::classname(), [
+                    'data' => $model->listAsset(),
+                    'options' => ['placeholder' => 'เลือกครุภัณฑ์ ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label('รหัสครุภัณฑ์');
+                ?>
+
     </div>
 
     <div class="col-12">

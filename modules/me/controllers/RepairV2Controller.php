@@ -44,10 +44,10 @@ class RepairV2Controller extends Controller
      *
      * @return string
      */
- public function actionIndex()
+    public function actionIndex()
     {
         $userId = \Yii::$app->user->id;
-         $emp = UserHelper::GetEmployee();
+        $emp = UserHelper::GetEmployee();
         $searchModel = new HelpdeskSearch([
             'created_by' => $userId,
             'emp_id' => $emp->id,
@@ -60,14 +60,14 @@ class RepairV2Controller extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '\$.repair_note')"), $searchModel->q],
         ]);
 
-             if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
-        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -84,15 +84,15 @@ class RepairV2Controller extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
-                if($this->request->isAjax){
+        if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('view', [
-                'model' => $model,
-        ])
+                    'model' => $model,
+                ])
             ];
-        }else{
+        } else {
             return $this->render('view', [
                 'model' => $model,
             ]);
@@ -119,30 +119,60 @@ class RepairV2Controller extends Controller
                 } catch (\Throwable $th) {
                 }
                 $model->status = 'pending';
-                if($model->save()){
+                switch ($model->repair_group) {
+                    case '1':
+                        $depCode = 'GEN';
+                        break;
+
+                    case '2':
+                        $depCode = 'IT';
+                        break;
+                    case '3':
+                        $depCode = 'MED';
+                        break;
+
+                    default:
+                        $depCode = '';
+                        break;
+                }
+                $model->repair_number = $model->HelpdeskGenNumber($depCode);;
+                if ($model->save()) {
+                    $this->changAssetStatus($model->asset_number);
+                    //ส่งการแจ้งเตือน
+                    // $this->sendMsg($model);
                     return [
-                        'status' => 'success' 
+                        'status' => 'success'
                     ];
                 }
             }
         } else {
             $model->loadDefaultValues();
         }
-        
-        if($this->request->isAjax){
+
+        if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
-            'model' => $model,
-        ])
+                    'model' => $model,
+                ])
             ];
-        }else{
+        } else {
             return $this->render('create', [
                 'model' => $model,
             ]);
         }
     }
+
+    protected function changAssetStatus($code)
+    {
+        $model = Asset::findOne(['code' => $code]);
+        if ($model) {
+            $model->asset_status = 5;
+            $model->save();
+        }
+    }
+
 
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
@@ -176,7 +206,7 @@ class RepairV2Controller extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-public function actionUpdate($id)
+    public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
@@ -188,26 +218,25 @@ public function actionUpdate($id)
                     $model->request_repair_date = AppHelper::convertToGregorian($model->request_repair_date);
                 } catch (\Throwable $th) {
                 }
-                
-                if($model->save()){
+                if ($model->save()) {
                     return [
-                        'status' => 'success' 
+                        'status' => 'success'
                     ];
                 }
             }
         } else {
             $model->loadDefaultValues();
         }
-        
-        if($this->request->isAjax){
+
+        if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
-            'model' => $model,
-        ])
+                    'model' => $model,
+                ])
             ];
-        }else{
+        } else {
             return $this->render('update', [
                 'model' => $model,
             ]);
@@ -226,11 +255,11 @@ public function actionUpdate($id)
     {
         $model = $this->findModel($id);
         $model->status = 'cancel';
-        if($model->save())
+        if ($model->save())
 
 
 
-        return $this->redirect(['index']);
+            return $this->redirect(['index']);
     }
 
     /**

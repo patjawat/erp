@@ -44,7 +44,8 @@ $group = Yii::$app->request->get('group');
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>รูปภาพครุภัณฑ์</span>
-                <span class="badge text-bg-primary">สถานะ: ใช้งานได้</span>
+                  <?=$model->viewstatus()?>
+                <!-- <span class="badge text-bg-primary">สถานะ: ใช้งานได้</span> -->
             </div>
             <div class="card-body text-center">
                 <div class="position-relative p-2 d-flex">
@@ -213,48 +214,13 @@ $group = Yii::$app->request->get('group');
             <div class="tab-pane fade" id="maintenance" role="tabpanel" aria-labelledby="maintenance-tab">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title mb-0">ประวัติการซ่อมบำรุง</h5>
-                    <button class="btn btn-sm btn-primary no-print" data-bs-toggle="modal"
+                    <!-- <button class="btn btn-sm btn-primary no-print" data-bs-toggle="modal"
                         data-bs-target="#addMaintenanceModal">
                         <i class="bi bi-plus-circle"></i> เพิ่มประวัติการซ่อม
-                    </button>
+                    </button> -->
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>วันที่</th>
-                                <th>ประเภท</th>
-                                <th>รายละเอียด</th>
-                                <th>ผู้ดำเนินการ</th>
-                                <th>ค่าใช้จ่าย</th>
-                                <th class="no-print">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>15/07/2566</td>
-                                <td><span class="badge bg-info">บำรุงรักษา</span></td>
-                                <td>ทำความสะอาดเครื่อง และอัพเดทระบบปฏิบัติการ</td>
-                                <td>นายสมชาย ใจดี</td>
-                                <td>0.00 บาท</td>
-                                <td class="no-print">
-                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>03/04/2566</td>
-                                <td><span class="badge bg-warning text-dark">ซ่อมแซม</span></td>
-                                <td>เปลี่ยนพัดลมระบายความร้อน CPU</td>
-                                <td>บริษัท คอมพิวเตอร์ โซลูชั่น จำกัด</td>
-                                <td>1,200.00 บาท</td>
-                                <td class="no-print">
-                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <?=$this->render('repair_history',['model' => $model])?>
                 </div>
             </div>
 

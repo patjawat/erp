@@ -21,8 +21,8 @@ class m250722_064946_hekpdesk_update_field extends Migration
                 $this->addColumn($table, 'device_type_id', $this->string(100)->comment('ประเภทอุปกรณ์')->after('repair_number'));
             }
 
-            if (!isset($schema->columns['fsn_number'])) {
-                $this->addColumn($table, 'fsn_number', $this->string(100)->comment('หมายเลขครุภัณฑ์')->after('device_type_id'));
+            if (!isset($schema->columns['asset_number'])) {
+                $this->addColumn($table, 'asset_number', $this->string(100)->comment('หมายเลขครุภัณฑ์')->after('device_type_id'));
             }
 
             if (!isset($schema->columns['request_repair_date'])) {

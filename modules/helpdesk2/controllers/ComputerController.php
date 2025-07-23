@@ -22,7 +22,7 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'code', $searchModel->q],
+           ['like', 'repair_number', $searchModel->q],
             ['like', 'title', $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
@@ -59,7 +59,7 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'code', $searchModel->q],
+            ['like', 'repair_number', $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],

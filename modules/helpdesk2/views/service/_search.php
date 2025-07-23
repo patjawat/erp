@@ -32,7 +32,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <div class="row">
     <div class="col-3">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+        <?php echo $form->field($model, 'q')->textInput(['class' => 'form-control','placeholder' => 'ค้นหา'])->label(false);?>
     </div>
     <div class="col-2">
         <?php
@@ -81,6 +81,9 @@ use iamsaint\datetimepicker\Datetimepicker;
 <div class="collapse mt-3" id="collapseFilter">
     <!-- การกรองแบบละเอียด -->
     <div class="row">
+        <div class="col-3">
+              <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
         <div class="col-3">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [

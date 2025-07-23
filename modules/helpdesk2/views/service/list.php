@@ -68,8 +68,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                 <tbody>
                      <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                       <td class="text-start fw-semibold"><?php echo $item->repair_number?>
-            </td>
+                       <td class="text-start fw-semibold"><?php echo $item->repair_number?></td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
                         <td><?=$item->data_json['location']?></td>

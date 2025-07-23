@@ -54,7 +54,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type','repair_result'], 'safe'],
+            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type','repair_result','asset_number'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -76,7 +76,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             'move_out' => 'จำหน่าย',
             'device_type_id' => 'ประเภทอุปกรณ์',
             'request_repair_date' => 'วันที่ต้องการให้ซ่อม',
-            'fsn_number' => 'หมายเลขครุภัณฑ์',
+            'asset_number' => 'หมายเลขครุภัณฑ์',
             'data_json' => 'Data Json',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -383,6 +383,14 @@ public static function getRepairResultList()
         $list = Categorise::find()->andWhere(['name' => 'device_type'])->all();
         return ArrayHelper::map($list, 'code', 'title');
     }
+
+    //ดึงทรัพสินทร์ที่เป็นครุภัณฑ์
+    public function listAsset()
+    {
+        $list = Asset::find()->all();
+        return ArrayHelper::map($list, 'code', 'code');
+    }
+
 
 
     public function ListStatus()

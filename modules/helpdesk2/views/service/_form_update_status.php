@@ -64,7 +64,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 <div class="col-12 d-flex justify-content-end mt-4">
     <button type="submit" class="btn btn-primary">
         <i class="fa-solid fa-circle-check me-1"></i>
-        บันทึก
+        ตกลง
     </button>
 </div>
 

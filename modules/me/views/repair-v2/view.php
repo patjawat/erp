@@ -67,7 +67,7 @@
                             <dd class="col-sm-8"><?=$model->deviceType->title ?? '-'?></dd>
 
                             <dt class="col-sm-4">รหัสอุปกรณ์:</dt>
-                            <dd class="col-sm-8"><?=$model->fsn_number?></dd>
+                            <dd class="col-sm-8"><?=$model->asset_number?></dd>
 
                             <dt class="col-sm-4">ปัญหา:</dt>
                             <dd class="col-sm-8"><?=$model->title?></dd>
@@ -128,7 +128,7 @@
                 </div>
             </div>
 
-            <div class="col-12">
+            <!-- <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">ติดต่อช่าง</h6>
@@ -147,7 +147,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>

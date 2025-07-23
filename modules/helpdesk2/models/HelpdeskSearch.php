@@ -64,7 +64,7 @@ class HelpdeskSearch extends Helpdesk
             'status' => $this->status,
             'thai_year' => $this->thai_year,
             'device_type_id' => $this->device_type_id,
-            'fsn_number' => $this->fsn_number,
+            'asset_number' => $this->asset_number,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
