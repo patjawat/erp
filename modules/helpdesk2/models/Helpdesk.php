@@ -387,7 +387,7 @@ public static function getRepairResultList()
     //ดึงทรัพสินทร์ที่เป็นครุภัณฑ์
     public function listAsset()
     {
-        $list = Asset::find()->all();
+        $list = Asset::find()->where(['asset_group_id' => 4])->all();
         return ArrayHelper::map($list, 'code', 'code');
     }
 
