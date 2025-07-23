@@ -21,37 +21,37 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         'id' => 'form-status',
     ]); ?>
 <div class="row">
-  <div class="col-6">
-  <?= $form->field($model, 'repair_type')->dropDownList($model::getRepairTypeList(), ['prompt' => 'เลือกประเภทการซ่อม'])->label('ประเภทการซ่อม');?>
-</div>
-<div class="col-6">
-  
-    <?= $form->field($model, 'status')->widget(Select2::classname(), [
+    <div class="col-6">
+        <?= $form->field($model, 'repair_type')->dropDownList($model::getRepairTypeList(), ['prompt' => 'เลือกประเภทการซ่อม'])->label('ประเภทการซ่อม');?>
+    </div>
+    <div class="col-6">
+
+        <?= $form->field($model, 'status')->widget(Select2::classname(), [
     'data' => $model->listStatus(),
     'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
     'pluginOptions' => [
-        'allowClear' => true,
+      'allowClear' => true,
     ],
-    // 'addon' => [
-    //     'append' => [
-    //         'content' => Html::submitButton(
-    //             '<i class="fa-solid fa-circle-check me-1"></i> ตกลง',
-    //             ['class' => 'btn btn-primary']
-    //         ),
-    //         'asButton' => true,
-    //     ],
-    // ],
-])->label('สถานะงานซ่อม'); ?>
+    ])->label('สถานะงานซ่อม'); ?>
 
-</div>
-</div>
-
-  <div class="col-12 d-flex justify-content-end mt-4">
-        <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-circle-check me-1"></i>
-            บันทึก
-        </button>
     </div>
+    <div class="col-12">
+        <?= $form->field($model, 'repair_result')->widget(Select2::classname(), [
+          'data' => $model->getRepairResultList(),
+            'options' => ['placeholder' => 'เลือกผลการซ่อม ...'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label('ผลการซ่อม'); ?>
+    </div>
+</div>
+
+<div class="col-12 d-flex justify-content-end mt-4">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-circle-check me-1"></i>
+        บันทึก
+    </button>
+</div>
 
 <?php ActiveForm::end(); ?>
 

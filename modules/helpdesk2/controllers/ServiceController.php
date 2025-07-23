@@ -153,7 +153,16 @@ class ServiceController extends \yii\web\Controller
     }
 
 
-
+    public function actionCancel($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->status = 'Cancel';
+        $model->save();
+        return ['status' => 'success'];
+        
+    }
+    
     protected function findModel($id)
     {
         if (($model = Helpdesk::findOne(['id' => $id])) !== null) {

@@ -54,7 +54,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type'], 'safe'],
+            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type','repair_result'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -67,6 +67,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             'ref' => 'Ref',
             'code' => 'Code',
             'receive_date' => 'วันที่รับเรื่อง',
+            'repair_result' => 'ผลการซ่อม',
             'date_start' => 'Date Start',
             'date_end' => 'Date End',
             'name' => 'Name',
@@ -134,6 +135,15 @@ class Helpdesk extends Yii\db\ActiveRecord
         'external' => 'ซ่อมภายนอก',
     ];
 }
+//ผลการซ่อม
+public static function getRepairResultList()
+{
+    return [
+        'Y' => 'ซ่อมได้',
+        'N' => 'ซ่อมไม่ได้',
+    ];
+}
+
 
     //แสดงรูปภาพประกอบ
     public function getImageRequest()

@@ -35,8 +35,14 @@ class m250722_064946_hekpdesk_update_field extends Migration
             }
 
                if (!isset($schema->columns['repair_type'])) {
-                $this->addColumn($table, 'repair_type', $this->string(100)->comment('ประเภทการซ่อม')->after('request_repair_date'));
-            }
+                   $this->addColumn($table, 'repair_type', $this->string(100)->comment('ประเภทการซ่อม')->after('request_repair_date'));
+                }
+                
+                if (!isset($schema->columns['repair_result'])) {
+                    $this->addColumn($table, 'repair_result', $this->string(100)->comment('ผลการซ่อม (ซ่อมได้/ซ่อมไม่ได้)')->after('request_repair_date'));
+                }
+
+
 
 
 
