@@ -453,7 +453,7 @@ public function listDeviceType()
         }
     }
     
-    public function viewStatusOld()
+    public function viewStatus()
     {
         try {
         if (isset($this->data_json['urgency'])) {
@@ -481,37 +481,37 @@ public function listDeviceType()
                 }
     }
 
-    // public function UrgencyName()
-    // {
-    //     $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
-    //     if ($model) {
-    //         return $model->title;
-    //     }
-    // }
+    public function UrgencyName()
+    {
+        $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+        if ($model) {
+            return $model->title;
+        }
+    }
 
     // แสดงความเร่งด่วน
-    // public function viewUrgency()
-    // {
-    //     try {
-    //         if (isset($this->data_json['urgency'])) {
-    //             $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
-    //             if ($model->code == 1) {
-    //                 return '<span class="badge text-bg-light fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-    //             }
-    //             if ($model->code == 2) {
-    //                 return '<span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-    //             }
-    //             if ($model->code == 3) {
-    //                 return '<span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-    //             }
-    //             if ($model->code == 4) {
-    //                 return '<span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
-    //             }
-    //         }
-    //     } catch (\Throwable $th) {
-    //         return null;
-    //     }
-    // }
+    public function viewUrgency()
+    {
+        try {
+            if (isset($this->data_json['urgency'])) {
+                $model = Categorise::findOne(['name' => 'urgency', 'code' => $this->data_json['urgency']]);
+                if ($model->code == 1) {
+                    return '<span class="badge text-bg-light fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 2) {
+                    return '<span class="badge text-bg-primary fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 3) {
+                    return '<span class="badge text-bg-warning fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+                }
+                if ($model->code == 4) {
+                    return '<span class="badge text-bg-danger fs-13"><i class="fa-solid fa-circle-exclamation"></i> ' . $model->title . '</span>';
+                }
+            }
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
 
     // แสดงผู้ส่งซ่อม
     public function viewCreateUser()

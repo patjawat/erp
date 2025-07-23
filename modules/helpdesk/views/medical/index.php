@@ -84,7 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </td>
                     <td> <?= $item->showAvatarCreate(); ?></td>
                     <!-- <td><?php//  echo $item->StackTeam() ?></td> -->
-                    <td><?=$item->viewUrgency()?></td>
+                    <td><?=$item->viewUrgent()['view']?></td>
                     <td class="text-center"> <?= $item->viewStatus() ?></td>
                     <td class="text-center">
                         <?php if($item->status == 1):?>

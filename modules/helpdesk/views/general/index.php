@@ -84,8 +84,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     </td>
                     <td> <?= $item->showAvatarCreate(); ?></td>
                     <!-- <td><?php//  echo $item->StackTeam() ?></td> -->
-                    <td><?=$item->viewUrgency()?></td>
-                    <td class="text-center"> <?= $item->viewStatus() ?></td>
+                    <td><?=$item->viewUrgent()['view']?></td>
+                    <td class="text-center"> <?php echo $item->viewStatus() ?></td>
                     <td class="text-center">
                         <?php if($item->status == 1):?>
                         <?= Html::a('<i class="fa-solid fa-user-pen"></i> รับเรื่อง', ['/helpdesk/repair/accept-job', 'id' => $item->id, 'title' => '<i class="fa-solid fa-hammer"></i> แก้ไขรายการส่งซ่อม'], ['class' => 'btn btn-warning accept-job', 'data' => ['size' => 'modal-lg']]) ?>
