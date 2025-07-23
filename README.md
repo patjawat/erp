@@ -263,3 +263,6 @@ INNER JOIN `categorise` c
   AND c.group_id = 'EQUIP'
 SET a.asset_type_id = c.code
 WHERE a.asset_group_id = 4;
+
+
+https://www.canva.com/ai/code/thread/b02cab16-c48c-461d-8935-e21a8b30e63a
