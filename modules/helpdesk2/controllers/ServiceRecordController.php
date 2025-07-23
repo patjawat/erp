@@ -2,12 +2,14 @@
 
 namespace app\modules\helpdesk2\controllers;
 
+use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
-use app\modules\helpdesk\models\HelpdeskDetail;
-use app\modules\helpdesk\models\HelpdeskDetailSearch;
+use app\modules\helpdesk2\models\HelpdeskDetail;
+use app\modules\helpdesk2\models\HelpdeskDetailSearch;
 
 /**
  * ServiceRecordController implements the CRUD actions for HelpdeskDetail model.
@@ -74,6 +76,7 @@ class ServiceRecordController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+                $this->CheckUpdateServiceRecordStatus($model);
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success'
@@ -110,12 +113,27 @@ class ServiceRecordController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            $this->CheckUpdateServiceRecordStatus($model);
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success'
+                ];
+            
         }
 
-        return $this->render('update', [
+       if($this->request->isAjax){
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
             'model' => $model,
-        ]);
+        ])
+            ];
+        }else{
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -134,7 +152,11 @@ class ServiceRecordController extends Controller
 
     public function actionTimeline($helpdesk_id)
     {
-        $lists = HelpdeskDetail::find()->where(['name' => 'service_record','helpdesk_id' => $helpdesk_id])->all();
+        $lists = HelpdeskDetail::find()
+            ->where(['name' => 'service_record', 'helpdesk_id' => $helpdesk_id])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->limit(5)
+            ->all();
           if($this->request->isAjax){
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -148,6 +170,22 @@ class ServiceRecordController extends Controller
                 'lists' => $lists,
             ]);
         }
+    }
+
+        private static function CheckUpdateServiceRecordStatus($model)
+    {
+        try {
+        // บึนทึกยี่ห้ออัตโนมัติ
+        $status = $model->status;
+        $modelStatus = Categorise::findOne(['name' => 'service_record_status', 'title' => $status]);
+        if (!$modelStatus) {
+            $modelNewStatus = new Categorise(['name' => 'service_record_status', 'code' => $status, 'title' => $status]);
+            $modelNewStatus->save();
+        }
+
+        } catch (\Throwable $th) {
+    //throw $th;
+}
     }
     /**
      * Finds the HelpdeskDetail model based on its primary key value.

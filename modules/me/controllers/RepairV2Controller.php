@@ -13,8 +13,8 @@ use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\helpdesk2\models\HelpdeskSearch;
 
 /**
  * RepairV2Controller implements the CRUD actions for Helpdesk model.

@@ -12,8 +12,8 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\components\DateFilterHelper;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\helpdesk2\models\HelpdeskSearch;
 
 class RepairController extends Controller
 {

@@ -23,7 +23,6 @@ class MedicalController extends \yii\web\Controller
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 3,
             'date_filter' => 'this_month',
-            'status' => 1
             // 'auth_item' => 'medical',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

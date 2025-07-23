@@ -30,6 +30,16 @@ class m250722_064946_hekpdesk_update_field extends Migration
             }
 
 
+            if (!isset($schema->columns['receive_date'])) {
+                $this->addColumn($table, 'receive_date', $this->dateTime()->comment('วันที่ต้องการให้ซ่อม')->after('code'));
+            }
+
+               if (!isset($schema->columns['repair_type'])) {
+                $this->addColumn($table, 'repair_type', $this->string(100)->comment('ประเภทการซ่อม')->after('request_repair_date'));
+            }
+
+
+
        if (!isset($schema->columns['title'])) {
                 $this->addColumn($table, 'title', $this->string(100)->comment('ปัญหา')->after('request_repair_date'));
             }
@@ -70,12 +80,12 @@ class m250722_064946_hekpdesk_update_field extends Migration
           $repairStatus = (new \yii\db\Query())->from('categorise')->where(['name' => 'repair_status'])->count();
             if ($repairStatus == 0) {
                 Yii::$app->db->createCommand("
-                    INSERT INTO categorise (name, title, code, data_json) VALUES
-                        ('repair_status', 'รอดำเนินการ', 'pending', JSON_OBJECT('color', 'secondary')),
-                        ('repair_status', 'กำลังดำเนินการ', 'in_progress', JSON_OBJECT('color', 'primary')),
-                        ('repair_status', 'รออะไหล่', 'waiting_parts', JSON_OBJECT('color', 'warning')),
-                        ('repair_status', 'เสร็จสิ้น', 'complet', JSON_OBJECT('color', 'success')),
-                        ('repair_status', 'ยกเลิก', 'cancel', JSON_OBJECT('color', 'danger'))
+                    INSERT INTO categorise (name, title, code, sort, data_json) VALUES
+                        ('repair_status', 'รอดำเนินการ', 'pending','1',JSON_OBJECT('color', 'secondary')),
+                        ('repair_status', 'รับเรื่อง', 'receive','2',JSON_OBJECT('color', 'warning')),
+                        ('repair_status', 'กำลังดำเนินการ', 'in_progress','3', JSON_OBJECT('color', 'primary')),
+                        ('repair_status', 'เสร็จสิ้น', 'success','4', JSON_OBJECT('color', 'success')),
+                        ('repair_status', 'ยกเลิก', 'cancel','0', JSON_OBJECT('color', 'danger'))
                 ")->execute();
             }
 
@@ -87,26 +97,26 @@ class m250722_064946_hekpdesk_update_field extends Migration
      */
     public function safeDown()
     {
-            $table = '{{%helpdesk}}';
-        $schema = Yii::$app->db->getTableSchema($table, true);
+        //     $table = '{{%helpdesk}}';
+        // $schema = Yii::$app->db->getTableSchema($table, true);
 
-        if (isset($schema->columns['repair_number'])) {
-            $this->dropColumn($table, 'repair_number');
-        }
-
-
-        if (isset($schema->columns['fsn_number'])) {
-            $this->dropColumn($table, 'fsn_number');
-        }
+        // if (isset($schema->columns['repair_number'])) {
+        //     $this->dropColumn($table, 'repair_number');
+        // }
 
 
-        if (isset($schema->columns['device_type_id'])) {
-            $this->dropColumn($table, 'device_type_id');
-        }
+        // if (isset($schema->columns['fsn_number'])) {
+        //     $this->dropColumn($table, 'fsn_number');
+        // }
 
-        if (isset($schema->columns['request_repair_date'])) {
-            $this->dropColumn($table, 'request_repair_date');
-        }
+
+        // if (isset($schema->columns['device_type_id'])) {
+        //     $this->dropColumn($table, 'device_type_id');
+        // }
+
+        // if (isset($schema->columns['request_repair_date'])) {
+        //     $this->dropColumn($table, 'request_repair_date');
+        // }
 
     }
 

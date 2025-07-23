@@ -1,15 +1,15 @@
 <?php
 
-namespace app\modules\helpdesk\models;
+namespace app\modules\helpdesk2\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\helpdesk\models\HelpdeskDetail;
+use app\modules\helpdesk\models\Helpdesk;
 
 /**
- * HelpdeskDetailSearch represents the model behind the search form of `app\modules\helpdesk\models\HelpdeskDetail`.
+ * HelpdeskSearch represents the model behind the search form of `app\modules\helpdesk\models\Helpdesk`.
  */
-class HelpdeskDetailSearch extends HelpdeskDetail
+class HelpdeskSearch extends Helpdesk
 {
     /**
      * {@inheritdoc}
@@ -17,8 +17,8 @@ class HelpdeskDetailSearch extends HelpdeskDetail
     public function rules()
     {
         return [
-            [['id', 'helpdesk_id', 'move_out', 'thai_year', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'name', 'code', 'title', 'data_json', 'status', 'rating', 'created_at', 'updated_at','emp_id'], 'safe'],
+            [['id', 'created_by', 'updated_by'], 'integer'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item','emp_id','date_filter','date_filter','device_type_id'], 'safe'],
         ];
     }
 
@@ -35,13 +35,12 @@ class HelpdeskDetailSearch extends HelpdeskDetail
      * Creates data provider instance with search query applied
      *
      * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
      *
      * @return ActiveDataProvider
      */
-    public function search($params, $formName = null)
+    public function search($params)
     {
-        $query = HelpdeskDetail::find();
+        $query = Helpdesk::find();
 
         // add conditions that should always apply here
 
@@ -49,7 +48,7 @@ class HelpdeskDetailSearch extends HelpdeskDetail
             'query' => $query,
         ]);
 
-        $this->load($params, $formName);
+        $this->load($params);
 
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
@@ -60,10 +59,12 @@ class HelpdeskDetailSearch extends HelpdeskDetail
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'helpdesk_id' => $this->helpdesk_id,
             'emp_id' => $this->emp_id,
-            'move_out' => $this->move_out,
+            'repair_group' => $this->repair_group,
+            'status' => $this->status,
             'thai_year' => $this->thai_year,
+            'device_type_id' => $this->device_type_id,
+            'fsn_number' => $this->fsn_number,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
@@ -71,12 +72,10 @@ class HelpdeskDetailSearch extends HelpdeskDetail
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'code', $this->code])
+            ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'status', $this->status])
-            ->andFilterWhere(['like', 'rating', $this->rating]);
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

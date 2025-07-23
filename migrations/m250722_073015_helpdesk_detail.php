@@ -13,6 +13,7 @@ class m250722_073015_helpdesk_detail extends Migration
             'id' => $this->primaryKey(),
             'ref' => $this->string(255),
             'helpdesk_id' => $this->integer()->defaultValue(0)->comment('เชื่อมกับ ID หลัก'),
+            'emp_id' => $this->string()->comment('เชื่อมกับบุคลากร'),
             'name' => $this->string(255)->comment('ชื่อการเก็บข้อมูล'),
             'code' => $this->string(255),
             'title' => $this->string(255)->comment('รายการ'),

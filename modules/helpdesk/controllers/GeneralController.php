@@ -25,7 +25,6 @@ class GeneralController extends \yii\web\Controller
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 1,
             'date_filter' => 'this_month',
-            'status' => 1
             // 'auth_item' => 'technician',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

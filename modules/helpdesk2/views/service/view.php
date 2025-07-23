@@ -94,99 +94,111 @@
                 <h6 class="mb-0">ข้อมูลการซ่อม</h6>
             </div>
             <div class="card-body">
-                <dl class="row mb-0">
+                <dl class="row mb-3">
                     <dt class="col-sm-4">ผู้รับผิดชอบ:</dt>
-                    <dd class="col-sm-8">นายช่าง มือดี</dd>
+                    <dd class="col-sm-8"><?=$model->StackTeam()?></dd>
 
-                    <dt class="col-sm-4">วันที่เริ่มซ่อม:</dt>
-                    <dd class="col-sm-8">16/10/2023</dd>
+                    <dt class="col-sm-4">วันที่รับเรื่อง:</dt>
+                    <dd class="col-sm-8"><?=$model->viewReceiveDate()?></dd>
 
-                    <dt class="col-sm-4">คาดว่าจะเสร็จ:</dt>
-                    <dd class="col-sm-8">17/10/2023</dd>
-
-                    <dt class="col-sm-4">สถานะปัจจุบัน:</dt>
-                    <dd class="col-sm-8">
-                        <select class="form-select form-select-sm">
-                            <option>รอดำเนินการ</option>
-                            <option selected="">กำลังดำเนินการ</option>
-                            <option>รออะไหล่</option>
-                            <option>เสร็จสิ้น</option>
-                            <option>ยกเลิก</option>
-                        </select>
-                    </dd>
-
-                    
                 </dl>
+                <div id="showFormFormStatus"></div>
             </div>
         </div>
     </div>
 
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">บันทึกการซ่อม</h6>
-            </div>
-            <div class="card-body">
-                <div id="showTimeline"></div>
 
-                <div class="mt-3">
-                    <div id="showFormFormServiceRecord"></div>
-                    <!-- <div class="input-group">
-                        <input type="text" class="form-control" placeholder="เพิ่มบันทึกการซ่อม...">
-                        <button class="btn btn-primary" type="button">บันทึก</button>
+    </div>
+
+
+    <div class="container">
+        <div class="modern-tabs mb-5">
+            <ul class="nav" id="filledTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home"
+                        type="button" role="tab">
+                        บันทึกการซ่อม
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="team-tab" data-bs-toggle="tab" data-bs-target="#team" type="button"
+                        role="tab">
+                        ผู้ร่วมดำเนินงาน
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="repairParts-tab" data-bs-toggle="tab" data-bs-target="#repairParts"
+                        type="button" role="tab">
+                        อะไหล่ที่ใช้
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="filledTabsContent">
+                <div class="tab-pane fade show active" id="home" role="tabpanel">
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mt-3">
+                                <div id="showFormFormServiceRecord"></div>
+                            </div>
+                            <div id="showTimeline"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="tab-pane fade" id="team" role="tabpanel">
+                    <div id="showFormTeam"></div>
+                    <div id="showListTeam"></div>
+                </div>
+                <div class="tab-pane fade" id="repairParts" role="tabpanel">
+                    <!-- <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>รหัสอะไหล่</th>
+                                            <th>รายการ</th>
+                                            <th>จำนวน</th>
+                                            <th>ราคาต่อหน่วย</th>
+                                            <th>รวม</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>AC-GAS-002</td>
+                                            <td>น้ำยาแอร์ R32</td>
+                                            <td>1</td>
+                                            <td>500</td>
+                                            <td>500</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="4" class="text-end">รวมทั้งสิ้น:</th>
+                                            <th>2,500 บาท</th>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
                     </div> -->
                 </div>
             </div>
         </div>
     </div>
 
+
     <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">อะไหล่ที่ใช้</h6>
-                <button class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus-lg me-1"></i>
-                    เพิ่มอะไหล่
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>รหัสอะไหล่</th>
-                                <th>รายการ</th>
-                                <th>จำนวน</th>
-                                <th>ราคาต่อหน่วย</th>
-                                <th>รวม</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>          
-                            <!-- <tr>
-                                <td>AC-GAS-002</td>
-                                <td>น้ำยาแอร์ R32</td>
-                                <td>1</td>
-                                <td>500</td>
-                                <td>500</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr> -->
-                        </tbody>
-                        <!-- <tfoot>
-                            <tr>
-                                <th colspan="4" class="text-end">รวมทั้งสิ้น:</th>
-                                <th>2,500 บาท</th>
-                                <td></td>
-                            </tr>
-                        </tfoot> -->
-                    </table>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <div class="col-12">
@@ -204,12 +216,34 @@
 <?php
 
 use yii\helpers\Url;
-$urlFormServiceRecord = Url::to(['/helpdesk2/service-record/create','helpdesk_id' => $model->id]);
-$urlTimeline = Url::to(['/helpdesk2/service-record/timeline','helpdesk_id' => $model->id]);
+$urlFormServiceRecord = Url::to(['/helpdesk/service-record/create','helpdesk_id' => $model->id]);
+$urlTimeline = Url::to(['/helpdesk/service-record/timeline','helpdesk_id' => $model->id]);
+
+$urlFormTeam = Url::to(['/helpdesk/team/create','helpdesk_id' => $model->id]);
+$urllistTeam = Url::to(['/helpdesk/team/list','helpdesk_id' => $model->id]);
+$urllistTeam = Url::to(['/helpdesk/team/list','helpdesk_id' => $model->id]);
+$urlFormStatus= Url::to(['/helpdesk/service/update-status','id' => $model->id]);
 $js = <<<JS
 
 loadFormServiceRecord()
 loadTimeline()
+loadFormTeam()
+loadListTeam()
+loadFormStatus()
+
+function loadFormStatus()
+{
+    $.ajax({
+        type: "get",
+        url: "$urlFormStatus",
+        dataType: "json",
+        success: function (response) {
+            $('#showFormFormStatus').html(response.content)
+        }
+    });
+}
+
+
 function loadFormServiceRecord()
 {
     $.ajax({
@@ -230,6 +264,32 @@ function loadTimeline()
         dataType: "json",
         success: function (response) {
             $('#showTimeline').html(response.content)
+        }
+    });
+}
+
+function loadFormTeam()
+{
+    $.ajax({
+        type: "get",
+        url: "$urlFormTeam",
+        dataType: "json",
+        success: function (response) {
+            $('#showFormTeam').html(response.content)
+        }
+    });
+}
+
+function loadListTeam()
+{
+    $.ajax({
+        type: "get",
+        url: "$urllistTeam",
+        dataType: "json",
+        success: function (response) {
+            $('#showListTeam').html(response.content)
+            console.log('loadsuccess');
+            
         }
     });
 }

@@ -28,7 +28,6 @@ class ComputerController extends \yii\web\Controller
             'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 2,
             'date_filter' => 'this_month',
-            'status' => 1
             // 'auth_item' => 'computer',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

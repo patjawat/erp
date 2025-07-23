@@ -29,9 +29,10 @@ $items = [
     [
         'title' => 'แจ้งซ่อม',
         'icon' => 'fa-solid fa-circle-exclamation fs-1',
-        'url' => ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
+        // 'url' => ['/helpdesk/default/repair-select', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
+        'url' => ['/me/repair-v2/create', 'title' => '<i class="fa-regular fa-circle-check"></i> เลือกประเภทการซ่อม'],
         'modal' => true,
-        'size' => 'modal-md'
+        'size' => 'modal-lg'
     ],
     [
         'title' => 'ขอซื้อขอจ้าง',

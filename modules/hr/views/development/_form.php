@@ -68,20 +68,20 @@ $this->params['breadcrumbs'][] = $this->title;
 }
 </style>
 
-        <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
-        <!-- ข้อมูลอ้างอิงเอกสาร -->
-        <div class="card mb-3">
-            <div class="card-header bg-light p-2">
-                <strong><i class="bi bi-file-earmark-text me-2"></i>ข้อมูลเอกสาร</strong>
+<?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
+<!-- ข้อมูลอ้างอิงเอกสาร -->
+<div class="card mb-3">
+    <div class="card-header bg-light p-2">
+        <strong><i class="bi bi-file-earmark-text me-2"></i>ข้อมูลเอกสาร</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 col-sm-12">
+                <?= $form->field($model, 'thai_year')->textInput(['class' => 'form-control form-control-sm']) ?>
+                <?= $form->field($model, 'data_json[doc_number]')->textInput(['class' => 'form-control form-control-sm'])->label('เลขที่หนังสือ') ?>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 col-sm-12">
-                        <?= $form->field($model, 'thai_year')->textInput(['class' => 'form-control form-control-sm']) ?>
-                        <?= $form->field($model, 'data_json[doc_number]')->textInput(['class' => 'form-control form-control-sm'])->label('เลขที่หนังสือ') ?>
-                    </div>
-                    <div class="col-md-9 col-sm-12">
-                      <?php
+            <div class="col-md-9 col-sm-12">
+                <?php
 
                     $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', function($model) {
                         return [
@@ -105,41 +105,41 @@ $this->params['breadcrumbs'][] = $this->title;
                             ]
                         ])->label('หนังสืออ้างอิง');
                         ?>
-                    </div>
-                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- รายละเอียดการพัฒนา -->
+<div class="card mb-3">
+    <div class="card-header bg-light p-2">
+        <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <?= $form->field($model, 'topic')->textInput(['maxlength' => true, 'placeholder' => 'ระบุหัวข้อการอบรม/ประชุม/ดูงาน']) ?>
             </div>
         </div>
 
-        <!-- รายละเอียดการพัฒนา -->
-        <div class="card mb-3">
-            <div class="card-header bg-light p-2">
-                <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <?= $form->field($model, 'topic')->textInput(['maxlength' => true, 'placeholder' => 'ระบุหัวข้อการอบรม/ประชุม/ดูงาน']) ?>
+        <div class="row">
+            <!-- คอลัมน์ซ้าย -->
+            <div class="col-md-6">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <!-- คอลัมน์ซ้าย -->
-                    <div class="col-md-6">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mt-2">
-                            <?php
+                <div class="form-group mt-2">
+                    <?php
                             echo $form->field($model, 'development_type_id')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::DevelopmentType(),
                                 'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
@@ -149,10 +149,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('ประเภทการพัฒนา');
                             ?>
-                        </div>
+                </div>
 
-                        <div class="form-group mt-2">
-                            <?php
+                <div class="form-group mt-2">
+                    <?php
                             echo $form->field($model, 'data_json[development_level_name]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::DevelopmentLevel(true),
                                 'options' => ['placeholder' => 'เลือกระดับการพัฒนา'],
@@ -162,10 +162,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('ระดับการพัฒนา');
                             ?>
-                        </div>
+                </div>
 
-                        <div class="form-group mt-2">
-                            <?php
+                <div class="form-group mt-2">
+                    <?php
                             echo $form->field($model, 'data_json[time_slot]')->widget(Select2::classname(), [
                                 'data' => [
                                     'เต็มวัน' => 'เต็มวัน',
@@ -179,13 +179,13 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('ช่วงเวลา');
                             ?>
-                        </div>
-                    </div>
+                </div>
+            </div>
 
-                    <!-- คอลัมน์ขวา -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <?php
+            <!-- คอลัมน์ขวา -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    <?php
                             echo $form->field($model, 'data_json[development_go_type_name]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::DevelopmentGoType(true),
                                 'options' => ['placeholder' => 'เลือกลักษณะ'],
@@ -195,10 +195,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('ลักษณะการเข้าร่วม');
                             ?>
-                        </div>
+                </div>
 
-                        <div class="form-group mt-2">
-                            <?php
+                <div class="form-group mt-2">
+                    <?php
                             echo $form->field($model, 'data_json[claim_type_name]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::DevelopmentClaimType(true),
                                 'options' => ['placeholder' => 'เลือกการเบิกเงิน'],
@@ -208,11 +208,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('การเบิกเงิน');
                             ?>
-                        </div>
+                </div>
 
-                        <div class="form-group mt-2 avatar-form d-flex justify-content-between">
+                <div class="form-group mt-2 avatar-form d-flex justify-content-between">
 
-<?php
+                    <?php
             $url = Url::to(['/depdrop/employee-by-id']);
             $employee = Employees::find()->where(['id' => $model->leader_id])->one();
             $initEmployee = empty($model->leader_id) ? '' : Employees::findOne($model->leader_id)->getAvatar(false);//กำหนดค่าเริ่มต้น
@@ -237,10 +237,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
 
                     ])->label('หัวหน้างาน');
-                    ?>   
+                    ?>
 
 
-<?php
+                    <?php
             $url = Url::to(['/depdrop/employee-by-id']);
             $employee = Employees::find()->where(['id' => $model->leader_group_id])->one();
             $initEmployee = empty($model->leader_group_id) ? '' : Employees::findOne($model->leader_group_id)->getAvatar(false);//กำหนดค่าเริ่มต้น
@@ -265,14 +265,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
 
                     ])->label('หัวหน้ากลุ่มงาน');
-                    ?>   
-                    
-                        </div>
+                    ?>
 
-                        <div class="form-group mt-2 avatar-form">
+                </div>
+
+                <div class="form-group mt-2 avatar-form">
 
 
-<?php
+                    <?php
             $url = Url::to(['/depdrop/employee-by-id']);
             $employeeAssignedTo = Employees::find()->where(['id' => $model->assigned_to])->one();
             $initEmployeeAssignedTo = empty($model->assigned_to) ? '' : Employees::findOne($model->assigned_to)->getAvatar(false);//กำหนดค่าเริ่มต้น
@@ -297,26 +297,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
 
                     ])->label('ผู้ปฏิบัติหน้าที่แทน');
-                    ?>   
+                    ?>
 
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- สถานที่และหน่วยงาน -->
-        <div class="card mb-3">
-            <div class="card-header bg-light p-2">
-                <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
+<!-- สถานที่และหน่วยงาน -->
+<div class="card mb-3">
+    <div class="card-header bg-light p-2">
+        <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
 
 
-                        <?php
+                    <?php
                             echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกสถานที่'],
@@ -333,11 +333,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                 
                     ])->label('สถานที่จัดงาน');?>
-                    
-                        </div>
 
-                        <div class="form-group mt-2">
-                            <?php
+                </div>
+
+                <div class="form-group mt-2">
+                    <?php
                             echo $form->field($model, 'data_json[province_name]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::ListProvinceName(true),
                                 'options' => ['placeholder' => 'เลือกจังหวัด'],
@@ -346,12 +346,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('จังหวัด');
                             ?>
-                        </div>
-                    </div>
+                </div>
+            </div>
 
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <?php
+            <div class="col-md-6">
+                <div class="form-group">
+                    <?php
                             echo $form->field($model, 'data_json[location_org]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::ListLocationOrg(true),
                                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
@@ -362,10 +362,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('หน่วยงานที่จัด');
                             ?>
-                        </div>
+                </div>
 
-                        <div class="form-group mt-2">
-                            <?= $form->field($model, 'data_json[location_org_type]')->radioList([
+                <div class="form-group mt-2">
+                    <?= $form->field($model, 'data_json[location_org_type]')->radioList([
                                 'ในจังหวัด' => 'ในจังหวัด',
                                 'ต่างจังหวัด' => 'ต่างจังหวัด',
                                 'ต่างประเทศ' => 'ต่างประเทศ',
@@ -378,38 +378,41 @@ $this->params['breadcrumbs'][] = $this->title;
                                             </div>";
                                 }
                             ])->label('ประเภทสถานที่'); ?>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- ข้อมูลการเดินทาง -->
-        <div class="card mb-3">
-            <div class="card-header bg-light p-2">
-                <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
-                                </div>
-                            </div>
-                        </div>
+<!-- ข้อมูลการเดินทาง -->
+<div class="card mb-3">
+    <div class="card-header bg-light p-2">
+        <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
                     </div>
-                    <div class="col-md-6">
-                                <div class="row">
-                                    <div class="col-6">
-                                    <div class="form-group">
-                            <?php
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'data_json[vehicle_time_start]')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ระบุเวลาไป เช่น 08:00'])->label('เวลา') ?>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'data_json[vehicle_time_end]')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ระบุเวลาไป เช่น 16:00'])->label('เวลา') ?>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="col-6">
+                        <?php
                             echo $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
                                 'data' => $model->ListVehicleType(),
                                 'options' => ['placeholder' => 'เลือกพาหนะเดินทาง'],
@@ -419,33 +422,32 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ],
                             ])->label('พาหนะเดินทาง');
                             ?>
-                        </div>
-                                    </div>
-                                    <div class="col-6">
+                    </div>
+                    <div class="col-6">
 
-<?= $form->field($model, 'data_json[license_plate]')->textInput(['placeholder' => 'ระบุทะเบียนพาหนะเดินทาง'])->label('ทะเบียนพาหนะเดินทาง') ?>
-
-</div>
-</div>
-<?= $form->field($model, 'data_json[distance]')->textInput(['placeholder' => 'ระบุระยะทาง'])->label('ระยะทาง/กิโลเมตร') ?>
+                        <?= $form->field($model, 'data_json[license_plate]')->textInput(['placeholder' => 'ระบุทะเบียนพาหนะเดินทาง'])->label('ทะเบียนพาหนะเดินทาง') ?>
 
                     </div>
-                    
                 </div>
+                <?= $form->field($model, 'data_json[distance]')->textInput(['placeholder' => 'ระบุระยะทาง'])->label('ระยะทาง/กิโลเมตร') ?>
+
             </div>
+
         </div>
+    </div>
+</div>
 
-        <?= $form->field($model, 'status')->hiddenInput(['maxlength' => true, 'value' => 'Pending'])->label(false) ?>
-        <?php //  $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true, 'value' => 1])->label(false) ?>
+<?= $form->field($model, 'status')->hiddenInput(['maxlength' => true, 'value' => 'Pending'])->label(false) ?>
+<?php //  $form->field($model, 'emp_id')->hiddenInput(['maxlength' => true, 'value' => 1])->label(false) ?>
 
-        <div class="form-group text-center mt-4">
-            <?php echo Html::submitButton('<i class="bi bi-check2-circle me-2"></i> บันทึกข้อมูล', ['class' => 'btn btn-primary rounded-pill px-4 py-2 shadow me-2', 'id' => 'summit']) ?>
-            <button type="button" class="btn btn-secondary rounded-pill px-4 py-2 shadow" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle me-2"></i> ยกเลิก
-            </button>
-        </div>
+<div class="form-group text-center mt-4">
+    <?php echo Html::submitButton('<i class="bi bi-check2-circle me-2"></i> บันทึกข้อมูล', ['class' => 'btn btn-primary rounded-pill px-4 py-2 shadow me-2', 'id' => 'summit']) ?>
+    <button type="button" class="btn btn-secondary rounded-pill px-4 py-2 shadow" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle me-2"></i> ยกเลิก
+    </button>
+</div>
 
-        <?php ActiveForm::end(); ?>
+<?php ActiveForm::end(); ?>
 
 
 <?php

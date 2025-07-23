@@ -111,7 +111,7 @@ $items = [
         'url' => ['/hr/development/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('hr') ? true : false,
-        'show' => true
+        // 'show' => true
     ],
     
     

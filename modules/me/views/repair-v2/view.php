@@ -53,18 +53,7 @@
     <div class="card-body">
         <div class="row g-3">
             <div class="col-12">
-                <div class="alert alert-info">
-                    <div class="d-flex">
-                        <div class="me-3">
-                            <i class="bi bi-info-circle-fill fs-3"></i>
-                        </div>
-                        <div>
-                            <h5 class="alert-heading">กำลังดำเนินการซ่อม</h5>
-                            <p class="mb-0">ช่างได้ทำการตรวจสอบและพบว่าคอมเพรสเซอร์มีปัญหา
-                                ขณะนี้อยู่ระหว่างการเปลี่ยนอะไหล่</p>
-                        </div>
-                    </div>
-                </div>
+                <?=$model->viewServiceRecordInfo()?>
             </div>
 
             <div class="col-12 col-md-6">
@@ -108,18 +97,22 @@
                         </div>
 
                         <dl class="row mb-0">
-                            <dt class="col-sm-4">ผู้รับผิดชอบ:</dt>
-                            <dd class="col-sm-8">นายช่าง มือดี</dd>
+                    <dt class="col-sm-4">ผู้รับผิดชอบ:</dt>
+                    <dd class="col-sm-8"><?=$model->StackTeam()?></dd>
 
-                            <dt class="col-sm-4">เริ่มซ่อม:</dt>
-                            <dd class="col-sm-8">16/10/2023</dd>
+                    <dt class="col-sm-4">วันที่รับเรื่อง:</dt>
+                    <dd class="col-sm-8"><?=$model->viewReceiveDate()?></dd>
 
-                            <dt class="col-sm-4">คาดว่าจะเสร็จ:</dt>
-                            <dd class="col-sm-8">17/10/2023</dd>
+                    <dt class="col-sm-4">วันที่เสร็จสิ้น:</dt>
+                    <dd class="col-sm-8">17/10/2023</dd>
 
-                            <dt class="col-sm-4">สถานะ:</dt>
-                            <dd class="col-sm-8"><span class="badge status-in-progress">กำลังดำเนินการ</span></dd>
-                        </dl>
+                    <dt class="col-sm-4">สถานะปัจจุบัน:</dt>
+                    <dd class="col-sm-8">
+                      <?=$model->repairStatus?->title ?? '-'?>
+                    </dd>
+
+                    
+                </dl>
                     </div>
                 </div>
             </div>

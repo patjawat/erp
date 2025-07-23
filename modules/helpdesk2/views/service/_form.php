@@ -24,6 +24,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     ]); ?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput(['value' => 'repair'])->label(false) ?>
 
 <div class="row g-3">
     <div class="col-12">

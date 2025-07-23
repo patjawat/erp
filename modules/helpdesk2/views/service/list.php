@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'repair']) ?>
+<?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'repair']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col" class="text-center fw-semibold">ลำดับ</th>
+                        <th scope="col" class="text-start fw-semibold">ลำดับ</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
@@ -71,27 +71,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody>
                      <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                       <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                       <td class="text-start fw-semibold"><?php echo $item->repair_number?>
             </td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
                         <td><?=$item->data_json['location']?></td>
-                        <td><?=$item->emp->fullname?></td>
+                        <td><?=$item->emp->getInfo()['avatar']?></td>
                         <td><?=$item->viewCreateDateTime()?></td>
                         <td><?=$item->viewUrgent()['view']?></td>
                         <td><?=$item->repairStatus?->title ?? '-'?></td>
                         <td>
+                            <?php if($item->status == 'pending'):?>
+                            <?=Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับงานซ่อม',['/helpdesk2/service/receive','id' => $item->id],['class' => 'receive-order']);?>
+                            <?php else:?>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
-                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>ดูรายละเอียด',['/helpdesk2/service/view','id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #MR-2023-001'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i> บันทึกงานซ่อม',['/helpdesk2/service/view','id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?=Html::a('<i class="fa-regular fa-file-lines me-2"></i>เบิกอะไหล่',['//helpdesk2/repair-parts/create','helpdesk_id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item','data' => ['size' => 'modal-xl']])?></li>
                                     <li><?=Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข',['/helpdesk2/service/update','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
                                     <li><?=Html::a('<i class="fa-solid fa-ban me-2"></i>ยกเลิก',['/helpdesk2/service/cancel','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item cancel-order'])?></li>
                                 </ul>
                             </div>
+                            <?php endif;?>
                         </td>
                     </tr>
                     <?php endforeach;?>
@@ -113,3 +118,51 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<?php
+$js = <<< JS
+$('body').on('click', '.receive-order', function (e) {
+    e.preventDefault();
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'ยืนยันการรับงาน?',
+        text: "คุณแน่ใจหรือไม่ว่าจะรับงานนี้?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'ใช่, รับงาน',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "get",
+                url: url,
+                dataType: "json",
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'รับงานสำเร็จ!',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload(); // โหลดหน้าใหม่หลังจากแจ้งเตือน
+                        });
+                    } else {
+                        Swal.fire('ผิดพลาด', response.message || 'ไม่สามารถรับงานได้', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+                }
+            });
+        }
+    });
+});
+
+
+JS;
+$this->registerJS($js,View::POS_END);
+?>

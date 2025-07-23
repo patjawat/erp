@@ -1,60 +1,64 @@
 <?php
 
+use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
-use kartik\widgets\Select2;
+use kartik\select2\Select2;
+use kartik\form\ActiveField;
+use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
+use app\modules\hr\models\Employees;
+
 
 /** @var yii\web\View $this */
-/** @var app\modules\helpdesk\models\HelpdeskDetail $model */
+/** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
+$emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+
 ?>
 
-<div class="helpdesk-detail-form">
-
-    <?php $form = ActiveForm::begin(['id' => 'form']); ?>
-
-    <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
-
-    <?= $form->field($model, 'helpdesk_id')->hiddenInput()->label(false) ?>
-
-    <?= $form->field($model, 'name')->hiddenInput(['value' => 'service_record'])->label(false) ?>
-    <div class="row">
-<div class="col-3">
-   <?=$form->field($model, 'status')->widget(Select2::classname(), [
-                    // 'data' => ['เริ่มตรวจสอบ' => 'เริ่มตรวจสอบ','กำลังดำเนินการ' => 'กำลังดำเนินการ'],
-                    'data' => $model->ServiceRecordStatus(),
-                    'options' => ['placeholder' => 'หัวข้อ'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                         'dropdownParent' => '#main-modal',
-                        'tags' => true,
-                    ],
-                ])->label(false);
-                ?>
+<?php $form = ActiveForm::begin([
+        'id' => 'form-status',
+    ]); ?>
+<div class="row">
+  <div class="col-6">
+  <?= $form->field($model, 'repair_type')->dropDownList($model::getRepairTypeList(), ['prompt' => 'เลือกประเภทการซ่อม'])->label('ประเภทการซ่อม');?>
 </div>
-<div class="col-9">
-    <?php
-    echo $form->field($model, 'title', [
-    'addon' => [
-        'append' => [
-            'content' => Html::submitButton('<i class="fa-solid fa-circle-check me-1"></i>ตกลง', ['class' => 'btn btn-primary']),
-            'asButton' => true
-        ],
+<div class="col-6">
+  
+    <?= $form->field($model, 'status')->widget(Select2::classname(), [
+    'data' => $model->listStatus(),
+    'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
+    'pluginOptions' => [
+        'allowClear' => true,
     ],
-])->textInput(['placeholder' => 'อธิบายวิธีการดำเนินการ...'])->label(false);
+    // 'addon' => [
+    //     'append' => [
+    //         'content' => Html::submitButton(
+    //             '<i class="fa-solid fa-circle-check me-1"></i> ตกลง',
+    //             ['class' => 'btn btn-primary']
+    //         ),
+    //         'asButton' => true,
+    //     ],
+    // ],
+])->label('สถานะงานซ่อม'); ?>
 
- ?>
+</div>
 </div>
 
+  <div class="col-12 d-flex justify-content-end mt-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-circle-check me-1"></i>
+            บันทึก
+        </button>
     </div>
-    <?php ActiveForm::end(); ?>
 
-</div>
+<?php ActiveForm::end(); ?>
 
 <?php
 $js = <<< JS
    
-   $(document).on('beforeSubmit', '#form', function (e) {
+   $(document).on('beforeSubmit', '#form-status', function (e) {
     e.preventDefault();
     const form = $(this);
     Swal.fire({

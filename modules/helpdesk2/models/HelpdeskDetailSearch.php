@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\helpdesk\models;
+namespace app\modules\helpdesk2\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;

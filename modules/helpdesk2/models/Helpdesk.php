@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\helpdesk\models;
+namespace app\modules\helpdesk2\models;
 
 use Yii;
 use yii\db\Query;
@@ -54,7 +54,7 @@ class Helpdesk extends Yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number'], 'safe'],
+            [['title', 'emp_id', 'category_id', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'status', 'rating', 'repair_group', 'move_out', 'thai_year', 'q', 'date_between', 'urgency', 'auth_item', 'date_filter', 'device_type_id', 'request_repair_date', 'repair_number','receive_date','repair_type'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
             [['ref', 'code', 'name', 'title'], 'string', 'max' => 255],
         ];
@@ -66,6 +66,7 @@ class Helpdesk extends Yii\db\ActiveRecord
             'id' => 'ID',
             'ref' => 'Ref',
             'code' => 'Code',
+            'receive_date' => 'วันที่รับเรื่อง',
             'date_start' => 'Date Start',
             'date_end' => 'Date End',
             'name' => 'Name',
@@ -124,6 +125,15 @@ class Helpdesk extends Yii\db\ActiveRecord
 
         parent::afterFind();
     }
+
+
+    public static function getRepairTypeList()
+{
+    return [
+        'internal' => 'ซ่อมภายใน',
+        'external' => 'ซ่อมภายนอก',
+    ];
+}
 
     //แสดงรูปภาพประกอบ
     public function getImageRequest()
@@ -210,6 +220,43 @@ class Helpdesk extends Yii\db\ActiveRecord
         $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
         return "$prefix-$yearMonth-$departmentCode-$nextNumber";
     }
+
+   public function ResetHelpdeskGenNumber()
+{
+    switch ($this->repair_group) {
+        case '1':
+            $depCode = 'GEN';
+            break;
+        case '2':
+            $depCode = 'IT';
+            break;
+        case '3':
+            $depCode = 'MED';
+            break;
+        default:
+            $depCode = '';
+            break;
+    }
+
+    $prefix = 'REP';
+
+    // ใช้ created_at แทนวันที่ปัจจุบัน
+    $createdAt = new \DateTime($this->created_at); // เช่น 2025-02-02 11:12:00
+    $buddhistYear = (int)$createdAt->format('y') + 43; // เช่น ปี ค.ศ. 25 -> 25+43 = 68 (พ.ศ. เฉพาะหลักท้าย)
+    $yearMonth = $buddhistYear . $createdAt->format('m'); // 6802
+
+    $departmentCode = $depCode;
+
+    $count = self::find()
+        ->where(['like', 'repair_number', "$prefix-$yearMonth-$departmentCode"])
+        ->count();
+
+    $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+
+    return "$prefix-$yearMonth-$departmentCode-$nextNumber";
+}
+
+
     // ผู้แจ่งซ่อม
     public function getUserReq($msg = null)
     {
@@ -540,6 +587,14 @@ class Helpdesk extends Yii\db\ActiveRecord
         return \Yii::$app->thaiFormatter->asDate($this->created_at, 'long');
     }
 
+    //แสดงผลวันที่รับเรื่อง
+        public function viewReceiveDate()
+    {
+        return \Yii::$app->thaiFormatter->asDate($this->receive_date, 'long');
+    }
+
+    
+
     public function viewCreateDateTime()
     {
         return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
@@ -564,15 +619,43 @@ class Helpdesk extends Yii\db\ActiveRecord
             // throw $th;
         }
     }
+//แสดง timeline สถานะงานซ่อมล่าสุด
+   public function viewServiceRecordInfo()
+{
+    try {
+        $model = HelpdeskDetail::find()
+            ->where(['helpdesk_id' => $this->id])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->one();
+
+        if ($model === null) {
+            return '';
+        }
+
+        return '<div class="alert alert-info">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="bi bi-info-circle-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="alert-heading">' . Html::encode($model->status) . '</h5>
+                        <p class="mb-0">' . Html::encode($model->title) . '</p>
+                    </div>
+                </div>
+            </div>';
+    } catch (\Throwable $th) {
+        return '';
+    }
+}
 
     // แสดงวันที่แล้วสร็จ
-    public function viewEndJob()
-    {
-        try {
-            return \Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
-        } catch (\Throwable $th) {
-        }
-    }
+    // public function viewEndJob()
+    // {
+    //     try {
+    //         return \Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
+    //     } catch (\Throwable $th) {
+    //     }
+    // }
 
     // วันที่แสดงความคิดเห็น
     public function viewCommentDate()
