@@ -40,6 +40,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                     'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
                     'pluginOptions' => [
                         'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label('ประเภทอุปกรณ์');
                 ?>
@@ -63,6 +64,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                     'options' => ['placeholder' => 'เลือกแผนกช่าง ...'],
                     'pluginOptions' => [
                         'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label('แผนกช่าง');
                 ?>
@@ -75,6 +77,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                     'options' => ['placeholder' => 'เลือกความเร่งด่วน ...'],
                     'pluginOptions' => [
                         'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label('ความเร่งด่วน');
                 ?>
@@ -100,11 +103,11 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     </div>
 
     <div class="col-12 d-flex justify-content-center mt-4">
-        <button type="button" class="btn btn-outline-secondary me-2">ยกเลิก</button>
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-send me-1"></i>
             บันทึก
         </button>
+        <button type="button" class="btn btn-outline-secondary me-2">ยกเลิก</button>
     </div>
 </div>
 </div>

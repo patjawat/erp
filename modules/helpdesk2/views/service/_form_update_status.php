@@ -27,6 +27,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                     'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
                     'pluginOptions' => [
                         'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
                     ],
                 ])->label('ประเภทอุปกรณ์');
                 ?>
@@ -43,6 +44,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
     'pluginOptions' => [
       'allowClear' => true,
+      'dropdownParent' => '#main-modal',
     ],
     ])->label('สถานะงานซ่อม'); ?>
 
@@ -53,6 +55,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             'options' => ['placeholder' => 'เลือกผลการซ่อม ...'],
             'pluginOptions' => [
                 'allowClear' => true,
+                'dropdownParent' => '#main-modal',
             ],
         ])->label('ผลการซ่อม'); ?>
     </div>
