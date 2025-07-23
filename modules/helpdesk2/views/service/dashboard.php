@@ -16,7 +16,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?= $this->render('@app/modules/helpdesk/views/repair/summary_status', ['model' => $searchModel]) ?>
-<h1><?=$title?></h1>
 <div class="row">
     <div class="col-8">
         <?php echo $this->render('@app/modules/helpdesk/views/repair/_chart_summary',[ 'searchModel' => $searchModel,])?>
