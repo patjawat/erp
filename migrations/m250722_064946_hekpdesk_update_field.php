@@ -26,7 +26,7 @@ class m250722_064946_hekpdesk_update_field extends Migration
             }
 
             if (!isset($schema->columns['request_repair_date'])) {
-                $this->addColumn($table, 'request_repair_date', $this->date()->comment('วันที่ต้องการให้ซ่อม')->after('fsn_number'));
+                $this->addColumn($table, 'request_repair_date', $this->date()->comment('วันที่ต้องการให้ซ่อม')->after('asset_number'));
             }
 
 
