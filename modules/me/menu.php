@@ -42,7 +42,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
-        <?=Html::a('<i class="fa-solid fa-screwdriver-wrench me-2"></i> แจ้งซ่อม ',['/me/repair'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-screwdriver-wrench me-2"></i> แจ้งซ่อม ',['/me/repair-v2'],['class' => 'dropdown-item'])?>
         <?=Html::a('<i class="fa-solid fa-bag-shopping me-2"></i> ขอซื้อขอจ้าง ',['/me/purchase'],['class' => 'dropdown-item'])?>
         <?=Html::a('<i class="fa-solid fa-car me-2"></i> จองรถ',['/me/booking-vehicle/calendar'],['class' => 'dropdown-item'])?>
         <?=Html::a('<i class="fa-solid fa-handshake me-2"></i> ห้องประชุม',['/me/booking-meeting/calendar'],['class' => 'dropdown-item'])?>
