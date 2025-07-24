@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'repair']) ?>
+<?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'asset']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?=$this->render('@app/modules/helpdesk2/views/service/_search_asset', ['model' => $searchModel])?>
+        <?=$this->render('@app/modules/helpdesk2/views/service/_search_asset', ['model' => $searchModel,'listAssetType'=> $listAssetType])?>
     </div>
 </div>
 

@@ -22,7 +22,7 @@ use app\modules\am\models\Asset;
                         <th class="fw-semibold" scope="col">ราคา</th>
                         <th class="fw-semibold" scope="col">วันที่รับเข้า</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>
-                        <th class="fw-semibold text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
+                        <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                     </tr>
                 </thead>
               <tbody class="table-group-divider align-middle">
@@ -39,20 +39,20 @@ use app\modules\am\models\Asset;
                         <td class="align-middle"><?=number_format($item->price,0)?></td>
                         <td class="align-middle"><?=$item->receive_date?></td>
                         <td><?=$item->statusName()?></td>
-                        <td class="fw-light">
-                            <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                    <i class="bi bi-caret-down-fill"></i>
+
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
                                 </button>
-
-                                <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
-                                </ui>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                                </ul>
                             </div>
-
                         </td>
+
 
                         <!-- <td class="align-middle text-center">
                             <div class="d-flex gap-3">

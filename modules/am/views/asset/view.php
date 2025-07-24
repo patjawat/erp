@@ -92,7 +92,8 @@ $group = Yii::$app->request->get('group');
                         <i class="bi bi-info-circle"></i> ข้อมูลทั่วไป
                     </div>
                     <div class="d-feles gap-2">
-                        <?= Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม', ['/helpdesk/repair/create', 'code' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'], ['class' => 'open-modal btn btn-danger rounded-pill shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?php //  Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม', ['/helpdesk/repair/create', 'code' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3 text-danger"></i>  ส่งซ่อม'], ['class' => 'open-modal btn btn-danger rounded-pill shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('<i class="fa-solid fa-triangle-exclamation"></i> แจ้งซ่อม', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'open-modal btn btn-danger rounded-pill shadow', 'data' => ['size' => 'modal-lg']]) ?>
                         <?= Html::a('<i class="fa-solid fa-qrcode"></i> QR-Code', ['qrcode', 'id' => $model->id], ['class' => 'open-modal btn btn-success rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
                         <?= Html::a('<i class="fa-solid fa-chart-line"></i> ค่าเสื่อม', ['depreciation', 'id' => $model->id], ['class' => 'open-modal btn btn-primary rounded-pill shadow', 'data' => ['size' => 'modal-lg']]) ?>
                         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow']) ?>

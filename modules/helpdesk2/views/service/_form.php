@@ -47,16 +47,17 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     </div>
 
     <div class="col-12 col-md-6">
-          <?=$form->field($model, 'asset_number')->widget(Select2::classname(), [
-                    'data' => $model->listAsset(),
-                    'options' => ['placeholder' => 'เลือกครุภัณฑ์ ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                    ],
-                ])->label('รหัสครุภัณฑ์');
-                ?>
-
+            <?= $form->field($model, 'asset_number')->widget(Select2::classname(), [
+                'data' => $model->listAsset(),
+                'options' => ['placeholder' => 'เลือกครุภัณฑ์ ...'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'dropdownParent' => '#main-modal',
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function(e) { getRepairGroup(e.params.data.id); }",
+                ],
+            ])->label('รหัสครุภัณฑ์'); ?>
     </div>
 
     <div class="col-12">
@@ -123,12 +124,35 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
 <?php ActiveForm::end(); ?>
 <?php
+$getRepairGroupUrl = Url::to(['/me/repair-v2/get-repair-group']);
+$assetNumber = json_encode($model->asset_number);
 $js = <<< JS
+
+     if ($assetNumber) {
+        getRepairGroup($assetNumber);
+    }
+    
     thaiDatepicker('#helpdesk-request_repair_date');
+
 
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });
+    function getRepairGroup(id)
+    {
+        $.ajax({
+            type: "get",
+            url: "$getRepairGroupUrl",
+            data: {id:id},
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+               $('#helpdesk-repair_group').val(response).trigger('change');
+                
+            }
+        });
+    }
+
 JS;
 $this->registerJS($js,View::POS_END)
 ?>

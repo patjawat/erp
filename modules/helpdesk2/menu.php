@@ -18,7 +18,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนงานซ่อม',['index'],['class' => 'nav-link ' . (isset($active) && $active =='index' ? 'active' : '')])?>
 </li>
 <li class="nav-item">
-    <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนครุภัณฑ์',['asset'],['class' => 'nav-link ' . (isset($active) && $active =='index' ? 'active' : '')])?>
+    <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนครุภัณฑ์',['asset'],['class' => 'nav-link ' . (isset($active) && $active =='asset' ? 'active' : '')])?>
 </li>
 <li class="nav-item">
     <?php else:?>

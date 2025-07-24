@@ -17,7 +17,7 @@ use app\modules\hr\models\Organization;
 /** @var app\modules\am\models\AssetSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 $listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item_id'])->all(),'code','title');
-$listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(),'code','title');
+// $listAssetType= ArrayHelper::map(Categorise::find()->andWhere(['name' => 'asset_type'])->andWhere(['IN','code',$assetTypeId])->all(),'code','title');
 
 ?>
 <style>
@@ -55,7 +55,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         <?php
 
             echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-                'data' => $model->listAssetType(),
+                'data' => $listAssetType ? $listAssetType : $model->listAssetType(),
                     'options' => [
                     'placeholder' => 'ทุกประเภท',
                     'id' => 'asset_type_id'

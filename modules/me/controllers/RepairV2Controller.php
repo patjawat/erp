@@ -111,8 +111,9 @@ class RepairV2Controller extends Controller
         $me = UserHelper::GetEmployee();
         $model = new Helpdesk([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'emp_id' => $me->id
-        ]);
+            'emp_id' => $me->id,
+            'asset_number' => $this->request->get('asset_number')
+         ]);
         if ($this->request->isPost) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load($this->request->post())) {
@@ -293,6 +294,30 @@ class RepairV2Controller extends Controller
 
             return $this->redirect(['index']);
     }
+
+    //ดึงแผนกของช่างซ่อมบำรุงตามครุภัณฑ์ที่เลืกอ
+    public function actionGetRepairGroup($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $repairGroup = Asset::find()->where(['code' => $id])->one();
+        return $this->GroupMach($repairGroup->asset_type_id);
+    }
+
+        public function GroupMach($group)
+        {
+            // กลุ่ม
+            $group2 = ['COM'];       // in
+            $group3 = ['MED'];       // in
+
+            if (in_array($group, $group2)) {
+                return 2;
+            } elseif (in_array($group, $group3)) {
+                return 2;
+            } else {
+                return 1; // ไม่มีในกลุ่มใด
+            }
+        }
+
 
     /**
      * Finds the Helpdesk model based on its primary key value.
