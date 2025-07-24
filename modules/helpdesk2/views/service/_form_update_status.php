@@ -21,7 +21,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
         'id' => 'form-status',
     ]); ?>
 <div class="row">
-   <div class="col-6 col-md-6">
+    <div class="col-6 col-md-6">
         <?=$form->field($model, 'device_type_id')->widget(Select2::classname(), [
                     'data' => $model->listDeviceType(),
                     'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
@@ -36,19 +36,6 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     <div class="col-6">
         <?= $form->field($model, 'repair_type')->dropDownList($model::getRepairTypeList(), ['prompt' => 'เลือกประเภทการซ่อม'])->label('ประเภทการซ่อม');?>
     </div>
-    
-    <div class="col-6">
-
-        <?= $form->field($model, 'status')->widget(Select2::classname(), [
-    'data' => $model->listStatus(),
-    'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
-    'pluginOptions' => [
-      'allowClear' => true,
-      'dropdownParent' => '#main-modal',
-    ],
-    ])->label('สถานะงานซ่อม'); ?>
-
-    </div>
     <div class="col-6">
         <?= $form->field($model, 'repair_result')->widget(Select2::classname(), [
           'data' => $model->getRepairResultList(),
@@ -59,6 +46,18 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
             ],
         ])->label('ผลการซ่อม'); ?>
     </div>
+    <div class="col-6">
+        <?= $form->field($model, 'status')->widget(Select2::classname(), [
+    'data' => $model->listStatus(),
+    'options' => ['placeholder' => 'เลือกประเภทอุปกรณ์ ...'],
+    'pluginOptions' => [
+      'allowClear' => true,
+      'dropdownParent' => '#main-modal',
+    ],
+    ])->label('สถานะงานซ่อม'); ?>
+
+    </div>
+
 </div>
 
 <div class="col-12 d-flex justify-content-end mt-4">

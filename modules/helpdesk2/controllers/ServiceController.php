@@ -11,6 +11,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\helpdesk2\models\Helpdesk;
@@ -50,6 +51,7 @@ class ServiceController extends \yii\web\Controller
                 }
 
                 if ($model->save()) {
+                   
                     return [
                         'status' => 'success'
                     ];
@@ -74,6 +76,19 @@ class ServiceController extends \yii\web\Controller
         }
     }
 
+public function UpdateAssetStatus($model)
+{
+    if ($model->asset_number !== '' && $model->status == 'success') {
+        $asset = Asset::findOne(['code' => $model->asset_number]);
+        if ($asset) {
+            $asset->asset_status = 1;
+            return $asset->save(false);
+        }
+    }
+    return false;
+}
+
+
 
     public function actionUpdateStatus($id)
     {
@@ -84,6 +99,7 @@ class ServiceController extends \yii\web\Controller
             if ($model->load($this->request->post())) {
 
                 if ($model->save()) {
+                    $this->UpdateAssetStatus($model);
                     return [
                         'status' => 'success'
                     ];

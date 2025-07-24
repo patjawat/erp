@@ -93,8 +93,7 @@ class GeneralController extends \yii\web\Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        $q = trim($searchModel->q);
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_name', $q],

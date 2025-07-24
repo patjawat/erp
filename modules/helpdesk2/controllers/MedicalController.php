@@ -91,7 +91,7 @@ class MedicalController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $q = trim($searchModel->q);
+       $q = trim($searchModel->q ?? '');
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
             'or',
