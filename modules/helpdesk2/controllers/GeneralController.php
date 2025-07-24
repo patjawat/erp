@@ -80,82 +80,89 @@ class GeneralController extends \yii\web\Controller
     }
 
 
-  public function actionAsset()
+    public function actionAsset()
     {
-        $assetTypeItem = ['MED','SCI','COM'];
-        $listsData = Categorise::find()->andWhere(['name' => 'asset_type','group_id' => 4])->andWhere(['NOT IN','code',$assetTypeItem])->all();
-        $listAssetType= ArrayHelper::map($listsData,'code','title');
-        $assetTypeColumn = ArrayHelper::getColumn($listsData,'code');
+        $assetTypeItem = ['MED', 'SCI', 'COM'];
+        $listsData = Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 4])->andWhere(['NOT IN', 'code', $assetTypeItem])->all();
+        $listAssetType = ArrayHelper::map($listsData, 'code', 'title');
+        $assetTypeColumn = ArrayHelper::getColumn($listsData, 'code');
 
         $searchModel = new AssetSearch([
-             'asset_group_id' => 4,
-             'asset_type_id' => $assetTypeColumn
+            'asset_group_id' => 4,
+            'asset_type_id' => $assetTypeColumn
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        $q = trim($searchModel->q);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'asset_name', $q],
+            ['like', 'code', $q],
         ]);
 
-        $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         //  $dataProvider->query->andFilterWhere(['asset_items.asset_type_id' => $searchModel->asset_type_id]);
 
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
-            $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
+        $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
 
-            // ค้นหาคามกลุ่มโครงสร้าง
-            $org1 = Organization::findOne($searchModel->q_department);
-            // ถ้ามรกลุ่มย่อย
-            if (isset($searchModel->q_department) && isset($org1) && $org1->lvl == 1) {
-                $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามรกลุ่มย่อย
+        if (isset($searchModel->q_department) && isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
             WHERE t2.name = :name;';
-                $querys = Yii::$app
-                    ->db
-                    ->createCommand($sql)
-                    ->bindValue(':name', $org1->name)
-                    ->queryAll();
-                $arrDepartment = [];
-                foreach ($querys as $tree) {
-                    $arrDepartment[] = $tree['id'];
-                }
-                if (count($arrDepartment) > 0) {
-                    $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-                }
-            } else {
-                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
             }
-            // จบการค้นหา
-
-            $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
-            $dataProvider->query->andFilterWhere([
-                'or',
-                ['LIKE', 'asset.code', $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
-            ]);
-
-            // ค้นหาตามอายุ
-            if ($searchModel->price1 && !$searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
             }
-            // ค้นหาระหว่างช่วงอายุ
-            if ($searchModel->price1 && $searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
-            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+        }
+        // จบการค้นหา
 
-            $dataProvider->setSort([
-                'defaultOrder' => [
-                    'code' => 'SORT_DESC',
-                    'receive_date' => 'SORT_DESC',
-                ],
-            ]);
+        $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+        ]);
+
+        // ค้นหาตามอายุ
+        if ($searchModel->price1 && !$searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
+        }
+        // ค้นหาระหว่างช่วงอายุ
+        if ($searchModel->price1 && $searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
+        }
+
+        $dataProvider->setSort([
+            'defaultOrder' => [
+                'code' => 'SORT_DESC',
+                'receive_date' => 'SORT_DESC',
+            ],
+        ]);
 
         return $this->render('@app/modules/helpdesk2/views/service/list_asset', [
-             'title' => 'ศูนย์คอมพิวเตอร์',
-            'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
+            'title' => 'ศูนย์งานซ่อมบำรุง',
+            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
             'listAssetType' => $listAssetType,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
-    
 }

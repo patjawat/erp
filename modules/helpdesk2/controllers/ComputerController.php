@@ -24,14 +24,15 @@ class ComputerController extends \yii\web\Controller
             'repair_group' => 2,
             'date_filter' => 'this_month',
         ]);
+        $q = trim($searchModel->q);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $searchModel->q],
-            ['like', 'title', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ['like', 'repair_number', $q],
+            ['like', 'title', $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         if ($searchModel->date_filter) {
@@ -92,6 +93,13 @@ class ComputerController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $q = trim($searchModel->q);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'asset_name', $q],
+            ['like', 'code', $q],
+        ]);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
@@ -154,7 +162,7 @@ class ComputerController extends \yii\web\Controller
         ]);
     }
 
-     public function actionView($id)
+    public function actionView($id)
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -169,7 +177,4 @@ class ComputerController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-
-
-
 }
