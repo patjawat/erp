@@ -81,7 +81,7 @@ $group = Yii::$app->request->get('group');
                          <?php
                     // DepDrop - หมวดหมู่ครุภัณฑ์
                     echo $form->field($model, 'asset_category_id')->widget(DepDrop::class, [
-                        'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวดรัพย์สิน ...'],
+                        'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวดทรัพย์สิน ...'],
                         'type' => DepDrop::TYPE_SELECT2,
                         'select2Options' => [
                             'pluginOptions' => ['allowClear' => true],

@@ -84,7 +84,7 @@ class ComputerController extends \yii\web\Controller
 
     public function actionAsset()
     {
-        $assetTypeItem = ['MED'];
+        $assetTypeItem = ['COM'];
         $listAssetType = ArrayHelper::map(Categorise::find()->andWhere(['name' => 'asset_type'])->andWhere(['IN', 'code', $assetTypeItem])->all(), 'code', 'title');
 
         $searchModel = new AssetSearch([
