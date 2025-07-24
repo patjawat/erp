@@ -14,13 +14,18 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item">
     <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['dashboard'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')])?>
 </li>
-</li>
-<?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนงานซ่อม',['index'],['class' => 'nav-link ' . (isset($active) && $active =='index' ? 'active' : '')])?>
 <li class="nav-item">
-<?php else:?>
-
-<div class="d-flex gap-2">
-    <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['dashboard'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนงานซ่อม',['index'],['class' => 'nav-link ' . (isset($active) && $active =='index' ? 'active' : '')])?>
+</li>
+<li class="nav-item">
+    <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนครุภัณฑ์',['asset'],['class' => 'nav-link ' . (isset($active) && $active =='index' ? 'active' : '')])?>
+</li>
+<li class="nav-item">
+    <?php else:?>
+        
+        <div class="d-flex gap-2">
+            <?=Html::a('<i class="fa-solid fa-gauge-high me-1"></i> Dashboard',['dashboard'],['class' => 'btn btn-light'])?>
     <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนงานซ่อม',['index'],['class' => 'btn btn-light'])?>
+
 </div>
 <?php endif;?>

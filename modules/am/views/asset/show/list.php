@@ -41,14 +41,14 @@ use app\modules\am\models\Asset;
                         <td><?=$item->statusName()?></td>
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/am/asset/update', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
                                 <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
 
                                 <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/am/asset/view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
                                 </ui>
                             </div>
 
@@ -56,9 +56,9 @@ use app\modules\am\models\Asset;
 
                         <!-- <td class="align-middle text-center">
                             <div class="d-flex gap-3">
-                                <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/am/asset/view','id' => $item->id])?>
-                                <?=Html::a('<i class="fa-solid fa-pen-to-square fa fa-2x text-warning"></i>',['/am/asset/update','id' => $item->id])?>
-                                <?= Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>', ['/am/asset/delete', 'id' => $item->id], ['class' => 'delete-asset']) ?>
+                                <?=Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['view','id' => $item->id])?>
+                                <?=Html::a('<i class="fa-solid fa-pen-to-square fa fa-2x text-warning"></i>',['update','id' => $item->id])?>
+                                <?= Html::a('<i class="fa-solid fa-trash fa-2x text-danger"></i>', ['delete', 'id' => $item->id], ['class' => 'delete-asset']) ?>
                             </div>
                         </td> -->
                     </tr>
