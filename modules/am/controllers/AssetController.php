@@ -241,7 +241,6 @@ class AssetController extends Controller
     {
         $model = new Asset([
             'asset_group_id' => 4,
-            'asset_item' => 0,
             'asset_status' => 0,
             'price' => 0,
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),

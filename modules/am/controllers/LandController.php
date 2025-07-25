@@ -32,10 +32,9 @@ class LandController extends \yii\web\Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-            'asset_group' => 1
+            'asset_group_id' => 1
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
         $dataProvider->query->andWhere('deleted_at IS NULL');
 
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
@@ -89,8 +88,7 @@ class LandController extends \yii\web\Controller
     {
         $model = new Asset([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'asset_group' => 1, // 1 = ที่ดิน
-            // 'asset_item' => 'land',
+            'asset_group_id' => 1, // 1 = ที่ดิน
         ]);
 
         if ($this->request->isPost) {

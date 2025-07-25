@@ -131,8 +131,6 @@ class Asset extends \yii\db\ActiveRecord
         ];
     }
 
-
-
     public function listAssetType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 4])->all(), 'code', 'title');
@@ -313,6 +311,18 @@ class Asset extends \yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
+public function landSize()
+{
+    $sizes = [
+        ($this->data_json['land_size'] ?? 0) > 0 ? $this->data_json['land_size'] . ' ไร่' : null,
+        ($this->data_json['land_size_ngan'] ?? 0) > 0 ? $this->data_json['land_size_ngan'] . ' งาน' : null,
+        ($this->data_json['land_size_tarangwa'] ?? 0) > 0 ? $this->data_json['land_size_tarangwa'] . ' ตารางวา' : null,
+    ];
+
+    return implode('', array_filter($sizes));
+}
+
+
 
     public function budgetTypeName()
     {
@@ -340,9 +350,9 @@ class Asset extends \yii\db\ActiveRecord
     }
 
 
-    public function Upload($ref, $name)
+    public function Upload($name)
     {
-        return FileManagerHelper::FileUpload($ref, $name);
+        return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
     // มูลค่าทรัพย์สินทั้งหมด
