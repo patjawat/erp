@@ -12,7 +12,6 @@ use app\modules\hr\models\Employees;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetSearch $model */
 /** @var yii\widgets\ActiveForm $form */
-$listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item'])->all(),'code','title');
 $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(),'code','title');
 $listAssetGroup= ArrayHelper::map(Categorise::find()
 ->where(['name' => 'asset_group'])
@@ -61,21 +60,6 @@ $listAssetGroup= ArrayHelper::map(Categorise::find()
 
 
 <div class="collapse mt-3" id="collapseFilter">
-
-
-    <?= $form->field($model, 'asset_item')->widget(Select2::classname(), [
-                                        'data' => $listAssetitem,
-                                        'options' => ['placeholder' => 'เลือกรายการครุภัณฑ์'],
-                                        'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'width' => '350px',
-                                        ],
-                                    ])->label(false);
-                                    
-                                    ?>
-
-
-
 
     <?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',

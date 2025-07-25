@@ -23,7 +23,6 @@ use iamsaint\datetimepicker\Datetimepicker;
     'validationUrl' => ['/am/asset/validator'],
      'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
-<?= $form->field($model, 'asset_item')->hiddenInput(['maxlength' => true])->label(false)?>
 <?= $form->field($model, 'asset_status')->hiddenInput(['maxlength' => true])->label(false)?>
 
 <div class="card">

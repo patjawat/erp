@@ -42,7 +42,6 @@ $group = Yii::$app->request->get('group');
      'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<?=$form->field($model, 'asset_item')->hiddenInput()->label(false);?>
 <div class="row">
     <div class="col-8">
 
