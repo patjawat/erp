@@ -13,6 +13,7 @@ use app\modules\hr\models\Development;
 $this->title = 'อบรม/ประชุม/ดูงาน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<!-- https://www.canva.com/ai/code/thread/7537949c-ec8b-4ea4-b910-eee147b74607 -->
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-briefcase fs-1"></i> <?= $this->title; ?>

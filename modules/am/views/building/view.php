@@ -1,8 +1,24 @@
 <?php
 use yii\helpers\Html;
 use app\components\AppHelper;
-
+$this->title = 'ทะเบียนอาคาร';
+$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-house fs-3"></i> <?=$this->title;?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?=$this->render('../default/menu')?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->endBlock(); ?>
+
+
 <div class="card mb-3">
     <div class="row g-0">
         <div class="col-md-4">

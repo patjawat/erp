@@ -130,14 +130,25 @@ class BuildingController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('udpate', [
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('udpate', [
+            return $this->render('update', [
                 'model' => $model,
             ]);
         }
     }
+
+
+    protected function findModel($id)
+    {
+        if (($model = Asset::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    
 }
