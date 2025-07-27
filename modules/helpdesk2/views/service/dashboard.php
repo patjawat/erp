@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = 'Dashboard';
 
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/helpdesk2/menu',['active' => 'repair']) ?>
+<?php echo $this->render('@app/modules/helpdesk2/menu',['active' => $active]) ?>
 <?php $this->endBlock(); ?>
 
 <?= $this->render('@app/modules/helpdesk2/views/service/summary_status', ['model' => $searchModel]) ?>

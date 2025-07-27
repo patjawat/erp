@@ -3,7 +3,6 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
-use yii\web\Response;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -24,17 +23,14 @@ class ComputerController extends \yii\web\Controller
             'repair_group' => 2,
             'date_filter' => 'this_month',
         ]);
-        $q = trim($searchModel->q ?? '');
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
+
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $q],
-            ['like', 'title', $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
+            ['like', 'repair_number', $searchModel->q],
+            ['like', 'title', $searchModel->q],
         ]);
-        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
@@ -46,7 +42,8 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
-            'title' => 'ศูนย์คอมพิวเตอร์',
+            'active' => 'index',
+             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -61,20 +58,21 @@ class ComputerController extends \yii\web\Controller
             'repair_group' => 2,
             'auth_item' => 'technician'
         ]);
-        $q = trim($searchModel->q ?? '');
+
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
+            ['like', 'repair_number', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
+             'active' => 'dashboard',
             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'searchModel' => $searchModel,
@@ -94,11 +92,10 @@ class ComputerController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'asset_name', $q],
-            ['like', 'code', $q],
+            ['like', 'asset_name', $searchModel->q],
+            ['like', 'code', $searchModel->q],
         ]);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
@@ -133,8 +130,8 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $q],
+            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
         ]);
 
         // ค้นหาตามอายุ
@@ -154,6 +151,7 @@ class ComputerController extends \yii\web\Controller
         ]);
 
         return $this->render('@app/modules/helpdesk2/views/service/list_asset', [
+             'active' => 'asset',
             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'listAssetType' => $listAssetType,
@@ -164,8 +162,6 @@ class ComputerController extends \yii\web\Controller
 
     public function actionView($id)
     {
-        // Yii::$app->response->format = Response::FORMAT_JSON;
-
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);

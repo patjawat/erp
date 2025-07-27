@@ -7,6 +7,7 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\modules\am\models\Asset;
 use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
@@ -43,6 +44,7 @@ class MedicalController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
+              'active' => 'index',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'searchModel' => $searchModel,
@@ -71,6 +73,7 @@ class MedicalController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
+              'active' => 'dashboard',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'searchModel' => $searchModel,
@@ -91,12 +94,11 @@ class MedicalController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-       $q = trim($searchModel->q ?? '');
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'asset_name', $q],
-            ['like', 'code', $q],
+            ['like', 'asset_name',$searchModel->q],
+            ['like', 'code',$searchModel->q],
         ]);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
@@ -150,6 +152,7 @@ class MedicalController extends \yii\web\Controller
         ]);
 
         return $this->render('@app/modules/helpdesk2/views/service/list_asset', [
+              'active' => 'asset',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'listAssetType' => $listAssetType,
@@ -157,4 +160,19 @@ class MedicalController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+        public function actionView($id)
+    {
+        $model = Asset::findOne($id);
+        $searchModel = new AssetSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
+
+        return $this->render('@app/modules/am/views/asset/view', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+    
 }

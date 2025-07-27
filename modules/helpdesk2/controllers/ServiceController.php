@@ -3,20 +3,15 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
-use DateTime;
 use yii\web\Response;
-use yii\db\Expression;
-use yii\web\Controller;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
+use app\modules\am\models\AssetSearch;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
-use app\modules\helpdesk2\models\HelpdeskSearch;
+
 
 class ServiceController extends \yii\web\Controller
 {
@@ -169,7 +164,6 @@ public function UpdateAssetStatus($model)
         
     }
 
-    
     protected function findModel($id)
     {
         if (($model = Helpdesk::findOne(['id' => $id])) !== null) {

@@ -18,7 +18,6 @@ use iamsaint\datetimepicker\Datetimepicker;
     width: 500px !important;
 }
 </style>
-
 <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',

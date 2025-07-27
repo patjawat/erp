@@ -7,6 +7,7 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\modules\am\models\Asset;
 use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
@@ -22,15 +23,15 @@ class GeneralController extends \yii\web\Controller
             'repair_group' => 1,
             'date_filter' => 'this_month',
         ]);
-        $q = trim($searchModel->q ?? '');
+
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $q],
-            ['like', 'title', $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
+            ['like', 'repair_number',$searchModel->q],
+            ['like', 'title',$searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"),$searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"),$searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         if ($searchModel->date_filter) {
@@ -44,6 +45,7 @@ class GeneralController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
+            'active' => 'index',
             'title' => 'ศูนย์งานซ่อมบำรุง',
             'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
             'searchModel' => $searchModel,
@@ -58,21 +60,22 @@ class GeneralController extends \yii\web\Controller
             'repair_group' => 1,
             'auth_item' => 'technician'
         ]);
-        $q = trim($searchModel->q ?? '');
+        
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
+            ['like', 'repair_number',$searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"),$searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"),$searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"),$searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
+             'active' => 'dashboard',
             'title' => 'ศูนย์งานซ่อมบำรุง',
             'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
             'searchModel' => $searchModel,
@@ -98,8 +101,8 @@ class GeneralController extends \yii\web\Controller
         $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'asset_name', $q],
-            ['like', 'code', $q],
+            ['like', 'asset_name',$searchModel->q],
+            ['like', 'code',$searchModel->q],
         ]);
 
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
@@ -138,8 +141,8 @@ class GeneralController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $q],
+            ['LIKE', 'asset.code',$searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"),$searchModel->q],
         ]);
 
         // ค้นหาตามอายุ
@@ -166,4 +169,19 @@ class GeneralController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+        public function actionView($id)
+    {
+        $model = Asset::findOne($id);
+        $searchModel = new AssetSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
+
+        return $this->render('@app/modules/am/views/asset/view', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+    
 }

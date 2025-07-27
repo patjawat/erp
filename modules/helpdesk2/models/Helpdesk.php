@@ -3,9 +3,7 @@
 namespace app\modules\helpdesk2\models;
 
 use Yii;
-use yii\db\Query;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -57,7 +55,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-      public $q;
+    public $q;
     public $asset_name;
     public $date_between;
     public $urgency;
@@ -78,7 +76,7 @@ class Helpdesk extends \yii\db\ActiveRecord
         return [
             [['repair_number', 'device_type_id', 'asset_number', 'request_repair_date', 'repair_result', 'repair_type', 'emp_id', 'ref', 'code', 'receive_date', 'date_start', 'date_end', 'name', 'title', 'data_json', 'status', 'rating', 'move_out', 'repair_group', 'thai_year', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'default', 'value' => null],
             [['category_id'], 'default', 'value' => 0],
-            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
             [['category_id', 'emp_id', 'move_out', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['repair_number', 'device_type_id', 'asset_number', 'repair_result', 'repair_type'], 'string', 'max' => 100],
             [['ref', 'code', 'name', 'title', 'status', 'rating', 'repair_group'], 'string', 'max' => 255],
@@ -165,20 +163,20 @@ class Helpdesk extends \yii\db\ActiveRecord
 
 
     public static function getRepairTypeList()
-{
-    return [
-        'internal' => 'ซ่อมภายใน',
-        'external' => 'ซ่อมภายนอก',
-    ];
-}
-//ผลการซ่อม
-public static function getRepairResultList()
-{
-    return [
-        'Y' => 'ซ่อมได้',
-        'N' => 'ซ่อมไม่ได้',
-    ];
-}
+    {
+        return [
+            'internal' => 'ซ่อมภายใน',
+            'external' => 'ซ่อมภายนอก',
+        ];
+    }
+    //ผลการซ่อม
+    public static function getRepairResultList()
+    {
+        return [
+            'Y' => 'ซ่อมได้',
+            'N' => 'ซ่อมไม่ได้',
+        ];
+    }
 
 
     //แสดงรูปภาพประกอบ
@@ -267,46 +265,46 @@ public static function getRepairResultList()
         return "$prefix-$yearMonth-$departmentCode-$nextNumber";
     }
 
-   public function ResetHelpdeskGenNumber()
-{
-    try {
-    
-    switch ($this->repair_group) {
-        case '1':
-            $depCode = 'GEN';
-            break;
-        case '2':
-            $depCode = 'IT';
-            break;
-        case '3':
-            $depCode = 'MED';
-            break;
-        default:
-            $depCode = '';
-            break;
+    public function ResetHelpdeskGenNumber()
+    {
+        try {
+
+            switch ($this->repair_group) {
+                case '1':
+                    $depCode = 'GEN';
+                    break;
+                case '2':
+                    $depCode = 'IT';
+                    break;
+                case '3':
+                    $depCode = 'MED';
+                    break;
+                default:
+                    $depCode = '';
+                    break;
+            }
+
+            $prefix = 'REP';
+
+            // ใช้ created_at แทนวันที่ปัจจุบัน
+            $createdAt = new \DateTime($this->created_at); // เช่น 2025-02-02 11:12:00
+            $buddhistYear = (int)$createdAt->format('y') + 43; // เช่น ปี ค.ศ. 25 -> 25+43 = 68 (พ.ศ. เฉพาะหลักท้าย)
+            $yearMonth = $buddhistYear . $createdAt->format('m'); // 6802
+
+            $departmentCode = $depCode;
+
+            $count = self::find()
+                ->where(['like', 'repair_number', "$prefix-$yearMonth-$departmentCode"])
+                ->count();
+
+            $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+
+            return "$prefix-$yearMonth-$departmentCode-$nextNumber";
+            //code...
+        } catch (\Throwable $th) {
+            return '';
+        }
     }
-
-    $prefix = 'REP';
-
-    // ใช้ created_at แทนวันที่ปัจจุบัน
-    $createdAt = new \DateTime($this->created_at); // เช่น 2025-02-02 11:12:00
-    $buddhistYear = (int)$createdAt->format('y') + 43; // เช่น ปี ค.ศ. 25 -> 25+43 = 68 (พ.ศ. เฉพาะหลักท้าย)
-    $yearMonth = $buddhistYear . $createdAt->format('m'); // 6802
-
-    $departmentCode = $depCode;
-
-    $count = self::find()
-        ->where(['like', 'repair_number', "$prefix-$yearMonth-$departmentCode"])
-        ->count();
-
-    $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-
-    return "$prefix-$yearMonth-$departmentCode-$nextNumber";
-        //code...
-    } catch (\Throwable $th) {
-       return '';
-    }
-}
 
 
     // ผู้แจ่งซ่อม
@@ -648,12 +646,12 @@ public static function getRepairResultList()
     }
 
     //แสดงผลวันที่รับเรื่อง
-        public function viewReceiveDate()
+    public function viewReceiveDate()
     {
         return \Yii::$app->thaiFormatter->asDate($this->receive_date, 'long');
     }
 
-    
+
 
     public function viewCreateDateTime()
     {
@@ -679,20 +677,20 @@ public static function getRepairResultList()
             // throw $th;
         }
     }
-//แสดง timeline สถานะงานซ่อมล่าสุด
-   public function viewServiceRecordInfo()
-{
-    try {
-        $model = HelpdeskDetail::find()
-            ->where(['helpdesk_id' => $this->id])
-            ->orderBy(['created_at' => SORT_DESC])
-            ->one();
+    //แสดง timeline สถานะงานซ่อมล่าสุด
+    public function viewServiceRecordInfo()
+    {
+        try {
+            $model = HelpdeskDetail::find()
+                ->where(['helpdesk_id' => $this->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->one();
 
-        if ($model === null) {
-            return '';
-        }
+            if ($model === null) {
+                return '';
+            }
 
-        return '<div class="alert alert-info">
+            return '<div class="alert alert-info">
                 <div class="d-flex">
                     <div class="me-3">
                         <i class="bi bi-info-circle-fill fs-3"></i>
@@ -703,10 +701,10 @@ public static function getRepairResultList()
                     </div>
                 </div>
             </div>';
-    } catch (\Throwable $th) {
-        return '';
+        } catch (\Throwable $th) {
+            return '';
+        }
     }
-}
 
     // แสดงวันที่แล้วสร็จ
     // public function viewEndJob()
@@ -838,5 +836,4 @@ FROM (
 
         return $query;
     }
-    
 }
