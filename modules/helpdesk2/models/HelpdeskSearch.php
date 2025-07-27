@@ -18,7 +18,7 @@ class HelpdeskSearch extends Helpdesk
     {
         return [
             [['id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item','emp_id','date_filter','date_filter','device_type_id'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item','emp_id','date_filter','date_filter','device_type_id','repair_number'], 'safe'],
         ];
     }
 
@@ -72,6 +72,7 @@ class HelpdeskSearch extends Helpdesk
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'repair_number', $this->repair_number])
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])

@@ -22,14 +22,15 @@ class GeneralController extends \yii\web\Controller
             'repair_group' => 1,
             'date_filter' => 'this_month',
         ]);
+        $q = trim($searchModel->q ?? '');
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $searchModel->q],
-            ['like', 'title', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ['like', 'repair_number', $q],
+            ['like', 'title', $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         if ($searchModel->date_filter) {
@@ -57,14 +58,15 @@ class GeneralController extends \yii\web\Controller
             'repair_group' => 1,
             'auth_item' => 'technician'
         ]);
+        $q = trim($searchModel->q ?? '');
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ['like', 'repair_number', $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
@@ -136,8 +138,8 @@ class GeneralController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $searchModel->q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+            ['LIKE', 'asset.code', $q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $q],
         ]);
 
         // ค้นหาตามอายุ
