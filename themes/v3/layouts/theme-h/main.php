@@ -37,6 +37,9 @@ $moduleId = Yii::$app->controller->module->id;
     <?php $this->head() ?>
 </head>
 <style>
+body{
+    font-size: 0.9rem !important;
+}
 #nprogress .bar {
     background: linear-gradient(90deg, #fce9af 0%, #f7c873 100%) !important;
 }

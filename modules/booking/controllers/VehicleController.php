@@ -65,11 +65,9 @@ class VehicleController extends Controller
 
     public function actionIndex()
     {
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
+            'date_filter' => 'this_month',
             'status' =>   'Pending',
             'vehicle_type_id' => 'official'
         ]);

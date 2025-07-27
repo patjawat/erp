@@ -189,9 +189,10 @@ class Meeting extends \yii\db\ActiveRecord
     {
         try {
             $emp = $this->employee;
-        
+        // $createDate = $this->viewCreated()['full'] ?? '-';
+        $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
             return [
-                'avatar' => $emp->getAvatar(false,$emp->departmentName()),
+                'avatar' => $emp->getAvatar(false,$createDate),
                 'fullname' => $emp->fullname,
                 'department' => $emp->departmentName(),
             ];
@@ -257,7 +258,7 @@ class Meeting extends \yii\db\ActiveRecord
     //นับจำนวนการจองห้องประชุมตามสถานะ
     public function countStatus($status = null)
     {
-        $count = Meeting::find()
+        $count = self::find()
             ->andFilterwhere(['status' => $status])
             ->count();
         return $count;
@@ -267,7 +268,7 @@ class Meeting extends \yii\db\ActiveRecord
     public function upComing()
     {
         $date = date('Y-m-d');
-        $count = Meeting::find()
+        $count = self::find()
             ->andFilterwhere(['between', 'date_start', new Expression('CURDATE()'), new Expression('DATE_ADD(CURDATE(), INTERVAL 7 DAY)')])
             ->andFilterwhere(['status' => 'Pass'])
             ->count();
@@ -279,10 +280,10 @@ class Meeting extends \yii\db\ActiveRecord
     public static function getUsageStatistics()
 {
     // นับจำนวนทั้งหมดของ meeting
-$totalAll = Meeting::find()->count();
+$totalAll = self::find()->count();
 
 // เขียน ActiveRecord query
-$data = Meeting::find()
+$data = self::find()
     ->alias('m')
     ->select([
         new Expression("IFNULL(r.title, 'ไม่ระบุห้อง') AS title"),

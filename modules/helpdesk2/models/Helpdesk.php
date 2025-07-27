@@ -10,6 +10,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
@@ -308,20 +309,49 @@ class Helpdesk extends \yii\db\ActiveRecord
 
 
     // ผู้แจ่งซ่อม
-    public function getUserReq($msg = null)
+ public function getUserReq()
     {
-        return UserHelper::getMe($msg);
-        // try {
-        //     $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+        try {
+            $emp = $this->emp;
+        $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+            return [
+                'avatar' => $emp->getAvatar(false,$createDate),
+                'fullname' => $emp->fullname,
+                'department' => $emp->departmentName(),
+            ];
+        } catch (\Throwable $th) {
+        
+            return [
+                'avatar' => '',
+                'fullname' => '',
+                'department' => '',
+            ];
+        }
 
-        //     return [
-        //         'avatar' => $employee->getAvatar(false),
-        //         'department' => $employee->departmentName()
-        //     ];
-        // } catch (\Throwable $th) {
-        //     return null;
-        // }
     }
+
+        //แสดงวันเวลาที่แสดง
+    public function viewCreated()
+    {
+        try {
+        $datetime = explode(' ',$this->created_at);
+        $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+        $time = $datetime[1].'.น';
+        return [
+            'full' => $date.' '.$time,
+            'date' => $date,
+            'time' => $time
+        ];
+
+        } catch (\Throwable $th) {
+           return [
+            'full' => '',
+            'date' =>'',
+            'time' => ''
+        ];
+        }
+    }
+
 
     // ประเภทของงานซ่อม
     public function RepairType(): array

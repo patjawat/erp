@@ -9,7 +9,7 @@ use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
-/** @var app\modules\lm\models\LeaveSearch $model */
+/** @var app\modules\lm\models\meetingsearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
@@ -108,15 +108,15 @@ use app\modules\hr\models\Organization;
 
 $js = <<< JS
 
-    thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+    thaiDatepicker('#meetingsearch-date_start,#meetingsearch-date_end')
 
-    $("#leavesearch-date_start").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#leavesearch-date_end").on('change', function() {
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
+    $("#meetingsearch-date_start").on('change', function() {
+            $('#meetingsearch-thai_year').val(null).trigger('change');
+            $('#meetingsearch-date_filter').val(null).trigger('change');
+        });
+        $("#meetingsearch-date_end").on('change', function() {
+            $('#meetingsearch-thai_year').val(null).trigger('change');
+            $('#meetingsearch-date_filter').val(null).trigger('change');
     });
 
 JS;

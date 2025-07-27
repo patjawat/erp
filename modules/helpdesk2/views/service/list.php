@@ -50,31 +50,31 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
     </div>
 
     <div class="card-body">
-            <table class="table table-hover">
+            <table class="table table-hover table-striped">
                 <thead>
                     <tr>
-                        <th scope="col" class="text-start fw-semibold">รหัสงานซ่อม</th>
+                        <th scope="col" class="text-start fw-semibold" style="width: 161px;">รหัสงานซ่อม</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
                         <th scope="col">ผู้แจ้ง</th>
-                        <th scope="col">วันที่แจ้ง</th>
-                        <th scope="col">ความเร่งด่วน</th>
-                        <th scope="col">สถานะ</th>
+                        <th scope="col"  style="width: 250px;">หน่วยงาน</th>
+                        <th scope="col" style="width: 100px;">ความเร่งด่วน</th>
+                        <th scope="col" class="text-center"  style="width: 150px;">สถานะ</th>
                         <th scope="col">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="align-middle table-group-divider">
                      <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
                        <td class="text-start fw-semibold"><?php echo $item->repair_number?></td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
                         <td><?=$item->data_json['location']?></td>
-                        <td><?=$item->emp->getInfo()['avatar']?></td>
-                        <td><?=$item->viewCreateDateTime()?></td>
+                        <td><?=$item->getUserReq()['avatar']?></td>
+                        <td><?=$item->getUserReq()['department']?></td>
                         <td><?=$item->viewUrgent()['view']?></td>
-                        <td><?=$item->repairStatus?->title ?? '-'?></td>
+                        <td class="text-center"><?=$item->repairStatus?->title ?? '-'?></td>
                         <td>
                             <?php if($item->status == 'pending'):?>
                             <?=Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับงานซ่อม',['/helpdesk/service/receive','id' => $item->id],['class' => 'receive-order']);?>
