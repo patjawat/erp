@@ -41,6 +41,11 @@ body {
   font-style: normal;
 }
 
+  .calendar-bg-primary{
+    background-color: var(--bg-primary);
+    color: '#fffff';
+  }
+
 
 .btn {
   font-family: var(--bs-header-font-family);

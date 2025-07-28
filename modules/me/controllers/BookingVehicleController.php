@@ -122,12 +122,11 @@ class BookingVehicleController extends Controller
                 'source' => 'vehicle',
                 'extendedProps' => [
                     'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
-                    'code' => $item->code
+                    'code' => $item->code,
+                    'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
                 ],
                 'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
                 'description' => 'description for All Day Event',
-                'textColor' => 'black',
-                // 'backgroundColor' => '#eee',
             ];
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Html;
 use kartik\widgets\Select2;
@@ -16,13 +17,15 @@ use app\components\DateFilterHelper;
     'options' => [
         'data-pjax' => 1
     ],
-      'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
 ]); ?>
-<?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])?>
+<?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])
+?>
 
 <div class="row">
     <div class="col-lg-3 col-md-3 col-sm-12">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+
+        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา'])->label(false); ?>
     </div>
 
     <div class="col-lg-2 col-md-2 col-sm-12">
@@ -37,10 +40,10 @@ use app\components\DateFilterHelper;
 
 
     <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
     </div>
 
     <div class="col-lg-2 col-md-2 col-sm-12">
@@ -71,23 +74,23 @@ use app\components\DateFilterHelper;
 
 
     <div class="collapse mt-3" id="collapseFilter">
-        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    // $(this).submit()
-                }',
-                'select2:unselecting' => 'function() {
-                    // $(this).submit()
-                }',
-            ]
-        ])->label(false) ?>
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-12">
+                <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+            </div>
+            <div class="col-lg-3 col-md-3 col-sm-12">
+
+                <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                    'data' => $model->ListThaiYear(),
+                    'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false) ?>
+            </div>
+        </div>
     </div>
-    
+
     <?php ActiveForm::end(); ?>
 </div>
 
@@ -97,11 +100,11 @@ $js = <<< JS
     thaiDatepicker('#vehiclesearch-date_start,#vehiclesearch-date_end')
     $("#vehiclesearch-date_start").on('change', function() {
             $('#vehiclesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#vehiclesearch-date_end").on('change', function() {
+            $('#vehiclesearch-date_filter').val(null).trigger('change');
+        });
+        $("#vehiclesearch-date_end").on('change', function() {
             $('#vehiclesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
+            $('#vehiclesearch-date_filter').val(null).trigger('change');
     });
 
 

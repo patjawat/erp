@@ -288,7 +288,10 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewTime()
     {
-        return $this->time_start . '-' . $this->time_end . ' น.';
+        $timeStart = substr($this->time_start, 0, 5);
+        $timeEnd = substr($this->time_end, 0, 5);
+        $fulltime = $timeStart.' - '.$timeEnd;
+        return $fulltime . ' น.';
     }
 
     public function showStartTime()

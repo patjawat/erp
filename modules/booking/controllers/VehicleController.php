@@ -68,7 +68,6 @@ class VehicleController extends Controller
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
-            'status' =>   'Pending',
             'vehicle_type_id' => 'official'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -76,6 +75,7 @@ class VehicleController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
+            ['like', 'reason', $searchModel->q],
         ]);
 
         if ($searchModel->date_filter) {
@@ -182,37 +182,34 @@ class VehicleController extends Controller
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $bookings = Vehicle::find()
+            // ->andWhere(['vehicle_type_id' =>  'official'])
             ->andWhere(['<>', 'status', 'Cancel'])
             ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
             ->orderBy(['id' => SORT_DESC])
             ->all();
         $data = [];
 
-            foreach ($bookings as $item) {
-                $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-                $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
-                $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
-                $title = 'ขอใช้' . $item->carType?->title . ' ไป' . ($item->locationOrg?->title ?? '-');
-                $data[] = [
-                    'id'               => $item->id,
-                    'title'            => $item->reason,
-                    'start'            => $dateStart,
-                    'end'            => $dateEnd,
-                    // 'display' => 'auto',
-                    'allDay' => false,
-                    'source' => 'vehicle',
-                    'extendedProps' => [
-                        'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
-                        'code' => $item->code
-                    ],
-                    'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
-                    'description' => 'description for All Day Event',
-                    'textColor' => 'black',
-                    // 'backgroundColor' => '#eee',
-                ];
-            }
-
+        foreach ($bookings as $item) {
+            $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
+            $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+            $data[] = [
+                'id'               => $item->id,
+                'title'            => $item->reason,
+                'start'            => $dateStart,
+                'end'            => $dateEnd,
+                // 'display' => 'auto',
+                'allDay' => false,
+                'source' => 'vehicle',
+                'extendedProps' => [
+                    'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
+                    'code' => $item->code,
+                    'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
+                ],
+                'description' => 'description for All Day Event',
+            ];
+        }
         return  $data;
     }
 
@@ -532,39 +529,39 @@ class VehicleController extends Controller
             $model->save(false);
 
             $info = SiteHelper::getInfo();
-            
 
-                $modelData = [
-                    'director' => $info['company_name'],
-                    'fullname' => $model->employee?->fullname,
-                    'fullname_' => $model->employee?->fullname,
-                    'date' => ThaiDateHelper::formatThaiDate($model->date_start),
-                    'position' => $model->employee?->positionName(),
-                    'department' => $model->employee?->departmentName(),
-                    'location' => $model->locationOrg?->title ?? '-',
-                    'passenger' => '2',
-                    'phone' => $model->employee?->phone ?? '-',
-                    'reason' => $model->reason,
-                    'date_start' => ThaiDateHelper::formatThaiDate($model->date_start),
-                    'date_end' => ThaiDateHelper::formatThaiDate($model->date_end),
-                    'time_start' => $model->time_start,
-                    'time_end' => $model->time_start,
-                    'vehicle_type' => $model->vehicle_type_id,
-                    'license_plate' => $model->license_plate,
-                    'driver_name' => $model->driver?->fullname ?? '-',
-                    'driver_name_' => $model->driver?->fullname ?? '-',
-                    //หัวหน้างาน
-                    'leader_name' => $model->leader?->getInfo()['fullname'],
-                    'leader_signature' => $model->leader?->getInfo()['signature'],
 
-                    'driver_leader_name' => 'นายหัวหน้า พขร.',
-                    'mileage_start' => '10000',
-                    'mileage_end' => '10100',
-                    'emp_signature' => $model->userRequest()['signature'],
-                    'driver_signature' => $model->driver?->getInfo()['signature'],
-                    'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
+            $modelData = [
+                'director' => $info['company_name'],
+                'fullname' => $model->employee?->fullname,
+                'fullname_' => $model->employee?->fullname,
+                'date' => ThaiDateHelper::formatThaiDate($model->date_start),
+                'position' => $model->employee?->positionName(),
+                'department' => $model->employee?->departmentName(),
+                'location' => $model->locationOrg?->title ?? '-',
+                'passenger' => '2',
+                'phone' => $model->employee?->phone ?? '-',
+                'reason' => $model->reason,
+                'date_start' => ThaiDateHelper::formatThaiDate($model->date_start),
+                'date_end' => ThaiDateHelper::formatThaiDate($model->date_end),
+                'time_start' => $model->time_start,
+                'time_end' => $model->time_start,
+                'vehicle_type' => $model->vehicle_type_id,
+                'license_plate' => $model->license_plate,
+                'driver_name' => $model->driver?->fullname ?? '-',
+                'driver_name_' => $model->driver?->fullname ?? '-',
+                //หัวหน้างาน
+                'leader_name' => $model->leader?->getInfo()['fullname'],
+                'leader_signature' => $model->leader?->getInfo()['signature'],
 
-                ];
+                'driver_leader_name' => 'นายหัวหน้า พขร.',
+                'mileage_start' => '10000',
+                'mileage_end' => '10100',
+                'emp_signature' => $model->userRequest()['signature'],
+                'driver_signature' => $model->driver?->getInfo()['signature'],
+                'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
+
+            ];
             if ($model) {
                 $content = $this->renderAjax('print', [
                     'model' => $model,

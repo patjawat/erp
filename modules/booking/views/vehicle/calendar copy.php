@@ -4,57 +4,96 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use app\models\Categorise;
-use app\modules\booking\models\Vehicle;
 
 
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
-$this->title = 'ระบบขอใช้ยานพาหนะ/ปฏิทินการใช้รถ';
+$this->title = 'ปฏิทินการใช้รถ';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar-day fs-1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-calendar fx-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
 ปฏิทินการใช้รถยนต์
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?=$this->render('menu')?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('menu',['active' => 'calendar'])?>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/me//menu',['active' => 'vehicle']) ?>
-<?php $this->endBlock(); ?>
-
-
-
 <style>
+    /* ปรับสีพื้นหลังของ header */
+.fc .fc-toolbar-title {
+    /* color: #007bff;
+    font-size: 20px; */
+}
+
+/* ปรับสีปุ่มใน header */
+.fc-button {
+    background-color: #28a745; /* สีเขียว */
+    color: white;
+}
+
+.fc-button:hover {
+    background-color: #218838; /* สีเขียวเข้มเมื่อ hover */
+}
+
+/* ปรับสีของ event */
+.fc-event {
+    /* background-color: #f0f8ff;
+    color: black;  */
+}
+
+/* ปรับขนาดฟอนต์ในปฏิทิน */
+.fc-daygrid-day-number {
+    font-size: 14px;
+}
+/* ปรับขนาด event ให้แสดงเต็มพื้นที่แนวนอน */
+.fc-event {
    
+    white-space: normal; /* เพื่อให้ข้อความแสดงได้เต็มบรรทัด */
+    text-align: center; /* จัดข้อความให้อยู่ตรงกลาง */
+    font-size: 12px; /* ปรับขนาดฟอนต์ให้เหมาะสม */
+}
+
+.fc-daygrid-event-harness{
+    padding-bottom: 8px;
+}
+  .fc-popover {
+    max-width: 500px;
+  }
+
+  .fc-popover .fc-popover-body {
+    max-height: 550px;
+    overflow-y: auto;
+  }
+
+  /* เพิ่มความสวยงามเล็กน้อย */
+  .fc-popover .fc-event {
+    white-space: normal;
+  }
 </style>
+
+
 <div class="card">
     <div class="card-body">
+    <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
+    <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
+</div>
         <div id="calendar"></div>
-    </div>
-    <div class="card-footer">
-       <?php 
-       $listStatus = Categorise::find()
-            ->where(['name' => 'vehicle_status'])
-            ->all();
-       foreach ($listStatus as $statusItem) {
-        $status = new Vehicle;
-           echo $status->getStatus($statusItem->code)['view'];
-       }
-       ?>
     </div>
 </div>
 
 <?php
-$url = Url::to(['/me/booking-vehicle/']);
+$url = Url::to(['/booking/vehicle/']);
 // $eventUrl = Url::to(['/booking/vehicle/events']);  // Replace with your actual endpoint URL
 $js = <<<JS
         \$(document).ready(function() {
@@ -96,6 +135,20 @@ $js = <<<JS
                 editable: true,
                 selectable: true,
                 droppable: true,
+                moreLinkClick: 'popover',
+                dayMaxEvents: 5, // จำกัดให้แสดงสูงสุด 3 event ต่อวัน
+                    moreLinkContent: function(args) {
+                        return '+' + args.num + ' more';
+                    },
+                    loading: function(isLoading) {
+                        if (isLoading) {
+                            // กำลังโหลดข้อมูลจาก AJAX
+                            $('#calendar-loading').show();  // แสดง loading spinner
+                        } else {
+                            // โหลดเสร็จแล้ว
+                            $('#calendar-loading').hide();
+                        }
+                    },
                 events: async function(fetchInfo, successCallback, failureCallback) {
                     await $.ajax({
                         url: '$url'+'/events',
@@ -114,10 +167,8 @@ $js = <<<JS
                     });
                 },
                 eventDidMount: function(info) {
-                    if (info.event.extendedProps.color) {
-                        info.el.style.backgroundColor = info.event.extendedProps.color;
-                    }
-                    },
+                            info.el.style.borderLeft = '5px solid red';
+                        },
                 eventContent: function(arg) {
                         // ดึงข้อมูลจาก extendedProps
                         const title = arg.event.extendedProps.title || '';
@@ -125,35 +176,20 @@ $js = <<<JS
                         const container = document.createElement('div');
                         container.style.textAlign = 'left';
                         // ใช้ innerHTML ได้ตามใจ
-                        container.innerHTML = `<div class="mb-0 px-2 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
+                        container.innerHTML = `<div class="mb-0 p-1 d-flex flex-column justify-conten-start gap-1">\${title}</div>`;
                         return { domNodes: [container] };
                     },
+                //     eventDidMount: function(info) {
+                //         info.el.addEventListener('dblclick', function() {
+                //         document.getElementById('modalEventContent').innerHTML =
+                //             `<strong>Title:</strong> \${info.event.title}<br>
+                //             <strong>Description:</strong> \${info.event.extendedProps.description}`;
+                //         $('#main-modal').modal('show');
+                //         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
+                //         $(".modal-dialog").addClass('modal-lg');
+                //         });
+                // },
                 select: function(info) {
-                        const dateStart = info.startStr;
-                        // แปลง dateEnd เป็น Date แล้วลบ 1 วัน
-                            const endDateObj = new Date(info.endStr);
-                            endDateObj.setDate(endDateObj.getDate() - 1);
-                            // แปลงกลับเป็นรูปแบบ YYYY-MM-DD
-                            const dateEnd = endDateObj.toISOString().split('T')[0];
-                            beforLoadModal();
-                                $.ajax({
-                                    type: "get",
-                                    url: '$url'+'/create',
-                                    data: {
-                                        date_start: dateStart,
-                                        date_end: dateEnd,
-                                        title:'ขอใช้รถยนต์',
-                                    },
-                                    dataType: "json",
-                                    success: function (res) {
-                                        $("#main-modal").modal("show");
-                                        $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                                        $(".modal-dialog").addClass("modal-xl");
-                                            $("#main-modal-label").html(res.title);
-                                            $(".modal-body").html(res.content);
-                                            $(".modal-footer").html(res.footer);
-                                    }
-                                });
                     },
                 drop: function(info) {
                     console.log('drop: ' + info.dateStr);
@@ -175,9 +211,8 @@ $js = <<<JS
                     console.log('New End: ' + formatDate(info.event.end));
                 },
                   
-                eventClick: function(info) {
+               eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
-                        // let viewHtml = info.event.extendedProps.view;
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
                        var code = info.event.extendedProps.code || '';
                         var url = '$url/'+'view?id=' + info.event.id;
@@ -188,7 +223,7 @@ $js = <<<JS
                                 dataType: "json",
                                 success: function (res) {
                                       \$('#main-modal').modal('show')
-                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">'+code+'</span></label>');
+                                        \$("#main-modal-label").html('<label class="form-label">ขอใช้ยานพาหนะเลขที่ : <span class="badge rounded-pill bg-primary text-white fw-bold">CAR250703-028            </span></label>');
                                         \$(".modal-body").html(res.content);
                                         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                                         $(".modal-dialog").addClass("modal-lg");
@@ -198,8 +233,6 @@ $js = <<<JS
                             
                     },
             });
-            // render the calendar});
-
             calendar.render();
         });
     JS;
