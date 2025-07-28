@@ -101,6 +101,7 @@ class BookingVehicleController extends Controller
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $bookings = Vehicle::find()
+         ->andWhere(['<>', 'status', 'Cancel'])
             ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
             ->orderBy(['id' => SORT_DESC])
             ->all();
