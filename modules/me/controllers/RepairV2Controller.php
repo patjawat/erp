@@ -6,9 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
-use app\components\LineMsg;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
@@ -113,7 +111,7 @@ class RepairV2Controller extends Controller
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'emp_id' => $me->id,
             'asset_number' => $this->request->get('asset_number')
-         ]);
+        ]);
         if ($this->request->isPost) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load($this->request->post())) {
@@ -140,9 +138,9 @@ class RepairV2Controller extends Controller
                 }
                 $model->repair_number = $model->HelpdeskGenNumber($depCode);;
                 if ($model->save()) {
-                if($model->asset_number !==''){
-                    $this->changAssetStatus($model->asset_number);
-                }
+                    if ($model->asset_number !== '') {
+                        $this->changAssetStatus($model->asset_number);
+                    }
                     //ส่งการแจ้งเตือน
                     $this->sendMsg($model);
                     return [
@@ -175,28 +173,45 @@ class RepairV2Controller extends Controller
     {
         // template message
         $emp = Yii::$app->employee::GetEmployee();
-        $message = 'แจ้งซ่อม ' . $emp->departmentName() . "\nสถานที่อื่นๆ : " . $model->data_json['location'] . (isset($checkAssetType['title']) ? "\nประเภท :" . $checkAssetType['title'] . "\nเลขคุภัณฑ์ : " . $model->asset_number : '') . "\nอาการ : " . $model->title . "\nความเร่งด่วน : " . $model->UrgencyName() . "\nเพิ่มเติม  : " . $model->data_json['note'] . "\nเบอร์โทร  : " . $model->data_json['note'] . "\nผู้ร้องขอ  : " . $emp->fullname;
 
-        // try {
-            if($model->repair_group == 1){
+
+
+        try {
+        if ($model->repair_group == 1) {
             $sendTo = 'repair';
-            } else if($model->repair_group == 2){
+            $sentName = 'งานซ่อมบำรุง';
+        } else if ($model->repair_group == 2) {
             $sendTo = 'computer_service';
-            } else if($model->repair_group == 3){
+            $sentName = 'งานซ่อมคอมพิวเตอร์';
+        } else if ($model->repair_group == 3) {
             $sendTo = 'medical_service';
-            } else {
+            $sentName = 'งานซ่อมครุภัณฑ์การแพทย์';
+        } else {
             $sendTo = '';
-            }
-            $response = Yii::$app->telegram->sendMessage($sendTo, $message, [
+            $sentName = '';
+        }
+
+        $message = "🔧 รหัสซ่อม : " . $model->repair_number . "\n";
+        $message .= "📂 ประเภทงาน : " . ($model->deviceType->title ?? '-') . "\n";
+        $message .= "🛠️ รหัสครุภัณฑ์ : " . ($model->asset_number ?: '-') . "\n";
+        $message .= "📝 รายละเอียด : " . $model->title . "\n";
+        $message .= "📍 สถานที่ : " . $model->data_json['location'] . "\n";
+        $message .= "⚠️ ความเร่งด่วน : " . $model->viewUrgent()['title'] . "\n";
+        $message .= "👤 ผู้แจ้ง : " . $model->emp->fullname . "\n";
+        $message .= "📞 โทร : " . $model->data_json['phone'] . "\n\n";
+        $message .= "📌 แจ้งซ่อม ". $sentName."\n\n";
+
+        $response = Yii::$app->telegram->sendMessage($sendTo, $message, [
             'parse_mode' => 'HTML',
             'disable_web_page_preview' => true,
-            ]);
-        // } catch (\Exception $e) {
-        // }
+        ]);
+        } catch (\Exception $e) {
+
+        }
     }
 
 
-    
+
     protected function changAssetStatus($code)
     {
         $model = Asset::findOne(['code' => $code]);
@@ -303,20 +318,20 @@ class RepairV2Controller extends Controller
         return $this->GroupMach($repairGroup->asset_type_id);
     }
 
-        public function GroupMach($group)
-        {
-            // กลุ่ม
-            $group2 = ['COM'];       // in
-            $group3 = ['MED'];       // in
+    public function GroupMach($group)
+    {
+        // กลุ่ม
+        $group2 = ['COM'];       // in
+        $group3 = ['MED'];       // in
 
-            if (in_array($group, $group2)) {
-                return 2;
-            } elseif (in_array($group, $group3)) {
-                return 2;
-            } else {
-                return 1; // ไม่มีในกลุ่มใด
-            }
+        if (in_array($group, $group2)) {
+            return 2;
+        } elseif (in_array($group, $group3)) {
+            return 2;
+        } else {
+            return 1; // ไม่มีในกลุ่มใด
         }
+    }
 
 
     /**

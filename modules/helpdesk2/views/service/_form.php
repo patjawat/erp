@@ -61,11 +61,14 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     </div>
 
     <div class="col-12">
-        <?= $form->field($model, 'title')->textArea(['rows' => 5, 'placeholder' => 'กรุณาอธิบายปัญหาที่พบโดยละเอียด...'])->label('รายละเอียดปัญหา') ?>
+        <?= $form->field($model, 'title')->textArea(['rows' => 3, 'placeholder' => 'กรุณาอธิบายปัญหาที่พบโดยละเอียด...'])->label('รายละเอียดปัญหา') ?>
     </div>
 
     <div class="col-12 col-md-6">
         <?= $form->field($model, 'data_json[location]')->textInput(['placeholder'=>'เช่น ห้อง 301, แผนกบัญชี'])->label('สถานที่') ?>
+    </div>
+     <div class="col-12 col-md-6">
+        <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder'=>'เบอร์โทรศัพท์ติดต่อ'])->label('โทร') ?>
     </div>
 
     <div class="col-12 col-md-6">
@@ -94,7 +97,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     </div>
 
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-12">
         <?= $form->field($model, 'request_repair_date')->textInput(['placeholder' => 'เลือกวันที่ต้องการให้ซ่อม'])->label('วันที่ต้องการให้ซ่อม'); ?>
     </div>
 
@@ -112,7 +115,7 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
 
     </div>
 
-    <div class="col-12 d-flex justify-content-center mt-4">
+    <div class="col-12 d-flex justify-content-center mt-4 gap-3">
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-send me-1"></i>
             บันทึก
