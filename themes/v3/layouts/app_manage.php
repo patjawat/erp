@@ -119,13 +119,12 @@ $items = [
     
 ];
 ?>
-<div class="d-none d-lg-inline-flex ms-2 dropdown">
+<div class="d-none d-md-inline-flex ms-2 dropdown">
     <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-app-dropdown"
         aria-expanded="false" class="btn header-item notify-icon">
         <i class="fa-solid fa-bars-progress"></i>
     </button>
-    <div aria-labelledby="page-header-app-dropdown" class="dropdown-menu-lg dropdown-menu-right dropdown-menu"
-        style="width: 650px;">
+    <div aria-labelledby="page-header-app-dropdown" class="dropdown-menu-lg dropdown-menu-right dropdown-menu" style="min-width:650px">
         <div class="px-lg-2">
             <h5 class="text-center mt-3"><i class="fa-solid fa-bars-progress"></i> ระบบงาน</h5>
             <div class="container">

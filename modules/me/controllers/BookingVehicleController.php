@@ -66,7 +66,7 @@ class BookingVehicleController extends Controller
             ['like', 'reason', $searchModel->q],
             ['like', 'code', $searchModel->q],
         ]);
-        
+
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
@@ -89,7 +89,12 @@ class BookingVehicleController extends Controller
 
     public function actionCalendar()
     {
-        return $this->render('calendar', ['url' => '/me/booking-vehicle/']);
+        return $this->render('calendar');
+    }
+
+    public function actionCalendarAmbulance()
+    {
+        return $this->render('calendar_ambulance');
     }
 
 
@@ -101,24 +106,24 @@ class BookingVehicleController extends Controller
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $bookings = Vehicle::find()
-         ->andWhere(['<>', 'status', 'Cancel'])
+            ->andWhere(['<>', 'status', 'Cancel'])
             ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
             ->orderBy(['id' => SORT_DESC])
             ->all();
         $data = [];
 
-        foreach ($bookings as $item) {
-            $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-            $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+       foreach ($bookings as $item) {
+            $timeStart = $item->time_start;
+            $timeEnd = $item->time_end;
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
             $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
-            $title = 'ขอใช้' . $item->carType?->title . ' ไป' . ($item->locationOrg?->title ?? '-');
             $data[] = [
                 'id'               => $item->id,
                 'title'            => $item->reason,
                 'start'            => $dateStart,
+                'time_start' => $timeStart,
                 'end'            => $dateEnd,
-                // 'display' => 'auto',
+                'time_end' => $timeEnd,
                 'allDay' => false,
                 'source' => 'vehicle',
                 'extendedProps' => [
@@ -126,12 +131,11 @@ class BookingVehicleController extends Controller
                     'code' => $item->code,
                     'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
                 ],
-                'className' =>  'border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
-                'description' => 'description for All Day Event',
             ];
         }
-
-        return  $data;
+         return  [
+            'events' => $data
+        ];
     }
 
     /**
@@ -177,7 +181,7 @@ class BookingVehicleController extends Controller
             // 'time_start' => '08:00',
             // 'time_end' => '16:30',
         ]);
-        $model->leader_id = isset($model->Approve()['approve_1']['id']) ?$model->Approve()['approve_1']['id'] : '' ;
+        $model->leader_id = isset($model->Approve()['approve_1']['id']) ? $model->Approve()['approve_1']['id'] : '';
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {

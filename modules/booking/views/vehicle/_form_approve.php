@@ -20,11 +20,10 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 
 <?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
     <div class="mb-3">
-        <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->code?></label>
-        <p><?php echo $model->userRequest()['fullname'];?>
+        <?php echo $model->userRequest()['avatar'];?>
+        <p class="mt-3">
             ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> วันที่
             <?php echo $model->showDateRange()?> </p>
-
     </div>
 
     <div class="booking-details">
@@ -105,8 +104,6 @@ $('#booking-form').on('beforeSubmit', function (e) {
     }).then((result) => {
         if (result.isConfirmed) {
             // แสดงข้อมูลในคอนโซลเพื่อดีบัก
-            console.log('Form data:', form.serialize());
-            
             $.ajax({
                 url: form.attr('action'),
                 type: 'post',
@@ -120,12 +117,13 @@ $('#booking-form').on('beforeSubmit', function (e) {
                             text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
                             icon: "success",
                             timer: 1000
-                        }).then(() => {
-                            window.location.reload();
-                            if (response.redirect) {
-                                // window.location.href = response.redirect;
-                            } else {
-                            }
+                        }).then(async () => {
+                            await calendar.refetchEvents(); // สำหรับ FullCalendar v5+
+                             await $("#main-modal").modal("hide");
+                            // if (response.redirect) {
+                            //     window.location.reload();
+                            // } else {
+                            // }
                         });
                     } else {
                         Swal.fire({

@@ -94,7 +94,6 @@ class VehicleController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            // 'dataProviderDetail' => $dataProviderDetail,
         ]);
     }
 
@@ -113,7 +112,6 @@ class VehicleController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
-        // $dataProvider->query->andFilterWhere(['!=', 'vehicle_type_id', 'personal']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -133,34 +131,6 @@ class VehicleController extends Controller
             // throw $th;
         }
 
-        // search employee department
-        // ค้นหาคามกลุ่มโครงสร้าง
-        //  $org1 = Organization::findOne($searchModel->q_department);
-        //  // ถ้ามีกลุ่มย่อย
-        //  if (isset($org1) && $org1->lvl == 1) {
-        //      $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
-        //      FROM tree t1
-        //      JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-        //      WHERE t2.name = :name;';
-        //      $querys = Yii::$app
-        //          ->db
-        //          ->createCommand($sql)
-        //          ->bindValue(':name', $org1->name)
-        //          ->queryAll();
-        //      $arrDepartment = [];
-        //      foreach ($querys as $tree) {
-        //          $arrDepartment[] = $tree['id'];
-        //      }
-        //      if (count($arrDepartment) > 0) {
-        //          $dataProvider->query->andWhere(['in', 'employees.department', $arrDepartment]);
-        //      } else {
-        //          $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-        //      }
-        //  } else {
-        //      $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-        //  }
-
-
         return $this->render('ambulance', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -169,37 +139,41 @@ class VehicleController extends Controller
     }
 
 
-
+//ปฎิทินการขอใช้รถยนต์ราชการ
     public function actionCalendar()
     {
-        return $this->render('calendar');
+        return $this->render('calendar',['vehicle_type' => 'official']);
     }
+
 
     public function actionEvents()
     {
-        $start = $this->request->get('start');
-        $end = $this->request->get('end');
-
+        $start = Yii::$app->formatter->asDate($this->request->get('start'), 'php:Y-m-d');
+        $end =  Yii::$app->formatter->asDate($this->request->get('end'), 'php:Y-m-d');
+        $vehicleType  = $this->request->get('vehicle_type');
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
         $bookings = Vehicle::find()
-            // ->andWhere(['vehicle_type_id' =>  'official'])
+            ->andWhere(['vehicle_type_id' =>  $vehicleType])
             ->andWhere(['<>', 'status', 'Cancel'])
-            ->andWhere(['>=', 'date_start', $start])->andFilterWhere(['<=', 'date_end', $end])
-            ->orderBy(['id' => SORT_DESC])
+            ->andWhere(['>=', 'date_start', $start])->andWhere(['<', 'date_end', $end])
+            ->orderBy(['date_start' => SORT_ASC])
             ->all();
         $data = [];
 
+
         foreach ($bookings as $item) {
-            $timeStart = (preg_match('/^\d{2}:\d{2}$/', $item->time_start) && strtotime($item->time_start)) ? $item->time_start : '00:00';
-            $timeEnd = (preg_match('/^\d{2}:\d{2}$/', $item->time_end) && strtotime($item->time_end)) ? $item->time_end : '00:00';
+            $timeStart = $item->time_start;
+            $timeEnd = $item->time_end;
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
             $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
             $data[] = [
                 'id'               => $item->id,
                 'title'            => $item->reason,
                 'start'            => $dateStart,
+                'time_start' => $timeStart,
                 'end'            => $dateEnd,
-                // 'display' => 'auto',
+                'time_end' => $timeEnd,
                 'allDay' => false,
                 'source' => 'vehicle',
                 'extendedProps' => [
@@ -207,10 +181,26 @@ class VehicleController extends Controller
                     'code' => $item->code,
                     'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
                 ],
-                'description' => 'description for All Day Event',
             ];
         }
-        return  $data;
+
+        $summaryStatus = Vehicle::find()
+            ->select(['status', 'COUNT(*) AS count'])
+            ->andWhere(['vehicle_type_id' =>  $vehicleType])
+            ->andWhere(['>=', 'date_start', $start])
+            ->andWhere(['<', 'date_end', $end])
+            ->groupBy('status')
+            ->orderBy(['status' => SORT_ASC])
+            ->asArray()
+            ->all();
+
+        return  [
+            'date_start' =>  $start,
+            'date_end' => $end,
+            'vehicle_type' => $vehicleType,
+            'summary_status' => $summaryStatus,
+            'events' => $data
+        ];
     }
 
 
@@ -410,8 +400,6 @@ class VehicleController extends Controller
             $model->status = 'Pass';
             $post = Yii::$app->request->post();
 
-            // Yii::info('POST data: ' . print_r($post, true), 'booking');
-
             // ตรวจสอบและแสดงข้อมูล
             $dates = Yii::$app->request->post('dates', []);
             $cars = Yii::$app->request->post('cars', []);
@@ -444,16 +432,11 @@ class VehicleController extends Controller
             return [
                 'status' => 'success'
             ];
-            // return $this->redirect(['view', 'id' => $model->id]);
-            // } catch (\Exception $e) {
-            //     $transaction->rollBack();
-            //     Yii::$app->session->setFlash('error', $e->getMessage());
-            // }
         }
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => $this->request->get('title'),
+                'title' => 'คำขอใช้รถที่#'.$model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
                 ]),

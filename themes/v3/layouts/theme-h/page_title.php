@@ -12,7 +12,7 @@ use yii\bootstrap5\Breadcrumbs;
 
     <div class="page-title-box">
                <div class="container-fluid mt-4">
-                  <div class="d-flex justify-content-between">
+                  <div class="d-flex flex-column flex-lg-row justify-content-lg-between">
                      <div>
                         <div class="page-title"  data-aos="fade-left">
                            <h4 class="mb-1 text-primary text-primary-gradient"><?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : 'ERP';?></h4>

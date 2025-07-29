@@ -198,18 +198,49 @@ class Vehicle extends \yii\db\ActiveRecord
 
     }
     // ผู้ขอบริการ
-    public function userRequest($reqMsg = null)
+    public function userRequest()
+    {
+        // try {
+            $emp = $this->employee;
+        $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+            return [
+                'avatar' => $emp->getAvatar(false,'วันที่ขอ '.$createDate),
+                'fullname' => $emp->fullname,
+                'department' => $emp->departmentName(),
+            ];
+        // } catch (\Throwable $th) {
+        
+        //     return [
+        //         'avatar' => '',
+        //         'fullname' => '',
+        //         'department' => '',
+        //     ];
+        // }
+
+    }
+
+        //แสดงวันเวลาที่แสดง
+    public function viewCreated()
     {
         try {
-            $emp = Employees::findOne($this->emp_id);
+        $datetime = explode(' ',$this->created_at);
+        $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+        $time =  substr($datetime[1], 0, 5).'.น';
+        return [
+            'full' => $date.' '.$time,
+            'date' => $date,
+            'time' => $time
+        ];
 
-         return  $emp->getInfo();
-      
         } catch (\Throwable $th) {
-           
+           return [
+            'full' => '',
+            'date' =>'',
+            'time' => ''
+        ];
         }
-        
     }
+
 
     // กรณีแสดงช่วงวันที่
     public function showDateRange()

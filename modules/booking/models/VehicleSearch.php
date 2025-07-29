@@ -66,7 +66,7 @@ class VehicleSearch extends Vehicle
             'oil_liter' => $this->oil_liter,
             'document_id' => $this->document_id,
             'owner_id' => $this->owner_id,
-            // 'date_start' => $this->date_start,
+            'vehicle_type_id' => $this->vehicle_type_id,
             // 'date_end' => $this->date_end,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -78,7 +78,6 @@ class VehicleSearch extends Vehicle
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'vehicle_type_id', $this->vehicle_type_id])
             ->andFilterWhere(['like', 'urgent', $this->urgent])
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'location', $this->location])

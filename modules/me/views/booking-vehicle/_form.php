@@ -56,7 +56,6 @@ $resultsJs = <<<JS
 ?>
 
 
-
 <?php $form = ActiveForm::begin(['id' => 'vehicle-form']); ?>
 
 
@@ -464,9 +463,9 @@ $js = <<<JS
                             icon: "success",
                             timer: 1000,
                             showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                            // window.location.href = "/me/booking-vehicle";
+                        }).then(async () => {
+                                await calendar.refetchEvents(); // สำหรับ FullCalendar v5+
+                                await $("#main-modal").modal("hide");
                         });
                     }
                 }

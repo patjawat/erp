@@ -189,7 +189,6 @@ class Meeting extends \yii\db\ActiveRecord
     {
         try {
             $emp = $this->employee;
-        // $createDate = $this->viewCreated()['full'] ?? '-';
         $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
             return [
                 'avatar' => $emp->getAvatar(false,$createDate),

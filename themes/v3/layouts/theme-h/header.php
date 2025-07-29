@@ -46,7 +46,7 @@ use app\components\UserHelper;
             </div>
             <?=$this->render('../app_service')?>
             <?=$this->render('../app_manage')?>
-            <div class="d-none d-lg-inline-flex gap-2">
+            <div class="d-none d-md-inline-flex gap-2">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
                     <i class="fa-solid fa-expand"></i>
                 </button>
@@ -92,11 +92,11 @@ use app\components\UserHelper;
                 </div>
 
             </div>
-            <div class="d-inline-flex">
+            <!-- <div class="d-inline-flex">
                 <button type="button" id="layout" class="btn header-item notify-icon">
                     <i class="bx bx-cog bx-spin"></i>
                 </button>
-            </div>
+            </div> -->
         </div>
     </div>
 </header>
