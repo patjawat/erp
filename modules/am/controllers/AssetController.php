@@ -202,7 +202,6 @@ class AssetController extends Controller
 
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
         return $this->render('view', [

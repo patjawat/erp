@@ -190,12 +190,9 @@ $dataProvider = $searchModel->search($this->request->queryParams);
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = $this->findModel($id);
-        // return $model->device_items;
-        // $ids = ArrayHelper::getColumn($model->device_items, 'id');
 
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
         return $this->render('view', [
@@ -205,25 +202,15 @@ $dataProvider = $searchModel->search($this->request->queryParams);
         ]);
     }
 
-    public function actionDepreciation($id)
-    {
-        $model = $this->findModel($id);
-        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา' . $model->data_json['asset_name'] : '-';
-        $title = $this->request->get('title') . isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => '<i class="fa-solid fa-chart-line"></i> ' . $asset_name,
-                'content' => $this->renderAjax('depreciation_list', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('depreciation_list', [
-                'model' => $model,
-            ]);
-        }
-    }
     
+        protected function findModel($id)
+    {
+        if (($model = Asset::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
 
 }
