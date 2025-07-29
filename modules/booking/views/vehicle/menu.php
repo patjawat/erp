@@ -35,10 +35,11 @@ $menus = [
         'icon' => '<i class="fa-solid fa-car-on me-2"></i>'
     ],
         [
-        'title' => 'ทะเบียนทรัพย์สิน',
+        'title' => 'ทะเบียนครุภัณฑ์',
         'active' => 'asset',
         'url' => ['/booking/asset'],
-        'icon' => '<i class="fa-solid fa-car-on me-2"></i>'
+        'icon' => '<i class="bi bi-ui-checks me-2"></i>'
+        
     ],
     [
         'title' => 'ตั้งค่าแบบฟอร์ม',
