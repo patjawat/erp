@@ -1,37 +1,11 @@
 <?php
-
 use yii\web\View;
 use yii\helpers\Url;
-use yii\helpers\Html;
 use yii\helpers\Json;
-use app\models\Categorise;
-use app\components\UserHelper;
-use app\modules\hr\models\Organization;
-
-
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
-$this->title = 'ปฏิทินการใช้รถ';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
-$this->params['breadcrumbs'][] = $this->title;
-$vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar fx-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('sub-title'); ?>
-ปฏิทินการใช้รถยนต์
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => 'calendar']) ?>
-<?php $this->endBlock(); ?>
 
 <style>
     .status-indicator {
