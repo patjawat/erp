@@ -64,6 +64,7 @@ class AssetSearch extends Asset
             'asset.asset_type_id' => $this->asset_type_id,
             'license_plate' => $this->license_plate,
             'receive_date' => $this->receive_date,
+            'asset_category_id' => $this->asset_category_id,
             'price' => $this->price,
             'life' => $this->life,
             'department' => $this->department,

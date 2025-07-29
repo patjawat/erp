@@ -29,9 +29,15 @@ $menus = [
     //     'icon' => '<i class="fa-regular fa-calendar me-2"></i>'
     // ],
     [
-        'title' => 'ทะเบียนจัดสรรรถยนต์',
+        'title' => 'ทะเบียนจัดรถยนต์',
         'active' => 'work',
         'url' => ['/booking/vehicle/work'],
+        'icon' => '<i class="fa-solid fa-car-on me-2"></i>'
+    ],
+        [
+        'title' => 'ทะเบียนทรัพย์สิน',
+        'active' => 'asset',
+        'url' => ['/booking/asset'],
         'icon' => '<i class="fa-solid fa-car-on me-2"></i>'
     ],
     [
