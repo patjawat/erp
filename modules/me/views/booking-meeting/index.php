@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="avatar-detail">
                                     <h6 class="mb-0 fs-13"><?=$item->title?></h6>
                                     <p class="text-muted mb-0 fs-13">
-                                        <?=$item->viewMeetingDate()?> เวลา <?=$item->viewMeetingTime()?>
+                                        <?=$item->viewMeetingDate()?> เวลา <?=$item->viewTime()['full']?>
                                     </p>
                                 </div>
                             </td>

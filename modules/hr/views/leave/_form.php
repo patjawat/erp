@@ -66,19 +66,19 @@ $resultsJs = <<<JS
 
 ?>
 <style>
-:not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
-:not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-    height: calc(2.875rem + 2px);
-    padding: 4px;
-    font-size: 1.0rem;
-    line-height: 1.5;
-    border-radius: .3rem;
-}
+    :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
+    :not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+        height: calc(2.875rem + 2px);
+        padding: 4px;
+        font-size: 1.0rem;
+        line-height: 1.5;
+        border-radius: .3rem;
+    }
 
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #e5e5e5;
-    color: #000;
-}
+    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+        background-color: #e5e5e5;
+        color: #000;
+    }
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -115,14 +115,14 @@ $resultsJs = <<<JS
                                 'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                                    'select2:select' => 'function() {
+                                'select2:select' => 'function() {
                                         calDays();
                                         }',
-                                    ],
-                                    ])->label('ประเภท');
-                                    ?>
+                            ],
+                        ])->label('ประเภท');
+                        ?>
 
-<?=$form->field($model, 'date_end_type')->widget(Select2::classname(), [
+                        <?= $form->field($model, 'date_end_type')->widget(Select2::classname(), [
                             'data' => [
                                 '0' => 'เต็มวัน',
                                 '0.5' => 'ครึงวัน',
@@ -312,7 +312,8 @@ $resultsJs = <<<JS
 </div>
 
 
-<?php // echo $this->render('summary', ['model' => $model]) ?>
+<?php // echo $this->render('summary', ['model' => $model]) 
+?>
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
@@ -327,15 +328,13 @@ $resultsJs = <<<JS
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
-            class="fa-regular fa-circle-xmark"></i> ปิด</button>
+    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
-</div>
-</div>
+
 
 <?php ActiveForm::end(); ?>
 <?php
-$calDaysUrl = Url::to(['/hr/leave/cal-days','emp_id' => $model->emp_id]);
+$calDaysUrl = Url::to(['/hr/leave/cal-days', 'emp_id' => $model->emp_id]);
 $js = <<<JS
 
     calDays()

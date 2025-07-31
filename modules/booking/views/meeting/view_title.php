@@ -1,6 +1,6 @@
  <div class="">
      <p class="mb-0 fw-semibold fs-12">
-         <?=$model->viewStatus()['icon']?><?=$model->viewMeetingTime()?>
+         <?=$model->viewStatus()['icon']?><?=$model->viewTime()['full']?>
      </p>
      <p class="mb-0 fw-semibold fs-12">
          <?=$model->room?->title ?? '-'?>

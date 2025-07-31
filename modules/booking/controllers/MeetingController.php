@@ -99,25 +99,25 @@ class MeetingController extends Controller
      * @throws NotFoundHttpException if the model cannot be found
      */
 
-     public function actionView($id)
-     {
-             $model = $this->findModel($id);
-             if ($this->request->isAJax) {
-                 \Yii::$app->response->format = Response::FORMAT_JSON;
-             return [
-                 'title' => $model->getUserReq()['avatar'],
-                 'content' => $this->renderAjax('view', [
-                     'model' => $model,
-                     'action' => true
-                 ]),
-             ];
-         } else {
-             return $this->render('view', [
-                 'model' => $model,
-                 'action' => true
-             ]);
-         }
-     }
+    public function actionView($id)
+    {
+            $model = $this->findModel($id);
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'คำขอใช้ห้องประชุมที่#'.$model->code,
+                'content' => $this->renderAjax('@app/modules/booking/views/meeting/view', [
+                    'model' => $model,
+                    'action' => false
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/booking/views/meeting/view', [
+                'model' => $model,
+                'action' => false
+            ]);
+        }
+    }
 
     /**
      * Creates a new Meeting model.
@@ -181,55 +181,102 @@ class MeetingController extends Controller
     }
     
 
+
     public function actionEvents()
     {
-        $start = $this->request->get('start');
-        $end = $this->request->get('end');
-
-        // Convert start and end dates to the desired format
-        $start = (new DateTime($start))->format('Y-m-d');
-        $end = (new DateTime($end))->format('Y-m-d');
-
+        $start = Yii::$app->formatter->asDate($this->request->get('start'), 'php:Y-m-d');
+        $end =  Yii::$app->formatter->asDate($this->request->get('end'), 'php:Y-m-d');
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $query = Meeting::find()
+        $bookings = Meeting::find()
             ->andWhere(['between', 'date_start', $start, $end])
-            ->andWhere(['or', ['status' => 'Pending'], ['status' => 'Pass']])
-            ->orderBy(['id' => SORT_DESC]);
-
-        $bookings = $query->all();
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
         $data = [];
+
 
         foreach ($bookings as $item) {
             try {
-            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_start), "php:Y-m-d\TH:i:s");
-            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
+   
+            $timeStart = $item->time_start ?? '00:00';
+            $timeEnd = $item->time_end ?? '00:00';
+            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeEnd), "php:Y-m-d\TH:i");
             $data[] = [
-                'id' => $item->id,
-                'title' => $this->renderAjax('view_title', ['model' => $item, 'action' => false]),
-                'start' => $dateStart,
-                'end' => $dateStart,
+                'id'               => $item->id,
+                'title'            => $item->title,
+                'start'            => $dateStart,
+                // 'time_start' => $timeStart,
+                'end'            => $dateEnd,
+                'time_end' => $timeEnd,
+                'allDay' => false,
+                'source' => 'vehicle',
                 'extendedProps' => [
-                    'room' => $item->room->title,
-                    'dateTime' => $item->viewMeetingTime(),
-                    'status' => $item->viewStatus()['view'],
-                    'calendar_content' => $this->renderAjax('calendar_content', ['model' => $item, 'action' => false]),
-                    'view' => $this->renderAjax('view', ['model' => $item, 'action' => false]),
-                    'description' => 'คำอธิบาย',
+                    'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', ['model' => $item]),
+                    'code' => $item->code,
+                    'color' =>  (isset($item->room) && isset($item->room->data_json['color'])) ? $item->room->data_json['color'] : '',
                 ],
-                'className' => 'text-truncate px-2 border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
-                'description' => 'description for All Day Event',
-                'textColor' => 'black',
-                'backgroundColor' => '#3aa3e3',
             ];
-                            //code...
+                         //code...
             } catch (\Throwable $th) {
                 //throw $th;
             }
         }
 
-        return $data;
+        return  [
+            'events' => $data
+        ];
     }
+
+    // public function actionEvents()
+    // {
+    //     $start = $this->request->get('start');
+    //     $end = $this->request->get('end');
+
+    //     // Convert start and end dates to the desired format
+    //     $start = (new DateTime($start))->format('Y-m-d');
+    //     $end = (new DateTime($end))->format('Y-m-d');
+
+    //     \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    //     $query = Meeting::find()
+    //         ->andWhere(['between', 'date_start', $start, $end])
+    //         ->andWhere(['or', ['status' => 'Pending'], ['status' => 'Pass']])
+    //         ->orderBy(['id' => SORT_DESC]);
+
+    //     $bookings = $query->all();
+    //     $data = [];
+
+    //     foreach ($bookings as $item) {
+    //         try {
+    //         $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_start), "php:Y-m-d\TH:i:s");
+    //         $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
+    //         $data[] = [
+    //             'id' => $item->id,
+    //             'title' => $this->renderAjax('view_title', ['model' => $item, 'action' => false]),
+    //             'start' => $dateStart,
+    //             'end' => $dateStart,
+    //             'extendedProps' => [
+    //                 'room' => $item->room->title,
+    //                 'dateTime' => $item->viewMeetingTime(),
+    //                 'status' => $item->viewStatus()['view'],
+    //                 'calendar_content' => $this->renderAjax('calendar_content', ['model' => $item, 'action' => false]),
+    //                 'view' => $this->renderAjax('view', ['model' => $item, 'action' => false]),
+    //                 'description' => 'คำอธิบาย',
+    //             ],
+    //             'className' => 'text-truncate px-2 border border-4 border-start border-top-0 border-end-0 border-bottom-0 border-' . $item->viewStatus()['color'],
+    //             'description' => 'description for All Day Event',
+    //             'textColor' => 'black',
+    //             'backgroundColor' => '#3aa3e3',
+    //         ];
+    //                         //code...
+    //         } catch (\Throwable $th) {
+    //             //throw $th;
+    //         }
+    //     }
+
+    //     return $data;
+    // }
         
 
 

@@ -3,16 +3,12 @@
 namespace app\modules\me\controllers;
 use Yii;
 use DateTime;
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
-use yii\db\Expression;
-use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use mdm\autonumber\AutoNumber;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
@@ -21,6 +17,7 @@ use app\modules\booking\models\Meeting;
 use app\modules\booking\models\RoomSearch;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\MeetingSearch;
+use app\modules\booking\models\RoomLayout;
 
 class BookingMeetingController extends \yii\web\Controller
 {
@@ -90,25 +87,7 @@ class BookingMeetingController extends \yii\web\Controller
     }
 
 
-    public function actionView($id)
-    {
-            $model = $this->findModel($id);
-            if ($this->request->isAJax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' =>$model->getUserReq()['avatar'],
-                'content' => $this->renderAjax('view', [
-                    'model' => $model,
-                    'action' => false
-                ]),
-            ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
-                'action' => false
-            ]);
-        }
-    }
+
 
 public function actionConfirm()
 {
@@ -272,7 +251,7 @@ public function actionConfirm()
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $model->code  = \mdm\autonumber\AutoNumber::generate('MEETING' .date('ymd') . '-???');
+                $model->code  = \mdm\autonumber\AutoNumber::generate('ME-' .date('ymd') . '-???');
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 // $model->date_end = AppHelper::convertToGregorian($model->date_end);
@@ -295,12 +274,12 @@ public function actionConfirm()
             return [
                 // 'title' => $this->request->get('title'),
                 'title' => 'จองห้องประชุม',
-                'content' => $this->renderAjax('create', [
+                'content' => $this->renderAjax('@app/modules/booking/views/meeting/_form', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('create', [
+            return $this->render('@app/modules/booking/views/meeting/_form', [
                 'model' => $model
             ]);
         }
@@ -340,12 +319,12 @@ public function actionConfirm()
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
+                'content' => $this->renderAjax('@app/modules/booking/views/meeting/_form', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('update', [
+            return $this->render('@app/modules/booking/views/meeting/_form', [
                 'model' => $model
             ]);
         }
@@ -360,6 +339,18 @@ public function actionGetRoom($id)
         'title' => $model->title,
         'img' => $model->showImg(),
         'seat' => $model->data_json['seat_capacity'] ?? 0,
+        'data' => $model
+    ];
+}    
+
+public function actionGetRoomLayout($id)
+{
+    $model = RoomLayout::find()->where(['code' => $id,'name' => 'room_layout'])->one();
+    \Yii::$app->response->format = Response::FORMAT_JSON;
+    return [
+        'status' => 'success',
+        'title' => $model->title,
+        'img' => $model->showImg()['image'],
         'data' => $model
     ];
 }    
@@ -453,7 +444,7 @@ public function actionGetRoom($id)
             try {
 
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_start), "php:Y-m-d\TH:i:s");
-            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $item->time_end), "php:Y-m-d\TH:i:s");
             $data[] = [
                 'id' => $item->id,
                 'title' => $item->room->title,
@@ -482,7 +473,11 @@ public function actionGetRoom($id)
 
     public function actionCalendar()
     {
-        return $this->render('calendar');
+
+        $eventTodays = Meeting::find()->where(['date_start' => date('Y-m-d')])->all();
+        return $this->render('calendar',[
+            'eventTodays' => $eventTodays
+        ]);
     }
     
     

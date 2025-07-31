@@ -6,7 +6,6 @@ use Yii;
 use app\models\Uploads;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
-use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -29,9 +28,12 @@ use app\modules\filemanager\components\FileManagerHelper;
  */
 class Room extends \yii\db\ActiveRecord
 {
+    
+    public $q;
     /**
      * {@inheritdoc}
      */
+
     public static function tableName()
     {
         return 'categorise';
@@ -45,7 +47,7 @@ class Room extends \yii\db\ActiveRecord
         return [
             [['name', 'code', 'title'], 'required'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items', 'code'], 'safe'],
+            [['data_json', 'ma_items', 'code','q'], 'safe'],
             [['ref', 'group_id', 'category_id', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -106,7 +108,7 @@ class Room extends \yii\db\ActiveRecord
             $emp = Employees::findOne($this->data_json['owner']);
             return [
                 'emp' => $emp,
-                'avatar' => $emp->getAvatar(false, 'ผู้ดูแลรับผิดชอบ  '.$msg) ?? null,
+                'avatar' => $emp->getAvatar(false, 'ผู้ดูแลรับผิดชอบ  ' . $msg) ?? null,
                 'line_id' => $emp->user->line_id ?? null
             ];
         } catch (\Throwable $th) {
@@ -118,6 +120,42 @@ class Room extends \yii\db\ActiveRecord
         }
     }
 
+
+    public function listRoomStatus()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'room_status'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+    public function showStatus()
+    {
+        try {
+
+        $code = $this->data_json['room_status'];
+        if($code)
+        {
+            $getStatus = Categorise::find()->where(['name' => 'room_status','code' => $code])->one();
+            return [
+                'title' => $getStatus->title,
+                'view' => ''
+            ];
+        }else{
+              return [
+                'title' => '',
+                'view' => ''
+            ];
+        }
+                    //code...
+        } catch (\Throwable $th) {
+           return [
+                'title' => '',
+                'view' => ''
+            ];
+        }
+    }
     // แสดงรายการอุปกรณ์
     public function listAccessory()
     {
@@ -130,16 +168,16 @@ class Room extends \yii\db\ActiveRecord
     public function showAccessory()
     {
         try {
- 
-        $data = $this->data_json['room_accessory'];
-        $result = [];
-        foreach ($data as $key => $value) {
-            $result[] = $value;
+
+            $data = $this->data_json['room_accessory'];
+            $result = [];
+            foreach ($data as $key => $value) {
+                $result[] = $value;
+            }
+            return implode(', ', $result);
+        } catch (\Throwable $th) {
+            return '';
         }
-        return implode(', ', $result);
-    } catch (\Throwable $th) {
-       return '';
-    }
     }
 
     public function checkRoom($date)
@@ -149,6 +187,4 @@ class Room extends \yii\db\ActiveRecord
             ->andWhere(['<>', 'status', 'cancel'])
             ->one();
     }
-
-
 }

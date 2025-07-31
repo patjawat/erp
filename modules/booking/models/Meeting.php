@@ -3,6 +3,7 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use DateTime;
 use yii\db\Expression;
 use app\models\Categorise;
 use app\components\LineMsg;
@@ -13,7 +14,7 @@ use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\booking\models\Meeting;
+use app\modules\booking\models\RoomLayout;
 use app\modules\booking\models\MeetingDetail;
 
 /**
@@ -61,7 +62,7 @@ class Meeting extends \yii\db\ActiveRecord
     {
         return [
             [['code', 'room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'thai_year', 'urgent', 'status', 'emp_id'], 'required'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter','room_layout_id'], 'safe'],
             [['thai_year', 'document_id', 'emp_number', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'code', 'room_id', 'title', 'time_start', 'time_end', 'urgent', 'status', 'emp_id'], 'string', 'max' => 255],
         ];
@@ -77,6 +78,7 @@ class Meeting extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'code' => 'รหัส',
             'room_id' => 'รหัส',
+            'room_layout_id' => 'รูปแบบการจัดห้อง',
             'title' => 'หัวข้อการประชุ',
             'date_start' => 'เริ่มวันที่',
             'date_end' => 'ถึงวันที่',
@@ -136,6 +138,11 @@ class Meeting extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'driver_service_status']);
     }
+
+        public function getViewUrgent()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'urgent'])->andOnCondition(['name' => 'urgent']);
+    }
         //สมาชิกที่จะเข้าร่วมประชุม
         public function getlistMembers()
         {
@@ -146,6 +153,12 @@ class Meeting extends \yii\db\ActiveRecord
     public function listRooms()
     {
         $model = Room::find()->where(['name' => 'meeting_room'])->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+        public function listRoomLayout()
+    {
+        $model = RoomLayout::find()->where(['name' => 'room_layout'])->all();
         return ArrayHelper::map($model, 'code', 'title');
     }
     public function ListThaiYear()
@@ -164,7 +177,6 @@ class Meeting extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-    
     public function listUrgent()
     {
         $model = Categorise::find()
@@ -173,6 +185,7 @@ class Meeting extends \yii\db\ActiveRecord
             ->all();
         return ArrayHelper::map($model, 'code', 'title');
     }
+
 
         // แสดงรายการาถานะ
         public function ListStatus()
@@ -211,14 +224,57 @@ class Meeting extends \yii\db\ActiveRecord
         return ThaiDateHelper::formatThaiDate($this->date_start);
     }
 
-    public function viewMeetingTime()
+    // public function viewMeetingTime()
+    // {
+    //     try {
+    //         return $this->time_start . ' - ' . $this->time_end.' น.';
+    //     } catch (\Throwable $th) {
+    //         return '-';
+    //     }
+    // }
+
+        public function viewTime()
     {
-        try {
-            return $this->time_start . ' - ' . $this->time_end.' น.';
-        } catch (\Throwable $th) {
-            return '-';
-        }
+        $timeStart = substr($this->time_start, 0, 5);
+        $timeEnd = substr($this->time_end, 0, 5);
+        $fulltime = $timeStart.' - '.$timeEnd;
+
+        
+        return[
+            'start' => $timeStart,
+            'end' => $timeEnd,
+            'full' => $fulltime . ' น.'
+        ];
     }
+
+//แสดง icon ถ้าเป็นเวลาปัจจุบัน
+function showIconIfInTimeRange() {
+    $currentTime = new DateTime();
+    $startTimeStr = $this->viewTime()['start'];
+    $endTimeStr = $this->viewTime()['end'];
+
+    $startTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $startTimeStr);
+    $endTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $endTimeStr);
+
+    $inRange = false;
+
+    if ($startTime > $endTime) {
+        $endTime->modify('+1 day');
+        $inRange = ($currentTime >= $startTime || $currentTime <= $endTime);
+    } else {
+        $inRange = ($currentTime >= $startTime && $currentTime <= $endTime);
+    }
+
+    return [
+        'active' => $inRange,
+        'icon' => $inRange ? '<i class="fa-solid fa-caret-right text-success"></i>' : ''
+    ];
+}
+
+
+
+
+
 
     public function viewMeetingDateTime()
     {

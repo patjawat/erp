@@ -492,6 +492,7 @@ $('#LoadTest').click(function (e) {
  
 
  isFile()
+ 
 \$('#form-asset').on('beforeSubmit', function (e) {
             var form = \$(this);
            

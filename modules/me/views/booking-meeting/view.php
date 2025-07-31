@@ -11,13 +11,17 @@ $this->params['breadcrumbs'][] = ['label' => 'Booking Cars', 'url' => ['index']]
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+    <div class="row mb-0 align-items-center">
+        <label class="col-sm-4 col-form-label text-end fw-medium">ห้องประชุม:</label>
+        <div class="col-sm-8"><?=$model->room->title;?></div>
+    </div>
+    <div class="row mb-0 align-items-center">
+        <label class="col-sm-4 col-form-label text-end fw-medium">ความเร่งด่วน:</label>
+        <div class="col-sm-8"><?=$model->viewUrgent->title;?></div>
+    </div>
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">หัวข้อการประชุม:</label>
     <div class="col-sm-8"><?=$model->title;?></div>
-</div>
-<div class="row mb-0 align-items-center">
-    <label class="col-sm-4 col-form-label text-end fw-medium">ห้องประชุม:</label>
-    <div class="col-sm-8"><?=$model->room->title;?></div>
 </div>
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">วันที่:</label>
@@ -30,12 +34,12 @@ $this->params['breadcrumbs'][] = $this->title;
     <label class="col-sm-4 col-form-label text-end fw-medium">เวลา:</label>
     <div class="col-sm-8 d-flex align-items-center gap-2">
     <i class="fa-regular fa-clock"></i>
-    <?=$model->viewMeetingTime()?>
+    <?=$model->viewTime()?>
     </div>
 </div>
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">จำนวนผู้เข้าร่วม:</label>
-    <div class="col-sm-8">20 คน</div>
+    <div class="col-sm-8"><?=$model->emp_number ?? 0?> คน</div>
 </div>
 <div class="row mb-0 align-items-center">
     <label class="col-sm-4 col-form-label text-end fw-medium">สถานะ:</label>
@@ -56,3 +60,9 @@ $this->params['breadcrumbs'][] = $this->title;
   </button>
 </div>
 <?php endif?>
+
+<div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/booking-meeting/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+</div>
+

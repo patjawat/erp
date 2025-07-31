@@ -4,18 +4,16 @@ namespace app\modules\booking\controllers;
 
 use Yii;
 use yii\web\Response;
-use yii\db\Expression;
 use yii\web\Controller;
-use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
-use app\modules\booking\models\Room;
-use app\modules\booking\models\RoomSearch;
+use app\modules\booking\models\RoomLayout;
+use app\modules\booking\models\RoomLayoutSearch;
 
 /**
- * RoomController implements the CRUD actions for Room model.
+ * RoomLayoutController implements the CRUD actions for RoomLayout model.
  */
-class RoomController extends Controller
+class RoomLayoutController extends Controller
 {
     /**
      * @inheritDoc
@@ -36,23 +34,14 @@ class RoomController extends Controller
     }
 
     /**
-     * Lists all Room models.
+     * Lists all RoomLayout models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new RoomSearch();
+        $searchModel = new RoomLayoutSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'meeting_room']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'title', $searchModel->q],
-            ['like', 'code', $searchModel->q],
-            ['like', 'description', $searchModel->q],
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.location'))"), $searchModel->q],
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.seat_capacity'))"), $searchModel->q],
-        ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -61,39 +50,27 @@ class RoomController extends Controller
     }
 
     /**
-     * Displays a single Room model.
+     * Displays a single RoomLayout model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-            $model = $this->findModel($id);
-            if ($this->request->isAJax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-    
-                return [
-                    'title' => $this->request->get('title'),
-                    'content' => $this->renderAjax('view', [
-                        'model' => $model,
-                    ]),
-                ];
-            } else {
-                return $this->render('view', [
-                    'model' => $model,
-                ]);
-            }
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
     }
 
     /**
-     * Creates a new Room model.
+     * Creates a new RoomLayout model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
+   public function actionCreate()
     {
         $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-        $model = new Room([
+        $model = new RoomLayout([
             'ref' => $ref,
             'name' => 'meeting_room'
         ]);
@@ -105,7 +82,7 @@ class RoomController extends Controller
 
                 return [
                     'status' => 'success',
-                    'container' => '#booking',
+                    'container' => '#room-type',
                 ];
             }
         } else {
@@ -138,16 +115,18 @@ class RoomController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        
+        if(!$model->ref){
+            $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            // return $this->redirect(['view', 'id' => $model->id]);
-            $this->CheckRoomAccessory($model);
             \Yii::$app->response->format = Response::FORMAT_JSON;
             // return $model->data_json;
 
             return [
                 'status' => 'success',
-                'container' => '#booking',
+                'container' => '#room-type',
             ];
         }
 
@@ -167,31 +146,9 @@ class RoomController extends Controller
         }
     }
 
-    // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
-    protected function CheckRoomAccessory($model)
-    {
-        try {
-            $data = $model->data_json['room_accessory'];
-
-            foreach ($data as $item) {
-                if (!Categorise::findOne(['category_id' => $model->code,'name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
-                    $maxCode = Categorise::find()
-                        ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
-                        ->where(['like', 'name', 'room_accessory'])
-                        ->scalar();
-                    $model = new Categorise();
-                    $model->name = 'room_accessory';
-                    $model->code = ($maxCode + 1);
-                    $model->title = $item;
-                    $model->save(false);
-                }
-            }
-        } catch (\Throwable $th) {
-        }
-    }
 
     /**
-     * Deletes an existing Room model.
+     * Deletes an existing RoomLayout model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -205,15 +162,15 @@ class RoomController extends Controller
     }
 
     /**
-     * Finds the Room model based on its primary key value.
+     * Finds the RoomLayout model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Room the loaded model
+     * @return RoomLayout the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Room::findOne(['id' => $id])) !== null) {
+        if (($model = RoomLayout::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

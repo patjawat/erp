@@ -25,7 +25,7 @@ use yii\helpers\Html;
                 <td>
                     <?= $item->viewMeetingDate() ?>
                     <p class="text-muted mb-0 fs-13">
-                        เริ่มเวลา <?= $item->viewMeetingTime() ?>
+                        เริ่มเวลา <?= $item->viewTime() ?>
                     </p>
                 </td>
                 <td class="fs-13"><?= $item->room?->title ?? '-' ?></td>

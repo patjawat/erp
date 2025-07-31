@@ -10,10 +10,12 @@ use kartik\widgets\ActiveForm;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\booking\models\RoomLayout;
 use app\modules\dms\models\DocumentsDetail;
 
 $me = UserHelper::GetEmployee();
 $room = Room::findOne(['name' => 'meeting_room', 'code' => $model->room_id]);
+$roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->room_layout_id]);
 
 try {
     $mappedDataAccessory = ArrayHelper::map(
@@ -27,7 +29,7 @@ try {
 
 ?>
 <style>
-    .room-img{
+    .room-img,.room-layout-img{
         object-fit: cover;max-width: 100%;height: auto;
     }
 </style>
@@ -47,7 +49,11 @@ try {
                 <div class="card-body">
                     <h4 class="fw-medium mb-2">จองห้องประชุม</h4>
                     <p class="card-text">กรอกข้อมูลเพื่อจองห้องประชุม</p>
-                    <?php
+                  
+
+    <div class="row">
+        <div class="col-6">
+              <?php
                     echo $form->field($model, 'room_id')->widget(Select2::classname(), [
                         'data' => $model->listRooms(),
                         'options' => [
@@ -71,13 +77,33 @@ try {
                     ?>
 
 
-    <div class="row">
-        <div class="col-6">
                             <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('วันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
                         </div>
                         <div class="col-6">
+                             <?php
+                    echo $form->field($model, 'room_layout_id')->widget(Select2::classname(), [
+                        'data' => $model->listRoomLayout(),
+                        'options' => [
+                            'placeholder' => 'เลือกรูปแบบห้องประชุม...',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                            // 'width' => '150px',
+                        ],
+                        'pluginEvents' => [
+                            'select2:unselect' => 'function() {
+                                                            
+                                                            }',
+                            'select2:select' => 'function() {
+
+                                                            }',
+                        ],
+                    ])->label('รูปแบบห้องประชุม');
+                    ?>
+
                         <?=$form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
                         'data' => [
                             'เต็มวัน' => 'เต็มวัน',
@@ -134,7 +160,7 @@ try {
                             <?= Html::a('<i class="fa-solid fa-arrow-left"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary shadow rounded-pill']) ?>
                         </div>
                         <div class="mt-3">
-                            <?= Html::submitButton('<i class="fa-solid fa-calendar-plus"></i> ส่งคำขอจอง', ['class' => 'btn btn-primary shadow rounded-pill']) ?>
+                            <?= Html::submitButton('<i class="fa-solid fa-calendar-plus"></i> บันทึก', ['class' => 'btn btn-primary shadow rounded-pill']) ?>
                         </div>
                     </div>
                 </div>
@@ -145,7 +171,10 @@ try {
             <div class="card">
                 <div class="card-body">
                     <h4 class="fw-medium mb-2">ข้อมูลห้องประชุม</h4>
-                    <p class="card-text">รายละเอียดห้องประชุมที่เลือก</p>
+                    <div class="d-flex justify-content-between">
+                        <p class="card-text  room-title">รายละเอียดห้องประชุมที่เลือก</p>
+                        <span>ความจุ: <span class="seat"><?= $room->data_json['seat_capacity'] ?? 0?></span> คน</span>
+                    </div>
                     <div class="rounded-md d-flex align-items-center justify-content-center mb-3">
                         <?php if($room && $room->showImg()):?>
                         <?=Html::img($room->showImg(), ['class' => 'room-img'])?>
@@ -154,19 +183,20 @@ try {
                         <?php endif?>
                     </div>
 
-                    <div>
-                        <h3 class="h5 fw-semibold room-title">ห้องประชุมใหญ่</h3>
-                        <div class="mt-2">
-                            <div class="d-flex align-items-center gap-2 small mb-2">
-                                <i class="bi bi-person-add fs-5"></i>
-                                <span>ความจุ: <span class="seat">0</span> คน</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 small">
-                                <i class="bi bi-calendar-event-fill"></i>
-                                <span>เวลาทำการ: 09:00 - 17:00 น.</span>
-                            </div>
-                        </div>
+<div class="d-flex justify-content-between">
+                        <p class="card-text ">รูปแบบการจัดห้องประชุม</p>
+                        <p class="room-layout-title"><?= $roomLayout->title ?? ''?></p>
+
                     </div>
+                    <div class="rounded-md d-flex align-items-center justify-content-center mb-3">
+                        <?php if($roomLayout && $roomLayout->showImg()['isFile']):?>
+                        <?=Html::img($roomLayout->showImg()['image'], ['class' => 'room-layout-img'])?>
+                        <?php else:?>
+                        <?= Html::img('@web/img/placeholder.svg', ['class' => 'room-layout-img']) ?>
+                        <?php endif?>
+                    </div>
+
+
                     <hr>
                     <div>
                         <h4 class="fw-medium mb-2">อุปกรณ์ที่มีให้บริการ</h4>
@@ -244,8 +274,25 @@ $js = <<<JS
                     $('.room-img').attr('src',res.img)
                     log(res)
                 }
+            });
+        });
+        
+        
+        \$('#meeting-room_layout_id').on('change', function() {
+            \$.ajax({
+                type: "get",
+                url: "/me/booking-meeting/get-room-layout",
+                data: {
+                    id: \$(this).val()
+                },
+                dataType: "json",
+                success: function (res) {
+                    $('.room-layout-img').attr('src',res.img)
+                    \$('.room-layout-title').text(res.title)
+                }
               });
             });
+
 
             \$('#meeting-date_end').on('change', function() {
                 var dateStart = \$('#meeting-date_start').val();

@@ -4,12 +4,12 @@ namespace app\modules\booking\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\booking\models\Room;
+use app\modules\booking\models\RoomLayout;
 
 /**
- * RoomSearch represents the model behind the search form of `app\modules\booking\models\Room`.
+ * RoomLayoutSearch represents the model behind the search form of `app\modules\booking\models\RoomLayout`.
  */
-class RoomSearch extends Room
+class RoomLayoutSearch extends RoomLayout
 {
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class RoomSearch extends Room
     {
         return [
             [['id', 'qty', 'active'], 'integer'],
-            [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items','q'], 'safe'],
+            [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items','q'], 'safe'],
         ];
     }
 
@@ -35,29 +35,29 @@ class RoomSearch extends Room
      * Creates data provider instance with search query applied
      *
      * @param array $params
+     * @param string|null $formName Form name to be used into `->load()` method.
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $formName = null)
     {
-        $query = Room::find();
-        
+        $query = RoomLayout::find();
+
         // add conditions that should always apply here
-        
+
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            
         ]);
-        
-        $this->load($params);
-        
+
+        $this->load($params, $formName);
+
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');
             return $dataProvider;
         }
-        // $query->andFilterWhere(['name' => 'meeting_room']);
-
+        
+        $query->where(['name' => 'room_layout']);
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
@@ -65,7 +65,8 @@ class RoomSearch extends Room
             'active' => $this->active,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
+        $query->andFilterWhere(['like', 'sort', $this->sort])
+            ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'group_id', $this->group_id])
             ->andFilterWhere(['like', 'category_id', $this->category_id])
             ->andFilterWhere(['like', 'code', $this->code])

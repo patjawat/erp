@@ -82,6 +82,7 @@ use yii\helpers\Url;
 
     <!-- ห้องประชุม -->
     <div class="col-6 col-lg-2">
+         <a href="<?=Url::to(['/me/booking-meeting/calendar'])?>">
         <div class="card h-100 shadow border-0 rounded-3 hover-card">
             <div class="card-body text-center p-3 p-lg-4">
                 <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-2 mb-lg-3" style="width: 50px; height: 50px;">
@@ -95,6 +96,7 @@ use yii\helpers\Url;
                 <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 d-none d-lg-inline" style="font-size: 0.7rem;">พร้อมใช้งาน</span>
             </div>
         </div>
+</a>
     </div>
 
     <!-- อบรม/ประชุม/ดูงาน -->

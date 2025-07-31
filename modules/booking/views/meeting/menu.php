@@ -20,12 +20,6 @@ $menus = [
     'url' => ['/booking/meeting/calendar'],
     'icon' => '<i class="fa-solid fa-calendar text-primary me-1"></i>'
     ],
-        [
-    'title' => 'ตั้งค่าห้องประชุม',
-    'active' => 'room',
-    'url' => ['/booking/room'],
-    'icon' => '<i class="fa-solid fa-gear text-primary me-1"></i>'
-    ]
 ];
 ?>
 <?php if($layout == 'horizontal'):?>
@@ -34,6 +28,18 @@ $menus = [
     <?=Html::a($menu['icon'].$menu['title'],$menu['url'],['class' => 'nav-link ' . (isset($active) && $active == $menu['active'] ? 'active' : '')])?>
 </li>
 <?php endforeach;?>
+
+<li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-gear me-1 fs-5"></i> การตั้งค่า
+                           <i class="bx bx-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+                              <?=Html::a('<i class="fa-solid fa-pen-to-square me-1 fs-5"></i> ห้องประชุม',['/booking/room'],['class' => 'dropdown-item'])?>
+                              <?=Html::a('<i class="fa-solid fa-pen-to-square me-1 fs-5"></i> รูปแบบห้องประชุม',['/booking/room-layout'],['class' => 'dropdown-item'])?>
+                        </div>
+                     </li>
+                     
 
 <?php else:?>
 <div class="d-flex gap-2">

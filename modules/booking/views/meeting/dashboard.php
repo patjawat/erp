@@ -57,7 +57,7 @@ Dashboard
                             </div>
                             <div class="text-muted small mt-1">
                                     <i class="bi bi-calendar-event me-1"></i><?=$item->viewMeetingDate()?><br />
-                                    <i class="bi bi-clock me-1"></i><?=$item->viewMeetingTime()?>
+                                    <i class="bi bi-clock me-1"></i><?=$item->viewTime()?>
                                 </div>
                             <div class="d-flex align-items-start gap-2">
                         <div class="action-icon approve d-inline-flex confirm-meeting" data-id="<?=$item->id?>"

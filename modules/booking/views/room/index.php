@@ -7,6 +7,7 @@ use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use app\modules\booking\models\Room;
+
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\RoomSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -19,78 +20,121 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-people-fill"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-จัดการข้อมูลห้องประชุมทั้งหมดในระบบ
-<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('@app/modules/booking/views/meeting/menu') ?>
 <?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../meeting/menu',['active' => 'room'])?>
+<?= $this->render('../meeting/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
+<?php Pjax::begin()?>
+<?php
+$palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#e91e63', '#607d8b'];
+?>
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
 
 <div class="card mb-4">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียนห้องประชุม <span class="badge rounded-pill text-bg-light"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        </div>
+    </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between mb-3">
-            <h6><i class="bi bi-ui-checks"></i> ทะเบียนห้องประชุม <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
-         <div class="d-flex justify-content-between align-items-center gap-3">    
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-primary rounded-pill mt-3 shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
-        </div>
-        </div>
-       
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                     <th class="text-center fw-semibold" style="width:200px">สี</th>
+                    <th class="fw-semibold">ชื่อห้องประชุม</th>
+                    <th class="fw-semibold">ความจุ/คน</th>
+                    <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
+                    <th class="fw-semibold d-none d-md-table-cell">อุปกรณ์</th>
+                    <th class="fw-semibold">สถานะ</th>
+                    <th class="fw-semibold text-end">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <th class="fw-semibold">ชื่อห้องประชุม</th>
-                        <th class="fw-semibold">ความจุ</th>
-                        <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
-                        <th class="fw-semibold d-none d-md-table-cell">อุปกรณ์</th>
-                        <th class="fw-semibold">สถานะ</th>
-                        <th class="fw-semibold text-end">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="table-group-divider">
-                    <?php foreach(Room::find()->where(['name' => 'meeting_room'])->all() as $item):?>
-                    <tr>
-                        <td class="fw-medium"><?=$item->title?></td>
-                        <td><?=$item->data_json['seat_capacity'] ?? '-'?> คน</td>
-                        <td class="d-none d-md-table-cell"><?=$item->data_json['location'] ?? '-';?></td>
-                        <td class="d-none d-md-table-cell"><?=$item->showAccessory()?></td>
-                        <td>พร้อมใช้งาน</td>
-                <td class="fw-light text-end">
-                <div class="btn-group">
-                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['update', 'id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                        <i class="bi bi-caret-down-fill"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item'])?>
-                        </li>
-                    </ul>
-                </div>
-            </td>
-                    <?php endforeach;?>
+                            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                            <td>
 
-                </tbody>
-            </table>
-        </div>
+                            <?php 
+                            echo kartik\color\ColorInput::widget([
+                                'name' => 'color_' . $item->id,
+                                'value' => $item->data_json['color'] ?? '', // assuming 'color' is the attribute
+                                'options' => [
+                                    'placeholder' => 'Choose your color ...',
+                                    'class' => 'leave-color-input',
+                                    'data-id' => $item->id,
+                                    'value' => $item->data_json['color'] ?? '#2196f3', // preset default color if not set
+                                ],
+                                'pluginOptions' => [
+                                    'showDefaultPalette' => true,
+                                    'palette' => [$palette],
+                                    'allowEmpty' => false,
+                                ],
+                                'pluginEvents' => [
+                                    "change" => "function(event) {
+                                        let color = $(this).val();
+                                        let id = $(this).data('id');
+                                        $.ajax({
+                                            url: '" . Url::to(['/hr/leave-type/update-color','id' => $item->id]) . "',
+                                            type: 'POST',
+                                            data: {id: id, color: color},
+                                            success: function(res) {
+                                            console.log(res.data.data_json.color)
+                                                $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);
+                                            }
+                                        });
+                                    }"
+                                ]
+                            ]);
+                        ?>
+                            </td>
+                        <td class="fw-medium"><?= $item->title ?></td>
+                        <td><?= $item->data_json['seat_capacity'] ?? '-' ?></td>
+                        <td class="d-none d-md-table-cell"><?= $item->data_json['location'] ?? '-'; ?></td>
+                        <td class="d-none d-md-table-cell"><?= $item->showAccessory() ?></td>
+                        <td><?=$item->showStatus()['title']?></td>
+                        <td class="fw-light text-end">
+                        <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                </ul>
+                            </div>
+                        </td>
+                    <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
 
-
-
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'listOptions' => 'pagination pagination-sm',
-                    'class' => 'pagination-sm',
-                ],
-            ]); ?>
+        'pagination' => $dataProvider->pagination,
+        'firstPageLabel' => 'หน้าแรก',
+        'lastPageLabel' => 'หน้าสุดท้าย',
+        'options' => [
+            'listOptions' => 'pagination pagination-sm',
+            'class' => 'pagination-sm',
+        ],
+    ]); ?>
 </div>
+<?php Pjax::end()?>
