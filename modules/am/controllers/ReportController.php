@@ -66,7 +66,7 @@ class ReportController extends \yii\web\Controller
                                                                           ROUND((price/CAST(a.data_json->'$.service_life' as UNSIGNED) / 12),2) as month_price
 
                                                                           FROM asset a
-                                                                          LEFT JOIN categorise i ON i.code = a.asset_item
+                                                                          LEFT JOIN categorise i ON i.code = a.asset_item_id
                                                                           LEFT JOIN categorise asset_type ON i.category_id = asset_type.code AND asset_type.name = 'asset_type'
                                                                           WHERE asset_type.code IS NOT NULL ) as x1) as x2) as x3 WHERE   x3.receive_date <= x3.date AND x3.receive_date <= x3.date AND x3.asset_status = 1) as x4) as x5 GROUP BY x5.type_code";
         $querys = Yii::$app->db->createCommand($sql)->queryAll();
