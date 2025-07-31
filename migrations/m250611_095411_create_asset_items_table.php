@@ -38,17 +38,18 @@ class m250611_095411_create_asset_items_table extends Migration
         // backup table categorise
         $date = date('Y_m_d_H:i:s'); // ใช้ underscore (_) แทน dash (-)
         $tableName = "categorise_{$date}";
-        
+
         // สร้าง SQL เพื่อคัดลอกโครงสร้างและข้อมูล
         $this->execute("CREATE TABLE `{$tableName}` LIKE `categorise`");
         $this->execute("INSERT INTO `{$tableName}` SELECT * FROM `categorise`");
-        
+
         $tableAsset = "asset_{$date}";
-         $this->execute("CREATE TABLE `{$tableAsset}` LIKE `asset`");
+        $this->execute("CREATE TABLE `{$tableAsset}` LIKE `asset`");
         $this->execute("INSERT INTO `{$tableAsset}` SELECT * FROM `asset`");
 
 
-// ตรวจสอบก่อนการทำงานป้องกัน error
+        // ตรวจสอบก่อนการทำงานป้องกัน error
+        Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_group' WHERE `name` = 'asset_group'")->execute();
         $countAssetGroup = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_group'])->count();
         if ($countAssetGroup == 0) {
             // เพิ่มข้อมูลใหม่
@@ -64,9 +65,10 @@ class m250611_095411_create_asset_items_table extends Migration
             ")->execute();
         }
 
- $countAssetType = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_type'])->count();
+        Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_type' WHERE `name` = 'asset_type'")->execute();
+        $countAssetType = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_type'])->count();
         if ($countAssetType == 0) {
-         Yii::$app->db->createCommand("INSERT INTO categorise 
+            Yii::$app->db->createCommand("INSERT INTO categorise 
         (name,group_id, title, code, data_json) 
         VALUES
         ('asset_type','4','ครุภัณฑ์การแพทย์', 'MED', JSON_OBJECT('title_en', 'Medical Equipment', 'description','อุปกรณ์ทางการแพทย์และเครื่องมือรักษาพยาบาล')),
@@ -80,12 +82,11 @@ class m250611_095411_create_asset_items_table extends Migration
         ('asset_type','4','ครุภัณฑ์ยานพาหนะ', 'VEH', JSON_OBJECT('title_en','Vehicle Equipment', 'description', 'ยานพาหนะและอุปกรณ์การขนส่ง')),
         ('asset_type','4','ครุภัณฑ์วิทยาศาสตร์', 'SCI', JSON_OBJECT('title_en','Scientific Equipment', 'description', 'เครื่องมือและอุปกรณ์ทางวิทยาศาสตร์และการวิจัย')),
         ('asset_type','4','ครุภัณฑ์สำนักงาน', 'OFF', JSON_OBJECT('title_en','Office Equipment', 'description', 'อุปกรณ์สำนักงานและเครื่องใช้ในการบริหารงาน')); ")->execute();
-
         }
 
         $countAssetCategory = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_category'])->count();
         if ($countAssetCategory == 0) {
-         Yii::$app->db->createCommand("
+            Yii::$app->db->createCommand("
         INSERT INTO categorise (name, category_id, title, code, data_json) VALUES
         ('asset_category','MED','กระตุกไฟฟ้าหัวใจ','DF',JSON_OBJECT('title_en', 'Defibrillation')),
         ('asset_category','MED','กล้องจุลทรรศน์ในการผ่าตัด','MC',JSON_OBJECT('title_en', 'Microscopy')),
@@ -151,10 +152,13 @@ class m250611_095411_create_asset_items_table extends Migration
         if ($table !== null && isset($table->columns['title'])) {
             // Only alter if the column type is not already 'text'
             if (stripos($table->columns['title']->dbType, 'text') === false) {
-            $this->alterColumn('categorise', 'title', $this->text()
-                ->defaultValue(null)
-                ->comment('ชื่อ')
-            );
+                $this->alterColumn(
+                    'categorise',
+                    'title',
+                    $this->text()
+                        ->defaultValue(null)
+                        ->comment('ชื่อ')
+                );
             }
         }
 
