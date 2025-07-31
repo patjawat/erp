@@ -189,7 +189,7 @@ $js = <<<JS
                eventClick: function(info) {
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
                        var code = info.event.extendedProps.code || '';
-                        var url = '$url/'+'view?id=' + info.event.id;
+                        var url = 'view?id=' + info.event.id;
                             $.ajax({
                                 type: "get",
                                 url: url,

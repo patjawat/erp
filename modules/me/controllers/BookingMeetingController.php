@@ -481,6 +481,26 @@ public function actionGetRoomLayout($id)
     }
     
     
+        public function actionView($id)
+    {
+            $model = $this->findModel($id);
+            if ($this->request->isAJax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'คำขอใช้ห้องประชุมที่#'.$model->code,
+                'content' => $this->renderAjax('@app/modules/booking/views/meeting/view', [
+                    'model' => $model,
+                    'action' => false
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/booking/views/meeting/view', [
+                'model' => $model,
+                'action' => false
+            ]);
+        }
+    }
+    
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
