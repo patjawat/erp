@@ -89,12 +89,16 @@ class BookingVehicleController extends Controller
 
     public function actionCalendar()
     {
-        return $this->render('calendar');
+        return $this->render('calendar',[
+              'vehicle_type' => 'official'
+        ]);
     }
 
     public function actionCalendarAmbulance()
     {
-        return $this->render('calendar_ambulance');
+        return $this->render('calendar',[
+              'vehicle_type' => 'ambulance'
+        ]);
     }
 
 
@@ -300,6 +304,8 @@ class BookingVehicleController extends Controller
         ];
     }
 
+
+    
     /**
      * Finds the Vehicle model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

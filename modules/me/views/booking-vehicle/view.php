@@ -25,9 +25,9 @@ $this->params['breadcrumbs'][] = $this->title;
     
     <div class="row">
         <div class="col-6">
-            <?php echo $model->userRequest()['avatar'];?>
+            <?php echo $model->userRequest()['avatar'] ?? '-';?>
         </div>
-        <div class="col-6">โทร : <?php echo $model->userRequest()['phone'];?></div>
+        <div class="col-6">โทร : <?php echo $model->userRequest()['phone'] ?? '-';?></div>
         <div class="col-12"></div>
     </div>
 
