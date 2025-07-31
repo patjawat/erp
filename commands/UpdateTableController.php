@@ -86,8 +86,10 @@ class UpdateTableController extends Controller
 
             // ยานพาหนะ
             ['name' => '/booking/vehicle/*', 'type' => 2,'description' =>''],
+            ['name' => '/booking/vehicle/events', 'type' => 2,'description' =>''],
             // ห้องประชุม
             ['name' => '/booking/meeting/*', 'type' => 2,'description' =>''],
+            ['name' => '/booking/meeting/events', 'type' => 2,'description' =>''],
 
             ['name' => '/dms/*', 'type' => 2,'description' =>''],
             ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
@@ -136,21 +138,27 @@ class UpdateTableController extends Controller
             ['name' => '/hr/leave/update', 'type' => 2,'description' =>''],
             ['name' => '/hr/leave/view', 'type' => 2,'description' =>''],
             ['name' => '/hr/leave/view-history', 'type' => 2,'description' =>''],
+            
             ['name' => '/inventory/*', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/default/product-summary', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/default/warehouse', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/stock-out/index', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/stock-out/stock', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/stock/view-chart-total', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/stock/warehouse', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/warehouse/index', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/warehouse/list-order-request', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/warehouse/view', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/main-stock/store', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/main-stock/create', 'type' => 2,'description' =>''],
-            // ['name' => '/inventory/stock-order', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/product-summary', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/warehouse', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock-out/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock-out/stock', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock/view-chart-total', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock/warehouse', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/list-order-request', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/warehouse/view', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/main-stock/store', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/main-stock/create', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/stock-order', 'type' => 2,'description' =>''],
             ['name' => '/me/*', 'type' => 2,'description' =>''],
             ['name' => '/profile/*', 'type' => 2,'description' =>''],
+
+            // stock
+            ['name' => '/inventory/default/index', 'type' => 2,'description' =>''],
+
+            
             
             //ขัดซื้อ
             ['name' => '/purchase/*', 'type' => 2,'description' =>''],
@@ -236,6 +244,8 @@ class UpdateTableController extends Controller
             ['child' => '/am/asset/update', 'parent' => 'user'],
             ['child' => '/am/default/index', 'parent' => 'user'],
             ['child' => '/depdrop/*', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/events', 'parent' => 'user'],
+            ['child' => '/booking/meeting/events', 'parent' => 'user'],
             // ซ่อมบำรุง
             ['child' => '/helpdesk/computer/*', 'parent' => 'computer'],
             ['child' => '/helpdesk/team/*', 'parent' => 'computer'],
