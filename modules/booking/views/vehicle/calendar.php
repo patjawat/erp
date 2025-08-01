@@ -1,6 +1,8 @@
 <?php
+
 use yii\helpers\Html;
 use app\models\Categorise;
+use yii\web\View;
 
 $this->title = 'ปฏิทินการใช้รถ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
@@ -31,16 +33,17 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         display: inline-block;
         margin-right: 6px;
     }
-
 </style>
 
 <div class="row">
-    <div class="col-lg-9 col-md-12 col-sm-12" id="calender-container">
-       
-        <?=$this->render('carlendar_item',['vehicle_type' => $vehicle_type])?>
+    <div class="col-lg-8 col-md-12 col-sm-12" id="calender-container">
+        <?= $this->render('carlendar_item', ['vehicle_type' => $vehicle_type]) ?>
     </div>
-    <div class="col-lg-3 col-md-12 col-sm-12" id="manual-container">
-        <?=$this->render('@app/modules/booking/views/vehicle/list_event_todays')?>
+    <div class="col-lg-4 col-md-12 col-sm-12" id="manual-container">
+
+
+        <div id="showEventToDays"></div>
+        <div id="showEventTomorrow"></div>
 
         <div class="card">
             <div class="card-header  bg-primary-gradient">
@@ -59,7 +62,6 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
                             <div>
                                 <span class="badge text-bg-light status_summary" id="status<?= $_vehicleStatus->code ?>">0</span>
                             </div>
-
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -67,5 +69,36 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         </div>
     </div>
 </div>
-</div>
-</div>
+
+
+<?php
+$js = <<<JS
+            listEventTomorrow()
+            listEventToDays()
+            async function listEventToDays()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "/booking/vehicle/list-event-todays",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showEventToDays').html(response.content)
+                    }
+                });
+            }
+
+            async function listEventTomorrow()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "/booking/vehicle/list-event-tomorrow",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showEventTomorrow').html(response.content)
+                    }
+                });
+            }
+    JS;
+
+$this->registerJS($js, View::POS_END);
+?>

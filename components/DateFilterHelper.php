@@ -6,7 +6,7 @@ class DateFilterHelper
 {
     /**
      * คืนช่วงวันที่ตาม key ที่กำหนด
-     * @param string $rangeKey เช่น today, this_week, last_week, this_month, last_month
+     * @param string $rangeKey เช่น today, tomorrow, this_week, last_week, this_month, last_month
      * @return array|null [start, end] หรือ null ถ้าไม่พบ
      */
     public static function getRange(string $rangeKey): ?array
@@ -14,6 +14,12 @@ class DateFilterHelper
         switch ($rangeKey) {
             case 'today':
                 return [date('Y-m-d 00:00:00'), date('Y-m-d 23:59:59')];
+
+            case 'tomorrow':
+                return [
+                    date('Y-m-d 00:00:00', strtotime('+1 day')),
+                    date('Y-m-d 23:59:59', strtotime('+1 day'))
+                ];
 
             case 'yesterday':
                 return [
@@ -56,6 +62,7 @@ class DateFilterHelper
         return [
             '' => 'ทั้งหมด',
             'today' => 'วันนี้',
+            'tomorrow' => 'พรุ่งนี้',
             'yesterday' => 'เมื่อวาน',
             'this_week' => 'อาทิตย์นี้',
             'last_week' => 'อาทิตย์ที่แล้ว',
@@ -64,3 +71,4 @@ class DateFilterHelper
         ];
     }
 }
+

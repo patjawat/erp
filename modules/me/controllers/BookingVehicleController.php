@@ -6,7 +6,6 @@ use Yii;
 use DateTime;
 use DatePeriod;
 use DateInterval;
-use yii\helpers\Url;
 use yii\web\Response;
 use yii\web\Controller;
 use app\models\Categorise;
@@ -15,13 +14,11 @@ use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
-use mdm\autonumber\AutoNumber;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
-use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 
@@ -81,7 +78,7 @@ class BookingVehicleController extends Controller
 
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
-        return $this->render('index', [
+        return $this->render('@app/modules/booking/views/vehicle/index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -99,6 +96,35 @@ class BookingVehicleController extends Controller
         return $this->render('calendar', [
             'vehicle_type' => 'ambulance'
         ]);
+    }
+
+
+
+
+    //แสดงรายการพรุ่งนี้
+    public function actionListTomorrow()
+    {
+        $dateTomorrow = date('Y-m-d', strtotime('+1 day'));
+        $searchModel = new VehicleSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['date_start' => $dateTomorrow]);
+        $dataProvider->query->andFilterWhere(['<>','status','Cancel']);
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+        // กำหนด pageSize ที่นี่
+        $dataProvider->pagination->pageSize = 7;
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' =>  $this->renderAjax('@app/modules/booking/views/vehicle/list_vehicle_tomorrow', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        }else{
+            return  $dateTomorrow;
+
+        }
     }
 
 

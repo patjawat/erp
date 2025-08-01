@@ -63,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="row">
-    <div class="col-lg-8 col-md-8 col-sm-12">
+    <div class="col-lg-8 col-md-12 col-sm-12">
         
 <div class="card" id="fullscreen-container">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -94,11 +94,10 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
     </div>
-    <div class="col-lg-4 col-md-4 col-sm-12">
+    <div class="col-lg-4 col-md-12 col-sm-12">
 
-        <?=$this->render('@app/modules/booking/views/vehicle/list_event_todays')?>
-        <div id="showEventItem"></div>
-
+        <div id="showEventToDays"></div>
+        <div id="showEventTomorrow"></div>
     </div>
 </div>
 
@@ -286,6 +285,34 @@ $js = <<<JS
                     $('#resizeCalendar').html('<i class="fa-solid fa-expand me-2 fs-6"></i> ขยายเต็มจอ');
                 }
             });
+
+            listEventTomorrow()
+            listEventToDays()
+            async function listEventToDays()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "/booking/vehicle/list-event-todays",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showEventToDays').html(response.content)
+                    }
+                });
+            }
+
+            async function listEventTomorrow()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "/booking/vehicle/list-event-tomorrow",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showEventTomorrow').html(response.content)
+                    }
+                });
+            }
+
+
 
 
     JS;

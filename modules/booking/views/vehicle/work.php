@@ -49,17 +49,17 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="card-body p-0">
     <div class="table-responsive pb-5">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="">
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
-                        <th class="fw-semibold">เหตุผล/จุดหมาย</th>
-                        <th class="fw-semibold" style="width: 400px;">พขร./วันที่ขอใช้</th>
+                        <th class="fw-semibold">เลขที่</th>
                         <th class="fw-semibold">ผู้ขอ</th>
-                        <th class="fw-semibold">เลขไมล์ออกเดินทาง</th>
-                        <th class="fw-semibold">เลขไมล์หลังเดินทาง</th>
-                        <th class="fw-semibold">สถานะ</th>
+                        <th class="fw-semibold">วัน/เวลา/สถานที่</th>
+                        <th class="fw-semibold">พขร</th>
+                        <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
+                        <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
+                        <th class="fw-semibold text-center">สถานะ</th>
                         <th class="fw-semibold text-center" style="width:150px;">ดำเนินการ</th>
                     </tr>
                     </thead>
@@ -68,27 +68,23 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <td class="text-center fw-semibold">
                                 <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                                <td>
-                            <p class="text-muted mb-0 fs-13"><?php echo $item->vehicle->viewUrgent() ?></p>
-                            <p class="mb-0 fw-semibold fs-13"><?= $item->vehicle->code ?></p>
+                            
+                            <td><p class="mb-0 fw-semibold fs-13"><?= $item->vehicle->code ?></p>
                         </td>
+                          <td> <?=$item->vehicle->userRequest()['avatar']?></td>
                         <td>
-                            <div class="avatar-detail text-truncate">
-                                <p class="fs-13 mb-0"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
-                                <h6 class="text-muted mb-0 fs-13"><i class="fa-solid fa-circle-info text-primary"></i> <?= $item->vehicle->reason; ?></h6>
+                            <div style="width:300px" class="avatar-detail text-truncate">
+                                <p class="mb-0"><?=$item->vehicle->showDateRange()?></p>
+                                <p class="fs-13 mb-0 fw-semibold"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
+                                <p class="text-muted mb-0 fs-12"> <?= $item->vehicle->reason; ?></p>
                               
                             </div>
                         </td>
-                        <td>
-                            <?php
-                            $msg = '<i class="fa-solid fa-calendar-day me-1"></i><span class="fw-semibold fs-13 text-primary">'.$item->vehicle->showDateRange().' เวลา '.$item->vehicle->viewTime()['full'].'</span>';
-                            echo $item->showDriver($msg)['avatar']?>
+                        <td><?=$item->showDriver()['avatar']?></td>
                           
-                        </td>
-                            <td> <?=$item->vehicle->userRequest()['avatar']?></td>
-                            <td><?=$item->mileage_start?></td>
-                            <td><?=$item->mileage_end?></td>
-                            <td><?php echo $item->vehicle->getStatus($item->status)['view'] ?? '-'?></td>
+                            <td class="text-end"><?=$item->mileage_start?></td>
+                            <td  class="text-end"><?=$item->mileage_end?></td>
+                            <td  class="text-center"><?php echo $item->vehicle->getStatus($item->status)['view'] ?? '-'?></td>
                             <td class="fw-light text-center">
                             <div class="btn-group">
                             <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'btn btn-light w-100  open-modal', 'data' => ['size' => 'modal-lg']]) ?>

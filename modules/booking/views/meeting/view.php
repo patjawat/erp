@@ -83,17 +83,22 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
 
 <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-center gap-2 mt-3">
 
+<!-- ถ้ายกเลิกแล้วไม่สามารถแก้ไขได้ -->
+<?php if($model->status !== 'Cancel'):?>
     <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/booking-meeting/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+<?php endif;?>
 
     <?php if ($model->status == 'Pending'): ?>
         <button type="button" class="btn btn-primary confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
             <i class="fa-regular fa-circle-check"></i> อนุมัติ
         </button>
     <?php endif; ?>
-
-    <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
-        <i class="fa-solid fa-xmark"></i> ยกเลิก
-    </button>
+    
+    <?php if($model->status !== 'Cancel'):?>
+        <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
+            <i class="fa-solid fa-xmark"></i> ยกเลิก
+        </button>
+        <?php endif; ?>
 
     <button type="button" class="btn btn-secondary  rounded-pill" data-bs-dismiss="modal"><i
             class="fa-regular fa-circle-xmark"></i> ปิด</button>

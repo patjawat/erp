@@ -207,6 +207,8 @@ class Vehicle extends \yii\db\ActiveRecord
             'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
             'fullname' => $emp->fullname,
             'department' => $emp->departmentName(),
+            'signature' => $emp->getInfo()['signature'],
+            
         ];
         // } catch (\Throwable $th) {
 
@@ -393,19 +395,17 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-        return $this->getStatus($this->status);
+        $statusName = $this->vehicleStatus?->title ?? null;
+        return $this->getStatus($this->status,$statusName);
     }
 
-    public  function getStatus($status)
+    public  function getStatus($status,$statusName)
     {
-        $title = '';
-        $color = '';
-        $view = '';
         $count = self::find()
             ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
             ->andWhere(['status' => $status])->count();
         $total = self::find()->count();
-        $data = AppHelper::viewStatus($status);
+        $data = AppHelper::viewStatus($status,$statusName);
         $percent = $total > 0 ? ($count / $total * 100) : 0;
 
         return [

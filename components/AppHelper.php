@@ -737,9 +737,9 @@ class AppHelper extends Component
         return $data;
     }
 
-    public static function viewStatus($status)
+    public static function viewStatus($status,$statusName=null)
     {
-        $title = '';
+        $title = $statusName ? $statusName : '';
         $color = '';
         $view = '';
         $icon = '';
@@ -747,43 +747,43 @@ class AppHelper extends Component
             case 'Pending':
                 $color = 'warning';
                 $icon = '<i class="fa-solid fa-hourglass-start me-1  me-1 text-'.$color.'"></i>';
-                $title = 'รอการอนุมัติ';
+                 $title =  $statusName ? $statusName : 'รอการอนุมัติ';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">'.$icon. $title . '</span>';
                 break;
             case 'Pass':
                 $color = 'primary';
                 $icon = '<i class="fa-solid fa-circle-check  me-1 text-'.$color.'"></i>';
-                $title = 'อนุมัติ';
+                 $title =  $statusName ? $statusName : 'อนุมัติ';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color. ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             case 'Approve':
                 $color = 'success';
                 $icon = '<i class="fa-regular fa-star  me-1 text-'.$color.'"></i>';
-                $title = 'ผอ.อนุมัติ';
+                $title =  $statusName ? $statusName : 'ผอ.อนุมัติ';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             case 'Cancel':
                 $color = 'secondary';
                 $icon = '<i class="fa-solid fa-circle-stop  me-1 text-'.$color.'"></i>';
-                $title = 'ยกเลิก';
+                 $title =  $statusName ? $statusName : 'ยกเลิก';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             case 'Success':
                 $color = 'success';
                 $icon = '<i class="fa-regular fa-circle-check  me-1 text-'.$color.'"></i>';
-                $title = 'เสร็จสิ้น';
+                 $title =  $statusName ? $statusName : 'เสร็จสิ้น';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-circle-check"></i> ' .$icon. $title . '</span>';
                 break;
             case 'None':
                 $color = 'secondary';
                 $icon = '<i class="fa-solid fa-circle-minus  me-1 text-'.$color.'"></i>';
-                $title = 'รอตรวจสอบ';
+                 $title =  $statusName ? $statusName : 'รอตรวจสอบ';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-hourglass-half"></i> ' .$icon. $title . '</span>';
                 break;
             default:
             $color = 'light';
             $icon = '<i class="fa-solid fa-circle-question  me-1 text-'.$color.'"></i>';
-                $title = 'ไม่ระบุ';
+                 $title =  $statusName ? $statusName : 'ไม่ระบุ';
                 $view = '<span class="badge-soft-' . $color . ' rounded-pill">' .$icon. $title . '</span>';
                 break;
         }

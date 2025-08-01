@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -11,19 +12,19 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-    <i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('sub-title'); ?>
-    ทะเบียนใช้รถยนต์ทั่วไป
+ทะเบียนใช้รถยนต์ทั่วไป
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-    <?= $this->render('menu') ?>
+<?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-    <?= $this->render('menu', ['active' => 'official']) ?>
+<?= $this->render('menu', ['active' => 'official']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
@@ -36,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="card shadow-sm">
-        <div class="card-header bg-primary-gradient text-white">
+    <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนการขอใช้รถยนต์
@@ -49,19 +50,17 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
-        <div class="card-body">
+    <div class="card-body">
         <table class="table table-hover">
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th>รหัสการจอง</th>
-                    <th class="text-center">ความเร่งด่วน</th>
-                    <th>รถที่ต้องการ</th>
-                    <th>วันที่ใช้</th>
-                    <th>จุดหมาย</th>
                     <th>ผู้จอง</th>
+                    <th>จุดหมาย</th>
+                    <th class="text-center">ความเร่งด่วน</th>
                     <th>สถานะ</th>
-                    <th>จัดการ</th>
+                    <th class="text-end">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -71,20 +70,34 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td><?= $item->code ?></td>
-                        <td class="text-center"><?= $item->viewUrgent() ?></td>
-                        <td><?=$this->render('caritem',['item' => $item])?></td>
-                        <td>
-                            <p class="mb-0">
-                                <?= $item->showDateRange() ?>
-                            </p>
-                            <p class="mb-0">
-                                <?= $item->viewTime()['full'] ?>
-                            </p>
-                    </td>
-                        <td><?= $item->locationOrg?->title ?? '-' ?></td>
                         <td><?= $item->userRequest()['avatar'] ?></td>
-                        <td><?= $item->viewStatus()['view'] ?? '-' ?></td>
-                        <td class="fw-light text-end">
+                        <td>
+                            <p class="mb-0 fw-semibold"><?= $item->showDateRange() ?> เวลา <?= $item->viewTime()['full'] ?></p>
+                            <p class="mb-0 fs-11">
+                                <?= $item->locationOrg?->title ?? '-' ?>
+                            </p>
+                        </td>
+                        <td class="text-center"><?= $item->viewUrgent() ?></td>
+                        <td><?= $item->viewStatus()['view'] ?? '-' ?>
+                            <?= $item->is_shared == 1 ? 'จัดสรรร่วม' : '' ?>
+                        </td>
+
+                        <td class="text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-2"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                </ul>
+                            </div>
+                        </td>
+
+                        <!-- <td class="fw-light text-end">
                             <div class="btn-group">
                                 <?= Html::a(
                                     '<i class="fa-solid fa-pen-to-square"></i>',
@@ -103,13 +116,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
                                         ) ?>
                                     </li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',
-                                            ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอรถยนต์'],
-                                            ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]
-                                        ) ?>
-                                    </li>
+                                  
                                     <li>
                                         <?= Html::a(
                                             '<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก',
@@ -119,7 +126,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </li>
                                 </ul>
                             </div>
-                        </td>
+                        </td> -->
                     </tr>
                 <?php endforeach; ?>
             </tbody>

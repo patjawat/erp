@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             </div>
         </div>
-        <div id="showEventItem"></div>
+        <div id="showTomorrow"></div>
 
     </div>
 </div>
@@ -79,15 +79,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-listEventItem()
-async function listEventItem()
+listTomorrow()
+async function listTomorrow()
 {
     await $.ajax({
         type: "get",
-        url: "/me/booking-meeting/list-event-items",
+        url: "/me/booking-meeting/list-tomorrow",
         dataType: "json",
         success: function (response) {
-            $('#showEventItem').html(response.content)
+            $('#showTomorrow').html(response.content)
         }
     });
 }

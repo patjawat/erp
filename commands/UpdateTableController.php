@@ -87,9 +87,12 @@ class UpdateTableController extends Controller
             // ยานพาหนะ
             ['name' => '/booking/vehicle/*', 'type' => 2,'description' =>''],
             ['name' => '/booking/vehicle/events', 'type' => 2,'description' =>''],
+            ['name' => '/booking/vehicle/list-event-tomorrow', 'type' => 2,'description' =>''],
+            ['name' => '/booking/vehicle/list-event-todays', 'type' => 2,'description' =>''],
             // ห้องประชุม
             ['name' => '/booking/meeting/*', 'type' => 2,'description' =>''],
             ['name' => '/booking/meeting/events', 'type' => 2,'description' =>''],
+
 
             ['name' => '/dms/*', 'type' => 2,'description' =>''],
             ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
@@ -230,6 +233,8 @@ class UpdateTableController extends Controller
 
             // ยานพาหนะ
             ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
+            ['child' => '/booking/vehicle/list-event-todays', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/list-event-tomorrow', 'parent' => 'user'],
             // ระบบห้องประชุม
             ['child' => '/booking/meeting/*', 'parent' => 'meeting'],
             

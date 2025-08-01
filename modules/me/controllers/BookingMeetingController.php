@@ -11,14 +11,15 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\booking\models\Booking;
 use app\modules\booking\models\Meeting;
+use app\modules\booking\models\RoomLayout;
 use app\modules\booking\models\RoomSearch;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\MeetingSearch;
-use app\modules\booking\models\RoomLayout;
 
 class BookingMeetingController extends \yii\web\Controller
 {
@@ -51,20 +52,21 @@ class BookingMeetingController extends \yii\web\Controller
             'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        
+         if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            // $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-            // $dataProvider->query->andFilterWhere(['between', 'date_start', $dateStart, $dateEnd]);
 
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_start', AppHelper::convertToGregorian($searchModel->date_end)]);
+       
         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -72,24 +74,29 @@ class BookingMeetingController extends \yii\web\Controller
         ]);
     }
 
-    //แสดงรายการทั้งหมด
-    public function actionListEventItems()
+    //แสดงรายการพรุ่งนี้
+    public function actionListTomorrow()
     {
-
+        $dateTomorrow = date('Y-m-d', strtotime('+1 day'));
         $searchModel = new MeetingSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+        $dataProvider->query->andFilterWhere(['date_start' => $dateTomorrow]);
+        $dataProvider->query->andFilterWhere(['<>','status','Cancel']);
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
         // กำหนด pageSize ที่นี่
         $dataProvider->pagination->pageSize = 7;
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' =>  $this->renderAjax('list_event_items', [
+                'content' =>  $this->renderAjax('@app/modules/booking/views/meeting/list_meeting_tomorrow', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),
             ];
+        }else{
+            return  $dateTomorrow;
+
         }
     }
 

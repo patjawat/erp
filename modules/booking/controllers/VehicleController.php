@@ -53,7 +53,6 @@ class VehicleController extends Controller
 
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
-            // 'status' => 'Pending',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -98,6 +97,77 @@ class VehicleController extends Controller
         ]);
     }
 
+    //แสดงการจองรถวันนี้
+    public function actionListEventTodays()
+    {
+
+        $todays =  date('Y-m-d');
+        $searchModel = new VehicleSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['date_start' => $todays]);
+        $dataProvider->query->andWhere(['IN', 'status', ['Pass', 'Approve']]);
+        $dataProvider->pagination->pageSize = 7;
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_vehicle_events', [
+                    'showDate' => ThaiDateHelper::formatThaiDate($todays),
+                    'container' => 'EventTodays',
+                    'title' => 'การใช้รถวันนี้',
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('list_vehicle_events', [
+                'showDate' => ThaiDateHelper::formatThaiDate($todays),
+                'container' => 'EventTodays',
+                'title' => 'การใช้รถวันนี้',
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
+    //แสดงการจองรถวันพรุ่งนี้
+    public function actionListEventTomorrow()
+    {
+
+        $todays =  date('Y-m-d');
+        $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
+        $searchModel = new VehicleSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        // $dataProvider->query->andWhere(['date_start' => $nextDate]);
+        $dataProvider->query->andWhere(['IN', 'status', ['Pass', 'Approve']]);
+        $dataProvider->pagination->pageSize = 7;
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_vehicle_events', [
+                    'showDate' => ThaiDateHelper::formatThaiDate($nextDate),
+                    'container' => 'EventTomorrow',
+                    'title' => 'การใช้รถพรุ่งนี้',
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('list_vehicle_events', [
+                'showDate' => ThaiDateHelper::formatThaiDate($nextDate),
+                'container' => 'EventTomorrow',
+                'title' => 'การใช้รถพรุ่งนี้',
+               'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+    }
+
 
 
     public function actionAmbulance()
@@ -140,10 +210,10 @@ class VehicleController extends Controller
     }
 
 
-//ปฎิทินการขอใช้รถยนต์ราชการ
+    //ปฎิทินการขอใช้รถยนต์ราชการ
     public function actionCalendar()
     {
-        return $this->render('calendar',['vehicle_type' => 'official']);
+        return $this->render('calendar', ['vehicle_type' => 'official']);
     }
 
 
@@ -165,26 +235,26 @@ class VehicleController extends Controller
 
         foreach ($bookings as $item) {
             try {
-    
-            $timeStart = $item->time_start;
-            $timeEnd = $item->time_end;
-            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
-            $data[] = [
-                'id'               => $item->id,
-                'title'            => $item->reason,
-                'start'            => $dateStart,
-                'time_start' => $timeStart,
-                'end'            => $dateEnd,
-                'time_end' => $timeEnd,
-                'allDay' => false,
-                'source' => 'vehicle',
-                'extendedProps' => [
-                    'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
-                    'code' => $item->code,
-                    'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
-                ],
-            ];
+
+                $timeStart = $item->time_start;
+                $timeEnd = $item->time_end;
+                $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+                $data[] = [
+                    'id'               => $item->id,
+                    'title'            => $item->reason,
+                    'start'            => $dateStart,
+                    'time_start' => $timeStart,
+                    'end'            => $dateEnd,
+                    'time_end' => $timeEnd,
+                    'allDay' => false,
+                    'source' => 'vehicle',
+                    'extendedProps' => [
+                        'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
+                        'code' => $item->code,
+                        'color' => (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
+                    ],
+                ];
             } catch (\Throwable $th) {
                 //throw $th;
             }
@@ -230,19 +300,6 @@ class VehicleController extends Controller
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
-
-        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        // }
-
-        // try {
-        //     $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        //     $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        //     $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', $dateStart])->andFilterWhere(['<=', 'vehicle_detail.date_end', $dateEnd]);
-        // } catch (\Throwable $th) {
-        //     // throw $th;
-        // }
 
         return $this->render('work', [
             'searchModel' => $searchModel,
@@ -412,7 +469,7 @@ class VehicleController extends Controller
                 throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
             }
             //ถ้าไม่ใช่การจัดสรรร่วม
-            if($model->is_shared == "0"){
+            if ($model->is_shared == "0") {
                 foreach ($post['vehicleDetails'] as $key => $detail) {
                     $bookingDetail = VehicleDetail::findOne($detail['id']);
                     if ($bookingDetail) {
@@ -422,7 +479,7 @@ class VehicleController extends Controller
                         $bookingDetail->save(false);
                         $this->sendMessage($model);
                     }
-                    
+
                     if (!$bookingDetail->save()) {
                         throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
                     }
@@ -440,7 +497,7 @@ class VehicleController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'คำขอใช้รถที่#'.$model->code,
+                'title' => 'คำขอใช้รถที่#' . $model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
                 ]),
