@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\formtemplate\controllers;
+namespace app\modules\formlayout\controllers;
 
 use Yii;
 use yii\web\Response;

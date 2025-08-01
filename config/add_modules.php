@@ -77,7 +77,7 @@ $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module ก�
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
 $modules['asset'] = ['class' => 'app\modules\asset\Module'];  // module ทรัพสินย์
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
-$modules['formtemplate'] = ['class' => 'app\modules\formtemplate\Module'];  // module ออกแบบ โนพท pdf
+$modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 
 return $modules;

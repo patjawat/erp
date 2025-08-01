@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\formtemplate;
+namespace app\modules\formlayout;
 
 /**
  * formdesign module definition class
@@ -10,7 +10,7 @@ class Module extends \yii\base\Module
     /**
      * {@inheritdoc}
      */
-    public $controllerNamespace = 'app\modules\formtemplate\controllers';
+    public $controllerNamespace = 'app\modules\formlayout\controllers';
 
     /**
      * {@inheritdoc}
