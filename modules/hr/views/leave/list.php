@@ -58,10 +58,6 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             </td>
             <td>
                 <?php echo $item->stackChecker()?>
-            <?php
-            echo Html::img($item->checkerName(4)['employee']->signature());
-            echo $item->checkerName(4)['employee']->signature();
-            ?>
             </td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?>
             </td>
