@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <p class="text-muted mb-0 fs-13"></p>
        
     </div>
-    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()?></p>
+    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()['full']?></p>
 </div>
     
     <div class="row">

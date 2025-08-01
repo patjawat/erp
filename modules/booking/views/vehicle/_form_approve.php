@@ -27,7 +27,10 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
     </div>
 
     <div class="booking-details">
-        <label class="form-label">จัดสรรรถ (<code><?php echo $model->viewGoType()?></code>)</label>
+        <div class="d-flex justify-content-between">
+            <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true])->label('จัดสรรร่วม') ?>
+            <label class="form-label">ประเภทการไป  (<code><?php echo $model->viewGoType()?></code>)</label>
+        </div>
         <table class="table table-bordered" id="details-table">
             <thead class="table-light">
                 <tr>

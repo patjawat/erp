@@ -25,7 +25,7 @@ use yii\helpers\Html;
                 <td>
                     <?= $item->viewMeetingDate() ?>
                     <p class="text-muted mb-0 fs-13">
-                        เริ่มเวลา <?= $item->viewTime() ?>
+                        เริ่มเวลา <?= $item->viewTime()['full'] ?>
                     </p>
                 </td>
                 <td class="fs-13"><?= $item->room?->title ?? '-' ?></td>
@@ -43,6 +43,7 @@ use yii\helpers\Html;
                             จัดการ
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                            <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', [$url . 'view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                             <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i>แก้ไข', [$url . 'view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                             <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-2"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item', 'data' => ['size' => 'modal-lg']]) ?></li>
                         </ul>

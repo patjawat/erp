@@ -42,74 +42,56 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
             <div class="card-body">
-                    <table
-                        class="table table-striped"
-                    >
-                        <thead>
+                <table
+                    class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">เวลา</th>
+                            <th scope="col">กิจกรรม</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($eventTodays as $_eventTodays): ?>
+                            <?php $iconData = $_eventTodays->showIconIfInTimeRange(); ?>
                             <tr>
-                                <th scope="col">เวลา</th>
-                                <th scope="col">กิจกรรม</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($eventTodays as $_eventTodays):?>
-                                <?php $iconData = $_eventTodays->showIconIfInTimeRange(); ?>
-                            <tr>
-                                <td scope="row"  class="<?=$iconData['active'] ? 'fw-semibold text-sucess' : ''?>">
-
-                                <?php
-                                
-                                echo $iconData['icon'] . ' ' . ($_eventTodays->viewTime()['full'] ?? '-');
-                                ?>
+                                <td scope="row" class="<?= $iconData['active'] ? 'fw-semibold text-sucess' : '' ?>">
+                                    <p class="mb-0"><?=$iconData['icon'].' '.$iconData['status']?></p>
+                                    <?= ($_eventTodays->viewTime()['full'] ?? '-'); ?>
                                 </td>
-                                <!-- <td  class="<?=$iconData['active'] ? 'fw-semibold text-success' : ''?>"><?php // $_eventTodays->title?></td> -->
-                                    <td>
-                                    <p class="mb-0"><?=$_eventTodays->room->title?></p>
-                                    <p class="mb-0 fs-12"><?=$_eventTodays->title?></p>
+                                <td>
+                                    <a href="<?=Url::to(['view','id' => $_eventTodays->id])?>" class="open-modal" data-size="modal-lg">
+                                    <p class="mb-0 fw-semibold"><?= $_eventTodays->room->title ?></p>
+                                    <p class="mb-0 fs-12"><?= $_eventTodays->title ?></p>
+                                </a>
                                 </td>
                             </tr>
-                            <?php endforeach;?>
-                        </tbody>
-                    </table>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header bg-primary-gradient text-white">
-                <div class="d-flex justify-content-between">
-                    <h6 class="text-white">
-                        <i class="fa-solid fa-calendar-days"></i> ปฏิทินทั้งหมด
-                    </h6>
-                </div>
-            </div>
-            <div class="card-body">
-                    <table
-                        class="table table-striped"
-                    >
-                        <thead>
-                            <tr>
-                                <th scope="col">เวลา</th>
-                                <th scope="col">กิจกรรม</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($eventTodays as $_eventTodays):?>
-                                <?php $iconData = $_eventTodays->showIconIfInTimeRange(); ?>
-                            <tr>
-                                <td><?=$_eventTodays->viewTime()['full'] ?? '-'?></td>
-                                 <td>
-                                    <p class="mb-0"><?=$_eventTodays->room->title?></p>
-                                    <p class="mb-0 fs-12"><?=$_eventTodays->title?></p>
-                                </td>
-                            </tr>
-                            <?php endforeach;?>
-                        </tbody>
-                    </table>
-
-            </div>
-        </div>
-
+        <div id="showEventItem"></div>
 
     </div>
 </div>
+
+<?php
+$js = <<< JS
+
+listEventItem()
+async function listEventItem()
+{
+    await $.ajax({
+        type: "get",
+        url: "/me/booking-meeting/list-event-items",
+        dataType: "json",
+        success: function (response) {
+            $('#showEventItem').html(response.content)
+        }
+    });
+}
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>

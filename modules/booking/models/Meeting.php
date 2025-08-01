@@ -248,6 +248,7 @@ class Meeting extends \yii\db\ActiveRecord
     }
 
 //แสดง icon ถ้าเป็นเวลาปัจจุบัน
+
 function showIconIfInTimeRange() {
     $currentTime = new DateTime();
     $startTimeStr = $this->viewTime()['start'];
@@ -256,20 +257,66 @@ function showIconIfInTimeRange() {
     $startTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $startTimeStr);
     $endTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $endTimeStr);
 
-    $inRange = false;
+    $status = '';
+    $icon = '';
 
     if ($startTime > $endTime) {
+        // กรณีช่วงเวลาเลยเที่ยงคืน เช่น 22:00 - 01:00
         $endTime->modify('+1 day');
-        $inRange = ($currentTime >= $startTime || $currentTime <= $endTime);
+
+        if ($currentTime < $startTime) {
+            $status = 'กำลังเริ่ม';
+            $icon = '<i class="fa-regular fa-clock text-warning"></i>';
+        } elseif ($currentTime >= $startTime || $currentTime <= $endTime) {
+            $status = 'เริ่มแล้ว';
+            $icon = '<i class="fa-solid fa-caret-right text-success"></i>';
+        } else {
+            $status = 'สิ้นสุดแล้ว';
+            $icon = '<i class="fa-solid fa-circle-check"></i>';
+        }
     } else {
-        $inRange = ($currentTime >= $startTime && $currentTime <= $endTime);
+        if ($currentTime < $startTime) {
+            $status = 'กำลังเริ่ม';
+            $icon = '<i class="fa-regular fa-clock text-warning"></i>';
+        } elseif ($currentTime >= $startTime && $currentTime <= $endTime) {
+            $status = 'เริ่มแล้ว';
+            $icon = '<i class="fa-solid fa-caret-right text-success"></i>';
+        } else {
+            $status = 'สิ้นสุด';
+            $icon = '';
+        }
     }
 
     return [
-        'active' => $inRange,
-        'icon' => $inRange ? '<i class="fa-solid fa-caret-right text-success"></i>' : ''
+        'active' => ($status === 'เริ่มแล้ว'),
+        'status' => $status,
+        'icon' => $icon
     ];
 }
+
+
+// function showIconIfInTimeRange() {
+//     $currentTime = new DateTime();
+//     $startTimeStr = $this->viewTime()['start'];
+//     $endTimeStr = $this->viewTime()['end'];
+
+//     $startTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $startTimeStr);
+//     $endTime = new DateTime($currentTime->format('Y-m-d') . ' ' . $endTimeStr);
+
+//     $inRange = false;
+
+//     if ($startTime > $endTime) {
+//         $endTime->modify('+1 day');
+//         $inRange = ($currentTime >= $startTime || $currentTime <= $endTime);
+//     } else {
+//         $inRange = ($currentTime >= $startTime && $currentTime <= $endTime);
+//     }
+
+//     return [
+//         'active' => $inRange,
+//         'icon' => $inRange ? '<i class="fa-solid fa-caret-right text-success"></i>' : ''
+//     ];
+// }
 
 
 
@@ -291,9 +338,6 @@ function showIconIfInTimeRange() {
 
     public function getStatus($status)
     {
-      $title = '';
-      $color = '';
-      $view = '';
       $count = self::find()->where(['status' => $status])->count();
       $total = self::find()->count();
       $data = AppHelper::viewStatus($status);

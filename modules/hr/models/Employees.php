@@ -1303,8 +1303,8 @@ class Employees extends Yii\db\ActiveRecord
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
             if ($model) {
-                // $filepath = FileManagerHelper::getUploadPath() . $this->ref . '/' . $model->real_filename;
-                 return FileManagerHelper::getImg($model->id);
+                $filepath = FileManagerHelper::getUploadPath() . $this->ref . '/' . $model->real_filename;
+                //  return FileManagerHelper::getImg($model->id);
                 return $filepath;
             } else {
                 return null;

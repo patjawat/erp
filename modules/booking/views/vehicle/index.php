@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ทะเบียนการขอใช้รถยนต์';
+$this->title = 'ทะเบียนการการขอใช้รถยนต์';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-    <?= $this->render('menu', ['active' => 'index']) ?>
+    <?= $this->render('menu', ['active' => 'official']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
@@ -78,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= $item->showDateRange() ?>
                             </p>
                             <p class="mb-0">
-                                <?= $item->viewTime() ?>
+                                <?= $item->viewTime()['full'] ?>
                             </p>
                     </td>
                         <td><?= $item->locationOrg?->title ?? '-' ?></td>

@@ -81,7 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td>
                             <?php
-                            $msg = '<i class="fa-solid fa-calendar-day me-1"></i><span class="fw-semibold fs-13 text-primary">'.$item->vehicle->showDateRange().' เวลา '.$item->vehicle->viewTime().'</span>';
+                            $msg = '<i class="fa-solid fa-calendar-day me-1"></i><span class="fw-semibold fs-13 text-primary">'.$item->vehicle->showDateRange().' เวลา '.$item->vehicle->viewTime()['full'].'</span>';
                             echo $item->showDriver($msg)['avatar']?>
                           
                         </td>

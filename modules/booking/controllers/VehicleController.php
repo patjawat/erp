@@ -6,6 +6,7 @@ use Yii;
 use DateTime;
 use yii\web\Response;
 use yii\web\Controller;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
@@ -163,6 +164,8 @@ class VehicleController extends Controller
 
 
         foreach ($bookings as $item) {
+            try {
+    
             $timeStart = $item->time_start;
             $timeEnd = $item->time_end;
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
@@ -182,6 +185,9 @@ class VehicleController extends Controller
                     'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
                 ],
             ];
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
 
         $summaryStatus = Vehicle::find()
@@ -400,28 +406,26 @@ class VehicleController extends Controller
             $model->status = 'Pass';
             $post = Yii::$app->request->post();
 
-            // ตรวจสอบและแสดงข้อมูล
-            $dates = Yii::$app->request->post('dates', []);
-            $cars = Yii::$app->request->post('cars', []);
-            $drivers = Yii::$app->request->post('drivers', []);
             // try {
             // บันทึกข้อมูลหลักการจอง
             if (!$model->save()) {
                 throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
             }
-
-            foreach ($post['vehicleDetails'] as $key => $detail) {
-                $bookingDetail = VehicleDetail::findOne($detail['id']);
-                if ($bookingDetail) {
-                    $bookingDetail->driver_id = $detail['driver'];
-                    $bookingDetail->license_plate = $detail['car'];
-                    $bookingDetail->status = 'Pass';
-                    $bookingDetail->save(false);
-                    $this->sendMessage($model);
-                }
-
-                if (!$bookingDetail->save()) {
-                    throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+            //ถ้าไม่ใช่การจัดสรรร่วม
+            if($model->is_shared == "0"){
+                foreach ($post['vehicleDetails'] as $key => $detail) {
+                    $bookingDetail = VehicleDetail::findOne($detail['id']);
+                    if ($bookingDetail) {
+                        $bookingDetail->driver_id = $detail['driver'];
+                        $bookingDetail->license_plate = $detail['car'];
+                        $bookingDetail->status = 'Pass';
+                        $bookingDetail->save(false);
+                        $this->sendMessage($model);
+                    }
+                    
+                    if (!$bookingDetail->save()) {
+                        throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+                    }
                 }
             }
 
@@ -451,7 +455,7 @@ class VehicleController extends Controller
     //ส่งข้อความหาพนักงานขับรถที่จัดสรร
     public function sendMessage($model)
     {
-        $message = 'ภาระกิจไป' . ($model->locationOrg?->title ?? '-') . ($model->showDateRange() . ' ' . $model->viewTime()) . "\n ผู้ขอ" . $model->userRequest()['fullname'];
+        $message = 'ภาระกิจไป' . ($model->locationOrg?->title ?? '-') . ($model->showDateRange() . ' ' . $model->viewTime()['full']) . "\n ผู้ขอ" . $model->userRequest()['fullname'];
         $data = [];
         if (isset($this->listMembers) && is_array($this->listMembers)) {
             foreach ($this->listMembers as $item) {

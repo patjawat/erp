@@ -57,18 +57,31 @@ class UploadsController extends \yii\web\Controller
 
     }
 
-    protected function setHttpHeaders($type)
-    {
-        
-        \Yii::$app->response->format = yii\web\Response::FORMAT_RAW;
-        if($type == 'png'){
-            \Yii::$app->response->headers->add('content-type','image/png');
-        }
-        
-        if($type == 'pdf'){
-            \Yii::$app->response->headers->add('content-type','application/pdf');
+protected function setHttpHeaders($type)
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
 
-        }
+    $mimeTypes = [
+        'png'  => 'image/png',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'bmp'  => 'image/bmp',
+        'webp' => 'image/webp',
+        'svg'  => 'image/svg+xml',
+        'pdf'  => 'application/pdf',
+        'doc'  => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    $type = strtolower($type);
+
+    if (isset($mimeTypes[$type])) {
+        Yii::$app->response->headers->set('Content-Type', $mimeTypes[$type]);
+    } else {
+        // Default fallback
+        Yii::$app->response->headers->set('Content-Type', 'application/octet-stream');
+    }
     
 
         // Yii::$app->getResponse()->getHeaders()

@@ -2,6 +2,8 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
+use yii\bootstrap5\Html;
+use app\modules\booking\models\Vehicle;
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
@@ -57,6 +59,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 </style>
 
+
+
+
+<div class="row">
+    <div class="col-lg-8 col-md-8 col-sm-12">
+        
 <div class="card" id="fullscreen-container">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>ปฏิทินการขอใช้รถยนต์</span>
@@ -83,6 +91,14 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div id="calendar"></div>
         </div>
+    </div>
+</div>
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-12">
+
+        <?=$this->render('@app/modules/booking/views/vehicle/list_event_todays')?>
+        <div id="showEventItem"></div>
+
     </div>
 </div>
 

@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\Vehicle $model */
@@ -10,17 +10,17 @@ $this->title = $model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Vehicles', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+ $me = UserHelper::GetEmployee();
 ?>
 
 <div class="mb-3 p-3 rounded">
     <div class="d-flex justify-content-between align-items-center mb-2">
-
         <h5 class="mb-0">
             ขอใช้<?php echo $model->carType?->title;?>ไป<?php echo $model->locationOrg?->title ?? '-'?> </h5>
         <p class="text-muted mb-0 fs-13"></p>
        
     </div>
-    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()?></p>
+    <p>วันที่ <?php echo $model->showDateRange()?> เวลา <?=$model->viewTime()['full']?></p>
 </div>
     
     <div class="row">
@@ -91,7 +91,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?php if($model->status == 'Pending' && Yii::$app->user->id == $model->created_by):?>
+<?php // if($model->status == 'Pending' && Yii::$app->user->id == $model->created_by):?>
+<?php if($me->id == $model->emp_id):?>
 <div class="d-flex justify-content-center gap-2">
         <?= Html::a('<i class="bi bi-pencil"></i> แก้ไข', ['/me/booking-vehicle/update','id' => $model->id,'title' => '<i class="bi bi-pencil"></i> แก้ไขแบบขอใช้รถยนต์'],['class' => 'btn btn-warning rounded-pill open-modal','data' => ['size' => 'modal-lg']]) ?>
         <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิกการจอง', ['/me/booking-vehicle/cancel', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill cancel-booking']) ?>

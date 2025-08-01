@@ -40,6 +40,7 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         <?=$this->render('carlendar_item',['vehicle_type' => $vehicle_type])?>
     </div>
     <div class="col-lg-3 col-md-12 col-sm-12" id="manual-container">
+        <?=$this->render('@app/modules/booking/views/vehicle/list_event_todays')?>
 
         <div class="card">
             <div class="card-header  bg-primary-gradient">

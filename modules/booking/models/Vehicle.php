@@ -17,7 +17,6 @@ use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;
 use app\modules\booking\models\BookingDetail;
@@ -79,8 +78,9 @@ class Vehicle extends \yii\db\ActiveRecord
             [['code', 'thai_year', 'vehicle_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
             [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'refer_type','date_filter'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'refer_type', 'date_filter', 'is_shared'], 'safe'],
             [['ref', 'code', 'vehicle_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
+            ['is_shared', 'boolean'],
         ];
     }
 
@@ -93,6 +93,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'id' => 'ID',
             'ref' => 'Ref',
             'code' => 'รหัส',
+            'is_shared' => 'จัดสรรร่วม',
             'thai_year' => 'ปีงบประมาณ',
             'vehicle_type_id' => 'ประเภทของรถ general หรือ ambulance',
             'refer_type' => 'ประเภทของการ refer รถพยาบาล refer,ems,normal',
@@ -156,7 +157,7 @@ class Vehicle extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'leader_id']);
     }
 
-       public function getDriver()
+    public function getDriver()
     {
         return $this->hasOne(Employees::class, ['id' => 'driver_id']);
     }
@@ -188,28 +189,27 @@ class Vehicle extends \yii\db\ActiveRecord
     public function getTemplate()
     {
         // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
-        $formName = 'vehicle_layout_form'; 
+        $formName = 'vehicle_layout_form';
         $template = Categorise::find()->where(['name' => $formName])->one();
-        if($template){
+        if ($template) {
             return  Url::to(['/dms/documents/show', 'ref' => $template->ref]);
-        }else{
+        } else {
             return false;
         }
-
     }
     // ผู้ขอบริการ
     public function userRequest()
     {
         // try {
-            $emp = $this->employee;
-        $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
-            return [
-                'avatar' => $emp->getAvatar(false,'วันที่ขอ '.$createDate),
-                'fullname' => $emp->fullname,
-                'department' => $emp->departmentName(),
-            ];
+        $emp = $this->employee;
+        $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+        return [
+            'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
+            'fullname' => $emp->fullname,
+            'department' => $emp->departmentName(),
+        ];
         // } catch (\Throwable $th) {
-        
+
         //     return [
         //         'avatar' => '',
         //         'fullname' => '',
@@ -219,25 +219,24 @@ class Vehicle extends \yii\db\ActiveRecord
 
     }
 
-        //แสดงวันเวลาที่แสดง
+    //แสดงวันเวลาที่แสดง
     public function viewCreated()
     {
         try {
-        $datetime = explode(' ',$this->created_at);
-        $date = ThaiDateHelper::formatThaiDate($datetime[0]);
-        $time =  substr($datetime[1], 0, 5).'.น';
-        return [
-            'full' => $date.' '.$time,
-            'date' => $date,
-            'time' => $time
-        ];
-
+            $datetime = explode(' ', $this->created_at);
+            $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+            $time =  substr($datetime[1], 0, 5) . '.น';
+            return [
+                'full' => $date . ' ' . $time,
+                'date' => $date,
+                'time' => $time
+            ];
         } catch (\Throwable $th) {
-           return [
-            'full' => '',
-            'date' =>'',
-            'time' => ''
-        ];
+            return [
+                'full' => '',
+                'date' => '',
+                'time' => ''
+            ];
         }
     }
 
@@ -277,20 +276,20 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function sendMessage($msg = null)
     {
-        
-        
+
+
         $telegramMessage = $msg ? $msg : "
         🚗 <b>แจ้งเตือนการจองรถ</b>
-        👤 <b>ผู้จอง:</b> ".$this->userRequest()['fullname']."
-        📝 <b>วัตถุประสงค์:</b> ".$this->reason."
-        📍 <b>สถานที่:</b> ".($this->locationOrg?->title ?? '-')."
-        📅 <b>วันที่เดินทาง:</b> ".$this->showDateRange()."
-        🕘 <b>เวลา:</b> ".$this->viewTime()."
+        👤 <b>ผู้จอง:</b> " . $this->userRequest()['fullname'] . "
+        📝 <b>วัตถุประสงค์:</b> " . $this->reason . "
+        📍 <b>สถานที่:</b> " . ($this->locationOrg?->title ?? '-') . "
+        📅 <b>วันที่เดินทาง:</b> " . $this->showDateRange() . "
+        🕘 <b>เวลา:</b> " . $this->viewTime()['full'] . "
         
         ";
         //ส่ง telegram
         try {
-            
+
             $response = Yii::$app->telegram->sendMessage('vehicle', $telegramMessage, [
                 'parse_mode' => 'HTML',
                 'disable_web_page_preview' => true,
@@ -299,30 +298,34 @@ class Vehicle extends \yii\db\ActiveRecord
             //throw $th;
         }
         $lineMessage = $msg . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
-        
+
         try {
-            
+
             $data = [];
             foreach ($this->listMembers as $item) {
                 if (isset($item->employee->user->line_id)) {
                     $lineId = $item->employee->user->line_id;
                     LineMsg::sendMsg($lineId, $lineMessage);
+                }
             }
-        }
-        // return $data;
-                    //code...
+            // return $data;
+            //code...
         } catch (\Throwable $th) {
-
         }
-        
     }
 
     public function viewTime()
     {
         $timeStart = substr($this->time_start, 0, 5);
         $timeEnd = substr($this->time_end, 0, 5);
-        $fulltime = $timeStart.' - '.$timeEnd;
-        return $fulltime . ' น.';
+        $fulltime = $timeStart . ' - ' . $timeEnd;
+
+
+        return [
+            'start' => $timeStart,
+            'end' => $timeEnd,
+            'full' => $fulltime . ' น.'
+        ];
     }
 
     public function showStartTime()
@@ -335,6 +338,10 @@ class Vehicle extends \yii\db\ActiveRecord
             return false;
         }
     }
+
+
+
+    //แสดง icon ถ้าเป็นเวลาปัจจุบัน
 
     public function showEndTime()
     {
@@ -386,8 +393,7 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function viewStatus()
     {
-       return $this->getStatus($this->status);
-  
+        return $this->getStatus($this->status);
     }
 
     public  function getStatus($status)
@@ -412,7 +418,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'icon' => $data['icon']
         ];
     }
-    
+
 
     public function viewCarType()
     {
@@ -480,26 +486,28 @@ class Vehicle extends \yii\db\ActiveRecord
     }
 
 
-         //  ภาพทีมคณะกรรมการ
-         public function StackDriver()
-         {
-             try {
-             $data = '';
-             $data .= '<div class="avatar-stack">';
-             foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
-                 $emp = Employees::findOne(['id' => $item->driver_id]);
-                    $data .= Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-                         'data' => [
-                             'expand' => '-20',
-                             'sizes' => 'auto',
-                             'src' => $emp->showAvatar()
-                         ]]);
-             }
-             $data .= '</div>';
-             return $data;
-             } catch (\Throwable $th) {
-             }
-         }
+    //  ภาพทีมคณะกรรมการ
+    public function StackDriver()
+    {
+        try {
+            $data = '';
+            $data .= '<div class="avatar-stack">';
+            foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
+                $emp = Employees::findOne(['id' => $item->driver_id]);
+                $data .= Html::img('@web/img/placeholder-img.jpg', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $emp->showAvatar()
+                    ]
+                ]);
+            }
+            $data .= '</div>';
+            return $data;
+        } catch (\Throwable $th) {
+        }
+    }
 
     public function listDocument()
     {
@@ -513,10 +521,12 @@ class Vehicle extends \yii\db\ActiveRecord
     // แสดงรายการทะยานพาหนะ
     public function ListCarItems()
     {
-        $items = Asset::find()->andWhere(['AND',
+        $items = Asset::find()->andWhere([
+            'AND',
             ['IS NOT', 'license_plate', null],
             ['<>', 'license_plate', ''],
-            ['<>', 'license_plate', ' ']])->all();
+            ['<>', 'license_plate', ' ']
+        ])->all();
         return ArrayHelper::map($items, 'license_plate', 'license_plate');
     }
 
@@ -612,12 +622,12 @@ class Vehicle extends \yii\db\ActiveRecord
         }
     }
 
-   
-        // รายงานแยกตามเดือน
-        public function getChartSummary($name)
-        {
-            // return $name;
-            $arr =  Vehicle::find()
+
+    // รายงานแยกตามเดือน
+    public function getChartSummary($name)
+    {
+        // return $name;
+        $arr =  Vehicle::find()
             ->select([
                 'thai_year',
                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 1 THEN 1 END) AS m1'),
@@ -634,138 +644,138 @@ class Vehicle extends \yii\db\ActiveRecord
                 new Expression('COUNT(CASE WHEN MONTH(d.date_start) = 12 THEN 1 END) AS m12'),
             ])
             ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
-                // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
-                ->where(['vehicle_type_id' => $name])
-                ->andWhere(['IN','d.status',['Approve']])
-                ->andFilterWhere(['thai_year' => $this->thai_year])
-                ->groupBy('thai_year')
-                ->asArray()
-                ->one();
-                // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
-            for ($i = 1; $i <= 12; $i++) {
-                $key = 'm' . $i;
-                if (!isset($arr[$key])) {
-                    $arr[$key] = 0;
-                }
+            // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
+            ->where(['vehicle_type_id' => $name])
+            ->andWhere(['IN', 'd.status', ['Approve']])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->groupBy('thai_year')
+            ->asArray()
+            ->one();
+        // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+        for ($i = 1; $i <= 12; $i++) {
+            $key = 'm' . $i;
+            if (!isset($arr[$key])) {
+                $arr[$key] = 0;
             }
-            return $arr;
         }
-         // รายงานแยกตามเดือน
-         public function getChartSummaryAmbulance($ambulanceType)
-         {
-             // return $name;
-             $arr =  Vehicle::find()
-             ->select([
-                 'thai_year',
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 1 THEN 1 END) AS m1'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 2 THEN 1 END) AS m2'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 3 THEN 1 END) AS m3'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 4 THEN 1 END) AS m4'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 5 THEN 1 END) AS m5'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 6 THEN 1 END) AS m6'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 7 THEN 1 END) AS m7'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 8 THEN 1 END) AS m8'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 9 THEN 1 END) AS m9'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 10 THEN 1 END) AS m10'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 11 THEN 1 END) AS m11'),
-                 new Expression('COUNT(CASE WHEN MONTH(date_start) = 12 THEN 1 END) AS m12'),
-             ])
+        return $arr;
+    }
+    // รายงานแยกตามเดือน
+    public function getChartSummaryAmbulance($ambulanceType)
+    {
+        // return $name;
+        $arr =  Vehicle::find()
+            ->select([
+                'thai_year',
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 1 THEN 1 END) AS m1'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 2 THEN 1 END) AS m2'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 3 THEN 1 END) AS m3'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 4 THEN 1 END) AS m4'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 5 THEN 1 END) AS m5'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 6 THEN 1 END) AS m6'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 7 THEN 1 END) AS m7'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 8 THEN 1 END) AS m8'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 9 THEN 1 END) AS m9'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 10 THEN 1 END) AS m10'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 11 THEN 1 END) AS m11'),
+                new Expression('COUNT(CASE WHEN MONTH(date_start) = 12 THEN 1 END) AS m12'),
+            ])
             //  ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
-                 // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
+            // ->where(['thai_year' => $this->thai_year, 'vehicle_type_id' => $name])
 
-                 ->andWhere(['vehicle_type_id' => 'ambulance'])
-                 ->andWhere(['refer_type' => $ambulanceType])
-                //  ->where(['vehicle_type_id' => 'ambulance'])
-                //  ->andWhere(['IN','d.status',['Approve']])
-                 ->andFilterWhere(['thai_year' => $this->thai_year])
-                 
-                 ->groupBy('thai_year')
-                 ->asArray()
-                 ->one();
-                 // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
-             for ($i = 1; $i <= 12; $i++) {
-                 $key = 'm' . $i;
-                 if (!isset($arr[$key])) {
-                     $arr[$key] = 0;
-                 }
-             }
-             return $arr;
-         }
+            ->andWhere(['vehicle_type_id' => 'ambulance'])
+            ->andWhere(['refer_type' => $ambulanceType])
+            //  ->where(['vehicle_type_id' => 'ambulance'])
+            //  ->andWhere(['IN','d.status',['Approve']])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
 
-         public function departmentSummary()
-         {
-            $query = Vehicle::find()
-                ->select(['d.name', 'COUNT(v.id) as total'])
-                ->from(['v' => Vehicle::tableName()])
-                ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
-                ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
-                ->where(['IN','v.status', ['Approve','Pass','Success']])
-                ->andFilterWhere(['thai_year' => $this->thai_year])
-                ->groupBy('d.id')
-                ->orderBy(['total' => SORT_ASC]);
+            ->groupBy('thai_year')
+            ->asArray()
+            ->one();
+        // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+        for ($i = 1; $i <= 12; $i++) {
+            $key = 'm' . $i;
+            if (!isset($arr[$key])) {
+                $arr[$key] = 0;
+            }
+        }
+        return $arr;
+    }
 
-            $result = $query->asArray()->all();
-            return $result;
-         }
+    public function departmentSummary()
+    {
+        $query = Vehicle::find()
+            ->select(['d.name', 'COUNT(v.id) as total'])
+            ->from(['v' => Vehicle::tableName()])
+            ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
+            ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
+            ->where(['IN', 'v.status', ['Approve', 'Pass', 'Success']])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->groupBy('d.id')
+            ->orderBy(['total' => SORT_ASC]);
 
-         public function carSummary()
-         {
-            $vehicles = Vehicle::find()
-                    ->select([
-                        'license_plate',
-                        new Expression('COUNT(id) AS total'),
-                    ])
-                    ->groupBy('license_plate')
-                    ->where(['IN','status', ['Approve','Pass','Success']])
-                    ->asArray()
-                    ->all();
+        $result = $query->asArray()->all();
+        return $result;
+    }
 
-                    return $vehicles;
-         }
+    public function carSummary()
+    {
+        $vehicles = Vehicle::find()
+            ->select([
+                'license_plate',
+                new Expression('COUNT(id) AS total'),
+            ])
+            ->groupBy('license_plate')
+            ->where(['IN', 'status', ['Approve', 'Pass', 'Success']])
+            ->asArray()
+            ->all();
 
-           // รายงานค่าใช้จ่ายรถ
-           public function getPriceSummary()
-           {
-               // return $name;
-               $arr = Vehicle::find()
-                   ->select([
-                       'thai_year',
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 1 THEN d.oil_price ELSE 0 END) AS m1'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 2 THEN d.oil_price ELSE 0 END) AS m2'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 3 THEN d.oil_price ELSE 0 END) AS m3'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 4 THEN d.oil_price ELSE 0 END) AS m4'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 5 THEN d.oil_price ELSE 0 END) AS m5'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 6 THEN d.oil_price ELSE 0 END) AS m6'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 7 THEN d.oil_price ELSE 0 END) AS m7'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 8 THEN d.oil_price ELSE 0 END) AS m8'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 9 THEN d.oil_price ELSE 0 END) AS m9'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 10 THEN d.oil_price ELSE 0 END) AS m10'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 11 THEN d.oil_price ELSE 0 END) AS m11'),
-                       new Expression('SUM(CASE WHEN MONTH(d.date_start) = 12 THEN d.oil_price ELSE 0 END) AS m12'),
-                   ])
-                   ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
-                   ->andWhere(['NOT IN', 'vehicle.status', ['Pending', 'Cancel']])
-                   ->andFilterWhere(['vehicle.thai_year' => $this->thai_year])
-                   ->groupBy('thai_year')
-                   ->asArray()
-                   ->one();
-                   
-               // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
-               for ($i = 1; $i <= 12; $i++) {
-                   $key = 'm' . $i;
-                   if (!isset($arr[$key])) {
-                       $arr[$key] = 0;
-                   }
-               }
-               return $arr;
-           }
-           
+        return $vehicles;
+    }
 
-           public function sendMessageTelegram()
-           {
-              //ส่งการแจ้งเตือนทาง Telegram
+    // รายงานค่าใช้จ่ายรถ
+    public function getPriceSummary()
+    {
+        // return $name;
+        $arr = Vehicle::find()
+            ->select([
+                'thai_year',
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 1 THEN d.oil_price ELSE 0 END) AS m1'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 2 THEN d.oil_price ELSE 0 END) AS m2'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 3 THEN d.oil_price ELSE 0 END) AS m3'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 4 THEN d.oil_price ELSE 0 END) AS m4'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 5 THEN d.oil_price ELSE 0 END) AS m5'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 6 THEN d.oil_price ELSE 0 END) AS m6'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 7 THEN d.oil_price ELSE 0 END) AS m7'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 8 THEN d.oil_price ELSE 0 END) AS m8'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 9 THEN d.oil_price ELSE 0 END) AS m9'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 10 THEN d.oil_price ELSE 0 END) AS m10'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 11 THEN d.oil_price ELSE 0 END) AS m11'),
+                new Expression('SUM(CASE WHEN MONTH(d.date_start) = 12 THEN d.oil_price ELSE 0 END) AS m12'),
+            ])
+            ->leftJoin('vehicle_detail d', 'd.vehicle_id = vehicle.id')
+            ->andWhere(['NOT IN', 'vehicle.status', ['Pending', 'Cancel']])
+            ->andFilterWhere(['vehicle.thai_year' => $this->thai_year])
+            ->groupBy('thai_year')
+            ->asArray()
+            ->one();
 
-                 $message = <<<MSG
+        // กำหนดค่าเริ่มต้น 0 ให้เดือนที่ไม่มีข้อมูล
+        for ($i = 1; $i <= 12; $i++) {
+            $key = 'm' . $i;
+            if (!isset($arr[$key])) {
+                $arr[$key] = 0;
+            }
+        }
+        return $arr;
+    }
+
+
+    public function sendMessageTelegram()
+    {
+        //ส่งการแจ้งเตือนทาง Telegram
+
+        $message = <<<MSG
                         📌 <b>{$this->reason}</b>\n
                         🧑‍💼 <b>ผู้ขอ:</b> นายสมชาย ใจดี\n
                         📍 <b>สถานที่:</b> ศาลากลางจังหวัด\n
@@ -774,12 +784,10 @@ class Vehicle extends \yii\db\ActiveRecord
                         🚗 <b>ประเภทรถ:</b> รถตู้\n
                         // 🔗 <a href="https://your-app.com/booking/{$id}">ดูรายละเอียด</a>
                         MSG;
-    
-                         $response = Yii::$app->telegram->sendMessage('book_vehicle', $message, [
-                        'parse_mode' => 'HTML',
-                        'disable_web_page_preview' => true,
-                        ]);
-           }
-         
-        
+
+        $response = Yii::$app->telegram->sendMessage('book_vehicle', $message, [
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+        ]);
+    }
 }

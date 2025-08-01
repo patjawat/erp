@@ -52,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th class="fw-semibold">ผู้ขอ</th>
                             <th class="fw-semibold">ห้องประชุม</th>
                             <th class="fw-semibold">สถานะ</th>
-                            <th class="fw-semibold text-center">ดำเนินการ</th>
+                            <th class="fw-semibold text-end">ดำเนินการ</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
@@ -72,21 +72,23 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?=$item->getUserReq()['avatar']?></td>
                             <td><?=$item->room->title?></td>
                             <td><?=$item->viewStatus()['view']?></td>
-                            <td class="fw-light text-center">
-                                <div class="btn-group">
-                                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/me/booking-meeting/update', 'id' => $item->id,'title' => 'แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
-                                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                        <i class="bi bi-caret-down-fill"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><?php echo Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-meeting/view','id' => $item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
-                                        </li>
-                                        <li><?php echo Html::a('<i class="fa-solid fa-circle-xmark me-1"></i> ยกเลิก',['/me/booking-meeting/cancel','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
+
+                            <td class="fw-light text-end">
+                        <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงข้อมูล',['/me/booking-meeting/view','id' => $item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?>
+                                    <li><?= Html::a('<i class="fa-solid fa-circle-xmark me-1"></i> ยกเลิก',['/me/booking-meeting/cancel','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> ลบ'],['class' => 'dropdown-item cancel-order','data' => ['size' => 'modal-lg']])?>
+                                </ul>
+                            </div>
+                        </td>
+
+                            
                         </tr>
                         <?php endforeach;?>
                     </tbody>

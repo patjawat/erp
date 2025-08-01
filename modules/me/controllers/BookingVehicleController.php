@@ -89,15 +89,15 @@ class BookingVehicleController extends Controller
 
     public function actionCalendar()
     {
-        return $this->render('calendar',[
-              'vehicle_type' => 'official'
+        return $this->render('calendar', [
+            'vehicle_type' => 'official'
         ]);
     }
 
     public function actionCalendarAmbulance()
     {
-        return $this->render('calendar',[
-              'vehicle_type' => 'ambulance'
+        return $this->render('calendar', [
+            'vehicle_type' => 'ambulance'
         ]);
     }
 
@@ -116,7 +116,7 @@ class BookingVehicleController extends Controller
             ->all();
         $data = [];
 
-       foreach ($bookings as $item) {
+        foreach ($bookings as $item) {
             $timeStart = $item->time_start;
             $timeEnd = $item->time_end;
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
@@ -133,11 +133,11 @@ class BookingVehicleController extends Controller
                 'extendedProps' => [
                     'title' => $this->renderAjax('@app/modules/booking/views/vehicle/view_title', ['model' => $item]),
                     'code' => $item->code,
-                    'color' =>  (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
+                    'color' => (isset($item->vehicleStatus) && isset($item->vehicleStatus->data_json['color'])) ? $item->vehicleStatus->data_json['color'] : '',
                 ],
             ];
         }
-         return  [
+        return  [
             'events' => $data
         ];
     }
@@ -161,7 +161,6 @@ class BookingVehicleController extends Controller
                 ]),
             ];
         } else {
-            // return $this->render('@app/modules/booking/views/vehicle/view', [
             return $this->render('view', [
                 'model' => $model
             ]);
@@ -182,8 +181,6 @@ class BookingVehicleController extends Controller
         $model = new Vehicle([
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
-            // 'time_start' => '08:00',
-            // 'time_end' => '16:30',
         ]);
         $model->leader_id = isset($model->Approve()['approve_1']['id']) ? $model->Approve()['approve_1']['id'] : '';
 
@@ -206,13 +203,9 @@ class BookingVehicleController extends Controller
 
                     $this->createDetail($model);
                     $model->sendMessage();
-
-
                     //สร้างการอนุมัติ
 
                     // $this->createApprove($model);
-
-                    // return $this->redirect(['/me/booking-vehicle/index', 'id' => $model->id]);
                     return [
                         'status' => 'success',
                     ];
@@ -248,15 +241,26 @@ class BookingVehicleController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-
-
-            return [
-                'status' => 'success',
-                'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
-            ];
+            $model->thai_year = AppHelper::YearBudget();
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->status =  $model->vehicle_type_id == "personal" ? 'Pass' : 'Pending';
+            if ($model->save()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'message' => 'เกิดข้อผิดพลาด',
+                ];
+            }
         }
 
         if ($this->request->isAJax) {
@@ -294,7 +298,7 @@ class BookingVehicleController extends Controller
         👤 <b>ผู้ยกเลิก:</b> " . $model->userRequest()['fullname'] . "
         📍 <b>สถานที่:</b> " . ($model->locationOrg?->title ?? '-') . "
         📅 <b>วันที่:</b> " . $model->showDateRange() . "
-        🕘 <b>เวลา:</b> " . $model->viewTime();
+        🕘 <b>เวลา:</b> " . $model->viewTime()['full'];
             $model->sendMessage($msg);
         }
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -305,7 +309,7 @@ class BookingVehicleController extends Controller
     }
 
 
-    
+
     /**
      * Finds the Vehicle model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

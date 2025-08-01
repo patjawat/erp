@@ -56,7 +56,13 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <td class="text-start text-truncate" style="max-width:150px;">
                 <?=$item->getAvatar(false)['department']?>
             </td>
-            <td><?php echo $item->stackChecker()?></td>
+            <td>
+                <?php echo $item->stackChecker()?>
+            <?php
+            echo Html::img($item->checkerName(4)['employee']->signature());
+            echo $item->checkerName(4)['employee']->signature();
+            ?>
+            </td>
             <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?>
             </td>
             <td class="fw-center align-middle text-start">

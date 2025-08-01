@@ -5,41 +5,23 @@ use yii\helpers\Html;
 $layout = app\components\SiteHelper::getInfo()['layout'];
 $menus = [
     [
-        'title' => 'Dashboard',
-        'active' => 'dashboard',
-        'url' => ['/booking/vehicle/dashboard'],
-        'icon' => '<i class="fa-solid fa-gauge-high me-1"></i>'
-    ],
-    [
-        'title' => 'ขอใช้รถทั่วไป',
-        'active' => 'calendar',
-        'url' => ['/booking/vehicle/calendar'],
-        'icon' => '<i class="fa-regular fa-calendar me-2"></i>'
-    ],
-    [
         'title' => 'ขอใช้รถพยาบาล',
         'active' => 'ambulance',
         'url' => ['/booking/vehicle/ambulance'],
         'icon' => '<i class="fa-solid fa-truck-medical me-2"></i>'
     ],
-    // [
-    //     'title' => 'ปฏิทิน',
-    //     'active' => 'calendar',
-    //     'url' => ['/booking/vehicle/calendar'],
-    //     'icon' => '<i class="fa-regular fa-calendar me-2"></i>'
-    // ],
     [
         'title' => 'ทะเบียนจัดรถยนต์',
         'active' => 'work',
         'url' => ['/booking/vehicle/work'],
         'icon' => '<i class="fa-solid fa-car-on me-2"></i>'
     ],
-        [
+    [
         'title' => 'ทะเบียนครุภัณฑ์',
         'active' => 'asset',
         'url' => ['/booking/asset'],
         'icon' => '<i class="bi bi-ui-checks me-2"></i>'
-        
+
     ],
     [
         'title' => 'ตั้งค่าแบบฟอร์ม',
@@ -50,12 +32,30 @@ $menus = [
 
 ];
 ?>
+
+<li class="nav-item">
+    <?= Html::a('<i class="fa-solid fa-gauge-high me-1"></i>Dashboard', ['/booking/vehicle/dashboard'], ['class' => 'nav-link']) ?>
+</li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle <?= (isset($active) && $active == 'official' ? 'active' : '') ?>" href="#"
+            id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="bi bi-ui-checks me-2"></i> ขอใช้รถทั่วไป
+            <i class="bx bx-chevron-down"></i>
+        </a>
+        <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+            <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนคำขอ', ['/booking/vehicle'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="fa-regular fa-calendar me-2"></i> ปฏิทินขอใช้รถยนต์ ', ['/booking/vehicle/calendar'], ['class' => 'dropdown-item']) ?>
+        </div>
+    </li>
+
 <?php if ($layout == 'horizontal'): ?>
     <?php foreach ($menus as $menu): ?>
         <li class="nav-item">
             <?= Html::a($menu['icon'] . $menu['title'], $menu['url'], ['class' => 'nav-link ' . (isset($active) && $active == $menu['active'] ? 'active' : '')]) ?>
         </li>
     <?php endforeach; ?>
+
+
 
 <?php else: ?>
 

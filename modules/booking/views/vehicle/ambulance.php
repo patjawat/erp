@@ -86,7 +86,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="avatar-detail">
                             <p class="mb-0 fw-semibold fs-13"><i class="fa-solid fa-calendar-day"></i>
                                 <?php echo $item->showDateRange()?></p>
-                            <p class="mb-0 fw-semibold fs-13"> เวลา <?php echo $item->viewTime()?></p>
+                            <p class="mb-0 fw-semibold fs-13"> เวลา <?php echo $item->viewTime()['full']?></p>
                         </div>
                     </td>
                     <td> <?=$item->userRequest()['avatar']?></td>
