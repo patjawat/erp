@@ -58,8 +58,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th>รหัสการจอง</th>
                     <th>ผู้จอง</th>
                     <th>จุดหมาย</th>
+                    <th>พขร</th>
                     <th class="text-center">ความเร่งด่วน</th>
-                    <th>สถานะ</th>
+                    <th class="text-center">สถานะ</th>
                     <th class="text-end">จัดการ</th>
                 </tr>
             </thead>
@@ -78,8 +79,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             </p>
                         </td>
                         <td class="text-center"><?= $item->viewUrgent() ?></td>
-                        <td><?= $item->viewStatus()['view'] ?? '-' ?>
-                            <?= $item->is_shared == 1 ? 'จัดสรรร่วม' : '' ?>
+                        <td>-</td>
+                        <td class="text-center"><?= $item->viewStatus()['view'] ?? '-' ?>
+                            <?= $item->is_shared == 1 ? '<i class="fa-solid fa-user-group"></i> จัดสรรร่วม' : '' ?>
                         </td>
 
                         <td class="text-end">

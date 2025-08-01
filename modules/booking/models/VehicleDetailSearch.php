@@ -61,6 +61,7 @@ class VehicleDetailSearch extends VehicleDetail
         $query->andFilterWhere([
             'id' => $this->id,
             'vehicle_id' => $this->vehicle_id,
+            'vehicle_detail.driver_id' => $this->driver_id,
             'mileage_start' => $this->mileage_start,
             'mileage_end' => $this->mileage_end,
             'distance_km' => $this->distance_km,
@@ -79,7 +80,6 @@ class VehicleDetailSearch extends VehicleDetail
             ->andFilterWhere(['like', 'vehicle_detail.status', $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
-            ->andFilterWhere(['like', 'driver_id', $this->driver_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

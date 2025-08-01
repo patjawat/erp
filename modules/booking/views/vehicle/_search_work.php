@@ -22,9 +22,10 @@ use app\components\DateFilterHelper;
 
 <div class="row">
     <div class="col-lg-3 col-md-3 col-sm-12">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+    
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false,'placeholder' => 'พขร.','fieldName' => 'driver_id'])?>
     </div>
-
+    
     <div class="col-lg-2 col-md-2 col-sm-12">
         <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
             'data' => DateFilterHelper::getDropdownItems(),
@@ -34,15 +35,15 @@ use app\components\DateFilterHelper;
             ],
         ])->label(false) ?>
     </div>
-
-
+    
+    
     <div class="col-lg-2 col-md-2 col-sm-12">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-12">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
     </div>
-
+    
     <div class="col-lg-2 col-md-2 col-sm-12">
         <?= $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
@@ -71,7 +72,12 @@ use app\components\DateFilterHelper;
 
 
     <div class="collapse mt-3" id="collapseFilter">
-        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+        <div class="row">
+<div class="col-lg-3">
+    <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+</div>
+<div class="col-lg-3">
+<?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
             'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
             'pluginOptions' => [
@@ -86,6 +92,11 @@ use app\components\DateFilterHelper;
                 }',
             ]
         ])->label(false) ?>
+</div>
+<div class="col-lg-3"></div>
+<div class="col-lg-3"></div>
+        </div>
+        
     </div>
     
     <?php ActiveForm::end(); ?>

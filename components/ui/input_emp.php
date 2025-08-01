@@ -13,6 +13,7 @@ use app\modules\hr\models\Organization;
 $feild = $fieldName ?? 'emp_id';
 $showEmp = $showEmp ?? true;
 $label = $label ?? 'บุคลากร';
+$placeholder = $placeholder ?? 'บุคลากร';
 ?>
 
 <style>
@@ -57,7 +58,7 @@ $label = $label ?? 'บุคลากร';
             echo $form->field($model, $feild)->widget(Select2::classname(), [
                 'initValueText' => $initEmployee,
                 // 'size' => Select2::,
-                'options' => ['placeholder' => 'เลือกบุคลากร ...'],
+                'options' => ['placeholder' => 'เลือก'.$placeholder.'...'],
                 'pluginOptions'=>[
                     'dropdownParent' => (isset($modal) ? '#main-modal' : false),
                     'width' => '100%',
@@ -76,6 +77,7 @@ $label = $label ?? 'บุคลากร';
                     // 'select2:select' =>  new JsExpression('function() { $(this).closest("form").submit(); }'),
                     // 'select2:unselecting' =>  new JsExpression('function() { $(this).closest("form").submit(); }'),
                 ],
+                    // ])->label($label ?? 'บุคลากร');
                     ])->label($label ?? 'บุคลากร');
                     ?>       
        </div>

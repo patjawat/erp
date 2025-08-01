@@ -399,7 +399,7 @@ class Vehicle extends \yii\db\ActiveRecord
         return $this->getStatus($this->status,$statusName);
     }
 
-    public  function getStatus($status,$statusName)
+    public  function getStatus($status,$statusName=null)
     {
         $count = self::find()
             ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])

@@ -117,6 +117,13 @@ class VehicleDetail extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'driver_id']);
     }
 
+
+        // สถานะ
+    public function getVehicleDetailStatus()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'vehicle_detail_status']);
+    }
+
     public function showDate()
     {
         return ThaiDateHelper::formatThaiDate($this->date_start);
@@ -172,5 +179,23 @@ class VehicleDetail extends \yii\db\ActiveRecord
                 ->all();
             return ArrayHelper::map($model, 'code', 'title');
         }
+
+            public function viewStatus()
+    {
+        $statusName = $this->vehicleDetailStatus?->title ?? null;
+        return $this->getStatus($this->status,$statusName);
+    }
+
+    public  function getStatus($status,$statusName=null)
+    {
+        $data = AppHelper::viewStatus($status,$statusName);
+        return [
+            'title' => $data['title'],
+            'color' => $data['color'],
+            'view' => $data['view'],
+            'icon' => $data['icon']
+        ];
+    }
+
     
 }

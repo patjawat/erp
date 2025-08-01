@@ -1,14 +1,9 @@
 <?php
-
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use app\components\ThaiDateHelper;
-use app\modules\booking\models\Vehicle;
 
-$this->title = 'ภาระกิจ';
+
+$this->title = 'ทะเบียนการจัดสรรรถ (พขร.)';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -48,7 +43,6 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="card-body p-0">
-    <div class="table-responsive pb-5">
                 <table class="table table-hover table-striped mb-0">
                     <thead class="">
                     <tr>
@@ -74,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                           <td> <?=$item->vehicle->userRequest()['avatar']?></td>
                         <td>
                             <div style="width:300px" class="avatar-detail text-truncate">
-                                <p class="mb-0"><?=$item->vehicle->showDateRange()?></p>
+                                <p class="mb-0"><?=$item->vehicle->showDateRange()?> เวลา <?= $item->vehicle->viewTime()['full'] ?></p>
                                 <p class="fs-13 mb-0 fw-semibold"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
                                 <p class="text-muted mb-0 fs-12"> <?= $item->vehicle->reason; ?></p>
                               
@@ -84,27 +78,25 @@ $this->params['breadcrumbs'][] = $this->title;
                           
                             <td class="text-end"><?=$item->mileage_start?></td>
                             <td  class="text-end"><?=$item->mileage_end?></td>
-                            <td  class="text-center"><?php echo $item->vehicle->getStatus($item->status)['view'] ?? '-'?></td>
+                            <td  class="text-center"><?=$item->viewStatus()['view'] ?? '-'?></td>
                             <td class="fw-light text-center">
-                            <div class="btn-group">
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'btn btn-light w-100  open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                <?php // echo Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['/booking/vehicle/approve', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'], ['class' => 'btn btn-light w-100 open-modal', 'data' => [ 'size' => 'modal-lg']]) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                    <i class="bi bi-caret-down-fill"></i>
+
+                            <td class="text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
                                 </button>
-                                <ul class="dropdown-menu">
-                                    <li><?php echo Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle-detail/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?=Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> บันทึกการใช้รถ', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?=Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle-detail/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li> 
                                 </ul>
                             </div>
-                        </td>
-                
                     </tr>
                     <?php endforeach; ?>
-
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 

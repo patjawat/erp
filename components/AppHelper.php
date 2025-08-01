@@ -772,13 +772,13 @@ class AppHelper extends Component
                 $color = 'success';
                 $icon = '<i class="fa-regular fa-circle-check  me-1 text-'.$color.'"></i>';
                  $title =  $statusName ? $statusName : 'เสร็จสิ้น';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-circle-check"></i> ' .$icon. $title . '</span>';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             case 'None':
                 $color = 'secondary';
                 $icon = '<i class="fa-solid fa-circle-minus  me-1 text-'.$color.'"></i>';
                  $title =  $statusName ? $statusName : 'รอตรวจสอบ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 "><i class="fa-regular fa-hourglass-half"></i> ' .$icon. $title . '</span>';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
                 break;
             default:
             $color = 'light';

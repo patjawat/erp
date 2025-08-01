@@ -301,6 +301,19 @@ class VehicleController extends Controller
             ['like', 'reason', $searchModel->q],
         ]);
 
+                if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
         return $this->render('work', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -326,12 +339,12 @@ class VehicleController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('work_update', [
+                'content' => $this->renderAjax('_form_work_update', [
                     'model' => $model
                 ]),
             ];
         } else {
-            return $this->render('work_update', [
+            return $this->render('_form_work_update', [
                 'model' => $model
             ]);
         }

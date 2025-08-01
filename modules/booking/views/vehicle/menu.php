@@ -43,8 +43,9 @@ $menus = [
             <i class="bx bx-chevron-down"></i>
         </a>
         <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
-            <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนคำขอ', ['/booking/vehicle'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนคำขอใช้รถ', ['/booking/vehicle'], ['class' => 'dropdown-item']) ?>
             <?= Html::a('<i class="fa-regular fa-calendar me-2"></i> ปฏิทินขอใช้รถยนต์ ', ['/booking/vehicle/calendar'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนการจัดสรรรถ (พขร.)', ['/booking/vehicle/work'], ['class' => 'dropdown-item']) ?>
         </div>
     </li>
 
