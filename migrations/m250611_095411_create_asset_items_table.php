@@ -49,7 +49,7 @@ class m250611_095411_create_asset_items_table extends Migration
 
 
         // ตรวจสอบก่อนการทำงานป้องกัน error
-        Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_group' WHERE `name` = 'asset_group'")->execute();
+        // Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_group' WHERE `name` = 'asset_group'")->execute();
         $countAssetGroup = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_group'])->count();
         if ($countAssetGroup == 0) {
             // เพิ่มข้อมูลใหม่
@@ -65,7 +65,7 @@ class m250611_095411_create_asset_items_table extends Migration
             ")->execute();
         }
 
-        Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_type' WHERE `name` = 'asset_type'")->execute();
+        // Yii::$app->db->createCommand("UPDATE `categorise`  set name = 'old_asset_type' WHERE `name` = 'asset_type'")->execute();
         $countAssetType = (new \yii\db\Query())->from('categorise')->where(['name' => 'asset_type'])->count();
         if ($countAssetType == 0) {
             Yii::$app->db->createCommand("INSERT INTO categorise 
