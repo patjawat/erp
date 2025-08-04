@@ -18,21 +18,8 @@ use app\modules\hr\models\Employees;
 $emp = UserHelper::GetEmployee();
 $listDocumentMe  = $emp->listDocumentMe();
 
-          
-$this->title = 'อบรม/ประชุม/ดูงาน';
-$this->params['breadcrumbs'][] = $this->title;
+
 ?>
-
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-briefcase fs-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/development/menu') ?>
-<?php $this->endBlock(); ?>
-
 
 
 <style>
@@ -314,8 +301,6 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-
-
                     <?php
                             echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
                                 'data' => CategoriseHelper::ListLocationOrg(true),
@@ -397,7 +382,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $form->field($model, 'data_json[vehicle_time_start]')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ระบุเวลาไป เช่น 08:00'])->label('เวลา') ?>
+                     <?= $form->field($model, 'data_json[vehicle_time_start]')
+                        ->input('time', [
+                            'class' => 'form-control form-control-sm',
+                            'placeholder' => 'ระบุเวลาไป'
+                        ])->label('เวลา') ?>
                     </div>
                 </div>
                 <div class="row g-2">
@@ -405,7 +394,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $form->field($model, 'data_json[vehicle_time_end]')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ระบุเวลาไป เช่น 16:00'])->label('เวลา') ?>
+                          <?= $form->field($model, 'data_json[vehicle_time_end]')
+                        ->input('time', [
+                            'class' => 'form-control form-control-sm',
+                            'placeholder' => 'ระบุเวลาไป เช่น 16:00'
+                        ])->label('เวลา') ?>
                     </div>
                 </div>
             </div>
@@ -442,9 +435,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="form-group text-center mt-4">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle me-2"></i> บันทึกข้อมูล', ['class' => 'btn btn-primary rounded-pill px-4 py-2 shadow me-2', 'id' => 'summit']) ?>
-    <button type="button" class="btn btn-secondary rounded-pill px-4 py-2 shadow" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle me-2"></i> ยกเลิก
-    </button>
+
+    <?= Html::a(
+    '<i class="bi bi-arrow-left-circle me-2"></i> ย้อนกลับ',
+    'javascript:history.back()',
+    ['class' => 'btn btn-secondary rounded-pill px-4 py-2 shadow']
+) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

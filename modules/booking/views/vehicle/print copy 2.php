@@ -3,10 +3,6 @@
 use app\models\Categorise;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
-use yii\widgets\Pjax;
-
 $this->title = 'แบบฟอร์มใบขอใช้รถ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -14,20 +10,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex">
     <div class="w-75">
-
         <canvas id="pdfCanvas" width="794" height="1123" style="border:1px solid #ccc"></canvas>
     </div>
     <div class="w-25">
         <div class="d-grid gap-2">
-<!-- <button id="printPDF" class="btn btn-danger">พิมพ์</button> -->
-<button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
-
-<button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
-
-</div>
-</div>
-
-
+            <button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
+            <button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
+            <button id="printPDF" class="btn btn-success">สั่งพิมพ์</button> <!-- ปุ่มใหม่ -->
+        </div>
+    </div>
 </div>
 
 <?php
@@ -37,11 +28,110 @@ $templateUrl = $model->getTemplate();
 $urlUpload = Url::to('/filemanager/uploads/upload-pdf');
 $formName = 'vehicle_layout_form'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
 $urlGetLayout = Url::to(['/booking/vehicle-form-layout/get-layout', 'formName' => $formName]);
-
-
 $jsModelData = json_encode($modelData, JSON_UNESCAPED_UNICODE);
-
+$id = $model->id;
 $js = <<< JS
+
+
+window.addEventListener('DOMContentLoaded', function () {
+    // เรียก getLayout() แล้วรอให้ Fabric.js สร้าง element เสร็จค่อยแปลง PDF
+    getLayoutAndShowPDF();
+});
+
+
+function getLayoutAndShowPDF() {
+    $.ajax({
+        type: "get",
+        url: "$urlGetLayout",
+        dataType: "json",
+        success: function (res) {
+            let totalImages = 0;
+            let loadedImages = 0;
+
+            canvas.clear(); // เคลียร์ก่อน
+            res.forEach(layout => {
+                const field = layout.field;
+                const value = window.modelData[field];
+                const imageFields = ['emp_signature', 'leader_signature', 'driver_signature', 'director_signature'];
+
+                if (imageFields.includes(field)) {
+                    const url = value;
+                    if (url) {
+                        totalImages++;
+                        fabric.Image.fromURL(url, function(img) {
+                            const scale = layout.scale || 0.3;
+                            img.set({
+                                left: layout.x,
+                                top: layout.y,
+                                scaleX: scale,
+                                scaleY: scale,
+                                selectable: false
+                            });
+                            canvas.add(img);
+                            loadedImages++;
+
+                            if (loadedImages === totalImages) {
+                                renderCanvasToPDF();
+                            }
+                        }, { crossOrigin: 'anonymous' });
+                    }
+                } else {
+                    if (value !== undefined) {
+                        const text = new fabric.Text(value, {
+                            left: layout.x,
+                            top: layout.y,
+                            fontSize: layout.fontSize || 20,
+                            fontFamily: layout.fontFamily || 'TH Sarabun New',
+                            fontWeight: layout.fontWeight || 'bold',
+                            scaleX: layout.scale || 1,
+                            scaleY: layout.scale || 1,
+                            fill: 'black',
+                            selectable: false
+                        });
+                        canvas.add(text);
+                    }
+                }
+            });
+
+            // ถ้าไม่มีรูปภาพเลย → สร้าง PDF ทันที
+            if (totalImages === 0) {
+                renderCanvasToPDF();
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("❌ Error loading layout:", status, error);
+        }
+    });
+}
+
+
+function renderCanvasToPDF() {
+        const dataURL = canvas.toDataURL({
+            format: 'png',
+            multiplier: 2
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const imgProps = pdf.getImageProperties(dataURL);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+        const blobURL = pdf.output('bloburl');
+
+        // เปิดในแท็บใหม่
+        // window.open(blobURL, '_blank');
+
+        // หรือถ้าอยากแทนที่หน้าเดิมใช้
+        window.location.href = blobURL;
+
+}
+
+
+
+
 
     window.modelData = $jsModelData;
     let canvas = new fabric.Canvas('pdfCanvas');
@@ -70,26 +160,6 @@ $js = <<< JS
         });
     });
 
-    // จำกัดการ move ให้อยู่ในกรอบ canvas
-    canvas.on('object:moving', function(e) {
-        var obj = e.target;
-        // ขนาดของ object
-        var objWidth = obj.getScaledWidth();
-        var objHeight = obj.getScaledHeight();
-
-        // ขนาดของ canvas
-        var canvasWidth = canvas.getWidth();
-        var canvasHeight = canvas.getHeight();
-
-        // จำกัดขอบซ้ายและบน
-        if (obj.left < 0) obj.left = 0;
-        if (obj.top < 0) obj.top = 0;
-
-        // จำกัดขอบขวาและล่าง
-        if (obj.left + objWidth > canvasWidth) obj.left = canvasWidth - objWidth;
-        if (obj.top + objHeight > canvasHeight) obj.top = canvasHeight - objHeight;
-    });
-    
     getLayout()
     
 function getLayout() {
@@ -242,32 +312,56 @@ function getLayout() {
         canvas.add(text);
     });
 
-    $('#downloadPDF').on('click', function() {
-        // แปลง Canvas เป็น Image
-        const dataURL = canvas.toDataURL({
-            format: 'png',
-            multiplier: 2  // เพิ่มความละเอียด
-        });
 
-        // ใช้ jsPDF
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
-
-        // โหลดภาพลง PDF
-        const imgProps = pdf.getImageProperties(dataURL);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-        // บันทึก
-        pdf.save('form-layout.pdf');
+    $('#downloadPDF').on('click', function () {
+    // แปลง Canvas เป็น Image
+    const dataURL = canvas.toDataURL({
+        format: 'png',
+        multiplier: 2  // เพิ่มความละเอียด
     });
 
+    // ใช้ jsPDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
+
+    // โหลดภาพลง PDF
+    const imgProps = pdf.getImageProperties(dataURL);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    // สร้าง Blob URL และเปิดในแท็บใหม่
+    const blobURL = pdf.output('bloburl');
+    window.open(blobURL, '_blank');
+});
+
+
+    // $('#downloadPDF').on('click', function() {
+    //     // แปลง Canvas เป็น Image
+    //     const dataURL = canvas.toDataURL({
+    //         format: 'png',
+    //         multiplier: 2  // เพิ่มความละเอียด
+    //     });
+
+    //     // ใช้ jsPDF
+    //     const { jsPDF } = window.jspdf;
+    //     const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
+
+    //     // โหลดภาพลง PDF
+    //     const imgProps = pdf.getImageProperties(dataURL);
+    //     const pdfWidth = pdf.internal.pageSize.getWidth();
+    //     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    //     pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    //     // บันทึก
+    //     pdf.save('form-layout.pdf');
+    // });
 
 
 
-        $('#printPDF').on('click', function () {
+    $('#printPDF').on('click', function () {
     const dataURL = canvas.toDataURL({
         format: 'png',
         multiplier: 2
@@ -290,6 +384,9 @@ function getLayout() {
     `);
     printWindow.document.close();
 });
+
+
+
 
 JS;
 $this->registerJS($js, \yii\web\View::POS_END);

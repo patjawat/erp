@@ -316,19 +316,18 @@ class Vehicle extends \yii\db\ActiveRecord
         }
     }
 
-    public function viewTime()
-    {
-        $timeStart = substr($this->time_start, 0, 5);
-        $timeEnd = substr($this->time_end, 0, 5);
-        $fulltime = $timeStart . ' - ' . $timeEnd;
+public function viewTime()
+{
+    $timeStart = substr((string)($this->time_start ?? ''), 0, 5);
+    $timeEnd = substr((string)($this->time_end ?? ''), 0, 5);
+    $fulltime = $timeStart . ' - ' . $timeEnd;
 
-
-        return [
-            'start' => $timeStart,
-            'end' => $timeEnd,
-            'full' => $fulltime . ' น.'
-        ];
-    }
+    return [
+        'start' => $timeStart,
+        'end' => $timeEnd,
+        'full' => $fulltime . ' น.'
+    ];
+}
 
     public function showStartTime()
     {

@@ -20,6 +20,7 @@ use yii\widgets\Pjax;
             <thead>
                 <tr>
                     <th scope="col">รายการ/สถานที่</th>
+                    <th scope="col">พขร.</th>
                     <th scope="col">รถที่จัดสรรค์</th>
                 </tr>
             </thead>
@@ -27,11 +28,20 @@ use yii\widgets\Pjax;
                 <?php foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
                     <td>
-                        <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="open-modal" data-size="modal-lg">
-                        <p class="mb-0 fw-semibold"> <?= ($item->viewTime()['full'] ?? '-'); ?> <?php echo $item->locationOrg?->title ?? '-' ?></p>
-                        <p class="mb-0 fs-11"><?php echo $item->reason ?? '-' ?></p>
+                        <a href="<?= Url::to(['approve', 'id' => $item->vehicle->id,'title' => 'เลขที่#'.$item->vehicle->code]) ?>" class="open-modal" data-size="modal-lg">
+                        <p class="mb-0 fw-semibold"> <span class="text-danger"><?= ($item->vehicle->viewTime()['full'] ?? '-'); ?></span> <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
+                        <p class="mb-0 fs-11"><?php echo $item->vehicle->reason ?? '-' ?></p>
                     </a>
                     </td>
+                    <td>
+                <?=Html::img('@web/img/placeholder-img.jpg', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $item->showDriver()['photo']
+                    ]
+                    ]);?></td>
                     <td class="">
                         <div class="d-flex">
                             <?php

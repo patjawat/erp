@@ -75,41 +75,26 @@ use yii\helpers\Html;
                                     <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                     <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                     <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                    <li><?= Html::a(
+                                        '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',
+                                        ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'],
+                                        ['class' => 'dropdown-item', 'target' => '_blank']
+                                    ) ?></li>
+                                    
                                     <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-2"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
+
+                                    <li>
+    <a href="#" 
+       class="dropdown-item btn-download-pdf" 
+       data-id="<?= $item->id ?>">
+        <i class="fa-solid fa-file-pdf me-1"></i> พิมพ์
+    </a>
+</li>
                                 </ul>
                             </div>
                         </td>
 
-                        <!-- <td class="fw-light text-end">
-                            <div class="btn-group">
-                                <?= Html::a(
-                                    '<i class="fa-solid fa-pen-to-square"></i>',
-                                    ['/booking/vehicle/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'],
-                                    ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]
-                                ) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                    <i class="bi bi-caret-down-fill"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-user-tag me-1"></i> จัดสรร',
-                                            ['/booking/vehicle/approve', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'],
-                                            ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
-                                        ) ?>
-                                    </li>
-                                  
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก',
-                                            ['/booking/vehicle/cancel', 'id' => $item->id],
-                                            ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]
-                                        ) ?>
-                                    </li>
-                                </ul>
-                            </div>
-                        </td> -->
+                       
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -129,34 +114,12 @@ use yii\helpers\Html;
     </div>
 </div>
 
+
+
+
 <?php
 $js = <<< JS
 
-$(document).ready(function () {
-  const map = {};
-
-  // เก็บ key สำหรับแต่ละ tr
-  $('table tbody tr').each(function () {
-    const tr = $(this);
-    const date = tr.data('date_start');
-    const location = tr.data('location');
-    const key = date + '|' + location;
-
-    if (!map[key]) {
-      map[key] = [];
-    }
-    map[key].push(tr);
-  });
-
-  // ถ้ามี key ซ้ำ (มากกว่า 1 แถว) ให้เพิ่ม class bg-warning เฉพาะ td
-  $.each(map, function (key, rows) {
-    if (rows.length > 1) {
-      rows.forEach(function (tr) {
-        tr.find('td').addClass('bg-warning bg-opacity-25');
-      });
-    }
-  });
-});
 
 JS;
 $this->registerJS($js, View::POS_END);

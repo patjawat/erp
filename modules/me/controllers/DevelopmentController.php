@@ -170,10 +170,10 @@ class DevelopmentController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/development/_form', ['model' => $model]),
+                'content' => $this->renderAjax('create', ['model' => $model]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/development/_form', [
+            return $this->render('create', [
                 'model' => $model,
             ]);
         }

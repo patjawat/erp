@@ -148,11 +148,12 @@ class VehicleController extends Controller
 
         $todays =  date('Y-m-d');
         $vehicle_type = $this->request->get('vehicle_type_id');
-        $searchModel = new VehicleSearch();
+        $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['date_start' => $todays]);
+        $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $todays]);
         $dataProvider->query->andWhere(['vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'status', ['Cancel']]);
+        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
         if ($this->request->isAJax) {
@@ -187,11 +188,12 @@ class VehicleController extends Controller
         $vehicle_type = $this->request->get('vehicle_type');
 
         $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
-        $searchModel = new VehicleSearch();
+        $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider->query->andFilterWhere(['date_start' => $nextDate]);
-        $dataProvider->query->andFilterWhere(['vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'status', ['Cancel']]);
+         $dataProvider->query->joinWith('vehicle');
+         $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
+        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
+        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
     
 
@@ -532,7 +534,7 @@ class VehicleController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'คำขอใช้รถที่#' . $model->code,
+                'title' => 'เลขที่#' . $model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
                 ]),
@@ -599,17 +601,16 @@ class VehicleController extends Controller
         }
     }
 
+
+
     public function actionPrint($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        if ($this->request->isAjax) {
+       
+      
             $model = $this->findModel($id);
             $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $model->save(false);
-
             $info = SiteHelper::getInfo();
-
-
             $modelData = [
                 'director' => $info['company_name'],
                 'fullname' => $model->employee?->fullname,
@@ -632,7 +633,6 @@ class VehicleController extends Controller
                 //หัวหน้างาน
                 'leader_name' => $model->leader?->getInfo()['fullname'],
                 'leader_signature' => $model->leader?->getInfo()['signature'],
-
                 'driver_leader_name' => 'นายหัวหน้า พขร.',
                 'mileage_start' => '10000',
                 'mileage_end' => '10100',
@@ -642,6 +642,8 @@ class VehicleController extends Controller
 
             ];
             if ($model) {
+                  if ($this->request->isAjax) {
+                     Yii::$app->response->format = Response::FORMAT_JSON;
                 $content = $this->renderAjax('print', [
                     'model' => $model,
                     'modelData' => $modelData,
@@ -651,13 +653,18 @@ class VehicleController extends Controller
                     'status' => 'success',
                     'content' => $content,
                 ];
+            }else{
+                return $this->render('print', [
+                    'model' => $model,
+                    'modelData' => $modelData,
+                ]);
+            }
             } else {
                 return [
                     'status' => 'error',
                     'message' => 'ไม่พบข้อมูลการจอง'
                 ];
             }
-        }
     }
 
 

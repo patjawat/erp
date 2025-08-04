@@ -363,7 +363,11 @@ class BookingMeetingController extends \yii\web\Controller
         $model = new Meeting();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $model->title == '' ? $model->addError('titlt', $requiredName) : null;
+
+            $checkRoomDeplicate = Meeting::find()->where(['room_id' => $model->room_id,'date_start' => AppHelper::convertToGregorian($model->date_start)])->count();
+            if($checkRoomDeplicate >=1){
+                $model->addError('room_id', 'ห้องไม่ว่าง');
+            }
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
             $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
         }

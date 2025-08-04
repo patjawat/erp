@@ -10,9 +10,15 @@ $this->params['breadcrumbs'][] = ['label' => 'Developments', 'url' => ['index']]
 $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?php  echo $this->render('@app/modules/me/menu',['active' => 'development']) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="development-update">
 
-    <?= $this->render('_form', [
+    <?= $this->render('@app/modules/hr/views/development/_form', [
         'model' => $model,
     ]) ?>
 

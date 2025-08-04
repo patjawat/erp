@@ -62,7 +62,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
             [['vehicle_id'], 'required'],
             [['vehicle_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'emp_id', 'thai_year', 'date_filter','location'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'emp_id', 'thai_year', 'date_filter', 'location'], 'safe'],
             [['ref', 'license_plate', 'status', 'time_start', 'time_end', 'driver_id'], 'string', 'max' => 255],
         ];
     }
@@ -144,17 +144,31 @@ class VehicleDetail extends \yii\db\ActiveRecord
             // $msg = $emp->departmentName();
             return [
                 'avatar' => $emp->getAvatar(false, $msg),
-                'fullname' => $emp->fullname
+                'fullname' => $emp->fullname,
+                'photo' => $emp->showAvatar(),
             ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
-                'fullname' => ''
+                'fullname' => '',
+                'photo' => '',
             ];
         }
     }
 
 
+ public function viewTime()
+{
+    $timeStart = substr((string)($this->time_start ?? ''), 0, 5);
+    $timeEnd = substr((string)($this->time_end ?? ''), 0, 5);
+    $fulltime = $timeStart . ' - ' . $timeEnd;
+
+    return [
+        'start' => $timeStart,
+        'end' => $timeEnd,
+        'full' => $fulltime . ' น.'
+    ];
+}
 
     // แสดงหน่วยงานภานนอก
     public function ListOrg()

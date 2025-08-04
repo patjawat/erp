@@ -14,20 +14,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex">
     <div class="w-75">
-
         <canvas id="pdfCanvas" width="794" height="1123" style="border:1px solid #ccc"></canvas>
     </div>
     <div class="w-25">
         <div class="d-grid gap-2">
-<!-- <button id="printPDF" class="btn btn-danger">พิมพ์</button> -->
-<button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
-
-<button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
-
-</div>
-</div>
-
-
+            <button id="downloadPDF" class="btn btn-danger">ดาวน์โหลด PDF</button>
+            <button id="exportLayout" class="btn btn-primary">บันทึก Layout</button>
+            <button id="printPDF" class="btn btn-success">สั่งพิมพ์</button> <!-- ปุ่มใหม่ -->
+        </div>
+    </div>
 </div>
 
 <?php
@@ -37,11 +32,10 @@ $templateUrl = $model->getTemplate();
 $urlUpload = Url::to('/filemanager/uploads/upload-pdf');
 $formName = 'vehicle_layout_form'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
 $urlGetLayout = Url::to(['/booking/vehicle-form-layout/get-layout', 'formName' => $formName]);
-
-
 $jsModelData = json_encode($modelData, JSON_UNESCAPED_UNICODE);
-
+$id = $model->id;
 $js = <<< JS
+
 
     window.modelData = $jsModelData;
     let canvas = new fabric.Canvas('pdfCanvas');
@@ -242,32 +236,56 @@ function getLayout() {
         canvas.add(text);
     });
 
-    $('#downloadPDF').on('click', function() {
-        // แปลง Canvas เป็น Image
-        const dataURL = canvas.toDataURL({
-            format: 'png',
-            multiplier: 2  // เพิ่มความละเอียด
-        });
 
-        // ใช้ jsPDF
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
-
-        // โหลดภาพลง PDF
-        const imgProps = pdf.getImageProperties(dataURL);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-        // บันทึก
-        pdf.save('form-layout.pdf');
+    $('#downloadPDF').on('click', function () {
+    // แปลง Canvas เป็น Image
+    const dataURL = canvas.toDataURL({
+        format: 'png',
+        multiplier: 2  // เพิ่มความละเอียด
     });
 
+    // ใช้ jsPDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
+
+    // โหลดภาพลง PDF
+    const imgProps = pdf.getImageProperties(dataURL);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    // สร้าง Blob URL และเปิดในแท็บใหม่
+    const blobURL = pdf.output('bloburl');
+    window.open(blobURL, '_blank');
+});
+
+
+    // $('#downloadPDF').on('click', function() {
+    //     // แปลง Canvas เป็น Image
+    //     const dataURL = canvas.toDataURL({
+    //         format: 'png',
+    //         multiplier: 2  // เพิ่มความละเอียด
+    //     });
+
+    //     // ใช้ jsPDF
+    //     const { jsPDF } = window.jspdf;
+    //     const pdf = new jsPDF('p', 'pt', 'a4'); // portrait, points, A4
+
+    //     // โหลดภาพลง PDF
+    //     const imgProps = pdf.getImageProperties(dataURL);
+    //     const pdfWidth = pdf.internal.pageSize.getWidth();
+    //     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    //     pdf.addImage(dataURL, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    //     // บันทึก
+    //     pdf.save('form-layout.pdf');
+    // });
 
 
 
-        $('#printPDF').on('click', function () {
+    $('#printPDF').on('click', function () {
     const dataURL = canvas.toDataURL({
         format: 'png',
         multiplier: 2
@@ -290,6 +308,9 @@ function getLayout() {
     `);
     printWindow.document.close();
 });
+
+
+
 
 JS;
 $this->registerJS($js, \yii\web\View::POS_END);

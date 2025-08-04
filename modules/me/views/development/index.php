@@ -12,13 +12,10 @@ $this->title = 'อบรม/ประชุม/ดูงาน';
 ทะเบียน<?=$this->title?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<?=$this->render('menu')?>
-<?php $this->endBlock(); ?>
 
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/me//menu',['active' => 'development']) ?>
+<?php  echo $this->render('@app/modules/me/menu',['active' => 'development']) ?>
 <?php $this->endBlock(); ?>
 
 

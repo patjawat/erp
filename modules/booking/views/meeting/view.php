@@ -31,6 +31,7 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
 <div class="row">
     <div class="col-8">
 
+
         <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">ผู้ร้องขอ:</label>
             <div class="col-sm-8"><?= $model->getUserReq()['avatar']; ?></div>
@@ -96,7 +97,7 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
     
     <?php if($model->status !== 'Cancel'):?>
         <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
-            <i class="fa-solid fa-xmark"></i> ยกเลิก
+            <i class="fa-solid fa-xmark"></i> ยกเลิกการจอง
         </button>
         <?php endif; ?>
 
