@@ -73,8 +73,6 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                     }
                     ?>
                 </td>
-
-
                 <td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
@@ -87,7 +85,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                                 <!-- แต่เป็น admin แก้ไขได้ -->
                                 <?php if (Yii::$app->user->can('admin')): ?>
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-pen-to-square"></i>',
+                                        '<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข',
                                         ['/hr/leave/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],
                                         ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
                                     ) ?>
