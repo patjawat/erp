@@ -36,7 +36,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 
 
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#"
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'service' ? 'active' : '')?>" href="#"
         id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <i class="bi bi-app-indicator me-2"></i> บริการ
         <i class="bx bx-chevron-down"></i>

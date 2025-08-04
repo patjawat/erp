@@ -1,8 +1,9 @@
 <?php
 
+use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use app\models\Categorise;
-use yii\web\View;
 
 $this->title = 'ปฏิทินการใช้รถ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
@@ -33,6 +34,7 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         display: inline-block;
         margin-right: 6px;
     }
+    
 </style>
 
 <div class="row">
@@ -72,6 +74,9 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 
 
 <?php
+$urlEventToDays = Url::to(['/booking/vehicle/list-event-todays','vehicle_type' => 'official']);
+$urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow','vehicle_type' => 'official']);
+
 $js = <<<JS
             listEventTomorrow()
             listEventToDays()
@@ -79,7 +84,7 @@ $js = <<<JS
             {
                 await $.ajax({
                     type: "get",
-                    url: "/booking/vehicle/list-event-todays",
+                    url: "$urlEventToDays",
                     dataType: "json",
                     success: function (response) {
                         $('#showEventToDays').html(response.content)
@@ -91,7 +96,7 @@ $js = <<<JS
             {
                 await $.ajax({
                     type: "get",
-                    url: "/booking/vehicle/list-event-tomorrow",
+                    url: "$urlEventTomorrow",
                     dataType: "json",
                     success: function (response) {
                         $('#showEventTomorrow').html(response.content)

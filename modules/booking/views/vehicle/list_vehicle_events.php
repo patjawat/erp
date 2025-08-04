@@ -20,7 +20,6 @@ use yii\widgets\Pjax;
             <thead>
                 <tr>
                     <th scope="col">รายการ/สถานที่</th>
-                    <th scope="col">เวลา</th>
                     <th scope="col">รถที่จัดสรรค์</th>
                 </tr>
             </thead>
@@ -28,14 +27,11 @@ use yii\widgets\Pjax;
                 <?php foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
                     <td>
+                        <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="open-modal" data-size="modal-lg">
+                        <p class="mb-0 fw-semibold"> <?= ($item->viewTime()['full'] ?? '-'); ?></p>
                         <p class="mb-0 fw-semibold"><?php echo $item->locationOrg?->title ?? '-' ?></p>
                         <p class="mb-0 fs-11"><?php echo $item->reason ?? '-' ?></p>
-
-                    </td>
-                    <td>
-                        <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="open-modal" data-size="modal-lg">
-                            <p class="mb-0 fw-semibold"> <?= ($item->viewTime()['full'] ?? '-'); ?></p>
-                        </a>
+                    </a>
                     </td>
                     <td class="">
                         <div class="d-flex">

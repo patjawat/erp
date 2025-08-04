@@ -97,15 +97,59 @@ class VehicleController extends Controller
         ]);
     }
 
+
+
+    public function actionAmbulance()
+    {
+        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
+        $status = $this->request->get('status');
+        $searchModel = new VehicleSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            'date_end' => AppHelper::convertToThai($lastDay),
+            'status' =>   $status ? [$status] : ['Pending'],
+            'vehicle_type_id' => 'ambulance'
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'code', $searchModel->q],
+        ]);
+
+    if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            // 'dataProviderDetail' => $dataProviderDetail,
+        ]);
+    }
+
+    
     //แสดงการจองรถวันนี้
     public function actionListEventTodays()
     {
 
         $todays =  date('Y-m-d');
+        $vehicle_type = $this->request->get('vehicle_type_id');
         $searchModel = new VehicleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['date_start' => $todays]);
-        $dataProvider->query->andWhere(['IN', 'status', ['Pass', 'Approve']]);
+        $dataProvider->query->andFilterWhere(['date_start' => $todays]);
+        $dataProvider->query->andWhere(['vehicle_type_id' => $vehicle_type]);
+        $dataProvider->query->andFilterWhere(['NOT IN', 'status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
         if ($this->request->isAJax) {
@@ -137,12 +181,16 @@ class VehicleController extends Controller
     {
 
         $todays =  date('Y-m-d');
+        $vehicle_type = $this->request->get('vehicle_type');
+
         $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
         $searchModel = new VehicleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andWhere(['date_start' => $nextDate]);
-        $dataProvider->query->andWhere(['IN', 'status', ['Pass', 'Approve']]);
+         $dataProvider->query->andFilterWhere(['date_start' => $nextDate]);
+        $dataProvider->query->andFilterWhere(['vehicle_type_id' => $vehicle_type]);
+        $dataProvider->query->andFilterWhere(['NOT IN', 'status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
+    
 
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -170,44 +218,6 @@ class VehicleController extends Controller
 
 
 
-    public function actionAmbulance()
-    {
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
-        $status = $this->request->get('status');
-        $searchModel = new VehicleSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
-            'status' =>   $status ? [$status] : ['Pending'],
-            'vehicle_type_id' => 'ambulance'
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'code', $searchModel->q],
-        ]);
-
-
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-        try {
-            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd]);
-        } catch (\Throwable $th) {
-            // throw $th;
-        }
-
-        return $this->render('ambulance', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            // 'dataProviderDetail' => $dataProviderDetail,
-        ]);
-    }
 
 
     //ปฎิทินการขอใช้รถยนต์ราชการ
@@ -215,6 +225,13 @@ class VehicleController extends Controller
     {
         return $this->render('calendar', ['vehicle_type' => 'official']);
     }
+
+    // ปฏิทินการขอใช้รถยนต์ทั่วไป
+        public function actionCalendarAmbulance()
+    {
+        return $this->render('calendar', ['vehicle_type' => 'ambulance']);
+    }
+
 
 
     public function actionEvents()
@@ -231,6 +248,11 @@ class VehicleController extends Controller
             ->orderBy(['date_start' => SORT_ASC])
             ->all();
         $data = [];
+        // return [
+        //     'date_start' => $start,
+        //     'date_end' => $end,
+        //     'vehicle_type' => $vehicleType
+        // ];
 
 
         foreach ($bookings as $item) {

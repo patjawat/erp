@@ -1,13 +1,16 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
+
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 ?>
 
 <style>
+
     .status-indicator {
         width: 12px;
         height: 12px;
@@ -28,10 +31,10 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
         padding: 20px !important;
         overflow: auto !important;
     }
-    #calendar {
-    touch-action: manipulation;
-}
 
+    #calendar {
+        touch-action: manipulation;
+    }
 </style>
 
 <div class="card" id="fullscreen-container">

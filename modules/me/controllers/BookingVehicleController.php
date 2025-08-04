@@ -78,7 +78,8 @@ class BookingVehicleController extends Controller
 
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
-        return $this->render('@app/modules/booking/views/vehicle/index', [
+        return $this->render('index', [
+            'vehicle_type' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
