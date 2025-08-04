@@ -320,7 +320,7 @@ $resultsJs = <<<JS
 <?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[off_days]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'total_days')->textInput()->label(false) ?>
+<?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>

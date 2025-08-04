@@ -378,7 +378,7 @@ class LeaveController extends Controller
 
         $model->data_json = [
             'title' => $this->request->get('title'),
-            'address' => $model->CreateBy()->fulladdress,
+            'address' => strip_tags($model->CreateBy()->fulladdress),
             'phone' => $model->CreateBy()->phone,
             'approve_1' => $model->Approve()['approve_1']['id'],
             'approve_2' => $model->Approve()['approve_2']['id'],
