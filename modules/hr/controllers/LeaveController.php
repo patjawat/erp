@@ -177,7 +177,7 @@ class LeaveController extends Controller
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
         ]);
-        $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
+        // $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
 
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
