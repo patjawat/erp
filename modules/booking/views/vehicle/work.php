@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
@@ -21,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu',['active' => 'work'])?>
+<?= $this->render('menu', ['active' => 'work']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -32,71 +33,71 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-       <?php echo $this->render('_search_work', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search_work', ['model' => $searchModel]); ?>
     </div>
 </div>
 
 <div class="card shadow-sm">
-<div class="card-header bg-primary-gradient">
-       <div class="d-flex justify-content-between">
+    <div class="card-header bg-primary-gradient">
+        <div class="d-flex justify-content-between">
             <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> กาจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
         </div>
     </div>
     <div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0">
-                    <thead class="">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="">
+                <tr>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="fw-semibold">เลขที่</th>
+                    <th class="fw-semibold">ผู้ขอ</th>
+                    <th class="fw-semibold">วัน/เวลา/สถานที่</th>
+                    <th class="fw-semibold">พขร</th>
+                    <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
+                    <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
+                    <th class="fw-semibold text-center">สถานะ</th>
+                    <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
+                </tr>
+            </thead>
+            <tbody class="align-middle table-group-divider">
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold">เลขที่</th>
-                        <th class="fw-semibold">ผู้ขอ</th>
-                        <th class="fw-semibold">วัน/เวลา/สถานที่</th>
-                        <th class="fw-semibold">พขร</th>
-                        <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
-                        <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
-                        <th class="fw-semibold text-center">สถานะ</th>
-                        <th class="fw-semibold text-center" style="width:150px;">ดำเนินการ</th>
-                    </tr>
-                    </thead>
-                    <tbody class="align-middle table-group-divider">
-                        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                        <tr>
-                            <td class="text-center fw-semibold">
-                                <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                            
-                            <td><p class="mb-0 fw-semibold fs-13"><?= $item->vehicle->code ?></p>
+                        <td class="text-center fw-semibold">
+                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+
+                        <td>
+                            <p class="mb-0 fw-semibold fs-13"><?= $item->vehicle->code ?></p>
                         </td>
-                          <td> <?=$item->vehicle->userRequest()['avatar']?></td>
+                        <td> <?= $item->vehicle->userRequest()['avatar'] ?></td>
                         <td>
                             <div style="width:300px" class="avatar-detail text-truncate">
-                                <p class="mb-0"><?=$item->vehicle->showDateRange()?> เวลา <?= $item->vehicle->viewTime()['full'] ?></p>
+                                <p class="mb-0"><?= $item->vehicle->showDateRange() ?> เวลา <?= $item->vehicle->viewTime()['full'] ?></p>
                                 <p class="fs-13 mb-0 fw-semibold"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
                                 <p class="text-muted mb-0 fs-12"> <?= $item->vehicle->reason; ?></p>
-                              
+
                             </div>
                         </td>
-                        <td><?=$item->showDriver()['avatar']?></td>
-                          
-                            <td class="text-end"><?=$item->mileage_start?></td>
-                            <td  class="text-end"><?=$item->mileage_end?></td>
-                            <td  class="text-center"><?=$item->viewStatus()['view'] ?? '-'?></td>
-                            <td class="fw-light text-center">
+                        <td><?= $item->showDriver()['avatar'] ?></td>
 
-                            <td class="text-end">
+                        <td class="text-end"><?= $item->mileage_start ?></td>
+                        <td class="text-end"><?= $item->mileage_end ?></td>
+                        <td class="text-center"><?= $item->viewStatus()['view'] ?? '-' ?></td>
+                        <td class="text-end">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?=Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> บันทึกการใช้รถ', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?=Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?=Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle-detail/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li> 
+                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> บันทึกการใช้รถ', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle-detail/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
                                 </ul>
                             </div>
+                        </td>
                     </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 

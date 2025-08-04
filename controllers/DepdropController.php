@@ -515,7 +515,7 @@ class DepdropController extends \yii\web\Controller
         foreach ($query as $clientCode) {
             $data[] = [
                 'id' => $clientCode['zip_code'],
-                'text' => 'ต. ' . $clientCode['district_name'] . ' ' . 'อ. ' . $clientCode['amphure_name'] . ' จ. ' . $clientCode['province_name'] . ' <code>' . $clientCode['zip_code'] . '</code>',
+                'text' => 'ต. ' . $clientCode['district_name'] . ' ' . 'อ. ' . $clientCode['amphure_name'] . ' จ. ' . $clientCode['province_name'] . $clientCode['zip_code'],
                 'fulltext' => 'ตำบล' . $clientCode['district_name'] . ' ' . 'อำเภอ' . $clientCode['amphure_name'] . ' จังหวัด' . $clientCode['province_name'] . ' ' . $clientCode['zip_code'],
                 'district_id' => $clientCode['district_id'],
                 'district_name' => $clientCode['district_name'],

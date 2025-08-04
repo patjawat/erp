@@ -59,7 +59,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]); ?>
 </div>
 
-
 <?php Pjax::end(); ?>
 
 <?php

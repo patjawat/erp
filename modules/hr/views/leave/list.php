@@ -1,8 +1,10 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
 use app\components\UserHelper;
+
 $me = UserHelper::GetEmployee();
 
 $currentSort = Yii::$app->request->get('sort', '');
@@ -30,107 +32,98 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
         </tr>
     </thead>
     <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
-        <?php foreach($dataProvider->getModels() as $key => $item):?>
-        <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
-            </td>
-            <td class="text-center fw-semibold "><?php echo $item->thai_year?></td>
-            <td class="text-truncate" style="max-width: 230px;">
-                <a href="<?php echo Url::to(['/me/leave/view','id' => $item->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
-                    class="open-modal" data-size="modal-xl">
-                    <?=$item->getAvatar(false)['avatar']?>
-                </a>
-            </td>
-            <td>
-                <?=$item->data_json['reason']?>
-                <div class="d-flex flex-column justofy-content-start align-items-start">
-                    <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
-                            class="bi bi-exclamation-circle-fill"></i>
-                        <?php echo $item->leaveType?->title ?? '-' ?>
-                        <code><?php echo $item->total_days?> </code> วัน</span>
-                </div>
-            </td>
-            <td>
-                <?=$item->showLeaveDate()?>
-            </td>
-            <td class="text-start text-truncate" style="max-width:150px;">
-                <?=$item->getAvatar(false)['department']?>
-            </td>
-            <td>
-                <?php echo $item->stackChecker()?>
-            </td>
-            <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus();?>
-            </td>
-            <td class="fw-center align-middle text-start">
+        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+            <tr>
+                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                </td>
+                <td class="text-center fw-semibold "><?php echo $item->thai_year ?></td>
+                <td class="text-truncate" style="max-width: 230px;">
+                    <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
+                        class="open-modal" data-size="modal-xl">
+                        <?= $item->getAvatar(false)['avatar'] ?>
+                    </a>
+                </td>
+                <td>
+                    <?= $item->data_json['reason'] ?>
+                    <div class="d-flex flex-column justofy-content-start align-items-start">
+                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
+                                class="bi bi-exclamation-circle-fill"></i>
+                            <?php echo $item->leaveType?->title ?? '-' ?>
+                            <code><?php echo $item->total_days ?> </code> วัน</span>
+                    </div>
+                </td>
+                <td>
+                    <?= $item->showLeaveDate() ?>
+                </td>
+                <td class="text-start text-truncate" style="max-width:150px;">
+                    <?= $item->getAvatar(false)['department'] ?>
+                </td>
+                <td>
+                    <?php echo $item->stackChecker() ?>
+                </td>
+                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?>
+                </td>
+                <td class="fw-center align-middle text-start">
 
-                <?php
-                        try {
-                            echo $item->viewStatus();
-                        } catch (\Throwable $th) {
-                            //throw $th;
-                        }
-                        ?>
-            </td>
+                    <?php
+                    try {
+                        echo $item->viewStatus();
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                    ?>
+                </td>
 
-            <td class="fw-light text-end">
-                <div class="btn-group">
 
-                    <!-- แต่เป็น admin แก้ไขได้ -->
-                    <?php if(Yii::$app->user->can('admin')):?>
-                    <?= Html::a(
-                                    '<i class="fa-solid fa-pen-to-square"></i>',
-                                    ['/hr/leave/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],
-                                    ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]
-                                ) ?>
+                <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            จัดการ
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 
-                    <?php else:?>
-                    <i class="fa-solid fa-pencil fa-2x text-secondary"></i>
-                    <?php endif;?>
-
-                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                        data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                        <i class="bi bi-caret-down-fill"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง',
-                                            ['/me/leave/view','id' => $item->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']]
-                                        ) ?>
-                        </li>
-
-                        <li></li>
-                        <!-- การพิมพ์ใบลา ถ้า ผอ.อนุมัติแล้ว ให้พิมได้ -->
-                        <?php if($item->status == 'Approve'):?>
-                        <li>
-
-                            <?php echo Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบลา', 
-                            [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'], 
-                            ['class' => 'dropdown-item open-modal','data' => [
-                                'size' => 'modal-xl',
-                                'filename' => $item->leaveType?->title ?? '-'.'-'.$item->employee->fullname
-                            ]]) ?>
-                        </li>
-                        <?php endif;?>
-                    </ul>
-                </div>
-            </td>
-
-            
-        </tr>
-        <?php endforeach;?>
+                            <li>
+                                <!-- แต่เป็น admin แก้ไขได้ -->
+                                <?php if (Yii::$app->user->can('admin')): ?>
+                                    <?= Html::a(
+                                        '<i class="fa-solid fa-pen-to-square"></i>',
+                                        ['/hr/leave/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
+                                    ) ?>
+                                <?php endif; ?>
+                            </li>
+                            <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                            <?php if ($item->status == 'Approve'): ?>
+                                <li>
+                                    <?php echo Html::a(
+                                        '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบลา',
+                                        [$item->leave_type_id == 'LT4' ? '/hr/document/leavelt4' : '/hr/document/leavelt1', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> พิมพ์เอกสาร'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => [
+                                            'size' => 'modal-xl',
+                                            'filename' => $item->leaveType?->title ?? '-' . '-' . $item->employee->fullname
+                                        ]]
+                                    ) ?>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
     </tbody>
 </table>
 
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'listOptions' => 'pagination pagination-sm',
-                    'class' => 'pagination-sm',
-                ],
-            ]); ?>
+        'pagination' => $dataProvider->pagination,
+        'firstPageLabel' => 'หน้าแรก',
+        'lastPageLabel' => 'หน้าสุดท้าย',
+        'options' => [
+            'listOptions' => 'pagination pagination-sm',
+            'class' => 'pagination-sm',
+        ],
+    ]); ?>
 </div>
 <?php
 $js = <<< JS
@@ -178,5 +171,5 @@ $js = <<< JS
 
 
 JS;
-$this->registerJs($js,View::POS_END);
+$this->registerJs($js, View::POS_END);
 ?>

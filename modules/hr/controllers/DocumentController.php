@@ -6,14 +6,9 @@ use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
-use yii\helpers\FileHelper;
-use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use PhpOffice\PhpWord\Settings;
 use yii\helpers\BaseFileHelper;
-use app\modules\am\models\Asset;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 
@@ -74,7 +69,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('leaveType', $model->leaveType->title);
         $templateProcessor->setValue('days', $model->total_days);
         $templateProcessor->setValue('total', ($model->total_days + ($model->LastDays()['data']->total_days ?? 0)));
-        $templateProcessor->setValue('address', $model->data_json['address']);
+        $templateProcessor->setValue('address', (isset($model->data_json['address']) ? strip_tags($model->data_json['address']) : ''));
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
@@ -163,7 +158,7 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('ld', $model->entitlements()->days ?? 0);  // วันละพักผ่อนสะสมประจำปี
         $templateProcessor->setValue('sum', $model->entitlements()->days ?? 0);  // รวมวันลาพักผ่อนที่ใช้ได้
         $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
-        $templateProcessor->setValue('address', $model->data_json['address']);
+        $templateProcessor->setValue('address', (isset($model->data_json['address']) ? strip_tags($model->data_json['address']) : ''));
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
         // ชื่อผู้ขอลา
