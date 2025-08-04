@@ -1,22 +1,12 @@
 <?php
 use app\models\Car;
 use yii\helpers\Html;
-use app\models\Driver;
-
-use yii\jui\DatePicker;
-use app\models\Categorise;
-use app\models\LocationOrg;
-use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
+use app\modules\booking\models\Vehicle;
 
 $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 ?>
-<?php
-// echo "<pre>";
-// print_r($model->vehicleDetails);
-// echo "</pre>";
 
-?>
 
 <?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
     <div class="mb-3">
@@ -28,9 +18,11 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 
     <div class="booking-details">
         <div class="d-flex justify-content-between">
-            <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true])->label('จัดสรรร่วม') ?>
+            <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true,'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
             <label class="form-label">ประเภทการไป  (<code><?php echo $model->viewGoType()?></code>)</label>
         </div>
+
+        
         <table class="table table-bordered" id="details-table">
             <thead class="table-light">
                 <tr>
@@ -44,7 +36,6 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
                 <?php foreach ($model->vehicleDetails as $index => $detail): ?>
                 <tr class="detail-row">
                     <td>
-                        
                         <?=$model->go_type == 1 ? $detail->showDate() : $model->showDateRange()?>
                         <input type="hidden" name="vehicleDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
                     </td>
@@ -96,7 +87,6 @@ $js = <<<JS
     handleFormSubmit('#booking-form', null, async function(response) {
         await location.reload();
     });
-
 
 JS;
 $this->registerJs($js);

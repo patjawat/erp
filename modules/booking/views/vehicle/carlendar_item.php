@@ -3,14 +3,15 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
+use app\models\Categorise;
 
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 
 ?>
 
 <style>
-
     .status-indicator {
         width: 12px;
         height: 12px;
@@ -62,6 +63,17 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
                 <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
             </div>
             <div id="calendar"></div>
+            <div class="d-flex justify-content-center mt-3">
+                <ul class="d-flex  felx-column gap-5">
+                    <?php foreach ($vehicleStatus as $vehicleStatusItem): ?>
+                        <li class="d-flex gap- align-items-center">
+                            <span class="badge rounded-pill me-1" style="background-color:<?= $vehicleStatusItem->data_json['color'] ?>">&nbsp;</span>
+                            <?= $vehicleStatusItem->title ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+
         </div>
     </div>
 </div>

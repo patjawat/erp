@@ -1,7 +1,10 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
+use app\models\Categorise;
+
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
@@ -28,10 +31,10 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
         padding: 20px !important;
         overflow: auto !important;
     }
-    #calendar {
-    touch-action: manipulation;
-}
 
+    #calendar {
+        touch-action: manipulation;
+    }
 </style>
 
 <div class="card" id="fullscreen-container">
@@ -53,15 +56,26 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
-                <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
-            </div>
-            <div id="calendar"></div>
+    <div class="card-body">
+        <div id="calendar-loading" style="display: none; text-align: center; margin-bottom: 10px;">
+            <span class="spinner-border text-primary" role="status"></span> กำลังโหลดกิจกรรม...
+        </div>
+        <div id="calendar"></div>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-center mt-3">
+            <ul class="d-flex  felx-column gap-5">
+                <?php foreach (Categorise::find()->where(['name' => 'meeting_status'])->all() as $statusItem): ?>
+                    <li class="d-flex gap- align-items-center">
+                        <span class="badge rounded-pill me-1" style="background-color:<?= isset($statusItem->data_json['color']) ? $statusItem->data_json['color'] : '' ?>">&nbsp;</span>
+                        <?= $statusItem->title ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     </div>
 </div>
+
 
 
 <?php
@@ -284,4 +298,3 @@ $js = <<<JS
 
 $this->registerJS($js, View::POS_END);
 ?>
-

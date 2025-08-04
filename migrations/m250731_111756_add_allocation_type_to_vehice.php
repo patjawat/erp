@@ -12,7 +12,7 @@ class m250731_111756_add_allocation_type_to_vehice extends Migration
         $table = '{{%vehicle}}';
         $schema = Yii::$app->db->getTableSchema($table, true);
 
-            if (!isset($schema->columns['allocation_type'])) {
+            if (!isset($schema->columns['is_shared'])) {
                   $this->addColumn($table, 'is_shared', $this->boolean()->notNull()->defaultValue(false)->comment('การจัดสรรร่วม'));
             }
     }

@@ -47,6 +47,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
     public $emp_id;
     public $thai_year;
     public $date_filter;
+    public $location;
     public static function tableName()
     {
         return 'vehicle_detail';
@@ -61,7 +62,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
             [['vehicle_id'], 'required'],
             [['vehicle_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['mileage_start', 'mileage_end', 'distance_km', 'oil_price', 'oil_liter'], 'number'],
-            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','emp_id','thai_year','date_filter'], 'safe'],
+            [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'emp_id', 'thai_year', 'date_filter','location'], 'safe'],
             [['ref', 'license_plate', 'status', 'time_start', 'time_end', 'driver_id'], 'string', 'max' => 255],
         ];
     }
@@ -118,7 +119,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
     }
 
 
-        // สถานะ
+    // สถานะ
     public function getVehicleDetailStatus()
     {
         return $this->hasOne(Categorise::class, ['code' => 'status'])->andOnCondition(['name' => 'vehicle_detail_status']);
@@ -140,18 +141,29 @@ class VehicleDetail extends \yii\db\ActiveRecord
     {
         try {
             $emp = Employees::findOne(['id' => $this->driver_id]);
-        // $msg = $emp->departmentName();
-        return [
-            'avatar' => $emp->getAvatar(false, $msg),
-            'fullname' => $emp->fullname
-        ];
+            // $msg = $emp->departmentName();
+            return [
+                'avatar' => $emp->getAvatar(false, $msg),
+                'fullname' => $emp->fullname
+            ];
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
                 'fullname' => ''
             ];
         }
-        
+    }
+
+
+
+    // แสดงหน่วยงานภานนอก
+    public function ListOrg()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'document_org'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
     }
 
     public function ListThaiYear()
@@ -170,25 +182,25 @@ class VehicleDetail extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-        // แสดงรายการาถานะ
-        public function ListStatus()
-        {
-            $model = Categorise::find()
-                ->where(['name' => 'vehicle_detail_status'])
-                ->asArray()
-                ->all();
-            return ArrayHelper::map($model, 'code', 'title');
-        }
-
-            public function viewStatus()
+    // แสดงรายการาถานะ
+    public function ListStatus()
     {
-        $statusName = $this->vehicleDetailStatus?->title ?? null;
-        return $this->getStatus($this->status,$statusName);
+        $model = Categorise::find()
+            ->where(['name' => 'vehicle_detail_status'])
+            ->asArray()
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
     }
 
-    public  function getStatus($status,$statusName=null)
+    public function viewStatus()
     {
-        $data = AppHelper::viewStatus($status,$statusName);
+        $statusName = $this->vehicleDetailStatus?->title ?? null;
+        return $this->getStatus($this->status, $statusName);
+    }
+
+    public  function getStatus($status, $statusName = null)
+    {
+        $data = AppHelper::viewStatus($status, $statusName);
         return [
             'title' => $data['title'],
             'color' => $data['color'],
@@ -196,6 +208,4 @@ class VehicleDetail extends \yii\db\ActiveRecord
             'icon' => $data['icon']
         ];
     }
-
-    
 }

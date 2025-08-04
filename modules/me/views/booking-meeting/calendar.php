@@ -3,6 +3,7 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\modules\booking\models\Meeting;
 
 
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
@@ -32,45 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $this->render('@app/modules/booking/views/meeting/calendar_item') ?>
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12">
-
-        <div class="card">
-            <div class="card-header bg-primary-gradient text-white">
-                <div class="d-flex justify-content-between">
-                    <h6 class="text-white">
-                        <i class="fa-solid fa-calendar-days"></i> ปฏิทินวันนี้
-                    </h6>
-                </div>
-            </div>
-            <div class="card-body">
-                <table
-                    class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">เวลา</th>
-                            <th scope="col">กิจกรรม</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($eventTodays as $_eventTodays): ?>
-                            <?php $iconData = $_eventTodays->showIconIfInTimeRange(); ?>
-                            <tr>
-                                <td scope="row" class="<?= $iconData['active'] ? 'fw-semibold text-sucess' : '' ?>">
-                                    <p class="mb-0"><?=$iconData['icon'].' '.$iconData['status']?></p>
-                                    <?= ($_eventTodays->viewTime()['full'] ?? '-'); ?>
-                                </td>
-                                <td>
-                                    <a href="<?=Url::to(['view','id' => $_eventTodays->id])?>" class="open-modal" data-size="modal-lg">
-                                    <p class="mb-0 fw-semibold"><?= $_eventTodays->room->title ?></p>
-                                    <p class="mb-0 fs-12"><?= $_eventTodays->title ?></p>
-                                </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
+        <div id="showToDays"></div>
         <div id="showTomorrow"></div>
 
     </div>
@@ -80,14 +43,29 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<< JS
 
 listTomorrow()
+
+listTomorrow()
+listToDays()
 async function listTomorrow()
 {
     await $.ajax({
         type: "get",
-        url: "/me/booking-meeting/list-tomorrow",
+        url: "/me/booking-meeting/event-tomorrow",
         dataType: "json",
         success: function (response) {
             $('#showTomorrow').html(response.content)
+        }
+    });
+}
+
+async function listToDays()
+{
+    await $.ajax({
+        type: "get",
+        url: "/me/booking-meeting/event-todays",
+        dataType: "json",
+        success: function (response) {
+            $('#showToDays').html(response.content)
         }
     });
 }

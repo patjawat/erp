@@ -28,8 +28,7 @@ use yii\widgets\Pjax;
                 <tr>
                     <td>
                         <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="open-modal" data-size="modal-lg">
-                        <p class="mb-0 fw-semibold"> <?= ($item->viewTime()['full'] ?? '-'); ?></p>
-                        <p class="mb-0 fw-semibold"><?php echo $item->locationOrg?->title ?? '-' ?></p>
+                        <p class="mb-0 fw-semibold"> <?= ($item->viewTime()['full'] ?? '-'); ?> <?php echo $item->locationOrg?->title ?? '-' ?></p>
                         <p class="mb-0 fs-11"><?php echo $item->reason ?? '-' ?></p>
                     </a>
                     </td>

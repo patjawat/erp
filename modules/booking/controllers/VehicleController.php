@@ -90,7 +90,10 @@ class VehicleController extends Controller
         }
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-
+        $dataProvider->query->orderBy([
+            'date_start' => SORT_DESC,
+            'location' =>  SORT_DESC,
+        ]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -304,26 +307,25 @@ class VehicleController extends Controller
 
     public function actionWork()
     {
-        $me = UserHelper::GetEmployee();
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
-        $status = $this->request->get('status');
         $searchModel = new VehicleDetailSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
-            // 'status' =>   $status ? [$status] : ['Pending']
+             'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month'
         ]);
+
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');
         $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+
         // $dataProvider->query->joinWith('vehicle');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
 
-                if ($searchModel->date_filter) {
+
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -335,7 +337,6 @@ class VehicleController extends Controller
         }
 
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-
         return $this->render('work', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -503,8 +504,7 @@ class VehicleController extends Controller
             if (!$model->save()) {
                 throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
             }
-            //ถ้าไม่ใช่การจัดสรรร่วม
-            if ($model->is_shared == "0") {
+            
                 foreach ($post['vehicleDetails'] as $key => $detail) {
                     $bookingDetail = VehicleDetail::findOne($detail['id']);
                     if ($bookingDetail) {
@@ -519,7 +519,7 @@ class VehicleController extends Controller
                         throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
                     }
                 }
-            }
+
 
             $transaction->commit();
             $this->sendApprove($model);

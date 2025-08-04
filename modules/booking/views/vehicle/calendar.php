@@ -34,7 +34,6 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         display: inline-block;
         margin-right: 6px;
     }
-    
 </style>
 
 <div class="row">
@@ -42,11 +41,8 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
         <?= $this->render('carlendar_item', ['vehicle_type' => $vehicle_type]) ?>
     </div>
     <div class="col-lg-4 col-md-12 col-sm-12" id="manual-container">
-
-
         <div id="showEventToDays"></div>
         <div id="showEventTomorrow"></div>
-
         <div class="card">
             <div class="card-header  bg-primary-gradient">
                 <div class="d-flex justify-content-between align-items-center align-self-center">
@@ -74,8 +70,8 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 
 
 <?php
-$urlEventToDays = Url::to(['/booking/vehicle/list-event-todays','vehicle_type' => 'official']);
-$urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow','vehicle_type' => 'official']);
+$urlEventToDays = Url::to(['/booking/vehicle/list-event-todays', 'vehicle_type' => 'official']);
+$urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow', 'vehicle_type' => 'official']);
 
 $js = <<<JS
             listEventTomorrow()

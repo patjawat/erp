@@ -52,6 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="fw-semibold">ผู้ขอ</th>
                     <th class="fw-semibold">วัน/เวลา/สถานที่</th>
                     <th class="fw-semibold">พขร</th>
+                    <th class="fw-semibold">ทะเบียนรถ</th>
                     <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
                     <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
                     <th class="fw-semibold text-center">สถานะ</th>
@@ -77,6 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </td>
                         <td><?= $item->showDriver()['avatar'] ?></td>
+                        <td><?=$item->car?->license_plate?></td>
 
                         <td class="text-end"><?= $item->mileage_start ?></td>
                         <td class="text-end"><?= $item->mileage_end ?></td>

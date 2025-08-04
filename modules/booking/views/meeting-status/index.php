@@ -6,19 +6,22 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
-use app\modules\booking\models\Room;
+use app\modules\booking\models\RoomType;
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\RoomSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ตั้งค่าห้องประชุม';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบจัดการห้องประชุม', 'url' => ['/booking/meeting/index']];
+$this->title = 'ตั้งค่าสถานะประชุม';
+$this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['/booking/meeting/index']];
 $this->params['breadcrumbs'][] = $this->title;
+?>
+<?php
+$palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#e91e63', '#607d8b'];
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<i class="fa-solid fa-gear"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
@@ -28,11 +31,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('../meeting/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
-<?php Pjax::begin()?>
-<?php
-$palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#e91e63', '#607d8b'];
-?>
 
+<?php Pjax::begin(); ?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
@@ -42,33 +42,38 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
     </div>
 </div>
 
-<div class="card mb-4">
+
+<div class="card">
     <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between align-items-center gap-3">
-            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียนห้องประชุม <span class="badge rounded-pill text-bg-light"><?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม', ['/booking/room/create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างห้องประชุม'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+            </h6>
+            <div class="d-flex justify-content-between">
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างรูปแบบห้องประชุม'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+            </div>
         </div>
     </div>
     <div class="card-body">
         <table class="table table-hover">
             <thead>
                 <tr>
-                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                     <th class="text-center fw-semibold" style="width:200px">สี</th>
-                    <th class="fw-semibold">ชื่อห้องประชุม</th>
-                    <th class="fw-semibold">ความจุ/คน</th>
-                    <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
-                    <th class="fw-semibold d-none d-md-table-cell">อุปกรณ์</th>
-                    <th class="fw-semibold">สถานะ</th>
-                    <th class="fw-semibold text-end">จัดการ</th>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center fw-semibold" style="width:200px">สี</th>
+                    <th class="fw-semibold" style="width:10%">รหัส</th>
+                    <th class="fw-semibold" style="width:70%">สถานะ</th>
+                    <th class="fw-semibold text-end" style="width:10%">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                            <td>
-                            <?php 
+                        <td class="text-center fw-semibold">
+                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td>
+                            <?php
                             echo kartik\color\ColorInput::widget([
                                 'name' => 'color_' . $item->id,
                                 'value' => $item->data_json['color'] ?? '', // assuming 'color' is the attribute
@@ -88,7 +93,7 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                         let color = $(this).val();
                                         let id = $(this).data('id');
                                         $.ajax({
-                                            url: '" . Url::to(['/hr/leave-type/update-color','id' => $item->id]) . "',
+                                            url: '" . Url::to(['/hr/leave-type/update-color', 'id' => $item->id]) . "',
                                             type: 'POST',
                                             data: {id: id, color: color},
                                             success: function(res) {
@@ -99,21 +104,18 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                     }"
                                 ]
                             ]);
-                        ?>
-                            </td>
-                        <td class="fw-medium"><?= $item->title ?></td>
-                        <td><?= $item->data_json['seat_capacity'] ?? '-' ?></td>
-                        <td class="d-none d-md-table-cell"><?= $item->data_json['location'] ?? '-'; ?></td>
-                        <td class="d-none d-md-table-cell"><?= $item->showAccessory() ?></td>
-                        <td><?=$item->showStatus()['title']?></td>
-                        <td class="fw-light text-end">
-                        <div class="dropdown">
+                            ?>
+                        </td>
+                        <td class="fw-medium align-middle"><?= $item->code ?></td>
+                        <td class="fw-medium align-middle"><?= $item->title ?></td>
+                        <td class="fw-light text-end align-middle">
+                            <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
                                     <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                 </ul>
                             </div>
@@ -123,8 +125,6 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
         </table>
     </div>
 </div>
-
-
 <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
     <?= yii\bootstrap5\LinkPager::widget([
         'pagination' => $dataProvider->pagination,
@@ -136,4 +136,4 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
         ],
     ]); ?>
 </div>
-<?php Pjax::end()?>
+<?php Pjax::end() ?>

@@ -6,9 +6,11 @@ use yii\widgets\Pjax;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white">
-                <i class="fa-solid fa-calendar-days"></i> ปฏิทินทั้งหมด
-            </h6>
+            <p class="text-white mb-0">
+                <i class="fa-solid fa-calendar-days"></i> <?=$title?>
+            </p>
+
+            <p class="text-white mb-0"><?=$date?></p>
         </div>
     </div>
     <div class="card-body">

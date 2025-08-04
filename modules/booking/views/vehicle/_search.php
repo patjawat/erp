@@ -75,6 +75,18 @@ use app\components\DateFilterHelper;
 
     <div class="collapse mt-3" id="collapseFilter">
         <div class="row">
+
+        <div class="col-lg-3 col-md-3 col-sm-12">
+                <?= $form->field($model, 'location')->widget(Select2::classname(), [
+                    'data' => $model->ListOrg(),
+                    'options' => ['placeholder' => 'สถานที่ไปทั้งหมด'],
+                    'pluginOptions' => [
+                        'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                        'allowClear' => true,
+                    ],
+                ])->label(false) ?>
+            </div>
+
             <div class="col-lg-3 col-md-3 col-sm-12">
                 <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
             </div>

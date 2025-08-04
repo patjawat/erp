@@ -208,7 +208,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'fullname' => $emp->fullname,
             'department' => $emp->departmentName(),
             'signature' => $emp->getInfo()['signature'],
-            
+
         ];
         // } catch (\Throwable $th) {
 
@@ -396,16 +396,16 @@ class Vehicle extends \yii\db\ActiveRecord
     public function viewStatus()
     {
         $statusName = $this->vehicleStatus?->title ?? null;
-        return $this->getStatus($this->status,$statusName);
+        return $this->getStatus($this->status, $statusName);
     }
 
-    public  function getStatus($status,$statusName=null)
+    public  function getStatus($status, $statusName = null)
     {
         $count = self::find()
             ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
             ->andWhere(['status' => $status])->count();
         $total = self::find()->count();
-        $data = AppHelper::viewStatus($status,$statusName);
+        $data = AppHelper::viewStatus($status, $statusName);
         $percent = $total > 0 ? ($count / $total * 100) : 0;
 
         return [
@@ -485,7 +485,49 @@ class Vehicle extends \yii\db\ActiveRecord
         return $this->urgent;
     }
 
+    //การจัดสรรร่วม Stock
+    public function isShareStack()
+    {
+        $datas = self::find()
+            ->andWhere([
+                'is_shared' => 1,
+                'date_start' => $this->date_start,
+                'location' => $this->location, // แก้ตรงนี้ด้วยนะ 'lcoation' เป็น 'location'
+            ])
+            ->all();
 
+if (count($datas) >= 1) {
+    try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        $targetEmpId = $this->emp_id; // หรือใช้ชื่อให้ชัดเจน
+
+        foreach ($datas as $key => $item) {
+            if ($item->emp_id != $targetEmpId) {
+                continue; // ข้ามถ้าไม่ใช่ emp_id ที่ต้องการ
+            }
+
+            $emp = Employees::findOne(['id' => $item->emp_id]);
+            if ($emp) {
+                $data .= Html::img('@web/img/placeholder-img.jpg', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $emp->showAvatar()
+                    ]
+                ]);
+            }
+        }
+
+        $data .= '</div>';
+        return $data;
+    } catch (\Throwable $th) {
+        // อาจ log error หรือ throw ใหม่
+    }
+}
+
+    }
     //  ภาพทีมคณะกรรมการ
     public function StackDriver()
     {

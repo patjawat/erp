@@ -52,8 +52,8 @@ class BookingMeetingController extends \yii\web\Controller
             'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        
-         if ($searchModel->date_filter) {
+
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -66,7 +66,7 @@ class BookingMeetingController extends \yii\web\Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_start', AppHelper::convertToGregorian($searchModel->date_end)]);
-       
+
         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -74,31 +74,7 @@ class BookingMeetingController extends \yii\web\Controller
         ]);
     }
 
-    //แสดงรายการพรุ่งนี้
-    public function actionListTomorrow()
-    {
-        $dateTomorrow = date('Y-m-d', strtotime('+1 day'));
-        $searchModel = new MeetingSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['date_start' => $dateTomorrow]);
-        $dataProvider->query->andFilterWhere(['<>','status','Cancel']);
-        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
-        // กำหนด pageSize ที่นี่
-        $dataProvider->pagination->pageSize = 7;
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' =>  $this->renderAjax('@app/modules/booking/views/meeting/list_meeting_tomorrow', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]),
-            ];
-        }else{
-            return  $dateTomorrow;
 
-        }
-    }
 
     public function actionListMe()
     {
@@ -497,13 +473,62 @@ class BookingMeetingController extends \yii\web\Controller
 
     public function actionCalendar()
     {
-
-        $eventTodays = Meeting::find()->where(['date_start' => date('Y-m-d')])->all();
-        return $this->render('calendar', [
-            'eventTodays' => $eventTodays
-        ]);
+        return $this->render('calendar');
     }
 
+    //การจองห้องประชุมวันนี้
+    public function actionEventTodays()
+    {
+        $date = date('Y-m-d');
+        $searchModel = new MeetingSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['date_start' => $date]);
+        $dataProvider->query->andFilterWhere(['<>', 'status', 'Cancel']);
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+        // กำหนด pageSize ที่นี่
+        $dataProvider->pagination->pageSize = 7;
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' =>  $this->renderAjax('@app/modules/booking/views/meeting/list_events_item', [
+                    'title' => 'ปฏิทินวันนี้',
+                   'date' => AppHelper::convertToThai($date),
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return  $date;
+        }
+    }
+
+    //การจองห้องประชุมวันพรุ่งนี้
+    public function actionEventTomorrow()
+    {
+        $date = date('Y-m-d', strtotime('+1 day'));
+        $searchModel = new MeetingSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['date_start' => $date]);
+        $dataProvider->query->andFilterWhere(['<>', 'status', 'Cancel']);
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
+        // กำหนด pageSize ที่นี่
+        $dataProvider->pagination->pageSize = 7;
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' =>  $this->renderAjax('@app/modules/booking/views/meeting/list_events_item', [
+                    'title' => 'ปฏิทินวันพรุ่งนี้',
+                    'date' => AppHelper::convertToThai($date),
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return  $date;
+        }
+    }
 
     public function actionView($id)
     {

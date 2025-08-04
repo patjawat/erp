@@ -2,7 +2,7 @@
 
 <?php
 
-$this->title = 'ระบบขอใช้ยานพาหนะ/ปฏิทินการใช้รถ';
+$this->title = 'ระบบจองรถ/ปฏิทินการใช้รถ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -14,6 +14,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?=$this->render('@app/modules/booking/views/vehicle/_search', ['model' => $searchModel])?>
+    </div>
+</div>
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'index']) ?>
 <?php $this->endBlock(); ?>
