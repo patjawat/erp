@@ -38,6 +38,9 @@ try {
 
     <?php $form = ActiveForm::begin([
         'id' => 'meeting-form',
+        'validateOnChange' => true,
+        'validateOnBlur' => true,
+        'validateOnType' => false,
         'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
         'validationUrl' => ['/me/booking-meeting/validator']
     ]); ?>
@@ -220,7 +223,12 @@ try {
 
 <?php
 $js = <<<JS
-          thaiDatepicker('#meeting-date_start')
+
+
+        $('#meeting-date_start').on('change', function () {
+            $('#meeting-form').yiiActiveForm('validateAttribute', 'meeting-room_id');
+        });
+          thaiDatepicker('#meeting-date_start,#meeting-date_end')
 
             \$('#meeting-room_id').on('change', function() {
               \$.ajax({
@@ -234,7 +242,6 @@ $js = <<<JS
                     \$('.room-title').text(res.title)
                     \$('.seat').text(res.seat)
                     $('.room-img').attr('src',res.img)
-                    log(res)
                 }
             });
         });
@@ -256,57 +263,11 @@ $js = <<<JS
             });
 
 
-            \$('#meeting-date_end').on('change', function() {
-                var dateStart = \$('#meeting-date_start').val();
-                var dateEnd = \$('#meeting-date_end').val();
-                listCars(dateStart,dateEnd)
-            });
+    handleFormSubmit('#meeting-form', null, async function(response) {
+        await location.reload();
+    });
 
-          \$('#meeting-date_start').on('change', function() {
-                var dateStart = \$('#meeting-date_start').val();
-                var dateEnd = \$('#meeting-date_end').val();
-                listCars(dateStart,dateEnd)
-            });
-
-            
-
-          \$('#meeting-form').on('beforeSubmit', function (e) {
-            var form = \$(this);
-
-            Swal.fire({
-            title: "ยืนยัน?",
-            text: "ขอใช้ห้องประชุม!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "ยกเลิก!",
-            confirmButtonText: "ใช่, ยืนยัน!"
-            }).then((result) => {
-            if (result.isConfirmed) {
-                
-                \$.ajax({
-                    url: form.attr('action'),
-                    type: 'post',
-                    data: form.serialize(),
-                    dataType: 'json',
-                    boforeSubmit: function(){
-                        beforLoadModal()
-                    },
-                    success: function (response) {
-                        // form.yiiActiveForm('updateMessages', response, true);
-                        if(response.status == 'success') {
-                            closeModal()
-                            location.reload(true)
-                            
-                        }
-                    }
-                });
-            }
-            });
-            return false;
-        });
-
+        
 
         function setTime()
         {
