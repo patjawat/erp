@@ -28,7 +28,7 @@ use app\modules\hr\models\Organization;
      'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-        <?php echo $form->field($model, 'data_json[export]')->hiddenInput()->label(false) ?>
+        <?php echo $form->field($model, 'export')->hiddenInput()->label(false) ?>
 
 
         

@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><?php echo $item->employee->fullname ?? '-'?></td>
                     <td><?php echo $item->employee->positionName()?></td>
-                    <td class="text-center"><?=$item->employee->cid?></td>
+                    <td class="text-center"><?php echo $item->employee->cid?></td>
                     <td><?php echo $item->employee->departmentName()?></td>
                     <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
                     <td class="text-center fw-bolder"><?php  echo $item->sum_lt3?></td>
@@ -99,27 +99,30 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php
-$url = Url::to(['/hr/leave/report/export']);
+$url = Url::to(['/hr/leave/export']);
 $params = Yii::$app->request->queryParams;
 $js = <<< JS
     $("body").on("click", ".export-report", function (e) {
            e.preventDefault();
-           $('#leavesearch-data_json-export').val('true')
+           var form = $('#search-leave').serialize();
+           $('#leavesearch-export').val('true')
+           console.log(form);
+           
             $.ajax({
                 type: "get",
-                url: $('#w0').attr('action'),
-                data:$('#w0').serialize(),
+                url:"/hr/leave/report",
+                data:$('#search-leave').serialize(),
                 xhrFields: {
                     responseType: 'blob' // Important for handling binary data
                 },
                 beforeSend: function(){
-                    $('#page-content').hide()
-                    $('#loader').show()
+                    // $('#page-content').hide()
+                    // $('#loader').show()
                 },
                 success: function(response) {
-                    $('#page-content').show()
-                    $('#loader').hide()
-                    $('#leavesearch-data_json-export').val('')
+                    // $('#page-content').show()
+                    // $('#loader').hide()
+                    $('#leavesearch-export').val('')
                     const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         
                     const url = URL.createObjectURL(blob);
