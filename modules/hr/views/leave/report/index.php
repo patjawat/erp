@@ -128,7 +128,7 @@ $js = <<< JS
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'รายงาน.xlsx'; // The default file name
+                    a.download = 'รายงานวันลา.xlsx'; // The default file name
                     document.body.appendChild(a);
                     a.click();
                     URL.revokeObjectURL(url);
