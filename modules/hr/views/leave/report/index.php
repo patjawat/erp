@@ -36,8 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 รายการ
             </h6>
 
-         <span class="btn btn-success shadow export-report"><i
-                    class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
+         <span class="btn btn-success shadow export-report"><i class="fa-solid fa-file-export me-1"></i> Excel</span>
 
     </div>
     </div>
