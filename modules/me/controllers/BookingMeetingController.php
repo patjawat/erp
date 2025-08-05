@@ -365,7 +365,7 @@ class BookingMeetingController extends \yii\web\Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
 
             $checkRoomDeplicate = Meeting::find()->where(['room_id' => $model->room_id,'date_start' => AppHelper::convertToGregorian($model->date_start)])->count();
-            $checkRoomDeplicate >=1 ? $model->addError('room_id', 'ห้องไม่ว่าง') : null;
+            // $checkRoomDeplicate >=1 ? $model->addError('room_id', 'ห้องไม่ว่าง') : null;
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
             $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
         }

@@ -56,6 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="fw-semibold text-center">ลำดับ</th>
                     <th class="fw-semibold">ชื่อ นามสกุล</th>
                     <th class="fw-semibold">ตำแหน่ง</th>
+                    <th class="fw-semibold text-center">เลขบัตรประชาชน</th>
                     <th class="fw-semibold">ฝ่าย/แผนก</th>
                     <th class="fw-semibold text-center">ลาป่วย</th>
                     <th class="fw-semibold text-center">ลากิจ</th>
@@ -70,6 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><?php echo $item->employee->fullname ?? '-'?></td>
                     <td><?php echo $item->employee->positionName()?></td>
+                    <td class="text-center"><?=$item->employee->cid?></td>
                     <td><?php echo $item->employee->departmentName()?></td>
                     <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
                     <td class="text-center fw-bolder"><?php  echo $item->sum_lt3?></td>

@@ -285,75 +285,82 @@ class LeaveController extends Controller
         $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('A')->setWidth(6);
 
-        $rowA1 = 'A2';
-        $sheet->setCellValue($rowA1, 'ลำดับ');
-        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $rowA2 = 'A2';
+        $sheet->setCellValue($rowA2, 'ลำดับ');
+        $sheet->getStyle($rowA2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowA2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowA2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('A')->setWidth(6);
 
-        $rowB1 = 'B2';
-        $sheet->setCellValue($rowB1, 'ชื่อ-สกุล');
-        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $rowB2 = 'B2';
+        $sheet->setCellValue($rowB2, 'ชื่อ-สกุล');
+        $sheet->getStyle($rowB2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowB2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowB2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('B')->setWidth(40);
 
-        $rowC1 = 'C2';
-        $sheet->setCellValue($rowC1, 'ตำแหน่ง');
-        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('C')->setWidth(50);
+        $rowC2 = 'C2';
+        $sheet->setCellValue($rowC2, 'เลขบัตรแระชาชน');
+        $sheet->getStyle($rowC2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowC2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowC2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('C')->setWidth(40);
 
         $rowD1 = 'D2';
-        $sheet->setCellValue($rowD1, 'ฝ่าย/แผนก');
+        $sheet->setCellValue($rowD1, 'ตำแหน่ง');
         $sheet->getStyle($rowD1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowD1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowD1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('D')->setWidth(50);
+        $sheet->getColumnDimension('C')->setWidth(50);
 
-        $rowE1 = 'E2';
-        $sheet->setCellValue($rowE1, 'ประเภทการลา');
-        $sheet->getStyle($rowE1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowE1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowE1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        // $sheet->getColumnDimension('E')->setWidth(20);
-
-        $rowE2 = 'E3';
-        $sheet->setCellValue($rowE2, 'ลาป่วย');
+        $rowE2 = 'E2';
+        $sheet->setCellValue($rowE2, 'ฝ่าย/แผนก');
         $sheet->getStyle($rowE2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowE2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowE2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(50);
 
-        $rowF2 = 'F3';
-        $sheet->setCellValue($rowF2, 'ลากิจ');
+        $rowF2 = 'F2';
+        $sheet->setCellValue($rowF2, 'ประเภทการลา');
         $sheet->getStyle($rowF2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowF2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowF2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('F')->setWidth(15);
+        // $sheet->getColumnDimension('E')->setWidth(20);
 
-
-        $rowG2 = 'G3';
-        $sheet->setCellValue($rowG2, 'ลาคลอดบุตร');
-        $sheet->getStyle($rowG2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowG2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $rowG3 = 'G3';
+        $sheet->setCellValue($rowG3, 'ลาป่วย');
+        $sheet->getStyle($rowG3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowG3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowG3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('G')->setWidth(15);
 
-        $rowH2 = 'H3';
-        $sheet->setCellValue($rowH2, 'ลาพักผ่อน');
-        $sheet->getStyle($rowH2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowH2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowH2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $rowH3 = 'H3';
+        $sheet->setCellValue($rowH3, 'ลากิจ');
+        $sheet->getStyle($rowH3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowH3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowH3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('H')->setWidth(15);
 
-        $rowI2 = 'I2';
-        $sheet->setCellValue($rowI2, 'รวมได้ลาแล้ว');
-        $sheet->getStyle($rowI2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowI2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowI2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+
+        $rowI3 = 'I3';
+        $sheet->setCellValue($rowI3, 'ลาคลอดบุตร');
+        $sheet->getStyle($rowI3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowI3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowI3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('I')->setWidth(15);
+
+        $rowJ3 = 'J3';
+        $sheet->setCellValue($rowJ3, 'ลาพักผ่อน');
+        $sheet->getStyle($rowJ3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowJ3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowJ3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('J')->setWidth(15);
+
+        $rowK2 = 'K2';
+        $sheet->setCellValue($rowK2, 'รวมได้ลาแล้ว');
+        $sheet->getStyle($rowK2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($rowK2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($rowK2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('I')->setWidth(20);
 
 
@@ -381,52 +388,59 @@ class LeaveController extends Controller
             $text = '<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>ไม่ระบุตำแหน่ง';
             $cleaned_text = str_replace('<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>', '', $item->employee->positionName());
 
-            $sheet->setCellValue('C' . $numRow, trim($cleaned_text));
+            $sheet->setCellValue('C' . $numRow, $item->employee->cid);
             $sheet->getStyle('C' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('C' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('C' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('C' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('D' . $numRow, $item->employee->departmentName());
+
+            $sheet->setCellValue('D' . $numRow, trim($cleaned_text));
             $sheet->getStyle('D' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('D' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('D' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('E' . $numRow, $item->sum_lt1);
-            $sheet->getStyle('E' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('E' . $numRow, $item->employee->departmentName());
             $sheet->getStyle('E' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('E' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('E' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('E' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('F' . $numRow, $item->sum_lt3);
+            $sheet->setCellValue('F' . $numRow, $item->sum_lt1);
             $sheet->getStyle('F' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('F' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('F' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('F' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('F' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('G' . $numRow, $item->sum_lt2);
+            $sheet->setCellValue('G' . $numRow, $item->sum_lt3);
             $sheet->getStyle('G' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('G' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('G' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('G' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('H' . $numRow, $item->sum_lt4);
+            $sheet->setCellValue('H' . $numRow, $item->sum_lt2);
             $sheet->getStyle('H' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('H' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('H' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('H' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('H' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('I' . $numRow, ($item->sum_lt1 + $item->sum_lt2 + $item->sum_lt3 + $item->sum_lt4));
+            $sheet->setCellValue('I' . $numRow, $item->sum_lt4);
             $sheet->getStyle('I' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('I' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('I' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('I' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('I' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
+
+            $sheet->setCellValue('J' . $numRow, ($item->sum_lt1 + $item->sum_lt2 + $item->sum_lt3 + $item->sum_lt4));
+            $sheet->getStyle('J' . $numRow, ($key + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('J' . $numRow, ($key + 1))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('J' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('J' . $numRow, ($key + 1))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle('J' . $numRow, ($key + 1))->getFill()->getStartColor()->setRGB('8DB4E2');
         }
         // set font style ตั้งค่า font
         // $setHeader = 'B1:I3000';
