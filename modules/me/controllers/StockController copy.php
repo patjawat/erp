@@ -5,6 +5,7 @@ namespace app\modules\me\controllers;
 use Yii;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
+use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Product;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
@@ -22,11 +23,6 @@ class StockController extends \yii\web\Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
-    }
-
-    public function actionDashboard()
-    {
-        return $this->render('dashboard');
     }
 
     public function actionApprove($id)

@@ -71,7 +71,7 @@
         "yiithings/yii2-dotenv": "dev-master",
         "kartik-v/yii2-validators": "dev-master",
         "nick-denry/yii2-round-switch-column": "^0.1.2",
-        "unclead/yii2-multiple-input": "dev-master",
+        "unclead/yii2-multiple-input": "^2.26",
         "phpoffice/phpword": "dev-master",
         "yurkinx/yii2-image": "dev-master",
         "yiisoft/yii2-imagine": "~2.2.0",

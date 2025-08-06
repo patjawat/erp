@@ -13183,6 +13183,7 @@ th {
 input,
 input::placeholder {
   font-weight: 200;
+  color: var(--bs-gray-600);
 }
 
 .btn-indigo {

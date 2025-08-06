@@ -64,6 +64,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public $q_month;
     public $receive_month;
     public $date_filter;
+    public $items;
 
     public function rules()
     {
@@ -92,7 +93,8 @@ class StockEvent extends Yii\db\ActiveRecord
                 'transaction_type',
                 'category_id',
                 'qty',
-                'date_filter'
+                'date_filter',
+                'items'
             ], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
@@ -533,6 +535,25 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'vendor'])->all(), 'code', 'title');
     }
+
+
+
+        public static function getSelect2Data()
+    {
+        $materials = Categorise::find()->where(['name' => 'asset_item','group_id' => 4])->all();
+        $data = [];
+        foreach ($materials as $material) {
+            $data[] = [
+                'id' => $material->id,
+                'text' => $material->code . ' - ' . $material->title . ' (' . $material->data_json['unit'] . ')',
+                'unit' => $material->data_json['unit'],
+                'stock' => $material->data_json['unit'],
+            ];
+        }
+        return $data;
+    }
+
+
 
     // แสดงรายชื่อกรรมการตรวจรับ
     public function ListCommittee()
