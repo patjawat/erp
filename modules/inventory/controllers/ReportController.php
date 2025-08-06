@@ -102,7 +102,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowF1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowF2 = 'F2';
-        $sheet->setCellValue($rowF2, 'เดือน');
+        $sheet->setCellValue($rowF2, 'เดือนxxx');
         $sheet->getStyle($rowF2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowF2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowF2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
