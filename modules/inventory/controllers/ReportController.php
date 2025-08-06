@@ -4,34 +4,27 @@ namespace app\modules\inventory\controllers;
 
 use Yii;
 use DateTime;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\web\Response;
 use app\components\AppHelper;
-use yii\data\ArrayDataProvider;
-use PhpOffice\PhpSpreadsheet\Style\Font;
+use app\components\ThaiDateHelper;
+use app\components\DateFilterHelper;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\StockEvent;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use app\modules\inventory\models\StockSummary;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 // Microsoft Excel
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockSummarySearch;
 
 class ReportController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
 
         $searchModel = new StockEventSearch([
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay)
+           'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -40,6 +33,17 @@ class ReportController extends \yii\web\Controller
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
 
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+        
         // $dataProvider->query->groupBy('type_code');
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
@@ -117,7 +121,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowG3 = 'G3';
-        $showGenDate = AppHelper::convertToThai($dateStart).' - '.AppHelper::convertToThai($dateEnd);
+        $showGenDate = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd);
         $sheet->setCellValue($rowG3, $showGenDate);
         $sheet->getStyle($rowG3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowG3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -246,7 +250,9 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('C' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
+            // $sheet->setCellValue('D' . $numRow, $value['sum_month']);
             $sheet->setCellValue('D' . $numRow, $value['sum_month']);
+
             $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);

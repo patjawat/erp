@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
+use app\components\DateFilterHelper;
 use app\modules\inventory\models\Warehouse;
 use iamsaint\datetimepicker\Datetimepicker;
 
@@ -57,25 +58,19 @@ $months = [
                 ?>
                 </div>
 <div class="col-lg-3 col-md-3 col-sm-12">
+     <?php
+        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+            'data' =>  DateFilterHelper::getDropdownItems(),
+            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                // 'width' => '130px',
+            ],
+            ])->label(false);
+            ?>
 
     
-    <?php
-            echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                'data' => $model->ListGroupYear(),
-                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-                'pluginEvents' => [
-                    'select2:select' => "function(result) { 
-                        $(this).submit()
-                        }",
-                        "select2:unselecting" => "function() {
-                            $(this).submit()
-                            }",
-                            ]
-                            ])->label(false);
-                            ?>
+ 
                             </div>
                   <div class="col-2">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
@@ -85,10 +80,35 @@ $months = [
     </div>
     
     <div class="col-1">
-        <?php echo Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
     </div>
                 
 </div>
+
+
+<div class="collapse mt-3" id="collapseFilter">
+<div class="row">
+        <div class="col-3">
+
+            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
+                    'data' => $model->ListThaiYear(),
+                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        // 'width' => '120px',
+                    ],
+        ])->label(false);?>
+
+        </div>
+
+    
+    </div>
     <?php ActiveForm::end(); ?>
 
 <?php

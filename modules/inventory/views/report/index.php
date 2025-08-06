@@ -87,14 +87,23 @@ $this->params['breadcrumbs'][] = $this->title;
                          $sum_total += $total;
                         ?>
                     <tr>
+                        <!-- ที่ -->
                         <td class="text-center"><?= $num++; ?></td>
+                        <!-- รายการ -->
                         <td><?= $item['asset_type'] ?></td>
+                        <!-- สินค้าคงเหลือ -->
                         <td class="text-end fw-bolder"><?php echo number_format(($item['last_stock_in']-$item['last_stock_out']), 2) ?></td>
+                        <!-- ซื้อระหว่างเดือน -->
                         <td class="text-end fw-bolder"><?php echo number_format($item['sum_month'], 2) ?></td>
+                        <!-- รวม -->
                         <td class="text-end fw-bolder"><?php echo number_format(($item['sum_month'] + ($item['last_stock_in']-$item['last_stock_out'])), 2) ?></td>
+                        <!-- จ่ายส่วนของ รพ.สต. -->
                         <td class="text-end fw-bolder"><?php echo number_format($item['sum_branch'], 2) ?></td>
+                        <!-- จ่ายส่วนของโรงพยาบาล -->
                         <td class="text-end fw-bolder"><?php echo number_format($item['sum_sub'], 2) ?></td>
+                        <!-- รวม -->
                         <td class="text-end fw-bolder"><?php echo number_format(($item['sum_branch'] + $item['sum_sub']), 2) ?></td>
+                        <!-- ยอดยกไป -->
                         <td class="text-end fw-bolder"><?php echo number_format($total, 2) ?></td>
                     </tr>
                     <?php endforeach; ?>
