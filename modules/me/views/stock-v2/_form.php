@@ -1,18 +1,21 @@
 <?php
-
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\web\JsExpression;
 use app\models\Categorise;
 use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
 use unclead\multipleinput\MultipleInput;
+$warehouse = Yii::$app->session->get('sub-warehouse');
 
 $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
 ?>
 
+<?php
+echo "<pre>";
+print_r($warehouse);
+echo "</pre>";
 
+?>
 <div class="card">
     <div class="card-body">
         <?php $form = ActiveForm::begin([
@@ -51,15 +54,7 @@ $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' =>
 
         <div class="row mb-4">
             <div class="col-md-4">
-                <?= $form->field($model, 'from_warehouse_id')->widget(Select2::class, [
-                    'data' => [
-                        'main' => 'คลังหลัก - อาคาร A',
-                        'sub' => 'คลังสำรอง - อาคาร B',
-                        'consumable' => 'คลังวัสดุสิ้นเปลือง',
-                    ],
-                    'options' => ['placeholder' => 'เลือกคลังต้นทาง...'],
-                    'pluginOptions' => ['allowClear' => true],
-                ]) ?>
+                <?= $form->field($model, 'warehouse_id')->textInput()->label('คลัง') ?>
             </div>
             <div class="col-md-4">
                 <?= $form->field($model, 'data_json[issue_type]')->widget(Select2::class, [

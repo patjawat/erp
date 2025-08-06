@@ -80,7 +80,13 @@ class StockV2Controller extends \yii\web\Controller
 
     public function actionCreate()
     {
-        $model = new StockEvent;
+         $warehouse = Yii::$app->session->get('sub-warehouse');
+        $model = new StockEvent([
+            'name' => 'order',
+            'transaction_type' => 'OUT',
+            'warehouse_id' => $warehouse['id'] ?? null,
+
+        ]);
 
         if ($this->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
