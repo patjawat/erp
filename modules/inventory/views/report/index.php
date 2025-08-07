@@ -24,7 +24,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['timeout' => 88888888]); ?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -128,7 +127,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <button id="download-button" class="btn btn-primary shadow">ดาวน์โหลดรายงาน</button>
     </div>
 </div>
-<?php Pjax::end(); ?>
+
 
 <?php
 $url = Url::to(['/inventory/report/export-excel', 'warehouse_id' => $searchModel->warehouse_id, 'date_start' => $dateStart, 'date_end' => $dateEnd]);
@@ -136,6 +135,7 @@ $js = <<< JS
     \$("body").on("click", "#download-button", function (e) {
             var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
             var year = \$('#stockeventsearch-thai_year').find(':selected').text();
+            
             \$.ajax({
                 url: '$url', // Adjust to match your controller and action URL
                 method: 'GET',
