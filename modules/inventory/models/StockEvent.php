@@ -235,6 +235,7 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['id' => 'category_id']);
     }
 
+
     // การสั่งซื้อ
     public function getPurchase()
     {
@@ -942,6 +943,13 @@ class StockEvent extends Yii\db\ActiveRecord
         return $result['total'] ?: 0;
     }
 
+
+    public function listOrderItem()
+    {
+       return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->all();
+
+    }
     public function ListOrderType()
     {
         $arr = [];

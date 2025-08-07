@@ -15,10 +15,11 @@ class StockV2Controller extends \yii\web\Controller
 {
     public function actionIndex()
     {
+        $warehouse = Yii::$app->session->get('sub-warehouse');
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
-        $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
+        $dataProvider->query->andFilterWhere(['warehouse_id' =>$warehouse['id'] ?? null]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -90,6 +91,7 @@ class StockV2Controller extends \yii\web\Controller
 
         if ($this->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+            return $this->request->post();
 
             return [
                 'status' => 'success',
@@ -109,6 +111,7 @@ class StockV2Controller extends \yii\web\Controller
     {
 
         $model = StockEvent::findOne($id);
+        $model->items = $model->listOrderItem();
         $oldObj = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
 

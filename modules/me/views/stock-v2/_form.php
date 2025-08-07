@@ -10,12 +10,7 @@ $warehouse = Yii::$app->session->get('sub-warehouse');
 $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
 ?>
 
-<?php
-echo "<pre>";
-print_r($warehouse);
-echo "</pre>";
 
-?>
 <div class="card">
     <div class="card-body">
         <?php $form = ActiveForm::begin([
@@ -30,34 +25,20 @@ echo "</pre>";
         <!-- ส่วนข้อมูลหลัก -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <?= $form->field($model, 'document_no')->textInput(['readonly' => true, 'value' => 'WH-2024-002']) ?>
+                <?= $form->field($model, 'code')->textInput(['readonly' => true]) ?>
             </div>
             <div class="col-md-3">
-                <?= $form->field($model, 'request_date')->input('date', ['value' => '2024-12-15']) ?>
+                <?= $form->field($model, 'movement_date')->textInput()->label('วันที่') ?>
             </div>
-            <div class="col-md-3">
-                <?= $form->field($model, 'created_by')->textInput(['placeholder' => 'ชื่อผู้ขอเบิก']) ?>
-            </div>
-            <div class="col-md-3">
-                <?= $form->field($model, 'data_json[department]')->widget(Select2::class, [
-                    'data' => [
-                        'บัญชี' => 'แผนกบัญชี',
-                        'บุคคล' => 'แผนกบุคคล',
-                        'ไอที' => 'แผนกไอที',
-                        'การตลาด' => 'แผนกการตลาด',
-                    ],
-                    'options' => ['placeholder' => 'เลือกแผนก...'],
-                    'pluginOptions' => ['allowClear' => true],
-                ]) ?>
+              <div class="col-md-4">
+                <?= $form->field($model, 'warehouse_id')->textInput()->label('คลัง') ?>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-md-4">
-                <?= $form->field($model, 'warehouse_id')->textInput()->label('คลัง') ?>
-            </div>
-            <div class="col-md-4">
-                <?= $form->field($model, 'data_json[issue_type]')->widget(Select2::class, [
+          
+            <!-- <div class="col-md-4">
+                <?php $form->field($model, 'data_json[issue_type]')->widget(Select2::class, [
                     'data' => [
                         'ทั่วไป' => 'เบิกทั่วไป',
                         'PO' => 'เบิกตามใบสั่งซื้อ (PO)',
@@ -66,7 +47,7 @@ echo "</pre>";
                     'options' => ['placeholder' => 'เลือกประเภทการเบิก...'],
                     'pluginOptions' => ['allowClear' => true],
                 ]) ?>
-            </div>
+            </div> -->
             <div class="col-md-4">
                 <?= $form->field($model, 'data_json[remark]')->textInput(['placeholder' => 'หมายเหตุเพิ่มเติม']) ?>
             </div>
@@ -127,13 +108,13 @@ echo "</pre>";
                     'title' => 'จำนวน',
                     'type'  => 'textInput',
                 ],
-                [
-                    'name' => 'unit',
-                    'type'  => 'textInput',
-                    'title' => 'หน่วย',
-                    'defaultValue' => 1,
-                    'enableError' => true,
-                ],
+                // [
+                //     'name' => 'unit',
+                //     'type'  => 'textInput',
+                //     'title' => 'หน่วย',
+                //     'defaultValue' => 1,
+                //     'enableError' => true,
+                // ],
                 [
                     'name' => 'lot_number',
                     'title' => 'ล็อต/ซีเรียล',
