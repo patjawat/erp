@@ -565,7 +565,7 @@ class ReportController extends \yii\web\Controller
                         AND warehouse_id = :warehouse_id
                              AND x.warehouse_type = 'MAIN' 
                              AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price
                         ELSE 0 
                     END) AS last_stock_in,
             
@@ -575,19 +575,19 @@ class ReportController extends \yii\web\Controller
                          AND warehouse_id = :warehouse_id
                              AND x.warehouse_type IN ('SUB', 'BRANCH') 
                              AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price
                         ELSE 0 
                     END) AS last_stock_out,
             
                     -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                    SUM(CASE 
+                    ROUND(SUM(CASE 
                         WHEN x.transaction_type = 'IN'
                          AND warehouse_id = :warehouse_id 
                              AND x.warehouse_type = 'MAIN' 
                              AND x.receive_date BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price 
                         ELSE 0 
-                    END) AS sum_month,
+                    END),2) AS sum_month,
             
                     -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
                     SUM(CASE 
@@ -595,7 +595,7 @@ class ReportController extends \yii\web\Controller
                          AND warehouse_id = :warehouse_id 
                              AND x.warehouse_type = 'BRANCH' 
                              AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price 
                         ELSE 0 
                     END) AS sum_branch,
             
@@ -605,7 +605,7 @@ class ReportController extends \yii\web\Controller
                          AND warehouse_id = :warehouse_id
                              AND x.warehouse_type = 'MAIN' 
                              AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price
                         ELSE 0 
                     END) AS sum_sub
                 FROM view_stock_transaction x
@@ -634,7 +634,7 @@ class ReportController extends \yii\web\Controller
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
                                     AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.unit_price * x.qty 
+                                THEN x.total_price
                                 ELSE 0 
                             END) AS last_stock_in,
 
@@ -643,25 +643,25 @@ class ReportController extends \yii\web\Controller
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type IN ('SUB', 'BRANCH') 
                                     AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.unit_price * x.qty 
+                                THEN x.total_price
                                 ELSE 0 
                             END) AS last_stock_out,
 
                             -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                            SUM(CASE 
+                            ROUND(SUM(CASE 
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
                                     AND x.receive_date BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
+                                THEN x.total_price 
                                 ELSE 0 
-                            END) AS sum_month,
+                            END),2) AS sum_month,
 
                             -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
                             SUM(CASE 
                                 WHEN x.transaction_type = 'OUT' 
                                     AND x.warehouse_type = 'BRANCH' 
                                     AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
+                                THEN x.total_price
                                 ELSE 0 
                             END) AS sum_branch,
 
@@ -670,7 +670,7 @@ class ReportController extends \yii\web\Controller
                                 WHEN x.transaction_type = 'OUT' 
                                     AND x.warehouse_type = 'MAIN' 
                                     AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.unit_price * x.qty 
+                                THEN x.total_price
                                 ELSE 0 
                             END) AS sum_sub
                         FROM view_stock_transaction x
@@ -816,7 +816,7 @@ class ReportController extends \yii\web\Controller
                             AND x.warehouse_type = 'MAIN' 
                             AND x.order_status = 'success' 
                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.unit_price * x.qty 
+                        THEN x.total_price
                         ELSE 0 
                     END) AS last_stock_in,
                     SUM(CASE 
@@ -843,7 +843,7 @@ class ReportController extends \yii\web\Controller
                         THEN x.qty 
                         ELSE 0 
                     END) AS last_stock_out_qty,
-                    SUM(CASE 
+                     ROUND(SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.receive_date BETWEEN :date_start AND :date_end 

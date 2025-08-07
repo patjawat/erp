@@ -103,7 +103,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <!-- รวม -->
                         <td class="text-end fw-bolder"><?php echo number_format(($item['sum_branch'] + $item['sum_sub']), 2) ?></td>
                         <!-- ยอดยกไป -->
-                        <td class="text-end fw-bolder"><?php echo number_format($total, 2) ?></td>
+                        <td class="text-end fw-bolder"><?php echo number_format(floatval($total ?? 0), 2); ?></td>
                     </tr>
                     <?php endforeach; ?>
            
