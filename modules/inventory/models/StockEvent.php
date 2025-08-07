@@ -200,10 +200,10 @@ class StockEvent extends Yii\db\ActiveRecord
 
         // เขียนโค้ดที่ต้องการทำหลังจากลบ เช่น ลบไฟล์ที่เกี่ยวข้อง
         \Yii::info("Product ID {$this->id} was deleted", __METHOD__);
-            if($this->name == 'order'){
-                // หรือ ลบข้อมูลในตารางที่สัมพันธ์ เช่น product_items
-                self::deleteAll(['category_id' => $this->id]);
-            }
+        if ($this->name == 'order') {
+            // หรือ ลบข้อมูลในตารางที่สัมพันธ์ เช่น product_items
+            self::deleteAll(['category_id' => $this->id]);
+        }
     }
 
     // เชื่อมกับรายการ ทรัพสินและวัสดุ
@@ -296,7 +296,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public function getTotalOrderPrice()
     {
-        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
+        // $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
+        $sql = "SELECT IFNULL(SUM(total_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
         $query = \Yii::$app
             ->db
             ->createCommand($sql)
@@ -539,9 +540,9 @@ class StockEvent extends Yii\db\ActiveRecord
 
 
 
-        public static function getSelect2Data()
+    public static function getSelect2Data()
     {
-        $materials = Categorise::find()->where(['name' => 'asset_item','group_id' => 4])->all();
+        $materials = Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all();
         $data = [];
         foreach ($materials as $material) {
             $data[] = [
@@ -707,37 +708,37 @@ class StockEvent extends Yii\db\ActiveRecord
     public function viewChecker($msg = null)
     {
         try {
-        $approve = Approve::findOne(['name' => 'main_stock', 'from_id' => $this->id, 'level' => 1]);
-        $status = $approve->status;
-        switch ($status) {
-            case 'Pass':
-                $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
-                break;
+            $approve = Approve::findOne(['name' => 'main_stock', 'from_id' => $this->id, 'level' => 1]);
+            $status = $approve->status;
+            switch ($status) {
+                case 'Pass':
+                    $status = '<span class="badge rounded-pill badge-soft-success text-success fs-13"><i class="bi bi-check2-circle"></i> เห็นชอบ </span>';
+                    break;
 
-            case 'Reject':
-                $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
-                break;
+                case 'Reject':
+                    $status = '<span class="badge rounded-pill badge-soft-danger text-danger fs-13"><i class="fa-solid fa-xmark fs-6 text-danger"></i> ไม่เห็นชอบ </span>';
+                    break;
 
-            default:
-                $status = '<span class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-regular fa-clock"></i> รออนุมัติ </span>';
-                break;
-        }
+                default:
+                    $status = '<span class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-regular fa-clock"></i> รออนุมัติ </span>';
+                    break;
+            }
 
-        $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
-        // $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
+            $checkerTime = isset($this->data_json['checker_confirm_date']) ? AppHelper::timeDifference($this->data_json['checker_confirm_date']) : null;
+            // $approve = Approve::findOne(['name' => 'main_stock','from_id' => $this->id,'status' => 'Pass']);
 
-        return
-            [
-                'status' => $status,
-                // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
-                // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
-                'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
-                'position' => $this->getAvatar($approve->emp_id)['position_name'],
-                'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
-                'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">' . $msg . '</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
-                'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
-                // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
-            ];
+            return
+                [
+                    'status' => $status,
+                    // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
+                    // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
+                    'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
+                    'position' => $this->getAvatar($approve->emp_id)['position_name'],
+                    'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
+                    'avatar' => $this->getAvatar($approve->emp_id, '<span class="fw-bolder">' . $msg . '</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
+                    'checker_date' => isset($this->data_json['checker_confirm_date']) ?  Yii::$app->thaiDate->toThaiDate($this->data_json['checker_confirm_date'], true, false) : '',
+                    // 'avatar' => $this->getAvatar($this->checker, '<span class="fw-bolder">'.$msg.'</span> ' . $status . ' | <i class="bi bi-clock"></i> <span class="text-muted fs-13">' . $checkerTime . '</span>')['avatar'],
+                ];
         } catch (\Throwable $th) {
             return
                 [
@@ -816,9 +817,9 @@ class StockEvent extends Yii\db\ActiveRecord
     public function UserReq($msg = null)
     {
         // try {
-            // $emp = UserHelper::GetEmployee($this->data_json['user_req']);
-            return $this->getAvatar($this->emp_id, $msg);
-            //code...
+        // $emp = UserHelper::GetEmployee($this->data_json['user_req']);
+        return $this->getAvatar($this->emp_id, $msg);
+        //code...
         // } catch (\Throwable $th) {
         //     return [
         //         'avatar' => ''
@@ -906,13 +907,14 @@ class StockEvent extends Yii\db\ActiveRecord
 
         $query = self::find()
             ->select([
-                new Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) ELSE -COALESCE(i.qty, 0) * COALESCE(i.unit_price, 0) END), 2) as total')
+                new \yii\db\Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.total_price, 0) ELSE COALESCE(i.total_price, 0) END), 2) AS total')
             ])
             ->alias('e')
             ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
             ->andFilterWhere(['e.thai_year' => $this->thai_year])
             ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
             ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
+
 
         // เพิ่มเงื่อนไขการตรวจสอบสถานะเมื่อ $status เป็น true
         if ($status === true) {
@@ -940,15 +942,14 @@ class StockEvent extends Yii\db\ActiveRecord
         $result = $query->one();
 
         // ตรวจสอบผลลัพธ์
-        return $result['total'] ?: 0;
+        return number_format($result['total'],2) ?: 0;
     }
 
 
     public function listOrderItem()
     {
-       return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
+        return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
             ->all();
-
     }
     public function ListOrderType()
     {

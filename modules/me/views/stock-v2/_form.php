@@ -15,8 +15,6 @@ $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' =>
     <div class="card-body">
         <?php $form = ActiveForm::begin([
             'id' => 'form',
-            // 'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-            // 'validationUrl' => ['/inventory/stock-in/create-validator']
         ]); ?>
         <h5 class="border-bottom pb-2 mb-3">
             <i class="fas fa-info-circle me-2"></i>ข้อมูลหลัก
@@ -34,9 +32,7 @@ $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' =>
                 <?= $form->field($model, 'warehouse_id')->textInput()->label('คลัง') ?>
             </div>
         </div>
-
         <div class="row mb-4">
-          
             <!-- <div class="col-md-4">
                 <?php $form->field($model, 'data_json[issue_type]')->widget(Select2::class, [
                     'data' => [
@@ -108,13 +104,6 @@ $assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' =>
                     'title' => 'จำนวน',
                     'type'  => 'textInput',
                 ],
-                // [
-                //     'name' => 'unit',
-                //     'type'  => 'textInput',
-                //     'title' => 'หน่วย',
-                //     'defaultValue' => 1,
-                //     'enableError' => true,
-                // ],
                 [
                     'name' => 'lot_number',
                     'title' => 'ล็อต/ซีเรียล',
@@ -151,6 +140,21 @@ $js = <<< JS
    handleFormSubmit('#form', null, async function(response) {
         // await location.reload();
     });
+
+    $('body').on('keydown', function(e) {
+    if (e.key === 'Tab') {
+        // ใช้ setTimeout เพื่อรอให้การ focus เกิดขึ้นหลังจาก tab
+        setTimeout(function() {
+            let focusedElement = document.activeElement;
+            console.log('Element ที่ได้รับ focus:', focusedElement);
+            // ถ้าอยากใช้ jQuery กับ element นั้น
+            let focused = $(focusedElement);
+            // ตัวอย่าง: แสดง tag name และ value (ถ้ามี)
+            console.log('Tag:', focused.prop('tagName'), 'Value:', focused.val());
+        }, 0);
+    }
+});
+
 
     $('body').on('click', '.multiple-input .remove-button', function(e) {
     e.preventDefault(); // ป้องกันการลบทันที
