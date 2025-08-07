@@ -1,15 +1,6 @@
 <?php
 use yii\helpers\Html;
-use app\modules\purchase\models\Order;
-
-
 ?>
-<div
-    class="table-responsive"
->
-
-</div>
-
 
 <div class="table-responsive">
     <table class="table table-striped">

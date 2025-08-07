@@ -5,7 +5,6 @@ namespace app\modules\am\models;
 use Yii;
 use chillerlan\QRCode\QRCode;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -16,7 +15,6 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Organization;
-use app\modules\helpdesk\models\Helpdesk;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -337,6 +335,11 @@ public function landSize()
     // {
     //     return $this->hasOne(Categorise::class, ['code' => 'asset_item_id'])->andOnCondition(['name' => 'asset_item_id']);
     // }
+
+      public function getAssetGroup()
+    {
+        return $this->hasOne(AssetGroup::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
+    }
 
     public function getAssetItem()
     {

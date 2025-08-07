@@ -1,10 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 use yii\widgets\Pjax;
-use app\components\SiteHelper;
-use app\components\CategoriseHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Fsn $model */
@@ -38,9 +35,6 @@ $category_id = Yii::$app->request->get('category_id');
 
 <div class="row">
     <div class="col-12">
-
-
-
         <?=$this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,

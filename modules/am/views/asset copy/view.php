@@ -1,8 +1,6 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\widgets\DetailView;
-use yii\base\ErrorException;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 

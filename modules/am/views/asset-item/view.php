@@ -1,7 +1,6 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItem $model */
