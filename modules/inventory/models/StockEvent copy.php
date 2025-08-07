@@ -542,7 +542,8 @@ class StockEvent extends Yii\db\ActiveRecord
     {
 
         $query =  self::find()
-        ->select([new Expression("IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total")])
+        // ->select([new Expression("IFNULL(FORMAT(SUM(i.unit_price * i.qty),2), 0) AS total")])
+        ->select([new Expression("IFNULL(FORMAT(SUM(i.total_price),2), 0) AS total")])
         ->alias('e')
         ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
         ->andFilterWhere(['e.thai_year' => $this->thai_year])

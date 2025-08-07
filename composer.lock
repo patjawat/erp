@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "65f7f867264e5a75fcae329f7b6c5caf",
+    "content-hash": "69ad1c3a99313f826f86c356935f1016",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -234,12 +234,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/RobinHerbots/Inputmask.git",
-                "reference": "87eb3b13f0e314905ee105ea55ef082e82c6eca7"
+                "reference": "55dcd7e87bc74bbd9cdd67669fa6a6a589ba98eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/87eb3b13f0e314905ee105ea55ef082e82c6eca7",
-                "reference": "87eb3b13f0e314905ee105ea55ef082e82c6eca7"
+                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/55dcd7e87bc74bbd9cdd67669fa6a6a589ba98eb",
+                "reference": "55dcd7e87bc74bbd9cdd67669fa6a6a589ba98eb"
             },
             "require": {
                 "bower-asset/jquery": ">=1.7"
@@ -470,12 +470,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-qrcode.git",
-                "reference": "daf01b96b20ed8a98a70ced71f63ac01d5598df0"
+                "reference": "54c213bd4a96f1960c458be65bab1177aacbe878"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/daf01b96b20ed8a98a70ced71f63ac01d5598df0",
-                "reference": "daf01b96b20ed8a98a70ced71f63ac01d5598df0",
+                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/54c213bd4a96f1960c458be65bab1177aacbe878",
+                "reference": "54c213bd4a96f1960c458be65bab1177aacbe878",
                 "shasum": ""
             },
             "require": {
@@ -487,6 +487,7 @@
                 "chillerlan/php-authenticator": "^5.2.1",
                 "ext-fileinfo": "*",
                 "intervention/image": "^3.11",
+                "phan/phan": "^5.5.0",
                 "phpbench/phpbench": "^1.4",
                 "phpmd/phpmd": "^2.15",
                 "phpstan/phpstan": "^2.1.17",
@@ -559,7 +560,7 @@
                     "type": "Ko-Fi"
                 }
             ],
-            "time": "2025-06-16T16:47:48+00:00"
+            "time": "2025-07-19T23:10:13+00:00"
         },
         {
             "name": "chillerlan/php-settings-container",
@@ -753,12 +754,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/lipis/flag-icons.git",
-                "reference": "88050a786ef373e57dc891c3c17cf9538eef377e"
+                "reference": "5f40463ce1d8731f4e22dcb8acbc715b01573c54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lipis/flag-icons/zipball/88050a786ef373e57dc891c3c17cf9538eef377e",
-                "reference": "88050a786ef373e57dc891c3c17cf9538eef377e",
+                "url": "https://api.github.com/repos/lipis/flag-icons/zipball/5f40463ce1d8731f4e22dcb8acbc715b01573c54",
+                "reference": "5f40463ce1d8731f4e22dcb8acbc715b01573c54",
                 "shasum": ""
             },
             "default-branch": true,
@@ -787,7 +788,7 @@
                 "issues": "https://github.com/lipis/flag-icons/issues",
                 "source": "https://github.com/lipis/flag-icons/tree/main"
             },
-            "time": "2025-06-19T14:26:37+00:00"
+            "time": "2025-07-15T16:54:05+00:00"
         },
         {
             "name": "composer/pcre",
@@ -1740,7 +1741,7 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.400.0",
+            "version": "v0.406.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
@@ -1778,22 +1779,22 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.400.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.406.0"
             },
             "time": "2025-06-04T17:28:44+00:00"
         },
         {
             "name": "google/auth",
-            "version": "v1.47.0",
+            "version": "v1.47.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "d6389aae7c009daceaa8da9b7942d8df6969f6d9"
+                "reference": "d7a0a215ec42ca0c8cb40e9ae0c5960aa9a024b7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/d6389aae7c009daceaa8da9b7942d8df6969f6d9",
-                "reference": "d6389aae7c009daceaa8da9b7942d8df6969f6d9",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/d7a0a215ec42ca0c8cb40e9ae0c5960aa9a024b7",
+                "reference": "d7a0a215ec42ca0c8cb40e9ae0c5960aa9a024b7",
                 "shasum": ""
             },
             "require": {
@@ -1839,9 +1840,9 @@
             "support": {
                 "docs": "https://cloud.google.com/php/docs/reference/auth/latest",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.47.0"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.47.1"
             },
-            "time": "2025-04-15T21:47:20+00:00"
+            "time": "2025-07-09T15:26:02+00:00"
         },
         {
             "name": "graham-campbell/result-type",
@@ -2330,21 +2331,19 @@
         },
         {
             "name": "hamcrest/hamcrest-php",
-            "version": "dev-master",
+            "version": "v2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hamcrest/hamcrest-php.git",
-                "reference": "364bcda16d0547e054a590673169146f74bccaea"
+                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/364bcda16d0547e054a590673169146f74bccaea",
-                "reference": "364bcda16d0547e054a590673169146f74bccaea",
+                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
+                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
                 "shasum": ""
             },
             "require": {
-                "ext-ctype": "*",
-                "ext-dom": "*",
                 "php": "^7.4|^8.0"
             },
             "replace": {
@@ -2356,7 +2355,6 @@
                 "phpunit/php-file-iterator": "^1.4 || ^2.0 || ^3.0",
                 "phpunit/phpunit": "^4.8.36 || ^5.7 || ^6.5 || ^7.0 || ^8.0 || ^9.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2378,9 +2376,9 @@
             ],
             "support": {
                 "issues": "https://github.com/hamcrest/hamcrest-php/issues",
-                "source": "https://github.com/hamcrest/hamcrest-php/tree/master"
+                "source": "https://github.com/hamcrest/hamcrest-php/tree/v2.1.1"
             },
-            "time": "2025-06-26T10:46:04+00:00"
+            "time": "2025-04-30T06:54:44+00:00"
         },
         {
             "name": "iamsaint/yii2-datetimepicker",
@@ -5743,22 +5741,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/line/line-bot-sdk-php.git",
-                "reference": "670fa52d0d2a3ab623b297410b8e03fe7f277c83"
+                "reference": "ebf52cb21bb871e0170b0d32175e5c0f1126a61c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/line/line-bot-sdk-php/zipball/670fa52d0d2a3ab623b297410b8e03fe7f277c83",
-                "reference": "670fa52d0d2a3ab623b297410b8e03fe7f277c83",
+                "url": "https://api.github.com/repos/line/line-bot-sdk-php/zipball/ebf52cb21bb871e0170b0d32175e5c0f1126a61c",
+                "reference": "ebf52cb21bb871e0170b0d32175e5c0f1126a61c",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.3",
                 "guzzlehttp/psr7": "^1.7 || ^2.0",
-                "php": ">=8.1"
+                "php": "^8.1"
             },
             "require-dev": {
-                "guzzlehttp/guzzle": "^7.3",
-                "guzzlehttp/psr7": "^1.7 || ^2.0",
                 "orchestra/testbench": "*",
                 "phpmd/phpmd": "2.15.0",
                 "phpstan/phpstan": "^2.0",
@@ -5800,28 +5796,6 @@
             "license": [
                 "Apache-2.0"
             ],
-            "authors": [
-                {
-                    "name": "moznion",
-                    "email": "moznion@gmail.com",
-                    "role": "Retired"
-                },
-                {
-                    "name": "Satoru Yoshihara",
-                    "email": "vaduz0@gmail.com",
-                    "role": "Retired"
-                },
-                {
-                    "name": "Satoshi Shibuya",
-                    "email": "satosby@gmail.com",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Shunsuke Mori",
-                    "email": "morimorim7180@gmail.com",
-                    "role": "Maintainer"
-                }
-            ],
             "description": "SDK of the LINE BOT API for PHP",
             "homepage": "https://github.com/line/line-bot-sdk-php",
             "keywords": [
@@ -5830,29 +5804,30 @@
                 "sdk"
             ],
             "support": {
+                "docs": "https://line.github.io/line-bot-sdk-php/",
                 "issues": "https://github.com/line/line-bot-sdk-php/issues",
-                "source": "https://github.com/line/line-bot-sdk-php/tree/master"
+                "source": "https://github.com/line/line-bot-sdk-php"
             },
-            "time": "2025-06-18T03:23:03+00:00"
+            "time": "2025-07-29T20:43:03+00:00"
         },
         {
             "name": "maennchen/zipstream-php",
-            "version": "3.1.2",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maennchen/ZipStream-PHP.git",
-                "reference": "aeadcf5c412332eb426c0f9b4485f6accba2a99f"
+                "reference": "9712d8fa4cdf9240380b01eb4be55ad8dcf71416"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/aeadcf5c412332eb426c0f9b4485f6accba2a99f",
-                "reference": "aeadcf5c412332eb426c0f9b4485f6accba2a99f",
+                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/9712d8fa4cdf9240380b01eb4be55ad8dcf71416",
+                "reference": "9712d8fa4cdf9240380b01eb4be55ad8dcf71416",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-zlib": "*",
-                "php-64bit": "^8.2"
+                "php-64bit": "^8.3"
             },
             "require-dev": {
                 "brianium/paratest": "^7.7",
@@ -5861,7 +5836,7 @@
                 "guzzlehttp/guzzle": "^7.5",
                 "mikey179/vfsstream": "^1.6",
                 "php-coveralls/php-coveralls": "^2.5",
-                "phpunit/phpunit": "^11.0",
+                "phpunit/phpunit": "^12.0",
                 "vimeo/psalm": "^6.0"
             },
             "suggest": {
@@ -5903,7 +5878,7 @@
             ],
             "support": {
                 "issues": "https://github.com/maennchen/ZipStream-PHP/issues",
-                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.1.2"
+                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.2.0"
             },
             "funding": [
                 {
@@ -5911,7 +5886,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-27T12:07:53+00:00"
+            "time": "2025-07-17T11:15:13+00:00"
         },
         {
             "name": "markbaker/complex",
@@ -6660,12 +6635,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c"
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/1720ddd719e16cf0db4eb1c6eca108031636d46c",
-                "reference": "1720ddd719e16cf0db4eb1c6eca108031636d46c",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/07d290f0c47959fd5eed98c95ee5602db07e0b6a",
+                "reference": "07d290f0c47959fd5eed98c95ee5602db07e0b6a",
                 "shasum": ""
             },
             "require": {
@@ -6705,7 +6680,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.1"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.4"
             },
             "funding": [
                 {
@@ -6713,7 +6688,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-29T12:36:36+00:00"
+            "time": "2025-08-01T08:46:24+00:00"
         },
         {
             "name": "nick-denry/yii2-round-switch-column",
@@ -7273,12 +7248,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "61a6b50f02f6fed1da1923bf4f84b149a088d3c6"
+                "reference": "ea97afb754d06def4a4c731173c6d0f523aad221"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/61a6b50f02f6fed1da1923bf4f84b149a088d3c6",
-                "reference": "61a6b50f02f6fed1da1923bf4f84b149a088d3c6",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/ea97afb754d06def4a4c731173c6d0f523aad221",
+                "reference": "ea97afb754d06def4a4c731173c6d0f523aad221",
                 "shasum": ""
             },
             "require": {
@@ -7372,7 +7347,7 @@
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
                 "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/master"
             },
-            "time": "2025-06-24T15:46:36+00:00"
+            "time": "2025-08-06T07:16:44+00:00"
         },
         {
             "name": "phpoffice/phpword",
@@ -7565,12 +7540,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "592bb4be03fd1e61892d12c5e3eb9ac845c7f465"
+                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/592bb4be03fd1e61892d12c5e3eb9ac845c7f465",
-                "reference": "592bb4be03fd1e61892d12c5e3eb9ac845c7f465",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
+                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
                 "shasum": ""
             },
             "require": {
@@ -7667,7 +7642,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-22T22:57:02+00:00"
+            "time": "2025-06-26T16:29:55+00:00"
         },
         {
             "name": "piwik/device-detector",
@@ -7733,6 +7708,69 @@
             },
             "abandoned": "matomo/device-detector",
             "time": "2020-10-25T10:17:36+00:00"
+        },
+        {
+            "name": "predis/predis",
+            "version": "v3.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/predis/predis.git",
+                "reference": "9e9deec4dfd3ebf65d32eb368f498c646ba2ecd8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/predis/predis/zipball/9e9deec4dfd3ebf65d32eb368f498c646ba2ecd8",
+                "reference": "9e9deec4dfd3ebf65d32eb368f498c646ba2ecd8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0",
+                "psr/http-message": "^1.0|^2.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.3",
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpcov": "^6.0 || ^8.0",
+                "phpunit/phpunit": "^8.0 || ~9.4.4"
+            },
+            "suggest": {
+                "ext-relay": "Faster connection with in-memory caching (>=0.6.2)"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Predis\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Till Krüss",
+                    "homepage": "https://till.im",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A flexible and feature-complete Redis/Valkey client for PHP.",
+            "homepage": "http://github.com/predis/predis",
+            "keywords": [
+                "nosql",
+                "predis",
+                "redis"
+            ],
+            "support": {
+                "issues": "https://github.com/predis/predis/issues",
+                "source": "https://github.com/predis/predis/tree/v3.2.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/tillkruss",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-08-06T06:41:24+00:00"
         },
         {
             "name": "psr/cache",
@@ -8491,16 +8529,16 @@
         },
         {
             "name": "setasign/fpdi",
-            "version": "v2.6.3",
+            "version": "v2.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Setasign/FPDI.git",
-                "reference": "67c31f5e50c93c20579ca9e23035d8c540b51941"
+                "reference": "4b53852fde2734ec6a07e458a085db627c60eada"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Setasign/FPDI/zipball/67c31f5e50c93c20579ca9e23035d8c540b51941",
-                "reference": "67c31f5e50c93c20579ca9e23035d8c540b51941",
+                "url": "https://api.github.com/repos/Setasign/FPDI/zipball/4b53852fde2734ec6a07e458a085db627c60eada",
+                "reference": "4b53852fde2734ec6a07e458a085db627c60eada",
                 "shasum": ""
             },
             "require": {
@@ -8515,7 +8553,7 @@
                 "setasign/fpdf": "~1.8.6",
                 "setasign/tfpdf": "~1.33",
                 "squizlabs/php_codesniffer": "^3.5",
-                "tecnickcom/tcpdf": "^6.2"
+                "tecnickcom/tcpdf": "^6.8"
             },
             "suggest": {
                 "setasign/fpdf": "FPDI will extend this class but as it is also possible to use TCPDF or tFPDF as an alternative. There's no fixed dependency configured."
@@ -8551,7 +8589,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Setasign/FPDI/issues",
-                "source": "https://github.com/Setasign/FPDI/tree/v2.6.3"
+                "source": "https://github.com/Setasign/FPDI/tree/v2.6.4"
             },
             "funding": [
                 {
@@ -8559,7 +8597,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-05T13:22:35+00:00"
+            "time": "2025-08-05T09:57:14+00:00"
         },
         {
             "name": "softark/yii2-dual-listbox",
@@ -8749,6 +8787,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -8923,12 +8965,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mailer.git",
-                "reference": "bcd75c596e984704f3d916b5fa274b0eb5057054"
+                "reference": "44db2726bc5fa1da6ebb9131e7ed42e94f394971"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mailer/zipball/bcd75c596e984704f3d916b5fa274b0eb5057054",
-                "reference": "bcd75c596e984704f3d916b5fa274b0eb5057054",
+                "url": "https://api.github.com/repos/symfony/mailer/zipball/44db2726bc5fa1da6ebb9131e7ed42e94f394971",
+                "reference": "44db2726bc5fa1da6ebb9131e7ed42e94f394971",
                 "shasum": ""
             },
             "require": {
@@ -8991,11 +9033,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-20T10:40:28+00:00"
+            "time": "2025-08-04T15:10:24+00:00"
         },
         {
             "name": "symfony/mime",
@@ -9003,12 +9049,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "3a4e258771e8d768c643387ec90ac0f6d3bfef8a"
+                "reference": "9b6a474f4fc6509ceda58ec04225ab41edfb7116"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/3a4e258771e8d768c643387ec90ac0f6d3bfef8a",
-                "reference": "3a4e258771e8d768c643387ec90ac0f6d3bfef8a",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/9b6a474f4fc6509ceda58ec04225ab41edfb7116",
+                "reference": "9b6a474f4fc6509ceda58ec04225ab41edfb7116",
                 "shasum": ""
             },
             "require": {
@@ -9075,11 +9121,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-02T14:13:49+00:00"
+            "time": "2025-08-04T07:05:15+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -9152,6 +9202,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -9233,6 +9287,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -9320,6 +9378,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -9399,6 +9461,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -9484,6 +9550,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -9562,6 +9632,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -9813,16 +9887,16 @@
         },
         {
             "name": "unclead/yii2-multiple-input",
-            "version": "dev-master",
+            "version": "2.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/unclead/yii2-multiple-input.git",
-                "reference": "7022e484a120a3d5473e27748bed2c8a4b7ce75a"
+                "reference": "21d0138c1364903c5237c8a6d7a39e4b619ffac7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/unclead/yii2-multiple-input/zipball/7022e484a120a3d5473e27748bed2c8a4b7ce75a",
-                "reference": "7022e484a120a3d5473e27748bed2c8a4b7ce75a",
+                "url": "https://api.github.com/repos/unclead/yii2-multiple-input/zipball/21d0138c1364903c5237c8a6d7a39e4b619ffac7",
+                "reference": "21d0138c1364903c5237c8a6d7a39e4b619ffac7",
                 "shasum": ""
             },
             "require": {
@@ -9832,7 +9906,6 @@
             "require-dev": {
                 "phpunit/phpunit": "5.7.*"
             },
-            "default-branch": true,
             "type": "yii2-extension",
             "autoload": {
                 "psr-4": {
@@ -9863,7 +9936,7 @@
                 "issues": "https://github.com/unclead/yii2-multiple-input/issues?state=open",
                 "source": "https://github.com/unclead/yii2-multiple-input"
             },
-            "time": "2024-04-21T13:52:05+00:00"
+            "time": "2024-04-21T10:54:03+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
@@ -10385,25 +10458,26 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/strings.git",
-                "reference": "220caa78ad2da6a79a5b9710cb5a02b7ded358bc"
+                "reference": "5d597329ec518ce6a53fc8dd9cac96174ada0206"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/strings/zipball/220caa78ad2da6a79a5b9710cb5a02b7ded358bc",
-                "reference": "220caa78ad2da6a79a5b9710cb5a02b7ded358bc",
+                "url": "https://api.github.com/repos/yiisoft/strings/zipball/5d597329ec518ce6a53fc8dd9cac96174ada0206",
+                "reference": "5d597329ec518ce6a53fc8dd9cac96174ada0206",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0"
+                "php": "8.1 - 8.4"
             },
             "require-dev": {
                 "maglnet/composer-require-checker": "^4.7.1",
-                "phpunit/phpunit": "^10.5.45",
-                "rector/rector": "^2.0.8",
+                "phpbench/phpbench": "^1.4.1",
+                "phpunit/phpunit": "^10.5.48",
+                "rector/rector": "^2.1.2",
                 "roave/infection-static-analysis-plugin": "^1.35",
                 "spatie/phpunit-watcher": "^1.24",
-                "vimeo/psalm": "^5.26.1|^6.4.1"
+                "vimeo/psalm": "^5.26.1 || ^6.13"
             },
             "default-branch": true,
             "type": "library",
@@ -10441,7 +10515,7 @@
                     "type": "opencollective"
                 }
             ],
-            "time": "2025-02-09T16:30:54+00:00"
+            "time": "2025-07-29T11:32:54+00:00"
         },
         {
             "name": "yiisoft/yii-jquery",
@@ -10533,12 +10607,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "9b15614ad5da7e12506a28c8f83e4f043734fde7"
+                "reference": "8eb1faa791de40527c83561683a0c17511744349"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/9b15614ad5da7e12506a28c8f83e4f043734fde7",
-                "reference": "9b15614ad5da7e12506a28c8f83e4f043734fde7",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/8eb1faa791de40527c83561683a0c17511744349",
+                "reference": "8eb1faa791de40527c83561683a0c17511744349",
                 "shasum": ""
             },
             "require": {
@@ -10647,7 +10721,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-25T12:07:46+00:00"
+            "time": "2025-07-19T13:52:26+00:00"
         },
         {
             "name": "yiisoft/yii2-authclient",
@@ -11294,20 +11368,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-redis.git",
-                "reference": "0a90a543e06fd9f201511a839602a83e0b2487dc"
+                "reference": "efe038dd6637cc538715489a660504d4721a38a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-redis/zipball/0a90a543e06fd9f201511a839602a83e0b2487dc",
-                "reference": "0a90a543e06fd9f201511a839602a83e0b2487dc",
+                "url": "https://api.github.com/repos/yiisoft/yii2-redis/zipball/efe038dd6637cc538715489a660504d4721a38a8",
+                "reference": "efe038dd6637cc538715489a660504d4721a38a8",
                 "shasum": ""
             },
             "require": {
                 "ext-openssl": "*",
+                "php": "^7.3 || ^8.0",
+                "predis/predis": "^v2.3.0|^3.0",
                 "yiisoft/yii2": "~2.0.39"
             },
             "require-dev": {
-                "phpunit/phpunit": "<7",
+                "phpunit/phpunit": "9.*",
                 "yiisoft/yii2-dev": "~2.0.39"
             },
             "default-branch": true,
@@ -11361,7 +11437,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-05T04:02:57+00:00"
+            "time": "2025-07-14T16:56:01+00:00"
         },
         {
             "name": "yiisoft/yii2-swiftmailer",
@@ -11634,12 +11710,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Behat/Gherkin.git",
-                "reference": "b4870b14c0949b72983687b65c1c8ca8590b0856"
+                "reference": "7d341ec5dd0f49a20c17fa716995e7fd2c1daab7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Behat/Gherkin/zipball/b4870b14c0949b72983687b65c1c8ca8590b0856",
-                "reference": "b4870b14c0949b72983687b65c1c8ca8590b0856",
+                "url": "https://api.github.com/repos/Behat/Gherkin/zipball/7d341ec5dd0f49a20c17fa716995e7fd2c1daab7",
+                "reference": "7d341ec5dd0f49a20c17fa716995e7fd2c1daab7",
                 "shasum": ""
             },
             "require": {
@@ -11647,8 +11723,8 @@
                 "php": "8.1.* || 8.2.* || 8.3.* || 8.4.*"
             },
             "require-dev": {
-                "cucumber/gherkin-monorepo": "dev-gherkin-v32.1.2",
-                "friendsofphp/php-cs-fixer": "^3.65",
+                "cucumber/gherkin-monorepo": "dev-gherkin-v33.1.0",
+                "friendsofphp/php-cs-fixer": "^3.77",
                 "mikey179/vfsstream": "^1.6",
                 "phpstan/extension-installer": "^1",
                 "phpstan/phpstan": "^2",
@@ -11696,7 +11772,7 @@
                 "issues": "https://github.com/Behat/Gherkin/issues",
                 "source": "https://github.com/Behat/Gherkin/tree/master"
             },
-            "time": "2025-06-09T18:58:00+00:00"
+            "time": "2025-08-04T13:45:21+00:00"
         },
         {
             "name": "codeception/codeception",
@@ -12352,16 +12428,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.5.0",
+            "version": "v5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9"
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/ae59794362fe85e051a58ad36b289443f57be7a9",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/221b0d0fdf1369c71047ad1d18bb5880017bbc56",
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56",
                 "shasum": ""
             },
             "require": {
@@ -12404,9 +12480,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.5.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.0"
             },
-            "time": "2025-05-31T08:24:38+00:00"
+            "time": "2025-07-27T20:03:57+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -12414,12 +12490,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/manifest.git",
-                "reference": "54750ef60c58e43759730615a392c31c80e23176"
+                "reference": "65f90285728eae4eae313b8b6ba11b2f5436038e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/manifest/zipball/54750ef60c58e43759730615a392c31c80e23176",
-                "reference": "54750ef60c58e43759730615a392c31c80e23176",
+                "url": "https://api.github.com/repos/phar-io/manifest/zipball/65f90285728eae4eae313b8b6ba11b2f5436038e",
+                "reference": "65f90285728eae4eae313b8b6ba11b2f5436038e",
                 "shasum": ""
             },
             "require": {
@@ -12466,7 +12542,7 @@
             "description": "Component for reading phar.io manifest information from a PHP Archive (PHAR)",
             "support": {
                 "issues": "https://github.com/phar-io/manifest/issues",
-                "source": "https://github.com/phar-io/manifest/tree/2.0.4"
+                "source": "https://github.com/phar-io/manifest/tree/master"
             },
             "funding": [
                 {
@@ -12474,7 +12550,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-03-03T12:33:53+00:00"
+            "time": "2025-07-05T08:48:25+00:00"
         },
         {
             "name": "phar-io/version",
@@ -12893,12 +12969,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "a9e1112505effabbc6a0b3dde09e62999280f029"
+                "reference": "b7c2c3e1edc9d527552114182fc3dffc9baeda8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a9e1112505effabbc6a0b3dde09e62999280f029",
-                "reference": "a9e1112505effabbc6a0b3dde09e62999280f029",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b7c2c3e1edc9d527552114182fc3dffc9baeda8b",
+                "reference": "b7c2c3e1edc9d527552114182fc3dffc9baeda8b",
                 "shasum": ""
             },
             "require": {
@@ -12909,7 +12985,7 @@
                 "ext-mbstring": "*",
                 "ext-xml": "*",
                 "ext-xmlwriter": "*",
-                "myclabs/deep-copy": "^1.13.1",
+                "myclabs/deep-copy": "^1.13.4",
                 "phar-io/manifest": "^2.0.4",
                 "phar-io/version": "^3.2.1",
                 "php": ">=7.3",
@@ -12996,7 +13072,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-19T14:51:41+00:00"
+            "time": "2025-08-05T13:19:07+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -14328,12 +14404,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
-                "reference": "b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe"
+                "reference": "380872130d3a5dd3ace2f4010d95125fde5d5c70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe",
-                "reference": "b9123926e3b7bc2f98c02ad54f6a4b02b91a8abe",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/380872130d3a5dd3ace2f4010d95125fde5d5c70",
+                "reference": "380872130d3a5dd3ace2f4010d95125fde5d5c70",
                 "shasum": ""
             },
             "require": {
@@ -14383,7 +14459,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/1.x"
             },
             "funding": [
                 {
@@ -14399,7 +14475,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2025-06-27T09:58:17+00:00"
         },
         {
             "name": "symfony/polyfill-php73",
@@ -14469,6 +14545,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -14999,7 +15079,6 @@
         "setasign/fpdf": 20,
         "softark/yii2-dual-listbox": 20,
         "tecnickcom/tcpdf": 20,
-        "unclead/yii2-multiple-input": 20,
         "warrence/yii2-kartikgii": 20,
         "yiithings/yii2-dotenv": 20,
         "yurkinx/yii2-image": 20

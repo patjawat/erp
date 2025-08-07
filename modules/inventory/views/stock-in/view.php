@@ -148,11 +148,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="align-middle text-center">
                                 <?=$item->expDate?></td>
                             <td class="align-middle text-end">
-                                <span class="fw-semibold">
-                                    <?=number_format(($item->unit_price * $item->qty),2) ?>
-                                </span>
-
-                            </td>
+                                    <span class="fw-semibold">
+                                        <?php echo number_format($item->total_price,2)?>
+                                    </span>
+                                </td>
                             <td class="align-middle">
                                 <div class="d-flex justify-content-center gap-2">
                                     <?php if($item->order_status == 'pending'):?>
