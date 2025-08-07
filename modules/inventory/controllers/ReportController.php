@@ -603,7 +603,7 @@ class ReportController extends \yii\web\Controller
                     SUM(CASE 
                         WHEN x.transaction_type = 'OUT' 
                          AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type = 'SUB' 
+                             AND x.warehouse_type = 'MAIN' 
                              AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
                         THEN x.unit_price * x.qty 
                         ELSE 0 
@@ -668,7 +668,7 @@ class ReportController extends \yii\web\Controller
                             -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
                             SUM(CASE 
                                 WHEN x.transaction_type = 'OUT' 
-                                    AND x.warehouse_type = 'SUB' 
+                                    AND x.warehouse_type = 'MAIN' 
                                     AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
                                 THEN x.unit_price * x.qty 
                                 ELSE 0 
