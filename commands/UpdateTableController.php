@@ -454,7 +454,8 @@ class UpdateTableController extends Controller
                                     si.qty,
                                     si.unit_price,
                                     so.data_json->>'\$.receive_date' as receive_date,so.created_at,
-                                    so.thai_year
+                                    so.thai_year,
+                                    si.total_price
                                     
                                 FROM 
                                     stock_events so
