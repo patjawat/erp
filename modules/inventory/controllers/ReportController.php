@@ -580,14 +580,14 @@ class ReportController extends \yii\web\Controller
                     END) AS last_stock_out,
             
                     -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                    ROUND(SUM(CASE 
+                    SUM(CASE 
                         WHEN x.transaction_type = 'IN'
                          AND warehouse_id = :warehouse_id 
                              AND x.warehouse_type = 'MAIN' 
                              AND x.receive_date BETWEEN :date_start AND :date_end 
                         THEN x.total_price
                         ELSE 0 
-                    END),2) AS sum_month,
+                    END) AS sum_month,
             
                     -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
                     SUM(CASE 
@@ -648,13 +648,13 @@ class ReportController extends \yii\web\Controller
                             END) AS last_stock_out,
 
                             -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                            ROUND(SUM(CASE 
+                            SUM(CASE 
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
                                     AND x.receive_date BETWEEN :date_start AND :date_end 
                                 THEN x.total_price
                                 ELSE 0 
-                            END),2) AS sum_month,
+                            END) AS sum_month,
 
                             -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
                             SUM(CASE 
@@ -849,7 +849,7 @@ class ReportController extends \yii\web\Controller
                             AND x.receive_date BETWEEN :date_start AND :date_end 
                         THEN (x.total_price) 
                         ELSE 0 
-                    END AS sum_month,
+                    END) AS sum_month,
                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
