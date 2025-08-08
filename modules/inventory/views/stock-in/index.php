@@ -54,26 +54,33 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 ?>
 
 <div class="card">
-    <div class="card-body d-flex justify-content-between">
-        <div class="d-flex gap-3">
-            <?= Html::a($createIcon . 'สร้างรายการรับเข้า', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-primary shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
-            <?= $count > 0 ?  Html::a('<i class="fa-solid fa-bell"></i> รอรับเข้า <span class="badge text-bg-danger">' . $count . '</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-warning shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) : '' ?>
-        </div>
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
+
 <div class="stock-in-index">
     <div class="card">
-        <div class="card-body">
+        <div class="card-header bg-primary-gradient text-white">
             <div class="d-flex justify-content-between">
-                <h6><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
-                        class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
+         <h6 class="text-white"><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
+         class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
                 </h6>
-                <div>
-                    มูลค่า <span
-                        class="fw-semibold badge rounded-pill text-bg-light fs-6"><?= $searchModel->SummaryTotal(false) ?></span>บาท
-                </div>
+                <span class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $searchModel->SummaryTotal(false) ?></span>
+
+                 <div class="d-flex gap-3">
+            <?= Html::a($createIcon . 'สร้างใหม่', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-light shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
+            <?= $count > 0 ?  Html::a('<i class="fa-solid fa-bell"></i> รอรับเข้า <span class="badge text-bg-danger">' . $count . '</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-warning shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) : '' ?>
+        </div>
+
             </div>
+    </div>
+        <div class="card-body">
+              
+                
         </div>
         <table class="table table-striped table-hover">
             <thead>

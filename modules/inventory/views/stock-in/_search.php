@@ -1,9 +1,11 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
+use app\components\DateFilterHelper;
 use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
@@ -11,10 +13,9 @@ use iamsaint\datetimepicker\Datetimepicker;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-
-.right-setting {
-    width: 500px !important;
-}
+    .right-setting {
+        width: 500px !important;
+    }
 </style>
 <div class="stock-in-search">
 
@@ -25,90 +26,101 @@ use iamsaint\datetimepicker\Datetimepicker;
             'data-pjax' => 1
         ],
     ]); ?>
-<div class="d-flex justify-content-between gap-3">
+    <div class="row">
 
-    <?= $form->field($model, 'q')->label(false) ?>
-    <?=$form->field($model, 'asset_type_name')->widget(Select2::classname(), [
-        'data' => ArrayHelper::map($model->ListOrderType(),'id','name'),
-        'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
-        'pluginOptions' => [
-            'width' => '200px',
-            'allowClear' => true,
-        ],
-        'pluginEvents' => [
-            'select2:select' => "function(result) { 
+        <div class="col-lg-2 col-md-2 col-sm-12">
+
+            <?= $form->field($model, 'q')->label(false) ?>
+
+
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-12">
+            <?= $form->field($model, 'asset_type_name')->widget(Select2::classname(), [
+                'data' => ArrayHelper::map($model->ListOrderType(), 'id', 'name'),
+                'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                'pluginEvents' => [
+                    'select2:select' => "function(result) { 
                 $(this).submit()
                 }",
-                'select2:unselecting' => "function(result) { 
+                    'select2:unselecting' => "function(result) { 
                     $(this).submit()
                     }",
-                    
-                    ]
-                    ])->label(false);
-                    ?>
-                       
 
-
-<div class="right-setting" id="filter-emp">
-    <div class="card mb-0 w-100">
-        <div class="card-header">
-            <h5 class="card-title d-flex justify-content-between">
-                ค้นหาข้อมูล
-                <a href="javascript:void(0)"><i class="bi bi-x-circle filter-emp-close"></i></a>
-            </h5>
+                ]
+            ])->label(false);
+            ?>
         </div>
-<div class="p-2">
+        <div class="col-2">
+            <?php
+            echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+                'data' =>  DateFilterHelper::getDropdownItems(),
+                'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '130px',
+                ],
+            ])->label(false);
+            ?>
 
+        </div>
 
-            <div class="d-flex justify-content-between gap-3">
-
-                                <?=$form->field($model, 'date_start')->widget(Datetimepicker::className(),[
-                        'options' => [
-                            'timepicker' => false,
-                            'datepicker' => true,
-                            'mask' => '99/99/9999',
-                            'lang' => 'th',
-                            'yearOffset' => 543,
-                            'format' => 'd/m/Y', 
-                        ],
-                        ])->label('ช่วงวันที่');
-                        ?>
-                                <?=$form->field($model, 'date_end')->widget(Datetimepicker::className(),[
-                                    'options' => [
-                                        'timepicker' => false,
-                                        'datepicker' => true,
-                                        'mask' => '99/99/9999',
-                                        'lang' => 'th',
-                                        'yearOffset' => 543,
-                                        'format' => 'd/m/Y', 
-                                    ],
-                                    ])->label('ถึงวันที่');
-                                ?>
-                            </div>
-                    
-
-                <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary mt-3']);?>
-                    
-</div>
-</div>
+              <div class="col-lg-1 col-md-1 col-sm-12">
+                  <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+                </div>
+                <div class="col-lg-1 col-md-1 col-sm-12">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+    </div>
+        <div class="col-lg-2 col-md-2 col-sm-12">
+            <?= $form->field($model, 'order_status')->widget(Select2::classname(), [
+                'data' => $model->listStatus(),
+                'options' => ['placeholder' => 'สถานะทั้งหมด'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '150px',
+                ],
+            ])->label(false); ?>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-12">
+            <div class="d-flex flex-row align-items-center gap-2">
+                <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                    aria-expanded="false" aria-controls="collapseFilter">
+                    <i class="fa-solid fa-filter"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
 
-    <span class="filter-emp btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-custom-class="custom-tooltip" data-bs-title="เลือกเงื่อนไขของการค้นหาเพิ่มเติม...">
-        <i class="fa-solid fa-filter"></i>
-    </span>
+
+<div class="collapse mt-3" id="collapseFilter">
+
+
 </div>
 
-    <?php ActiveForm::end(); ?>
-    
-</div>
+<?php ActiveForm::end(); ?>
+
+
 
 
 <?php
 
 
 $js = <<<JS
+
+thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
+
+    $("#stockeventsearch-date_start").on('change', function() {
+            $('#stockeventsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
+    $("#stockeventsearch-date_end").on('change', function() {
+            $('#stockeventsearch-thai_year').val(null).trigger('change');
+            // $(this).submit();
+    });
 
 $(".filter-emp").on("click", function(){
   $("#filter-emp").addClass("show");
@@ -120,44 +132,7 @@ $(".filter-emp-close").on("click", function(){
     localStorage.setItem('right-setting','hide')
 })
 
-var thaiYear = function (ct) {
-    var leap=3;  
-    var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
-    if(ct){  
-        var yearL=new Date(ct).getFullYear()-543;  
-        leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
-        if(leap==2){  
-            dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
-        }  
-    }              
-    this.setOptions({  
-        i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
-    })                
-};    
- 
-
-$("#stockeventsearch-date_start").datetimepicker({
-    timepicker:false,
-    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-    lang:'th',  // แสดงภาษาไทย
-    onChangeMonth:thaiYear,          
-    onShow:thaiYear,                  
-    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    closeOnDateSelect:true,
-});   
-
-$("#stockeventsearch-date_end").datetimepicker({
-    timepicker:false,
-    format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-    lang:'th',  // แสดงภาษาไทย
-    onChangeMonth:thaiYear,          
-    onShow:thaiYear,                  
-    yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-    closeOnDateSelect:true,
-});       
-
 
 JS;
 $this->registerJS($js, View::POS_END)
 ?>
-

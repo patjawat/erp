@@ -11,6 +11,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\purchase\models\Order;
 use app\modules\inventory\models\Stock;
 use app\modules\sm\models\ProductSearch;
@@ -47,12 +48,14 @@ class StockInController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-        if(!$warehouse){
+        if (!$warehouse) {
             return $this->redirect(['/inventory']);
         }
         $searchModel = new StockEventSearch([
-           'warehouse_id' => $warehouse->id,
-           'transaction_type' => 'IN'
+            'warehouse_id' => $warehouse->id,
+            'transaction_type' => 'IN',
+            'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
@@ -64,18 +67,42 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
 
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+
+       $dataProvider->query
+            ->andFilterWhere([
+                '>=',
+                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.receive_date'))"),
+                AppHelper::convertToGregorian($searchModel->date_start)
+            ])
+            ->andFilterWhere([
+                '<=',
+                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.receive_date'))"),
+                AppHelper::convertToGregorian($searchModel->date_end)
+            ]);
+
         $dataProvider->query->andWhere(['name' => 'order']);
 
         //ค้นหาช่วบงวันที่
-   
+
         try {
-           $dataProvider->query->andFilterWhere([
-               'between', 
-               new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),  
-               AppHelper::convertToGregorian($searchModel->date_start), 
-               AppHelper::convertToGregorian($searchModel->date_end), 
+            $dataProvider->query->andFilterWhere([
+                'between',
+                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),
+                AppHelper::convertToGregorian($searchModel->date_start),
+                AppHelper::convertToGregorian($searchModel->date_end),
             ]);
-                        //code...
+            //code...
         } catch (\Throwable $th) {
             //throw $th;
         }
@@ -94,7 +121,7 @@ class StockInController extends Controller
     {
         $warehouse = \Yii::$app->session->get('warehouse');
         $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
-        
+
         if (isset($warehouseModel->data_json['item_type'])) {
 
             $item = $warehouseModel->data_json['item_type'];
@@ -103,7 +130,7 @@ class StockInController extends Controller
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 5]);
-            $dataProvider->query->andFilterWhere(['!=','category_id', 'M25']);
+            $dataProvider->query->andFilterWhere(['!=', 'category_id', 'M25']);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'pr_number', $searchModel->q],
@@ -132,7 +159,7 @@ class StockInController extends Controller
                 return $this->render('list_pending_order', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                   
+
                 ]);
             }
         } else {
@@ -173,7 +200,6 @@ class StockInController extends Controller
                 'ajax' => false
             ]);
         }
-
     }
 
     /**
@@ -190,7 +216,7 @@ class StockInController extends Controller
         $order_id = $this->request->get('order_id');
         $asset_item = $this->request->get('asset_item');
         $order = StockEvent::findOne($order_id);
-    
+
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'category_id' => $order_id,
@@ -216,27 +242,25 @@ class StockInController extends Controller
                 ];
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
-                    $model->code = \mdm\autonumber\AutoNumber::generate('IN-'.substr(AppHelper::YearBudget(), 2).'????');
+                    $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->data_json = ArrayHelper::merge($model->data_json, $created);
                     $model->thai_year =  AppHelper::YearBudget($model->data_json['receive_date']);
                 }
-                
+
                 if ($model->name == 'order_item') {
                     $model->thai_year =  AppHelper::YearBudget($order->data_json['receive_date']);
                     $convertDate = [
-                            'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
-                            'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
-                            'req_qty' => $model->qty
-                        ];
-                        $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
-                        
-                        if ($model->auto_lot == '1') {
-                            $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
-                        } else {
-                        }
+                        'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
+                        'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
+                        'req_qty' => $model->qty
+                    ];
+                    $model->data_json = ArrayHelper::merge($model->data_json, $convertDate, $created);
+
+                    if ($model->auto_lot == '1') {
+                        $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
+                    } else {
                     }
-                    
-;
+                };
                 $model->order_status = 'pending';
                 $model->warehouse_id = $warehouse->id;
 
@@ -300,9 +324,9 @@ class StockInController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                $model->code = \mdm\autonumber\AutoNumber::generate('RC-'.substr(AppHelper::YearBudget(), 2).'????');
+                $model->code = \mdm\autonumber\AutoNumber::generate('RC-' . substr(AppHelper::YearBudget(), 2) . '????');
                 if ($order) {
                     // $order->status = 5;
                     // $order->save(false);
@@ -311,18 +335,18 @@ class StockInController extends Controller
 
                 $model->transaction_type = 'IN';
                 $model->order_status = 'pending';
-                $convertDate =[
+                $convertDate = [
                     'receive_date' =>  AppHelper::convertToGregorian($model->data_json['receive_date']),
                 ];
                 $model->thai_year = AppHelper::YearBudget(AppHelper::convertToGregorian($model->data_json['receive_date']));
-                $model->data_json =  ArrayHelper::merge($model->data_json,$convertDate);
+                $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
 
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {
                     $stockItem = new StockEvent([
                         'code' => $model->code,
                         'thai_year' =>  $model->thai_year,
-                        'lot_number' => $model->auto_lot == '1' ? \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????') : '',
+                        'lot_number' => $model->auto_lot == '1' ? \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????') : '',
                         'asset_item' => $item->asset_item,
                         'transaction_type' => 'IN',
                         'warehouse_id' => $model->warehouse_id,
@@ -389,50 +413,48 @@ class StockInController extends Controller
                 $convertDate = [
                     'receive_date' => AppHelper::convertToGregorian($model->data_json['receive_date']),
                 ];
-               $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
+                $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
             }
 
             if ($model->name == 'order_item' && $model->auto_lot == '1' && $model->lot_number == '') {
-                $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT'.substr(AppHelper::YearBudget(), 2).'-?????');
+                $model->lot_number = \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
             }
             //ถ้าหากมีการระบุวันที่รับเข้าให้หาปีงบประมาจากวันที่
-            if(isset($model->data_json['receive_date'])){
+            if (isset($model->data_json['receive_date'])) {
                 // return $model->data_json['receive_date'];
                 // return AppHelper::YearBudget($model->data_json['receive_date']);
-                 $model->thai_year = AppHelper::YearBudget($model->data_json['receive_date']);
-            }else{
+                $model->thai_year = AppHelper::YearBudget($model->data_json['receive_date']);
+            } else {
                 // ถ้าไม้ให้เป็นปัจจุบัน
-                 $model->thai_year = AppHelper::YearBudget();
+                $model->thai_year = AppHelper::YearBudget();
             }
-            
+
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->save(false)) {
                 // if ($model->name == 'order') {
                 //     return $this->redirect(['view', 'id' => $model->id]);
                 // } else {
-                    \Yii::$app->response->format = Response::FORMAT_JSON;
+                \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                    return [
-                        'status' => 'success',
-                        'container' => '#inventory-container',
-                    ];
+                return [
+                    'status' => 'success',
+                    'container' => '#inventory-container',
+                ];
                 // }
             } else {
-             
             }
-        }else{
+        } else {
             $model->loadDefaultValues();
             try {
                 $model->data_json = [
                     'receive_date' => AppHelper::convertToThai($model->data_json['receive_date']),
                 ];
-                $model->data_json = ArrayHelper::merge($oldObj,$model->data_json);
+                $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
                 //code...
             } catch (\Throwable $th) {
                 //throw $th;
             }
-
         }
         if ($model->name == 'order_item') {
             try {
@@ -487,8 +509,8 @@ class StockInController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockEvent::findOne(['id' => $id]);
-        
-        if($model && $model->delete()){   
+
+        if ($model && $model->delete()) {
             return [
                 'status' => 'success',
                 'container' => '#inventory-container',
@@ -551,8 +573,7 @@ class StockInController extends Controller
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
 
-            if ($model->name == 'order') 
-            {
+            if ($model->name == 'order') {
                 if (isset($model->data_json['receive_date'])) {
                     preg_replace('/\D/', '', $model->data_json['receive_date']) == "" ? $model->addError('data_json[receive_date]', $requiredName) : null;
                 }
@@ -563,12 +584,11 @@ class StockInController extends Controller
                 if (isset($model->data_json['item_type'])) {
                     $model->data_json['item_type'] == '' ? $model->addError('data_json[item_type]', $requiredName) : null;
                 }
-                
-                $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
 
+                $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
             }
             if ($model->name == 'order_item') {
-                
+
                 // if (isset($model->data_json['mfg_date'])) {
                 //     preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
                 // }
@@ -576,25 +596,24 @@ class StockInController extends Controller
                 //     preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
                 // }
 
-            if (isset($model->asset_item)) {
-                $model->asset_item == '' ? $model->addError('asset_item', $requiredName) : null;
+                if (isset($model->asset_item)) {
+                    $model->asset_item == '' ? $model->addError('asset_item', $requiredName) : null;
+                }
+
+                if (isset($model->data_json['item_type'])) {
+                    $model->data_json['item_type'] == '' ? $model->addError('data_json[item_type]', $requiredName) : null;
+                }
+
+                if ($model->auto_lot == '0') {
+                    $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
+                }
+
+                $model->qty == '' ? $model->addError('qty', $requiredName) : null;
+                $model->unit_price == '' ? $model->addError('unit_price', $requiredName) : null;
             }
-
-            if (isset($model->data_json['item_type'])) {
-                $model->data_json['item_type'] == '' ? $model->addError('data_json[item_type]', $requiredName) : null;
-            }
-
-            if ($model->auto_lot == '0') {
-                $model->lot_number == '' ? $model->addError('lot_number', $requiredName) : null;
-            }
-
-            $model->qty == '' ? $model->addError('qty', $requiredName) : null;
-            $model->unit_price == '' ? $model->addError('unit_price', $requiredName) : null;
-        }
-
         }
         foreach ($model->getErrors() as $attribute => $errors) {
-                $result[Html::getInputId($model, $attribute)] = $errors;
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
         if (!empty($result)) {
             return $this->asJson($result);
