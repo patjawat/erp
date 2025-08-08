@@ -4,7 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\AppHelper;
-$this->title = 'สรุปรายงานวัสดุคงคลังรายตัว';
+$this->title = 'สรุปรายงานวัสดุคงคลังหลัก';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
