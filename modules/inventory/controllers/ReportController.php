@@ -16,14 +16,16 @@ use app\modules\inventory\models\Warehouse;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\models\StockTransactionSearch;
 
 class ReportController extends \yii\web\Controller
 {
+    //รายงานรวมวัสดุคงคลัง
     public function actionIndex()
     {
 
         $searchModel = new StockEventSearch([
-           'thai_year' => AppHelper::YearBudget(),
+            'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -43,19 +45,54 @@ class ReportController extends \yii\web\Controller
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
             $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         }
-        
+
         // $dataProvider->query->groupBy('type_code');
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $querys = $this->GroupSummary($searchModel->warehouse_id,$dateStart,$dateEnd);
-        
-        return $this->render('index',[
+        $querys = $this->GroupSummary($searchModel->warehouse_id, $dateStart, $dateEnd);
+
+        return $this->render('index', [
             'querys' => $querys,
             'dateStart' => $dateStart,
             'dateEnd' => $dateEnd,
             'searchModel' => $searchModel,
             // 'dataProvider' => $dataProvider
-            ] );
+        ]);
+    }
+
+    //รายงานแบบแยกรายตัว
+    public function actionListSummary()
+    {
+        $searchModel = new StockTransactionSearch([
+            'thai_year' => AppHelper::YearBudget(),
+        ]);
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $dataProvider->query->orderBy = ['receive_date' => SORT_DESC];
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+
+        $dataProvider->query->andFilterWhere(['between', 'receive_date', AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+
+           // ถ้า request มี all=true ให้ปิด pagination
+    if (Yii::$app->request->get('all') == 1) {
+        $dataProvider->pagination = false;
+    }
+    
+
+        return $this->render('list_summary', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     public function actionExportExcel()
@@ -70,7 +107,7 @@ class ReportController extends \yii\web\Controller
         //     'querys' => $this->ItemSummary($warehouseId,$dateStart,$dateEnd)
         // ]);
 
-        $datas = $this->GroupSummary($warehouseId,$dateStart,$dateEnd);
+        $datas = $this->GroupSummary($warehouseId, $dateStart, $dateEnd);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         // ตั้งชื่อแผ่นงาน
@@ -121,7 +158,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowG3 = 'G3';
-        $showGenDate = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd);
+        $showGenDate = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd);
         $sheet->setCellValue($rowG3, $showGenDate);
         $sheet->getStyle($rowG3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowG3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -227,7 +264,7 @@ class ReportController extends \yii\web\Controller
         // $a = [];
         foreach ($datas as $key => $value) {
             $numRow = $StartRow++;
-            $total =  ($value['sum_month'] + ($value['last_stock_in']-$value['last_stock_out'])) - ($value['sum_branch'] + $value['sum_sub']);
+            $total =  ($value['sum_month'] + ($value['last_stock_in'] - $value['last_stock_out'])) - ($value['sum_branch'] + $value['sum_sub']);
             // $a[] = ['B' => 'B'.$StartRow++];
             $sheet->setCellValue('A' . $numRow, $numRow);
             $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -243,7 +280,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('B' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
 
-            $sheet->setCellValue('C' . $numRow, ($value['last_stock_in']-$value['last_stock_out']));
+            $sheet->setCellValue('C' . $numRow, ($value['last_stock_in'] - $value['last_stock_out']));
             $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('C' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -259,7 +296,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('E' . $numRow,($value['sum_month'] + ($value['last_stock_in']-$value['last_stock_out'])));
+            $sheet->setCellValue('E' . $numRow, ($value['sum_month'] + ($value['last_stock_in'] - $value['last_stock_out'])));
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -413,7 +450,7 @@ class ReportController extends \yii\web\Controller
 
         $StartRowSheet2 = 3;
         // $dataItems = $this->findModelItem($params);
-        $dataItems = $this->ItemSummary($warehouseId,$dateStart,$dateEnd);
+        $dataItems = $this->ItemSummary($warehouseId, $dateStart, $dateEnd);
         foreach ($dataItems as $key => $value) {
             $numRow = $StartRowSheet2++;
             // $a[] = ['B' => 'B'.$StartRow++];
@@ -534,7 +571,7 @@ class ReportController extends \yii\web\Controller
         $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($rowsheet2N)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->getStyle($rowsheet2N)->getFont()->setBold(true)->setItalic(false);
-        
+
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
         $writer->save($filePath);  // สร้าง excel
@@ -550,10 +587,10 @@ class ReportController extends \yii\web\Controller
         }
     }
 
-    protected function GroupSummary($warehouse_id,$dateStart,$dateEnd)
+    protected function GroupSummary($warehouse_id, $dateStart, $dateEnd)
     {
         if ($warehouse_id && $warehouse_id !== '') {
-                $sql="WITH stock_data AS (
+            $sql = "WITH stock_data AS (
                 SELECT 
                     x.category_id, 
                     x.asset_type,
@@ -615,7 +652,7 @@ class ReportController extends \yii\web\Controller
             SELECT *,
                 ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
             FROM stock_data";
-            
+
             return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
                 ':date_end' => $dateEnd,
@@ -681,18 +718,18 @@ class ReportController extends \yii\web\Controller
                         ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
                     FROM stock_data";
 
-                return Yii::$app->db->createCommand($sql, [
+            return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
                 ':date_end' => $dateEnd,
             ])->queryAll();
         }
     }
-    protected function ItemSummary($warehouse_id,$dateStart,$dateEnd)
+    protected function ItemSummary($warehouse_id, $dateStart, $dateEnd)
     {
         // ถ้ามีการเลือกคลัง
         if ($warehouse_id && $warehouse_id !== '') {
 
-         $sql ="WITH x2 AS (
+            $sql = "WITH x2 AS (
                 SELECT 
                     x.category_id,
                     x.warehouse_id,
@@ -799,10 +836,10 @@ class ReportController extends \yii\web\Controller
                 ':date_start' => $dateStart,
                 ':date_end' => $dateEnd
             ])->queryAll();
-        }else{
+        } else {
 
-    
-            $sql ="WITH x2 AS (
+
+            $sql = "WITH x2 AS (
                 SELECT 
                     x.category_id,
                     x.warehouse_id,
@@ -898,8 +935,6 @@ class ReportController extends \yii\web\Controller
                 ':date_start' => $dateStart,
                 ':date_end' => $dateEnd
             ])->queryAll();
-            
         }
-
     }
 }

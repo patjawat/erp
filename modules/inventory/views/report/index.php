@@ -34,8 +34,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
  <h6 class="text-white"><i class="fa-solid fa-chart-pie"></i> สรุปงานวัสดุคงคลัง</h6>

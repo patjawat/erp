@@ -3,41 +3,35 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 
 $layout = app\components\SiteHelper::getInfo()['layout'];
-$menus = [
-    [
-    'title' => 'Dashboard',
-     'active' => 'dashboard',
-    'url' => ['/inventory/default/dashboard'],
-    'icon' => '<i class="fa-solid fa-gauge-high text-primary me-1"></i>'
-    ],
-    [
-        'title' => 'คลัง',
-        'active' => 'index',
-        'url' => ['/inventory/default/index'],
-        'icon' => '<i class="fa-solid fa-cubes-stacked text-primary me-1"></i>'
-    ],
-      [
-        'title' => 'สรุปรายงานวัสดุคงคลัง',
-        'active' => 'report',
-        'url' => ['/inventory/report'],
-        'icon' => '<i class="fa-solid fa-chart-column text-primary me-1"></i>'
-    ],
-     [
-        'title' => 'ตั้งค่าคลัง',
-        'active' => 'warehouse',
-        'url' => ['/inventory/warehouse'],
-        'icon' => '<i class="fa-solid fa-gear text-primary me-1"></i>'
-    ],
-        
 
-];
 ?>
 <?php if($layout == 'horizontal'):?>
-<?php foreach($menus as $menu):?>
+
+
 <li class="nav-item">
-    <?=Html::a($menu['icon'].$menu['title'],$menu['url'],['class' => 'nav-link ' . (isset($active) && $active == $menu['active'] ? 'active' : '')])?>
+<?=Html::a('<i class="fa-solid fa-gauge-high text-primary me-1"></i> Dashboard ',['/inventory/default/dashboard'],['class' => 'nav-link'])?>
 </li>
-<?php endforeach;?>
+<li class="nav-item">
+<?=Html::a('<i class="fa-solid fa-cubes-stacked text-primary me-1"></i> คลัง ',['/inventory/default/index'],['class' => 'nav-link'])?>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'report' ? 'active' : '')?>" href="#"
+        id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-chart-column text-primary me-1"></i> รายงานวัสดุคงคลัง
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+        <?=Html::a('<i class="fa-solid fa-gauge me-2"></i> สรุปรายงานวัสดุคงคลัง ',['/inventory/report'],['class' => 'dropdown-item'])?>
+        <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุรายตัว ',['/inventory/report/list-summary'],['class' => 'dropdown-item'])?>
+    </div>
+</li>
+
+<li class="nav-item">
+<?=Html::a('<i class="fa-solid fa-gear text-primary me-1"></i> ตั้งค่าคลัง ',['/inventory/warehouse'],['class' => 'nav-link'])?>
+</li>
+
+
 
 
 <?php else:?>
