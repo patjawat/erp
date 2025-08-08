@@ -52,8 +52,8 @@ use app\modules\inventory\models\Warehouse;
     <div class="col-lg-2 col-md-2 col-sm-12">
 
         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-            // 'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name'),
-            'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
+            'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name'),
+            // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
             'options' => ['placeholder' => 'คลังทั้งหมด'],
             'pluginEvents' => [
                 "select2:unselect" => "function() { 

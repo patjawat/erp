@@ -67,6 +67,7 @@ class ReportController extends \yii\web\Controller
             'thai_year' => AppHelper::YearBudget(),
         ]);
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+         $dataProvider->query->andFilterWhere(['warehouse_type' => 'MAIN']);
         $dataProvider->query->orderBy = ['receive_date' => SORT_DESC];
 
         if ($searchModel->date_filter) {
