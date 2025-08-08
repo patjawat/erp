@@ -108,10 +108,24 @@ use app\modules\inventory\models\Warehouse;
 <div class="collapse mt-3" id="collapseFilter">
     <div class="row">
           <div class="col-2">
-              <?php echo $form->field($model, 'code')->textInput([ 'placeholder' => 'เลขที่'])->label(false); ?>
+                <?= $form->field($model, 'code')->widget(Select2::classname(), [
+                'data' => $model->ListCode(),
+                'options' => ['placeholder' => 'เลขที่'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '120px',
+                ],
+            ])->label(false); ?>
             </div>
             <div class="col-2">
-                
+                  <?= $form->field($model, 'asset_name')->widget(Select2::classname(), [
+                'data' => $model->ListAssetName(),
+                'options' => ['placeholder' => 'ชื่อวัสดุ'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '120px',
+                ],
+            ])->label(false); ?>
                 </div>
 
     

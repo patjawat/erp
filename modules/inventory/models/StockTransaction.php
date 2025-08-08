@@ -125,6 +125,34 @@ class StockTransaction extends \yii\db\ActiveRecord
     }
 
 
+        // แสดงปีงบประมานทั้งหมด
+    public function ListAssetName()
+    {
+        $model = self::find()
+            ->select('asset_name')
+            ->groupBy('asset_name')
+            ->orderBy(['asset_name' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($model, 'asset_name', 'asset_name');
+    }
+
+        public function ListCode()
+    {
+        $model = self::find()
+            ->select('code')
+            ->groupBy('code')
+            ->orderBy(['code' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($model, 'code', 'code');
+    }
+
+
+
+
 
     public function ListAssetType()
     {
