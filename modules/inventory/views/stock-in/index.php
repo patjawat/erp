@@ -69,6 +69,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
          <h6 class="text-white"><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
          class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
                 </h6>
+                
                 <span class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $searchModel->SummaryTotal(false) ?></span>
 
                  <div class="d-flex gap-3">

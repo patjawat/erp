@@ -585,7 +585,7 @@ class ReportController extends \yii\web\Controller
                          AND warehouse_id = :warehouse_id 
                              AND x.warehouse_type = 'MAIN' 
                              AND x.receive_date BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price 
+                        THEN x.total_price
                         ELSE 0 
                     END),2) AS sum_month,
             
@@ -652,7 +652,7 @@ class ReportController extends \yii\web\Controller
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
                                     AND x.receive_date BETWEEN :date_start AND :date_end 
-                                THEN x.qty*x.unit_price 
+                                THEN x.total_price
                                 ELSE 0 
                             END),2) AS sum_month,
 
@@ -742,7 +742,7 @@ class ReportController extends \yii\web\Controller
                         AND x.warehouse_id = :warehouse_id
                             AND x.warehouse_type = 'MAIN' 
                             AND x.receive_date BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price 
+                        THEN x.total_price 
                         ELSE 0 
                     END) AS sum_month,
                     SUM(CASE 
@@ -843,13 +843,13 @@ class ReportController extends \yii\web\Controller
                         THEN x.qty 
                         ELSE 0 
                     END) AS last_stock_out_qty,
-                     ROUND(SUM(CASE 
+                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.receive_date BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price 
+                        THEN (x.total_price) 
                         ELSE 0 
-                    END) AS sum_month,
+                    END AS sum_month,
                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 

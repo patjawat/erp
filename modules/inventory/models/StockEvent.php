@@ -295,17 +295,25 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     public function getTotalOrderPrice()
-    {
-        // $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
-        $sql = "SELECT IFNULL(SUM(total_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND `category_id` = :category_id;";
-        $query = \Yii::$app
-            ->db
-            ->createCommand($sql)
-            ->bindValue(':category_id', $this->id)
-            ->queryScalar();
+{
+    $sql = "
+        SELECT 
+            IFNULL(
+                CAST(SUM(total_price) AS DECIMAL(10, 2))
+            , 0) AS total 
+        FROM `stock_events` 
+        WHERE name = 'order_item' 
+          AND `category_id` = :category_id
+    ";
 
-        return $query;
-    }
+    $total = \Yii::$app
+        ->db
+        ->createCommand($sql)
+        ->bindValue(':category_id', $this->id)
+        ->queryScalar();
+    return $total;
+}
+
 
     public function getTotalOrderPriceSuccess()
     {
@@ -913,7 +921,17 @@ class StockEvent extends Yii\db\ActiveRecord
             ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
             ->andFilterWhere(['e.thai_year' => $this->thai_year])
             ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
-            ->andFilterWhere(['e.transaction_type' => $this->transaction_type]);
+            ->andFilterWhere(['e.transaction_type' => $this->transaction_type])
+            ->andFilterWhere([
+                '>=',
+                new Expression("JSON_UNQUOTE(JSON_EXTRACT(e.data_json, '$.receive_date'))"),
+                AppHelper::convertToGregorian($this->date_start)
+            ])
+            ->andFilterWhere([
+                '<=',
+                new Expression("JSON_UNQUOTE(JSON_EXTRACT(e.data_json, '$.receive_date'))"),
+                AppHelper::convertToGregorian($this->date_end)
+            ]);
 
 
         // เพิ่มเงื่อนไขการตรวจสอบสถานะเมื่อ $status เป็น true
