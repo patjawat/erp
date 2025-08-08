@@ -867,7 +867,7 @@ class ReportController extends \yii\web\Controller
                     END) AS last_stock_in_qty,
                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type IN ('SUB', 'BRANCH') 
+                             AND x.warehouse_type IN ('MAIN') 
                             AND x.order_status = 'success' 
                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price 
@@ -875,7 +875,7 @@ class ReportController extends \yii\web\Controller
                     END) AS last_stock_out,
                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type IN ('SUB', 'BRANCH') 
+                             AND x.warehouse_type IN ('MAIN')  
                             AND x.order_status = 'success' 
                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty 
@@ -911,14 +911,14 @@ class ReportController extends \yii\web\Controller
                     END) AS sum_branch_qty,
                     SUM(CASE 
                         WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'SUB' 
+                            AND x.warehouse_type IN ('MAIN') 
                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
                         THEN x.qty*x.unit_price
                         ELSE 0 
                     END) AS sum_sub,
                     SUM(CASE 
                         WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'SUB' 
+                            AND x.warehouse_type IN ('MAIN') 
                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
                         THEN x.qty 
                         ELSE 0 
