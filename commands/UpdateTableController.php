@@ -441,7 +441,7 @@ class UpdateTableController extends Controller
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
         echo "Create view_stock\n";
 
-        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT  t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
+        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT so.id as order_id ,si.id as item_id,t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
                                     so.code,
                                     si.po_number,
                                     wf.warehouse_type as from_warehouse_type,
@@ -453,22 +453,15 @@ class UpdateTableController extends Controller
                                     so.warehouse_id,
                                     si.qty,
                                     si.unit_price,
-                                    so.data_json->>'\$.receive_date' as receive_date,so.created_at,
+                                    so.data_json->>'\$.receive_date' as receive_date,
+                                    DATE_FORMAT(so.movement_date, '%Y-%m-%d') AS movement_date,
+                                    so.created_at,
                                     so.thai_year,
                                     si.total_price
                                     
                                 FROM 
                                     stock_events so
-                                    LEFT OUTER JOIN stock_events si 
-                                        ON si.category_id = so.id AND si.name = 'order_item'
-                                    LEFT OUTER JOIN categorise i 
-                                        ON i.code = si.asset_item AND i.name = 'asset_item'
-                                    LEFT OUTER JOIN categorise t 
-                                        ON t.code = i.category_id AND t.name='asset_type'
-                                    LEFT OUTER JOIN warehouses w 
-                                        ON w.id = si.warehouse_id
-                                    LEFT OUTER JOIN warehouses wf 
-                                        ON wf.id = si.from_warehouse_id
+                                   
                                 WHERE i.category_id <> ''
                                 ) SELECT *,(CASE 
                                         WHEN (t.transaction_type = 'IN') 

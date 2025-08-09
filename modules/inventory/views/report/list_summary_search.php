@@ -141,6 +141,18 @@ use app\modules\inventory\models\Warehouse;
 
         </div>
 
+         <div class="col-3">
+           <?= $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
+            'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],
+            'options' => ['placeholder' => 'เลือกประเภทคลัง'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+
+        </div>
+
 
 
     </div>

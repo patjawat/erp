@@ -149,7 +149,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?=$item->expDate?></td>
                             <td class="align-middle text-end">
                                     <span class="fw-semibold">
-                                        <?php echo number_format($item->total_price,2)?>
+                                        <?php echo isset($item->total_price) ? number_format($item->total_price,2) : '-' ?>
                                     </span>
                                 </td>
                             <td class="align-middle">

@@ -57,7 +57,8 @@ use app\components\ThaiDateHelper;
                     <th scope="col" class="text-start fw-bold">เลขที่</th>
                     <th scope="col" class="text-start fw-bold">ประเภทวัสดุ</th>
                     <th scope="col" class="text-start fw-bold">ชื่อวัสดุ</th>
-                    <th scope="col" class="text-start fw-bold">ชื่อคัง</th>
+                    <th scope="col" class="text-start fw-bold">ประเภทคลัง</th>
+                    <th scope="col" class="text-start fw-bold">ชื่อคลัง</th>
                     <th scope="col" class="text-center fw-bold">วันที่</th>
                     <th scope="col" class="text-center fw-bold">ความเคลื่อนไหว</th>
                     <th scope="col" class="text-center fw-bold">จำนวน</th>
@@ -73,6 +74,7 @@ use app\components\ThaiDateHelper;
                         <td><?= $item->code ?></td>
                         <td><?= $item->asset_type ?></td>
                         <td><?= $item->asset_name ?></td>
+                        <td><?= $item->warehouse_type == 'MAIN' ? 'คลังหลัก' : 'คลังย่อย' ?></td>
                         <td><?= $item->warehouse_name ?></td>
                         <td class="text-center"><?= ThaiDateHelper::formatThaiDate($item->receive_date) ?></td>
                         <td class="text-center"><?= $item->transaction_type == 'IN' ? 'รับเข้า' : 'จ่ายออก' ?></td>
@@ -84,7 +86,7 @@ use app\components\ThaiDateHelper;
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="10" class="text-end fw-bold">รวมราคาทั้งหมด</td>
-                    <td class="fw-bold text-end"><?= number_format((clone $dataProvider->query)->sum('(qty * unit_price)') ?? 0, 2); ?></td>
+                    <td class="fw-bold text-end"><?= number_format((clone $dataProvider->query)->sum('(CEIL(qty * unit_price * 100) / 100)') ?? 0, 2); ?></td>
                 </tr>
             </tbody>
         </table>

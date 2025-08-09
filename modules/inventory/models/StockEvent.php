@@ -960,7 +960,8 @@ class StockEvent extends Yii\db\ActiveRecord
         $result = $query->one();
 
         // ตรวจสอบผลลัพธ์
-        return number_format($result['total'],2) ?: 0;
+        $total = isset($result['total']) && $result['total'] !== null ? $result['total'] : 0;
+        return number_format($total, 2);
     }
 
 
