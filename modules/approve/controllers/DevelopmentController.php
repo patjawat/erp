@@ -126,10 +126,12 @@ class DevelopmentController extends \yii\web\Controller
                         if ($model->level == 1 && $model->status == 'Pass') {
                             $model->development->status = 'Checking';
                             $model->development->save();
-                            
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
                            
+                        }elseif ($model->level == 1 && $model->status == 'Reject') {
+                            $model->development->status = 'Reject';
+                            $model->development->save();
                         }
 
 
@@ -139,7 +141,9 @@ class DevelopmentController extends \yii\web\Controller
                             
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
-                           
+                        }elseif ($model->level == 2 && $model->status == 'Reject') {
+                            $model->development->status = 'Reject';
+                            $model->development->save();
                         }
                         
                         if ($model->level == 3 && $model->status == 'Pass') {
@@ -148,6 +152,17 @@ class DevelopmentController extends \yii\web\Controller
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
                            
+                        }elseif ($model->level == 3 && $model->status == 'Reject') {
+                            $model->development->status = 'Reject';
+                            $model->development->save();
+                        }
+
+                        if ($model->level == 4 && $model->status == 'Pass') {
+                            $model->development->status = 'Approve';
+                            $model->development->save();
+                        }elseif ($model->level == 4 && $model->status == 'Reject') {
+                            $model->development->status = 'Reject';
+                            $model->development->save();
                         }
                       
                     }
