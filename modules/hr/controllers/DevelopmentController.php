@@ -64,6 +64,7 @@ class DevelopmentController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
+            ['like', 'development.emp_id', $searchModel->emp_id],
         ]);
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
 
