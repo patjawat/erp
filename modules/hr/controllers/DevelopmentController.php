@@ -159,8 +159,22 @@ class DevelopmentController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->date_start = $model->date_start ? AppHelper::convertToThai($model->date_start) : null;
+        $model->date_end = $model->date_end ? AppHelper::convertToThai($model->date_end) : null;
+        $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToThai($model->vehicle_date_start) : null;
+        $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToThai($model->vehicle_date_end) : null;
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+                try {
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+                } catch (\Throwable $th) {
+                }
+
+                $model->save();
+
             return $this->redirect('index');
         }
 
