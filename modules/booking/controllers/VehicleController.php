@@ -147,7 +147,7 @@ class VehicleController extends Controller
     {
 
         $todays =  date('Y-m-d');
-        $vehicle_type = $this->request->get('vehicle_type_id');
+        $vehicle_type = $this->request->get('vehicle_type');
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');

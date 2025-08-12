@@ -11,6 +11,7 @@ use yii\helpers\Html;
             <th>เรื่อง</th>
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
+            <th class="fw-semibold" scope="col">ผู้ขอ</th>
             <th class="fw-semibold" scope="col">คณะเดินทาง</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
             <th class="fw-semibold text-end">ดำเนินการ</th>
@@ -32,6 +33,15 @@ use yii\helpers\Html;
                 <td>
                     <p class="mb-0 fw-semibold"> <?= $item->showDateRange() ?></p>
 
+                </td>
+                <td>
+                    <?php 
+                    
+                    try {
+                        echo $item->userRequest()['avatar'] ?? '';
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }?>
                 </td>
                 <td>
                     <?= $item->StackMember() ?></td>
