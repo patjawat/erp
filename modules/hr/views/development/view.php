@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h5><?= $model->createdByEmp->fullname ?? 'ไม่ระบุ' ?></h5>
                     <p class="text-muted mb-1"><?= $model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>
                     <p class="text-muted"><?= $model->createdByEmp->department->name ?? 'ไม่ระบุแผนก' ?></p>
-                    <p>ผู้บันทึกข้อมูล <?=$model->viewCreated()?></p>
+                    <p>ผู้บันทึกข้อมูล <?=$model->viewCreated()['full']?></p>
                 </div>
             </div>
         </div>
