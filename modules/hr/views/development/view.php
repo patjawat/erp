@@ -34,7 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="card-header bg-light p-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
-                        <?= $me->id == $model->emp_id ? Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']]) : ''?>
+                    
+                        <div>
+  <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer, ['class' => 'btn btn-secondary shadow']) ?>
+                            <?= $me->id == $model->emp_id ? Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']]) : ''?>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
