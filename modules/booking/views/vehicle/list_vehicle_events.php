@@ -21,7 +21,7 @@ use yii\widgets\Pjax;
                 <tr>
                     <th scope="col">รายการ/สถานที่</th>
                     <th scope="col">พขร.</th>
-                    <th scope="col">รถที่จัดสรรค์</th>
+                    <th scope="col">รถที่จัดสรร</th>
                 </tr>
             </thead>
             <tbody>
