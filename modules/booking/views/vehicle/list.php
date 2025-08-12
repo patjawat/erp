@@ -74,7 +74,7 @@ use yii\helpers\Html;
                                             ) ?></li>
                                     <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                     <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                    <!-- <li><?php // Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li> -->
                                     <li><?= Html::a(
                                         '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',
                                         ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'],
@@ -84,11 +84,6 @@ use yii\helpers\Html;
                                     <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-2"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
 
                                     <li>
-    <a href="#" 
-       class="dropdown-item btn-download-pdf" 
-       data-id="<?= $item->id ?>">
-        <i class="fa-solid fa-file-pdf me-1"></i> พิมพ์
-    </a>
 </li>
                                 </ul>
                             </div>

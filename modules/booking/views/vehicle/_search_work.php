@@ -117,13 +117,13 @@ use app\components\DateFilterHelper;
 <?php
 $js = <<< JS
 
-    thaiDatepicker('#vehiclesearch-date_start,#vehiclesearch-date_end')
-    $("#vehiclesearch-date_start").on('change', function() {
-            $('#vehiclesearch-thai_year').val(null).trigger('change');
+    thaiDatepicker('#vehicledetailsearch-date_start,#vehicledetailsearch-date_end')
+    $("#vehicledetailsearch-date_start").on('change', function() {
+            $('#vehicledetailsearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
-    $("#vehiclesearch-date_end").on('change', function() {
-            $('#vehiclesearch-thai_year').val(null).trigger('change');
+    $("#vehicledetailsearch-date_end").on('change', function() {
+            $('#vehicledetailsearch-thai_year').val(null).trigger('change');
             // $(this).submit();
     });
 
