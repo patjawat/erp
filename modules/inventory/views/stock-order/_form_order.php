@@ -117,6 +117,7 @@ try {
     ?>
 
 <?=$form->field($model, 'created_at')->textInput()->label('วันที่ขอเบิก');?>
+<?=$form->field($model, 'movement_date')->textInput()->label('วันที่จ่าย');?>
     <?=$form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
                                         'data' =>ArrayHelper::map(
                                                     Warehouse::find()->where(['warehouse_type' => 'sub'])

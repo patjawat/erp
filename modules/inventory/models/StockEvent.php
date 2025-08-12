@@ -173,7 +173,15 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+        public function updateMovementDateItem()
+        {
+            $rowsUpdated = StockEvent::find()->where(['category_id' => $this->id, 'name' => 'order_item'])->all();
+            foreach ($rowsUpdated as $item) {
+                $item->movement_date = $this->movement_date;
+                $item->save(false);
+            }
 
+        }
 
     // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
@@ -865,6 +873,15 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         try {
             return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+        } catch (\Throwable $th) {
+            return '-';
+        }
+    }
+
+        public function viewMoveMentDate()
+    {
+        try {
+            return Yii::$app->thaiDate->toThaiDate($this->movement_date, false, false);
         } catch (\Throwable $th) {
             return '-';
         }

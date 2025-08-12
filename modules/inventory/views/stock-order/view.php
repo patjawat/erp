@@ -119,8 +119,8 @@ $emp = UserHelper::GetEmployee();
                             'value' => $model->fromWarehouse->warehouse_name ?? '-',
                         ],
                         [
-                            'label' => 'วันที่',
-                            'value' => $model->viewCreatedAt(),
+                            'label' => 'วันที่ตัดจ่าย',
+                            'value' => $model->viewMoveMentDate(),
                         ],
                         [
                             'label' => 'สถานะคำขอ',

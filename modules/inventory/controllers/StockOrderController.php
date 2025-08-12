@@ -394,11 +394,14 @@ class StockOrderController extends Controller
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
         $model->created_at = AppHelper::convertToThai(isset($model->created_at) ? $model->created_at : date('Y-m-d'));
+        $model->movement_date = AppHelper::convertToThai(isset($model->movement_date) ? $model->movement_date : date('Y-m-d'));
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->created_at = AppHelper::convertToGregorian($model->created_at).' '.date('H:i:s');
+            $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             if($model->save(false)){
+                 $model->updateMovementDateItem();
                 return [
                     'status' => 'success',
                     'container' => '#inventory-container',
@@ -411,8 +414,6 @@ class StockOrderController extends Controller
                     'message' => 'ไม่สามารถบันทึกข้อมูลได้',
                 ];
             }
-
-
             return $this->redirect(['view', 'id' => $model->id]);
         }
 

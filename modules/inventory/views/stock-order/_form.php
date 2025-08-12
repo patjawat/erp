@@ -45,10 +45,10 @@ use iamsaint\datetimepicker\Datetimepicker;
 $js = <<< JS
 
 
-    thaiDatepicker('#stockevent-created_at')
+    thaiDatepicker('#stockevent-created_at,#stockevent-movement_date')
 
     handleFormSubmit('#form', null, async function(response) {
-        await location.reload();
+        // await location.reload();
     });
     
 JS;

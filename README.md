@@ -273,3 +273,7 @@ https://www.canva.com/ai/code/thread/e6114b7d-e716-461f-9839-2eb621a8300e
 
 เพิ่มเติมรูปแบบการจัดห้องประชุม
 ALTER TABLE `meeting` ADD `room_type_id` VARCHAR(255) NULL COMMENT 'รูปแบบการจัดห้อง' AFTER `room_id`;
+
+
+เปลี่ยน date time เป็น date
+ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFAULT NULL COMMENT 'วันที่และเวลาที่เกิดการเคลื่อนไหว';
