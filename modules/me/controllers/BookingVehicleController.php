@@ -488,6 +488,7 @@ class BookingVehicleController extends Controller
 
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['asset_status' => 1]);
         $dataProvider->query->andWhere([
             'AND',
             ['IS NOT', 'license_plate', null],

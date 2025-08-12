@@ -130,7 +130,7 @@ $resultsJs = <<< JS
             <div class="col-6">
                 <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
                         'data' => $model->listUrgent(),
-                        'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
+                        'options' => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
                         'pluginOptions' => [
                             'allowClear' => true,
                             // 'width' => '370px',

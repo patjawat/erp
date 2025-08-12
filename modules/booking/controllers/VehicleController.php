@@ -451,8 +451,13 @@ class VehicleController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+         $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+       if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',

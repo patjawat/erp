@@ -188,7 +188,7 @@ $js = <<<JS
                         data: {
                             date_start: dateStart,
                             date_end: dateEnd,
-                            title:'<i class="fa-regular fa-file-lines"></i> แบบฟอร์มบันทึกการลา',
+                            title:'<i class="fa-regular fa-file-lines"></i> แบบฟอร์มการขอใช้รถยนต์',
                         },
                         dataType: "json",
                         success: function (res) {

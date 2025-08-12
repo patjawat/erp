@@ -35,7 +35,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                 'Pass' => ' จัดสรร',
                 'Success' => 'เสร็จสิ้นภาระกิจ',
             ],
-            'options' => ['placeholder' => 'เลือกระดับความแร้งด่วน'],
+            'options' => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
             'pluginOptions' => [
                 'allowClear' => true,
                 // 'width' => '370px',
