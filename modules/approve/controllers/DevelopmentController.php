@@ -25,13 +25,14 @@ class DevelopmentController extends \yii\web\Controller
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
-            'status' => ['Pending']
+            // 'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like','title', $searchModel->q],

@@ -45,9 +45,7 @@ use yii\helpers\Html;
                 </td>
                 <td>
                     <?= $item->StackMember() ?></td>
-                <td class="text-center">
-
-                    <?= $item->getStatus($item->status)['view'] ?? '-' ?></td>
+                <td class="text-center"><?= $item->getStatus($item->status)['view'] ?? '-' ?></td>
                 <td class="text-end">
 
                     <div class="dropdown">

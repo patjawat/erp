@@ -49,6 +49,7 @@ class Approve extends \yii\db\ActiveRecord
     public $leave_type_id;
     public $approve_emp_id;
     public $date_filter;
+    public $q_status;
     public static function tableName()
     {
         return 'approve';
@@ -61,7 +62,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'comment'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at','q','thai_year','date_start','date_end','q_department','leave_type_id','approve_emp_id','q','date_filter'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at','q','thai_year','date_start','date_end','q_department','leave_type_id','approve_emp_id','q','date_filter','q_status'], 'safe'],
             [['emp_id', 'level', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['from_id', 'name', 'status'], 'string', 'max' => 255],
         ];
@@ -154,6 +155,19 @@ class Approve extends \yii\db\ActiveRecord
         {
             return ArrayHelper::map(Categorise::find()->where(['name' => 'leave_status'])->all(), 'code', 'title');
         }
+
+    public function listDevelopmentStatus()
+        {
+              return [
+            'Pending' => 'รอเห็นชอบ',
+            'Checking' => 'รอตรวจสอบ',
+            'Pass' => 'ตรวจสอบผ่าน',
+            'Approve' => 'ผอ.อนุมัติ',
+            'Reject' => 'ไม่อนุมัติ',
+            'Cancel' => 'ยกเลิก',
+        ];
+        }
+
         
         public function viewStatus()
         {

@@ -90,7 +90,8 @@ $msg = 'ขอ';
                             </td>
 
                             <td> <?= $item->development->StackMember() ?></td>
-                            <td><?= $item->viewStatus()['view'] ?>
+                            <td>
+                            <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>    
                             </td>
 
                             <td class="text-center" style="width:120px">
