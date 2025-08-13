@@ -58,7 +58,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
 <!-- ข้อมูลอ้างอิงเอกสาร -->
 <div class="card mb-3">
-    <div class="card-header bg-light p-2">
+    <div class="card-header p-2">
         <strong><i class="bi bi-file-earmark-text me-2"></i>ข้อมูลเอกสาร</strong>
     </div>
     <div class="card-body">
@@ -99,7 +99,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 
 <!-- รายละเอียดการพัฒนา -->
 <div class="card mb-3">
-    <div class="card-header bg-light p-2">
+    <div class="card-header p-2">
         <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
     </div>
     <div class="card-body">
@@ -294,7 +294,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 
 <!-- สถานที่และหน่วยงาน -->
 <div class="card mb-3">
-    <div class="card-header bg-light p-2">
+    <div class="card-header p-2">
         <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
     </div>
     <div class="card-body">
@@ -371,7 +371,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 
 <!-- ข้อมูลการเดินทาง -->
 <div class="card mb-3">
-    <div class="card-header bg-light p-2">
+    <div class="card-header p-2">
         <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
     </div>
     <div class="card-body">

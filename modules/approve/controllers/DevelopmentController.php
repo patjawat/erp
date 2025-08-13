@@ -124,7 +124,7 @@ class DevelopmentController extends \yii\web\Controller
                     if($nextApprove){
 
                         if ($model->level == 1 && $model->status == 'Pass') {
-                            $model->development->status = 'Checking';
+                            $model->development->status = 'Pending';
                             $model->development->save();
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();
@@ -147,7 +147,7 @@ class DevelopmentController extends \yii\web\Controller
                         }
                         
                         if ($model->level == 3 && $model->status == 'Pass') {
-                            $model->development->status = 'Verify';
+                            $model->development->status = 'Pass';
                             $model->development->save();
                             $nextApprove->status = 'Pending';
                             $nextApprove->save();

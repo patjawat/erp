@@ -175,9 +175,11 @@ class AppHelper extends Component
     // แปลงตัวเลขอาราบิก เป็น ตัวเลขไทย
     public static function thainumDigit($num)
     {
-        return str_replace(array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
+        return str_replace(
+            array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
             array('o', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'),
-            $num);
+            $num
+        );
     }
 
     public static function viewProgressBar($val)
@@ -737,7 +739,7 @@ class AppHelper extends Component
         return $data;
     }
 
-    public static function viewStatus($status,$statusName=null)
+    public static function viewStatus($status, $statusName = null)
     {
         $title = $statusName ? $statusName : '';
         $color = '';
@@ -745,46 +747,60 @@ class AppHelper extends Component
         $icon = '';
         switch ($status) {
             case 'Pending':
-                $color = 'warning';
-                $icon = '<i class="fa-solid fa-hourglass-start me-1  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'รอการอนุมัติ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">'.$icon. $title . '</span>';
+                $color = 'danger';
+                $icon = '<i class="fa-solid fa-hourglass-start me-1  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'รอเห็นชอบ';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
+
+            case 'Checking':
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-file-pen me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'รอการตรวจสอบ';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
+                break;
+            case 'Verify':
+                $color = 'info';
+                $icon = '<i class="fa-solid fa-circle-check me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'ตรวจสอบผ่าน';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
+                break;
+
             case 'Pass':
                 $color = 'primary';
-                $icon = '<i class="fa-solid fa-circle-check  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'อนุมัติ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color. ' fs-13 ">' .$icon. $title . '</span>';
+                $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'ตรวจสอบผ่าน';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
             case 'Approve':
                 $color = 'success';
-                $icon = '<i class="fa-regular fa-star  me-1 text-'.$color.'"></i>';
+                $icon = '<i class="fa-regular fa-star  me-1 text-' . $color . '"></i>';
                 $title =  $statusName ? $statusName : 'ผอ.อนุมัติ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
             case 'Cancel':
                 $color = 'secondary';
-                $icon = '<i class="fa-solid fa-circle-stop  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'ยกเลิก';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
+                $icon = '<i class="fa-solid fa-circle-stop  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'ยกเลิก';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
             case 'Success':
                 $color = 'success';
-                $icon = '<i class="fa-regular fa-circle-check  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'เสร็จสิ้น';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
+                $icon = '<i class="fa-regular fa-circle-check  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'เสร็จสิ้น';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
             case 'None':
                 $color = 'secondary';
-                $icon = '<i class="fa-solid fa-circle-minus  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'รอตรวจสอบ';
-                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' .$icon. $title . '</span>';
+                $icon = '<i class="fa-solid fa-circle-minus  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'รอตรวจสอบ';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' text-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
             default:
-            $color = 'light';
-            $icon = '<i class="fa-solid fa-circle-question  me-1 text-'.$color.'"></i>';
-                 $title =  $statusName ? $statusName : 'ไม่ระบุ';
-                $view = '<span class="badge-soft-' . $color . ' rounded-pill">' .$icon. $title . '</span>';
+                $color = 'light';
+                $icon = '<i class="fa-solid fa-circle-question  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'ไม่ระบุ';
+                $view = '<span class="badge-soft-' . $color . ' rounded-pill">' . $icon . $title . '</span>';
                 break;
         }
         return [
@@ -795,8 +811,8 @@ class AppHelper extends Component
         ];
     }
 
-//ตรวจสอบชื่อสถานที่ถ้าไม่มีให้ create
- public static function checkLocation($locationName)
+    //ตรวจสอบชื่อสถานที่ถ้าไม่มีให้ create
+    public static function checkLocation($locationName)
     {
         $location = Categorise::findOne(['title' => $locationName]);
         if (!$location) {
@@ -811,5 +827,4 @@ class AppHelper extends Component
             $newLocation->save(false);
         }
     }
-
 }

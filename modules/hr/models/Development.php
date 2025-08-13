@@ -627,12 +627,12 @@ class Development extends \yii\db\ActiveRecord
     public function listStatus()
     {
         return [
-            'Pending' => 'รออนุมัติ',
+            'Pending' => 'รอเห็นชอบ',
+            'Checking' => 'รอตรวจสอบ',
             'Pass' => 'ตรวจสอบผ่าน',
-            'Approve' => 'อนุมัติ',
+            'Approve' => 'ผอ.อนุมัติ',
             'Reject' => 'ไม่อนุมัติ',
             'Cancel' => 'ยกเลิก',
-            'Complete' => 'เสร็จสิ้น',
         ];
     }
 

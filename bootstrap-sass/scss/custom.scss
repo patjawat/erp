@@ -635,10 +635,27 @@ textarea:focus {
   background-color: rgba(31, 88, 199, .1);
 }
 
+.badge-soft-info {
+  color: #196bad;
+  background-color: rgba(31, 88, 199, .1);
+}
+
 .badge-soft-warning {
   color: #d96f04;
   background-color: rgb(234 174 22 / 26%);
 }
+
+.badge-soft-danger {
+    color: #c73f34;
+    background-color: rgb(234 223 222);
+}
+
+
+.badge-soft-success {
+  color: #009688;
+  background-color: rgb(224 243 225);
+}
+
 
 .badge-soft-secondary {
   color: #a4a9b4;

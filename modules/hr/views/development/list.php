@@ -66,7 +66,7 @@ use yii\helpers\Html;
                             </li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบตอบรับเป็นวิทยากร', ['/me/development/form-academic', 'id' => $item->id], ['class' => 'dropdown-item  open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             </li>
-                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> แจ้งยกเลิก', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
+                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-1"></i> ยกเลิก', ['cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order']) ?>
                             </li>
                             </ui>
                     </div>

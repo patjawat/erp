@@ -221,6 +221,21 @@ class DevelopmentController extends Controller
         return $this->redirect(['index']);
     }
 
+        public function actionCancel($id)
+    {
+         Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->status = 'Cancel';
+        $model->save();
+        return [
+            'status' => 'success',
+            'message' => 'ยกเลิกการขอไปราชการเรียบร้อยแล้ว',
+        ];
+
+    }
+
+
+
     /**
      * Finds the Development model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

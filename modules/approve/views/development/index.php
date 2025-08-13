@@ -1,23 +1,26 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+
 /** @var yii\web\View $this */
 $this->title = 'อนุมัติอบรม/ประชุม/ดูงาน';
 $msg = 'ขอ';
 ?>
-<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
+<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); 
+?>
 <?php $this->beginBlock('page-title'); ?>
 <!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
+<?php echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php echo $this->render('@app/modules/me/menu', ['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -32,67 +35,78 @@ $msg = 'ขอ';
 
 
 <div class="card">
-        <div class="card-header bg-primary-gradient text-white">
-            <div class="d-flex justify-content-between">
-                <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-                <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-light shadow approve-all']);?>
-            </div>
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+            <?php echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+        </div>
     </div>
     <div class="card-body">
-    <div class="d-flex justify-content-between">
-    </div>
+        <div class="d-flex justify-content-between">
+        </div>
         <div class="d-flex justify-content-between  align-top align-items-center">
             <div class="d-flex flex-column">
                 <div class="d-flex justify-content-between">
                 </div>
             </div>
         </div>
-        
+
         <div class="table-responsive pb-5">
             <table class="table">
                 <thead>
                     <tr>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="text-center fw-semibold" style="width:30px">ปีงบประมาณ</th>
-
-                        <th class="fw-semibold" scope="col">เรื่อง/วัน/สถานที่</th>
-                        <th class="fw-semibold"  scope="col">คณะเดินทาง</th>
-                        <th class="fw-semibold"  scope="col">สถานะ</th>
+                        <th class="fw-semibold">เรื่อง</th>
+                        <th class="fw-semibold">ประเภท</th>
+                        <th class="fw-semibold">วันที่</th>
+                        <th class="fw-semibold" scope="col">ผู้ขอ</th>
+                        <th class="fw-semibold" scope="col">คณะเดินทาง</th>
+                        <th class="fw-semibold" scope="col">สถานะ</th>
                         <th class="fw-semibold text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="table-group-divider align-middle">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr>
-                        <td class="text-center fw-semibold">
-                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-                        </td>
-                        <td><?=$item->development->thai_year;?></td>
-                        <td>
-                            <div>
-                                <p class="fw-semibold mb-0"><?=$item->development->topic?></p>
-                                สถานที่ <?=$item->development->data_json['location'] ?? '-'?>  <?=$item->development->showDateRange()?>
-                            </div>
-                        </td>
+                        <tr>
+                            <td class="text-center fw-semibold">
+                                <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                            </td>
+                            <td>
+                                <p class="mb-0"><?= $item->development->topic ?></p>
+                                <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
+                            </td>
+                            <td><?= $item->developmentType?->title ?? '-' ?></td>
+                            <td>
+                                <p class="mb-0 fw-semibold"> <?= $item->development->showDateRange() ?></p>
+                            </td>
+                            <td>
+                                <?php
 
-                        <td>  <?=$item->development->StackMember()?></td>
-                        <td><?=$item->viewStatus()['view'] ?>
-                    </td>
-                        
-                        <td class="text-center" style="width:120px">
-                            <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal','data' => ['size' => 'modal-xl']]) ?>
-                                <!-- <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                try {
+                                    echo $item->development->userRequest()['avatar'] ?? '';
+                                } catch (\Throwable $th) {
+                                    //throw $th;
+                                } ?>
+                            </td>
+
+                            <td> <?= $item->development->StackMember() ?></td>
+                            <td><?= $item->viewStatus()['view'] ?>
+                            </td>
+
+                            <td class="text-center" style="width:120px">
+                                <div class="btn-group">
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <!-- <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view','id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
                     </ui> -->
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach;?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
@@ -111,7 +125,8 @@ $msg = 'ขอ';
     </div>
 </div>
 
-<?php // Pjax::end(); ?>
+<?php // Pjax::end(); 
+?>
 
 
 
@@ -414,7 +429,7 @@ $('.approve-all').click(function (e) {
 
 
 JS;
-$this->registerJS($js,View::POS_END);
+$this->registerJS($js, View::POS_END);
 $this->registerCss('
 .calendar-table th, .calendar-table td {
     min-width: 120px;

@@ -31,13 +31,13 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="col-md-9">
             <div class="card h-100">
-                <div class="card-header bg-light p-2">
+                <div class="card-header p-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
                     
                         <div>
-  <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer, ['class' => 'btn btn-secondary shadow']) ?>
-                            <?= $me->id == $model->emp_id ? Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']]) : ''?>
+  <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ',['/hr/development/index',], ['class' => 'btn btn-secondary shadow']) ?>
+                            <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
                         </div>
                     </div>
                 </div>
@@ -91,7 +91,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <!-- สถานที่และหน่วยงาน -->
     <div class="card mt-4">
-        <div class="card-header bg-light p-2">
+        <div class="card-header p-2">
             <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
         </div>
         <div class="card-body">
@@ -139,7 +139,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <!-- ผู้ที่เกี่ยวข้อง -->
     <div class="card mt-4">
-        <div class="card-header bg-light p-2">
+        <div class="card-header p-2">
             <strong><i class="bi bi-people me-2"></i>บุคลากรที่เกี่ยวข้อง</strong>
         </div>
         <div class="card-body">
@@ -177,7 +177,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <!-- ข้อมูลการเดินทาง -->
     <div class="card mt-4">
-        <div class="card-header bg-light p-2">
+        <div class="card-header p-2">
             <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
         </div>
         <div class="card-body">
@@ -210,7 +210,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- การอนุมัติ -->
     <?php if ($model->status != 'Pending'): ?>
     <div class="card mt-4">
-        <div class="card-header bg-light p-2">
+        <div class="card-header p-2">
             <strong><i class="bi bi-clipboard-check me-2"></i>ข้อมูลการอนุมัติ</strong>
         </div>
         <div class="card-body">
@@ -267,7 +267,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <!-- ประวัติการแก้ไข -->
     <!-- <div class="card mt-4">
-                <div class="card-header bg-light p-2">
+                <div class="card-header p-2">
                     <strong><i class="bi bi-clock-history me-2"></i>ประวัติการดำเนินการ</strong>
                 </div>
                 <div class="card-body">

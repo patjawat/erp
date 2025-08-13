@@ -12253,7 +12253,7 @@ textarea:focus {
   top: 70px;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 5;
 }
 
 .navbar-nav .nav-link {
@@ -12447,9 +12447,24 @@ textarea:focus {
   background-color: rgba(31, 88, 199, 0.1);
 }
 
+.badge-soft-info {
+  color: #196bad;
+  background-color: rgba(31, 88, 199, 0.1);
+}
+
 .badge-soft-warning {
   color: #d96f04;
   background-color: rgba(234, 174, 22, 0.26);
+}
+
+.badge-soft-danger {
+  color: #c73f34;
+  background-color: rgb(234, 223, 222);
+}
+
+.badge-soft-success {
+  color: #009688;
+  background-color: rgb(224, 243, 225);
 }
 
 .badge-soft-secondary {
