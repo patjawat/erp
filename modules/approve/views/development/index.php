@@ -73,7 +73,7 @@ $msg = 'ขอ';
                             </td>
                             <td>
                                 <p class="mb-0"><?= $item->development->topic ?></p>
-                                <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
+                                <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->development->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
                             </td>
                             <td><?= $item->developmentType?->title ?? '-' ?></td>
                             <td>
