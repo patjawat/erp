@@ -5,7 +5,6 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-use yii\widgets\MaskedInput;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Employees;
@@ -58,25 +57,13 @@ $resultsJs = <<<JS
 
 
 <?php $form = ActiveForm::begin(['id' => 'vehicle-form']); ?>
+
+
 <div class="row">
     <div class="col-md-4">
-        <?= $form->field($model, 'time_start')->widget(MaskedInput::class, [
-    'mask' => '99:99',
-    'options' => ['placeholder' => 'HH:MM'],
-    'clientOptions' => [
-        'alias' => 'time', // optional แต่สามารถช่วย validation เบื้องต้น
-        'hourFormat' => '24'
-    ],
-])->label('เวลาไป') ?>
+        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('วันออกเดินทาง') ?>
+        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
 
-        <?= $form->field($model, 'time_end')->widget(MaskedInput::class, [
-    'mask' => '99:99',
-    'options' => ['placeholder' => 'HH:MM'],
-    'clientOptions' => [
-        'alias' => 'time',
-        'hourFormat' => '24'
-    ],
-])->label('เวลากลับ') ?>
     </div>
     <div class="col-md-2">
         <?= $form->field($model, 'time_start')->textInput(['type' => 'time'])->label('เวลาไป') ?>
@@ -123,7 +110,7 @@ $resultsJs = <<<JS
             ],
         ])->label('ประเภทรถที่ต้องการใช้') ?>
         <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
-
+        
 
         <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
             'data' => $model->listReferType(),
@@ -394,7 +381,7 @@ $resultsJs = <<<JS
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="showListCar"></div>
+    <div id="showListCar"></div>
         <?PHP // echo $this->render('list_cars', ['model' => $model]) ?>
     </div>
 </div>
@@ -413,7 +400,8 @@ $resultsJs = <<<JS
 </div>
 
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightCar" aria-labelledby="offcanvasRightLabelCar">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightCar"
+    aria-labelledby="offcanvasRightLabelCar">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasRightLabeCar"><i class="bi bi-person-circle"></i>
             แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h5>
