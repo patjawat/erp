@@ -39,12 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?=$this->render('_search', ['model' => $searchModel,'type' => 'development'])?>
     </div>
 </div>
-<?php
-echo "<pre>";
-print_r($searchModel->status);
-echo "</pre>";
 
-?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">

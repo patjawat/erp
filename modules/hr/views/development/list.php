@@ -12,12 +12,12 @@ use yii\helpers\Html;
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
             <th class="fw-semibold" scope="col">ผู้ขอ</th>
-            <th class="fw-semibold" scope="col">คณะเดินทาง</th>
+            <th class="fw-semibold" style="width:150px"  scope="col">คณะเดินทาง</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
-            <th class="fw-semibold text-end">ดำเนินการ</th>
+            <th class="fw-semibold text-end" style="width:100px">ดำเนินการ</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="align-middle table-group-divider">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
                 <td class="text-center fw-semibold">
