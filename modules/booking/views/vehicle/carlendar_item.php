@@ -67,7 +67,7 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
                 <ul class="d-flex  felx-column gap-5">
                     <?php foreach ($vehicleStatus as $vehicleStatusItem): ?>
                         <li class="d-flex gap- align-items-center">
-                            <span class="badge rounded-pill me-1" style="background-color:<?= $vehicleStatusItem->data_json['color'] ?>" id="status<?= $vehicleStatusItem->code ?>">0</span>
+                            <span class="badge rounded-pill me-1" style="background-color:<?= isset($vehicleStatusItem->data_json['color']) ? $vehicleStatusItem->data_json['color'] : '#cccccc' ?>" id="status<?= $vehicleStatusItem->code ?>">0</span>
                             <?= $vehicleStatusItem->title ?>
                         </li>
                     <?php endforeach; ?>
