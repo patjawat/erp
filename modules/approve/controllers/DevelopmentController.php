@@ -25,6 +25,7 @@ class DevelopmentController extends \yii\web\Controller
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
+            'q_status' => ($me->isDirector() == 1) ? 'Pass' : 'Pending',
             // 'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -32,7 +33,11 @@ class DevelopmentController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
+        if($me->isDirector()){
+            $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
+        }else{
+            $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pending']);
+        }
         $dataProvider->query->andFilterWhere([
             'or',
             ['like','title', $searchModel->q],

@@ -4,6 +4,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 $this->title = 'อนุมัติอบรม/ประชุม/ดูงาน';
@@ -23,7 +24,12 @@ $msg = 'ขอ';
 <?php echo $this->render('@app/modules/me/menu', ['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
-
+<h1>
+    <?php
+     $me = UserHelper::GetEmployee();
+    echo $me->isDirector();
+    ?>
+</h1>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
