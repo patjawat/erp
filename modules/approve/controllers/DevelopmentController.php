@@ -25,7 +25,7 @@ class DevelopmentController extends \yii\web\Controller
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
-            'q_status' => ($me->isDirector() == 1) ? 'Pass' : 'Pending',
+            'q_status' => ($me->isDirector() ? 'Pass' : 'Pending'),
             // 'status' => ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);

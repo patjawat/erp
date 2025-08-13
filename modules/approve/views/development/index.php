@@ -24,12 +24,6 @@ $msg = 'ขอ';
 <?php echo $this->render('@app/modules/me/menu', ['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
-<h1>
-    <?php
-     $me = UserHelper::GetEmployee();
-    echo $me->isDirector();
-    ?>
-</h1>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
