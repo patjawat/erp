@@ -3,9 +3,10 @@
 namespace app\modules\backup\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\helpers\FileHelper;
-use yii\web\Response;
+use app\modules\backup\components\BackupHelper;
 
 class DefaultController extends Controller
 {
@@ -24,170 +25,22 @@ class DefaultController extends Controller
             'backupFiles' => $backupFiles,
         ]);
     }
-public function actionBackupAll()
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-    $backupPath = Yii::getAlias($this->backupPath);
-    $dbTempDir = $backupPath . '/database';
-    $fileTempDir = $backupPath . '/fileupload';
-
-    // สร้าง directory ชั่วคราว
-    foreach([$dbTempDir, $fileTempDir] as $dir){
-        if(!is_dir($dir)) mkdir($dir, 0777, true);
-    }
-
-    $date = date('Y-m-d_H-i-s');
-    $archiveFile = "$backupPath/backup_all_{$date}.tar.gz";
-
-    // 1️⃣ Backup Database
-    $db = Yii::$app->db;
-    preg_match('/host=([^;]+)/', $db->dsn, $matches); $host = $matches[1];
-    preg_match('/dbname=([^;]+)/', $db->dsn, $matches); $dbname = $matches[1];
-
-    $dbFile = "$dbTempDir/{$dbname}_{$date}.sql";
-    $mysqldumpPath = '/usr/bin/mysqldump';
-    $cmd = "$mysqldumpPath -h $host -u {$db->username} -p'{$db->password}' $dbname > $dbFile 2>&1";
-    exec($cmd, $out, $ret);
-    if($ret !== 0){
-        return ['success'=>false, 'error'=>$out];
-    }
-
-    // 2️⃣ Backup File Upload
-    $uploadPath = Yii::getAlias($this->fileUploadPath);
-    exec("cp -r $uploadPath/. $fileTempDir/");
-
-    // 3️⃣ บีบอัดทั้งสอง folder เป็น tar.gz
-    $tarCmd = "tar -czf $archiveFile -C $backupPath database -C $backupPath fileupload";
-    exec($tarCmd, $out2, $ret2);
-
-    // 4️⃣ ลบโฟลเดอร์ชั่วคราว
-    if(is_dir($dbTempDir)) $this->deleteDir($dbTempDir);
-    if(is_dir($fileTempDir)) $this->deleteDir($fileTempDir);
-
-    if($ret2 === 0){
-        clearstatcache();
-        $sizeBytes = filesize($archiveFile);
-        $sizeText = $sizeBytes >= 1024*1024 ? round($sizeBytes/(1024*1024),2).' MB' :
-                    ($sizeBytes >= 1024 ? round($sizeBytes/1024,2).' KB' : $sizeBytes.' B');
-
-        return ['success'=>true, 'file'=>basename($archiveFile), 'size'=>$sizeText];
-    } else {
-        return ['success'=>false, 'error'=>$out2];
-    }
-}
-
-
 public function actionBackupDatabase()
 {
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-    $backupPath = Yii::getAlias($this->backupPath); // runtime/backup
-    $dbTempDir = $backupPath . '/database'; // โฟลเดอร์ชั่วคราว
-    if(!is_dir($backupPath)) mkdir($backupPath, 0777, true);
-    if(!is_dir($dbTempDir)) mkdir($dbTempDir, 0777, true);
-
-    $date = date('Y-m-d_H-i-s');
-
-    // 1️⃣ Backup Database
-    $db = Yii::$app->db;
-    preg_match('/host=([^;]+)/', $db->dsn, $matches); $host = $matches[1];
-    preg_match('/dbname=([^;]+)/', $db->dsn, $matches); $dbname = $matches[1];
-
-    $dbFile = "$dbTempDir/{$dbname}_{$date}.sql";
-    $mysqldumpPath = '/usr/bin/mysqldump'; // ตรวจสอบ path จริงใน container
-
-    $cmd = "$mysqldumpPath -h $host -u {$db->username} -p'{$db->password}' $dbname > $dbFile 2>&1";
-    exec($cmd, $out, $ret);
-
-    if($ret !== 0){
-        return ['success' => false, 'error' => $out];
-    }
-
-    // 2️⃣ บีบอัด SQL เป็น .gz ใน runtime/backup
-    $gzFile = "$backupPath/{$dbname}_{$date}.sql.gz";
-    exec("gzip -c $dbFile > $gzFile");
-
-    // 3️⃣ ลบไฟล์ SQL ชั่วคราวทั้งหมด
-    if(is_dir($dbTempDir)){
-        $this->deleteDir($dbTempDir);
-    }
-
-    clearstatcache();
-    $sizeBytes = filesize($gzFile);
-    $sizeText = $sizeBytes >= 1024*1024 ? round($sizeBytes/(1024*1024),2).' MB' :
-                ($sizeBytes >= 1024 ? round($sizeBytes/1024,2).' KB' : $sizeBytes.' B');
-
-    return [
-        'success' => true,
-        'file' => basename($gzFile),
-        'size' => $sizeText
-    ];
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    return BackupHelper::backupDatabase();
 }
 
-/**
- * ลบ directory แบบ recursive
- */
-
-
-
-
-    // --- Backup File Upload ---
-  public function actionBackupFiles()
+public function actionBackupFiles()
 {
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-    $backupPath = Yii::getAlias($this->backupPath); // runtime/backup
-    $fileTempDir = $backupPath . '/fileupload'; // โฟลเดอร์ชั่วคราว
-    $uploadPath = Yii::getAlias($this->fileUploadPath); // modules/filemanager/fileupload
-
-    // สร้าง directory ชั่วคราว
-    if(!is_dir($fileTempDir)) mkdir($fileTempDir, 0777, true);
-
-    // คัดลอกไฟล์ upload มายังโฟลเดอร์ชั่วคราว
-    exec("cp -r $uploadPath/. $fileTempDir/");
-
-    $date = date('Y-m-d_H-i-s');
-    $fileArchive = "$backupPath/fileupload_{$date}.tar.gz";
-
-    // บีบอัด directory fileupload ชั่วคราวเป็น tar.gz
-    // เวลาแตกไฟล์จะอยู่ภายใต้โฟลเดอร์ fileupload
-    $tarCmd = "tar -czf $fileArchive -C $backupPath fileupload";
-    exec($tarCmd, $out, $ret);
-
-    // ลบโฟลเดอร์ชั่วคราว fileupload
-    if(is_dir($fileTempDir)){
-        $this->deleteDir($fileTempDir);
-    }
-
-    if ($ret === 0) {
-        clearstatcache();
-        $sizeBytes = filesize($fileArchive);
-        $sizeText = $sizeBytes >= 1024*1024 ? round($sizeBytes/(1024*1024),2).' MB' :
-                    ($sizeBytes >= 1024 ? round($sizeBytes/1024,2).' KB' : $sizeBytes.' B');
-
-        return ['success' => true, 'file' => basename($fileArchive), 'size' => $sizeText];
-    } else {
-        return ['success' => false, 'error' => $out];
-    }
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    return BackupHelper::backupFiles();
 }
 
-/**
- * ลบ directory แบบ recursive
- */
-protected function deleteDir($dir)
+public function actionBackupAll()
 {
-    if (!is_dir($dir)) return;
-    $files = array_diff(scandir($dir), ['.', '..']);
-    foreach ($files as $file) {
-        $path = "$dir/$file";
-        if (is_dir($path)) {
-            $this->deleteDir($path);
-        } else {
-            unlink($path);
-        }
-    }
-    rmdir($dir);
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    return BackupHelper::backupAll();
 }
 
 
