@@ -63,13 +63,13 @@ IF(x3.count_days > 15, ROUND(x3.date_number * ((x3.price / x3.service_life)/12),
                            FROM (
                            SELECT 
                            a.id,
-                           i.title,
+                        --    i.title,
                            a.code,
                            asset_type.title as type_name,
                            asset_type.code as type_code,
                            a.data_json->'$.service_life' as service_life,
                            CAST(a.data_json->'$.depreciation'as DECIMAL(4,2)) as depreciation,
-                           asset_group,
+                           asset_group_id,
                            receive_date,
                            ('".$model['date']."') as date,
                            price,
@@ -79,8 +79,7 @@ IF(x3.count_days > 15, ROUND(x3.date_number * ((x3.price / x3.service_life)/12),
                            ROUND((price/CAST(a.data_json->'$.service_life' as UNSIGNED) / 12),2) as month_price
                                
                            FROM asset a
-                           LEFT JOIN categorise i ON i.code = a.asset_item
-                           LEFT JOIN categorise asset_type ON i.category_id = asset_type.code AND asset_type.name = 'asset_type'
+                           LEFT JOIN categorise asset_type ON a.asset_type_id = asset_type.code AND asset_type.name = 'asset_type'
                            ) as x1) as x2) as x3 WHERE   x3.receive_date <= x3.date AND x3.receive_date <= x3.date AND x3.asset_status = 1) as x4) as x5 where x5.type_code = '".$model['type_code']."' ";
 $count = Yii::$app->db->createCommand($sql)->queryAll();
 
