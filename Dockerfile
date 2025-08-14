@@ -6,9 +6,11 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
     git \
-    ghostscript\
+    ghostscript \
+    tar gzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
 
     # เปิดใช้งาน Opcache
 RUN docker-php-ext-install opcache

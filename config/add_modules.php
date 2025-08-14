@@ -78,6 +78,7 @@ $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module ก�
 $modules['asset'] = ['class' => 'app\modules\asset\Module'];  // module ทรัพสินย์
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
+$modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 
 return $modules;
