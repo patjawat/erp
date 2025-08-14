@@ -48,7 +48,7 @@ $group = Yii::$app->request->get('group');
             </div>
             <div class="card-body text-center">
                 <div class="position-relative p-2 d-flex">
-                    <img src="<?= $model->QrCode() ?>" width="140" class="position-absolute start-0 top-0 m-2" alt="QR Code">
+                    <!-- <img src="<?= $model->QrCode() ?>" width="140" class="position-absolute start-0 top-0 m-2" alt="QR Code"> -->
                     <?= Html::img($model->showImg()['image'], ['class' => 'avatar-profile object-fit-cover rounded m-auto border border-2 border-secondary-subtle', 'style' => 'max-width:100%;min-width: 320px;']) ?>
                 </div>
                 <?php if (isset($model->Retire()['progress'])): ?>
@@ -84,42 +84,55 @@ $group = Yii::$app->request->get('group');
 
 
     <div class="col-md-8">
-        <p>
-    <?= Html::a('<i class="fa-solid fa-plus"></i> เพิ่มที่ดิน', ['create'], ['class' => 'btn btn-success']) ?>
-    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-    <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
-        'class' => 'btn btn-danger',
-        'data' => [
-            'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
-            'method' => 'post',
-        ],
-    ]) ?>
-</p>
+
         <div class="card mb-4">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <i class="bi bi-info-circle"></i> ข้อมูลทั่วไป
                     </div>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-bars"></i> จัดการ
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                            <li> <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'dropdown-item']) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> แจ้งซ่อม', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-qrcode me-2"></i> QR-Code', ['qrcode', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-chart-line me-2"></i> ค่าเสื่อม', ['depreciation', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                            <li><?= Html::a('<i class="fa-solid fa-trash me-2"></i> ลบ', ['delete', 'id' => $model->id], ['class' => 'dropdown-item delete-asset']) ?></li>
-                        </ul>
+                    <div class="d-flex align-items-center gap-1">
+                        <p class="mb-0 me-2">
+                        <div class="dropdown">
+                            <button class="btn btn-success dropdown-toggle" type="button"
+                                id="dropdownNewButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i id="dropdownNewIcon" class="fa-solid fa-circle-chevron-down"></i> สร้างใหม่
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li> <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> สร้างใหม่', ['create'], ['class' => 'dropdown-item']) ?></li>
+                                <li><?= Html::a('<i class="fa-solid fa-copy me-2"></i> สร้างใหม่จากสำเนานี้', ['create', 'id' => $model->id], ['class' => 'dropdown-item']) ?></li>
+
+                            </ul>
+                        </div>
+                        <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
+                        <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
+                            'class' => 'btn btn-danger',
+                            'data' => [
+                                'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
+                        </p>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                id="dropdownManageButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-bars"></i> จัดการ
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li> <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'dropdown-item']) ?></li>
+                                <li><?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> แจ้งซ่อม', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                <li><?= Html::a('<i class="fa-solid fa-qrcode me-2"></i> QR-Code', ['qrcode', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                <li><?= Html::a('<i class="fa-solid fa-chart-line me-2"></i> ค่าเสื่อม', ['depreciation', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                <li><?= Html::a('<i class="fa-solid fa-trash me-2"></i> ลบ', ['delete', 'id' => $model->id], ['class' => 'dropdown-item delete-asset']) ?></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">ชื่อครุภัณฑ์:</div>
-                    <div class="col-md-8"><?= $model->assetItem?->title ?? '-'; ?></div>
+                    <div class="col-md-8"><?= $model->asset_name; ?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">รหัสครุภัณฑ์:</div>
@@ -127,16 +140,16 @@ $group = Yii::$app->request->get('group');
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">หมวดหมู่:</div>
-                    <div class="col-md-8">ครุภัณฑ์คอมพิวเตอร์</div>
+                    <div class="col-md-8"><?= $model->assetCategory?->title ?? '-' ?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">ประเภท:</div>
-                    <div class="col-md-8"><?= $model->AssetTypeName() ?></div>
+                    <div class="col-md-8"><?= $model->assetType->title ?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">ยี่ห้อ/รุ่น:</div>
                     <div class="col-md-8">
-                        <?= $model->data_json['band'] ?? 'ไม่ระบุ' ?>/<?= $model->data_json['model'] ?? 'ไม่ระบุ' ?></div>
+                        <?= $model->data_json['brand'] ?? 'ไม่ระบุ' ?>/<?= $model->data_json['asset_model'] ?? 'ไม่ระบุ' ?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">หน่วยงานที่รับผิดชอบ:</div>
@@ -316,6 +329,16 @@ $group = Yii::$app->request->get('group');
 <?php
 $js = <<< JS
 
+
+var dropdownNew = document.getElementById('dropdownNewButton');
+var iconNew = document.getElementById('dropdownNewIcon');
+
+dropdownNew.addEventListener('show.bs.dropdown', function () {
+    iconNew.classList.replace('fa-circle-chevron-down', 'fa-circle-chevron-up');
+});
+dropdownNew.addEventListener('hide.bs.dropdown', function () {
+    iconNew.classList.replace('fa-circle-chevron-up', 'fa-circle-chevron-down');
+});
 
 $('.delete-asset').click(function (e) { 
     e.preventDefault();

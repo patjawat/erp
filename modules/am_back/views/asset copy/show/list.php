@@ -16,7 +16,7 @@ use app\modules\am\models\Asset;
                     <tr>
                         <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
                         <th class="fw-semibold" scope="col" style="width:70px;">รูปภาพ</th>
-                        <th class="fw-semibold" scope="col" style="width:200px;">หมายเลขคุภัณฑ์</th>
+                        <th class="fw-semibold" scope="col" style="width:200px;">หมายเลขครุภัณฑ์</th>
                         <th class="fw-semibold" scope="col">รายการทรัพย์สิน</th>
                         <th class="fw-semibold" scope="col" style="width: 350px;">ยี่ห้อ</th>
                         <th class="fw-semibold" scope="col">ราคา</th>

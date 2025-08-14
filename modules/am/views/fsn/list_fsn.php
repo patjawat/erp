@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
+use app\components\AssetHelper;
 use app\modules\am\models\AssetItem;
 
 /** @var yii\web\View $this */
@@ -52,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <button class="btn btn-sm btn-info select-item" 
                         data-code="<?=$item->code?>" 
                         data-title="<?=$item->title?>"
-                        data-fsn-next="<?php // $item->nextCode()?>"
+                        data-fsn-next="<?=AssetHelper::nextAssetCode($item->code)?>"
                         >เลือก</button>
                     </td>
                 </tr>

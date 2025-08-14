@@ -57,25 +57,75 @@ $group = Yii::$app->request->get('group');
             </div>
         </div>
 
+
         <div class="card">
             <div class="card-body">
-                <!-- ข้อมูลเฉพาะ -->
+
+                <!-- ข้อมูลงบประมาณ -->
                 <div class="form-section">
-                    <h5 class="section-title">ข้อมูลเฉพาะ</h5>
+                    <h5 class="section-title">ข้อมูลงบประมาณ</h5>
                     <div class="row g-3">
-                        <div class="col-6">
-                            <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
-                        </div>
-                        <div class="col-6">
-                            <?php // $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน (รถยนต์)') 
-                            ?>
-                            <?= $form->field($model, 'license_plate')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <?php
-                            echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                                'data' => $model->ListAssetStatus(),
-                                'options' => ['placeholder' => 'กรุณาเลือก...'],
+                            echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
+                                'data' => $model->ListBudgetdetail(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-budget_type_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('ประเภทเงิน');
+                            ?>
+                        </div>
+
+                        <div class="col-md-4">
+                            <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
+                        </div>
+
+                        <div class="col-md-4">
+                            <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
+                        </div>
+
+
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
+                                'name' => 'department',
+                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                                'value' => 1,
+                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                'fontAwesome' => true,
+                                'asDropdown' => true,
+                                'multiple' => false,
+                                'options' => ['disabled' => false],
+                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+
+                <!-- ข้อมูลการได้มา -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลการได้มา</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+
+                            <?php
+                            echo $form->field($model, 'data_json[method_get]')->widget(Select2::classname(), [
+                                'data' => $model->ListMethodget(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                 ],
@@ -85,85 +135,83 @@ $group = Yii::$app->request->get('group');
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                 ]
-                            ])->label('สถานะ'); ?>
+                            ])->label('วิธีได้มา');
+                            ?>
                         </div>
-                    </div>
-                </div>
 
-                <!-- ข้อมูลสถานที่และวันที่ -->
-                <div class="form-section">
-                    <h5 class="section-title">ข้อมูลสถานที่และวันที่</h5>
-                    <div class="row g-3">
+                        <div class="col-md-12 purchase-method-field">
+                            <?php
+                            echo $form->field($model, 'purchase')->widget(Select2::classname(), [
+                                'data' => $model->ListPurchase(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-purchase_text').val(data.text)
+                                        }",
+                                ]
+                            ])->label('วิธีการได้มา');
+                            ?>
+                        </div>
+
                         <div class="col-md-12">
-                            <?= $form->field($model, 'data_json[location]')->textInput()->label('อาคาร/ห้อง'); ?>
-                        </div>
-                        <div class="col-6">
-                            <?= $form->field($model, 'receive_date')->textInput()->label('วันที่รับเข้า'); ?>
-                        </div>
-                        <div class="col-6">
-                            <?= $form->field($model, 'data_json[expire_date]')->textInput()->label('วันหมดประกัน'); ?>
+                            <?php
+                            echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
+                                'data' => $model->ListVendor(),
+                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-vendor_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('ผู้ขาย/ผู้บริจาค');
+                            ?>
                         </div>
                         <div class="col-md-6">
                             <?= $form->field($model, 'data_json[inspection_date]')->textInput()->label('วันที่ตรวจรับ'); ?>
                         </div>
-
-                        <div class="col-md-6">
-                            <?php
-                            $url = \yii\helpers\Url::to(['/depdrop/employee']);
-                            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
-                            echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                                // 'data' => $model->ListEmployees(),
-                                'initValueText' => $owner,
-                                'options' => ['placeholder' => 'กรุณาเลือก'],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                    'minimumInputLength' => 1,
-                                    'language' => [
-                                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-                                    ],
-                                    'ajax' => [
-                                        'url' => $url,
-                                        'dataType' => 'json',
-                                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
-                                    ],
-                                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
-                                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
-                                ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
-                            ])->label('ผู้รับผิดชอบ');
-                            ?>
+                        <div class="col-6">
+                            <?= $form->field($model, 'receive_date')->textInput()->label('วันที่รับเข้า'); ?>
                         </div>
+                        <div class="col-12">
+                            <?= $form->field($model, 'data_json[expire_date]')->textInput()->label('วันหมดประกัน'); ?>
+                        </div>
+
                     </div>
                 </div>
-
             </div>
         </div>
 
+
+
+
     </div>
     <div class="col-8">
-                <p>
- <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
-    <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
-        'class' => 'btn btn-danger',
-        'data' => [
-            'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
-            'method' => 'post',
-        ],
-    ]) ?>
-</p>
+
         <div class="card">
             <div class="card-body">
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
                     <h5 class="section-title">
-                        <div class="d-flex justify-content-between">
-                            <p>ข้อมูลทั่วไป</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0">ข้อมูลทั่วไป</p>
+                            <p class="mb-0">
+                                <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
+                                <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
+                                    'class' => 'btn btn-danger',
+                                    'data' => [
+                                        'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
+                                        'method' => 'post',
+                                    ],
+                                ]) ?>
+                            </p>
                         </div>
                     </h5>
                     <div class="row g-3">
@@ -217,20 +265,33 @@ $group = Yii::$app->request->get('group');
                         </div>
 
                         <div class="col-md-6">
-                            <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขครุภัณฑ์') ?>
-                        </div>
-                        <div class="col-md-6">
                             <?php
-                            echo $form->field($model, 'fsn_number', [
+                            echo $form->field($model, 'code', [
                                 'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/fsn/list-fsn', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 'asButton' => true]
+                                    'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
                                 ]
                             ])->textInput([
                                 'maxlength' => true,
                                 'placeholder' => 'ค้นหาเลข FSN',
-                                'readonly' => true,  // Make field readonly
-                                'class' => 'form-control bg-primary text-white'  // Add background color
-                            ])->label('FSN'); ?>
+                                'readonly' => false,  // Make field readonly
+                                // 'class' => 'form-control bg-primary text-white'  // Add background color
+                                'class' => 'form-control'  // Add background color
+                            ])->label('หมายเลขครุภัณฑ์'); ?>
+                        </div>
+                        <div class="col-md-6">
+                           <?= $form->field($model, 'fsn_number', [
+                                    'addon' => [
+                                        'append' => [
+                                            'content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/fsn/list-fsn', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 
+                                            'asButton' => true
+                                        ]
+                                    ]
+                                ])->textInput([
+                                    'maxlength' => true,
+                                    'placeholder' => 'ค้นหาเลข FSN',
+                                    'readonly' => false,
+                                    'class' => 'form-control'
+                                ])->label('FSN'); ?>
                         </div>
 
                         <div class="col-md-6">
@@ -292,18 +353,77 @@ $group = Yii::$app->request->get('group');
                             ?>
                         </div>
                     </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <?= $form->field($model, 'data_json[serial_number]')->textInput()->label('S/N') ?>
+                        </div>
+                        <div class="col-6">
+                            <?php // $form->field($model, 'data_json[license_plate]')->textInput()->label('เลขทะเบียน (รถยนต์)') 
+                            ?>
+                            <?= $form->field($model, 'license_plate')->textInput()->label('เลขทะเบียน (รถยนต์)') ?>
+                        </div>
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'data_json[asset_options]')->widget(Summernote::class, [
+                                'useKrajeePresets' => true,
+                                'pluginOptions' => [
+                                    'height' => 150, // ความสูงเริ่มต้น (px)
+                                    'minHeight' => 150, // ความสูงต่ำสุด
+                                    'maxHeight' => 500, // ความสูงสูงสุด
+                                ]
+                            ])->label('คุณลักษณะเฉพาะ'); ?>
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <!-- ข้อมูลการได้มา -->
+                <!-- ข้อมูลสถานที่และวันที่ -->
                 <div class="form-section">
-                    <h5 class="section-title">ข้อมูลการได้มา</h5>
+                    <h5 class="section-title">ข้อมูลสถานที่และวันที่</h5>
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
+                        </div>
 
+
+                        <div class="col-md-6">
                             <?php
-                            echo $form->field($model, 'data_json[method_get]')->widget(Select2::classname(), [
-                                'data' => $model->ListMethodget(),
+                            $url = \yii\helpers\Url::to(['/depdrop/employee']);
+                            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
+                            echo $form->field($model, 'owner')->widget(Select2::classname(), [
+                                // 'data' => $model->ListEmployees(),
+                                'initValueText' => $owner,
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'minimumInputLength' => 1,
+                                    'language' => [
+                                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+                                    ],
+                                    'ajax' => [
+                                        'url' => $url,
+                                        'dataType' => 'json',
+                                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
+                                    ],
+                                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
+                                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
+                                ],
+                                'pluginEvents' => [
+                                    // "select2:select" => "function(result) { 
+                                    //     var data = $(this).select2('data')[0]
+                                    //     $('#asset-data_json-method_get_text').val(data.text)
+                                    //  }",
+                                ]
+                            ])->label('ผู้รับผิดชอบ');
+                            ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?php
+                            echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+                                'data' => $model->ListAssetStatus(),
+                                'options' => ['placeholder' => 'กรุณาเลือก...'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                 ],
@@ -313,114 +433,13 @@ $group = Yii::$app->request->get('group');
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                 ]
-                            ])->label('วิธีได้มา');
-                            ?>
-                        </div>
-
-                        <div class="col-md-6 purchase-method-field">
-                            <?php
-                            echo $form->field($model, 'purchase')->widget(Select2::classname(), [
-                                'data' => $model->ListPurchase(),
-                                'options' => ['placeholder' => 'กรุณาเลือก'],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ],
-                                'pluginEvents' => [
-                                    "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-purchase_text').val(data.text)
-                                        }",
-                                ]
-                            ])->label('วิธีการได้มา');
-                            ?>
-                        </div>
-
-                        <div class="col-md-6">
-                            <?php
-                            echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
-                                'data' => $model->ListVendor(),
-                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ],
-                                'pluginEvents' => [
-                                    "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-vendor_text').val(data.text)
-                                         }",
-                                ]
-                            ])->label('ผู้ขาย/ผู้บริจาค');
-                            ?>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="documentRef" class="form-label">เลขที่เอกสารอ้างอิง</label>
-                            <input type="text" class="form-control" id="documentRef"
-                                placeholder="เช่น เลขที่สัญญา, ใบสั่งซื้อ">
-                        </div>
+                            ])->label('สถานะ'); ?>
+                        </div>ข้อมูลคุณลักษณะเพิ่มเติม
                     </div>
                 </div>
 
-                <!-- ข้อมูลงบประมาณ -->
-                <div class="form-section">
-                    <h5 class="section-title">ข้อมูลงบประมาณ</h5>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <?php
-                            echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
-                                'data' => $model->ListBudgetdetail(),
-                                'options' => ['placeholder' => 'กรุณาเลือก'],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ],
-                                'pluginEvents' => [
-                                    "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-budget_type_text').val(data.text)
-                                         }",
-                                ]
-                            ])->label('ประเภทเงิน');
-                            ?>
-                        </div>
 
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
-                        </div>
 
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="budgetSource" class="form-label">แหล่งงบประมาณ</label>
-                            <input type="text" class="form-control" id="budgetSource">
-                        </div>
-
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
-                                'name' => 'department',
-                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                                'value' => 1,
-                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                'fontAwesome' => true,
-                                'asDropdown' => true,
-                                'multiple' => false,
-                                'options' => ['disabled' => false],
-                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ข้อมูลเฉพาะ -->
-                <div class="form-section">
-                    <h5 class="section-title">ข้อมูลเฉพาะ</h5>
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <?= $form->field($model, 'data_json[asset_options]')->widget(Summernote::class, ['useKrajeePresets' => true])->label('คุณลักษณะเฉพาะ'); ?>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- ปุ่มดำเนินการ -->
                 <div class="row mt-4">
@@ -441,7 +460,7 @@ $group = Yii::$app->request->get('group');
 
 
     </div>
-    
+
 </div>
 
 
@@ -456,9 +475,12 @@ $group = Yii::$app->request->get('group');
 ?>
 
 <!-- ถ้าเป็นรถยนต์ -->
-<?php if ($model->assetItem?->asset_category_id == 4): ?>
-    <?= $this->render('asset_item', ['model' => $model, 'form' => $form]) ?>
-<?php endif; ?>
+<?php // if ($model->assetItem?->asset_category_id == 4): 
+?>
+<?php //  $this->render('asset_item', ['model' => $model, 'form' => $form]) 
+?>
+<?php // endif; 
+?>
 
 <?php ActiveForm::end(); ?>
 
@@ -477,31 +499,57 @@ $js = <<< JS
  //กำหนดให้ปฏิทินแสดงวันที่
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
 
-$('#LoadTest').click(function (e) { 
-    e.preventDefault();
-
-    $('#asset_type_id').val('COM').trigger('change.select2');
-    $('#asset_category_id').val('COM').trigger('change.select2');
-
-    $('#asset_category_id').on('depdrop:afterChange', function () {
-
-});
-
-
-    // ✅ 1. bind event ก่อน
-    // $('#asset_category_id').one('depdrop:afterChange', function() {
-    //     // ✅ 2. ตั้งค่าค่าที่ต้องการใน dropdown ลูก
-    //     $('#asset_category_id').val('COM').trigger('change.select2');
-    // });
-
-    // ✅ 3. แล้วค่อย trigger parent
-    // $('#asset_type_id').val('COM').trigger('change');
-});
-
- 
 
  isFile()
- 
+
+ $('.next-code').on('click', function (e) { 
+    e.preventDefault();
+    $.ajax({
+        type: "post",
+        url: "/am/asset/next-code",
+        data: $('#form-asset').serialize(),
+        dataType: "json",
+        success: function (response) {
+            // ลบ class invalid เดิมทั้งหมดก่อน
+            $('#form-asset .is-invalid').removeClass('is-invalid');
+
+            if(response.status == 'error') {
+                for (let inputId in response.data) {
+                    let input = $('#' + inputId);
+
+                    // เพิ่ม class invalid ให้ input
+                    input.addClass('is-invalid');
+
+                    // แสดง toast แค่แจ้งเตือน ไม่แสดงใต้ input
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'ต้องระบุ FSN ก่อน',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }
+
+            if(response.status == 'success') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'ค้นหาหมายเลขครุภัณฑ์สำเร็จ',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+
+                // อัพเดตค่าใน input fsn_number
+                $('#asset-code').val(response.data);
+            }
+        }
+    });
+});
+
+
 \$('#form-asset').on('beforeSubmit', function (e) {
             var form = \$(this);
            

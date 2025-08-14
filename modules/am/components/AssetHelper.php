@@ -3,25 +3,24 @@
 namespace app\modules\am\components;
 
 use Yii;
-use app\modules\am\models\Fsn;
 use yii\base\Component;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
+use app\modules\am\models\Fsn;
 
 class AssetHelper extends Component
 {
 
-   
-
     public static function FsnGroup()
     {
-        return Fsn::find()->where(['name' => 'asset_group','active' => 1])->all();
+        return Fsn::find()->where(['name' => 'asset_group', 'active' => 1])->all();
     }
 
     //ค่าเสื่อมราคาตามวันที่ 1 รายการ
-    public static function Depreciation($id,$number)
+    public static function Depreciation($id, $number)
     {
-       
-    $sql = "SELECT x3.*,
+
+        $sql = "SELECT x3.*,
     ROUND(IF(x3.days = 0,0,(x3.year_price/12)),2) as price_month,
     IF((x3.price - total_price) < 1,1,ROUND((x3.price - total_price),2)) as total
     FROM(
@@ -64,20 +63,15 @@ class AssetHelper extends Component
     where m1<=DATE_FORMAT(DATE_FORMAT((SELECT receive_date FROM asset WHERE id = :id) + INTERVAL (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,'%Y-%m-%d')
     order by m1) as x1) as x2) as x3 where x3.date_number <= :number";
 
-    $querys = Yii::$app->db->createCommand($sql)
-    ->bindValue(':id', $id)
-    ->bindValue(':number', $number)
-    ->queryAll();
-      
-    if($querys){
-        return $querys;
-    }else{
-        return [];
+        $querys = Yii::$app->db->createCommand($sql)
+            ->bindValue(':id', $id)
+            ->bindValue(':number', $number)
+            ->queryAll();
+
+        if ($querys) {
+            return $querys;
+        } else {
+            return [];
+        }
     }
-    }
-
-    
-
-
-
 }

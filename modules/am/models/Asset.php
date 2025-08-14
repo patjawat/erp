@@ -3,12 +3,13 @@
 namespace app\modules\am\models;
 
 use Yii;
-use chillerlan\QRCode\QRCode;
 use yii\helpers\Html;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use chillerlan\QRCode\QRCode;
+use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\am\models\AssetItem;
 use app\modules\hr\models\Employees;
@@ -140,6 +141,7 @@ class Asset extends \yii\db\ActiveRecord
     }
 
 
+
     //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
     public function updateFsn()
     {
@@ -171,25 +173,24 @@ class Asset extends \yii\db\ActiveRecord
     public function ShowImg()
     {
         try {
-                   $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
-        if ($model) {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'asset'])->one();
+            if ($model) {
+                return [
+                    'image' => FileManagerHelper::getImg($model->id),
+                    'isFile' => true,
+                ];
+            } else {
+                return [
+                    'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
+                    'isFile' => false,
+                ];
+            }
+        } catch (\Throwable $th) {
             return [
-                'image' => FileManagerHelper::getImg($model->id),
-                'isFile' => true,
-            ];
-        } else {
-            return [
-                'image' => Yii::getAlias('@web') . '/img/placeholder-img.jpg',
+                'image' => '',
                 'isFile' => false,
             ];
         }
-        } catch (\Throwable $th) {
-          return [
-            'image' => '',
-            'isFile' => false,
-          ];
-        }
-
     }
 
     // ค่าเสื่อม
@@ -309,16 +310,16 @@ class Asset extends \yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
-public function landSize()
-{
-    $sizes = [
-        ($this->data_json['land_size'] ?? 0) > 0 ? $this->data_json['land_size'] . ' ไร่' : null,
-        ($this->data_json['land_size_ngan'] ?? 0) > 0 ? $this->data_json['land_size_ngan'] . ' งาน' : null,
-        ($this->data_json['land_size_tarangwa'] ?? 0) > 0 ? $this->data_json['land_size_tarangwa'] . ' ตารางวา' : null,
-    ];
+    public function landSize()
+    {
+        $sizes = [
+            ($this->data_json['land_size'] ?? 0) > 0 ? $this->data_json['land_size'] . ' ไร่' : null,
+            ($this->data_json['land_size_ngan'] ?? 0) > 0 ? $this->data_json['land_size_ngan'] . ' งาน' : null,
+            ($this->data_json['land_size_tarangwa'] ?? 0) > 0 ? $this->data_json['land_size_tarangwa'] . ' ตารางวา' : null,
+        ];
 
-    return implode('', array_filter($sizes));
-}
+        return implode('', array_filter($sizes));
+    }
 
 
 
@@ -336,15 +337,26 @@ public function landSize()
     //     return $this->hasOne(Categorise::class, ['code' => 'asset_item_id'])->andOnCondition(['name' => 'asset_item_id']);
     // }
 
-      public function getAssetGroup()
+    public function getAssetGroup()
     {
         return $this->hasOne(AssetGroup::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
     }
-
-    public function getAssetItem()
+    public function getAssetType()
     {
-        return $this->hasOne(AssetItem::class, ['id' => 'asset_item_id']);
+        return $this->hasOne(AssetType::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);;
     }
+
+        public function getAssetCategory()
+    {
+        return $this->hasOne(AssetCategory::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);;
+    }
+
+
+
+    // public function getAssetItem()
+    // {
+    //     return $this->hasOne(AssetItem::class, ['id' => 'asset_item_id']);
+    // }
 
     // วิธีการได้มา
     public function getPurchaseName()
@@ -414,6 +426,14 @@ public function landSize()
         }
     }
 
+    public function viewReceiveDate()
+    {
+        if ($this->receive_date) {
+            return ThaiDateHelper::formatThaiDate($this->receive_date);
+        } else {
+            return '-';
+        }
+    }
 
 
     public function viewStatus()

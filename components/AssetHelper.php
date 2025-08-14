@@ -13,6 +13,28 @@ use app\modules\hr\models\Organization;
 // ใช้งานเกี่ยวกับทรัพย์สิน
 class AssetHelper extends Component
 {
+
+        //คำนวนรหัสครุภัณฑ์ใหม่
+    public static function nextAssetCode($fsn_number)
+    {
+        $sql = "SELECT x.* FROM(SELECT 
+                CONCAT(:fsn,'/', 
+                    SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1), 
+                    '.', 
+                    LPAD(MAX(CAST(SUBSTRING_INDEX(code, '.', -1) AS UNSIGNED)) + 1, 2, '0')
+                ) AS next_code
+                    FROM asset 
+                    WHERE code LIKE CONCAT(:fsn, '/%')
+                    GROUP BY SUBSTRING_INDEX(SUBSTRING_INDEX(code, '/', -1), '.', 1)) as x
+                    order BY next_code DESC limit 1;";
+        $query = Yii::$app->db->createCommand($sql)
+            ->bindValue(':fsn', $fsn_number)
+            ->queryOne();
+
+        $newCode  = $fsn_number . '/' . substr(AppHelper::YearBudget(), -2) . '.01';
+        return $query['next_code'] ?? $newCode;
+    }
+    
     public static function ListAssetType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
