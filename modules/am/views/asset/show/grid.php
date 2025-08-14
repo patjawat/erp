@@ -103,30 +103,30 @@ use yii\helpers\Html;
                     </rect>
                 </div>
                 <div class="card-body pb-0 mb-0 position-relative">
-                    <p class="text-center mt-4"><?= $model->asset_name ?></p>
+                    <p class="text-center mt-4 fw-semibold"><?= $model->asset_name ?></p>
                     <div>
                         <ul class="list-inline fs-13 pb-0 mb-0r">
                             <li>
-                                <i class="bi bi-check2-circle"></i> <span
+                                <i class="fa-solid fa-angle-right"></i> <span
                                     class="">เลขครุภัณฑ์</span>
                                 <span class="text-danger"><?= $model->code ?><span>
                             </li>
                             <li>
-                                <i class="bi bi-check2-circle"></i>
-                                <span class="">วันเดือนปีทีซื้อ</span>
+                                <i class="fa-solid fa-angle-right"></i>
+                                <span class="">วันที่รับเข้า</span>
                                 <?= Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium') ?>
                             </li>
                             <li>
-                                <i class="bi bi-check2-circle"></i>
+                                <i class="fa-solid fa-angle-right"></i>
                                 <span class="">วิธีได้มา : </span> <?= $model->method_get ?>
                             </li>
                             <li>
-                                <i class="bi bi-check2-circle"></i>
+                                <i class="fa-solid fa-angle-right"></i>
                                 <span class="">ประเภทเงิน</span> :
                                 <?= $model->budget_type ?>
                             </li>
 
-                            <li class="text-truncate"><i class="bi bi-check2-circle text-truncate"></i>
+                            <li class="text-truncate"><i class="fa-solid fa-angle-right"></i>
                                 <span class="">ประจำหน่วยงาน</span>
                                 <?php if (isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''): ?>
                                     <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : '' ?>
@@ -138,7 +138,7 @@ use yii\helpers\Html;
                                 <div class="d-flex justify-content-between">
 
                                     <div>
-                                        <i class="bi bi-check2-circle"></i>
+                                        <i class="fa-solid fa-angle-right"></i>
                                         <span class="fw-semibold">มูลค่า</span> :
                                         <span
                                             class="fw-semibold"><?= isset($model->price) ? number_format($model->price, 2) : '' ?></span>
@@ -153,7 +153,7 @@ use yii\helpers\Html;
                     </div>
                     <div class="position-absolute top-0 start-50 translate-middle w-100 px-3">
 
-                        <div class="d-flex justify-content-between total font-weight-bold bg-secondary-subtle rounded p-2 w-100">
+                        <div class="d-flex justify-content-between total font-weight-bold bg-secondary-subtle rounded p-2 w-100 border-start border-end border-2 border-primary">
                             <?= $model->getOwner() ?>
                         </div>
                     </div>
