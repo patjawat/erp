@@ -19,7 +19,7 @@ $this->title = 'สำรองข้อมูล';
             <div class="mb-3">
                 <button id="backupAllBtn" class="btn btn-success"><i class="fa-solid fa-server"></i> สำรองทั้งหมด</button>
                 <button id="backupDbBtn" class="btn btn-primary"><i class="fa-solid fa-database"></i> สำรองฐานข้อมูล</button>
-                <button id="backupFileBtn" class="btn btn-success"><i class="fa-solid fa-file-circle-check"></i> สำรองไฟล์รูปภาพ</button>
+                <button id="backupFileBtn" class="btn btn-info"><i class="fa-solid fa-file-circle-check"></i> สำรองไฟล์รูปภาพ</button>
             </div>
 
         </div>
