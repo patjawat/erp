@@ -86,15 +86,22 @@ function startBackup(url) {
         },
         success: function(res){
             progressBar.css('width', '100%').text('100%');
+
+
             if(res.success){
                 Swal.fire('สำเร็จ', 'สำรองข้อมูลเสร็จสิ้น: ' + res.file, 'success');
                 // เพิ่มไฟล์ใหม่ในรายการ
-                $('#backupList').append(
-                    '<li class="list-group-item d-flex justify-content-between align-items-center">' +
-                    '<span><a href="download?file=' + res.file + '" target="_blank">' + res.file + '</a></span>' +
-                    '<span><button class="btn btn-sm btn-danger deleteFileBtn" data-file="' + res.file + '">ลบ</button></span>' +
-                    '</li>'
-                );
+         let fileSizeText = res.size || '';
+            $('#backupList').append(
+                '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                '<span><a href="/backup/default/download?file='+res.file+'" target="_blank">'+res.file+'</a> ' +
+                (fileSizeText ? '(<small class="text-muted">'+fileSizeText+'</small>)' : '') +
+                '</span>' +
+                '<span><button class="btn btn-sm btn-danger deleteFileBtn" data-file="'+res.file+'"><i class="fa-solid fa-trash"></i> ลบ</button></span>' +
+                '</li>'
+            );
+
+                
             } else {
                 Swal.fire('ผิดพลาด', (res.error || 'สำรองข้อมูลไม่สำเร็จ'), 'error');
             }

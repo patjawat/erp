@@ -25,84 +25,56 @@ class DefaultController extends Controller
         ]);
     }
 
-
     public function actionBackupAll()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $backupPath = Yii::getAlias($this->backupPath);
-        if (!is_dir($backupPath)) mkdir($backupPath, 0777, true);
+        $dbDir = $backupPath . '/database';
+        $fileDir = $backupPath . '/fileupload';
+
+        // สร้าง directory ถ้ายังไม่มี
+        foreach([$backupPath, $dbDir, $fileDir] as $dir){
+            if(!is_dir($dir)) mkdir($dir, 0777, true);
+        }
 
         $date = date('Y-m-d_H-i-s');
         $archiveFile = "$backupPath/backup_all_{$date}.tar.gz";
 
         // 1️⃣ Backup Database
         $db = Yii::$app->db;
-        preg_match('/host=([^;]+)/', $db->dsn, $matches);
-        $host = $matches[1];
-        preg_match('/dbname=([^;]+)/', $db->dsn, $matches);
-        $dbname = $matches[1];
+        preg_match('/host=([^;]+)/', $db->dsn, $matches); $host = $matches[1];
+        preg_match('/dbname=([^;]+)/', $db->dsn, $matches); $dbname = $matches[1];
 
-        $dbFile = "$backupPath/{$dbname}_{$date}.sql";
+        $dbFile = "$dbDir/{$dbname}_{$date}.sql";
         $mysqldumpPath = '/usr/bin/mysqldump'; // ตรวจสอบ path จริงใน container
         $cmd = "$mysqldumpPath -h $host -u {$db->username} -p'{$db->password}' $dbname > $dbFile 2>&1";
         exec($cmd, $out, $ret);
-        if ($ret !== 0) {
-            return ['success' => false, 'error' => $out];
+        if($ret !== 0){
+            return ['success'=>false, 'error'=>$out];
         }
 
-        // 2️⃣ รวม File Upload และ Database SQL เข้าใน .tar.gz
+        // 2️⃣ คัดลอก File Upload เข้า directory ของ backup
         $fileUploadPath = Yii::getAlias($this->fileUploadPath);
-        $tarCmd = "tar -czf $archiveFile -C $backupPath " . basename($dbFile) . " -C $fileUploadPath .";
+        $copyCmd = "cp -r $fileUploadPath/. $fileDir/";
+        exec($copyCmd);
+
+        // 3️⃣ บีบอัด directory ทั้งหมดเป็น tar.gz
+        $tarCmd = "tar -czf $archiveFile -C $backupPath database -C $backupPath fileupload";
         exec($tarCmd, $out2, $ret2);
 
-        // ลบไฟล์ SQL ชั่วคราว
-        if (file_exists($dbFile)) unlink($dbFile);
+        // ลบไฟล์ SQL ชั่วคราว และ fileupload temp
+        // หากต้องการเก็บแค่ tar.gz ให้ uncomment
+        // exec("rm -rf $dbDir $fileDir");
 
-        if ($ret2 === 0) {
+        if($ret2 === 0){
             clearstatcache();
             $sizeBytes = filesize($archiveFile);
-            if ($sizeBytes >= 1024 * 1024) {
-                $sizeText = round($sizeBytes / (1024 * 1024), 2) . ' MB';
-            } elseif ($sizeBytes >= 1024) {
-                $sizeText = round($sizeBytes / 1024, 2) . ' KB';
-            } else {
-                $sizeText = $sizeBytes . ' B';
-            }
-
-            return ['success' => true, 'file' => basename($archiveFile), 'size' => $sizeText];
+            $sizeText = $sizeBytes >= 1024*1024 ? round($sizeBytes/(1024*1024),2).' MB' :
+                        ($sizeBytes >= 1024 ? round($sizeBytes/1024,2).' KB' : $sizeBytes.' B');
+            return ['success'=>true, 'file'=>basename($archiveFile), 'size'=>$sizeText];
         } else {
-            return ['success' => false, 'error' => $out2];
-        }
-    }
-
-    // --- Backup Database ---
-    public function actionBackupDatabase()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $backupPath = Yii::getAlias($this->backupPath);
-        if (!is_dir($backupPath)) mkdir($backupPath, 0777, true);
-
-        $db = Yii::$app->db;
-        preg_match('/host=([^;]+)/', $db->dsn, $matches);
-        $host = $matches[1];
-        preg_match('/dbname=([^;]+)/', $db->dsn, $matches);
-        $dbname = $matches[1];
-
-        $date = date('Y-m-d_H-i-s');
-        $dbFile = "$backupPath/{$dbname}_{$date}.sql";
-
-        $mysqldumpPath = '/usr/bin/mysqldump'; // ตรวจสอบ path จริง
-        $cmd = "$mysqldumpPath -h $host -u {$db->username} -p'{$db->password}' $dbname > $dbFile 2>&1";
-        exec($cmd, $out, $ret);
-
-        if ($ret === 0) {
-            exec("gzip -f $dbFile");
-            $dbArchive = "$dbFile.gz";
-            return ['success' => true, 'file' => basename($dbArchive)];
-        } else {
-            return ['success' => false, 'error' => $out];
+            return ['success'=>false, 'error'=>$out2];
         }
     }
 
