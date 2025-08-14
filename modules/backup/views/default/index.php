@@ -32,19 +32,30 @@ $this->title = 'สำรองข้อมูล';
 
         <!-- <h3>ไฟล์สำรองข้อมูล</h3> -->
         <ul id="backupList" class="list-group">
-            <?php foreach ($backupFiles as $file): ?>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
-                        <a href="<?= Url::to(['download', 'file' => basename($file)]) ?>" target="_blank">
-                            <?= basename($file) ?>
-                        </a>
-                    </span>
-                    <span>
-                        <button class="btn btn-sm btn-danger deleteFileBtn" data-file="<?= basename($file) ?>">ลบ</button>
-                    </span>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+    <?php foreach($backupFiles as $file): 
+        $filePath = $file;
+        $size = filesize($filePath);
+        if ($size >= 1024*1024) {
+            $sizeText = round($size / (1024*1024), 2) . ' MB';
+        } elseif ($size >= 1024) {
+            $sizeText = round($size / 1024, 2) . ' KB';
+        } else {
+            $sizeText = $size . ' B';
+        }
+    ?>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                <a href="<?= Url::to(['download', 'file'=>basename($file)]) ?>" target="_blank">
+                    <?= basename($file) ?>
+                </a>
+                <small class="text-muted">(<?= $sizeText ?>)</small>
+            </span>
+            <span>
+                <button class="btn btn-sm btn-danger deleteFileBtn" data-file="<?= basename($file) ?>"><i class="fa-solid fa-trash"></i> ลบ</button>
+            </span>
+        </li>
+    <?php endforeach; ?>
+</ul>
     </div>
 </div>
 

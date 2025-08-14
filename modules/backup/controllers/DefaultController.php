@@ -26,27 +26,29 @@ class DefaultController extends Controller
     }
 
 
-     public function actionBackupAll()
+    public function actionBackupAll()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $backupPath = Yii::getAlias($this->backupPath);
-        if(!is_dir($backupPath)) mkdir($backupPath, 0777, true);
+        if (!is_dir($backupPath)) mkdir($backupPath, 0777, true);
 
         $date = date('Y-m-d_H-i-s');
         $archiveFile = "$backupPath/backup_all_{$date}.tar.gz";
 
         // 1️⃣ Backup Database
         $db = Yii::$app->db;
-        preg_match('/host=([^;]+)/', $db->dsn, $matches); $host = $matches[1];
-        preg_match('/dbname=([^;]+)/', $db->dsn, $matches); $dbname = $matches[1];
+        preg_match('/host=([^;]+)/', $db->dsn, $matches);
+        $host = $matches[1];
+        preg_match('/dbname=([^;]+)/', $db->dsn, $matches);
+        $dbname = $matches[1];
 
         $dbFile = "$backupPath/{$dbname}_{$date}.sql";
         $mysqldumpPath = '/usr/bin/mysqldump'; // ตรวจสอบ path จริงใน container
         $cmd = "$mysqldumpPath -h $host -u {$db->username} -p'{$db->password}' $dbname > $dbFile 2>&1";
         exec($cmd, $out, $ret);
-        if($ret !== 0){
-            return ['success'=>false, 'error'=>$out];
+        if ($ret !== 0) {
+            return ['success' => false, 'error' => $out];
         }
 
         // 2️⃣ รวม File Upload และ Database SQL เข้าใน .tar.gz
@@ -55,15 +57,25 @@ class DefaultController extends Controller
         exec($tarCmd, $out2, $ret2);
 
         // ลบไฟล์ SQL ชั่วคราว
-        if(file_exists($dbFile)) unlink($dbFile);
+        if (file_exists($dbFile)) unlink($dbFile);
 
-        if($ret2 === 0){
-            return ['success'=>true, 'file'=>basename($archiveFile)];
+        if ($ret2 === 0) {
+            clearstatcache();
+            $sizeBytes = filesize($archiveFile);
+            if ($sizeBytes >= 1024 * 1024) {
+                $sizeText = round($sizeBytes / (1024 * 1024), 2) . ' MB';
+            } elseif ($sizeBytes >= 1024) {
+                $sizeText = round($sizeBytes / 1024, 2) . ' KB';
+            } else {
+                $sizeText = $sizeBytes . ' B';
+            }
+
+            return ['success' => true, 'file' => basename($archiveFile), 'size' => $sizeText];
         } else {
-            return ['success'=>false, 'error'=>$out2];
+            return ['success' => false, 'error' => $out2];
         }
     }
-    
+
     // --- Backup Database ---
     public function actionBackupDatabase()
     {
