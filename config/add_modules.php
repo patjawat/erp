@@ -80,5 +80,6 @@ $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // mod
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
 $modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
+$modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
 
 return $modules;

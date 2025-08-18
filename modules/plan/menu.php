@@ -1,0 +1,28 @@
+<?php
+use yii\helpers\Html;
+?>
+<li class="nav-item mt-1">
+    <?php echo  Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/index'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')])?>
+</li>
+<li class="nav-item mt-1">
+    <?php echo  Html::a('<i class="fa-solid fa-dolly me-1"></i> แผนคำขอพัสดุ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/parcel'],['class' => 'nav-link ' . (isset($active) && $active == 'parcel' ? 'active' : '')])?>
+</li>
+<li class="nav-item mt-1">
+    <?php echo  Html::a('<i class="fa-solid fa-user-plus me-1"></i> แผนคำขอบุคลากร <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/personnel'],['class' => 'nav-link ' . (isset($active) && $active == 'personnel' ? 'active' : '')])?>
+</li>
+<li class="nav-item mt-1">
+    <?php echo  Html::a('<i class="fa-solid fa-file-invoice me-1"></i> แผนคำขอค่าใช้สอย <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/expenses'],['class' => 'nav-link ' . (isset($active) && $active == 'expenses' ? 'active' : '')])?>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#"
+        id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-gear me-1"></i> คั้งค่า
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทงบ',['/plan/plan-budget-type'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> รายจ่าย ',['/plan/plan-item'],['class' => 'dropdown-item'])?>
+
+    </div>
+</li>

@@ -1,0 +1,460 @@
+<?php
+
+use yii\helpers\Url;
+use yii\helpers\Html;
+use app\models\Categorise;
+use kartik\widgets\DepDrop;
+use kartik\widgets\Select2;
+use kartik\tree\TreeViewInput;
+use kartik\widgets\ActiveForm;
+use app\modules\am\components\AssetHelper;
+
+/** @var $model app\modules\plan\models\Plan */
+/** @var $items app\modules\plan\models\PlanItem[] */
+
+$form = ActiveForm::begin([
+    'id' => 'form',
+    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/plan/parcel/validator']
+]);
+?>
+
+<div class="row">
+    <div class="col-lg-9 col-md-10">
+        <div class="card">
+            <div class="card-body">
+
+                <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
+                <!-- ข้อมูลแผน -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
+                    </div>
+                    <div class="col-md-9">
+                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
+                            'name' => 'department',
+                            'id' => 'treeID',
+                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                            'value' => 1,
+                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                            'fontAwesome' => true,
+                            'asDropdown' => true,
+                            'multiple' => false,
+                            'options' => ['disabled' => false],
+                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'asset_group_id')->widget(Select2::classname(), [
+                            'data' => AssetHelper::listAssetGroup(),
+                            'options' => [
+                                'placeholder' => 'หมวดพัสดุ',
+                                'id' => 'asset_group_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                            'pluginEvents' => [
+                                "select2:select" => "function() { 
+                console.log($(this).val());
+            // $(this).submit(); 
+            }",
+                            ],
+                        ])->label('กลุ่มพัสดุ');
+                        ?>
+                    </div>
+
+                    <div class="col-lg-4 col-md-4 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'asset_type_id')->widget(DepDrop::classname(), [
+                            'options' => [
+                                'id' => 'asset_type_id',
+                                'placeholder' => 'ทุกประเภท',
+                            ],
+                            'type' => DepDrop::TYPE_SELECT2,
+                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+                            'pluginOptions' => [
+                                'depends' => ['asset_group_id'],
+                                'url' => Url::to(['/am/asset-item/get-asset-type']),
+                                'loadingText' => 'กำลังโหลด ...',
+                                'initialize' => true,
+                                'initDepends' => ['asset_group_id'], // ✅ ต้องเป็น parent field
+                                'params' => ['depdrop_all_params' => 'asset_type_id'],
+                            ],
+                            'data' => $model->asset_type_id
+                                ? [$model->asset_type_id => Categorise::findOne(['code' => $model->asset_type_id, 'name' => 'asset_type'])->title]
+                                : [],
+                        ])->label('ประเภท');
+
+                        ?>
+                    </div>
+                    <div class="col-lg-5 col-md-5 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
+                            'options' => [
+                                'placeholder' => 'ทุกหมวดหมู่',
+                                'id' => 'asset_category_id'
+                            ],
+                            'type' => DepDrop::TYPE_SELECT2,
+                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+                            'pluginOptions' => [
+                                'depends' => ['asset_type_id'],
+                                'url' => Url::to(['/am/asset-item/get-asset-category']),
+                                'loadingText' => 'กำลังโหลด ...',
+                                'params' => ['depdrop_all_params' => 'asset_category_id'],
+                                'initDepends' => ['asset_type_id'],
+                                'initialize' => true,
+                            ],
+                            'pluginEvents' => [
+                                "select2:select" => "function() { 
+                            console.log('Asset category selected:', $(this).val());
+                        }",
+                            ],
+
+                        ])->label('หมวดพัสดุ');
+                        ?>
+
+
+
+                    </div>
+                    <div class="col-lg-7 col-md-7 col-sm-12">
+                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                    </div>
+                    <div class="col-lg-5 col-md-5 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'price_ref')->widget(Select2::classname(), [
+                            'data' => $model->listPriceRef(),
+                            'options' => [
+                                'placeholder' => 'เลือกอ้างการอิงตามราคา',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                            'pluginEvents' => [
+                                "select2:select" => "function() { 
+                if($(this).val() == 'MARKET')
+                {
+                    $('.btn-disable').hide()
+                    $('#add-row').show()
+                    $('#btn-show-asset').hide()
+                }else{
+                    $('.btn-disable').hide()
+                    $('#add-row').hide()
+                    $('#btn-show-asset').show()
+                    }
+            }",
+                            ],
+                        ])->label('อ้างอิงตามราคา');
+                        ?>
+                    </div>
+                </div>
+
+
+
+                <!-- 
+<div class="row">
+    <div class="col-md-6"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01']) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'budget_used')->input('number', ['step' => '0.01']) ?></div>
+</div> -->
+
+                <hr>
+                <h4>รายการในแผน</h4>
+
+                <table class="table table-bordered" id="item-table">
+                    <thead>
+                        <tr>
+                            <th>ชื่อรายการ</th>
+                            <th width="150">จำนวน</th>
+                            <th width="200">ราคาต่อหน่วย</th>
+                            <th width="200" class="text-end">รวม</th>
+                            <th width="50">#</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($items): ?>
+                            <?php foreach ($items as $i => $item): ?>
+                                <tr>
+                                    <td><input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control"></td>
+                                    <td><input type="number" name="items[<?= $i ?>][qty]" value="<?= $item->qty ?>" class="form-control qty"></td>
+                                    <td><input type="number" step="0.01" name="items[<?= $i ?>][unit_price]" value="<?= $item->unit_price ?>" class="form-control price"></td>
+                                    <td class="total text-end"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
+                                    <td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-disable" disabled><i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button>
+                        <button type="button" class="btn btn-secondary" id="add-row"><i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button>
+                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/plan/parcel/list-asset-item'], ['class' => 'btn btn-primary', 'id' => 'btn-show-asset']) ?>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
+                        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col-3">
+
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 1</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label('ตุลาคม') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label('พฤศจิกายน') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label('ธันวาคม') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 2</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label('มกราคม') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label('กุมภาพันธ์') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label('มีนาคม') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 3</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label('เมษายน') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label('พฤษภาคม') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label('มิถุนายน') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 4</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label('กรกฎาคม') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label('สิงหาคม') ?>
+                            </div>
+                            <div class="col-6">
+                                <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label('กันยายน') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<?php ActiveForm::end(); ?>
+
+<?php
+$js = <<<JS
+
+checkBtnAdd()
+function checkBtnAdd()
+{
+    if($('#planorder-price_ref').val() === 'MARKET'){
+                    $('.btn-disable').hide()
+                    $('#add-row').show()
+                    $('#btn-show-asset').hide()
+    }else{
+          $('.btn-disable').hide()
+                    $('#add-row').hide()
+                    $('#btn-show-asset').show()
+    }
+}
+
+
+$('#form').on('beforeSubmit', function (e) {
+    e.preventDefault();
+    let form = $(this);
+
+    let valid = true;
+        let message = "";
+    $("#item-table tbody tr").each(function(index, row){
+        // ดึง input แต่ละช่อง
+        let item_name = $(row).find("input[name*='[item_name]']");
+        let qty       = $(row).find("input[name*='[qty]']");
+        let price     = $(row).find("input[name*='[unit_price]']");
+
+        // reset class ก่อน
+        item_name.removeClass("is-invalid");
+        qty.removeClass("is-invalid");
+        price.removeClass("is-invalid");
+
+        // ตรวจสอบค่า
+        if((item_name.val() || "").trim() === ""){
+            valid = false;
+            item_name.addClass("is-invalid");
+        }
+        if((qty.val() || "").trim() === ""){
+            valid = false;
+            qty.addClass("is-invalid");
+        }
+        if((price.val() || "").trim() === ""){
+            valid = false;
+            price.addClass("is-invalid");
+        }
+    });
+
+
+        // if(!valid){
+        //     e.preventDefault(); // หยุดการ submit
+        //     return false;
+        // }
+
+
+    Swal.fire({
+        title: 'ยืนยันการบันทึก?',
+        text: "คุณต้องการบันทึกข้อมูลหรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, บันทึกเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                beforeSend: async function () {
+
+                },
+                success: async function (response) {
+                    if (response.status === 'success') {
+                        closeModal();
+                        await Swal.fire({
+                            title: 'บันทึกสำเร็จ!',
+                            text: 'ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 2000, // ปิดอัตโนมัติใน 3 วินาที
+                            confirmButtonText: 'ตกลง'
+                        });
+                        window.location.href = response.url; // Redirect to the provided URL
+                    }
+                },
+            });
+        }
+    });
+
+    return false;
+});
+
+
+if($('#planorder-price_ref').val() == '')
+{
+    $('.btn-disable').show()
+    $('#add-row').hide()
+    $('#btn-show-asset').hide()
+}
+
+
+$('#btn-show-asset').click(function (e) { 
+    e.preventDefault();
+     beforLoadModal();
+
+    $.ajax({
+        type: "get",
+        url: $(this).attr('href'),
+        data: {
+            asset_group_id:$('#asset_group_id').val(),
+            asset_type_id: $('#asset_type_id').val(),
+            asset_category_id: $('#asset_category_id').val(),
+        },
+        dataType: "json",
+        success: function (response) {
+      $("#main-modal").modal("show");
+      $("#main-modal-label").html(response.title);
+      $(".modal-body").html(response.content);
+      $(".modal-footer").html(response.footer);
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+      $(".modal-dialog").addClass('modal-xxl');
+      $(".modal-content").addClass("card-outline card-primary");
+    },
+     error: function (xhr) {
+      $("#main-modal-label").html("เกิดข้อผิดพลาด");
+      $(".modal-body").html(
+        '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
+      );
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+      $(".modal-dialog").addClass("modal-md");
+    
+    },
+  });
+});
+
+let rowIndex = $("#item-table tbody tr").length;
+$("#add-row").on("click", function(){
+    let row = `<tr>
+        <td><input type="text" name="items[\${rowIndex}][item_name]" class="form-control"></td>
+        <td><input type="number" name="items[\${rowIndex}][qty]" class="form-control qty"></td>
+        <td><input type="number" step="0.01" name="items[\${rowIndex}][unit_price]" class="form-control price"></td>
+        <td class="total text-end fw-semibold">0.00</td>
+        <td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>
+    </tr>`;
+    $("#item-table tbody").append(row);
+    rowIndex++;
+});
+
+$(document).on("click",".remove-row", function(){ $(this).closest("tr").remove(); });
+$(document).on("input",".qty, .price", function(){
+    let tr = $(this).closest("tr");
+    let qty = parseFloat(tr.find(".qty").val())||0;
+    let price = parseFloat(tr.find(".price").val())||0;
+    tr.find(".total").text((qty*price).toFixed(2));
+});
+
+
+
+
+JS;
+$this->registerJs($js);
+?>

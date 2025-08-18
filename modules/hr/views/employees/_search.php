@@ -163,19 +163,19 @@ use app\modules\hr\models\Organization;
 $js = <<< JS
 
 
-$('#show').val(localStorage.getItem('right-setting'))
-console.log(localStorage.getItem('right-setting'));
-$("#filter-emp").addClass(localStorage.getItem('right-setting'));
+// $('#show').val(localStorage.getItem('right-setting'))
+// console.log(localStorage.getItem('right-setting'));
+// $("#filter-emp").addClass(localStorage.getItem('right-setting'));
 
-$(".filter-emp").on("click", function(){
-  $("#filter-emp").addClass("show");
-  localStorage.setItem('right-setting','show')
-})
+// $(".filter-emp").on("click", function(){
+//   $("#filter-emp").addClass("show");
+//   localStorage.setItem('right-setting','show')
+// })
 
-$(".filter-emp-close").on("click", function(){
-    $(".right-setting").removeClass("show");
-    localStorage.setItem('right-setting','hide')
-})
+// $(".filter-emp-close").on("click", function(){
+//     $(".right-setting").removeClass("show");
+//     localStorage.setItem('right-setting','hide')
+// })
 
 // const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 // const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))

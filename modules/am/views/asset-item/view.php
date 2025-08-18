@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
          <div class="row mb-2">
             <div class="col-md-4 fw-semibold">FSN:</div>
-            <div class="col-md-8 fw-semibold"><?=$model->code?></div>
+            <div class="col-md-8 fw-semibold"><?=$model->fsn?></div>
         </div>
     </div>
 </div>

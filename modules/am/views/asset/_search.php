@@ -12,6 +12,7 @@ use app\components\AppHelper;
 use kartik\tree\TreeViewInput;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\am\components\AssetHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetSearch $model */
@@ -55,7 +56,7 @@ $listAssetType= ArrayHelper::map(Categorise::find()->where(['name' => 'asset_typ
         <?php
 
             echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-                'data' => $model->listAssetType(),
+                'data' => AssetHelper::listAssetType(),
                     'options' => [
                     'placeholder' => 'ทุกประเภท',
                     'id' => 'asset_type_id'

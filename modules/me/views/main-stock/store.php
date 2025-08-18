@@ -56,7 +56,7 @@ $products = $cart->getItems();
             ?>
             <div>
 <?php if($cart->getCount() == 0):?>
-    <button type="button" class="btn btn-primary rounded-pill disabled">
+    <button type="button" class="btn btn-primary rounded-pfill disabled">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount"> 0 </span> รายการ
                     </button>
 <?php else:?>

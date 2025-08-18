@@ -58,9 +58,22 @@ class AssetItemController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+
+        $model = $this->findModel($id);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -68,7 +81,7 @@ class AssetItemController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-     public function actionCreate()
+    public function actionCreate()
     {
         $model = new AssetItem([
             'asset_group_id' => 'EQUIP',
@@ -76,9 +89,9 @@ class AssetItemController extends Controller
             'asset_category_id' => $this->request->get('asset_category_id'),
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
         ]);
-        
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) ) {
+            if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->code = $model->NextId();
                 $model->save();
@@ -89,10 +102,9 @@ class AssetItemController extends Controller
             }
         } else {
             $model->loadDefaultValues();
-          
         }
 
-         if ($this->request->isAjax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -131,7 +143,7 @@ class AssetItemController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-        
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -147,25 +159,47 @@ class AssetItemController extends Controller
         }
     }
 
-    public function actionGetAssetCategory()
-        {
-            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-            $out = [];
-            if (isset($_POST['depdrop_parents'])) {
-                $parents = $_POST['depdrop_parents'];
-                if ($parents != null) {
-                    $type_id = $parents[0];
-                    $out = Categorise::find()
-                        ->where(['category_id' => $type_id,'name' => 'asset_category'])
-                        ->select(['code as id', 'title as name'])
-                        ->asArray()
-                        ->all();
-                    return ['output' => $out, 'selected' => ''];
-                }
+        public function actionGetAssetType()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $parents = $_POST['depdrop_parents'];
+            if ($parents != null) {
+                $group_id = $parents[0];
+                $out = Categorise::find()
+                    ->where(['group_id' => $group_id, 'name' => 'asset_type'])
+                    ->select(['code as id', 'title as name'])
+                    ->asArray()
+                    ->all();
+                return ['output' => $out, 'selected' => ''];
             }
-            return ['output' => '', 'selected' => ''];
         }
+        return ['output' => '', 'selected' => ''];
+    }
+
+    public function actionGetAssetCategory()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $parents = $_POST['depdrop_parents'];
+
+            if ($parents != null) {
+                $type_id = $parents[0];
+                $out = Categorise::find()
+                    ->where(['category_id' => $type_id, 'name' => 'asset_category'])
+                    ->select(['code as id', 'title as name'])
+                    ->asArray()
+                    ->all();
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+        return ['output' => '', 'selected' => ''];
+    }
 
 
 
@@ -183,35 +217,34 @@ class AssetItemController extends Controller
         return $this->redirect(['index']);
     }
 
-       public function actionListItem()
+    public function actionListItem()
     {
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
-                'or',
-                ['LIKE', 'code', $searchModel->q],
-                ['LIKE', 'title', $searchModel->q],
-            ]);
-        if($this->request->isAjax){
+            'or',
+            ['LIKE', 'code', $searchModel->q],
+            ['LIKE', 'title', $searchModel->q],
+        ]);
+        if ($this->request->isAjax) {
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'title' => $this->request->get('title'),
-            'content' => $this->renderAjax('list_item', [
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('list_item', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]),
+            ];
+        } else {
+            return $this->render('list_item', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-            ]),
-        ];
-
-        }else{
-            return $this->render('list_item', [
-                            'searchModel' => $searchModel,
-                            'dataProvider' => $dataProvider,
             ]);
         }
     }
-    
-    
+
+
 
     /**
      * Finds the AssetItem model based on its primary key value.

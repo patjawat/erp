@@ -278,3 +278,5 @@ ALTER TABLE `meeting` ADD `room_type_id` VARCHAR(255) NULL COMMENT 'รูปแ
 เปลี่ยน date time เป็น date
 ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFAULT NULL COMMENT 'วันที่และเวลาที่เกิดการเคลื่อนไหว';
 
+
+

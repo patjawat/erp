@@ -35,10 +35,6 @@ class AssetHelper extends Component
         return $query['next_code'] ?? $newCode;
     }
     
-    public static function ListAssetType()
-    {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
-    }
 
     //
     public static function CheckAssetItem($typeName,$code, $title)

@@ -4,12 +4,36 @@ namespace app\modules\am\components;
 
 use Yii;
 use yii\base\Component;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Fsn;
 
 class AssetHelper extends Component
 {
+
+    public static function listAssetGroup()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(), 'code', 'title');
+    }
+
+    public static function listAssetType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 4])->all(), 'code', 'title');
+    }
+
+    public function listAssetTypex()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 4])->all(), 'code', 'title');
+    }
+
+    public static function listAssetCategory()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(), 'code', 'title');
+    }
+
+
+
 
     public static function FsnGroup()
     {

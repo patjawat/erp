@@ -50,11 +50,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center" scope="col" style="width: 5%">#</th>
                     <th scope="col" style="width: 8%">รหัส</th>
                     <th scope="col" style="width: 12%">FSN</th>
-                    <th scope="col" style="width: 40%">ชื่อทรัพย์สิน</th>
+                    <th scope="col" style="width: 35%">ชื่อทรัพย์สิน</th>
                     <th scope="col" style="width: 5%">หน่วย</th>
                     <th scope="col" style="width: 12%">ประเภท</th>
                     <th scope="col" style="width: 8%">หมวดหมู่</th>
-                    <th class="text-center" scope="col" style="width: 18%">จัดการ</th>
+                    <th class="text-end fw-blod" scope="col" style="width: 4%">ราคากลาง</th>
+                    <th class="text-center" scope="col" style="width: 120px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
@@ -70,8 +71,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     echo $item->assetType->title ?? '-';
                     ?></td>
                     <td><?=$item->category->title ?? '-'?></td>
+                    <td class="text-end fw-blod"><?=$item->price ?? '-'?></td>
                     <td class="text-center">
-                          <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-md']])?>
+                          <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-lg']])?>
                                 <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
                                 <?=Html::a('<i class="bi bi-trash"></i>',['delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
 

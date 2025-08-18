@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -55,6 +56,67 @@ class HelloController extends Controller
 
             $db->createCommand($sql)->execute();
             echo  "success \n";
+        }
     }
-}
+
+
+
+    public function actionPlanItem()
+    {
+        $count = (new \yii\db\Query())->from('categorise')->where(['name' => 'plan_item'])->count();
+        if ($count == 0) {
+            $items = [
+                // ======================= รายจ่ายบุคลากร (PE) =======================
+                ['code' => 'PE1',  'category_id' => 'PE',  'title' => 'ค่าจ้างลูกจ้างชั่วคราว / พนักงานกระทรวง','name' => 'plan_item'],
+                ['code' => 'PE2',  'category_id' => 'PE',  'title' => 'ค่าล่วงเวลางานบริการ / งานสนับสนุน','name' => 'plan_item'],
+                ['code' => 'PE3',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนการปฏิบัติงานเวรผลัดบ่ายหรือผลัดดึกของเจ้าหน้าที่','name' => 'plan_item'],
+                ['code' => 'PE4',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนเงินเพิ่มพิเศษไม่ทำเวชปฏิบัติส่วนตัว หรือปฏิบัติงาน รพ.เอกชน','name' => 'plan_item'],
+                ['code' => 'PE5',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.11)','name' => 'plan_item'],
+                ['code' => 'PE6',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนตามผลการปฏิบัติงาน (ฉ.12)','name' => 'plan_item'],
+                ['code' => 'PE7',  'category_id' => 'PE',  'title' => 'เงินเพิ่ม (พ.ต.ส)','name' => 'plan_item'],
+                ['code' => 'PE8',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานของเจ้าหน้าที่ (นอกเวลา) ฉ5','name' => 'plan_item'],
+                ['code' => 'PE9',  'category_id' => 'PE',  'title' => 'ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานในคลินิกพิเศษเฉพาะทางนอกเวลาราชการ (SMC)','name' => 'plan_item'],
+                ['code' => 'PE10', 'category_id' => 'PE',  'title' => 'ค่าตอบแทนอื่น','name' => 'plan_item'],
+                ['code' => 'PE11', 'category_id' => 'PE',  'title' => 'เงินค่าใช้จ่ายบุคลากรอื่น','name' => 'plan_item'],
+                ['code' => 'PE12', 'category_id' => 'PE',  'title' => 'ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.10)','name' => 'plan_item'],
+
+                // ======================= รายจ่ายจากการดำเนินงาน (OE) =======================
+                ['code' => 'OE1',  'category_id' => 'OE',  'title' => 'ค่ายา','name' => 'plan_item'],
+                ['code' => 'OE2',  'category_id' => 'OE',  'title' => 'ค่าเวชภัณฑ์มิใช่ยา','name' => 'plan_item'],
+                ['code' => 'OE3',  'category_id' => 'OE',  'title' => 'ค่าวัสดุ','name' => 'plan_item'],
+                ['code' => 'OE4',  'category_id' => 'OE',  'title' => 'ค่าสาธารณูปโภค','name' => 'plan_item'],
+                ['code' => 'OE5',  'category_id' => 'OE',  'title' => 'ค่าใช้สอย','name' => 'plan_item'],
+                ['code' => 'OE6',  'category_id' => 'OE',  'title' => 'ค่าใช้จ่ายดำเนินงานอื่น','name' => 'plan_item'],
+
+                // ======================= รายจ่ายลงทุน (CE) =======================
+                ['code' => 'CE1',  'category_id' => 'CE',  'title' => 'ค่าครุภัณฑ์','name' => 'plan_item'],
+                ['code' => 'CE2',  'category_id' => 'CE',  'title' => 'ค่าที่ดินและสิ่งก่อสร้าง','name' => 'plan_item'],
+                ['code' => 'CE3',  'category_id' => 'CE',  'title' => 'ค่าครุภัณฑ์ต่ำกว่าเกณฑ์','name' => 'plan_item'],
+
+                // ======================= รายจ่ายอื่น (OE-OTH) =======================
+                ['code' => 'OE-OTH1', 'category_id' => 'OE-OTH', 'title' => 'รายจ่ายสนับสนุน รพ.สต. รพช. รพท. รพศ. สสอ. สสจ.','name' => 'plan_item'],
+                ['code' => 'OE-OTH2', 'category_id' => 'OE-OTH', 'title' => 'รายจ่ายอื่นๆ','name' => 'plan_item'],
+            ];
+
+
+
+      foreach ($items as $item) {
+            $exists = (new \yii\db\Query())
+                ->from('categorise')
+                ->where(['name' => 'plan_item', 'code' => $item['code']])
+                ->exists();
+
+            if (!$exists) {
+                Yii::$app->db->createCommand()->insert('categorise', [
+                    'name' => 'plan_item',
+                    'code' => $item['code'],
+                    'category_id' => $item['category_id'],
+                    'title' => $item['title'],
+
+                ])->execute();
+            }
+        }
+        }
+    }
+
 }
