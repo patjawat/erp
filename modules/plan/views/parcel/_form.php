@@ -211,80 +211,103 @@ $form = ActiveForm::begin([
     </div>
     <div class="col-3">
 
-        <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 1</h4>
-                        <div class="row">
-                            <div class="col-12">
-                                <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label('ตุลาคม') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label('พฤศจิกายน') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label('ธันวาคม') ?>
-                            </div>
-                        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">แผนการใช้จ่ายไตรมาส 1</h4>
+                <div class="row">
+                    <label class="col-sm-4 col-form-label">ตุลาคม</label>
+                    <div class="col-auto">
+                        <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label(false) ?>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 2</h4>
-                        <div class="row">
-                            <div class="col-12">
-                                <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label('มกราคม') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label('กุมภาพันธ์') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label('มีนาคม') ?>
-                            </div>
-                        </div>
+                <div class="row">
+                    <label class="col-sm-4 col-form-label">พฤศจิกายน</label>
+                    <div class="col-auto">
+                        <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label(false) ?>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 3</h4>
-                        <div class="row">
-                            <div class="col-12">
-                                <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label('เมษายน') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label('พฤษภาคม') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label('มิถุนายน') ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 4</h4>
-                        <div class="row">
-                            <div class="col-12">
-                                <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label('กรกฎาคม') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label('สิงหาคม') ?>
-                            </div>
-                            <div class="col-6">
-                                <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label('กันยายน') ?>
-                            </div>
-                        </div>
+                <div class="row">
+                    <label class="col-sm-4 col-form-label">ธันวาคม</label>
+                    <div class="col-auto">
+                        <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label(false) ?>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">แผนการใช้จ่ายไตรมาส 2</h4>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">มกราคม</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">กุมภาพันธ์</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">มีนาคม</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">แผนการใช้จ่ายไตรมาส 3</h4>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">เมษายน</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">พฤษภาคม</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">มิถุนายน</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">แผนการใช้จ่ายไตรมาส 4</h4>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">กรกฎาคม</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">สิงหาคม</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-sm-4 col-form-label">กันยายน</label>
+                <div class="col-auto">
+                <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label(false) ?>
+                </div>
+            </div>
+            </div>
+        </div>
+
 
     </div>
 
