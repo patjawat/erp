@@ -3,6 +3,7 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use kartik\mpdf\Pdf;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
@@ -397,17 +398,17 @@ class StockOrderController extends Controller
         $model->movement_date = AppHelper::convertToThai(isset($model->movement_date) ? $model->movement_date : date('Y-m-d'));
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            $model->created_at = AppHelper::convertToGregorian($model->created_at).' '.date('H:i:s');
+            $model->created_at = AppHelper::convertToGregorian($model->created_at) . ' ' . date('H:i:s');
             $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
-            if($model->save(false)){
-                 $model->updateMovementDateItem();
+            if ($model->save(false)) {
+                $model->updateMovementDateItem();
                 return [
                     'status' => 'success',
                     'container' => '#inventory-container',
                     'data' => $model,
                 ];
-            }else{
+            } else {
                 return [
                     'status' => 'error',
                     'container' => '#inventory-container',
@@ -590,7 +591,7 @@ class StockOrderController extends Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockEvent::findOne($id);
 
-        if($model->order_status =='cancel'){
+        if ($model->order_status == 'cancel') {
             return [
                 'status' => 'error',
                 'container' => '#inventory-container',
@@ -928,7 +929,7 @@ class StockOrderController extends Controller
             'id' => $id
         ];
     }
-    
+
     // เจ้าหน้าที่คลังอนุมัติเห็นชอบแทนหัวหน้า Level 1
     public function actionApproveFormStore($id)
     {
@@ -937,15 +938,14 @@ class StockOrderController extends Controller
         if ($this->request->isPost) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $status = $this->request->post('status');
-             // ระบบอนุมัติเบิกคลัง
-             $old = $model->data_json;
-             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
-             $model->status = $status;
-              $model->emp_id = $me->id;
-             //ถ้าบันทุกเรียบร้อย
-             if($model->save(false))
-             {
+            // ระบบอนุมัติเบิกคลัง
+            $old = $model->data_json;
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+            $model->status = $status;
+            $model->emp_id = $me->id;
+            //ถ้าบันทุกเรียบร้อย
+            if ($model->save(false)) {
                 // update ส่วน stock
                 $oldStockObj = $model->stock->data_json;
                 $checkData = $model->stock->empChecker;
@@ -955,7 +955,7 @@ class StockOrderController extends Controller
                     'checker_position' => $checkData->positionName(),
                     'checker_confirm' => ($model->status == 'Pass' ? 'Y' : 'N')
                 ];
-                
+
                 if ($model->status == 'Pass') {
                     $model->stock->order_status = 'pending';
                 }
@@ -964,17 +964,15 @@ class StockOrderController extends Controller
                     $model->stock->order_status = 'cancel';
                 }
                 $model->stock->data_json = ArrayHelper::merge($oldStockObj, $model->stock->data_json, $checkerData);
-               
-                $model->stock->save(false);
 
-                }
-                
-                return [
-                    'status' => 'success'
-                ];
-                
+                $model->stock->save(false);
+            }
+
+            return [
+                'status' => 'success'
+            ];
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -988,7 +986,56 @@ class StockOrderController extends Controller
                 'model' => $model,
             ]);
         }
+    }
 
+
+
+    public function actionPdf($id)
+    {
+        $model = $this->findModel($id);
+
+        // Get PDF content
+        $content = $this->renderPartial('_pdf', [
+            'model' => $model,
+        ]);
+
+        $pdf = new Pdf([
+            'mode' => Pdf::MODE_UTF8,
+            'format' => Pdf::FORMAT_A4,
+            'orientation' => Pdf::ORIENT_PORTRAIT,
+            'destination' => Pdf::DEST_BROWSER,
+            'content' => $content,
+            // 'cssFile' => '@webroot/css/kv-mpdf-bootstrap.css',
+             'cssInline' => '*,body{font-family:thsarabun;font-size:14pt}',
+            'options' => [
+                'title' => 'ใบเบิกวัสดุ - ' . $model->code,
+                'defaultFont' => 'thsarabun'
+            ],
+            'methods' => [
+                'SetHeader' => ['ใบเบิกวัสดุ||' . Yii::$app->thaiDate->toThaiDate($model->created_at, false, false)],
+                'SetFooter' => ['||หน้า {PAGENO}'],
+            ]
+        ]);
+
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+
+        $pdf->options = array_merge($pdf->options , [
+            'fontDir' => array_merge($fontDirs, [ Yii::$app->basePath . '/web/fonts/THSarabunNew']),  // make sure you refer the right physical path
+            'fontdata' => array_merge($fontData, [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'I' => 'THSarabunNew Italic.ttf',
+                    'B' => 'THSarabunNew Bold.ttf',
+                ]
+            ])
+        ]);
+
+        return $pdf->render();
     }
     /**
      * Deletes an existing StockOut model.
