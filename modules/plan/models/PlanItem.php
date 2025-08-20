@@ -9,7 +9,9 @@ use Yii;
  *
  * @property int $id
  * @property int $plan_order_id รหัสแผน
- * @property string $item_name ชื่อวัสดุ/บุคลากร/ค่าใช้สอย
+ * @property string $title ชื่อวัสดุ/บุคลากร/ค่าใช้สอย
+ * @property string $item_id รหัสที่ใช้เชื่อมกัน
+ * @property string $item_name ชื่อการเชื่อมต่อ
  * @property int|null $qty จำนวน
  * @property float|null $unit_price ราคาต่อหน่วย
  * @property float|null $total_price ราคารวม
@@ -42,11 +44,11 @@ class PlanItem extends \yii\db\ActiveRecord
             [['data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['qty'], 'default', 'value' => 1],
             [['total_price'], 'default', 'value' => 0.00],
-            [['plan_order_id', 'item_name'], 'required'],
+            [['plan_order_id', 'title', 'item_id', 'item_name'], 'required'],
             [['plan_order_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['unit_price', 'total_price'], 'number'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['item_name'], 'string', 'max' => 255],
+            [['title', 'item_id', 'item_name'], 'string', 'max' => 255],
         ];
     }
 
@@ -58,6 +60,8 @@ class PlanItem extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'plan_order_id' => 'Plan Order ID',
+            'title' => 'Title',
+            'item_id' => 'Item ID',
             'item_name' => 'Item Name',
             'qty' => 'Qty',
             'unit_price' => 'Unit Price',

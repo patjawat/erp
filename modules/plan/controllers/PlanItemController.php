@@ -40,7 +40,6 @@ class PlanItemController extends Controller
     {
         $searchModel = new PlanItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'plan_item']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

@@ -6,7 +6,7 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanItem $model */
 
-$this->title = $model->name;
+$this->title = $model->title;
 $this->params['breadcrumbs'][] = ['label' => 'Plan Items', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
@@ -30,19 +30,20 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'sort',
-            'ref',
-            'group_id',
-            'category_id',
-            'code',
-            'emp_id',
-            'name',
-            'title:ntext',
+            'plan_order_id',
+            'title',
+            'item_id',
+            'item_name',
             'qty',
-            'description',
+            'unit_price',
+            'total_price',
             'data_json',
-            'ma_items',
-            'active',
+            'created_at',
+            'updated_at',
+            'created_by',
+            'updated_by',
+            'deleted_at',
+            'deleted_by',
         ],
     ]) ?>
 

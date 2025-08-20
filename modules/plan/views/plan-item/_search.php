@@ -13,23 +13,41 @@ use yii\widgets\ActiveForm;
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
     ]); ?>
-    <div class="row">
-        <div class="col-lg-4">
-            <?= $form->field($model, 'title')->textInput()->label(false) ?>
-        </div>
-        <div class="col-1">
-            <div class="d-flex flex-row align-items-center gap-2">
-                <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                    aria-expanded="false" aria-controls="collapseFilter">
-                    <i class="fa-solid fa-filter"></i>
-                </button>
-            </div>
-        </div>
+
+    <?= $form->field($model, 'id') ?>
+
+    <?= $form->field($model, 'plan_order_id') ?>
+
+    <?= $form->field($model, 'title') ?>
+
+    <?= $form->field($model, 'item_id') ?>
+
+    <?= $form->field($model, 'item_name') ?>
+
+    <?php // echo $form->field($model, 'qty') ?>
+
+    <?php // echo $form->field($model, 'unit_price') ?>
+
+    <?php // echo $form->field($model, 'total_price') ?>
+
+    <?php // echo $form->field($model, 'data_json') ?>
+
+    <?php // echo $form->field($model, 'created_at') ?>
+
+    <?php // echo $form->field($model, 'updated_at') ?>
+
+    <?php // echo $form->field($model, 'created_by') ?>
+
+    <?php // echo $form->field($model, 'updated_by') ?>
+
+    <?php // echo $form->field($model, 'deleted_at') ?>
+
+    <?php // echo $form->field($model, 'deleted_by') ?>
+
+    <div class="form-group">
+        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
+        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

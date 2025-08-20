@@ -12,31 +12,33 @@ use yii\widgets\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'sort')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'plan_order_id')->textInput() ?>
 
-    <?= $form->field($model, 'ref')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'group_id')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'item_id')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'category_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'emp_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'title')->textarea(['rows' => 6]) ?>
+    <?= $form->field($model, 'item_name')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'qty')->textInput() ?>
 
-    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'unit_price')->textInput(['maxlength' => true]) ?>
+
+    <?= $form->field($model, 'total_price')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'data_json')->textInput() ?>
 
-    <?= $form->field($model, 'ma_items')->textInput() ?>
+    <?= $form->field($model, 'created_at')->textInput() ?>
 
-    <?= $form->field($model, 'active')->textInput() ?>
+    <?= $form->field($model, 'updated_at')->textInput() ?>
+
+    <?= $form->field($model, 'created_by')->textInput() ?>
+
+    <?= $form->field($model, 'updated_by')->textInput() ?>
+
+    <?= $form->field($model, 'deleted_at')->textInput() ?>
+
+    <?= $form->field($model, 'deleted_by')->textInput() ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
