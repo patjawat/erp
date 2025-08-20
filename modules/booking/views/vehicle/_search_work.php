@@ -12,7 +12,7 @@ use app\components\DateFilterHelper;
 ?>
 
 <?php $form = ActiveForm::begin([
-    'action' => ['/booking/vehicle/work'],
+    // 'action' => ['/booking/vehicle/work'],
     'method' => 'get',
     'options' => [
         'data-pjax' => 1
