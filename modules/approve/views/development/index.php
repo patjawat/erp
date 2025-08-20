@@ -38,7 +38,7 @@ $msg = 'ขอ';
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+            <?php echo Html::a('อนุมัติทั้งหมด', ['/approve/development/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
         </div>
     </div>
     <div class="card-body">
@@ -65,9 +65,9 @@ $msg = 'ขอ';
                         <th class="fw-semibold text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
-                <tbody class="table-group-divider align-middle">
+                <tbody class="table-group-divider align-middle" id="list-data">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                        <tr>
+                        <tr data-id="<?=$item->id?>">
                             <td class="text-center fw-semibold">
                                 <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                             </td>
@@ -91,6 +91,7 @@ $msg = 'ขอ';
 
                             <td> <?= $item->development->StackMember() ?></td>
                             <td>
+                                <?=$item->development->status;?>
                             <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>    
                             </td>
 
@@ -365,12 +366,83 @@ let currentDate = new Date('$currentDate');
     }
 
 
+$('.approve-all').on('click', function(e) {
+    e.preventDefault();
+    let ids = $('#list-data tr').map(function() {
+        return $(this).data('id');
+    }).get();
 
 
-$('.approve-all').click(function (e) { 
+     Swal.fire({
+        title: 'ยืนยันการอนุมัติ?',
+        text: "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติทั้งหมด?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, อนุมัติ!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            $.ajax({
+               url: '/approve/development/approve-all',
+                type: 'post',
+                data: { ids: ids,status:'Pass' },
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == 'success') {
+                        Swal.fire({
+                        title: 'กำลังบันทึกข้อมูล...',
+                        text: 'โปรดรอสักครู่',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        timer: 1000,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    }).then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'บันทึกสำเร็จ',
+                            showConfirmButton: false,
+                            timer: 1000
+                        }).then(() => {
+                            window.location.reload();
+                        });  
+                    });
+                    
+                    } else {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: res.message || 'ไม่สามารถอนุมัติได้',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+    });
+
+
+
+$('.approve-allหหห').click(function (e) { 
     e.preventDefault();
     
     let url = $(this).attr('href');
+    
+    let ids = [];
+$('#list-data tr').each(function() {
+    ids.push($(this).data('id'));
+});
+console.log(ids); // [1, 2, 3, ...]
+
+
 
     Swal.fire({
         title: 'ยืนยันการอนุมัติ?',

@@ -116,7 +116,7 @@ use app\modules\hr\models\Organization;
 <?php
 $js = <<< JS
 
-thaiDatepicker('#leavesearch-date_start,#leavesearch-date_end')
+thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
 
 JS;
 $this->registerJS($js, View::POS_END);
