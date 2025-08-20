@@ -118,6 +118,15 @@ $js = <<< JS
 
 thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
 
+    $("#approvesearch-date_start").on('change', function() {
+            $('#approvesearch-thai_year').val(null).trigger('change');
+            $('#approvesearch-date_filter').val(null).trigger('change');
+        });
+        $("#approvesearch-date_end").on('change', function() {
+            $('#approvesearch-thai_year').val(null).trigger('change');
+            $('#approvesearch-date_filter').val(null).trigger('change');
+    });
+
 JS;
 $this->registerJS($js, View::POS_END);
 ?>

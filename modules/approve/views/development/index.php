@@ -427,7 +427,9 @@ $('.approve-all').on('click', function(e) {
                 }
             });
         }
+        });
     });
+
 
 
 

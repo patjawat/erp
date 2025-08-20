@@ -143,7 +143,7 @@ class VehicleController extends Controller
         return $this->render('index', [
             'type' => $type,
             'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
-            'title' => 'ทะเบียนขอใช้รถ Refer',
+            'title' => 'ทะเบียนขอใช้รถพยาบาล',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             // 'dataProviderDetail' => $dataProviderDetail,
@@ -225,7 +225,7 @@ class VehicleController extends Controller
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
             'type' => 'ambulance',
-            'title' => 'ทะเบียนการจัดสรรรถ Refer (พขร.)',
+            'title' => 'ทะเบียนการจัดสรรรถพยาบาล (พขร.)',
             'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -357,13 +357,21 @@ class VehicleController extends Controller
     //ปฎิทินการขอใช้รถยนต์ราชการ
     public function actionCalendar()
     {
-        return $this->render('calendar', ['vehicle_type' => 'official']);
+        return $this->render('calendar', [
+              'icon' => '<i class="fa-solid fa-car-on"></i>',
+            'title' => 'ปฏิทินการใช้รถทั่วไป',
+            'vehicle_type' => 'official'
+        ]);
     }
 
     // ปฏิทินการขอใช้รถยนต์ทั่วไป
     public function actionCalendarAmbulance()
     {
-        return $this->render('calendar', ['vehicle_type' => 'ambulance']);
+        return $this->render('calendar',[
+            'title' => 'ปฏิทินการใช้รถพยาบาล',
+            'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
+            'vehicle_type' => 'ambulance'
+        ]);
     }
 
 

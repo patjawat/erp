@@ -357,25 +357,55 @@ class BookingMeetingController extends \yii\web\Controller
 
 
     // ตรวจสอบความถูกต้อง
-    public function actionValidator()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Meeting();
-        $requiredName = 'ต้องระบุ';
-        if ($this->request->isPost && $model->load($this->request->post())) {
+public function actionValidator($id = null)
+{
+    \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $checkRoomDeplicate = Meeting::find()->where(['room_id' => $model->room_id,'date_start' => AppHelper::convertToGregorian($model->date_start)])->count();
-            // $checkRoomDeplicate >=1 ? $model->addError('room_id', 'ห้องไม่ว่าง') : null;
-            $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
-            $model->data_json['period_time'] == '' ? $model->addError('data_json[period_time]', $requiredName) : null;
+    // ถ้ามี $id แสดงว่าเป็น update → โหลด model เก่ามา
+    $model = $id === null ? new Meeting() : Meeting::findOne($id);
+
+    $requiredName = 'ต้องระบุ';
+    $result = [];
+
+    if ($this->request->isPost && $model->load($this->request->post())) {
+
+        // ✅ ตรวจสอบว่าเบอร์โทรถูกกรอกหรือยัง
+        if (empty($model->data_json['phone'])) {
+            $model->addError('data_json[phone]', $requiredName);
         }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Html::getInputId($model, $attribute)] = $errors;
+
+        // ✅ ตรวจสอบว่าเลือกช่วงเวลาหรือยัง
+        if (empty($model->data_json['period_time'])) {
+            $model->addError('data_json[period_time]', $requiredName);
         }
-        if (!empty($result)) {
-            return $this->asJson($result);
+
+        // ✅ ตรวจสอบว่าห้อง + วันซ้ำหรือไม่
+        $query = Meeting::find()
+            ->where([
+                'room_id' => $model->room_id,
+                'date_start' => AppHelper::convertToGregorian($model->date_start),
+            ]);
+
+        // ถ้าเป็น update → ตัด record ตัวเองออก
+        if (!$model->isNewRecord) {
+            $query->andWhere(['<>', 'id', $model->id]);
+        }
+
+        if ($query->exists()) {
+            $model->addError('room_id', 'ห้องนี้ถูกจองแล้วในวันดังกล่าว');
         }
     }
+
+    // ส่ง error กลับไปเป็น JSON ที่ AjaxValidation ต้องการ
+    foreach ($model->getErrors() as $attribute => $errors) {
+        $result[Html::getInputId($model, $attribute)] = $errors;
+    }
+
+    return $this->asJson($result);
+}
+
+
+    
 
 
 

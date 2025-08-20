@@ -36,14 +36,17 @@ try {
 <div class="container-xx">
     <?php // $this->render('navbar')?>
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'meeting-form',
-        'validateOnChange' => true,
-        'validateOnBlur' => true,
-        'validateOnType' => false,
-        'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-        'validationUrl' => ['/me/booking-meeting/validator']
-    ]); ?>
+<?php $form = ActiveForm::begin([
+    'id' => 'meeting-form',
+    'validateOnChange' => true,
+    'validateOnBlur' => true,
+    'validateOnType' => false,
+    'enableAjaxValidation' => true,
+    'validationUrl' => $model->isNewRecord 
+        ? ['/me/booking-meeting/validator']   // create
+        : ['/me/booking-meeting/validator', 'id' => $model->id], // update
+]); ?>
+
 
 
     <div class="row">

@@ -13,7 +13,7 @@ $products = $cart->getItems();
             <th class="text-center">จำนวนสต็อก</th>
             <th class="text-center">หน่วย</th>
             <th class="text-end">มูลค่า</th>
-            <th class="text-center" style="width:190px">จำนวนเบิก</th>
+            <th class="text-center" style="min-width:200px">จำนวนเบิก</th>
             <th scope="col" class="text-center align-center" style="width:32px;">#</th>
         </tr>
     </thead>
@@ -36,7 +36,7 @@ $products = $cart->getItems();
                 <div class="d-flex d-flex flex-row">
                     <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/sub-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-sub-cart'])?>
                     <input type="text" value="<?=$item->getQuantity()?>" class="form-control update-qty"
-                        id="<?=$item->id?>" style="width:50px;font-weight: 600;" />
+                        id="<?=$item->id?>" style="font-weight: 600;" />
                     <?=Html::a('<i class="fa-solid fa-chevron-right"></i>',['/me/sub-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()+1)],['class' => 'btn update-sub-cart'])?>
                 </div>
             </td>

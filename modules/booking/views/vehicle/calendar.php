@@ -5,25 +5,22 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use app\models\Categorise;
 
-$this->title = 'ปฏิทินการใช้รถ';
+$this->title = $title;
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar fx-1"></i> <?= $this->title; ?>
+<?=$icon?> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-ปฏิทินการใช้รถยนต์
-<?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => 'calendar']) ?>
+<?= $this->render('menu', ['active' => $vehicle_type]) ?>
 <?php $this->endBlock(); ?>
 
 <style>
