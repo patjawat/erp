@@ -17,7 +17,7 @@ class PlanItemSearch extends PlanItem
     public function rules()
     {
         return [
-            [['id', 'qty', 'active'], 'integer'],
+            [['id', 'qty'], 'integer'],
             [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items'], 'safe'],
         ];
     }
@@ -61,7 +61,6 @@ class PlanItemSearch extends PlanItem
         $query->andFilterWhere([
             'id' => $this->id,
             'qty' => $this->qty,
-            'active' => $this->active,
         ]);
 
         $query->andFilterWhere(['like', 'sort', $this->sort])

@@ -15,7 +15,9 @@ class m250815_084655_create_plan_item_table extends Migration
         $this->createTable('{{%plan_item}}', [
             'id' => $this->primaryKey(),
             'plan_order_id' => $this->integer()->notNull()->comment('รหัสแผน'),
-            'item_name' => $this->string(255)->notNull()->comment('ชื่อวัสดุ/บุคลากร/ค่าใช้สอย'),
+            'title' => $this->string(255)->notNull()->comment('ชื่อวัสดุ/บุคลากร/ค่าใช้สอย'),
+            'item_id' => $this->string(255)->notNull()->comment('รหัสที่ใช้เชื่อมกัน'),
+            'item_name' => $this->string(255)->notNull()->comment('ชื่อการเชื่อมต่อ'),
             'qty' => $this->integer()->defaultValue(1)->comment('จำนวน'),
             'unit_price' => $this->decimal(15, 2)->defaultValue(0)->comment('ราคาต่อหน่วย'),
             'total_price' => $this->decimal(15, 2)->defaultValue(0)->comment('ราคารวม'),
