@@ -16,13 +16,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-file-invoice me-1"></i> </i> <?= $this->title; ?>
+<i class="fa-solid fa-file-invoice me-1"></i>> </i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/plan/menu', ['active' => 'index']) ?>
+<?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
 
 

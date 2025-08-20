@@ -6,25 +6,22 @@
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'ทะเบียนการการขอใช้รถยนต์';
+$this->title = $title;
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-car fs-x1"></i> <?= $this->title; ?>
+<?=$icon?> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-ทะเบียนใช้รถยนต์ทั่วไป
-<?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => 'official']) ?>
+<?= $this->render('menu', ['active' => $type]) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

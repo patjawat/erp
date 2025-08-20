@@ -17,8 +17,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/plan/menu', ['active' => 'index']) ?>
+<?= $this->render('@app/modules/plan/menu', ['active' => 'personnel']) ?>
 <?php $this->endBlock(); ?>
 
 
-        <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>
+        <?= $this->render('_form',  ['model' => $model]) ?>

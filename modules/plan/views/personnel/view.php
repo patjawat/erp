@@ -11,6 +11,19 @@ $this->params['breadcrumbs'][] = ['label' => 'Plan Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-dolly me-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?= $this->render('@app/modules/plan/menu', ['active' => 'parcel']) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="plan-order-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
@@ -29,23 +42,50 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
-            'plan_group_id',
-            'title',
-            'description:ntext',
-            'start_date',
-            'end_date',
-            'budget_total',
-            'budget_used',
-            'status',
-            'emp_id',
-            'data_json',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
-            'deleted_at',
-            'deleted_by',
+            [
+                'attribute' => 'thai_year',
+                'label' => 'ปีงบประมาณ',
+                'value' => function($model) {
+                    return $model->thai_year;
+                }
+            ],
+            [
+                'attribute' => 'plan_budget_type',
+                'label' => 'ประเภทงบประมาณ',
+            ],
+            [
+                'attribute' => 'asset_group_id',
+                'label' => 'หมวด',
+                 'value' => function($model) {
+                    return $model->assetGroup?->title ?? '-';
+                }
+            ],
+             [
+                'attribute' => 'asset_type_id',
+                'label' => 'ประเภท',
+                 'value' => function($model) {
+                    return $model->assetType?->title ?? '-';
+                }
+            ],
+             [
+                'attribute' => 'asset_category_id',
+                'label' => 'หมวดพัสดุ',
+                 'value' => function($model) {
+                    return $model->assetCategory?->title ?? '-';
+                }
+            ],
+            [
+                'attribute' => 'department_id',
+                'label' => 'ของกลุ่มงาน',
+                'value' => function($model)
+                {
+                    return $model->departmentName();
+                }
+            ],
+            [
+                'attribute' => 'budget_id',
+                'label' => 'แหล่องของเงิน',
+            ],
         ],
     ]) ?>
 

@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
     <?php $form = ActiveForm::begin([
-        'action' => ['list-item'],
+        'action' => ['list-asset-item'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1

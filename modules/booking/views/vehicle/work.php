@@ -4,27 +4,24 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 
 
-$this->title = 'ทะเบียนการจัดสรรรถ (พขร.)';
+$this->title = $title;
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-user-tag fs-1x me-2"></i> <?= $this->title; ?>
+<?=$icon?> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-ทะเบียนจัดสรรรถยนต์
-<?php $this->endBlock(); ?>
+
 
 <?php $this->beginBlock('page-action'); ?>
 <?php echo $this->render('menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => 'work']) ?>
+<?= $this->render('menu', ['active' => $type]) ?>
 <?php $this->endBlock(); ?>
-
 
 <?php Pjax::begin(['id' => 'vehicles-container', 'timeout' => 500000]); ?>
 
@@ -116,6 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
 $js = <<< JS
+
 $(document).on('click', '.cancel-order', function(e) {
     e.preventDefault();
     let url = $(this).attr('href');

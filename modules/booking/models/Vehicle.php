@@ -204,7 +204,8 @@ class Vehicle extends \yii\db\ActiveRecord
         $emp = $this->employee;
         $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
         return [
-            'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
+            // 'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
+            'avatar' => $emp->getAvatar(false,$emp->departmentName()),
             'fullname' => $emp->fullname,
             'department' => $emp->departmentName(),
             'signature' => $emp->getInfo()['signature'],

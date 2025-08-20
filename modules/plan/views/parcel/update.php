@@ -19,5 +19,4 @@ $this->params['breadcrumbs'][] = 'Update';
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('@app/modules/plan/menu', ['active' => 'index']) ?>
 <?php $this->endBlock(); ?>
-
-        <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>
+<?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>

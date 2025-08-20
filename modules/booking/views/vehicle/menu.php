@@ -18,7 +18,6 @@ $menus = [
         'url' => ['/booking/vehicle-form-layout'],
         'icon' => '<i class="fa-solid fa-gear me-2"></i>'
     ],
-
 ];
 ?>
 
@@ -34,7 +33,7 @@ $menus = [
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
         <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนคำขอใช้รถ', ['/booking/vehicle'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-regular fa-calendar me-2"></i> ปฏิทินขอใช้รถยนต์ ', ['/booking/vehicle/calendar'], ['class' => 'dropdown-item']) ?>
-        <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนการจัดสรรรถ (พขร.)', ['/booking/vehicle/work'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนการจัดสรรรถ (พขร.)', ['/booking/vehicle/work-official'], ['class' => 'dropdown-item']) ?>
     </div>
 </li>
 
@@ -47,7 +46,7 @@ $menus = [
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
         <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนคำขอใช้รถ', ['/booking/vehicle/ambulance'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-regular fa-calendar me-2"></i> ปฏิทินขอใช้รถยนต์ ', ['/booking/vehicle/calendar-ambulance'], ['class' => 'dropdown-item']) ?>
-        <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนการจัดสรรรถ (พขร.)', ['/booking/vehicle/work'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="bi bi-ui-checks me-2"></i> ทะเบียนการจัดสรรรถ (พขร.)', ['/booking/vehicle/work-ambulance'], ['class' => 'dropdown-item']) ?>
     </div>
 </li>
 

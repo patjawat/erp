@@ -10,12 +10,13 @@ $this->params['breadcrumbs'][] = ['label' => 'Plan Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->title, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-<div class="plan-order-update">
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-dolly me-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <?= $this->render('_form', [
-        'model' => $model,
-    ]) ?>
-
-</div>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?= $this->render('@app/modules/plan/menu', ['active' => 'personnel']) ?>
+<?php $this->endBlock(); ?>
+        <?= $this->render('_form',  ['model' => $model]) ?>

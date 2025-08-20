@@ -10,7 +10,6 @@ use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\SiteHelper;
-use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
@@ -65,10 +64,11 @@ class VehicleController extends Controller
 
     public function actionIndex()
     {
+        $type = 'official';
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
-            'vehicle_type_id' => 'official'
+            'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
@@ -95,6 +95,10 @@ class VehicleController extends Controller
             'location' =>  SORT_DESC,
         ]);
         return $this->render('index', [
+            'type' => $type,
+            'icon' => '<i class="fa-solid fa-car-on"></i>',
+            'title' => 'ทะเบียนขอใช้รถยนต์ทั่วไป',
+            'icon' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -106,12 +110,14 @@ class VehicleController extends Controller
     {
         $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
+
+        $type = 'ambulance';
         $searchModel = new VehicleSearch([
             'thai_year' => AppHelper::YearBudget(),
             'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
             'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending'],
-            'vehicle_type_id' => 'ambulance'
+            'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
@@ -120,7 +126,7 @@ class VehicleController extends Controller
             ['like', 'code', $searchModel->q],
         ]);
 
-    if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -135,13 +141,136 @@ class VehicleController extends Controller
 
 
         return $this->render('index', [
+            'type' => $type,
+            'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
+            'title' => 'ทะเบียนขอใช้รถ Refer',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             // 'dataProviderDetail' => $dataProviderDetail,
         ]);
     }
 
-    
+
+
+    //ทะเบียนจัดสรรรถทั่วไป
+    public function actionWorkOfficial()
+    {
+        $searchModel = new VehicleDetailSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month'
+        ]);
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'official']);
+
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'reason', $searchModel->q],
+        ]);
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        return $this->render('work', [
+             'type' => 'official',
+             'icon' => '<i class="fa-solid fa-car-on"></i>',
+            'title' => 'ทะเบียนการจัดสรรรถทั่วไป (พขร.)',
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    //ทะเบียนจจัดสรรรถ Refer
+    public function actionWorkAmbulance()
+    {
+        $searchModel = new VehicleDetailSearch([
+            'thai_year' => AppHelper::YearBudget(),
+            'date_filter' => 'this_month'
+        ]);
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'ambulance']);
+
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'reason', $searchModel->q],
+        ]);
+
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        return $this->render('work', [
+            'type' => 'ambulance',
+            'title' => 'ทะเบียนการจัดสรรรถ Refer (พขร.)',
+            'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+
+
+    //ลงบันทึกการใช่รถยนต์
+    public function actionWorkUpdate($id)
+    {
+        $model = VehicleDetail::findOne($id);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
+        if (!$model->ref) {
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->save();
+            return [
+                'status' => 'success',
+            ];
+        }
+
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_work_update', [
+                    'model' => $model
+                ]),
+            ];
+        } else {
+            return $this->render('_form_work_update', [
+                'model' => $model
+            ]);
+        }
+    }
+
+
     //แสดงการจองรถวันนี้
     public function actionListEventTodays()
     {
@@ -190,12 +319,12 @@ class VehicleController extends Controller
         $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider->query->joinWith('vehicle');
-         $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
+        $dataProvider->query->joinWith('vehicle');
+        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
         $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
         $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
-    
+
 
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -215,7 +344,7 @@ class VehicleController extends Controller
                 'showDate' => ThaiDateHelper::formatThaiDate($nextDate),
                 'container' => 'EventTomorrow',
                 'title' => 'การใช้รถพรุ่งนี้',
-               'searchModel' => $searchModel,
+                'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
@@ -232,7 +361,7 @@ class VehicleController extends Controller
     }
 
     // ปฏิทินการขอใช้รถยนต์ทั่วไป
-        public function actionCalendarAmbulance()
+    public function actionCalendarAmbulance()
     {
         return $this->render('calendar', ['vehicle_type' => 'ambulance']);
     }
@@ -304,75 +433,6 @@ class VehicleController extends Controller
             'summary_status' => $summaryStatus,
             'events' => $data
         ];
-    }
-
-
-    public function actionWork()
-    {
-        $searchModel = new VehicleDetailSearch([
-             'thai_year' => AppHelper::YearBudget(),
-            'date_filter' => 'this_month'
-        ]);
-
-
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
-        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
-
-        // $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'reason', $searchModel->q],
-        ]);
-
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        return $this->render('work', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    public function actionWorkUpdate($id)
-    {
-        $model = VehicleDetail::findOne($id);
-        if (!$model->ref) {
-            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-        }
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'status' => 'success',
-            ];
-        }
-
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_work_update', [
-                    'model' => $model
-                ]),
-            ];
-        } else {
-            return $this->render('_form_work_update', [
-                'model' => $model
-            ]);
-        }
     }
 
     /**
@@ -451,14 +511,13 @@ class VehicleController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-         $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
 
-       if ($this->request->isPost && $model->load($this->request->post())) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
-            \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
                 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
@@ -511,21 +570,21 @@ class VehicleController extends Controller
             if (!$model->save()) {
                 throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
             }
-            
-                foreach ($post['vehicleDetails'] as $key => $detail) {
-                    $bookingDetail = VehicleDetail::findOne($detail['id']);
-                    if ($bookingDetail) {
-                        $bookingDetail->driver_id = $detail['driver'];
-                        $bookingDetail->license_plate = $detail['car'];
-                        $bookingDetail->status = 'Pass';
-                        $bookingDetail->save(false);
-                        $this->sendMessage($model);
-                    }
 
-                    if (!$bookingDetail->save()) {
-                        throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
-                    }
+            foreach ($post['vehicleDetails'] as $key => $detail) {
+                $bookingDetail = VehicleDetail::findOne($detail['id']);
+                if ($bookingDetail) {
+                    $bookingDetail->driver_id = $detail['driver'];
+                    $bookingDetail->license_plate = $detail['car'];
+                    $bookingDetail->status = 'Pass';
+                    $bookingDetail->save(false);
+                    $this->sendMessage($model);
                 }
+
+                if (!$bookingDetail->save()) {
+                    throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+                }
+            }
 
 
             $transaction->commit();
@@ -610,45 +669,45 @@ class VehicleController extends Controller
 
     public function actionPrint($id)
     {
-       
-      
-            $model = $this->findModel($id);
-            $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-            $model->save(false);
-            $info = SiteHelper::getInfo();
-            $modelData = [
-                'director' => $info['company_name'],
-                'fullname' => $model->employee?->fullname,
-                'fullname_' => $model->employee?->fullname,
-                'date' => ThaiDateHelper::formatThaiDate($model->date_start),
-                'position' => $model->employee?->positionName(),
-                'department' => $model->employee?->departmentName(),
-                'location' => $model->locationOrg?->title ?? '-',
-                'passenger' => '2',
-                'phone' => $model->employee?->phone ?? '-',
-                'reason' => $model->reason,
-                'date_start' => ThaiDateHelper::formatThaiDate($model->date_start),
-                'date_end' => ThaiDateHelper::formatThaiDate($model->date_end),
-                'time_start' => $model->time_start,
-                'time_end' => $model->time_start,
-                'vehicle_type' => $model->vehicle_type_id,
-                'license_plate' => $model->license_plate,
-                'driver_name' => $model->driver?->fullname ?? '-',
-                'driver_name_' => $model->driver?->fullname ?? '-',
-                //หัวหน้างาน
-                'leader_name' => $model->leader?->getInfo()['fullname'],
-                'leader_signature' => $model->leader?->getInfo()['signature'],
-                'driver_leader_name' => 'นายหัวหน้า พขร.',
-                'mileage_start' => '10000',
-                'mileage_end' => '10100',
-                'emp_signature' => $model->userRequest()['signature'],
-                'driver_signature' => $model->driver?->getInfo()['signature'],
-                'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
 
-            ];
-            if ($model) {
-                  if ($this->request->isAjax) {
-                     Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+        $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        $model->save(false);
+        $info = SiteHelper::getInfo();
+        $modelData = [
+            'director' => $info['company_name'],
+            'fullname' => $model->employee?->fullname,
+            'fullname_' => $model->employee?->fullname,
+            'date' => ThaiDateHelper::formatThaiDate($model->date_start),
+            'position' => $model->employee?->positionName(),
+            'department' => $model->employee?->departmentName(),
+            'location' => $model->locationOrg?->title ?? '-',
+            'passenger' => '2',
+            'phone' => $model->employee?->phone ?? '-',
+            'reason' => $model->reason,
+            'date_start' => ThaiDateHelper::formatThaiDate($model->date_start),
+            'date_end' => ThaiDateHelper::formatThaiDate($model->date_end),
+            'time_start' => $model->time_start,
+            'time_end' => $model->time_start,
+            'vehicle_type' => $model->vehicle_type_id,
+            'license_plate' => $model->license_plate,
+            'driver_name' => $model->driver?->fullname ?? '-',
+            'driver_name_' => $model->driver?->fullname ?? '-',
+            //หัวหน้างาน
+            'leader_name' => $model->leader?->getInfo()['fullname'],
+            'leader_signature' => $model->leader?->getInfo()['signature'],
+            'driver_leader_name' => 'นายหัวหน้า พขร.',
+            'mileage_start' => '10000',
+            'mileage_end' => '10100',
+            'emp_signature' => $model->userRequest()['signature'],
+            'driver_signature' => $model->driver?->getInfo()['signature'],
+            'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
+
+        ];
+        if ($model) {
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 $content = $this->renderAjax('print', [
                     'model' => $model,
                     'modelData' => $modelData,
@@ -658,18 +717,18 @@ class VehicleController extends Controller
                     'status' => 'success',
                     'content' => $content,
                 ];
-            }else{
+            } else {
                 return $this->render('print', [
                     'model' => $model,
                     'modelData' => $modelData,
                 ]);
             }
-            } else {
-                return [
-                    'status' => 'error',
-                    'message' => 'ไม่พบข้อมูลการจอง'
-                ];
-            }
+        } else {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบข้อมูลการจอง'
+            ];
+        }
     }
 
 

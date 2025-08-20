@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use app\models\Categorise;
 use kartik\widgets\DepDrop;
 use kartik\widgets\Select2;
+use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use app\modules\am\components\AssetHelper;
 
@@ -20,7 +21,7 @@ $form = ActiveForm::begin([
 ?>
 
 <div class="row">
-    <div class="col-lg-9 col-md-10">
+    <div class="col-lg-12 col-md-12">
         <div class="card">
             <div class="card-body">
 
@@ -45,14 +46,14 @@ $form = ActiveForm::begin([
                         ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
                     </div>
 
-                    <div class="col-lg-3 col-md-3 col-sm-12">
-                        <?php
+                    
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+  <?php
 
-                        echo $form->field($model, 'asset_group_id')->widget(Select2::classname(), [
-                            'data' => AssetHelper::listAssetGroup(),
+                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_item','category_id' => 'PE'])->all(),'code','title'),
                             'options' => [
-                                'placeholder' => 'หมวดพัสดุ',
-                                'id' => 'asset_group_id'
+                                'placeholder' => 'เลือกรายการค่าใช้จ่าย',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
@@ -60,145 +61,45 @@ $form = ActiveForm::begin([
                             'pluginEvents' => [
                                 "select2:select" => "function() { 
                 console.log($(this).val());
-            // $(this).submit(); 
             }",
                             ],
-                        ])->label('กลุ่มพัสดุ');
+                        ])->label('ค่าใช้จ่าย');
                         ?>
                     </div>
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                           <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                           </div>
+                        </div>
 
-                    <div class="col-lg-4 col-md-4 col-sm-12">
-                        <?php
 
-                        echo $form->field($model, 'asset_type_id')->widget(DepDrop::classname(), [
-                            'options' => [
-                                'id' => 'asset_type_id',
-                                'placeholder' => 'ทุกประเภท',
-                            ],
-                            'type' => DepDrop::TYPE_SELECT2,
-                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                            'pluginOptions' => [
-                                'depends' => ['asset_group_id'],
-                                'url' => Url::to(['/am/asset-item/get-asset-type']),
-                                'loadingText' => 'กำลังโหลด ...',
-                                'initialize' => true,
-                                'initDepends' => ['asset_group_id'], // ✅ ต้องเป็น parent field
-                                'params' => ['depdrop_all_params' => 'asset_type_id'],
-                            ],
-                            'data' => $model->asset_type_id
-                                ? [$model->asset_type_id => Categorise::findOne(['code' => $model->asset_type_id, 'name' => 'asset_type'])->title]
-                                : [],
-                        ])->label('ประเภท');
 
-                        ?>
+<hr>
+<div>
+                        แผนการใช้จ่าย
+                        <div class="row">
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label('ต.ค.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label('พ.ย.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label('ธ.ค.') ?></div>
+ 
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label('ม.ค.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label('ก.พ.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label('มี.ค.') ?></div>
+         
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label('เม.ย.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label('พ.ค.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label('มิ.ย.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label('ก.ค.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label('ส.ค.') ?></div>
+                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label('ก.ย.') ?></div>
+                        </div>
                     </div>
-                    <div class="col-lg-5 col-md-5 col-sm-12">
-                        <?php
 
-                        echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
-                            'options' => [
-                                'placeholder' => 'ทุกหมวดหมู่',
-                                'id' => 'asset_category_id'
-                            ],
-                            'type' => DepDrop::TYPE_SELECT2,
-                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                            'pluginOptions' => [
-                                'depends' => ['asset_type_id'],
-                                'url' => Url::to(['/am/asset-item/get-asset-category']),
-                                'loadingText' => 'กำลังโหลด ...',
-                                'params' => ['depdrop_all_params' => 'asset_category_id'],
-                                'initDepends' => ['asset_type_id'],
-                                'initialize' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                            console.log('Asset category selected:', $(this).val());
-                        }",
-                            ],
-
-                        ])->label('หมวดพัสดุ');
-                        ?>
-
-
-
-                    </div>
-                    <div class="col-lg-7 col-md-7 col-sm-12">
-                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
-                    </div>
-                    <div class="col-lg-5 col-md-5 col-sm-12">
-                        <?php
-
-                        echo $form->field($model, 'price_ref')->widget(Select2::classname(), [
-                            'data' => $model->listPriceRef(),
-                            'options' => [
-                                'placeholder' => 'เลือกอ้างการอิงตามราคา',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                if($(this).val() == 'MARKET')
-                {
-                    $('.btn-disable').hide()
-                    $('#add-row').show()
-                    $('#btn-show-asset').hide()
-                }else{
-                    $('.btn-disable').hide()
-                    $('#add-row').hide()
-                    $('#btn-show-asset').show()
-                    }
-            }",
-                            ],
-                        ])->label('อ้างอิงตามราคา');
-                        ?>
-                    </div>
-                </div>
-
-
-
-                <!-- 
-<div class="row">
-    <div class="col-md-6"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01']) ?></div>
-    <div class="col-md-6"><?= $form->field($model, 'budget_used')->input('number', ['step' => '0.01']) ?></div>
-</div> -->
-
+ <?= $form->field($model, 'order_price')->textInput()->label('รวมเป็นจำนวนเงินทั้งสิ้น') ?>
                 <hr>
-                <h4>รายการในแผน</h4>
-
-                <table class="table table-bordered" id="item-table">
-                    <thead>
-                        <tr>
-                            <th>ชื่อรายการ</th>
-                            <th width="150">จำนวน</th>
-                            <th width="200">ราคาต่อหน่วย</th>
-                            <th width="200" class="text-end">รวม</th>
-                            <th width="50">#</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($items): ?>
-                            <?php foreach ($items as $i => $item): ?>
-                                <tr>
-                                    <td><input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control"></td>
-                                    <td><input type="number" name="items[<?= $i ?>][qty]" value="<?= $item->qty ?>" class="form-control qty"></td>
-                                    <td><input type="number" step="0.01" name="items[<?= $i ?>][unit_price]" value="<?= $item->unit_price ?>" class="form-control price"></td>
-                                    <td class="total text-end"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
-                                    <td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+               
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <button type="button" class="btn btn-secondary btn-disable" disabled><i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button>
-                        <button type="button" class="btn btn-secondary" id="add-row"><i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button>
-                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/plan/parcel/list-asset-item'], ['class' => 'btn btn-primary', 'id' => 'btn-show-asset']) ?>
-                    </div>
+<div></div>
                     <div class="d-flex gap-2">
                         <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
                         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
@@ -209,118 +110,7 @@ $form = ActiveForm::begin([
 
 
     </div>
-    <div class="col-3">
-
-        <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 1</h4>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">ตุลาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">พฤศจิกายน</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">ธันวาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 2</h4>
-
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">มกราคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">กุมภาพันธ์</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">มีนาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 3</h4>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">เมษายน</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">พฤษภาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">มิถุนายน</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">แผนการใช้จ่ายไตรมาส 4</h4>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">กรกฎาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">สิงหาคม</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <label for="colFormLabel" class="col-sm-3 col-form-label">กันยายน</label>
-                            <div class="col-sm-9">
-                                <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label(false) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
+    
 
 </div>
 
@@ -486,6 +276,25 @@ $(document).on("input",".qty, .price", function(){
     tr.find(".total").text((qty*price).toFixed(2));
 });
 
+
+
+
+$(document).ready(function() {
+    function calculateTotal() {
+        let total = 0;
+        // loop input ทุกช่องที่เป็น month_1 .. month_12
+        $("input[id^='planorder-month_']").each(function() {
+            let val = parseFloat($(this).val()) || 0;
+            total += val;
+        });
+        $("#planorder-order_price").val(total.toFixed(2)); // ใส่ค่าผลรวมลงไป
+    }
+
+    // ฟัง event เวลา keyup หรือเปลี่ยนค่า
+    $(document).on("input", "input[id^='planorder-month_']", function() {
+        calculateTotal();
+    });
+});
 
 
 

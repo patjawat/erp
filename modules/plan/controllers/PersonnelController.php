@@ -3,6 +3,7 @@
 namespace app\modules\plan\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
@@ -73,29 +74,16 @@ class PersonnelController extends Controller
     {
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget()+1),
-            'plan_group_id' => 'parcel', // Default to material type
+            'plan_group_id' => 'personnel', // Default to material type
         ]);
-        $items = []; // ไม่มีรายการเดิม
 
         if ($model->load(Yii::$app->request->post())) {
 
             $model->save(false);
-
-            $postItems = Yii::$app->request->post('items', []);
-            foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save(false);
-                }
-            }
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        return $this->render('create', ['model' => $model, 'items' => $items]);
+        return $this->render('create', ['model' => $model]);
     }
 
     /**
@@ -108,13 +96,19 @@ class PersonnelController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+           $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+            // return $model;
+
+             $model->save(false);
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
         return $this->render('update', [
             'model' => $model,
+            'items' => $items
         ]);
     }
 

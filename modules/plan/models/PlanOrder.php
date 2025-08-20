@@ -55,11 +55,11 @@ class PlanOrder extends \yii\db\ActiveRecord
             [['thai_year', 'department_id', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'description', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['budget_used'], 'default', 'value' => 0.00],
             [['status'], 'default', 'value' => 'draft'],
-            [['month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12','order_price'], 'default', 'value' => 0],
+            [['month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12', 'order_price'], 'default', 'value' => 0],
             [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['plan_group_id','thai_year','department_id','asset_group_id','price_ref'], 'required'],
+            [['plan_group_id', 'thai_year', 'department_id', 'asset_group_id', 'price_ref'], 'required'],
             [['description'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'title', 'emp_id', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12','order_price'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'title', 'emp_id', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12', 'order_price','plan_item_id'], 'safe'],
             [['budget_total', 'budget_used'], 'number'],
             [['plan_group_id'], 'string', 'max' => 50],
             [['asset_group_id', 'asset_type_id', 'asset_category_id', 'title', 'emp_id'], 'string', 'max' => 255],
@@ -102,13 +102,24 @@ class PlanOrder extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
     }
 
-        public function getAssetType()
+    public function getAssetType()
     {
         return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
 
-        public function getPlanItems()
+    public function getAssetCategory()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);
+    }
+
+    public function getBudge()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'budget_id'])->andOnCondition(['name' => 'budget']);
+    }
+
+
+    public function getPlanItems()
     {
         return $this->hasMany(PlanItem::class, ['plan_order_id' => 'id']);
     }
@@ -116,15 +127,15 @@ class PlanOrder extends \yii\db\ActiveRecord
     public function departmentName()
     {
         $model =  Organization::findOne(['id' => $this->department_id]);
-        if($model){
+        if ($model) {
             return $model->name;
-        }else{
+        } else {
             return '-';
         }
     }
-        public function listAssetType()
+    public function listAssetType()
     {
-        return AssetHelper::listAssetType();    
+        return AssetHelper::listAssetType();
     }
 
     public function listAssetCategory()
@@ -134,9 +145,6 @@ class PlanOrder extends \yii\db\ActiveRecord
 
     public function listPriceRef()
     {
-           return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
     }
-
-
-
 }
