@@ -2,7 +2,10 @@
 use yii\helpers\Html;
 ?>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/index'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')])?>
+    <?php echo  Html::a('<i class="fa-solid fa-gauge me-1"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/dashboard'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : 'dashboard')])?>
+</li>
+<li class="nav-item mt-1">
+    <?php echo  Html::a('<i class="fa-solid fa-chart-simple me-1"></i> ติดตามแผนรายจ่าย <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/overview'],['class' => 'nav-link ' . (isset($active) && $active == 'overview' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
     <?php echo  Html::a('<i class="fa-solid fa-dolly me-1"></i> แผนคำขอพัสดุ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/parcel'],['class' => 'nav-link ' . (isset($active) && $active == 'parcel' ? 'active' : '')])?>

@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanItem;
 use app\modules\plan\models\PlanOrder;
@@ -72,6 +73,7 @@ class ExpensesController extends Controller
     public function actionCreate()
     {
         $model = new PlanOrder([
+             'thai_year' => (AppHelper::YearBudget()+1),
             'plan_group_id' => 'expenses',
             'plan_category_id' => 'OE',//รายจ่ายจากการดำเนินงาน
             'plan_type_id' => 'OE5', //ค่าใช้สอย

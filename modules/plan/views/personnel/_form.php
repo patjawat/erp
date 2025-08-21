@@ -88,7 +88,7 @@ $form = ActiveForm::begin([
 
                     </div>
                     <div class="col-lg-12 col-md-12 col-sm-12">
-                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                        <?= $form->field($model, 'description')->textInput()->label('รายละเอียด') ?>
                     </div>
                 </div>
 
