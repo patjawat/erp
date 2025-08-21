@@ -192,7 +192,13 @@ class PlanOrder extends \yii\db\ActiveRecord
                         IFNULL(SUM(p.month_9), 0)  AS m9,
                         IFNULL(SUM(p.month_10), 0) AS m10,
                         IFNULL(SUM(p.month_11), 0) AS m11,
-                        IFNULL(SUM(p.month_12), 0) AS m12
+                        IFNULL(SUM(p.month_12), 0) AS m12,
+                    (
+                        IFNULL(SUM(p.month_1),0)  + IFNULL(SUM(p.month_2),0)  + IFNULL(SUM(p.month_3),0) +
+                        IFNULL(SUM(p.month_4),0)  + IFNULL(SUM(p.month_5),0)  + IFNULL(SUM(p.month_6),0) +
+                        IFNULL(SUM(p.month_7),0)  + IFNULL(SUM(p.month_8),0)  + IFNULL(SUM(p.month_9),0) +
+                        IFNULL(SUM(p.month_10),0) + IFNULL(SUM(p.month_11),0) + IFNULL(SUM(p.month_12),0)
+                    ) AS total
                 FROM categorise c
                 LEFT JOIN plan_order p 
                     ON p.plan_type_id = c.code

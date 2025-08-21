@@ -60,8 +60,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <td></td>
             <td></td>
         </tr>
-        <tr class="grey">
-            <td width="10px"></td>
+        <tr class="grey bg-secondary">
+            <td width="10px" class="bg-secondary"></td>
             <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i> รายจ่ายบุคลากร</td>
             <td></td>
             <td></td>
@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td width="10px"></td>
                 <td width="10px"></td>
                 <td colspan="2"><?= $item['title'] ?></td>
-                <td class="text-end fw-semibold">0.00</td>
+                <td class="text-end fw-semibold"><?=$item['total']?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m9'], 2) ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m10'], 2) ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m11'], 2) ?></td>
@@ -121,7 +121,46 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td width="10px"></td>
                 <td width="10px"></td>
                 <td colspan="2"><?= $item['title'] ?></td>
-                <td class="text-end fw-semibold">0.00</td>
+                <td class="text-end fw-semibold"><?= number_format($item['total'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m8'], 2) ?></td>
+
+            </tr>
+        <?php endforeach ?>
+
+         <tr class="grey">
+            <td width="10px"></td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายลงทุน</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'CE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['total'], 2) ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m9'], 2) ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m10'], 2) ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item['m11'], 2) ?></td>
@@ -192,7 +231,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr>
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3"><i class="fa-solid fa-chevron-right me-1"></i>รายรับจากการดำเนินงาน</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายรับจากการดำเนินงาน</td>
             <td></td>
             <td></td>
             <td></td>
