@@ -20,3 +20,4 @@ $this->params['breadcrumbs'][] = 'Update';
 <?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
         <?= $this->render('_form',  ['model' => $model]) ?>
+          <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>

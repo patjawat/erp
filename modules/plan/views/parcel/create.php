@@ -21,4 +21,4 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-        <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>
+<?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>

@@ -20,5 +20,5 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
 
+  <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>
 
-        <?= $this->render('_form',  ['model' => $model]) ?>

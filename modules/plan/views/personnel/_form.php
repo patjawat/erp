@@ -16,7 +16,7 @@ $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/plan/parcel/validator'],
-     'fieldConfig' => ['options' => ['class' => 'form-group mb-2 mr-2 me-2']] // spacing form field groups
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-2 mr-2 me-2']] // spacing form field groups
 ]);
 ?>
 
@@ -26,6 +26,7 @@ $form = ActiveForm::begin([
             <div class="card-body">
 
                 <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'plan_category_id')->hiddenInput()->label(false) ?>
                 <!-- ข้อมูลแผน -->
                 <div class="row">
                     <div class="col-md-3">
@@ -46,12 +47,12 @@ $form = ActiveForm::begin([
                         ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
                     </div>
 
-                    
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-  <?php
 
-                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_item','category_id' => 'PE'])->all(),'code','title'),
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type', 'category_id' => $model->plan_category_id])->all(), 'code', 'title'),
                             'options' => [
                                 'placeholder' => 'เลือกรายการค่าใช้จ่าย',
                             ],
@@ -60,46 +61,68 @@ $form = ActiveForm::begin([
                             ],
                             'pluginEvents' => [
                                 "select2:select" => "function() { 
-                console.log($(this).val());
-            }",
+                                    if($(this).val() == 'PE1'){
+                                        $('#planorder-wage_type_id').prop('disabled', false).trigger('change');
+                                        } else {
+                                            $('#planorder-wage_type_id').prop('disabled', true).trigger('change');
+                                    }
+                                }",
                             ],
                         ])->label('ค่าใช้จ่าย');
                         ?>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
-                           <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
-                           </div>
-                        </div>
+                        <?php
+                        echo $form->field($model, 'wage_type_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_wage_type'])->all(), 'code', 'title'),
+                            'options' => [
+                                'placeholder' => 'เลือกค่าจ้าง',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                            'pluginEvents' => [
+                                "select2:select" => "function() {}",
+                            ],
+                        ])->label('ค่าจ้าง'); ?>
 
-
-
-<hr>
-<div>
-                        แผนการใช้จ่าย
-                        <div class="row">
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label('ต.ค.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label('พ.ย.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label('ธ.ค.') ?></div>
- 
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label('ม.ค.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label('ก.พ.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label('มี.ค.') ?></div>
-         
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label('เม.ย.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label('พ.ค.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label('มิ.ย.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label('ก.ค.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label('ส.ค.') ?></div>
-                            <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label('ก.ย.') ?></div>
-                        </div>
                     </div>
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                    </div>
+                </div>
 
- <?= $form->field($model, 'order_price')->textInput()->label('รวมเป็นจำนวนเงินทั้งสิ้น') ?>
+
+
                 <hr>
-               
+                
 
-                <div class="d-flex justify-content-between align-items-center">
-<div></div>
+                <?= $form->field($model, 'order_price')->textInput()->label('รวมเป็นจำนวนเงินทั้งสิ้น') ?>
+                <hr>
+
+                <div>
+                    <div>
+                        <h6>แผนการใช้จ่าย</h6>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_10')->input('number', ['step' => '0.01'])->label('ต.ค.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_11')->input('number', ['step' => '0.01'])->label('พ.ย.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_12')->input('number', ['step' => '0.01'])->label('ธ.ค.') ?></div>
+
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_1')->input('number', ['step' => '0.01'])->label('ม.ค.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_2')->input('number', ['step' => '0.01'])->label('ก.พ.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_3')->input('number', ['step' => '0.01'])->label('มี.ค.') ?></div>
+
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_4')->input('number', ['step' => '0.01'])->label('เม.ย.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_5')->input('number', ['step' => '0.01'])->label('พ.ค.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_6')->input('number', ['step' => '0.01'])->label('มิ.ย.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_7')->input('number', ['step' => '0.01'])->label('ก.ค.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_8')->input('number', ['step' => '0.01'])->label('ส.ค.') ?></div>
+                        <div class="col-lg-2 col-md-3 col-sm-6"> <?= $form->field($model, 'month_9')->input('number', ['step' => '0.01'])->label('ก.ย.') ?></div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center">
                     <div class="d-flex gap-2">
                         <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
                         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
@@ -110,7 +133,7 @@ $form = ActiveForm::begin([
 
 
     </div>
-    
+
 
 </div>
 
@@ -118,6 +141,14 @@ $form = ActiveForm::begin([
 
 <?php
 $js = <<<JS
+
+$(function(){
+    if($('#planorder-plan_type_id').val() == 'PE1'){
+        $('#planorder-wage_type_id').prop('disabled', false).trigger('change');
+    } else {
+        $('#planorder-wage_type_id').prop('disabled', true).trigger('change');
+    }
+})
 
 checkBtnAdd()
 function checkBtnAdd()

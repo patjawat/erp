@@ -52,14 +52,39 @@ class PlanOrder extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['thai_year', 'department_id', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'description', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
+            [
+                [
+                    'thai_year', 'department_id', 'asset_group_id', 'asset_type_id', 
+                    'asset_category_id', 'description', 'data_json', 'created_at', 
+                    'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'
+                ], 
+                'default', 
+                'value' => null
+            ],
             [['budget_used'], 'default', 'value' => 0.00],
             [['status'], 'default', 'value' => 'draft'],
-            [['month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12', 'order_price'], 'default', 'value' => 0],
+            [
+                [
+                    'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 
+                    'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 
+                    'month_11', 'month_12', 'order_price'
+                ], 
+                'default', 
+                'value' => 0
+            ],
             [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['plan_group_id', 'thai_year', 'department_id', 'asset_group_id', 'price_ref'], 'required'],
             [['description'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'title', 'emp_id', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12', 'order_price','plan_item_id'], 'safe'],
+            [
+                [
+                    'data_json', 'created_at', 'updated_at', 'deleted_at', 'title', 
+                    'emp_id', 'month_1', 'month_2', 'month_3', 'month_4', 
+                    'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 
+                    'month_10', 'month_11', 'month_12', 'order_price', 
+                    'plan_type_item_id', 'plan_type_id', 'wage_type_id'
+                ], 
+                'safe'
+            ],
             [['budget_total', 'budget_used'], 'number'],
             [['plan_group_id'], 'string', 'max' => 50],
             [['asset_group_id', 'asset_type_id', 'asset_category_id', 'title', 'emp_id'], 'string', 'max' => 255],
@@ -79,6 +104,7 @@ class PlanOrder extends \yii\db\ActiveRecord
             'plan_group_id' => 'Plan Group ID',
             'asset_group_id' => 'Asset Group ID',
             'asset_type_id' => 'Asset Type ID',
+            'wage_type_id' => 'ค่าจ้าง',
             'asset_category_id' => 'Asset Category ID',
             'title' => 'Title',
             'description' => 'Description',

@@ -6,6 +6,7 @@ use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
@@ -67,6 +68,35 @@ class ParcelController extends Controller
         ]);
     }
 
+
+    public function actionGetAssetType()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $parents = $_POST['depdrop_parents'];
+            if ($parents != null) {
+                $assetGroupId = $parents[0];
+                $assetGroupMapId = Categorise::find()->where(['name' => 'plan_type', 'code' => $assetGroupId])->one();
+                if (isset($assetGroupMapId->data_json['asset_group_id'])) {
+                    $groupId = $assetGroupMapId->data_json['asset_group_id'];
+
+                    $out = Categorise::find()
+                        ->where(['group_id' => $groupId, 'name' => 'asset_type'])
+                        ->select(['code as id', 'title as name'])
+                        ->asArray()
+                        ->all();
+                } else {
+                    $out = [];
+                }
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+        return ['output' => '', 'selected' => ''];
+    }
+
+
     public function actionValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -95,8 +125,10 @@ class ParcelController extends Controller
     public function actionCreate()
     {
         $model = new PlanOrder([
-            'thai_year' => (AppHelper::YearBudget()+1),
+            'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'parcel', // Default to material type
+            'plan_category_id' => 'CE',
+            // 'plan_type_id' => 'CE1',
         ]);
         $items = []; // ไม่มีรายการเดิม
 
@@ -132,8 +164,8 @@ class ParcelController extends Controller
         $model = $this->findModel($id);
         $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
-             Yii::$app->response->format = Response::FORMAT_JSON;
-           PlanItem::deleteAll(['plan_order_id' => $model->id]);
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            PlanItem::deleteAll(['plan_order_id' => $model->id]);
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
                 if (!empty($item['item_name'])) {
@@ -142,10 +174,10 @@ class ParcelController extends Controller
                     $pi->item_name = $item['item_name'];
                     $pi->qty = (int)$item['qty'];
                     $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save();
+                    $pi->save(false);
                 }
             }
-           
+
             return $this->redirect(['view', 'id' => $model->id]);
         }
 

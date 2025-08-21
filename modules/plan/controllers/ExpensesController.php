@@ -2,11 +2,14 @@
 
 namespace app\modules\plan\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
+use app\modules\plan\models\PlanItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * ExpensesController implements the CRUD actions for PlanOrder model.
@@ -68,7 +71,12 @@ class ExpensesController extends Controller
      */
     public function actionCreate()
     {
-        $model = new PlanOrder();
+        $model = new PlanOrder([
+            'plan_group_id' => 'expenses',
+            'plan_category_id' => 'OE',//รายจ่ายจากการดำเนินงาน
+            'plan_type_id' => 'OE5', //ค่าใช้สอย
+        ]);
+           $items = []; // ไม่มีรายการเดิม
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -78,9 +86,7 @@ class ExpensesController extends Controller
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+       return $this->render('create', ['model' => $model, 'items' => $items]);
     }
 
     /**
@@ -94,7 +100,22 @@ class ExpensesController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            PlanItem::deleteAll(['plan_order_id' => $model->id]);
+            $postItems = Yii::$app->request->post('items', []);
+            foreach ($postItems as $item) {
+                if (!empty($item['item_name'])) {
+                    $pi = new PlanItem();
+                    $pi->plan_order_id = $model->id;
+                    $pi->item_name = $item['item_name'];
+                    $pi->qty = (int)$item['qty'];
+                    $pi->unit_price = (float)$item['unit_price'];
+                    $pi->save(false);
+                }
+            }
+
             return $this->redirect(['view', 'id' => $model->id]);
         }
 

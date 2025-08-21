@@ -75,6 +75,7 @@ class PersonnelController extends Controller
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget()+1),
             'plan_group_id' => 'personnel', // Default to material type
+            'plan_category_id' => 'PE',
         ]);
 
         if ($model->load(Yii::$app->request->post())) {
@@ -100,8 +101,6 @@ class PersonnelController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post())) {
              Yii::$app->response->format = Response::FORMAT_JSON;
-            // return $model;
-
              $model->save(false);
             return $this->redirect(['view', 'id' => $model->id]);
         }
