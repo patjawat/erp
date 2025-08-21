@@ -43,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </thead>
     <tbody class="align-middle table-group-divider">
         <tr class="grey">
-            <td colspan="4">รายจ่าย</td>
+            <td colspan="4" class="fw-semibold"><i class="fa-solid fa-caret-right"></i> รายจ่าย</td>
             <td></td>
             <td></td>
             <td></td>
@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr>
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายจ่ายบุคลากร</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i> รายจ่ายบุคลากร</td>
             <td></td>
             <td></td>
             <td></td>
@@ -293,7 +293,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายจ่ายจากการดำเนินงาน</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายจากการดำเนินงาน</td>
             <td></td>
             <td></td>
             <td></td>
@@ -418,7 +418,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr>
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายจ่ายลงทุน</td>
+            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายลงทุน</td>
             <td></td>
             <td></td>
             <td></td>
@@ -489,7 +489,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายจ่ายอื่น</td>
+            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายอื่น</td>
             <td></td>
             <td></td>
             <td></td>
@@ -542,7 +542,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr>
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายรับจากการดำเนินงาน</td>
+            <td colspan="3"><i class="fa-solid fa-chevron-right me-1"></i>รายรับจากการดำเนินงาน</td>
             <td></td>
             <td></td>
             <td></td>
@@ -721,7 +721,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3">รายรับอื่น</td>
+            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายรับอื่น</td>
             <td></td>
             <td></td>
             <td></td>
@@ -846,7 +846,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td></td>
-            <td colspan="3">งบกลาง (ไม่เกินร้อยละ 2-3.5 ของประมาณการรายจ่าย)</td>
+            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>งบกลาง (ไม่เกินร้อยละ 2-3.5 ของประมาณการรายจ่าย)</td>
             <td></td>
             <td></td>
             <td></td>
