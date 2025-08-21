@@ -103,7 +103,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 <div class="row">
 
     <div class="col-12">
-        <div id="viewOwnerAsset">Loading...</div>
+        <!-- <div id="viewOwnerAsset">Loading...</div> -->
     </div>
 </div>
 
