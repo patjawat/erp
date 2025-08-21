@@ -122,7 +122,7 @@ $js = <<< JS
     loadRepairHostory();
     // loadApproveStock();
     // loadPurchase();
-    loadOwnerAsset();
+    // loadOwnerAsset();
     loadDocumentMe();
     
 
