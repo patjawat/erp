@@ -173,4 +173,40 @@ class PlanOrder extends \yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
     }
+
+    public static function listOverviewSummary($thaiYear,$categoryId)
+    {
+            $sql = "
+                SELECT 
+                    c.code,
+                    c.title,
+                    :thai_year AS thai_year,
+                       IFNULL(SUM(p.month_1), 0)  AS m1,
+                        IFNULL(SUM(p.month_2), 0)  AS m2,
+                        IFNULL(SUM(p.month_3), 0)  AS m3,
+                        IFNULL(SUM(p.month_4), 0)  AS m4,
+                        IFNULL(SUM(p.month_5), 0)  AS m5,
+                        IFNULL(SUM(p.month_6), 0)  AS m6,
+                        IFNULL(SUM(p.month_7), 0)  AS m7,
+                        IFNULL(SUM(p.month_8), 0)  AS m8,
+                        IFNULL(SUM(p.month_9), 0)  AS m9,
+                        IFNULL(SUM(p.month_10), 0) AS m10,
+                        IFNULL(SUM(p.month_11), 0) AS m11,
+                        IFNULL(SUM(p.month_12), 0) AS m12
+                FROM categorise c
+                LEFT JOIN plan_order p 
+                    ON p.plan_type_id = c.code
+                    AND p.thai_year = :thai_year
+                WHERE c.`name` = 'plan_type'
+                AND c.category_id = :category_id
+                GROUP BY c.code, c.title
+            ";
+
+            $rows = Yii::$app->db->createCommand($sql, [
+                ':thai_year'   => $thaiYear,
+                ':category_id' => $categoryId,
+            ])->queryAll();
+
+            return $rows;
+    }
 }

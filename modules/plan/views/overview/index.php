@@ -1,5 +1,7 @@
 <?php
 
+use app\modules\plan\models\PlanOrder;
+
 $this->title = 'ติดตามแผนรายจ่าย';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -75,222 +77,28 @@ $this->params['breadcrumbs'][] = $this->title;
             <td></td>
             <td></td>
         </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าจ้างลูกจ้างชั่วคราว / พนักงานกระทรวง</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าล่วงเวลางานบริการ / งานสนับสนุน</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนการปฏิบัติงานเวรผลัดบ่ายหรือผลัดดึกของเจ้าหน้าที่</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเงินเพิ่มพิเศษไม่ทำเวชปฏิบัติส่วนตัว หรือปฏิบัติงาน รพ.เอกชน</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.11)</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนตามผลการปฏิบัติงาน (ฉ.12)</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินเพิ่ม (พ.ต.ส)</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานของเจ้าหน้าที่ (นอกเวลา) ฉ5</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานในคลินิกพิเศษเฉพาะทางนอกเวลาราชการ (SMC)</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนอื่น</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินค่าใช้จ่ายบุคลากรอื่น</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.10)</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'PE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end fw-semibold">0.00</td>
+                <td class="text-end fw-semibold"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m8'], 2) ?></td>
+
+            </tr>
+        <?php endforeach ?>
+
         <tr class="grey">
             <td width="10px"></td>
             <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายจากการดำเนินงาน</td>
@@ -308,188 +116,30 @@ $this->params['breadcrumbs'][] = $this->title;
             <td></td>
             <td></td>
         </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่ายา</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าเวชภัณฑ์มิใช่ยา</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าวัสดุ</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าสาธารณูปโภค</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้สอย</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้จ่ายดำเนินงานอื่น</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'OE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end fw-semibold">0.00</td>
+                <td class="text-end fw-semibold"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['m8'], 2) ?></td>
+
+            </tr>
+        <?php endforeach ?>
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายลงทุน</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าที่ดินและสิ่งก่อสร้าง</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์ต่ำกว่าเกณฑ์</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold">0.00</td>
-        </tr> <!---->
-        <tr class="grey">
-            <td width="10px"></td>
-            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายอื่น</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายอื่น</td>
             <td></td>
             <td></td>
             <td></td>
@@ -721,7 +371,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td width="10px"></td>
-            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายรับอื่น</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>รายรับอื่น</td>
             <td></td>
             <td></td>
             <td></td>
@@ -846,7 +496,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </tr> <!---->
         <tr class="grey">
             <td></td>
-            <td colspan="3"  class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>งบกลาง (ไม่เกินร้อยละ 2-3.5 ของประมาณการรายจ่าย)</td>
+            <td colspan="3" class="fw-semibold"><i class="fa-solid fa-chevron-right me-1"></i>งบกลาง (ไม่เกินร้อยละ 2-3.5 ของประมาณการรายจ่าย)</td>
             <td></td>
             <td></td>
             <td></td>
