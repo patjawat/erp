@@ -117,7 +117,6 @@ class Product extends \yii\db\ActiveRecord
     //สร้างรหัสวัสดุ
 public static function nextCode($categoryId)
 {
-    return $categoryId;
     return Yii::$app->db->createCommand("
         SELECT  CONCAT(
         'M1-', 
@@ -140,32 +139,6 @@ public static function nextCode($categoryId)
 }
 
 
-public static function createOrUpdate($categoryId, $title)
-{
-$model = self::find()
-    ->where([
-        'name' => 'asset_item',
-        'category_id' => $categoryId,
-        'title' => $title
-    ])
-    ->andWhere(['IS NOT', 'code', null])
-    ->one();
-    
-    if ($model) {
-        return $model;
-    }else{
-          $newModel = new Product();
-        $newModel->group_id = 4;
-        $newModel->name = 'asset_item';
-        $newModel->category_id = $categoryId;
-        $newModel->title = $title;
-        $newModel->code = self::nextCode($categoryId);   // ✅ ใช้ static function
-        $newModel->save(false);
-
-        return $newModel->code;
-    }
-
-}
 
 
     public function ShowImg()

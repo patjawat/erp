@@ -74,12 +74,12 @@ $('#btn-import').on('click', function() {
         data: { filePath: filePath, order_id: orderId },
         success: function(res) {
             if(res.status === 'success'){
-                alert(res.message);
+                // alert(res.message);
                 $('#preview-table').html('');
                 $('#import-btn').hide();
                 $('#csvFile').val('');
             } else {
-                alert(res.message);
+                // alert(res.message);
             }
         }
     });

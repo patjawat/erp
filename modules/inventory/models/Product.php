@@ -128,6 +128,32 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
         return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
+
+     //สร้างรหัสวัสดุ
+public static function nextCode($categoryId)
+{
+    return Yii::$app->db->createCommand("
+        SELECT  CONCAT(
+        :category_id,'-', 
+        IFNULL(
+            MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 
+            0
+        ) + 1
+    ) AS next_code
+        FROM categorise
+        WHERE group_id = :group_id
+          AND category_id = :category_id
+          AND name = :name
+          AND code LIKE :code_like
+    ")->bindValues([
+        ':group_id' => 4,
+        ':category_id' => $categoryId,
+        ':name' => 'asset_item',
+        ':code_like' => $categoryId . '-%',
+    ])->queryScalar();
+}
+
+
     public function ShowImg()
     {
         $model = Uploads::find()->where(['ref' => $this->ref])->one();
@@ -142,7 +168,7 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
         return '<div class="d-flex">
         '.Html::img($this->ShowImg(),['class' => 'avatar object-fit-cover']).'
                                 <div class="avatar-detail">
-                                    <h6 class="mb-1 fs-15 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
+                                    <h6 class="mb-1 fs-13 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
                                     <p class="text-primary mb-0 fs-13">'. $this->code.' '.$this->ViewTypeName()['title'].'</p>

@@ -3,12 +3,13 @@
 
 namespace app\modules\inventory\controllers;
 
+use app\models\Categorise;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 use app\models\UploadCsvForm;
-use app\modules\sm\models\Product;
+use app\modules\inventory\models\Product;
 use app\models\Employee; // ตัวอย่าง Model
 use app\modules\inventory\models\StockEvent;
 
@@ -93,25 +94,50 @@ class ImportController extends Controller
     }
 
     $imported = 0;
+    $demo = [];
     if (($handle = fopen($filePath, "r")) !== false) {
         $row = 0;
         while (($data = fgetcsv($handle, 1000, ",")) !== false) {
             $row++;
             if ($row == 1) continue; // ข้าม header
-
-return Product::createOrUpdate($stockOrder->data_json['asset_type'], $data[1]);
+            $assetType = $stockOrder->data_json['asset_type'] ?? '';
+            $product = Categorise::find()->where(['name' => 'asset_item','category_id' =>$assetType,'title' => $data[1]])->one();
+            $demo[] = $data;
+            if(!$product)
+            {
+                $newProduct = new Product;
+                $newProduct->name = 'asset_item';
+                $newProduct->category_id = $assetType;
+                $newProduct->title = $data[1];
+                $newProduct->code  = $newProduct->nextCode($assetType);
+                
+                $newProduct->data_json = [
+                    'unit' => $data['2'],
+                    'asset_type' => $assetType
+                ];
+                $newProduct->save();
+                $assetItem = $newProduct->code;
+            }else{
+                 $assetItem = $product->code;
+            }
             $item = new StockEvent([
-                'name' => 'asset_item',
+                'name' => 'order_item',
+                'asset_item' => $assetItem,
+                'qty' => $data[3],
+                'unit_price' => ($data[4]/$data[3]),
+                'total_price' => $data[4],
+                'order_status' => 'pending',
                 'transaction_type' => 'IN',
                 'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
                 'code' => $stockOrder->code,
                 'category_id' => $stockOrder->id
             ]);
-            $item->asset_item = Product::createOrUpdate($stockOrder->data_json['asset_type'], $data[1]);
+
             if($item->save(false)) $imported++;
         }
         fclose($handle);
     }
+    return $data;
 
     return ['status'=>'success','message'=>"นำเข้าข้อมูลเรียบร้อย {$imported} แถว"];
 }
