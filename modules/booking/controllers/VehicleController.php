@@ -526,9 +526,11 @@ class VehicleController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->save();
             return [
                 'status' => 'success',
                 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                'reload' => true
             ];
         }
 

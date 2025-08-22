@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -66,23 +67,23 @@ $resultsJs = <<<JS
 
     </div>
     <div class="col-md-2">
-        <?= $form->field($model, 'time_start')->textInput(['type' => 'time'])->label('เวลาไป') ?>
-        <?= $form->field($model, 'time_end')->textInput(['type' => 'time'])->label('เวลากลับ') ?>
+        <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาไป') ?>
+        <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลากลับ') ?>
     </div>
     <div class="col-6">
         <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
             'data' => [
-            'official' => 'รถยนต์ราชการ',
-            'personal' => 'รถยนต์ส่วนตัว',
-            'ambulance' => 'รถพยาบาล',
+                'official' => 'รถยนต์ราชการ',
+                'personal' => 'รถยนต์ส่วนตัว',
+                'ambulance' => 'รถพยาบาล',
             ],
             'options' => ['placeholder' => 'เลือกประเภทรถ'],
             'pluginOptions' => [
-            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-            'allowClear' => true,
-            'dropdownParent' => '#main-modal',
+                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
             ],
-            
+
             'pluginEvents' => [
                 'select2:select' => new JsExpression('function(result) { 
                     if ($(this).val() === "personal") {
@@ -110,7 +111,7 @@ $resultsJs = <<<JS
             ],
         ])->label('ประเภทรถที่ต้องการใช้') ?>
         <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
-        
+
 
         <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
             'data' => $model->listReferType(),
@@ -206,7 +207,7 @@ $resultsJs = <<<JS
 
         <div class="col-md-6">
             <?php
-            
+
             echo $form->field($model, 'license_plate', [
                 'addon' => [
                     'append' => [
@@ -231,7 +232,7 @@ $resultsJs = <<<JS
                     'allowClear' => true,
                     'dropdownParent' => '#main-modal',
                 ]
-            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) '.$model->license_plate);
+            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) ' . $model->license_plate);
             ?>
         </div>
     </div>
@@ -298,7 +299,8 @@ $resultsJs = <<<JS
 </div>
 <div class="row">
     <div class="col-7">
-        <?php // $form->field($model, 'private_car', ['options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->private_car == 1 ? true : false)])->label('ใช้รถยนต์ส่วนตัว'); ?>
+        <?php // $form->field($model, 'private_car', ['options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->private_car == 1 ? true : false)])->label('ใช้รถยนต์ส่วนตัว'); 
+        ?>
     </div>
     <div class="col-5">
 
@@ -307,7 +309,7 @@ $resultsJs = <<<JS
         <?php if ($model->vehicle_type_id == 'ambulance'): ?>
 
 
-        <!-- <div class="card border border-1">
+            <!-- <div class="card border border-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h6>
@@ -329,30 +331,30 @@ $resultsJs = <<<JS
 </div>
 
 <?php if ($model->vehicle_type_id == 'ambulance'): ?>
-<div class="card mb-2 border-2 border-primary" style="border-style:dashed">
-    <div class="card-body">
+    <div class="card mb-2 border-2 border-primary" style="border-style:dashed">
+        <div class="card-body">
 
-        <div class="row">
-            <div class="col-6">
-                <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
-                <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
-                <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
-            </div>
-            <div class="col-6">
-                <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
-                <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
-                <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+            <div class="row">
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
+                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
+                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
+                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
+                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
 
+                </div>
             </div>
+            <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+
         </div>
-        <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
-
     </div>
-</div>
 <?php endif; ?>
 
 <?php if ($model->vehicle_type_id == 'general'): ?>
-<?php
+    <?php
     echo $form->field($model, 'document_id')->widget(Select2::classname(), [
         'data' => $list,
         'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
@@ -361,7 +363,7 @@ $resultsJs = <<<JS
             'dropdownParent' => '#main-modal',
         ],
     ])->label('หนังสืออ้างอิง');
-?>
+    ?>
 <?php endif; ?>
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
@@ -381,8 +383,9 @@ $resultsJs = <<<JS
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-    <div id="showListCar"></div>
-        <?PHP // echo $this->render('list_cars', ['model' => $model]) ?>
+        <div id="showListCar"></div>
+        <?PHP // echo $this->render('list_cars', ['model' => $model]) 
+        ?>
     </div>
 </div>
 
@@ -454,9 +457,9 @@ $js = <<<JS
                     beforLoadModal()
                 },
                 success: function (response) {
-                    // form.yiiActiveForm('updateMessages', response, true);
                     if(response.status == 'success') {
                         closeModal()
+
                         Swal.fire({
                             title: "สำเร็จ!",
                             text: "บันทึกข้อมูลเรียบร้อยแล้ว",
@@ -464,9 +467,18 @@ $js = <<<JS
                             timer: 1000,
                             showConfirmButton: false
                         }).then(async () => {
+                            try {
                                 await calendar.refetchEvents(); // สำหรับ FullCalendar v5+
                                 await $("#main-modal").modal("hide");
-                        });
+                                
+                            } catch (error) {
+                                
+                            }
+                            if(response.reload)
+                                {
+                                    location.reload();
+                                }
+                            });
                     }
                 }
             });

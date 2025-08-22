@@ -67,8 +67,8 @@ $resultsJs = <<<JS
 
     </div>
     <div class="col-md-2">
-        <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลา') ?>
-        <?= $form->field($model, 'time_end')->textInput(['type' => 'time'])->label('เวลากลับ') ?>
+        <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาไป') ?>
+        <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลากลับ') ?>
     </div>
     <div class="col-6">
         <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
