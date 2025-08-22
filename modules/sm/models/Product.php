@@ -117,9 +117,16 @@ class Product extends \yii\db\ActiveRecord
     //สร้างรหัสวัสดุ
 public static function nextCode($categoryId)
 {
+    return $categoryId;
     return Yii::$app->db->createCommand("
-        SELECT CONCAT(:category_id,'-', IFNULL(MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 0) + 1)) AS next_code
-        FROM product
+        SELECT  CONCAT(
+        'M1-', 
+        IFNULL(
+            MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 
+            0
+        ) + 1
+    ) AS next_code
+        FROM categorise
         WHERE group_id = :group_id
           AND category_id = :category_id
           AND name = :name
@@ -135,14 +142,19 @@ public static function nextCode($categoryId)
 
 public static function createOrUpdate($categoryId, $title)
 {
-    $model = self::find()->where([
+$model = self::find()
+    ->where([
         'name' => 'asset_item',
         'category_id' => $categoryId,
         'title' => $title
-    ])->one();
-
-    if (!$model) {
-        $newModel = new Product();
+    ])
+    ->andWhere(['IS NOT', 'code', null])
+    ->one();
+    
+    if ($model) {
+        return $model;
+    }else{
+          $newModel = new Product();
         $newModel->group_id = 4;
         $newModel->name = 'asset_item';
         $newModel->category_id = $categoryId;
@@ -153,7 +165,6 @@ public static function createOrUpdate($categoryId, $title)
         return $newModel->code;
     }
 
-    return $model->code;
 }
 
 

@@ -52,33 +52,6 @@ $emp = UserHelper::GetEmployee();
                         }
                                 ?>
 <?php endforeach; ?>
-
-
-
-   <table class="table" border="1">
-        <tr>
-            <td style="align-items: center;">
-                    <div>
-
-                        <div>ลงชื่อ.................................................ผู้เบิก</div>
-                    </div>
-                <div>
-                    (น.ส.เมวิกา กาญจนะโกมล)
-                </div>
-                <div>ตำแหน่ง พนักงานบัตรรายงานโรค</div>
-                <div>19 สิงหาคม 2568 13:25 น.</div>
-            </td>
-            <td>
-                 <div>ลงชื่อ.................................................ผู้จ่ายพัสดุ</div>
-                <div>
-                    (ไม่ระบุผู้จ่าย)
-                </div>
-                <div>ตำแหน่ง</div>
-                <div>-</div>
-            </td>
-        </tr>
-    </table>
-    
 <div class="row">
 
     <div class="col-8">

@@ -99,7 +99,7 @@ class ImportController extends Controller
             $row++;
             if ($row == 1) continue; // ข้าม header
 
-
+return Product::createOrUpdate($stockOrder->data_json['asset_type'], $data[1]);
             $item = new StockEvent([
                 'name' => 'asset_item',
                 'transaction_type' => 'IN',
@@ -107,7 +107,7 @@ class ImportController extends Controller
                 'code' => $stockOrder->code,
                 'category_id' => $stockOrder->id
             ]);
-            $item->asset_item = Product::createOrUpdate($stockOrder->category_id, $data[1]);
+            $item->asset_item = Product::createOrUpdate($stockOrder->data_json['asset_type'], $data[1]);
             if($item->save(false)) $imported++;
         }
         fclose($handle);
