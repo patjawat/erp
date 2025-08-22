@@ -121,7 +121,8 @@ class ProductController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 if($model->auto == "1"){
-                    $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'-?');
+                    // $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'-?');
+                    $model->code  = $model->nextCode($model->category_id);
                 }
 
                 $model->save(false);

@@ -15,7 +15,10 @@ $this->title = 'นำเข้าไฟล์ CSV';
 <div id="preview-table"></div>
 
 <div id="import-btn" style="display:none; margin-top:10px;">
-    <button class="btn btn-success" id="btn-import">ยืนยันนำเข้า</button>
+    <button class="btn btn-success" id="btn-import" type="button">
+        <i class="fa-solid fa-file-import me-2"></i>ยืนยันนำเข้า
+    </button>
+    <?= Html::hiddenInput('filePath', null, ['id' => 'filePath']) ?>
 </div>
 
 <?php

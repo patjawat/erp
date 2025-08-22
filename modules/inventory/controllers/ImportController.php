@@ -4,10 +4,11 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
-use yii\web\Response;
 use app\models\UploadCsvForm;
+use app\modules\sm\models\Product;
 use app\models\Employee; // ตัวอย่าง Model
 use app\modules\inventory\models\StockEvent;
 
@@ -98,11 +99,15 @@ class ImportController extends Controller
             $row++;
             if ($row == 1) continue; // ข้าม header
 
-            $item = new StockEvent();
-            $item->transaction_type = 'IN';
-            $item->warehouse_id = $stockOrder->warehouse_id; // แนบ order_id
-            $item->code = $stockOrder->code;
-            $item->category_id = $stockOrder->id;
+
+            $item = new StockEvent([
+                'name' => 'asset_item',
+                'transaction_type' => 'IN',
+                'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
+                'code' => $stockOrder->code,
+                'category_id' => $stockOrder->id
+            ]);
+            $item->asset_item = Product::createOrUpdate($stockOrder->category_id, $data[1]);
             if($item->save(false)) $imported++;
         }
         fclose($handle);

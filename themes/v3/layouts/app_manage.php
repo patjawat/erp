@@ -113,7 +113,14 @@ $items = [
         'show' => Yii::$app->user->can('hr') ? true : false,
         // 'show' => true
     ],
-    
+        [
+        'title' => 'แผนงาน',
+        'icon' => 'fa-solid fa-ranking-star fs-1',
+        'url' => ['/plan/dashboard'],
+        'padding' => 'p-3',
+        // 'show' => Yii::$app->user->can('hr') ? true : false,
+        'show' => true
+    ],
     
 
     

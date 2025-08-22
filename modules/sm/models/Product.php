@@ -60,7 +60,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items','auto','q','unit_name'], 'safe'],
+            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -110,9 +110,52 @@ class Product extends \yii\db\ActiveRecord
 
     public function listAssetType()
     {
-        $items = self::find()->where(['category_id' => 4,'name' => 'asset_type'])->all();
-        return ArrayHelper::map($items, 'code','title');
+        $items = self::find()->where(['category_id' => 4, 'name' => 'asset_type'])->all();
+        return ArrayHelper::map($items, 'code', 'title');
     }
+
+    //สร้างรหัสวัสดุ
+public static function nextCode($categoryId)
+{
+    return Yii::$app->db->createCommand("
+        SELECT CONCAT(:category_id,'-', IFNULL(MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 0) + 1)) AS next_code
+        FROM product
+        WHERE group_id = :group_id
+          AND category_id = :category_id
+          AND name = :name
+          AND code LIKE :code_like
+    ")->bindValues([
+        ':group_id' => 4,
+        ':category_id' => $categoryId,
+        ':name' => 'asset_item',
+        ':code_like' => $categoryId . '-%',
+    ])->queryScalar();
+}
+
+
+public static function createOrUpdate($categoryId, $title)
+{
+    $model = self::find()->where([
+        'name' => 'asset_item',
+        'category_id' => $categoryId,
+        'title' => $title
+    ])->one();
+
+    if (!$model) {
+        $newModel = new Product();
+        $newModel->group_id = 4;
+        $newModel->name = 'asset_item';
+        $newModel->category_id = $categoryId;
+        $newModel->title = $title;
+        $newModel->code = self::nextCode($categoryId);   // ✅ ใช้ static function
+        $newModel->save(false);
+
+        return $newModel->code;
+    }
+
+    return $model->code;
+}
+
 
     public function ShowImg()
     {
@@ -125,31 +168,32 @@ class Product extends \yii\db\ActiveRecord
             $type = pathinfo($filepath, PATHINFO_EXTENSION);
             $data = file_get_contents($filepath);
             return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-            
         }
     }
 
-    public function Avatar(){
+    public function Avatar()
+    {
         return '<div class="d-flex">
-        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
                                 <div class="avatar-detail">
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
-                                        '.$this->title.'
+                                        ' . $this->title . '
                                     </h6>
-                                    <span class="text-primary fw-semibold">'. $this->code.'</span>
+                                    <span class="text-primary fw-semibold">' . $this->code . '</span>
                                 </div>
                             </div>';
     }
 
     //แสดงสำหรับ line
-    public function AvatarLine($msg = null){
+    public function AvatarLine($msg = null)
+    {
         return '<div class="d-flex">
-        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
                                 <div class="avatar-detail">
                                     <h6 class="mb-1 fs-15 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
-                                        '.$this->title.'
+                                        ' . $this->title . '
                                     </h6>
-                                    <span class="text-primary fw-semibold">'. $msg.'</span>
+                                    <span class="text-primary fw-semibold">' . $msg . '</span>
                                 </div>
                             </div>';
     }
@@ -157,40 +201,37 @@ class Product extends \yii\db\ActiveRecord
 
 
     //แสดงรูปแบบประเภท
-    public function ViewTypeName(){
+    public function ViewTypeName()
+    {
         try {
- 
+
             $model =  self::find()->where(['name' => $this->name])->one();
-            
-                return [
-                    'title' =>  isset($this->productType->title) ? $this->productType->title : 'ไม่ได้ระบุ',
-                    'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
-                ];
 
+            return [
+                'title' =>  isset($this->productType->title) ? $this->productType->title : 'ไม่ได้ระบุ',
+                'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
+            ];
         } catch (\Throwable $th) {
-              return [
-                    'title' =>  '',
-                    'code' => ''
-                ];
+            return [
+                'title' =>  '',
+                'code' => ''
+            ];
         }
-             
-            
-               
-
     }
 
-    public function AvatarXl(){
-                return '<div class="d-flex">
-                        '.Html::img($this->ShowImg(),['class' => 'avatar']).'
+    public function AvatarXl()
+    {
+        return '<div class="d-flex">
+                        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
                             <div class="avatar-detail">
-                                <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">'.$this->title.'</h5>
-                                    <p class="text-primary mb-0 fs-6">'.isset($this->productType) ? $this->productType->title : '-'.' <code>('.(isset($this->data_json['unit']) ? $this->data_json['unit'] : '-').')</code></p>
+                                <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">' . $this->title . '</h5>
+                                    <p class="text-primary mb-0 fs-6">' . isset($this->productType) ? $this->productType->title : '-' . ' <code>(' . (isset($this->data_json['unit']) ? $this->data_json['unit'] : '-') . ')</code></p>
                             </div>
         </div>';
     }
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','category_id' => [4]])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => [4]])->all(), 'code', 'title');
     }
 
     public function ListUnit()
