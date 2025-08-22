@@ -7,9 +7,11 @@ use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
+use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\models\UploadCsvForm;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\purchase\models\Order;
@@ -690,6 +692,108 @@ class StockInController extends Controller
         }
     }
 
+    public function actionPreview()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = new UploadCsvForm();
+        $model->csvFile = UploadedFile::getInstanceByName('csvFile');
+
+        if ($model->validate()) {
+            $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
+            $model->csvFile->saveAs($filePath);
+
+            // อ่านไฟล์ CSV
+            $previewData = [];
+            if (($handle = fopen($filePath, "r")) !== false) {
+                $row = 0;
+                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                    $previewData[] = $data;
+                    $row++;
+                    if ($row >= 10) break; // แสดง 10 แถวแรก
+                }
+                fclose($handle);
+            }
+
+            return [
+                'status' => 'success',
+                'preview' => $previewData,
+                'filePath' => $filePath,
+            ];
+        }
+
+        return ['status' => 'error', 'errors' => $model->getErrors()];
+    }
+    
+
+    public function actionImportCsv()
+    {
+         $model = new UploadCsvForm();
+        $previewData = null;
+        $filePath = null;
+
+        if (Yii::$app->request->isPost) {
+            $model->csvFile = UploadedFile::getInstance($model, 'csvFile');
+
+            if ($model->validate()) {
+                $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
+                $model->csvFile->saveAs($filePath);
+
+                // อ่านไฟล์มา preview
+                $previewData = [];
+                if (($handle = fopen($filePath, "r")) !== false) {
+                    $row = 0;
+                    while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                        $previewData[] = $data;
+                        $row++;
+                        if ($row >= 10) break; // แสดงตัวอย่าง 10 แถว
+                    }
+                    fclose($handle);
+                }
+            }
+        }
+
+        // ถ้ากดยืนยันนำเข้าจริง
+        if (Yii::$app->request->post('confirmImport') && ($filePath = Yii::$app->request->post('filePath'))) {
+            if (($handle = fopen($filePath, "r")) !== false) {
+                $row = 0;
+                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                    $row++;
+                    if ($row == 1) continue; // ข้าม header
+
+                    $employee = new Employee();
+                    $employee->name = $data[0];
+                    $employee->email = $data[1];
+                    $employee->phone = $data[2];
+                    $employee->save(false);
+                }
+                fclose($handle);
+            }
+
+            Yii::$app->session->setFlash('success', 'นำเข้าข้อมูลเรียบร้อยแล้ว');
+            return $this->redirect(['index']);
+        }
+
+                if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('import_csv', [
+                      'model' => $model,
+            'previewData' => $previewData,
+            'filePath' => $filePath,
+                ]),
+            ];
+        } else {
+            return $this->render('import_csv', [
+                 'model' => $model,
+            'previewData' => $previewData,
+            'filePath' => $filePath,
+            ]);
+        }
+
+    }
     /**
      * Finds the StockEvent model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

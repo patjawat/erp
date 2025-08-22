@@ -5,6 +5,7 @@ use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 use app\components\AppHelper;
 use app\modules\inventory\models\StockEvent;
+
 $totalPrice = 0;
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
@@ -19,11 +20,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
+<?php $this->beginBlock('navbar_menu'); ?>
+<?= $this->render('../default/menu', ['active' => 'stock_in']) ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
-<?php $this->endBlock(); ?>
+
 
 <?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <div class="row">
@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'label' => 'มูลค่า',
-                            'value' => number_format($model->getTotalOrderPrice(),2)
+                            'value' => number_format($model->getTotalOrderPrice(), 2)
                         ]
                     ],
                 ]) ?>
@@ -73,13 +73,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง</h6>
                 </div>
-                <?=$model->StackComittee()?>
+                <?= $model->StackComittee() ?>
             </div>
             <div class="card-footer d-flex justify-content-between">
                 <?= Html::a('รายการ', [
-                            '/inventory/committee/list','id' => $model->id,'title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
-                        ], ['class' => 'open-modal','data' => ['size' => 'modal-lg']]) ?>
-                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/inventory/committee/create', 'id' => $model->id, 'action' => 'create','name' => 'receive_committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    '/inventory/committee/list',
+                    'id' => $model->id,
+                    'title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
+                ], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <div>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/inventory/committee/create', 'id' => $model->id, 'action' => 'create', 'name' => 'receive_committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+
+                    
+                </div>
             </div>
         </div>
         <!-- End Committee -->
@@ -90,19 +96,31 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <div class="d-flex justify-content-between">
                     <h6><i class="bi bi-ui-checks"></i> รับเข้า <span
-                            class="badge rounded-pill text-bg-primary"><?=count($model->getItems())?> </span> รายการ
+                            class="badge rounded-pill text-bg-primary"><?= count($model->getItems()) ?> </span> รายการ
                     </h6>
-                    <?php if($model->order_status == 'success'):?>
+                    <?php if ($model->order_status == 'success'): ?>
 
-                    <?php else:?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-in/product-list','id' => $model->id,'name' => 'order_item','title' => 'รายการวัสดุ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-lg']])?>
-                    <?php endif?>
-                    <!-- <?php if($model->order_status == 'success'):?>
+                    <?php else: ?>
+                        <div class="d-flex flex-row gap-3">
+                            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/inventory/stock-in/product-list', 'id' => $model->id, 'name' => 'order_item', 'title' => 'รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <div class="dropdown">
+                                <button class="btn btn-success rounded-pill shadow dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-file-arrow-up"></i> การนำเข้า
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?=Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',['/inventory/import','order_id' => $model->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า','https://docs.google.com/spreadsheets/d/1NYsHKu0_6UcvD1ii-0TWhEpUQUsWZJ9ZXUekqZkylP8/edit?usp=sharing',['class' => 'dropdown-item','target' => '_blank'])?></li>
+                                </ul>
+                            </div>
+                        </div>
+                    <?php endif ?>
+                    <!-- <?php if ($model->order_status == 'success'): ?>
                    
-                    <?=Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก',['/inventory/stock-event/cancel-order','id' => $model->id],['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order','data' => ['title' => 'ยืนยัน','text' => 'ยืนยันยกเลิกรายการนี้']])?>
-                    <?php else:?>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ',['/inventory/stock-in/create','order_id' => $model->id,'name' => 'order_item','title' => 'เพิ่มรายการ'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
-                <?php endif?>  -->
+                    <?= Html::a('<i class="fa-solid fa-xmark"></i> ยกเลิก', ['/inventory/stock-event/cancel-order', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill shadow confirm-order', 'data' => ['title' => 'ยืนยัน', 'text' => 'ยืนยันยกเลิกรายการนี้']]) ?>
+                    <?php else: ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เลือกรายการ', ['/inventory/stock-in/create', 'order_id' => $model->id, 'name' => 'order_item', 'title' => 'เพิ่มรายการ'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                <?php endif ?>  -->
                 </div>
                 <table class="table table-striped mt-3">
                     <thead class="table-primary">
@@ -123,46 +141,47 @@ $this->params['breadcrumbs'][] = $this->title;
                     </thead>
                     <tbody class="table-group-divider">
                         <?php foreach ($model->getItems() as $item): ?>
-                        <tr class="<?=$item->order_status == 'pending' ? 'bg-warning-subtle' : ''?>">
-                            <td class="align-middle">
-                                <?php
-                            try {
-                                echo $item->product->Avatar();
-                            } catch (\Throwable $th) {}
-                            ?>
-                            </td>
+                            <tr class="<?= $item->order_status == 'pending' ? 'bg-warning-subtle' : '' ?>">
+                                <td class="align-middle">
+                                    <?php
+                                    try {
+                                        echo $item->product->Avatar();
+                                    } catch (\Throwable $th) {
+                                    }
+                                    ?>
+                                </td>
 
-                            <td class="align-middle text-center">
-                                <?=isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'?>
-                            </td>
-                            <td class="align-middle text-center">
-                                <?=isset($item->data_json['item_type']) ? $item->data_json['item_type'] : '-'?></td>
-                            <td class="align-middle text-end">
-                                <?=isset($item->unit_price) ? number_format($item->unit_price, 2) : '-' ?></td>
+                                <td class="align-middle text-center">
+                                    <?= isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-' ?>
+                                </td>
+                                <td class="align-middle text-center">
+                                    <?= isset($item->data_json['item_type']) ? $item->data_json['item_type'] : '-' ?></td>
+                                <td class="align-middle text-end">
+                                    <?= isset($item->unit_price) ? number_format($item->unit_price, 2) : '-' ?></td>
 
-                            <td class="align-middle text-center"><?= $item->qty ?></td>
+                                <td class="align-middle text-center"><?= $item->qty ?></td>
 
-                            <td class="align-middle text-center"><?= $item->lot_number ?></td>
-                            <td class="align-middle text-center">
-                                <?= $item->mfgDate; ?></td>
-                            <td class="align-middle text-center">
-                                <?=$item->expDate?></td>
-                            <td class="align-middle text-end">
+                                <td class="align-middle text-center"><?= $item->lot_number ?></td>
+                                <td class="align-middle text-center">
+                                    <?= $item->mfgDate; ?></td>
+                                <td class="align-middle text-center">
+                                    <?= $item->expDate ?></td>
+                                <td class="align-middle text-end">
                                     <span class="fw-semibold">
-                                        <?php echo isset($item->total_price) ? number_format($item->total_price,2) : '-' ?>
+                                        <?php echo isset($item->total_price) ? number_format($item->total_price, 2) : '-' ?>
                                     </span>
                                 </td>
-                            <td class="align-middle">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <?php if($item->order_status == 'pending'):?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-in/update', 'id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
-                                    <?php else:?>
-                                    <span>ดำเนินการแล้ว</span>
-                                    <?php endif?>
-                                </div>
-                            </td>
-                        </tr>
+                                <td class="align-middle">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <?php if ($item->order_status == 'pending'): ?>
+                                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-in/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/inventory/stock-in/delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger shadow rounded-pill delete-item']) ?>
+                                        <?php else: ?>
+                                            <span>ดำเนินการแล้ว</span>
+                                        <?php endif ?>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
 
                     </tbody>
@@ -170,7 +189,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="form-group mt-3 d-flex justify-content-center">
-            <?=($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า',['/inventory/stock-in/confirm-order','id' => $model->id],['class' => 'btn btn-primary rounded-pill shadow confirm-order','data' => ['title' => 'รับวัสดุเข้าคลัง','text' => 'ยืนยันการรับวัสดุเข้าคลัง']]) : ''?>
+            <?= ($model->isPending() >= 1) ? Html::a('<i class="bi bi-check2-circle"></i> บันทึกรับเข้า', ['/inventory/stock-in/confirm-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow confirm-order', 'data' => ['title' => 'รับวัสดุเข้าคลัง', 'text' => 'ยืนยันการรับวัสดุเข้าคลัง']]) : '' ?>
         </div>
     </div>
 
@@ -261,4 +280,4 @@ JS;
 $this->registerJS($js)
 ?>
 
-<?php Pjax::end()?>
+<?php Pjax::end() ?>

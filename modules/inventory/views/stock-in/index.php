@@ -1,13 +1,8 @@
 <?php
-
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use yii\grid\ActionColumn;
 use app\modules\purchase\models\Order;
 use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\StockEvent;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEventSearch $searchModel */
@@ -20,8 +15,6 @@ $this->title = $warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory']];
 $this->params['breadcrumbs'][] = $this->title;
 $this->params['breadcrumbs'][] = 'ทะเบียนรับเข้า';
-
-$createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
 
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -65,15 +58,16 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <div class="stock-in-index">
     <div class="card">
         <div class="card-header bg-primary-gradient text-white">
-            <div class="d-flex justify-content-between">
-         <h6 class="text-white"><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
-         class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-column">
+                    <h6 class="text-white"><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
+                    class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
                 </h6>
-                
                 <span class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $searchModel->SummaryTotal(false) ?></span>
+            </div>
 
                  <div class="d-flex gap-3">
-            <?= Html::a($createIcon . 'สร้างใหม่', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-light shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/inventory/stock-in/create', 'name' => 'order', 'type' => 'IN', 'title' => '<i class="bi bi-ui-checks"></i> สร้างใบรับเข้า'], ['class' => 'btn btn-light shadow open-modal position-relative', 'data' => ['size' => 'modal-md']]) ?>
             <?= $count > 0 ?  Html::a('<i class="fa-solid fa-bell"></i> รอรับเข้า <span class="badge text-bg-danger">' . $count . '</span>', ['/inventory/stock-in/list-pending-order', 'name' => 'order', 'title' => '<i class="bi bi-ui-checks"></i> รายการตรวจรับ'], ['class' => 'btn btn-warning shadow open-modal position-relative', 'data' => ['size' => 'modal-xl']]) : '' ?>
         </div>
 

@@ -98,6 +98,7 @@ class StockEvent extends Yii\db\ActiveRecord
             ], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
+             [['csvFile'], 'file', 'skipOnEmpty' => false, 'extensions' => 'csv'],
         ];
     }
 
