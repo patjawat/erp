@@ -179,7 +179,8 @@ $('#form-product').on('beforeSubmit', function (e) {
                     await uploadFile();
                 },
                 success: async function (response) {
-                    form.yiiActiveForm('updateMessages', response, true);
+                    console.log();
+                    
                     if (response.status === 'success') {
                         closeModal();
                         await Swal.fire({
@@ -190,6 +191,16 @@ $('#form-product').on('beforeSubmit', function (e) {
                             confirmButtonText: 'ตกลง'
                         });
                         await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
+                    }
+
+                    if (response.status === 'error') 
+                    {
+                        Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: response.msg,
+                        icon: 'error',
+                        confirmButtonText: 'ตกลง'
+                    });
                     }
                 },
                 error: function () {

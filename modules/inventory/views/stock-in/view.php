@@ -49,6 +49,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= DetailView::widget([
                     'model' => $model,
                     'attributes' => [
+                           [
+                            'label' => 'ประเภทวัสดุ',
+                            'value' => $model->viewAssetType()
+                           ],
                         [
                             'label' => 'สถานะ',
                             'format' => 'raw',
@@ -57,7 +61,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'label' => 'มูลค่า',
                             'value' => number_format($model->getTotalOrderPrice(), 2)
-                        ]
+                        ],
+                      
                     ],
                 ]) ?>
 
@@ -104,13 +109,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex flex-row gap-3">
                             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ', ['/inventory/stock-in/product-list', 'id' => $model->id, 'name' => 'order_item', 'title' => 'รายการวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <div class="dropdown">
-                                <button class="btn btn-success rounded-pill shadow dropdown-toggle" type="button"
+                                <button class="btn btn-secondary rounded-pill shadow dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-file-arrow-up"></i> การนำเข้า
+                                    <i class="fa-solid fa-gear"></i> จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?=Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',['/inventory/import','order_id' => $model->id],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',['/inventory/import','order_id' => $model->id,'title' => 'นำเข้าไฟล์ CSV'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']])?></li>
                                     <li><?=Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า','https://docs.google.com/spreadsheets/d/1NYsHKu0_6UcvD1ii-0TWhEpUQUsWZJ9ZXUekqZkylP8/edit?usp=sharing',['class' => 'dropdown-item','target' => '_blank'])?></li>
+                                    <li>
+                                        <?= Html::a('<i class="fa-regular fa-trash-can me-2"></i> ลบรายการทั้งหมด',
+    '#',
+    ['class' => 'dropdown-item delete-all-item', 'data-order-id' => $model->id]) ?>
+
+                                        </li>
                                 </ul>
                             </div>
                         </div>
@@ -275,7 +286,57 @@ $("body").on("click", ".delete-order-item", async function (e) {
   }
 });
 
-               
+       
+$('.delete-all-item').click(function (e) { 
+    e.preventDefault();
+    var orderId = $(this).data('order-id');
+
+    Swal.fire({
+        title: 'ยืนยันการลบ?',
+        text: "คุณแน่ใจว่าต้องการลบรายการทั้งหมด!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่ ลบเลย',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ส่ง AJAX ลบรายการ
+            $.ajax({
+                type: "post",
+                url: '/inventory/stock-in/delete-all-item',
+                data: { order_id: orderId, _csrf: $('meta[name="csrf-token"]').attr("content") },
+                dataType: "json",
+                success: function (response) {
+                    if(response.status == 'success') {
+                        Swal.fire(
+                            'ลบเรียบร้อย!',
+                            'รายการทั้งหมดถูกลบแล้ว',
+                            'success'
+                        ).then(() => {
+                            location.reload(); 
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            response.message || 'ไม่สามารถลบรายการได้',
+                            'error'
+                        );
+                    }
+                },
+                error: function () {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถลบรายการได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+});
+
 JS;
 $this->registerJS($js)
 ?>

@@ -3,12 +3,13 @@
 
 namespace app\modules\inventory\controllers;
 
-use app\models\Categorise;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
+use app\models\Categorise;
 use app\models\UploadCsvForm;
+use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
 use app\models\Employee; // ตัวอย่าง Model
 use app\modules\inventory\models\StockEvent;
@@ -27,14 +28,16 @@ class ImportController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('index',
-                [
-                    'model' => $model,
-                    'order_id' => $order_id
-                ]),
+                'content' => $this->renderAjax(
+                    'index',
+                    [
+                        'model' => $model,
+                        'order_id' => $order_id
+                    ]
+                ),
             ];
         } else {
-            return $this->render('index',['model' => $model]);
+            return $this->render('index', ['model' => $model]);
         }
     }
 
@@ -81,65 +84,144 @@ class ImportController extends Controller
     /**
      * POST: นำเข้าข้อมูลจริง
      */
-   public function actionImportCsv()
-{
-    Yii::$app->response->format = Response::FORMAT_JSON;
+    public function actionImportCsv()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-    $filePath = Yii::$app->request->post('filePath');
-    $id = Yii::$app->request->post('order_id');
-    $stockOrder = StockEvent::findOne($id);
-
-    if (!$filePath || !file_exists($filePath)) {
-        return ['status'=>'error','message'=>'ไม่พบไฟล์'];
-    }
-
-    $imported = 0;
-    $demo = [];
-    if (($handle = fopen($filePath, "r")) !== false) {
-        $row = 0;
-        while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-            $row++;
-            if ($row == 1) continue; // ข้าม header
-            $assetType = $stockOrder->data_json['asset_type'] ?? '';
-            $product = Categorise::find()->where(['name' => 'asset_item','category_id' =>$assetType,'title' => $data[1]])->one();
-            $demo[] = $data;
-            if(!$product)
-            {
-                $newProduct = new Product;
-                $newProduct->name = 'asset_item';
-                $newProduct->category_id = $assetType;
-                $newProduct->title = $data[1];
-                $newProduct->code  = $newProduct->nextCode($assetType);
-                
-                $newProduct->data_json = [
-                    'unit' => $data['2'],
-                    'asset_type' => $assetType
-                ];
-                $newProduct->save();
-                $assetItem = $newProduct->code;
-            }else{
-                 $assetItem = $product->code;
-            }
-            $item = new StockEvent([
-                'name' => 'order_item',
-                'asset_item' => $assetItem,
-                'qty' => $data[3],
-                'unit_price' => ($data[4]/$data[3]),
-                'total_price' => $data[4],
-                'order_status' => 'pending',
-                'transaction_type' => 'IN',
-                'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
-                'code' => $stockOrder->code,
-                'category_id' => $stockOrder->id
-            ]);
-
-            if($item->save(false)) $imported++;
+        $filePath = Yii::$app->request->post('filePath');
+        $id = Yii::$app->request->post('order_id');
+        $stockOrder = StockEvent::findOne($id);
+        if (!$filePath || !file_exists($filePath)) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
         }
-        fclose($handle);
+
+        $imported = 0;
+        $demo = [];
+        if (($handle = fopen($filePath, "r")) !== false) {
+            $row = 0;
+            $error = 0;
+            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                $row++;
+                if ($row == 1) continue; // ข้าม header
+                $assetType = $stockOrder->data_json['asset_type'] ?? '';
+
+                $product = $this->findProduct($data[0], $data[1], $assetType, $data[4]);
+                if ($product['status'] == 'error') {
+                    $error++;
+                }else{
+                $assetItem = $product['data']['code'];
+                $checkInOrder = StockEvent::findOne(['name' => 'order_item','asset_item' => $assetItem,'category_id' => $stockOrder->id]);
+                if(!$checkInOrder){
+                    $item = new StockEvent([
+                        'name' => 'order_item',
+                        'asset_item' => $assetItem,
+                        'qty' => $data[3],
+                        'unit_price' => ($data[4] / $data[3]),
+                        'total_price' => $data[4],
+                        'order_status' => 'pending',
+                        'transaction_type' => 'IN',
+                        'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
+                        'code' => $stockOrder->code,
+                        'category_id' => $stockOrder->id,
+                        'data_json' => [
+                            "req_qty" =>  "",
+                            "exp_date" => "",
+                            "mfg_date" => "",
+                            "item_type" =>  "ยอดยกมา",
+                            "po_number" => "",
+                            "pq_number" => "",
+                            "vendor_name" => "",
+                            "receive_date" => "",
+                            "asset_type_name" => "",
+                            "employee_fullname" => "",
+                            "employee_position"=> " ",
+                            "employee_department" => ""
+                            ]
+                        ]);
+                        if ($item->save(false)) $imported++;
+                    }
+                }
+                // $demo[] = $product['status'];
+
+            
+
+                
+            }
+            fclose($handle);
+            if ($error >= 1) {
+                return [
+                    'status' => 'error',
+                    'message' => "xx",
+                    'demo' => $demo
+                ];
+            }
+            return [
+                'status' => 'success',
+                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
+                'demo' => $demo
+            ];
+        }
+
+        // return ['status' => 'success', 'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว"];
     }
-    return $data;
 
-    return ['status'=>'success','message'=>"นำเข้าข้อมูลเรียบร้อย {$imported} แถว"];
-}
+    protected function findProduct($code = null, $title = null, $categoryId = null, $unit = null)
+    {
+        $product = Categorise::find()->where(['name' => 'asset_item', 'category_id' => $categoryId, 'title' => $title])->one();
+        if ($product) {
+            return [
+                'status' => 'success',
+                'msg' => 'ตรวจพบวัสดุที่มีอยู่แล้ว',
+                'data' => $product
+            ];
+        } else {
+            // ถ้าไม่มีทำการสร้างใหม่
+            //ตรวจสอบว่ารหัสที่จะสร้างใหม่ด้วยระบบอัตโนมัติจะซ้ำหรือไม่
+            $checkCodeDuplicate = ProductHelper::checkCodeDuplicate($categoryId, $code);
+            //ถ้าหากซ้ำกัน
+            if ($checkCodeDuplicate['status'] == false) {
+                return [
+                    'status' => 'error',
+                    'msg' => 'รหัสซ้ำ ==' . $checkCodeDuplicate['data']['code'] . ' ชื่อรายการ == ' . $checkCodeDuplicate['data']['title'],
+                    'data' => $checkCodeDuplicate['data']
+                ];
+            } else {
+            //ถ้าไม่ซ้ำให้สาร้างใหม่
+            $newProduct = new Product;
+            $newProduct->group_id = 4;
+            $newProduct->name = 'asset_item';
+            $newProduct->category_id = $categoryId;
+            $newProduct->title = $title;
+            $newProduct->code  = \mdm\autonumber\AutoNumber::generate($categoryId.'-?');
 
+            $newProduct->data_json = [
+                'unit' => $unit,
+                'asset_type' => $categoryId
+            ];
+            $newProduct->save(false);
+                return [
+                    'status' => 'success',
+                    'msg' => 'Yes',
+                    'data' => $newProduct
+                ];
+            }
+        }
+            
+        // if (!$product) {
+        //     $newProduct = new Product;
+        //     $newProduct->group_id = 4;
+        //     $newProduct->name = 'asset_item';
+        //     $newProduct->category_id = $categoryId;
+        //     $newProduct->title = $title;
+        //     $newProduct->code  = $newProduct->nextCode($categoryId);
+
+        //     $newProduct->data_json = [
+        //         'unit' => $unit,
+        //         'asset_type' => $categoryId
+        //     ];
+        //     // $newProduct->save(false);
+        // } else {
+        //     //    return  $product->code;
+        // }
+    }
 }

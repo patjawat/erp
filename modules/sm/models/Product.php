@@ -63,6 +63,7 @@ class Product extends \yii\db\ActiveRecord
             [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+             [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
         ];
     }
 
@@ -113,6 +114,7 @@ class Product extends \yii\db\ActiveRecord
         $items = self::find()->where(['category_id' => 4, 'name' => 'asset_type'])->all();
         return ArrayHelper::map($items, 'code', 'title');
     }
+
 
     //สร้างรหัสวัสดุ
 public static function nextCode($categoryId)

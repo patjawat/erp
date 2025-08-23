@@ -84,6 +84,7 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
             [['data_json', 'q_category', 'unit_items','price','qty','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+             [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
         ];
     }
 
@@ -128,6 +129,39 @@ class Product extends \yii\db\ActiveRecord implements ItemInterface
         return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
+
+    //ตรวจสอบรหัสซ้ำ
+public function checkCodeDuplicate($categoryId,$code)
+{
+    $sqlRunNumber="SELECT (number+1) FROM `auto_number` WHERE `group` = :group;";
+    $codeNumber = Yii::$app->db->createCommand($sqlRunNumber)
+    ->bindValue(':group',($categoryId.'-?'))->queryScalar();
+    //ถ้าสร้าง code อัตโนมัติ
+    if($code ==''){
+        $checkCode1 = self::findOne(['code' => $code,'name' => 'asset_item']);
+        // ซ้ำ   
+        if($checkCode1){
+            return [
+                'status' => false,
+                'data' => $checkCode1
+            ];
+        }
+    }else{
+        $newCode = $categoryId.'-'.$codeNumber;
+        $checknewCode = self::findOne(['code' => $newCode,'name' => 'asset_item']);  
+        // ซ้ำ   
+        if($checknewCode){
+            return [
+                'status' => false,
+                'data' => $checknewCode
+            ];
+        } 
+
+    }
+    return [
+        'status' => true
+    ];
+}
 
      //สร้างรหัสวัสดุ
 public static function nextCode($categoryId)

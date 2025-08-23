@@ -8,6 +8,7 @@ use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use app\components\ProductHelper;
 use app\modules\sm\models\Product;
 use yii\web\NotFoundHttpException;
 use app\modules\sm\models\ProductSearch;
@@ -120,9 +121,19 @@ class ProductController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+                $categoryId = $model->category_id;
+                $code = $model->code;
+                $checkCodeDuplicate = ProductHelper::checkCodeDuplicate($categoryId,$code);
+
+                if($checkCodeDuplicate['status'] == false){
+                    return [
+                        'status' => 'error',
+                        'msg' => 'รหัสซ้ำ =='. $checkCodeDuplicate['data']['code'].' ชื่อรายการ == '.$checkCodeDuplicate['data']['title'],
+                        'data' => $checkCodeDuplicate['data']
+                    ];
+                }
                 if($model->auto == "1"){
-                    // $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'-?');
-                    $model->code  = $model->nextCode($model->category_id);
+                    $model->code  = \mdm\autonumber\AutoNumber::generate($model->category_id.'-?');
                 }
 
                 $model->save(false);

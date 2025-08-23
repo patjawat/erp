@@ -173,15 +173,14 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
-        public function updateMovementDateItem()
-        {
-            $rowsUpdated = StockEvent::find()->where(['category_id' => $this->id, 'name' => 'order_item'])->all();
-            foreach ($rowsUpdated as $item) {
-                $item->movement_date = $this->movement_date;
-                $item->save(false);
-            }
-
+    public function updateMovementDateItem()
+    {
+        $rowsUpdated = StockEvent::find()->where(['category_id' => $this->id, 'name' => 'order_item'])->all();
+        foreach ($rowsUpdated as $item) {
+            $item->movement_date = $this->movement_date;
+            $item->save(false);
         }
+    }
 
     // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
@@ -269,6 +268,16 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
+    public function viewAssetType()
+    {
+        try {
+            $typeCode = $this->data_json['asset_type'];
+            $assetType = Categorise::findOne(['name' => 'asset_type', 'code' => $typeCode]);
+            return $assetType->title;
+        } catch (\Throwable $th) {
+            return '-';
+        }
+    }
 
 
     /**
@@ -303,8 +312,8 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     public function getTotalOrderPrice()
-{
-    $sql = "
+    {
+        $sql = "
         SELECT 
             IFNULL(
                 CAST(SUM(total_price) AS DECIMAL(10, 2))
@@ -314,13 +323,13 @@ class StockEvent extends Yii\db\ActiveRecord
           AND `category_id` = :category_id
     ";
 
-    $total = \Yii::$app
-        ->db
-        ->createCommand($sql)
-        ->bindValue(':category_id', $this->id)
-        ->queryScalar();
-    return $total;
-}
+        $total = \Yii::$app
+            ->db
+            ->createCommand($sql)
+            ->bindValue(':category_id', $this->id)
+            ->queryScalar();
+        return $total;
+    }
 
 
     public function getTotalOrderPriceSuccess()
@@ -878,7 +887,7 @@ class StockEvent extends Yii\db\ActiveRecord
         }
     }
 
-        public function viewMoveMentDate()
+    public function viewMoveMentDate()
     {
         try {
             return Yii::$app->thaiDate->toThaiDate($this->movement_date, false, false);

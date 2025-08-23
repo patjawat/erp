@@ -81,7 +81,7 @@ class StockInController extends Controller
         }
 
 
-       $dataProvider->query
+        $dataProvider->query
             ->andFilterWhere([
                 '>=',
                 new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.receive_date'))"),
@@ -691,108 +691,18 @@ class StockInController extends Controller
             ]);
         }
     }
-
-    public function actionPreview()
+    public function actionDeleteAllItem()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $order_id = $this->request->post('order_id');
 
-        $model = new UploadCsvForm();
-        $model->csvFile = UploadedFile::getInstanceByName('csvFile');
-
-        if ($model->validate()) {
-            $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
-            $model->csvFile->saveAs($filePath);
-
-            // อ่านไฟล์ CSV
-            $previewData = [];
-            if (($handle = fopen($filePath, "r")) !== false) {
-                $row = 0;
-                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $previewData[] = $data;
-                    $row++;
-                    if ($row >= 10) break; // แสดง 10 แถวแรก
-                }
-                fclose($handle);
-            }
-
-            return [
-                'status' => 'success',
-                'preview' => $previewData,
-                'filePath' => $filePath,
-            ];
+        if (!$order_id) {
+            return ['status' => 'error', 'message' => 'order_id not provided'];
         }
 
-        return ['status' => 'error', 'errors' => $model->getErrors()];
-    }
-    
+        StockEvent::deleteAll(['category_id' => $order_id]);
 
-    public function actionImportCsv()
-    {
-         $model = new UploadCsvForm();
-        $previewData = null;
-        $filePath = null;
-
-        if (Yii::$app->request->isPost) {
-            $model->csvFile = UploadedFile::getInstance($model, 'csvFile');
-
-            if ($model->validate()) {
-                $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
-                $model->csvFile->saveAs($filePath);
-
-                // อ่านไฟล์มา preview
-                $previewData = [];
-                if (($handle = fopen($filePath, "r")) !== false) {
-                    $row = 0;
-                    while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                        $previewData[] = $data;
-                        $row++;
-                        if ($row >= 10) break; // แสดงตัวอย่าง 10 แถว
-                    }
-                    fclose($handle);
-                }
-            }
-        }
-
-        // ถ้ากดยืนยันนำเข้าจริง
-        if (Yii::$app->request->post('confirmImport') && ($filePath = Yii::$app->request->post('filePath'))) {
-            if (($handle = fopen($filePath, "r")) !== false) {
-                $row = 0;
-                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $row++;
-                    if ($row == 1) continue; // ข้าม header
-
-                    $employee = new Employee();
-                    $employee->name = $data[0];
-                    $employee->email = $data[1];
-                    $employee->phone = $data[2];
-                    $employee->save(false);
-                }
-                fclose($handle);
-            }
-
-            Yii::$app->session->setFlash('success', 'นำเข้าข้อมูลเรียบร้อยแล้ว');
-            return $this->redirect(['index']);
-        }
-
-                if ($this->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('import_csv', [
-                      'model' => $model,
-            'previewData' => $previewData,
-            'filePath' => $filePath,
-                ]),
-            ];
-        } else {
-            return $this->render('import_csv', [
-                 'model' => $model,
-            'previewData' => $previewData,
-            'filePath' => $filePath,
-            ]);
-        }
-
+        return ['status' => 'success'];
     }
     /**
      * Finds the StockEvent model based on its primary key value.

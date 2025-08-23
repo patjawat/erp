@@ -5,7 +5,6 @@ use yii\widgets\ActiveForm;
 $this->title = 'นำเข้าไฟล์ CSV';
 ?>
 
-<h1><?= Html::encode($this->title) ?></h1>
 
 <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data', 'id' => 'upload-form']]) ?>
     <?= Html::fileInput('csvFile', null, ['id' => 'csvFile']) ?>
@@ -39,9 +38,13 @@ $('#csvFile').on('change', function() {
         contentType: false,
         success: function(res) {
             if(res.status === 'success'){
-                var html = '<table class="table table-bordered table-sm"><thead><tr>';
+
+                      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+                        $(".modal-dialog").addClass('modal-xl');
+
+                var html = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
                 res.preview[0].forEach(function(h){ html += '<th>' + h + '</th>'; });
-                html += '</tr></thead><tbody>';
+                html += '</tr></thead><tbody class="table-group-divider align-middle">';
                 
                 res.preview.slice(1).forEach(function(row){
                     html += '<tr>';
@@ -78,6 +81,7 @@ $('#btn-import').on('click', function() {
                 $('#preview-table').html('');
                 $('#import-btn').hide();
                 $('#csvFile').val('');
+                  window.location.reload(true);
             } else {
                 // alert(res.message);
             }
