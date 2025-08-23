@@ -199,6 +199,7 @@ class ImportController extends Controller
                 'asset_type' => $categoryId
             ];
             $newProduct->save(false);
+             $this->UpdateUnit($newProduct);
                 return [
                     'status' => 'success',
                     'msg' => 'Yes',
@@ -206,22 +207,14 @@ class ImportController extends Controller
                 ];
             }
         }
-            
-        // if (!$product) {
-        //     $newProduct = new Product;
-        //     $newProduct->group_id = 4;
-        //     $newProduct->name = 'asset_item';
-        //     $newProduct->category_id = $categoryId;
-        //     $newProduct->title = $title;
-        //     $newProduct->code  = $newProduct->nextCode($categoryId);
-
-        //     $newProduct->data_json = [
-        //         'unit' => $unit,
-        //         'asset_type' => $categoryId
-        //     ];
-        //     // $newProduct->save(false);
-        // } else {
-        //     //    return  $product->code;
-        // }
     }
+
+protected function UpdateUnit($model)
+ {
+    $unit  = Categorise::findOne(['name' => 'unit','title' => $model->data_json['unit']]);
+    if(!$unit){
+        $newUnit = new Categorise(['name' => 'unit','title' => $model->data_json['unit']]);
+        $newUnit->save(false);
+    }
+ }
 }
