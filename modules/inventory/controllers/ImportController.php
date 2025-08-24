@@ -8,6 +8,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 use app\models\Categorise;
+use app\components\AppHelper;
 use app\models\UploadCsvForm;
 use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
@@ -105,13 +106,16 @@ class ImportController extends Controller
                 if ($row == 1) continue; // ข้าม header
                 $assetType = $stockOrder->data_json['asset_type'] ?? '';
 
-                $product = $this->findProduct($data[0], $data[1], $assetType, $data[4]);
+                $product = $this->findProduct($data[0], $data[1], $assetType, $data[2]);
                 if ($product['status'] == 'error') {
                     $error++;
                 }else{
                 $assetItem = $product['data']['code'];
                 $checkInOrder = StockEvent::findOne(['name' => 'order_item','asset_item' => $assetItem,'category_id' => $stockOrder->id]);
                 if(!$checkInOrder){
+
+                $lotNumber = $data[5] !== '' ? $data[5] : \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
+
                     $item = new StockEvent([
                         'name' => 'order_item',
                         'asset_item' => $assetItem,
@@ -123,6 +127,7 @@ class ImportController extends Controller
                         'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
                         'code' => $stockOrder->code,
                         'category_id' => $stockOrder->id,
+                        'lot_number' => $lotNumber,
                         'data_json' => [
                             "req_qty" =>  "",
                             "exp_date" => "",

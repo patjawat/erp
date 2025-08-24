@@ -45,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'thai_year',
                 'label' => 'ปีงบประมาณ',
-                'value' => function($model) {
+                'value' => function ($model) {
                     return $model->thai_year;
                 }
             ],
@@ -56,29 +56,28 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'asset_group_id',
                 'label' => 'หมวด',
-                 'value' => function($model) {
+                'value' => function ($model) {
                     return $model->assetGroup?->title ?? '-';
                 }
             ],
-             [
+            [
                 'attribute' => 'asset_type_id',
                 'label' => 'ประเภท',
-                 'value' => function($model) {
+                'value' => function ($model) {
                     return $model->assetType?->title ?? '-';
                 }
             ],
-             [
+            [
                 'attribute' => 'asset_category_id',
                 'label' => 'หมวดพัสดุ',
-                 'value' => function($model) {
+                'value' => function ($model) {
                     return $model->assetCategory?->title ?? '-';
                 }
             ],
             [
                 'attribute' => 'department_id',
                 'label' => 'ของกลุ่มงาน',
-                'value' => function($model)
-                {
+                'value' => function ($model) {
                     return $model->departmentName();
                 }
             ],
@@ -89,4 +88,36 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+        <h6>รายการครุภัณฑ์</h6>
+        <table class="table table-bordered table-hover table-modal">
+            <thead>
+                <tr>
+                    <th class="text-center">ลำดับ</th>
+                    <th class="text-center">ชื่อ</th>
+                    <th class="text-center">ราคา/ต่อหน่วย</th>
+                    <th class="text-center">จำนวน</th>
+                    <th class="text-center">หน่วยนับ</th>
+                    <th class="text-center">เป็นเงิน</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($model->getPlanItems()->all() as $item):?>
+                <tr>
+                    <td rowspan="2" class="text-center">1</td>
+                    <td><?=$item->item_name?></td>
+                    <td class="text-right"><?=$item->unit_price?></td>
+                    <td class="text-right"><?=$item->qty?></td>
+                    <td>เครื่อง</td>
+                    <td class="text-right"><?=($item->qty* $item->unit_price)?></td>
+                </tr>
+                <?php endforeach;?>
+               
+            </tbody>
+        </table>
+    </div>
 </div>

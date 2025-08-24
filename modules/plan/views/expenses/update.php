@@ -19,5 +19,4 @@ $this->params['breadcrumbs'][] = 'Update';
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
-        <?= $this->render('_form',  ['model' => $model]) ?>
           <?= $this->render('_form',  ['model' => $model, 'items' => $items]) ?>

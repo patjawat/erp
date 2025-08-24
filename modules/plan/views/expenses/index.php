@@ -25,7 +25,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
 
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
@@ -53,8 +52,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th scope="col">ชื่อรายการ</th>
-                    <th scope="col">ประเภทงบ</th>
+                    <th scope="col">หมวดพัสดุ</th>
+                    <th scope="col">ประเภท</th>
+                    <th scope="col">วัตถุประสงค์</th>
+                    <th scope="col">วงเงิน</th>
+                    <th scope="col">หน่วยงาน</th>
+                    <th scope="col">สถานะ</th>
+                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -63,8 +67,24 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?= $item->title ?></td>
-                        <td><?= $item->getType() ?? '-' ?></td>
+                        <td><?=$item->assetGroup?->title ?></td>
+                        <td><?=$item->assetType?->title ?></td>
+                        <td><?= $item->description ?></td>
+                        <td><?= $item->order_price ?></td>
+                        <td><?= $item->departmentName() ?></td>
+                        <td><?= $item->status?></td>
+                        <td>
+                             <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>แสดง',['view','id' => $item->id],['class' => 'dropdown-item'])?></li>
+                                    <li><?=Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข',['update','id' => $item->id],['class' => 'dropdown-item'])?></li>
+                                </ul>
+                            </div>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

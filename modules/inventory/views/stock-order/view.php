@@ -33,7 +33,7 @@ yii\web\YiiAsset::register($this);
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'request'])?>
+<?= $this->render('../default/menu', ['active' => 'request']) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
@@ -45,12 +45,13 @@ $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(
 $emp = UserHelper::GetEmployee();
 
 ?>
-<?php $balanced=0;foreach ($model->getItems() as $item):?>
-<?php
-                        if($item->qty > $item->SumlotQty()){
-                            $balanced +=1;
-                        }
-                                ?>
+<?php $balanced = 0;
+foreach ($model->getItems() as $item): ?>
+    <?php
+    if ($item->qty > $item->SumlotQty()) {
+        $balanced += 1;
+    }
+    ?>
 <?php endforeach; ?>
 <div class="row">
 
@@ -63,15 +64,20 @@ $emp = UserHelper::GetEmployee();
                         รายการ
                     </h6>
                     <?php if (Yii::$app->user->can('warehouse')) { ?>
-                    <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
-                    <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])?>
+                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])
+                        ?>
+                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])
+                        ?>
                     <?php } else { ?>
-                    <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : ''?>
-                    <?php }?>
+                        <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : ''
+                        ?>
+                    <?php } ?>
                 </div>
                 <!-- รายละเอียดรายการขอเบิก -->
-                <?php // echo $this->render('order_items',['model' => $model,'office' => $office])?>
-                <?php // echo $this->render('list_items',['model' => $model])?>
+                <?php // echo $this->render('order_items',['model' => $model,'office' => $office])
+                ?>
+                <?php // echo $this->render('list_items',['model' => $model])
+                ?>
                 <div id="showOrderItem"></div>
             </div>
         </div>
@@ -88,23 +94,23 @@ $emp = UserHelper::GetEmployee();
 
                     <?php
                     //  try {
-                         echo $model->CreateBy('<code>ผู้ขอเบิก</code> '.$model->fromWarehouse->warehouse_name.' | เมื่อ '.$model->viewCreated())['avatar'];
+                    echo $model->CreateBy('<code>ผู้ขอเบิก</code> ' . $model->fromWarehouse->warehouse_name . ' | เมื่อ ' . $model->viewCreated())['avatar'];
                     //  } catch (Throwable $th) {
 
                     //     }
                     ?>
-                    <?php if(!in_array($model->order_status, ['success','cancel'])):?>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
-                            <?php  echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+                    <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
+                        <div class="dropdown float-end">
+                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                                <?php echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+                            </div>
                         </div>
-                    </div>
-                    <?php endif;?>
+                    <?php endif; ?>
                 </div>
 
                 <?php echo DetailView::widget([
@@ -130,10 +136,10 @@ $emp = UserHelper::GetEmployee();
                         [
                             'label' => 'มูลค่า',
                             'format' => 'html',
-                            'value' => function($model){
-                                return '<span>'.number_format($model->getTotalOrderPrice(),2).'</span>';
+                            'value' => function ($model) {
+                                return '<span>' . number_format($model->getTotalOrderPrice(), 2) . '</span>';
                             },
-                            'contentOptions' => ['id' => 'sumPrice','class' => 'fw-semibold']
+                            'contentOptions' => ['id' => 'sumPrice', 'class' => 'fw-semibold']
                         ],
                         [
                             'label' => 'พิมพ์เอกสาร',
@@ -141,7 +147,7 @@ $emp = UserHelper::GetEmployee();
                             // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank','data' => ['pjax' => false]])
                             // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['target' => '_blank', 'data-pjax' => '0']),
                             // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target' => '_blank','data' => ['pjax' => false]])
-                             'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]),
+                            'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['class' => 'open-modal', 'data-pjax' => '0', 'data' => ['size' => 'modal-xl']]),
                         ],
                     ],
                 ]); ?>
@@ -150,28 +156,31 @@ $emp = UserHelper::GetEmployee();
             <div class="card-footer">
                 <div class="d-flex justify-content-between">
                     <div class="">
-                        <?php  if(isset($model->data_json['player'])):?>
-                        <?=$model->ShowPlayer()['avatar'];?>
-                        <?php else :?>
+                        <?php if (isset($model->data_json['player'])): ?>
+                            <?= $model->ShowPlayer()['avatar']; ?>
+                        <?php else : ?>
 
-                        <?=isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null;?>
-                        <?php endif;?>
+                            <?= isset($office) ? $model->getMe('<code>ผู้สั่งจ่าย</code>')['avatar'] : null; ?>
+                        <?php endif; ?>
                         <!-- player -->
                     </div>
                     <div class="">
                         <div class="form-group mt-3 d-flex justify-content-end">
                             <?php if ($model->order_status == 'await') { ?>
-                            <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); ?>
-                            <?php }?>
-                            <?php if ($model->OrderApprove() && isset($office) && ($model->order_status !='success') && ($model->warehouse_id == $warehouse->id)): ?>
+                                <?php // echo Html::a('<i class="bi bi-check2-circle"></i> บันทึก', ['/inventory/stock-order/save-order', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout']); 
+                                ?>
+                            <?php } ?>
+                            <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouse->id)): ?>
 
-                            <?php   //if($balanced == 0):?>
-                            <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout','id' => 'btnSave']); ?>
+                                <?php   //if($balanced == 0):
+                                ?>
+                                <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow checkout', 'id' => 'btnSave']); ?>
 
-                            <?php  //endif;?>
-                            <?php else:?>
+                                <?php  //endif;
+                                ?>
+                            <?php else: ?>
 
-                            <?php endif;?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -179,51 +188,66 @@ $emp = UserHelper::GetEmployee();
 
         </div>
         <!-- End Card -->
-        <?php if($model->order_status == 'success' && $model->transaction_type == 'OUT'):?>
-        <div class="card">
-            <div class="card-body">
-                <?php if(isset($model->data_json['recipient'])):?>
+        <?php if ($model->order_status == 'success' && $model->transaction_type == 'OUT'): ?>
+            <div class="card">
+                <div class="card-body">
+                    <?php if (isset($model->data_json['recipient'])): ?>
 
-                <div class="d-flex justify-content-between align-items-center">
-                    <?=$model->Recipient()['avatar']?>
-                    <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']]);?>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <?= $model->Recipient()['avatar'] ?>
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> ผู้รับวัสดุ', ['/inventory/stock-order/recipient', 'id' => $model->id, 'title' => 'ผู้รับวัสดุ'], ['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="d-flex justify-content-center">
+                            <?= Html::a('<i class="bi bi-plus-circle"></i> ผู้รับวัสดุ', ['/inventory/stock-order/recipient', 'id' => $model->id, 'title' => 'ผู้รับวัสดุ'], ['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                        </div>
+                    <?php endif ?>
                 </div>
-                <?php else:?>
-                <div class="d-flex justify-content-center">
-                    <?=Html::a('<i class="bi bi-plus-circle"></i> ผู้รับวัสดุ',['/inventory/stock-order/recipient','id' => $model->id,'title' => 'ผู้รับวัสดุ'],['class' => 'btn btn-sm btn-primary shadow text-center rounded-pill open-modal','data' => ['size' => 'modal-md']]);?>
-                </div>
-                <?php endif?>
             </div>
-        </div>
-        <?php endif?>
+        <?php endif ?>
 
         <div class="d-grid gap-2">
-            <?php  // echo Html::a('อนุมัติเห็นชอบแทนหัวหน้า',['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApproveId()],['class' => 'btn btn-primary shadow open-modal','data' => ['size' => 'modal-md']])?>
+            <?php  // echo Html::a('อนุมัติเห็นชอบแทนหัวหน้า',['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApproveId()],['class' => 'btn btn-primary shadow open-modal','data' => ['size' => 'modal-md']])
+            ?>
         </div>
 
         <!-- หัวหน้าอนุมัติให้เบิก -->
-        <?php // if($model->viewChecker('ผู้เห็นชอบ')['status'] !==''):?>
+        <?php // if($model->viewChecker('ผู้เห็นชอบ')['status'] !==''):
+        ?>
         <!-- approve -->
         <div class="card">
             <div class="card-header bg-primary-gradient d-flex justify-content-between">
                 <h6 class=" text-white">ผู้เห็นชอบ</h6>
-                <?php  echo $model->leaderApprove()->status == 'Pending' ? Html::a('<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApprove()->id],['class' => 'btn btn-light rounded-pill shadow open-modal','data' => ['size' => 'modal-md']]) : ''?>
+                <?php if ($model->leaderApprove && $model->leaderApprove->status == 'Pending'): ?>
+                    <?= Html::a(
+                        '<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',
+                        ['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApprove->id],
+                        [
+                            'class' => 'btn btn-light rounded-pill shadow open-modal',
+                            'data' => ['size' => 'modal-md']
+                        ]
+                    ) ?>
+                <?php endif; ?>
+
             </div>
             <div class="card-body">
                 <?php
                 // echo $model->getStatus()['title'];
-                
+
                 ?>
                 <div class="d-flex justify-content-between align-items-center">
                     <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
-                    <?php // echo $model->viewChecker('ผู้เห็นชอบ')['position']; ?>
-                    <?php if($model->checker == $emp->id && $model->order_status != 'success'):?>
-                    <?php // echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); ?>
-                    <?php endif;?>
+                    <?php // echo $model->viewChecker('ผู้เห็นชอบ')['position']; 
+                    ?>
+                    <?php if ($model->checker == $emp->id && $model->order_status != 'success'): ?>
+                        <?php // echo Html::a('<i class="fa-regular fa-pen-to-square"></i> ดำเนินการ', ['/me/approve/view-stock-out', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]); 
+                        ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-        <?php // endif;?>
+        <?php // endif;
+        ?>
         <!-- หัวหน้าอนุมัติให้เบิก จบ -->
     </div>
 </div>
@@ -540,7 +564,7 @@ $("body").on("click", "#stockApprove", function (e) {
 
 
 JS;
-$this->registerJS($js,View::POS_END);
+$this->registerJS($js, View::POS_END);
 ?>
 
 <?php Pjax::end(); ?>

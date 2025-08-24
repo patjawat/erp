@@ -43,6 +43,8 @@ $this->params['breadcrumbs'][] = 'ทะเบียนรับเข้า';
             ->andWhere(['IN', 'category_id', $item])
             ->andWhere(['!=', 'category_id', 'M25'])
             ->count();
+    }else{
+        $count = 0;
     }
 ?>
 

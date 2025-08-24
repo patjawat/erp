@@ -35,7 +35,7 @@ use kartik\widgets\ActiveForm;
                             'select2:select' => "function(result) { 
                                 var data = \$(this).select2('data')[0].text;
                                 \$('#order-data_json-product_type_name').val(data)
-                                $(this).submit();
+                                // $(this).submit();
                                 }",
                                 ]
                                 ])->label(false);

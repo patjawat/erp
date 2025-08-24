@@ -81,7 +81,7 @@ class ExpensesController extends Controller
            $items = []; // ไม่มีรายการเดิม
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -121,9 +121,7 @@ class ExpensesController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        return $this->render('update', ['model' => $model, 'items' => $items]);
     }
 
     /**

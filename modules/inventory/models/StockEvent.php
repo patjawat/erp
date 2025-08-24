@@ -173,6 +173,13 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+    public function getLeaderApprove()
+{
+    return $this->hasOne(Approve::class, ['from_id' => 'id'])
+        ->andOnCondition(['name' => 'main_stock']);
+}
+
+
     public function updateMovementDateItem()
     {
         $rowsUpdated = StockEvent::find()->where(['category_id' => $this->id, 'name' => 'order_item'])->all();
@@ -257,16 +264,16 @@ class StockEvent extends Yii\db\ActiveRecord
 
 
     // หารอนุมัติจากหัวหน้า
-    public function leaderApprove()
-    {
+    // public function leaderApprove()
+    // {
 
-        $model = Approve::findOne(['from_id' => $this->id, 'name' => 'main_stock']);
-        if ($model) {
-            return $model;
-        } else {
-            return 0;
-        }
-    }
+    //     $model = Approve::findOne(['from_id' => $this->id, 'name' => 'main_stock']);
+    //     if ($model) {
+    //         return $model;
+    //     } else {
+    //         return 0;
+    //     }
+    // }
 
     public function viewAssetType()
     {
