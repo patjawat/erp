@@ -49,10 +49,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= DetailView::widget([
                     'model' => $model,
                     'attributes' => [
-                           [
+                        [
                             'label' => 'ประเภทวัสดุ',
                             'value' => $model->viewAssetType()
-                           ],
+                        ],
                         [
                             'label' => 'สถานะ',
                             'format' => 'raw',
@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             'label' => 'มูลค่า',
                             'value' => number_format($model->getTotalOrderPrice(), 2)
                         ],
-                      
+
                     ],
                 ]) ?>
 
@@ -89,7 +89,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div>
                     <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/inventory/committee/create', 'id' => $model->id, 'action' => 'create', 'name' => 'receive_committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
 
-                    
+
                 </div>
             </div>
         </div>
@@ -114,14 +114,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <i class="fa-solid fa-gear"></i> จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?=Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',['/inventory/import','order_id' => $model->id,'title' => 'นำเข้าไฟล์ CSV'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-md']])?></li>
-                                    <li><?=Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า','https://docs.google.com/spreadsheets/d/1NYsHKu0_6UcvD1ii-0TWhEpUQUsWZJ9ZXUekqZkylP8/edit?usp=sharing',['class' => 'dropdown-item','target' => '_blank'])?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/inventory/import', 'order_id' => $model->id, 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1NYsHKu0_6UcvD1ii-0TWhEpUQUsWZJ9ZXUekqZkylP8/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
                                     <li>
-                                        <?= Html::a('<i class="fa-regular fa-trash-can me-2"></i> ลบรายการทั้งหมด',
-    '#',
-    ['class' => 'dropdown-item delete-all-item', 'data-order-id' => $model->id]) ?>
+                                        <?= Html::a(
+                                            '<i class="fa-regular fa-trash-can me-2"></i> ลบรายการทั้งหมด',
+                                            '#',
+                                            ['class' => 'dropdown-item delete-all-item', 'data-order-id' => $model->id]
+                                        ) ?>
 
-                                        </li>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
