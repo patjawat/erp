@@ -64,7 +64,7 @@ class ImportController extends Controller
                 while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                     $previewData[] = $data;
                     $row++;
-                    if ($row >= 10) break;
+                    // if ($row >= 10) break;
                 }
                 fclose($handle);
             }
