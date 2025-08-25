@@ -39,13 +39,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         ['/plan/plan-order/update-status'],
                         [
                             'class' => 'btn btn-warning update-status',
-                            'data' => ['id' => $model->id, 'status' => 'submit']
+                            'data' => ['id' => $model->id]
                         ]
                     )
                     : ''
                 ?>
-                <?php //  $model->status == 'draft' ?  Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งคำขอ', ['/plan/plan-order/update-status','status' => 'submitt'], ['class' => 'btn btn-warning update-status','data'=> ['id' => $model->id,'status' => 'submit'] ]) : '' 
-                ?>
+
                 <?= $model->status == 'submit' ?  Html::a('<i class="fa-solid fa-circle-check"></i> อนุมัติแผน', ['/plan/plan-order/approve', 'id' => $model->id], ['class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-m']]) : '' ?>
                 <?= $model->status == 'approve' ?  Html::a('<i class="fa-solid fa-arrow-rotate-left"></i> ปรับแผน', ['/plan/plan-order/renew'], ['class' => 'btn btn-warning renew', 'data' => ['id' => $model->id]]) : '' ?>
                 <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
@@ -110,9 +109,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 [
                     'attribute' => 'budget_id',
                     'label' => 'แหล่องของเงิน',
-                    'value' => function ($model) {
-                        return $model->budge?->title ?? '-';
-                    }
                 ],
                 [
                     'attribute' => 'order_price',
@@ -208,66 +204,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-$('.update-status').click(function (e) { 
-    e.preventDefault();
-
-    Swal.fire({
-        title: 'ยืนยันการส่งคำขอ?',
-        text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, เปลี่ยนเลย!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                type: "post",
-                url:$(this).attr('href'),
-                data: {
-                    id:$(this).data('id'),
-                    status:$(this).data('status'),
-                },
-                dataType: "json",
-                success: function (response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'สำเร็จ!',
-                            text: 'อัปเดตสถานะเรียบร้อยแล้ว',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload(); // โหลดใหม่ถ้าต้องการ
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'ผิดพลาด!',
-                            text: response.message || 'ไม่สามารถอัปเดตสถานะได้',
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ผิดพลาด!',
-                        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
-                    });
-                }
-            });
-        }
-    });
-});
-
-
-
 $('.renew').click(function (e) { 
     e.preventDefault();
 
     Swal.fire({
-        title: 'ยืนยันการปรับแผน?',
+        title: 'ยืนยันการเปลี่ยนสถานะ?',
         text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
         icon: 'warning',
         showCancelButton: true,
@@ -303,7 +244,6 @@ $('.renew').click(function (e) {
         }
     });
 });
-
 
 
 JS;

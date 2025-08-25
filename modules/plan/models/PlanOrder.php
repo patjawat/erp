@@ -54,22 +54,42 @@ class PlanOrder extends \yii\db\ActiveRecord
         return [
             [
                 [
-                    'thai_year', 'department_id', 'asset_group_id', 'asset_type_id', 
-                    'asset_category_id', 'description', 'data_json', 'created_at', 
-                    'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'
-                ], 
-                'default', 
+                    'thai_year',
+                    'department_id',
+                    'asset_group_id',
+                    'asset_type_id',
+                    'asset_category_id',
+                    'description',
+                    'data_json',
+                    'created_at',
+                    'updated_at',
+                    'created_by',
+                    'updated_by',
+                    'deleted_at',
+                    'deleted_by'
+                ],
+                'default',
                 'value' => null
             ],
             [['budget_used'], 'default', 'value' => 0.00],
             [['status'], 'default', 'value' => 'draft'],
             [
                 [
-                    'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 
-                    'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 
-                    'month_11', 'month_12', 'order_price'
-                ], 
-                'default', 
+                    'month_1',
+                    'month_2',
+                    'month_3',
+                    'month_4',
+                    'month_5',
+                    'month_6',
+                    'month_7',
+                    'month_8',
+                    'month_9',
+                    'month_10',
+                    'month_11',
+                    'month_12',
+                    'order_price'
+                ],
+                'default',
                 'value' => 0
             ],
             [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
@@ -77,12 +97,30 @@ class PlanOrder extends \yii\db\ActiveRecord
             [['description'], 'string'],
             [
                 [
-                    'data_json', 'created_at', 'updated_at', 'deleted_at', 'title', 
-                    'emp_id', 'month_1', 'month_2', 'month_3', 'month_4', 
-                    'month_5', 'month_6', 'month_7', 'month_8', 'month_9', 
-                    'month_10', 'month_11', 'month_12', 'order_price', 
-                    'plan_type_item_id', 'plan_type_id', 'wage_type_id'
-                ], 
+                    'data_json',
+                    'created_at',
+                    'updated_at',
+                    'deleted_at',
+                    'title',
+                    'emp_id',
+                    'month_1',
+                    'month_2',
+                    'month_3',
+                    'month_4',
+                    'month_5',
+                    'month_6',
+                    'month_7',
+                    'month_8',
+                    'month_9',
+                    'month_10',
+                    'month_11',
+                    'month_12',
+                    'order_price',
+                    'plan_type_item_id',
+                    'plan_type_id',
+                    'wage_type_id',
+                    'plan_budget_type_id'
+                ],
                 'safe'
             ],
             [['budget_total', 'budget_used'], 'number'],
@@ -141,8 +179,25 @@ class PlanOrder extends \yii\db\ActiveRecord
 
     public function getBudge()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'budget_id'])->andOnCondition(['name' => 'budget']);
+        return $this->hasOne(Categorise::class, ['code' => 'plan_budget_type_id'])->andOnCondition(['name' => 'budget_type']);
     }
+
+
+    public function getPlanType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'plan_type_id'])->andOnCondition(['name' => 'plan_type']);
+    }
+    public function getPlanTypeItem()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'plan_type_item_id'])->andOnCondition(['name' => 'plan_type_item']);
+    }
+
+    public function getWageType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'wage_type_id'])->andOnCondition(['name' => 'plan_wage_type']);
+    }
+  
+
 
 
     public function getPlanItems()
@@ -174,9 +229,38 @@ class PlanOrder extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
     }
 
-    public static function listOverviewSummary($thaiYear,$categoryId)
+
+    public function viewStatus()
     {
-            $sql = "
+        switch ($this->status) {
+            case 'draft':
+                $title = 'ฉบับร่าง';
+                break;
+                $title = '';
+            case 'submit':
+                $title = 'ส่งคำขอ';
+                break;
+            case 'approve':
+                $title = 'อนุมัติ';
+                break;
+                case 'renew':
+                    $title = 'ปรับแผน';
+                break;
+            default:
+                $title = '';
+                break;
+        }
+
+        return [
+            'title' => $title,
+            'view' => $title,
+
+        ];
+    }
+
+    public static function listOverviewSummary($thaiYear, $categoryId)
+    {
+        $sql = "
                 SELECT 
                     c.code,
                     c.title,
@@ -208,11 +292,11 @@ class PlanOrder extends \yii\db\ActiveRecord
                 GROUP BY c.code, c.title
             ";
 
-            $rows = Yii::$app->db->createCommand($sql, [
-                ':thai_year'   => $thaiYear,
-                ':category_id' => $categoryId,
-            ])->queryAll();
+        $rows = Yii::$app->db->createCommand($sql, [
+            ':thai_year'   => $thaiYear,
+            ':category_id' => $categoryId,
+        ])->queryAll();
 
-            return $rows;
+        return $rows;
     }
 }

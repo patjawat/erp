@@ -1,12 +1,16 @@
 <?php
 
 namespace app\modules\plan\controllers;
+
 use Yii;
+use yii\helpers\Url;
+use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\modules\plan\models\Plan;
 use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanItem;
+use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanSearch;
 
 /**
@@ -70,28 +74,28 @@ class PlanOrderController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-public function actionCreate()
-{
-    $model = new Plan();
-    $items = []; // ไม่มีรายการเดิม
+    public function actionCreate()
+    {
+        $model = new Plan();
+        $items = []; // ไม่มีรายการเดิม
 
-    if ($model->load(Yii::$app->request->post()) && $model->save()) {
-        $postItems = Yii::$app->request->post('items', []);
-        foreach ($postItems as $item) {
-            if (!empty($item['item_name'])) {
-                $pi = new PlanItem();
-                $pi->plan_order_id = $model->id;
-                $pi->item_name = $item['item_name'];
-                $pi->quantity = (int)$item['quantity'];
-                $pi->unit_price = (float)$item['unit_price'];
-                $pi->save();
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            $postItems = Yii::$app->request->post('items', []);
+            foreach ($postItems as $item) {
+                if (!empty($item['item_name'])) {
+                    $pi = new PlanItem();
+                    $pi->plan_order_id = $model->id;
+                    $pi->item_name = $item['item_name'];
+                    $pi->quantity = (int)$item['quantity'];
+                    $pi->unit_price = (float)$item['unit_price'];
+                    $pi->save();
+                }
             }
+            return $this->redirect(['view', 'id' => $model->id]);
         }
-        return $this->redirect(['view','id'=>$model->id]);
-    }
 
-    return $this->render('create', ['model'=>$model, 'items'=>$items]);
-}
+        return $this->render('create', ['model' => $model, 'items' => $items]);
+    }
 
 
     /**
@@ -101,45 +105,108 @@ public function actionCreate()
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-public function actionUpdate($id)
-{
-    $model = $this->findModel($id); // โหลดแผนหลัก
-    $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id); // โหลดแผนหลัก
+        $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
 
-    if ($model->load(Yii::$app->request->post())) {
+        if ($model->load(Yii::$app->request->post())) {
 
-        $postItems = Yii::$app->request->post('items', []);
+            $postItems = Yii::$app->request->post('items', []);
 
-        // $model->updated_at = time();
-        if ($model->save()) {
+            // $model->updated_at = time();
+            if ($model->save()) {
 
-            // ลบรายการเก่าของแผน
-            \app\modules\plan\models\PlanItem::deleteAll(['plan_order_id' => $model->id]);
+                // ลบรายการเก่าของแผน
+                \app\modules\plan\models\PlanItem::deleteAll(['plan_order_id' => $model->id]);
 
-            // บันทึกรายการใหม่
-            foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new \app\modules\plan\models\PlanItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save();
+                // บันทึกรายการใหม่
+                foreach ($postItems as $item) {
+                    if (!empty($item['item_name'])) {
+                        $pi = new \app\modules\plan\models\PlanItem();
+                        $pi->plan_order_id = $model->id;
+                        $pi->item_name = $item['item_name'];
+                        $pi->qty = (int)$item['qty'];
+                        $pi->unit_price = (float)$item['unit_price'];
+                        $pi->save();
+                    }
                 }
-            }
 
-            Yii::$app->session->setFlash('success', 'แก้ไขแผนสำเร็จ');
-            return $this->redirect(['view', 'id' => $model->id]);
+                Yii::$app->session->setFlash('success', 'แก้ไขแผนสำเร็จ');
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        }
+
+        return $this->render('update', [
+            'model' => $model,
+            'items' => $items,
+        ]);
+    }
+
+    public function actionApprove($id)
+    {
+           Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = $this->findModel($id); // โหลดแผนหลัก
+
+        if ($model->load(Yii::$app->request->post())) {
+            // $model->updated_at = time();
+            $model->status = 'approve';
+            if ($model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'url' => Url::to(['/plan/'.$model->plan_group_id]),
+                ];
+                Yii::$app->session->setFlash('success', 'แก้ไขแผนสำเร็จ');
+            }
+        }
+
+        return [
+            'title' => 'จัดการแผน',
+            'content' => $this->renderAjax('_form_approve', [
+            'model' => $model,
+        ])];
+    }
+
+
+        public function actionRenew()
+    {
+             Yii::$app->response->format = Response::FORMAT_JSON;
+             
+             if ($this->request->post()) {
+                 $id = $this->request->post('id');
+                 $model = $this->findModel($id); // โหลดแผนหลัก
+                 $model->status = 'renew';
+            if ($model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'url' => Url::to(['/plan/'.$model->plan_group_id]),
+                ];
+                Yii::$app->session->setFlash('success', 'แก้ไขแผนสำเร็จ');
+            }
         }
     }
 
-    return $this->render('update', [
-        'model' => $model,
-        'items' => $items,
-    ]);
-}
 
 
+    //update สถานะ
+    public function actionUpdateStatus()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = $this->request->post('id');
+        $status = $this->request->post('status');
+        $model = $this->findModel($id);
+        if ($model) {
+            $model->status = $status;
+            $model->save(false);
+            return [
+                'status' => 'success'
+            ];
+        } else {
+            return [
+                'status' => 'error'
+            ];
+        }
+    }
     /**
      * Deletes an existing Plan model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -163,7 +230,7 @@ public function actionUpdate($id)
      */
     protected function findModel($id)
     {
-        if (($model = Plan::findOne(['id' => $id])) !== null) {
+        if (($model = PlanOrder::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

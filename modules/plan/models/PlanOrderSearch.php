@@ -18,7 +18,7 @@ class PlanOrderSearch extends PlanOrder
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','plan_type_id','asset_type_id','asset_category_id','plan_category_id'], 'safe'],
             [['budget_total', 'budget_used'], 'number'],
         ];
     }
@@ -69,6 +69,10 @@ class PlanOrderSearch extends PlanOrder
             'updated_by' => $this->updated_by,
             'deleted_at' => $this->deleted_at,
             'deleted_by' => $this->deleted_by,
+            'plan_type_id' => $this->plan_type_id,
+            'asset_type_id' => $this->asset_type_id,
+            'asset_category_id' => $this->asset_category_id,
+            'plan_category_id' => $this->plan_category_id
         ]);
 
         $query->andFilterWhere(['like', 'plan_group_id', $this->plan_group_id])

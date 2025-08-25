@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
+
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -57,9 +58,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">ประเภท</th>
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col">วงเงิน</th>
+                    <th scope="col">แหล่งงบประมาณ</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
-                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
+                    <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -68,21 +70,22 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?=$item->assetGroup?->title ?></td>
-                        <td><?=$item->assetType?->title ?></td>
+                        <td><?= $item->planType?->title ?></td>
+                        <td><?= $item->assetType?->title ?></td>
                         <td><?= $item->description ?></td>
-                        <td><?= $item->order_price ?></td>
+                        <td><?=$item->order_price?></td>
+                        <td><?=$item->budge?->title ?? '-'?></td>
                         <td><?= $item->departmentName() ?></td>
-                        <td><?= $item->status?></td>
-                        <td>
-                             <div class="dropdown">
+                        <td><?= $item->viewStatus()['view'] ?></td>
+                        <td class="text-center">
+                            <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>แสดง',['view','id' => $item->id],['class' => 'dropdown-item'])?></li>
-                                    <li><?=Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข',['update','id' => $item->id],['class' => 'dropdown-item'])?></li>
+                                    <li><?= Html::a('<i class="bi bi-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
                                 </ul>
                             </div>
                         </td>

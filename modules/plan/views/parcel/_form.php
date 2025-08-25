@@ -65,7 +65,7 @@ $form = ActiveForm::begin([
                             // $(this).submit(); 
                             }",
                             ],
-                        ])->label('หมวดพัสดุ');
+                        ])->label('หมวด');
                         ?>
                     </div>
 

@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-file-invoice me-1"></i>> </i> <?= $this->title; ?>
+<i class="fa-solid fa-file-invoice me-1"></i> </i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
@@ -52,10 +52,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th scope="col">หมวดพัสดุ</th>
                     <th scope="col">ประเภท</th>
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col">วงเงิน</th>
+                    <th scope="col">แหล่งงบประมาณ</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
                      <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
@@ -67,13 +67,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?=$item->assetGroup?->title ?></td>
-                        <td><?=$item->assetType?->title ?></td>
-                        <td><?= $item->description ?></td>
+                        <td><?=$item->planTypeItem?->title ?></td>
+                        <td><?=$item->description ?></td>
                         <td><?= $item->order_price ?></td>
+                       <td><?=$item->order_price?></td>
                         <td><?= $item->departmentName() ?></td>
-                        <td><?= $item->status?></td>
-                        <td>
+                        <td><?= $item->viewStatus()['view']?></td>
+                            <td class="text-center">
                              <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
