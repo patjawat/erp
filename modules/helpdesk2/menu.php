@@ -20,6 +20,19 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item">
     <?=Html::a('<i class="bi bi-ui-checks me-1"></i> ทะเบียนครุภัณฑ์',['asset'],['class' => 'nav-link ' . (isset($active) && $active =='asset' ? 'active' : '')])?>
 </li>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'setting' ? 'active' : '')?>" href="#"
+        id="topnav-dashboard" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-gear me-1"></i> ตั้งค่า
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทอุปกรณ์',['/helpdesk/device-type'],['class' => 'dropdown-item'])?>
+
+    </div>
+</li>
+
+
 <li class="nav-item">
     <?php else:?>
         

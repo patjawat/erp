@@ -10,6 +10,7 @@ use kartik\widgets\ActiveForm;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\booking\models\RoomDevice;
 use app\modules\booking\models\RoomLayout;
 use app\modules\dms\models\DocumentsDetail;
 
@@ -156,7 +157,10 @@ try {
 </div>
                     <?= $form->field($model, 'title')->textInput(['class' => ''])->label('หัวข้อการประชุม') ?>
                     <?= $form->field($model, 'data_json[meeting_details]')->textArea(['rows' => 3, 'class' => ''])->label('รายละเอียดการประชุม') ?>
-                    <?= $form->field($model, 'data_json[equipment]')->textInput(['class' => ''])->label('อุปกรณ์ที่ต้องการ') ?>
+                    <?= $form->field($model, 'data_json[equipment]')
+    ->checkboxList($model->equipmentItems())
+    ->label('รายการอุปกรณ์') ?>
+
                     <?= $form->field($model, 'data_json[phone]')->textInput(['placeholder' => 'เบอร์โทรศัพท์ติดต่อ', 'class' => ''])->label('เบอร์ติดต่อ') ?>
 
                  

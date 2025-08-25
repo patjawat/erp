@@ -1,0 +1,100 @@
+<?php
+
+use yii\helpers\Url;
+use yii\helpers\Html;
+
+use yii\widgets\Pjax;
+use yii\grid\GridView;
+use yii\grid\ActionColumn;
+use app\modules\booking\models\RoomType;
+
+/** @var yii\web\View $this */
+/** @var app\modules\booking\models\RoomSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+$this->title = 'ตั้งค่าอุปกรณ์';
+$this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['/booking/room-device']];
+$this->params['breadcrumbs'][] = $this->title;
+?>
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-gear"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('@app/modules/booking/views/meeting/menu') ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?= $this->render('../meeting/menu', ['active' => 'setting']) ?>
+<?php $this->endBlock(); ?>
+
+<?php Pjax::begin(); ?>
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white mt-2">
+                <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
+                <span class="badge text-bg-light">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+            </h6>
+            <div class="d-flex justify-content-between">
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างรูปแบบห้องประชุม'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center fw-semibold" style="width:5%">ลำดับ</th>
+                    <th class="fw-semibold" style="width:40%">ชื่ออุปกรณ์</th>
+                    <th class="fw-semibold text-end" style="width:10%">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr>
+                        <td class="text-center fw-semibold">
+                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                    
+                        <td class="fw-medium align-middle"><?= $item->title ?></td>
+                        <td class="fw-light text-end align-middle">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                    <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                </ul>
+                            </div>
+                        </td>
+                    <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+    <?= yii\bootstrap5\LinkPager::widget([
+        'pagination' => $dataProvider->pagination,
+        'firstPageLabel' => 'หน้าแรก',
+        'lastPageLabel' => 'หน้าสุดท้าย',
+        'options' => [
+            'listOptions' => 'pagination pagination-sm',
+            'class' => 'pagination-sm',
+        ],
+    ]); ?>
+</div>
+<?php Pjax::end() ?>

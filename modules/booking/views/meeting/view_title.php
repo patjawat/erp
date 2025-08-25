@@ -1,8 +1,8 @@
  <div class="">
-     <p class="mb-0 fw-semibold fs-12">
+     <p class="mb-0 fw-semibold fs-12" style="color:<?= isset($model->room->data_json['text_color']) ? $model->room->data_json['text_color'] : '' ?>">
          <?=$model->viewStatus()['icon']?><?=$model->viewTime()['full']?>
      </p>
-     <p class="mb-0 fw-semibold fs-12">
+     <p class="mb-0 fw-semibold fs-12" style="color:<?= isset($model->room->data_json['text_color']) ? $model->room->data_json['text_color'] : '' ?>">
          <?=$model->room?->title ?? '-'?>
      </p>
 

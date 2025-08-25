@@ -382,11 +382,7 @@ $listDocumentMe  = $emp->listDocumentMe();
                         <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
                     </div>
                     <div class="col-md-4">
-                     <?= $form->field($model, 'data_json[vehicle_time_start]')
-                        ->input('time', [
-                            'class' => 'form-control form-control-sm',
-                            'placeholder' => 'ระบุเวลาไป'
-                        ])->label('เวลา') ?>
+                        <?= $form->field($model, 'data_json[vehicle_time_start]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลา') ?>
                     </div>
                 </div>
                 <div class="row g-2">
@@ -394,11 +390,8 @@ $listDocumentMe  = $emp->listDocumentMe();
                         <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
                     </div>
                     <div class="col-md-4">
-                          <?= $form->field($model, 'data_json[vehicle_time_end]')
-                        ->input('time', [
-                            'class' => 'form-control form-control-sm',
-                            'placeholder' => 'ระบุเวลาไป เช่น 16:00'
-                        ])->label('เวลา') ?>
+                        <?= $form->field($model, 'data_json[vehicle_time_end]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลา') ?>
+                          
                     </div>
                 </div>
             </div>

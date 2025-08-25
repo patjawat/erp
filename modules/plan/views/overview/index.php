@@ -21,8 +21,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <table class="table table-bordered table-hover table-overview">
     <thead>
         <tr>
-            <td width="30%" rowspan="2" colspan="4" class="fw-semibold">รายการ</td>
-            <td width="10%" rowspan="2" class="fw-semibold text-center">แผนปี 2569</td>
+            <td width="30%" rowspan="2" colspan="4" class="fw-semibold text-center align-middle">รายการ</td>
+            <td width="10%" rowspan="2" class="fw-semibold text-center text-center align-middle">แผนปี 2569</td>
             <td colspan="3" class="fw-semibold text-center bg-primary text-white">ไตรมาส 1</td>
             <td colspan="3" class="fw-semibold  text-center bg-secondary text-white">ไตรมาส 2</td>
             <td colspan="3" class="fw-semibold  text-center bg-success text-white">ไตรมาส 3</td>

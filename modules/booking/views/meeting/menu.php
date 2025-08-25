@@ -37,9 +37,10 @@ $menus = [
             <i class="bx bx-chevron-down"></i>
         </a>
         <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
-            <?= Html::a('<i class="fa-solid fa-pen-to-square me-1 fs-5"></i> ห้องประชุม', ['/booking/room'], ['class' => 'dropdown-item']) ?>
-            <?= Html::a('<i class="fa-solid fa-pen-to-square me-1 fs-5"></i> รูปแบบห้องประชุม', ['/booking/room-layout'], ['class' => 'dropdown-item']) ?>
-            <?= Html::a('<i class="fa-solid fa-pen-to-square me-1 fs-5"></i> สถานะห้องประชุม', ['/booking/meeting-status'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> ห้องประชุม', ['/booking/room'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รูปแบบห้องประชุม', ['/booking/room-layout'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> สถานะห้องประชุม', ['/booking/meeting-status'], ['class' => 'dropdown-item']) ?>
+            <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รายการอุปกรณ์', ['/booking/room-device'], ['class' => 'dropdown-item']) ?>
         </div>
     </li>
 

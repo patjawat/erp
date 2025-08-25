@@ -60,10 +60,11 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="text-center fw-semibold" style="width:200px">สี</th>
+                    <th class="text-center fw-semibold" style="width:5%">ลำดับ</th>
+                    <th class="text-center fw-semibold" style="width:20%px">สีพื้นหลัง</th>
+                    <th class="text-center fw-semibold" style="width:20%px">สีตัวหนังสือ</th>
                     <th class="fw-semibold" style="width:10%">รหัส</th>
-                    <th class="fw-semibold" style="width:70%">สถานะ</th>
+                    <th class="fw-semibold" style="width:40%">สถานะ</th>
                     <th class="fw-semibold text-end" style="width:10%">จัดการ</th>
                 </tr>
             </thead>
@@ -96,6 +97,40 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                             url: '" . Url::to(['/hr/leave-type/update-color', 'id' => $item->id]) . "',
                                             type: 'POST',
                                             data: {id: id, color: color},
+                                            success: function(res) {
+                                            console.log(res.data.data_json.color)
+                                                $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);
+                                            }
+                                        });
+                                    }"
+                                ]
+                            ]);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            echo kartik\color\ColorInput::widget([
+                                'name' => 'color_' . $item->id,
+                                'value' => $item->data_json['text_color'] ?? '', // assuming 'color' is the attribute
+                                'options' => [
+                                    'placeholder' => 'Choose your color ...',
+                                    'class' => 'leave-color-input',
+                                    'data-id' => $item->id,
+                                    'value' => $item->data_json['text_color'] ?? '#2196f3', // preset default color if not set
+                                ],
+                                'pluginOptions' => [
+                                    'showDefaultPalette' => true,
+                                    'palette' => [$palette],
+                                    'allowEmpty' => false,
+                                ],
+                                'pluginEvents' => [
+                                    "change" => "function(event) {
+                                        let color = $(this).val();
+                                        let id = $(this).data('id');
+                                        $.ajax({
+                                            url: '" . Url::to(['/hr/leave-type/update-color', 'id' => $item->id]) . "',
+                                            type: 'POST',
+                                            data: {id: id, text_color: color},
                                             success: function(res) {
                                             console.log(res.data.data_json.color)
                                                 $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);

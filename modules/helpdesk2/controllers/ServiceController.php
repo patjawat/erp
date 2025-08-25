@@ -8,7 +8,6 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
-use app\modules\am\models\AssetSearch;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 

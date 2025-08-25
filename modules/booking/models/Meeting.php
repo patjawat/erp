@@ -14,6 +14,7 @@ use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\booking\models\RoomDevice;
 use app\modules\booking\models\RoomLayout;
 use app\modules\booking\models\MeetingDetail;
 
@@ -149,6 +150,10 @@ class Meeting extends \yii\db\ActiveRecord
             return $this->hasMany(MeetingDetail::class, ['meeting_id' => 'id'])->andOnCondition(['name' => 'meeting_menber']);
         }
     
+public static function equipmentItems()
+{
+    return ArrayHelper::map(RoomDevice::find()->where(['name' => 'room_device'])->all(),'title','title');
+}
 
     public function listRooms()
     {
@@ -204,7 +209,8 @@ class Meeting extends \yii\db\ActiveRecord
             $emp = $this->employee;
         $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
             return [
-                'avatar' => $emp->getAvatar(false,$createDate),
+                // 'avatar' => $emp->getAvatar(false,$createDate),
+                'avatar' => $emp->getAvatar(false,$emp->departmentName()),
                 'fullname' => $emp->fullname,
                 'department' => $emp->departmentName(),
             ];

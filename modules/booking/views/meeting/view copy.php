@@ -33,21 +33,27 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
 
 
         <div class="row mb-0 align-items-center">
-            <label class="col-sm-3 col-form-label text-end fw-medium">เลขที่ :</label>
-            <div class="col-sm-8"><?= $model->code; ?></div>
+            <label class="col-sm-3 col-form-label text-end fw-medium">ผู้ร้องขอ:</label>
+            <div class="col-sm-8"><?= $model->getUserReq()['avatar']; ?></div>
         </div>
 
-
+        <div class="row mb-0 align-items-center">
+            <label class="col-sm-3 col-form-label text-end fw-medium">ขอใช้ห้องประชุม:</label>
+            <div class="col-sm-8"><?= $model->room->title; ?></div>
+        </div>
         <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">วันที่:</label>
             <div class="col-sm-8 d-flex align-items-center gap-2">
                 <i class="fa-solid fa-calendar-day"></i>
-                <?= $model->viewMeetingDate() ?> เวลา <?= $model->viewTime()['full'] ?>
+                <?= $model->viewMeetingDate() ?>
             </div>
         </div>
-                <div class="row mb-0 align-items-center">
-            <label class="col-sm-3 col-form-label text-end fw-medium">ขอใช้ห้องประชุม:</label>
-            <div class="col-sm-8"><?= $model->room->title; ?></div>
+        <div class="row mb-0 align-items-center">
+            <label class="col-sm-3 col-form-label text-end fw-medium">เวลา:</label>
+            <div class="col-sm-8 d-flex align-items-center gap-2">
+                <i class="fa-regular fa-clock"></i>
+                <?= $model->viewTime()['full'] ?>
+            </div>
         </div>
         <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">หัวข้อการประชุม:</label>
@@ -58,15 +64,10 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
             <div class="col-sm-8"><?= $model->emp_number ?? 0 ?> คน</div>
         </div>
 
-        <div class="row mb-0 align-items-top">
+        <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">รายการอุปกรณ์:</label>
             <div class="col-sm-8">
-
-<ul>
-    <?php foreach ($model->equipmentItems() as $item): ?>
-        <li><?= $labels[$item] ?? $item ?></li>
-    <?php endforeach; ?>
-</ul>
+                <?= $model->viewStatus()['view'] ?>
             </div>
         </div>
         
