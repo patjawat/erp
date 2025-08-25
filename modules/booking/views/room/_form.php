@@ -198,22 +198,24 @@ $resultsJs = <<<JS
                 </div>
             </div>
 
-            <?= $form->field($model, 'data_json[room_accessory]')->widget(Select2::classname(), [
-                'data' => $model->ListAccessory(),
-                'options' => ['placeholder' => 'เลือกหน่วยงาน', 'multiple' => true],
-                'pluginOptions' => [
-                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                    'allowClear' => true,
-                    'dropdownParent' => '#main-modal',
-                ],
-                'pluginEvents' => [
-                    'select2:select' => 'function(result) { 
-                                                    }',
-                    'select2:unselecting' => 'function() {
+            <?php
+            //  $form->field($model, 'data_json[room_accessory]')->widget(Select2::classname(), [
+            //     'data' => $model->ListAccessory(),
+            //     'options' => ['placeholder' => 'เลือกหน่วยงาน', 'multiple' => true],
+            //     'pluginOptions' => [
+            //         'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+            //         'allowClear' => true,
+            //         'dropdownParent' => '#main-modal',
+            //     ],
+            //     'pluginEvents' => [
+            //         'select2:select' => 'function(result) { 
+            //                                         }',
+            //         'select2:unselecting' => 'function() {
 
-                                                    }',
-                ],
-            ])->label('รายการอุปกรณ์') ?>
+            //                                         }',
+            //     ],
+            // ])->label('รายการอุปกรณ์')
+             ?>
 
             <?= $form->field($model, 'description')->textArea(['maxlength' => true])->label('หมายเหตุ'); ?>
 

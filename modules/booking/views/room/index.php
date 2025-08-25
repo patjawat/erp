@@ -59,7 +59,6 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                     <th class="fw-semibold">ชื่อห้องประชุม</th>
                     <th class="fw-semibold">ความจุ/คน</th>
                     <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
-                    <th class="fw-semibold d-none d-md-table-cell">อุปกรณ์</th>
                     <th class="fw-semibold">สถานะ</th>
                     <th class="fw-semibold text-end">จัดการ</th>
                 </tr>
@@ -140,7 +139,6 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                         <td class="fw-medium"><?= $item->title ?></td>
                         <td><?= $item->data_json['seat_capacity'] ?? '-' ?></td>
                         <td class="d-none d-md-table-cell"><?= $item->data_json['location'] ?? '-'; ?></td>
-                        <td class="d-none d-md-table-cell"><?= $item->showAccessory() ?></td>
                         <td><?=$item->showStatus()['title']?></td>
                         <td class="fw-light text-end">
                         <div class="dropdown">
