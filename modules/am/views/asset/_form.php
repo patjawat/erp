@@ -263,22 +263,7 @@ $group = Yii::$app->request->get('group');
                                 ],
                             ])->label('หมวดหมู่'); ?>
                         </div>
-
-                        <div class="col-md-6">
-                            <?php
-                            echo $form->field($model, 'code', [
-                                'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
-                                ]
-                            ])->textInput([
-                                'maxlength' => true,
-                                'placeholder' => 'ค้นหาเลข FSN',
-                                'readonly' => false,  // Make field readonly
-                                // 'class' => 'form-control bg-primary text-white'  // Add background color
-                                'class' => 'form-control'  // Add background color
-                            ])->label('หมายเลขครุภัณฑ์'); ?>
-                        </div>
-                        <div class="col-md-6">
+                     <div class="col-md-6">
                            <?= $form->field($model, 'fsn_number', [
                                     'addon' => [
                                         'append' => [
@@ -293,6 +278,21 @@ $group = Yii::$app->request->get('group');
                                     'class' => 'form-control'
                                 ])->label('FSN'); ?>
                         </div>
+                        <div class="col-md-6">
+                            <?php
+                            echo $form->field($model, 'code', [
+                                'addon' => [
+                                    'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
+                                ]
+                            ])->textInput([
+                                'maxlength' => true,
+                                'placeholder' => 'ค้นหาเลข FSN',
+                                'readonly' => false,  // Make field readonly
+                                // 'class' => 'form-control bg-primary text-white'  // Add background color
+                                'class' => 'form-control'  // Add background color
+                            ])->label('หมายเลขครุภัณฑ์'); ?>
+                        </div>
+   
 
                         <div class="col-md-6">
                             <?= $form->field($model, 'data_json[fsn_old]')->textInput(['maxlength' => true])->label('เลขครุภัณฑ์เดิม') ?>

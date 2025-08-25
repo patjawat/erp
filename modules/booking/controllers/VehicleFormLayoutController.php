@@ -4,11 +4,12 @@ namespace app\modules\booking\controllers;
 
 use Yii;
 use yii\web\Response;
+use setasign\Fpdi\Fpdi;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
-use app\models\CategoriseSearch;
 use Imagine\Filter\Basic\Save;
+use app\models\CategoriseSearch;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -411,6 +412,54 @@ class VehicleFormLayoutController extends Controller
 
         return $this->redirect(['index']);
     }
+
+
+     public function actionExport($formName)
+    {
+        // ดึง layout จาก DB
+        $layout = Categorise::find()->where(['name' => $formName])->one();
+        if (!$layout) {
+            throw new \yii\web\NotFoundHttpException("Layout not found");
+        }
+
+        $fields = json_decode($layout->data_json, true);
+
+        // โหลด PDF template
+        $pdf = new Fpdi();
+        $pageCount = $pdf->setSourceFile(Yii::getAlias('@webroot/files/sample.pdf'));
+        $tplId = $pdf->importPage(1);
+        $size = $pdf->getTemplateSize($tplId);
+
+        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+        $pdf->useTemplate($tplId);
+
+        // ใส่ข้อมูลจริง (สมมุติว่ามาจาก DB หรือฟอร์ม)
+        $data = [
+            'fullname' => 'นายสมชาย ใจดี',
+            'address'  => '123/45 ถ.ประชาอุทิศ กรุงเทพฯ',
+            'tel'      => '081-2345678',
+        ];
+
+        foreach ($fields as $obj) {
+            $text = $data[$obj['field']] ?? '';
+
+            $pdf->SetFont(
+                $obj['fontFamily'] ?? 'Helvetica',
+                ($obj['fontWeight'] ?? 'bold') === 'bold' ? 'B' : '',
+                $obj['fontSize'] ?? 14
+            );
+
+            $pdf->SetXY((int)$obj['x'], (int)$obj['y']);
+            $pdf->Write(10, $text);
+        }
+
+        // บันทึกเป็นไฟล์
+        $filePath = Yii::getAlias('@webroot/files/output.pdf');
+        $pdf->Output($filePath, 'F');
+
+        return Yii::$app->response->sendFile($filePath);
+    }
+    
 
     /**
      * Finds the Categorise model based on its primary key value.
