@@ -44,7 +44,7 @@ use app\components\UserHelper;
                     </form>
                 </div>
             </div>
-            <?=$this->render('../app_service')?>
+            <?php // $this->render('../app_service')?>
             <?=$this->render('../app_manage')?>
             <div class="d-none d-md-inline-flex gap-2">
                 <button type="button" data-bs-toggle="fullscreen" class="btn header-item notify-icon" id="full-screen">
