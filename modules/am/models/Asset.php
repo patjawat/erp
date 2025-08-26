@@ -142,6 +142,17 @@ class Asset extends \yii\db\ActiveRecord
 
 
 
+       
+    public function departmentName()
+    {
+        $department = Organization::findOne(['id' => $this->department]);
+        if ($department) {
+            return $department->name;
+        } else {
+            return 'ไม่ระบุ';
+        }
+    }
+    
     //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
     public function updateFsn()
     {

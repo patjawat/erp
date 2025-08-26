@@ -153,7 +153,7 @@ $group = Yii::$app->request->get('group');
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">หน่วยงานที่รับผิดชอบ:</div>
-                    <div class="col-md-8">-</div>
+                    <div class="col-md-8"><?=$model->departmentName()?></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">สถานที่ตั้ง:</div>
