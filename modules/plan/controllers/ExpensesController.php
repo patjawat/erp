@@ -44,7 +44,7 @@ class ExpensesController extends Controller
     {
         $searchModel = new PlanOrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-         $dataProvider->query->andFilterWhere(['plan_group_id' => 'expenses']);
+        $dataProvider->query->andFilterWhere(['plan_group_id' => 'expenses']);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -73,22 +73,33 @@ class ExpensesController extends Controller
     public function actionCreate()
     {
         $model = new PlanOrder([
-             'thai_year' => (AppHelper::YearBudget()+1),
+            'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'expenses',
-            'plan_category_id' => 'OE',//รายจ่ายจากการดำเนินงาน
+            'plan_category_id' => 'OE', //รายจ่ายจากการดำเนินงาน
             'plan_type_id' => 'OE5', //ค่าใช้สอย
         ]);
-           $items = []; // ไม่มีรายการเดิม
+        $items = []; // ไม่มีรายการเดิม
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save(false)) {
-                return $this->redirect(['view', 'id' => $model->id]);
+                 $postItems = Yii::$app->request->post('items', []);
+                foreach ($postItems as $item) {
+                    if (!empty($item['item_name'])) {
+                        $pi = new PlanItem();
+                        $pi->plan_order_id = $model->id;
+                        $pi->item_name = $item['item_name'];
+                        $pi->qty = (int)$item['qty'];
+                        $pi->unit_price = (float)$item['unit_price'];
+                        $pi->save(false);
+                    }
+                }
+                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-       return $this->render('create', ['model' => $model, 'items' => $items]);
+        return $this->render('create', ['model' => $model, 'items' => $items]);
     }
 
     /**
@@ -102,7 +113,7 @@ class ExpensesController extends Controller
     {
         $model = $this->findModel($id);
 
-            $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
+        $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             PlanItem::deleteAll(['plan_order_id' => $model->id]);

@@ -17,6 +17,7 @@ use app\modules\am\models\Asset;
                     <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
                     <th class="fw-semibold" scope="col" style="width:70px;">รูปภาพ</th>
                     <th class="fw-semibold" scope="col" tyle="width:280px;">ชื่อครุภัณฑ์</th>
+                    <th class="fw-semibold" scope="col">ทะเบียน</th>
                     <th class="fw-semibold" scope="col">ครุภัณฑ์</th>
                     <th class="fw-semibold" scope="col">ประเภทครุภัณฑ์</th>
                     <th class="fw-semibold" scope="col">หมวดหมู่</th>
@@ -54,7 +55,6 @@ use app\modules\am\models\Asset;
                                 <?= $item->asset_name ?>
                             </span>
                             <div class="d-flex flex-row gap-1 fs-12">
-                                <?= !empty($item->license_plate) ? "ทะเบียน : <span class='fw-semibold'>{$item->license_plate}</span>" : '' ?>
                                 <?php if (isset($item->data_json['brand'])): ?>
                                     <span class="mb-0">ยี่ห้อ : <span class="fw-semibold"><?= $item->data_json['brand'] ?></span></span>
                                 <?php endif ?>
@@ -66,6 +66,7 @@ use app\modules\am\models\Asset;
                             <?php // $this->render('item_list',['model' => $item])
                             ?>
                         </td>
+                        <td class="fw-semibold text-primary"><?= $item->license_plate ?></td>
                         <td class="fw-semibold text-primary"><?= $item->code ?></td>
                         <td class="align-middle"><?= $item->assetType->title ?? '' ?></td>
                         <td class="align-middle"><?= $item->assetCategory?->title ?? '' ?></td>

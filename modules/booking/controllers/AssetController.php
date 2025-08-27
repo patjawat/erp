@@ -64,6 +64,7 @@ $dataProvider = $searchModel->search($this->request->queryParams);
             ['like', 'code', $searchModel->q],
         ]);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
+        $dataProvider->query->andWhere('asset.license_plate IS NOT NULL');
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
