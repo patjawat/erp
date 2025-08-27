@@ -125,38 +125,35 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
 <div class="card">
     <div class="card-body">
         <h6>รายการครุภัณฑ์</h6>
-        <table class="table table-bordered table-hover table-modal">
-            <thead>
-                <tr>
-                    <th class="text-center">ลำดับ</th>
-                    <th class="text-center">ชื่อ</th>
-                    <th class="text-center">ราคา/ต่อหน่วย</th>
-                    <th class="text-center">จำนวน</th>
-                    <th class="text-center">หน่วยนับ</th>
-                    <th class="text-center">เป็นเงิน</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($model->getPlanItems()->all() as $item): ?>
-                    <tr>
-                        <td rowspan="2" class="text-center">1</td>
-                        <td><?= $item->item_name ?></td>
-                        <td class="text-end"><?= $item->unit_price ?></td>
-                        <td class="text-end"><?= $item->qty ?></td>
-                        <td>เครื่อง</td>
-                        <td class="text-end"><?= ($item->qty * $item->unit_price) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-
-            </tbody>
-        </table>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th class="fw-semibold" scope="col" style="text-align: center;width:100px">ลำดับ</th>
+            <th>ชื่อรายการ</th>
+            <th width="150">จำนวน</th>
+            <th width="200" class="text-end">ราคาต่อหน่วย</th>
+            <th width="200" class="text-end">รวม</th>
+        </tr>
+    </thead>
+    <tbody class="table-group-divider align-middle">
+        <?php $num = 1;
+        foreach ($model->getPlanItems()->all() as $item): ?>
+            <tr>
+                <td><?= $num++ ?></td>
+                <td><?= $item->item_name ?></td>
+                <td><?= $item->qty ?></td>
+                <td class="text-end fw-semibold"><?= $item->unit_price ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item->qty * $item->unit_price, 2) ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
     </div>
 </div>
-
 
 <div class="card">
     <div class="card-body">

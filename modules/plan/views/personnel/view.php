@@ -118,6 +118,31 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th class="fw-semibold" scope="col" style="text-align: center;width:100px">ลำดับ</th>
+            <th>ชื่อรายการ</th>
+            <th width="150">จำนวน</th>
+            <th width="200" class="text-end">ราคาต่อหน่วย</th>
+            <th width="200" class="text-end">รวม</th>
+        </tr>
+    </thead>
+    <tbody class="table-group-divider align-middle">
+        <?php $num = 1;
+        foreach ($model->getPlanItems()->all() as $item): ?>
+            <tr>
+                <td><?= $num++ ?></td>
+                <td><?= $item->item_name ?></td>
+                <td><?= $item->qty ?></td>
+                <td class="text-end fw-semibold"><?= $item->unit_price ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item->qty * $item->unit_price, 2) ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+
 
 <div class="card">
     <div class="card-body">
