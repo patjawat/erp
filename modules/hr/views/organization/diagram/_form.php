@@ -76,13 +76,13 @@ switch ($node->lvl) {
     <div class="col-6">
         <?php
 
-            $leader2Data = $node->data_json['leader1'] ?? null;
+        $leader2Data = $node->data_json['leader1'] ?? null;
         $leader2Text = $leader1Data ? Employees::find()
             ->select(["CONCAT(fname, ' ', lname) AS fullname"])
             ->where(['id' => $leader2Data])
             ->scalar() : '';
-         echo $form->field($node, 'data_json[leader2]')->widget(Select2::classname(), [
-           'initValueText' => $leader2Text, // แสดงชื่อเดิมตอน update
+        echo $form->field($node, 'data_json[leader2]')->widget(Select2::classname(), [
+            'initValueText' => $leader2Text, // แสดงชื่อเดิมตอน update
             'options' => ['placeholder' => 'เลือกบุคคล...', 'multiple' => false],
             'pluginOptions' => [
                 'allowClear' => true,
