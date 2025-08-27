@@ -2,21 +2,23 @@
 
 namespace app\modules\hr\controllers;
 
-use app\models\Categorise;
-use app\models\CategoriseSearch;
 use Yii;
-use yii\filters\VerbFilter;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use app\modules\hr\models\Organization;
-
 use app\models\Tree;
+use yii\helpers\Html;
+use yii\web\Response;
+use yii\web\Controller;
+use app\models\Categorise;
+use yii\filters\VerbFilter;
+use app\models\CategoriseSearch;
+
+use yii\web\NotFoundHttpException;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 
 class TreeController extends \yii\web\Controller
 {
 
-        // โหลด form สำหรับ create/edit
+    // โหลด form สำหรับ create/edit
     public function actionForm($id = null, $parent_id = null)
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -34,63 +36,63 @@ class TreeController extends \yii\web\Controller
 
 
     public function actionGetNodes()
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-    $nodes = Organization::find()->all();
-    $result = [];
+        $nodes = Organization::find()->all();
+        $result = [];
 
-    foreach ($nodes as $node) {
-        $parent = $node->isRoot() ? '#' : (string)$node->parents(1)->one()->id;
-        $result[] = [
-            'id' => (string)$node->id,   // ensure string
-            'parent' => $parent ?: '#',
+        foreach ($nodes as $node) {
+            $parent = $node->isRoot() ? '#' : (string)$node->parents(1)->one()->id;
+            $result[] = [
+                'id' => (string)$node->id,   // ensure string
+                'parent' => $parent ?: '#',
+                'text' => $node->name,
+                'icon' => $node->icon ?: 'folder',
+                'state' => [
+                    'opened' => !$node->collapsed,
+                    'selected' => (bool)$node->selected,
+                    'disabled' => (bool)$node->disabled,
+                ],
+                'data' => $node->data_json,
+            ];
+        }
+
+        return $result;
+    }
+
+    private function buildNode($node)
+    {
+        $children = $node->children()->all();
+        $childNodes = [];
+        foreach ($children as $child) {
+            $childNodes[] = $this->buildNode($child);
+        }
+
+        // ถ้า root → ใช้ "#"
+        // ถ้าไม่ใช่ root → ดึง parent ถ้ามี
+        $parent = '#';
+        if (!$node->isRoot()) {
+            $parentNode = $node->parents(1)->one();
+            if ($parentNode) {
+                $parent = $parentNode->id;
+            }
+        }
+
+        return [
+            'id' => $node->id,
+            'parent' => $parent,
             'text' => $node->name,
             'icon' => $node->icon ?: 'folder',
             'state' => [
-                'opened' => !$node->collapsed,
                 'selected' => (bool)$node->selected,
                 'disabled' => (bool)$node->disabled,
+                'opened' => !$node->collapsed,
             ],
+            'children' => $childNodes,
             'data' => $node->data_json,
         ];
     }
-
-    return $result;
-}
-
-private function buildNode($node)
-{
-    $children = $node->children()->all();
-    $childNodes = [];
-    foreach($children as $child){
-        $childNodes[] = $this->buildNode($child);
-    }
-
-    // ถ้า root → ใช้ "#"
-    // ถ้าไม่ใช่ root → ดึง parent ถ้ามี
-    $parent = '#';
-    if (!$node->isRoot()) {
-        $parentNode = $node->parents(1)->one();
-        if ($parentNode) {
-            $parent = $parentNode->id;
-        }
-    }
-
-    return [
-        'id' => $node->id,
-        'parent' => $parent,
-        'text' => $node->name,
-        'icon' => $node->icon ?: 'folder',
-        'state' => [
-            'selected' => (bool)$node->selected,
-            'disabled' => (bool)$node->disabled,
-            'opened' => !$node->collapsed,
-        ],
-        'children' => $childNodes,
-        'data' => $node->data_json,
-    ];
-}
 
 
     public function actionCreateNode()
@@ -103,9 +105,9 @@ private function buildNode($node)
         $node = new Organization();
         $node->name = $name;
 
-        if(!$parent_id){ // root node
+        if (!$parent_id) { // root node
             $node->makeRoot();
-        }else{
+        } else {
             $parent = Organization::findOne($parent_id);
             $node->appendTo($parent);
         }
@@ -120,12 +122,12 @@ private function buildNode($node)
         $name = Yii::$app->request->post('name');
 
         $node = Organization::findOne($id);
-        if($node){
+        if ($node) {
             $node->name = $name;
             $node->save(false);
-            return ['success'=>true];
+            return ['success' => true];
         }
-        return ['error'=>'Cannot rename node'];
+        return ['error' => 'Cannot rename node'];
     }
 
     public function actionDeleteNode()
@@ -134,40 +136,54 @@ private function buildNode($node)
         $id = Yii::$app->request->post('id');
 
         $node = Organization::findOne($id);
-        if($node){
+        if ($node) {
             $node->deleteWithChildren();
-            return ['success'=>true];
+            return ['success' => true];
         }
 
-        return ['error'=>'Cannot delete node'];
+        return ['error' => 'Cannot delete node'];
     }
-public function actionOrgTree()
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    public function actionOrgTree()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-    $roots = Organization::find()->roots()->all();
+        $roots = Organization::find()->roots()->all();
 
-    $build = function($node) use (&$build) {
-        $data = $node->data_json ? $node->data_json : [];
-        $item = [
-            'id' => (string)$node->id,
-            'name' => $node->name,
-            // 'title' => $data['leader1_fullname'] ?? '', // ✅ กัน undefined
-            'title' => $data['leader1_fullname'] ?? '', // ✅ กัน undefined
-            'children' => [],
+        $build = function ($node) use (&$build) {
+            return [
+                'id' => (string)$node->id,
+                'data' => [
+                    'name' => $node->name,
+                    // 'imageURL' => $node->image_url ?? 'https://i.pravatar.cc/150?img=68', // กำหนด default
+                    // 'imageURL' => 'https://i.pravatar.cc/50?img=' . rand(1,70),
+                    'imageURL' => isset($node->data_json['leader1']) ? $this->getEmployee($node->data_json['leader1']) : '',
+                    'avatar' => isset($node->data_json['leader1']) ? $this->getEmployee($node->data_json['leader1']) : '',
+                    'borderColor' => $node->border_color ?? '#94ddff', // กำหนด default
+                ],
+                'children' => array_map($build, $node->children()->all()),
+            ];
+        };
+
+        $tree = array_map($build, $roots);
+
+        // ถ้า root มีแค่ 1 node ให้ส่ง node นั้น, ถ้ามากกว่า 1 ให้สร้าง root เปล่า
+        return count($tree) === 1 ? $tree[0] : [
+            'id' => 'root',
+            'data' => [
+                'name' => 'Root',
+                'imageURL' => '',
+                'borderColor' => '#cccccc',
+            ],
+            'children' => $tree,
         ];
-        foreach ($node->children()->all() as $child) {
-            $item['children'][] = $build($child);
-        }
-        return $item;
-    };
-
-    $tree = [];
-    foreach ($roots as $root) {
-        $tree[] = $build($root);
     }
 
-    return count($tree) === 1 ? $tree[0] : ['id' => 'root', 'name' => '', 'children' => $tree];
-}
-
+   protected function getEmployee($id)
+    {
+        $model = Employees::findOne($id);
+        if($model){
+            return Html::img($model->showAvatar(),['class' => 'avatar avatar-sm']);
+        }
+    }
+    
 }

@@ -99,9 +99,9 @@ class OrganizationController extends Controller
         return $this->render('diagram/index');
     }
 
-    public function actionDiagramV2()
+    public function actionChartOrg()
     {
-        return $this->render('diagram-v2/index');
+        return $this->render('chart-org/index');
     }
     /**
      * Displays a single Categorise model.

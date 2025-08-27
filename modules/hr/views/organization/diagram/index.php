@@ -15,9 +15,15 @@ $this->title = "ผังโครงสร้างองค์กร";
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
+
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-diagram-3"></i> <?=$this->title;?>  
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
+<?php $this->endBlock(); ?>
+
 <?php $this->beginBlock('page-action'); ?>
 <?= $this->render('@app/modules/hr/views/employees/menu') ?>
 <?php $this->endBlock(); ?>
