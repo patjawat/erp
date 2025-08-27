@@ -3,6 +3,7 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use creocoder\nestedsets\NestedSetsBehavior;
 
 /**
  * This is the model class for table "organization_diagram".
@@ -77,6 +78,25 @@ class Organization extends \yii\db\ActiveRecord
         return 'tree';
     }
 
+
+    public function behaviors()
+    {
+        return [
+            'tree' => [
+                'class' => NestedSetsBehavior::class,
+                'treeAttribute' => 'root',   // ใช้ root column
+                'leftAttribute' => 'lft',
+                'rightAttribute' => 'rgt',
+                'depthAttribute' => 'lvl',   // ใช้ lvl เป็น depth
+            ],
+        ];
+    }
+
+    public function getParent()
+{
+    return $this->parents(1)->one(); // ดึง parent ตัวเดียว
+}
+    
     /**
      * {@inheritdoc}
      */

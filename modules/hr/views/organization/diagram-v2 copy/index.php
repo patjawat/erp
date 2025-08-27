@@ -1,14 +1,13 @@
 <?php
 use app\models\Tree;
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-
-
 use kartik\tree\TreeView;
 
-// use muhsamsul\treeimage\TreeImage;
+
 use kartik\tree\TreeViewInput;
+
+// use muhsamsul\treeimage\TreeImage;
 use app\widgets\orgchart\TreeImage;
 use app\modules\hr\models\Organization;
 $this->title = "ผังโครงสร้างองค์กร";
@@ -29,8 +28,9 @@ $deleteUrl = \yii\helpers\Url::to(['tree/delete-node']);
 
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/apextree', ['depends' => \yii\web\JqueryAsset::class]);
 $orgUrl = \yii\helpers\Url::to(['tree/org-tree']);
-$formUrl = Url::to(['tree/form']);  
+
 ?>
+
 <?php
 $js = <<<JS
 $('#jstree_demo').jstree({
@@ -61,18 +61,6 @@ $('#jstree_demo').on('delete_node.jstree', function(e, data){
     $.post('$deleteUrl', { id: data.node.id });
 });
 
-
-$('#jstree_demo').on('select_node.jstree', function(e, data){
-    var nodeId = data.node.id;
-
-    // โหลด form edit ผ่าน AJAX
-    $.get("$formUrl", { id: nodeId }, function(html){
-        $('#modalBody').html(html);
-        $('#modal').modal('show');
-    });
-});
-
-
 fetch('/hr/tree/org-tree')
   .then(r => r.json())
   .then(data => {
@@ -90,11 +78,6 @@ fetch('/hr/tree/org-tree')
     });
     tree.render(data);
   });
-
-
-
-
-
 
 JS;
 $this->registerJs($js);

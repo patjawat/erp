@@ -2,13 +2,14 @@
 
 namespace app\modules\hr\controllers;
 
-use app\models\Categorise;
-use app\models\CategoriseSearch;
 use Yii;
-use yii\filters\VerbFilter;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\Controller;
+use app\models\Categorise;
+use yii\filters\VerbFilter;
+use app\models\CategoriseSearch;
+use yii\web\NotFoundHttpException;
+use app\modules\hr\models\Employees;
 
 /**
  * WorkgroupController implements the CRUD actions for Categorise model.
@@ -215,6 +216,20 @@ class OrganizationController extends Controller
                     'container' => '#hr-container',
                  ];
     }
+
+
+    public function actionListEmployee($q = null)
+{
+    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+   $query = Employees::find()
+    ->select(["id", "CONCAT(fname, ' ', lname) AS text"]) // concat fname+lname เป็น text สำหรับ Select2
+    ->andFilterWhere(['like', "CONCAT(fname, ' ', lname)", $q]) // search แบบรวมชื่อ+นามสกุล
+    ->asArray()
+    ->all();
+
+    return ['items' => $query];
+}
 
     /**
      * Finds the Categorise model based on its primary key value.
