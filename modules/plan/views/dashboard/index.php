@@ -1,5 +1,5 @@
 <?php
-
+use yii\helpers\Url;
 $this->title = 'Dashboard';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -9,6 +9,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="fa-solid fa-gauge me-1"></i> </i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('_search',['model' => $searchModel])?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
@@ -31,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">แบบร่าง</span>
-                        <span class="h3 fw-semibold">200</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('draft')?></span>
                     </div>
                     <div class="relative">
                         <i class="bi bi-file-earmark-text text-black-50 fs-1 mt-1"></i>
@@ -48,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">รออนุมัติ</span>
-                        <span class="h3 fw-semibold">0</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('submit')?></span>
                     </div>
                     <div class="relative">
                         <i class="bi bi-hourglass-split text-info text-opacity-75 fs-1 mt-1"></i>
@@ -63,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ปรับแผน</span>
-                        <span class="h3 fw-semibold">0</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('renew')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-repeat text-black-50 fs-1 mt-1"></i>
@@ -78,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">อนุมัติ</span>
-                        <span class="h3 fw-semibold">0</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('approve')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-regular fa-circle-check text-success text-opacity-75 fs-1 mt-1"></i>
@@ -93,7 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ไม่อนุมัติ</span>
-                        <span class="h3 fw-semibold">0</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('reject')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-hand text-danger text-opacity-75 fs-1 mt-1"></i>
@@ -108,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ทั้งหมด</span>
-                        <span class="h3 fw-semibold">0</span>
+                        <span class="h4 fw-semibold"><?=$searchModel->countStatus()?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-ranking-star text-primary text-opacity-75 fs-1 mt-1"></i>
@@ -127,8 +131,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h6 class="mb-0 text-muted">คำขอพัสดุ</h6>
                 <div class="icon-box"><i class="bi bi-box-seam fs-4"></i></div>
             </div>
-            <h2 class="fw-bold mb-0">1</h2>
-            <a href="#" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
+            <h2 class="fw-bold mb-0"><?=$searchModel->countStatus(null,'parcel')?></h2>
+            <a href="<?=Url::to(['/plan/parcel'])?>" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
     <div class="col-md-4">
@@ -137,8 +141,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h6 class="mb-0 text-muted">คำขอบุคลากร</h6>
                 <div class="icon-box"><i class="bi bi-person-circle fs-4"></i></div>
             </div>
-            <h2 class="fw-bold mb-0">2</h2>
-            <a href="#" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
+            <h2 class="fw-bold mb-0"><?=$searchModel->countStatus(null,'personnel')?></h2>
+            <a href="<?=Url::to(['/plan/personnel'])?>" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
     <div class="col-md-4">
@@ -147,8 +151,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h6 class="mb-0 text-muted">คำขอค่าใช้สอย</h6>
                 <div class="icon-box"><i class="bi bi-folder fs-4"></i></div>
             </div>
-            <h2 class="fw-bold mb-0">7</h2>
-            <a href="#" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
+            <h2 class="fw-bold mb-0"><?=$searchModel->countStatus(null,'expenses')?></h2>
+            <a href="<?=Url::to(['/plan/expenses'])?>" class="btn btn-link p-0 text-start mt-2">รายละเอียดเพิ่มเติม <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
 </div>

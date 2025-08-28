@@ -28,30 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="fa-solid fa-eye"></i> แสดงรายละเอียดแผนคำขอบุคลากร</h6>
-           <p>
-                <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-                  <?= ($model->status == 'draft' || $model->status == 'renew')
-                    ? Html::a(
-                        '<i class="fa-solid fa-paper-plane"></i> ส่งคำขอ',
-                        ['/plan/plan-order/update-status'],
-                        [
-                            'class' => 'btn btn-warning update-status',
-                            'data' => ['id' => $model->id,'status' => 'submit']
-                        ]
-                    )
-                    : ''
-                ?>
-                <?php //  $model->status == 'draft' ?  Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งคำขอ', ['/plan/plan-order/update-status','status' => 'submitt'], ['class' => 'btn btn-warning update-status','data'=> ['id' => $model->id,'status' => 'submit'] ]) : '' ?>
-                <?= $model->status == 'submit' ?  Html::a('<i class="fa-solid fa-circle-check"></i> อนุมัติแผน', ['/plan/plan-order/approve','id' => $model->id], ['class' => 'btn btn-success open-modal','data'=> ['size' => 'modal-m'] ]) : '' ?>
-                  <?= $model->status == 'approve' ?  Html::a('<i class="fa-solid fa-arrow-rotate-left"></i> ปรับแผน', ['/plan/plan-order/renew'], ['class' => 'btn btn-warning renew', 'data' => ['id' => $model->id]]) : '' ?>
-                <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
-                    'class' => 'btn btn-danger',
-                    'data' => [
-                        'confirm' => 'Are you sure you want to delete this item?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-            </p>
+                 <?=$this->render('action',['model' => $model])?>
         </div>
 
         <?= DetailView::widget([

@@ -2082,6 +2082,7 @@ progress {
 }
 .form-label {
   margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .col-form-label {
@@ -2089,6 +2090,7 @@ progress {
   padding-bottom: calc(0.375rem + var(--bs-border-width));
   margin-bottom: 0;
   font-size: inherit;
+  font-weight: 600;
   line-height: 1.5;
 }
 

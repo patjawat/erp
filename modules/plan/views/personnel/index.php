@@ -76,16 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view']?></td>
                         <td class="text-center">
-                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    จัดการ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?=Html::a('<i class="bi bi-eye me-2"></i>แสดง',['view','id' => $item->id],['class' => 'dropdown-item'])?></li>
-                                    <li><?=Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข',['update','id' => $item->id],['class' => 'dropdown-item'])?></li>
-                                </ul>
-                            </div>
+                            <?=$this->render('action',['model' => $item])?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

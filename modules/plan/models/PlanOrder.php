@@ -5,6 +5,7 @@ namespace app\modules\plan\models;
 use Yii;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use app\components\AssetHelper;
 use app\modules\hr\models\Organization;
 
@@ -205,6 +206,23 @@ class PlanOrder extends \yii\db\ActiveRecord
         return $this->hasMany(PlanItem::class, ['plan_order_id' => 'id']);
     }
 
+
+        public function ListThaiYear()
+    {
+        $model = self::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
     public function departmentName()
     {
         $model =  Organization::findOne(['id' => $this->department_id]);
@@ -214,15 +232,6 @@ class PlanOrder extends \yii\db\ActiveRecord
             return '-';
         }
     }
-    // public function listAssetType()
-    // {
-    //     return AssetHelper::listAssetType();
-    // }
-
-    // public function listAssetCategory()
-    // {
-    //     return AssetHelper::listAssetCategory();
-    // }
 
     public function listBudgetType()
     {
@@ -234,6 +243,15 @@ class PlanOrder extends \yii\db\ActiveRecord
     public function listPriceRef()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
+    }
+
+    public function countStatus($statusCode = null,$planGroup=null)
+    {
+        return self::find()
+        ->andFilterWhere(['status' => $statusCode])
+        ->andFilterWhere(['thai_year' => $this->thai_year])
+        ->andFilterWhere(['plan_group_id' => $planGroup])
+        ->count();
     }
 
 
