@@ -198,7 +198,7 @@ class PlanOrderController extends Controller
         if ($model) {
             $model->status = $status;
             $model->save(false);
-              return $this->redirect(['/'.$model->plan_group_id.'/index']);
+              return $this->redirect(['/plan/'.$model->plan_group_id.'/index']);
             return [
                 'status' => 'success',
                 

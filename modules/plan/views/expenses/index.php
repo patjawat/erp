@@ -1,11 +1,6 @@
 <?php
-
-use app\modules\plan\models\PlanOrder;
+use yii\web\View;
 use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
-use yii\widgets\Pjax;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -94,3 +89,103 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+
+<?php
+$js = <<< JS
+
+$('.update-status').click(function (e) { 
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยัน?',
+        text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เปลี่ยนเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url:$(this).attr('href'),
+                data: {
+                    id:$(this).data('id'),
+                    status:$(this).data('status'),
+                },
+                dataType: "json",
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: 'อัปเดตสถานะเรียบร้อยแล้ว',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload(); // โหลดใหม่ถ้าต้องการ
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                    });
+                }
+            });
+        }
+    });
+});
+
+
+
+$('.renew').click(function (e) { 
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยันการปรับแผน?',
+        text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เปลี่ยนเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url:$(this).attr('href'),
+                data: {
+                    id:$(this).data('id'),
+                    status:$(this).data('status'),
+                },
+                dataType: "json",
+                success: function (response) {
+                   if (response.url) {
+                        window.location.href = response.url;
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                    });
+                }
+            });
+        }
+    });
+});
+
+
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>

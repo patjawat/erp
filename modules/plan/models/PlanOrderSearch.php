@@ -18,7 +18,7 @@ class PlanOrderSearch extends PlanOrder
     {
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','plan_type_id','asset_type_id','asset_category_id','plan_category_id','thai_year'], 'safe'],
+            [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','plan_type_id','asset_type_id','asset_category_id','plan_category_id','thai_year','department_id'], 'safe'],
             [['budget_total', 'budget_used'], 'number'],
         ];
     }
@@ -62,6 +62,7 @@ class PlanOrderSearch extends PlanOrder
         $query->andFilterWhere([
             'id' => $this->id,
             'thai_year' => $this->thai_year,
+            'department_id' => $this->department_id,
             'budget_total' => $this->budget_total,
             'budget_used' => $this->budget_used,
             'created_at' => $this->created_at,

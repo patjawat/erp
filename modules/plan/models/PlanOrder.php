@@ -197,7 +197,7 @@ class PlanOrder extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categorise::class, ['code' => 'wage_type_id'])->andOnCondition(['name' => 'plan_wage_type']);
     }
-  
+
 
 
 
@@ -207,7 +207,7 @@ class PlanOrder extends \yii\db\ActiveRecord
     }
 
 
-        public function ListThaiYear()
+    public function ListThaiYear()
     {
         $model = self::find()
             ->select('thai_year')
@@ -237,7 +237,7 @@ class PlanOrder extends \yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
     }
-    
+
 
 
     public function listPriceRef()
@@ -245,13 +245,13 @@ class PlanOrder extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'price_ref'])->all(), 'code', 'title');
     }
 
-    public function countStatus($statusCode = null,$planGroup=null)
+    public function countStatus($statusCode = null, $planGroup = null)
     {
         return self::find()
-        ->andFilterWhere(['status' => $statusCode])
-        ->andFilterWhere(['thai_year' => $this->thai_year])
-        ->andFilterWhere(['plan_group_id' => $planGroup])
-        ->count();
+            ->andFilterWhere(['status' => $statusCode])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->andFilterWhere(['plan_group_id' => $planGroup])
+            ->count();
     }
 
 
@@ -268,8 +268,11 @@ class PlanOrder extends \yii\db\ActiveRecord
             case 'approve':
                 $title = 'อนุมัติ';
                 break;
-                case 'renew':
-                    $title = 'ปรับแผน';
+            case 'renew':
+                $title = 'ปรับแผน';
+                break;
+            case 'reject':
+                $title = 'ไม่อนุมัติ';
                 break;
             default:
                 $title = '';

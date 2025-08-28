@@ -166,7 +166,7 @@ $('.update-status').click(function (e) {
     e.preventDefault();
 
     Swal.fire({
-        title: 'ยืนยันการส่งคำขอ?',
+        title: 'ยืนยัน?',
         text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
         icon: 'warning',
         showCancelButton: true,
@@ -194,12 +194,6 @@ $('.update-status').click(function (e) {
                             timer: 1500
                         }).then(() => {
                             location.reload(); // โหลดใหม่ถ้าต้องการ
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'ผิดพลาด!',
-                            text: response.message || 'ไม่สามารถอัปเดตสถานะได้',
                         });
                     }
                 },
