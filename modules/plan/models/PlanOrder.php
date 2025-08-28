@@ -214,15 +214,22 @@ class PlanOrder extends \yii\db\ActiveRecord
             return '-';
         }
     }
-    public function listAssetType()
-    {
-        return AssetHelper::listAssetType();
-    }
+    // public function listAssetType()
+    // {
+    //     return AssetHelper::listAssetType();
+    // }
 
-    public function listAssetCategory()
+    // public function listAssetCategory()
+    // {
+    //     return AssetHelper::listAssetCategory();
+    // }
+
+    public function listBudgetType()
     {
-        return AssetHelper::listAssetCategory();
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
     }
+    
+
 
     public function listPriceRef()
     {

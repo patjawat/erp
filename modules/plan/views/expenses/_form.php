@@ -49,7 +49,7 @@ $form = ActiveForm::begin([
                     </div>
 
 
-                    <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
                         <?php
 
                         echo $form->field($model, 'plan_type_item_id')->widget(Select2::classname(), [
@@ -70,6 +70,20 @@ $form = ActiveForm::begin([
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?= $form->field($model, 'description')->textInput()->label('รายละเอียด') ?>
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'plan_budget_type_id')->widget(Select2::classname(), [
+                            'data' => $model->listBudgetType(),
+                            'options' => [
+                                'placeholder' => 'เลือกแหล่องของเงิน',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ])->label('แหล่องของเงิน');
+                        ?>
                     </div>
                 </div>
 

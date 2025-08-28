@@ -124,10 +124,10 @@ $form = ActiveForm::begin([
 
 
                     </div>
-                    <div class="col-lg-7 col-md-7 col-sm-12">
+                    <div class="col-lg-4 col-md-4 col-sm-12">
                         <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
                     </div>
-                    <div class="col-lg-5 col-md-5 col-sm-12">
+                      <div class="col-lg-3 col-md-3 col-sm-12">
                         <?php
 
                         echo $form->field($model, 'price_ref')->widget(Select2::classname(), [
@@ -155,6 +155,21 @@ $form = ActiveForm::begin([
                         ])->label('อ้างอิงตามราคา');
                         ?>
                     </div>
+                       <div class="col-lg-5 col-md-5 col-sm-12">
+                        <?php
+
+                        echo $form->field($model, 'plan_budget_type_id')->widget(Select2::classname(), [
+                            'data' => $model->listBudgetType(),
+                            'options' => [
+                                'placeholder' => 'เลือกแหล่องของเงิน',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ])->label('แหล่องของเงิน');
+                        ?>
+                    </div>
+
                 </div>
 
                 <hr>
