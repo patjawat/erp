@@ -49,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th scope="col">ประเภท</th>
                     <th scope="col">วัตถุประสงค์</th>
-                    <th scope="col">วงเงิน</th>
+                    <th scope="col" class="text-end">วงเงิน</th>
                     <th scope="col">แหล่งงบประมาณ</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?=$item->planTypeItem?->title ?></td>
                         <td><?=$item->description ?></td>
                         <td><?= $item->order_price ?></td>
-                       <td><?=$item->order_price?></td>
+                        <td class="text-end fw-semibold"><?=number_format($item->order_price,2)?></td>
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view']?></td>
                             <td class="text-center">

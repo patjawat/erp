@@ -56,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">หมวดพัสดุ</th>
                     <th scope="col">ประเภท</th>
                     <th scope="col">วัตถุประสงค์</th>
-                    <th scope="col">วงเงิน</th>
+                    <th scope="col" class="text-end">วงเงิน</th>
                     <th scope="col">แหล่องของเงิน</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item->planType?->title ?></td>
                         <td><?= $item->assetType?->title ?></td>
                         <td><?= $item->description ?></td>
-                        <td><?=$item->order_price?></td>
+                        <td class="text-end fw-semibold"><?=number_format($item->order_price,2)?></td>
                         <td><?=$item->budge?->title ?? '-'?></td>
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view'] ?></td>
