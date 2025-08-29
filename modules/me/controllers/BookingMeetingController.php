@@ -361,7 +361,7 @@ public function actionValidator($id = null)
 {
     \Yii::$app->response->format = Response::FORMAT_JSON;
 
-    // ถ้ามี $id แสดงว่าเป็น update → โหลด model เก่ามา
+    // ถ้ามี $id แสดงว่าเป็น update → โหลด model เดิม
     $model = $id === null ? new Meeting() : Meeting::findOne($id);
 
     $requiredName = 'ต้องระบุ';
@@ -379,20 +379,32 @@ public function actionValidator($id = null)
             $model->addError('data_json[period_time]', $requiredName);
         }
 
-        // ✅ ตรวจสอบว่าห้อง + วันซ้ำหรือไม่
-        $query = Meeting::find()
-            ->where([
-                'room_id' => $model->room_id,
-                'date_start' => AppHelper::convertToGregorian($model->date_start),
-            ]);
-
-        // ถ้าเป็น update → ตัด record ตัวเองออก
-        if (!$model->isNewRecord) {
-            $query->andWhere(['<>', 'id', $model->id]);
+        // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น
+        if (!empty($model->time_start) && !empty($model->time_end)) {
+            if (strtotime($model->time_end) <= strtotime($model->time_start)) {
+                $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+            }
         }
 
-        if ($query->exists()) {
-            $model->addError('room_id', 'ห้องนี้ถูกจองแล้วในวันดังกล่าว');
+        // ✅ ตรวจสอบว่าห้อง + วัน + เวลา ทับกันหรือไม่
+        if (!empty($model->time_start) && !empty($model->time_end)) {
+            $query = Meeting::find()
+                ->where([
+                    'room_id' => $model->room_id,
+                    'date_start' => AppHelper::convertToGregorian($model->date_start),
+                ])
+                ->andWhere(['<', 'time_start', $model->time_end])   // newStart < existEnd
+                ->andWhere(['>', 'time_end', $model->time_start]); // newEnd > existStart
+            
+
+            // ถ้าเป็น update → ตัด record ตัวเองออก
+            if (!$model->isNewRecord) {
+                $query->andWhere(['<>', 'id', $model->id]);
+            }
+
+            if ($query->exists()) {
+                $model->addError('room_id', 'ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาใหม่');
+            }
         }
     }
 
@@ -403,6 +415,7 @@ public function actionValidator($id = null)
 
     return $this->asJson($result);
 }
+
 
 
     

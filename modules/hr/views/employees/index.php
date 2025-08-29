@@ -135,40 +135,40 @@ $js = <<< JS
              $('body').find('#total-count').text(\$('#totalCount').text());
         });
 
-        \$("body").on("click", "#download-button", function (e) {
-            var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
-            var year = \$('#stockeventsearch-thai_year').find(':selected').text();
-            var form = $('#employees-filter')
-            \$.ajax({
-                url: '$url', // Adjust to match your controller and action URL
+        $("body").on("click", "#download-button", function (e) {
+            var btn = $(this); 
+            var originalHtml = btn.html(); // เก็บเนื้อหาปุ่มไว้คืนตอนหลัง
+
+            var form = $('#employees-filter');
+            $.ajax({
+                url: '$url', // ปรับเป็น URL ของคุณ
                 method: 'GET',
                 data: form.serialize(),
                 xhrFields: {
-                    responseType: 'blob' // Important for handling binary data
+                    responseType: 'blob' // สำคัญสำหรับ binary data
                 },
                 beforeSend: function(){
-                    // beforLoadModal();
+                    // เปลี่ยนปุ่มเป็นสถานะโหลด
+                    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> กำลังดาวน์โหลด...');
                 },
                 success: function(data) {
-                  const modal = bootstrap.Modal.getInstance(document.getElementById('main-modal'));
-                    var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
-                    var filename = 'ข้อมูลบุคลากร'+'.xlsx';
                     const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download = filename;
+                    link.download = 'ข้อมูลบุคลากร.xlsx';
                     link.click();
                 },
                 error: function() {
-                    alert('File could not be downloaded.');
+                    alert('ไม่สามารถดาวน์โหลดไฟล์ได้');
+                },
+                complete: function() {
+                    // คืนปุ่มกลับ
+                    btn.prop('disabled', false).html(originalHtml);
                 }
             });
         });
-
-        
-
-    JS;
-    $this->registerJS($js,View::POS_END)
+JS;
+$this->registerJS($js,View::POS_END)
 
 ?>
 <?php Pjax::end(); ?>

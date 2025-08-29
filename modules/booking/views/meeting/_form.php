@@ -293,6 +293,7 @@ $js = <<<JS
             }
         }
 
+        
 
     JS;
 $this->registerJS($js, View::POS_END);

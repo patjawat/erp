@@ -848,6 +848,7 @@ class EmployeesController extends Controller
         $sheet->setCellValue('W1', 'ความเชี่ยวชาญ');
         $sheet->setCellValue('X1', 'ประเภท/กลุ่มงาน');
         $sheet->setCellValue('Y1', 'เงินเดือน');
+        $sheet->setCellValue('Z1', 'หน่วยงาน');
         $StartRowSheet = 2;
         // $dataItems = $this->findModelItem($params);
         foreach ($dataProvider->getModels() as $key => $value) {
@@ -892,6 +893,7 @@ class EmployeesController extends Controller
             $sheet->setCellValue('W' . $numRow, $value->expertiseName());
             $sheet->setCellValue('X' . $numRow, $value->positionGroupName());
             $sheet->setCellValue('Y' . $numRow, $value->salary ? number_format($value->salary, 2) : '');
+            $sheet->setCellValue('Z' . $numRow, $value->departmentName());
         }
 
         $writer = new Xlsx($spreadsheet);
