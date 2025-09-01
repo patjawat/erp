@@ -25,38 +25,48 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-    <div class="card">
-        <div class="card-header bg-primary-gradient text-white">
-            <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-        </div>
-        <div class="card-body">
-            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span class="badge text-bg-light">
+                    <?= $dataProvider->getTotalCount() ?></span> รายการ</h6>
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+            </div>
         </div>
     </div>
+    <div class="card-body">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th scope="col">รหัส</th>
+                    <th scope="col">ชื่อรายการ</th>
+                </tr>
+            </thead>
+            <tbody class="align-middle table-group-divider">
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr class="">
+                    <tr>
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                        </td>
+                        <td><?=$item->code?></td>
+                        <td><?= $item->title ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-<div class="plan-group-index">
-
-    <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'code',
-            'title',
-           
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, PlanGroup $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
-
-    <?php Pjax::end(); ?>
-
+        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
+        </div>
+    </div>
 </div>

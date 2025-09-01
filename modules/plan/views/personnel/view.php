@@ -78,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
                  [
                     'attribute' => 'budget_id',
-                    'label' => 'แหล่องของเงิน',
+                    'label' => 'แหล่งของเงิน',
                     'value' => function ($model) {
                         return $model->budge?->title ?? '-';
                     }

@@ -45,11 +45,9 @@ $this->params['breadcrumbs'][] = $this->title;
             <div>
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
             </div>
-
         </div>
     </div>
     <div class="card-body">
-
         <table class="table table-striped table-hover">
             <thead>
                 <tr>

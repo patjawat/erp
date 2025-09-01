@@ -7,50 +7,25 @@ use yii\widgets\ActiveForm;
 /** @var app\modules\plan\models\PlanGroupSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-
-<div class="plan-group-search">
-
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
-
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'sort') ?>
-
-    <?= $form->field($model, 'ref') ?>
-
-    <?= $form->field($model, 'group_id') ?>
-
-    <?= $form->field($model, 'category_id') ?>
-
-    <?php // echo $form->field($model, 'code') ?>
-
-    <?php // echo $form->field($model, 'emp_id') ?>
-
-    <?php // echo $form->field($model, 'name') ?>
-
-    <?php // echo $form->field($model, 'title') ?>
-
-    <?php // echo $form->field($model, 'qty') ?>
-
-    <?php // echo $form->field($model, 'description') ?>
-
-    <?php // echo $form->field($model, 'data_json') ?>
-
-    <?php // echo $form->field($model, 'ma_items') ?>
-
-    <?php // echo $form->field($model, 'active') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
+<div class="row">
+    <div class="col-11">
+        <?= $form->field($model, 'id') ?>
     </div>
-
-    <?php ActiveForm::end(); ?>
-
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
+        <?php ActiveForm::end(); ?>
+    </div>
 </div>

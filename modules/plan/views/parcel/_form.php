@@ -161,12 +161,12 @@ $form = ActiveForm::begin([
                         echo $form->field($model, 'plan_budget_type_id')->widget(Select2::classname(), [
                             'data' => $model->listBudgetType(),
                             'options' => [
-                                'placeholder' => 'เลือกแหล่องของเงิน',
+                                'placeholder' => 'เลือกแหล่งของเงิน',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
-                        ])->label('แหล่องของเงิน');
+                        ])->label('แหล่งของเงิน');
                         ?>
                     </div>
 

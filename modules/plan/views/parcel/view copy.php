@@ -108,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
                 [
                     'attribute' => 'budget_id',
-                    'label' => 'แหล่องของเงิน',
+                    'label' => 'แหล่งของเงิน',
                 ],
                 [
                     'attribute' => 'order_price',
