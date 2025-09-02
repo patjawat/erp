@@ -81,6 +81,4 @@ $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // modul
 $modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
-$modules['planv2'] = ['class' => 'app\modules\planv2\Module'];  // แผนงานและโครงการ (Project management)
-
 return $modules;

@@ -52,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">ประเภท</th>
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col" class="text-end">วงเงิน</th>
-                    <th scope="col" class="text-center">แหล่องของเงิน</th>
+                    <th scope="col" class="text-center">แหล่งของเงิน</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
                      <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
