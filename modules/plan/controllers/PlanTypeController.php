@@ -2,16 +2,16 @@
 
 namespace app\modules\plan\controllers;
 
-use app\modules\plan\models\PlanItem;
-use app\modules\plan\models\PlanItemSearch;
+use app\modules\plan\models\PlanType;
+use app\modules\plan\models\PlanTypeSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
- * PlanItemController implements the CRUD actions for PlanItem model.
+ * PlanTypeController implements the CRUD actions for PlanType model.
  */
-class PlanItemController extends Controller
+class PlanTypeController extends Controller
 {
     /**
      * @inheritDoc
@@ -32,14 +32,14 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Lists all PlanItem models.
+     * Lists all PlanType models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new PlanItemSearch([
-             'name' => 'new_plan_item'
+        $searchModel = new PlanTypeSearch([
+            'name' => 'new_plan_type'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -50,7 +50,7 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Displays a single PlanItem model.
+     * Displays a single PlanType model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -63,13 +63,13 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Creates a new PlanItem model.
+     * Creates a new PlanType model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new PlanItem();
+        $model = new PlanType();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -85,7 +85,7 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Updates an existing PlanItem model.
+     * Updates an existing PlanType model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -105,7 +105,7 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Deletes an existing PlanItem model.
+     * Deletes an existing PlanType model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -119,15 +119,15 @@ class PlanItemController extends Controller
     }
 
     /**
-     * Finds the PlanItem model based on its primary key value.
+     * Finds the PlanType model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return PlanItem the loaded model
+     * @return PlanType the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = PlanItem::findOne(['id' => $id])) !== null) {
+        if (($model = PlanType::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

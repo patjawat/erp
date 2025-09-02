@@ -24,9 +24,12 @@ use yii\helpers\Html;
         <i class="bx bx-chevron-down"></i>
     </a>
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
-        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> กลุ่มคำขอ',['/plan/plan-group'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภท',['/plan/plan-type'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> หมวดหมู่',['/plan/plan-category'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> รายการ',['/plan/plan-item'],['class' => 'dropdown-item'])?>
+        <!-- <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> กลุ่มคำขอ',['/plan/plan-group'],['class' => 'dropdown-item'])?>
         <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทงบ',['/plan/plan-budget-type'],['class' => 'dropdown-item'])?>
-        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> รายจ่าย ',['/plan/plan-item'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> รายจ่าย ',['/plan/plan-item'],['class' => 'dropdown-item'])?> -->
 
     </div>
 </li>

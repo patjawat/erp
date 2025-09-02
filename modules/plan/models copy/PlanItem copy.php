@@ -45,7 +45,7 @@ class PlanItem extends \yii\db\ActiveRecord
             [['name'], 'required'],
             [['title'], 'string'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
+            [['data_json', 'ma_items','plan_order_id'], 'safe'],
             [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -72,8 +72,10 @@ class PlanItem extends \yii\db\ActiveRecord
             'active' => 'Active',
         ];
     }
-     public function getPlanCategory()
+
+        public function getPlanBudgetType()
     {
-        return $this->hasOne(PlanCategory::class, ['code' => 'category_id'])->andOnCondition(['name' => 'new_plan_category']);
+        return $this->hasOne(PlanBudgetType::class, ['code' => 'category_id'])->andOnCondition(['name' => 'plan_budget_type']);
     }
+
 }

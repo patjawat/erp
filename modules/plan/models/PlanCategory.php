@@ -22,7 +22,7 @@ use Yii;
  * @property string|null $ma_items รายการบำรุงรักษา
  * @property int|null $active
  */
-class PlanItem extends \yii\db\ActiveRecord
+class PlanCategory extends \yii\db\ActiveRecord
 {
 
 
@@ -72,8 +72,9 @@ class PlanItem extends \yii\db\ActiveRecord
             'active' => 'Active',
         ];
     }
-     public function getPlanCategory()
+         public function getPlanType()
     {
-        return $this->hasOne(PlanCategory::class, ['code' => 'category_id'])->andOnCondition(['name' => 'new_plan_category']);
+        return $this->hasOne(PlanType::class, ['code' => 'category_id'])->andOnCondition(['name' => 'new_plan_type']);
     }
+
 }

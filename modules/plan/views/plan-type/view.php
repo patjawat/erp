@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\plan\models\PlanItem $model */
+/** @var app\modules\plan\models\PlanType $model */
 
 $this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Plan Items', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Plan Types', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="plan-item-view">
+<div class="plan-type-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 

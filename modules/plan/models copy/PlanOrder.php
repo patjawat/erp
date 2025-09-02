@@ -8,7 +8,6 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\AssetHelper;
 use app\modules\hr\models\Organization;
-use app\modules\plan\models\PlanOrderItem;
 
 /**
  * This is the model class for table "plan_order".
@@ -204,7 +203,7 @@ class PlanOrder extends \yii\db\ActiveRecord
 
     public function getPlanItems()
     {
-        return $this->hasMany(PlanOrderItem::class, ['plan_order_id' => 'id']);
+        return $this->hasMany(PlanItem::class, ['plan_order_id' => 'id']);
     }
 
 

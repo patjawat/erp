@@ -4,12 +4,12 @@ namespace app\modules\plan\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\plan\models\PlanItem;
+use app\modules\plan\models\PlanType;
 
 /**
- * PlanItemSearch represents the model behind the search form of `app\modules\plan\models\PlanItem`.
+ * PlanTypeSearch represents the model behind the search form of `app\modules\plan\models\PlanType`.
  */
-class PlanItemSearch extends PlanItem
+class PlanTypeSearch extends PlanType
 {
     /**
      * {@inheritdoc}
@@ -41,7 +41,7 @@ class PlanItemSearch extends PlanItem
      */
     public function search($params, $formName = null)
     {
-        $query = PlanItem::find();
+        $query = PlanType::find();
 
         // add conditions that should always apply here
 

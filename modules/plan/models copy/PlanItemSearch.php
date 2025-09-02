@@ -17,8 +17,9 @@ class PlanItemSearch extends PlanItem
     public function rules()
     {
         return [
-            [['id', 'qty', 'active'], 'integer'],
-            [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items'], 'safe'],
+            [['id', 'plan_order_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['title', 'item_id', 'item_name', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['unit_price', 'total_price'], 'number'],
         ];
     }
 
@@ -60,21 +61,22 @@ class PlanItemSearch extends PlanItem
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'plan_order_id' => $this->plan_order_id,
             'qty' => $this->qty,
-            'active' => $this->active,
+            'unit_price' => $this->unit_price,
+            'total_price' => $this->total_price,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'deleted_at' => $this->deleted_at,
+            'deleted_by' => $this->deleted_by,
         ]);
 
-        $query->andFilterWhere(['like', 'sort', $this->sort])
-            ->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'group_id', $this->group_id])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
-            ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
-            ->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', 'ma_items', $this->ma_items]);
+        $query->andFilterWhere(['like', 'title', $this->title])
+            ->andFilterWhere(['like', 'item_id', $this->item_id])
+            ->andFilterWhere(['like', 'item_name', $this->item_name])
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

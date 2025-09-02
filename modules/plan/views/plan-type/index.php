@@ -1,17 +1,16 @@
 <?php
 
-use app\modules\plan\models\PlanItem;
+use app\modules\plan\models\PlanType;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
-
 /** @var yii\web\View $this */
-/** @var app\modules\plan\models\PlanItemSearch $searchModel */
+/** @var app\modules\plan\models\PlanTypeSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'รายการ';
+$this->title = 'ประเภท';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -22,8 +21,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/plan/menu', ['active' => 'index']) ?>
+<?=$this->render('@app/modules/plan/menu',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
+
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -50,11 +50,9 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th scope="col">ประเภท</th>
-                    <th scope="col">หมวดหมู</th>
                     <th scope="col">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
-                    <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
+                      <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -63,11 +61,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?= $item->planCategory->planType?->title ?? '-' ?></td>
-                        <td><?= $item->planCategory?->title ?? '-' ?></td>
                         <td><?= $item->code ?></td>
                         <td><?= $item->title ?></td>
-                        <td class="fw-light text-center align-middle">
+                       <td class="fw-light text-center align-middle">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
