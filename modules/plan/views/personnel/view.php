@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'attribute' => 'plan_budget_type',
                     'label' => 'ค่าใช้จ่าย',
                     'value' => function ($model) {
-                        return $model->planType->title;
+                       // return $model->planType->title;
                     }
                 ],
                 [

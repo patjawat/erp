@@ -10,7 +10,7 @@ use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\planv2\models\PlanItem;
+use app\modules\planv2\models\PlanOrderItem;
 use app\modules\planv2\models\PlanOrder;
 use app\modules\am\models\AssetItemSearch;
 use app\modules\planv2\models\PlanOrderSearch;
@@ -127,19 +127,19 @@ class ParcelController extends Controller
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'parcel', // Default to material type
-            'plan_category_id' => 'CE',
+            'plan_type_id' => 'INV',
+            'plan_category_id' => 'INV_01',
             // 'plan_type_id' => 'CE1',
         ]);
         $items = []; // ไม่มีรายการเดิม
 
-        if ($model->load(Yii::$app->request->post())) {
-
-            $model->save(false);
+        if ($model->load(Yii::$app->request->post()) && $model->save(false)) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
                 if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
+                    $pi = new PlanOrderItem();
                     $pi->plan_order_id = $model->id;
                     $pi->item_name = $item['item_name'];
                     $pi->qty = (int)$item['qty'];
@@ -162,14 +162,14 @@ class ParcelController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
+        $items = $model->getPlanOrderItems()->all(); // โหลดรายการเดิม
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            PlanItem::deleteAll(['plan_order_id' => $model->id]);
+            PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
                 if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
+                    $pi = new PlanOrderItem();
                     $pi->plan_order_id = $model->id;
                     $pi->item_name = $item['item_name'];
                     $pi->qty = (int)$item['qty'];

@@ -18,7 +18,7 @@ class PlanItemSearch extends PlanItem
     {
         return [
             [['id', 'qty', 'active'], 'integer'],
-            [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items'], 'safe'],
+            [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'plan_type_id'], 'safe'],
         ];
     }
 

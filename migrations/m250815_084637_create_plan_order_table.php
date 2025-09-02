@@ -55,12 +55,8 @@ class m250815_084637_create_plan_order_table extends Migration
             'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
             'deleted_by' => $this->integer()->comment('ผู้ลบ')
         ]);
-        $this->PlanGroup();
-        $this->PlanCategory();
-        $this->PlanType();
-        $this->PlanTypeItem();
         $this->PlanPriceRef();
-        $this->PlanWageType();
+
     }
 
     /**

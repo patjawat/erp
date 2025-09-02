@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span class="badge text-bg-light">
                     <?= $dataProvider->getTotalCount() ?></span> รายการ</h6>
             <div>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => 'สร้างใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
             </div>
         </div>
     </div>
@@ -49,7 +49,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th scope="col">ประเภท</th>
-                    <th scope="col">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
@@ -60,7 +59,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?= $item->planType->title ?? '-' ?></td>
-                        <td><?= $item->code ?></td>
                         <td><?= $item->title ?></td>
                         <td class="fw-light text-center align-middle">
                             <div class="dropdown">

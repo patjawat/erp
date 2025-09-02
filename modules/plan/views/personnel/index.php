@@ -66,7 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td><?=$item->planType?->title ?></td>
                         <td><?= $item->description ?></td>
-                        <td class="text-end fw-semibold"><?=number_format($item->order_price,2)?></td>
+                        <td class="text-end fw-semibold"><?= number_format($item->order_price ?? 0, 2) ?></td>
                          <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view']?></td>

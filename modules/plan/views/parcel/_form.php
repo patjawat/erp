@@ -26,6 +26,7 @@ $form = ActiveForm::begin([
             <div class="card-body">
 
                 <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
+                <?= $form->field($model, 'plan_type_id')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'plan_category_id')->hiddenInput()->label(false) ?>
                 <!-- ข้อมูลแผน -->
                 <div class="row">
@@ -47,11 +48,12 @@ $form = ActiveForm::begin([
                         ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
                     </div>
 
-                    <div class="col-lg-3 col-md-3 col-sm-12">
-                        <?php
+                   
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                         <?php
 
-                        echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(categorise::find()->where(['name' => 'plan_type', 'category_id' => 'CE'])->all(), 'code', 'title'),
+                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(categorise::find()->where(['name' => 'plan_item','category_id' => $model->plan_category_id])->all(), 'code', 'title'),
                             'options' => [
                                 'placeholder' => 'เลือกหมวดพัสดุ',
                                 'id' => 'plan_type_id'
@@ -68,66 +70,7 @@ $form = ActiveForm::begin([
                         ])->label('หมวด');
                         ?>
                     </div>
-
-                    <div class="col-lg-4 col-md-4 col-sm-12">
-                        <?php
-
-                        echo $form->field($model, 'asset_type_id')->widget(DepDrop::classname(), [
-                            'options' => [
-                                'id' => 'asset_type_id',
-                                'placeholder' => 'ทุกประเภท',
-                            ],
-                            'type' => DepDrop::TYPE_SELECT2,
-                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                            'pluginOptions' => [
-                                'depends' => ['plan_type_id'],
-                                'url' => Url::to(['/plan/parcel/get-asset-type']),
-                                'loadingText' => 'กำลังโหลด ...',
-                                'initialize' => true,
-                                'initDepends' => ['plan_type_id'], // ✅ ต้องเป็น parent field
-                                'params' => ['depdrop_all_params' => 'plan_type_id'],
-                            ],
-                            'data' => $model->asset_type_id
-                                ? [$model->asset_type_id => Categorise::findOne(['code' => $model->asset_type_id, 'name' => 'asset_type'])->title]
-                                : [],
-                        ])->label('ประเภท');
-
-                        ?>
-                    </div>
-                    <div class="col-lg-5 col-md-5 col-sm-12">
-                        <?php
-
-                        echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
-                            'options' => [
-                                'placeholder' => 'ทุกหมวดหมู่',
-                                'id' => 'asset_category_id'
-                            ],
-                            'type' => DepDrop::TYPE_SELECT2,
-                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                            'pluginOptions' => [
-                                'depends' => ['asset_type_id'],
-                                'url' => Url::to(['/am/asset-item/get-asset-category']),
-                                'loadingText' => 'กำลังโหลด ...',
-                                'params' => ['depdrop_all_params' => 'asset_category_id'],
-                                'initDepends' => ['asset_type_id'],
-                                'initialize' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                            console.log('Asset category selected:', $(this).val());
-                        }",
-                            ],
-
-                        ])->label('หมวดพัสดุ');
-                        ?>
-
-
-
-                    </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12">
-                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
-                    </div>
-                      <div class="col-lg-3 col-md-3 col-sm-12">
+                     <div class="col-lg-3 col-md-3 col-sm-12">
                         <?php
 
                         echo $form->field($model, 'price_ref')->widget(Select2::classname(), [
@@ -155,7 +98,12 @@ $form = ActiveForm::begin([
                         ])->label('อ้างอิงตามราคา');
                         ?>
                     </div>
-                       <div class="col-lg-5 col-md-5 col-sm-12">
+
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                    </div>
+                     
+                       <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
 
                         echo $form->field($model, 'plan_budget_type_id')->widget(Select2::classname(), [

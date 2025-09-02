@@ -64,415 +64,80 @@ $this->params['breadcrumbs'][] = $this->title;
             <td width="10px"></td>
             <td colspan="16" class="bg-warning fw-semibold text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i> รายจ่ายบุคลากร</td>
         </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าจ้างลูกจ้างชั่วคราว / พนักงานกระทรวง</td>
-            <td class="text-end">285600.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">23,800.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">23,800.00</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าล่วงเวลางานบริการ / งานสนับสนุน</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'PE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end"><?= $item['total'] ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end fw-semibold bg-success text-dark bg-opacity-25"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end fw-semibold bg-success text-dark bg-opacity-25"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end fw-semibold bg-success text-dark bg-opacity-25"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m8'], 2) ?></td>
 
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนการปฏิบัติงานเวรผลัดบ่ายหรือผลัดดึกของเจ้าหน้าที่</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเงินเพิ่มพิเศษไม่ทำเวชปฏิบัติส่วนตัว หรือปฏิบัติงาน รพ.เอกชน</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.11)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนตามผลการปฏิบัติงาน (ฉ.12)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินเพิ่ม (พ.ต.ส)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานของเจ้าหน้าที่ (นอกเวลา) ฉ5</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานในคลินิกพิเศษเฉพาะทางนอกเวลาราชการ (SMC)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินค่าใช้จ่ายบุคลากรอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.10)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
+            </tr>
+        <?php endforeach ?>
 
         <tr>
             <td width="10px"></td>
             <td colspan="16" class="bg-warning fw-semibold text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายจากการดำเนินงาน</td>
 
         </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่ายา</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'OE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end fw-semibold"><?= number_format($item['total'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m8'], 2) ?></td>
 
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าเวชภัณฑ์มิใช่ยา</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าวัสดุ</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าสาธารณูปโภค</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้สอย</td>
-            <td class="text-end fw-semibold">9,063,600.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้จ่ายดำเนินงานอื่น</td>
-            <td class="text-end fw-semibold">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
+            </tr>
+        <?php endforeach ?>
 
         <tr>
             <td width="10px"></td>
             <td colspan="16" class="bg-warning fw-semibold text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายลงทุน</td>
         </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
+        <?php foreach (PlanOrder::listOverviewSummary('2569', 'CE') as $item): ?>
+            <tr class="yellow">
+                <td width="10px"></td>
+                <td width="10px"></td>
+                <td colspan="2"><?= $item['title'] ?></td>
+                <td class="text-end"><?= number_format($item['total'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m9'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m10'], 2) ?></td>
+                <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?= number_format($item['m11'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m12'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m1'], 2) ?></td>
+                <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?= number_format($item['m2'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m3'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m4'], 2) ?></td>
+                <td class="text-end bg-success text-dark bg-opacity-25"><?= number_format($item['m5'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m6'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m7'], 2) ?></td>
+                <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?= number_format($item['m8'], 2) ?></td>
 
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าที่ดินและสิ่งก่อสร้าง</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์ต่ำกว่าเกณฑ์</td>
-            <td class="text-end">4,500.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">4,500.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
+            </tr>
+        <?php endforeach ?>
         <tr>
             <td width="10px"></td>
             <td colspan="16" class="bg-warning fw-semibold text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายอื่น</td>

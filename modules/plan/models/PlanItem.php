@@ -29,6 +29,7 @@ class PlanItem extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public $plan_type_id;
     public static function tableName()
     {
         return 'categorise';
@@ -45,7 +46,7 @@ class PlanItem extends \yii\db\ActiveRecord
             [['name'], 'required'],
             [['title'], 'string'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
+            [['data_json', 'plan_type_id'], 'safe'],
             [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -72,8 +73,29 @@ class PlanItem extends \yii\db\ActiveRecord
             'active' => 'Active',
         ];
     }
-     public function getPlanCategory()
+    public function getPlanCategory()
     {
-        return $this->hasOne(PlanCategory::class, ['code' => 'category_id'])->andOnCondition(['name' => 'new_plan_category']);
+        return $this->hasOne(PlanCategory::class, ['code' => 'category_id'])->andOnCondition(['name' => 'plan_category']);
+    }
+
+
+    /**
+     * Generate code ใหม่ ตาม category_id
+     * เช่น PRE -> PRE_01, PRE_02, ...
+     */
+    public static function generateNextCode($categoryId)
+    {
+        $last = self::find()
+            ->where(['category_id' => $categoryId])
+            ->orderBy(['id' => SORT_DESC]) // หรือ field ที่ใช้ sort ล่าสุด
+            ->one();
+
+        if ($last && preg_match('/^' . $categoryId . '_(\d+)$/', $last->code, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $categoryId . '_' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
     }
 }

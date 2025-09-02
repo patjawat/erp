@@ -68,7 +68,6 @@ class ParcelController extends Controller
         ]);
     }
 
-
     public function actionGetAssetType()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -95,6 +94,7 @@ class ParcelController extends Controller
         }
         return ['output' => '', 'selected' => ''];
     }
+
 
 
     public function actionValidator()
@@ -124,11 +124,11 @@ class ParcelController extends Controller
      */
     public function actionCreate()
     {
-        $model = new PlanOrder([
+    $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'parcel', // Default to material type
-            'plan_category_id' => 'CE',
-            // 'plan_type_id' => 'CE1',
+            'plan_type_id' => 'INV',
+            'plan_category_id' => 'INV_01',
         ]);
         $items = []; // ไม่มีรายการเดิม
 

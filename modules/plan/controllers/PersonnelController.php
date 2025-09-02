@@ -5,6 +5,7 @@ namespace app\modules\plan\controllers;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
@@ -52,6 +53,31 @@ class PersonnelController extends Controller
         ]);
     }
 
+
+    public function actionGetPlanItem()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $parents = $_POST['depdrop_parents'];
+            if ($parents != null) {
+                $planCategoryId = $parents[0];
+
+                    $out = Categorise::find()
+                        ->where(['category_id' => $planCategoryId, 'name' => 'plan_item'])
+                        ->select(['code as id', 'title as name'])
+                        ->asArray()
+                        ->all();
+        
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+        return ['output' => '', 'selected' => ''];
+    }
+
+
+    
     /**
      * Displays a single PlanOrder model.
      * @param int $id ID
@@ -75,7 +101,7 @@ class PersonnelController extends Controller
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget()+1),
             'plan_group_id' => 'personnel', // Default to material type
-            'plan_category_id' => 'PE',
+            'plan_category_id' => 'PER',
         ]);
 
         if ($model->load(Yii::$app->request->post())) {

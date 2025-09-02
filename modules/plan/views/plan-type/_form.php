@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use kartik\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanType $model */
@@ -9,39 +9,31 @@ use yii\widgets\ActiveForm;
 ?>
 
 <div class="plan-type-form">
+    <?php $form = ActiveForm::begin([
+        'id' => 'form'
+    ]); ?>
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'code')->textInput()->label('รหัส') ?>
+    <?= $form->field($model, 'title')->textInput()->label('ชื่อของประเภท') ?>
 
-    <?= $form->field($model, 'sort')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'ref')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'group_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'category_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'emp_id')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'title')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'qty')->textInput() ?>
-
-    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'data_json')->textInput() ?>
-
-    <?= $form->field($model, 'ma_items')->textInput() ?>
-
-    <?= $form->field($model, 'active')->textInput() ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="d-flex justify-content-center align-items-center mt-3">
+        <div class="d-flex gap-2">
+            <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
+             <?= Html::button('ปิด', [
+            'class' => 'btn btn-secondary',
+            'data-bs-dismiss' => 'modal'
+        ]) ?>
+        </div>
     </div>
-
     <?php ActiveForm::end(); ?>
-
 </div>
+<?php
+$js = <<< JS
+    handleFormSubmit('#form', null, async function(response) {
+        await location.reload();
+    });
+JS;
+$this->registerJs($js);
+?>

@@ -24,10 +24,8 @@ $form = ActiveForm::begin([
     <div class="col-lg-12 col-md-12">
         <div class="card">
             <div class="card-body">
-
-                <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
+ <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
                 <?= $form->field($model, 'plan_category_id')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'plan_type_id')->hiddenInput()->label(false) ?>
                 <!-- ข้อมูลแผน -->
                 <div class="row">
                     <div class="col-md-3">
@@ -48,28 +46,25 @@ $form = ActiveForm::begin([
                         ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
                     </div>
 
-
                     <div class="col-lg-12 col-md-12 col-sm-12">
-                        <?php
+                          <?php
 
-                        echo $form->field($model, 'plan_type_item_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type_item', 'category_id' => 'OE5'])->all(), 'code', 'title'),
+                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_item', 'category_id' =>  $model->plan_category_id])->all(), 'code', 'title'),
                             'options' => [
+                                'id' => 'plan_category_id',
                                 'placeholder' => 'เลือกรายการค่าใช้สอย',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                console.log($(this).val());
-            }",
-                            ],
-                        ])->label('ค่าใช้สอย');
+                        ])->label('รายการค่าใช้สอย');
                         ?>
+      
+
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
-                        <?= $form->field($model, 'description')->textInput()->label('รายละเอียด') ?>
+                        <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
@@ -86,6 +81,7 @@ $form = ActiveForm::begin([
                         ?>
                     </div>
                 </div>
+
 
                 <hr>
                 <div>
@@ -349,4 +345,4 @@ $(document).ready(function() {
 
 JS;
 $this->registerJs($js);
-?>
+?>  

@@ -2,11 +2,14 @@
 
 namespace app\modules\plan\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use kartik\form\ActiveForm;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanCategory;
 use app\modules\plan\models\PlanCategorySearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * PlanCategoryController implements the CRUD actions for PlanCategory model.
@@ -39,7 +42,7 @@ class PlanCategoryController extends Controller
     public function actionIndex()
     {
         $searchModel = new PlanCategorySearch([
-             'name' => 'new_plan_category'
+            'name' => 'plan_category'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -67,16 +70,38 @@ class PlanCategoryController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
+
     public function actionCreate()
     {
-        $model = new PlanCategory();
+        $model = new PlanCategory(['name' => 'plan_type']);
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if ($model->load($this->request->post())) {
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกข้อมูลสำเร็จ',
+                        'id' => $model->id,
+                    ];
+                } else {
+                    // validation error
+                    return ActiveForm::validate($model);
+                }
             }
-        } else {
-            $model->loadDefaultValues();
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+            ];
+        }
+
+        // ถ้าไม่ใช่ ajax → render แบบปกติ
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
         }
 
         return $this->render('create', [
@@ -84,16 +109,32 @@ class PlanCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Updates an existing PlanCategory model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if ($model->load($this->request->post())) {
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'message' => 'แก้ไขข้อมูลสำเร็จ',
+                        'id' => $model->id,
+                    ];
+                } else {
+                    return ActiveForm::validate($model);
+                }
+            }
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
+        }
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -104,18 +145,23 @@ class PlanCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Deletes an existing PlanCategory model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $id ID
-     * @return \yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $this->findModel($id)->delete();
+            return $this->redirect(['index']);
+        }
+    }
+    public function actionGenerateCode($category_id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $nextCode = PlanCategory::generateNextCode($category_id);
 
-        return $this->redirect(['index']);
+        return [
+            'success' => true,
+            'code' => $nextCode,
+        ];
     }
 
     /**

@@ -99,6 +99,8 @@ class PlanOrder extends \yii\db\ActiveRecord
             [['description'], 'string'],
             [
                 [
+                    'plan_category_id',
+                    'plan_item_id',
                     'data_json',
                     'created_at',
                     'updated_at',

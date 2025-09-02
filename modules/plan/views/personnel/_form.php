@@ -26,7 +26,7 @@ $form = ActiveForm::begin([
             <div class="card-body">
 
                 <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'plan_category_id')->hiddenInput()->label(false) ?>
+
                 <!-- ข้อมูลแผน -->
                 <div class="row">
                     <div class="col-md-3">
@@ -50,41 +50,42 @@ $form = ActiveForm::begin([
 
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
-
-                        echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type', 'category_id' => $model->plan_category_id])->all(), 'code', 'title'),
+                        echo $form->field($model, 'plan_category_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_category', 'category_id' => 'PER'])->andWhere(['NOT IN','code',['PER_04']])->all(), 'code', 'title'),
                             'options' => [
-                                'placeholder' => 'เลือกรายการค่าใช้จ่าย',
+                                'id' => 'plan_category_id',
+                                'placeholder' => 'เลือกรายการคำขอขุคลากร',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                                    if($(this).val() == 'PE1'){
-                                        $('#planorder-wage_type_id').prop('disabled', false).trigger('change');
-                                        } else {
-                                            $('#planorder-wage_type_id').prop('disabled', true).trigger('change');
-                                    }
-                                }",
-                            ],
-                        ])->label('ค่าใช้จ่าย');
+                        ])->label('รายการคำขอขุคลากร');
                         ?>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
-                        echo $form->field($model, 'wage_type_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_wage_type'])->all(), 'code', 'title'),
+
+                        echo $form->field($model, 'plan_item_id')->widget(DepDrop::classname(), [
                             'options' => [
-                                'placeholder' => 'เลือกค่าจ้าง',
+                                'id' => 'plan_item_id',
+                                'placeholder' => 'เลือกประเภทค่าใช้จ่าย',
                             ],
+                            'type' => DepDrop::TYPE_SELECT2,
+                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
                             'pluginOptions' => [
-                                'allowClear' => true,
+                                'depends' => ['plan_category_id'],
+                                'url' => Url::to(['get-plan-item']),
+                                'loadingText' => 'กำลังโหลด ...',
+                                'initialize' => true,
+                                'initDepends' => ['plan_category_id'], // ✅ ต้องเป็น parent field
+                                'params' => ['depdrop_all_params' => 'plan_category_id'],
                             ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() {}",
-                            ],
-                        ])->label('ค่าจ้าง'); ?>
+                            'data' => $model->asset_type_id
+                                ? [$model->asset_type_id => Categorise::findOne(['code' => $model->asset_type_id, 'name' => 'asset_type'])->title]
+                                : [],
+                        ])->label('ประเภทค่าใช้จ่าย');
+
+                        ?>
 
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
@@ -103,13 +104,13 @@ $form = ActiveForm::begin([
                             ],
                         ])->label('แหล่งของเงิน');
                         ?>
-                </div>
+                    </div>
                 </div>
 
 
 
                 <hr>
-                
+
 
                 <?= $form->field($model, 'order_price')->textInput()->label('รวมเป็นจำนวนเงินทั้งสิ้น') ?>
                 <hr>

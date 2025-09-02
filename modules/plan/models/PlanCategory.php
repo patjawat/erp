@@ -74,7 +74,27 @@ class PlanCategory extends \yii\db\ActiveRecord
     }
          public function getPlanType()
     {
-        return $this->hasOne(PlanType::class, ['code' => 'category_id'])->andOnCondition(['name' => 'new_plan_type']);
+        return $this->hasOne(PlanType::class, ['code' => 'category_id'])->andOnCondition(['name' => 'plan_type']);
+    }
+
+      /**
+     * Generate code ใหม่ ตาม category_id
+     * เช่น PRE -> PRE_01, PRE_02, ...
+     */
+       public static function generateNextCode($categoryId)
+    {
+        $last = self::find()
+            ->where(['category_id' => $categoryId])
+            ->orderBy(['id' => SORT_DESC]) // หรือ field ที่ใช้ sort ล่าสุด
+            ->one();
+
+        if ($last && preg_match('/^' . $categoryId . '_(\d+)$/', $last->code, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $categoryId . '_' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
     }
 
 }

@@ -55,7 +55,7 @@ class m250815_084655_create_plan_order_item_table extends Migration
     //ประเภทของแผน
     public function PlanType()
     {
-        $name = 'new_plan_type';
+        $name = 'plan_type';
 
         // ถ้ายังไม่มี name นี้เลย -> สร้างใหม่
         $count = (new \yii\db\Query())
@@ -99,7 +99,7 @@ class m250815_084655_create_plan_order_item_table extends Migration
     }
 public function PlanCategory()
 {
-    $name = 'new_plan_category';
+    $name = 'plan_category';
     
     // ถ้ายังไม่มี name นี้เลย -> สร้างใหม่
     $count = (new \yii\db\Query())
@@ -137,7 +137,7 @@ public function PlanCategory()
                 // หา category_id จาก parent_code
                 $parent = (new \yii\db\Query())
                     ->from('categorise')
-                    ->where(['name' => 'new_plan_type', 'code' => $item['code']])
+                    ->where(['name' => 'plan_type', 'code' => $item['code']])
                     ->one();
                 
                 Yii::$app->db->createCommand()->insert('categorise', [
@@ -155,7 +155,7 @@ public function PlanCategory()
 
 public function PlanItem()
 {
-    $name = 'new_plan_item';
+    $name = 'plan_item';
     
     // ถ้ายังไม่มี name นี้เลย -> สร้างใหม่
     $count = (new \yii\db\Query())
@@ -335,7 +335,7 @@ public function PlanItem()
                 // หา category_id จาก parent_code
                 $parent = (new \yii\db\Query())
                     ->from('categorise')
-                    ->where(['name' => 'new_plan_category', 'code' => $item['category_id']])
+                    ->where(['name' => 'plan_category', 'code' => $item['category_id']])
                     ->one();
                 
                 Yii::$app->db->createCommand()->insert('categorise', [

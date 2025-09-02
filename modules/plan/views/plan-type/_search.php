@@ -18,7 +18,7 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
     <div class="row">
-        <div class="col-lg-4">
+        <div class="col-lg-11">
             <?= $form->field($model, 'title')->textInput()->label(false) ?>
         </div>
         <div class="col-1">

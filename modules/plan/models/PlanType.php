@@ -42,7 +42,7 @@ class PlanType extends \yii\db\ActiveRecord
         return [
             [['sort', 'ref', 'group_id', 'category_id', 'code', 'emp_id', 'title', 'qty', 'description', 'data_json', 'ma_items'], 'default', 'value' => null],
             [['active'], 'default', 'value' => 1],
-            [['name'], 'required'],
+            [['name','code','title'], 'required'],
             [['title'], 'string'],
             [['qty', 'active'], 'integer'],
             [['data_json', 'ma_items'], 'safe'],
