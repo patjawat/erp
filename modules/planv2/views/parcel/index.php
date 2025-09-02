@@ -1,0 +1,199 @@
+<?php
+use yii\web\View;
+use yii\helpers\Html;
+/** @var yii\web\View $this */
+/** @var app\modules\plan\models\PlanOrderSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+
+/** @var yii\web\View $this */
+/** @var app\modules\plan\models\PlanOrderSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+$this->title = 'แผนคำขอพัสดุ';
+$this->params['breadcrumbs'][] = $this->title;
+?>
+
+
+<?php $this->beginBlock('page-title'); ?>
+<i class="fa-solid fa-dolly me-1"></i> <?= $this->title; ?>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('navbar_menu'); ?>
+<?= $this->render('@app/modules/planv2/menu', ['active' => 'parcel']) ?>
+<?php $this->endBlock(); ?>
+
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
+    <div class="card-body">
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span class="badge text-bg-light">
+                    <?= $dataProvider->getTotalCount() ?></span> รายการ</h6>
+            <div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+            </div>
+
+        </div>
+    </div>
+    <div class="card-body">
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th scope="col">หมวดพัสดุ</th>
+                    <th scope="col">ประเภท</th>
+                    <th scope="col">วัตถุประสงค์</th>
+                    <th scope="col" class="text-end">วงเงิน</th>
+                    <th scope="col" class="text-center">แหล่งของเงิน</th>
+                    <th scope="col">หน่วยงาน</th>
+                    <th scope="col">สถานะ</th>
+                    <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody class="align-middle table-group-divider">
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr class="">
+                    <tr>
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                        </td>
+                        <td><?= $item->planType?->title ?></td>
+                        <td><?= $item->assetType?->title ?></td>
+                        <td><?= $item->description ?></td>
+                        <td class="text-end fw-semibold"><?=number_format($item->order_price,2)?></td>
+                        <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
+                        <td><?= $item->departmentName() ?></td>
+                        <td><?= $item->viewStatus()['view'] ?></td>
+                        <td class="text-center">
+                            <?=$this->render('action',['model' => $item])?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+            <?= yii\bootstrap5\LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => [
+                    'listOptions' => 'pagination pagination-sm',
+                    'class' => 'pagination-sm',
+                ],
+            ]); ?>
+        </div>
+    </div>
+</div>
+
+
+<?php
+$js = <<< JS
+
+$('.update-status').click(function (e) { 
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยัน?',
+        text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เปลี่ยนเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url:$(this).attr('href'),
+                data: {
+                    id:$(this).data('id'),
+                    status:$(this).data('status'),
+                },
+                dataType: "json",
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: 'อัปเดตสถานะเรียบร้อยแล้ว',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload(); // โหลดใหม่ถ้าต้องการ
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                    });
+                }
+            });
+        }
+    });
+});
+
+
+
+$('.renew').click(function (e) { 
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยันการปรับแผน?',
+        text: "คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, เปลี่ยนเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url:$(this).attr('href'),
+                data: {
+                    id:$(this).data('id'),
+                    status:$(this).data('status'),
+                },
+                dataType: "json",
+                success: function (response) {
+                   if (response.url) {
+                        window.location.href = response.url;
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                    });
+                }
+            });
+        }
+    });
+});
+
+
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>
