@@ -32,25 +32,20 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'erp-docker-hub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
-                }
+                echo "login docker hub"
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                sh """
-                docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                """
+
+                echo "push image" 
             }
         }
 
         stage('Clean Up') {
             steps {
-                sh """
-                docker image prune -f
-                """
+                echo "clean"
             }
         }
     }
