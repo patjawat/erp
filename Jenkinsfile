@@ -8,14 +8,21 @@ pipeline {
     }
 
     stages {
-        stage('Build & Push') {
+        stage('Build Image') {
             steps {
                 script {
-                    // build image
-                    def app = docker.build("${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    // สร้าง Docker image
+                    docker.build("${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}")
+                }
+            }
+        }
 
-                    // login & push ใช้ credentials ที่สร้างไว้
+        stage('Push Image') {
+            steps {
+                script {
+                    // login และ push ไป Docker Hub
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        def app = docker.image("${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}")
                         app.push()
                     }
                 }
