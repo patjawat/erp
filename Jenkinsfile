@@ -1,51 +1,19 @@
 pipeline {
     agent any
-
     environment {
-        DOCKER_HUB_USER = "patjawat"
         DOCKER_IMAGE = "erp"
         DOCKER_TAG = "1.1"
+        DOCKER_HUB_CREDENTIALS = "erp-docker-hub"
     }
-
     stages {
-        stage('Checkout') {
+        stage('Build & Push') {
             steps {
-                git branch: 'main', url: 'https://github.com/patjawat/erp.git'
-            }
-        }
-
-        stage('Build Image') {
-            steps {
-                sh """
-                docker buildx build --platform linux/amd64 -t ${DOCKER_IMAGE}:${DOCKER_TAG} . --load
-                """
-            }
-        }
-
-        stage('Tag Image') {
-            steps {
-                sh """
-                docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                """
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                echo "login docker hub"
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-
-                echo "push image" 
-            }
-        }
-
-        stage('Clean Up') {
-            steps {
-                echo "clean"
+                script {
+                    def app = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        app.push()
+                    }
+                }
             }
         }
     }
