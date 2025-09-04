@@ -11,8 +11,6 @@ use yii\bootstrap5\LinkPager;
 $this->title = 'วัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 //  sql update ยาและเวชภัณฑ์
-
-//  UPDATE categorise SET category_id = 'M23', data_json = JSON_SET(data_json, '$.category_name', 'ยา|เวชภัณฑ์') WHERE JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.category_name')) = 'ยา l เวชภัณฑ์';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -57,8 +55,18 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <div>
+                <div class="d-flex justify-content-between gap-2">
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <div class="dropdown">
+                    <button class="btn btn-secondary shadow dropdown-toggle" type="button"
+                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-gear"></i> จัดการ
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1MmLegsxjTNXpeYnQf47XBZgGKIDNgQXXUdLOuOpO-60/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
