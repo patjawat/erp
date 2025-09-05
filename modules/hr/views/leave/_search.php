@@ -139,6 +139,15 @@ $js = <<< JS
             // $(this).submit();
     });
 
+
+  $("#approvesearch-date_filter").on('change', function() {
+    console.log('xxx');
+    
+            $('#leavesearch-thai_year').val(null).trigger('change');
+            $('#leavesearch-date_start').val(null).trigger('change');
+            $('#leavesearch-date_end').val(null).trigger('change');
+            // $(this).submit();
+    });
 JS;
 $this->registerJS($js, View::POS_END);
 

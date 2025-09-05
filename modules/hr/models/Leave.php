@@ -370,8 +370,9 @@ class Leave extends \yii\db\ActiveRecord
 
         $year = AppHelper::YearBudget();
         $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         // รวมข้อมูล
-        $model = ArrayHelper::merge($isYear, $model);
+        $model = ArrayHelper::merge($isYear,$nextYear, $model);
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 

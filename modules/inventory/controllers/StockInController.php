@@ -122,12 +122,9 @@ class StockInController extends Controller
     public function actionListPendingOrder()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-        $warehouseModel = Warehouse::findOne($warehouse['warehouse_id']);
+        $warehouseModel = Warehouse::findOne($warehouse->id);
 
         if (isset($warehouseModel->data_json['item_type'])) {
-
-            $item = $warehouseModel->data_json['item_type'];
-
 
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
@@ -306,18 +303,17 @@ class StockInController extends Controller
     {
         $order = Order::findOne($id);
         $warehouse = \Yii::$app->session->get('warehouse');
-        $po_number = $this->request->get('po_number');
         $model = new StockEvent([
             'name' => 'order',
             'category_id' => $order->id,
             'po_number' => $order->po_number,
             'vendor_id' => $order->vendor_id,
             // 'receive_type' => $this->request->get('receive_type'),
-            'warehouse_id' => $warehouse['warehouse_id'],
+            'warehouse_id' => $warehouse->id,
             'data_json' => [
                 'receive_date' => AppHelper::convertToThai(date('Y-m-d')),
                 'po_number' => $order->po_number,
-                'do_number' => $order->data_json['gr_number'],
+                'do_number' => isset($order->data_json['gr_number']) ? $order->data_json['gr_number'] : '',
                 'pq_number' => $order->pq_number,
                 'asset_type' => $order->assetType->code,
                 'asset_type_name' => $order->assetType->title
