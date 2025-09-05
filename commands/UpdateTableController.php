@@ -82,128 +82,128 @@ class UpdateTableController extends Controller
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
-            
+
 
             // ยานพาหนะ
-            ['name' => '/booking/vehicle/*', 'type' => 2,'description' =>''],
-            ['name' => '/booking/vehicle/events', 'type' => 2,'description' =>''],
-            ['name' => '/booking/vehicle/list-event-tomorrow', 'type' => 2,'description' =>''],
-            ['name' => '/booking/vehicle/list-event-todays', 'type' => 2,'description' =>''],
-            ['name' => '/booking/vehicle/view', 'type' => 2,'description' =>''],
-            ['name' => '/booking/vehicle/print', 'type' => 2,'description' =>''],
+            ['name' => '/booking/vehicle/*', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/events', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/list-event-tomorrow', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/list-event-todays', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/view', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/print', 'type' => 2, 'description' => ''],
             // ห้องประชุม
-            ['name' => '/booking/meeting/*', 'type' => 2,'description' =>''],
-            ['name' => '/booking/meeting/events', 'type' => 2,'description' =>''],
+            ['name' => '/booking/meeting/*', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/meeting/events', 'type' => 2, 'description' => ''],
 
 
-            ['name' => '/dms/*', 'type' => 2,'description' =>''],
-            ['name' => '/dms/dashboard', 'type' => 2,'description' =>'Dashboard'],
-            ['name' => '/dms/documents', 'type' => 2,'description' =>'หนังสือรับ'],
-            ['name' => '/dms/documents/create', 'type' => 2,'description' =>'ออกเลขหนังสือ'],
-            ['name' => '/dms/documents/update', 'type' => 2,'description' =>'แก้ไขหนังสือ'],
-            ['name' => '/dms/documents/view', 'type' => 2,'description' =>'แสดงหนังสือ'],
-            ['name' => '/dms/documents/delete', 'type' => 2,'description' =>'ลบหนังสือ'],
-            ['name' => '/am/asset/*', 'type' => 2,'description' =>''],
-            ['name' => '/am/asset/depreciation', 'type' => 2,'description' =>''],
-            ['name' => '/am/asset/index', 'type' => 2,'description' =>''],
-            ['name' => '/am/asset/qrcode', 'type' => 2,'description' =>''],
-            ['name' => '/am/asset/view', 'type' => 2,'description' =>''],
-            ['name' => '/am/asset/update', 'type' => 2,'description' =>''],
-            ['name' => '/am/default/index', 'type' => 2,'description' =>''],
-            ['name' => '/depdrop/*', 'type' => 2,'description' =>''],
-            ['name' => '/employees/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/computer/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/default/repair-select', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/general/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/medical/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/create', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/timeline', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/stock/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/summary', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/user-request-order', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/user-job', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/list-accept', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/view', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/accept-job', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/switch-group', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/cancel-job', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/add-part', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/update', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/rating', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/team/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/service/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/service-record/*', 'type' => 2,'description' =>''],
-            ['name' => '/helpdesk/repair-parts/*', 'type' => 2,'description' =>''],
-            ['name' => '/hr/default/index', 'type' => 2,'description' =>''],
-            ['name' => '/hr/employees/view', 'type' => 2,'description' =>''],
+            ['name' => '/dms/*', 'type' => 2, 'description' => ''],
+            ['name' => '/dms/dashboard', 'type' => 2, 'description' => 'Dashboard'],
+            ['name' => '/dms/documents', 'type' => 2, 'description' => 'หนังสือรับ'],
+            ['name' => '/dms/documents/create', 'type' => 2, 'description' => 'ออกเลขหนังสือ'],
+            ['name' => '/dms/documents/update', 'type' => 2, 'description' => 'แก้ไขหนังสือ'],
+            ['name' => '/dms/documents/view', 'type' => 2, 'description' => 'แสดงหนังสือ'],
+            ['name' => '/dms/documents/delete', 'type' => 2, 'description' => 'ลบหนังสือ'],
+            ['name' => '/am/asset/*', 'type' => 2, 'description' => ''],
+            ['name' => '/am/asset/depreciation', 'type' => 2, 'description' => ''],
+            ['name' => '/am/asset/index', 'type' => 2, 'description' => ''],
+            ['name' => '/am/asset/qrcode', 'type' => 2, 'description' => ''],
+            ['name' => '/am/asset/view', 'type' => 2, 'description' => ''],
+            ['name' => '/am/asset/update', 'type' => 2, 'description' => ''],
+            ['name' => '/am/default/index', 'type' => 2, 'description' => ''],
+            ['name' => '/depdrop/*', 'type' => 2, 'description' => ''],
+            ['name' => '/employees/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/computer/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/default/repair-select', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/general/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/medical/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/create', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/timeline', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/stock/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/summary', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/user-request-order', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/user-job', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/list-accept', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/view', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/accept-job', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/switch-group', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/cancel-job', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/add-part', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/update', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/rating', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/team/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/service/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/service-record/*', 'type' => 2, 'description' => ''],
+            ['name' => '/helpdesk/repair-parts/*', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/default/index', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/employees/view', 'type' => 2, 'description' => ''],
             //Router
-            ['name' => '/hr/leave/*', 'type' => 2,'description' =>''],
-            ['name' => '/hr/leave/create', 'type' => 2,'description' =>''],
-            ['name' => '/hr/leave/update', 'type' => 2,'description' =>''],
-            ['name' => '/hr/leave/view', 'type' => 2,'description' =>''],
-            ['name' => '/hr/leave/view-history', 'type' => 2,'description' =>''],
-            
-            ['name' => '/inventory/*', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/default/product-summary', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/default/warehouse', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/stock-out/index', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/stock-out/stock', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/stock/view-chart-total', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/stock/warehouse', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/warehouse/index', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/warehouse/list-order-request', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/warehouse/view', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/main-stock/store', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/main-stock/create', 'type' => 2,'description' =>''],
-            ['name' => '/inventory/stock-order', 'type' => 2,'description' =>''],
-            ['name' => '/me/*', 'type' => 2,'description' =>''],
-            ['name' => '/profile/*', 'type' => 2,'description' =>''],
+            ['name' => '/hr/leave/*', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/leave/create', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/leave/update', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/leave/view', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/leave/view-history', 'type' => 2, 'description' => ''],
+
+            ['name' => '/inventory/*', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/default/product-summary', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/default/warehouse', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/stock-out/index', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/stock-out/stock', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/stock/view-chart-total', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/stock/warehouse', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/warehouse/index', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/warehouse/list-order-request', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/warehouse/view', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/main-stock/store', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/main-stock/create', 'type' => 2, 'description' => ''],
+            ['name' => '/inventory/stock-order', 'type' => 2, 'description' => ''],
+            ['name' => '/me/*', 'type' => 2, 'description' => ''],
+            ['name' => '/profile/*', 'type' => 2, 'description' => ''],
 
             // stock
-            ['name' => '/inventory/default/index', 'type' => 2,'description' =>''],
+            ['name' => '/inventory/default/index', 'type' => 2, 'description' => ''],
 
-            
-            
+
+
             //ขัดซื้อ
-            ['name' => '/purchase/*', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/document/download-file', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/gr-order/update', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order-item/committee', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order-item/committee-detail', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order-item/create', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order-item/delete', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order-item/update', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order/delete-item', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order/document', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order/product-list', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order/update-item', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/order/view', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/po-order/create', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/po-order/index', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/po-order/update', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pq-order/index', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pq-order/update', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/checker-confirm', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/create', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/director-confirm', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/index', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/leader-confirm', 'type' => 2,'description' =>''],
-            ['name' => '/purchase/pr-order/update', 'type' => 2,'description' =>''],
-            ['name' => '/settings/*', 'type' => 2,'description' =>''],
-            ['name' => '/site/*', 'type' => 2,'description' =>''],
-            
-            ['name' => '/sm/*', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/accept-pr-order', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/budget-chart', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/chart', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/index', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/pq-order', 'type' => 2,'description' =>''],
-            ['name' => '/sm/default/pr-order', 'type' => 2,'description' =>''],
-            ['name' => '/usermanager/*', 'type' => 2,'description' =>''],
-            ['name' => '/warehouse/*', 'type' => 2,'description' =>''],
-            ['name' => 'purchase/po-order/index', 'type' => 2,'description' =>''],
-            ['name' => '/ms-word/*', 'type' => 2,'description' =>''],
+            ['name' => '/purchase/*', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/document/download-file', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/gr-order/update', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order-item/committee', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order-item/committee-detail', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order-item/create', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order-item/delete', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order-item/update', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order/delete-item', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order/document', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order/product-list', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order/update-item', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/order/view', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/po-order/create', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/po-order/index', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/po-order/update', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pq-order/index', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pq-order/update', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/checker-confirm', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/create', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/director-confirm', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/index', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/leader-confirm', 'type' => 2, 'description' => ''],
+            ['name' => '/purchase/pr-order/update', 'type' => 2, 'description' => ''],
+            ['name' => '/settings/*', 'type' => 2, 'description' => ''],
+            ['name' => '/site/*', 'type' => 2, 'description' => ''],
+
+            ['name' => '/sm/*', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/accept-pr-order', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/budget-chart', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/chart', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/index', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/pq-order', 'type' => 2, 'description' => ''],
+            ['name' => '/sm/default/pr-order', 'type' => 2, 'description' => ''],
+            ['name' => '/usermanager/*', 'type' => 2, 'description' => ''],
+            ['name' => '/warehouse/*', 'type' => 2, 'description' => ''],
+            ['name' => 'purchase/po-order/index', 'type' => 2, 'description' => ''],
+            ['name' => '/ms-word/*', 'type' => 2, 'description' => ''],
         ];
     }
 
@@ -241,10 +241,10 @@ class UpdateTableController extends Controller
             ['child' => '/booking/vehicle/print', 'parent' => 'user'],
             // ระบบห้องประชุม
             ['child' => '/booking/meeting/*', 'parent' => 'meeting'],
-            
+
             // ระบบสารบรรณ
             ['child' => '/dms/*', 'parent' => 'document'],
-            
+
             ['child' => '/am/asset/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
             ['child' => '/am/asset/index', 'parent' => 'user'],
@@ -412,25 +412,21 @@ class UpdateTableController extends Controller
             Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary`')->execute();
             echo "Drop leave_summary\n";
         } catch (\Throwable $th) {
-
         }
         try {
             Yii::$app->db->createCommand('DROP VIEW IF EXISTS `leave_summary_year`')->execute();
             echo "Drop leave_summary_year\n";
         } catch (\Throwable $th) {
-
         }
         try {
             Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock`')->execute();
             echo "Drop view_stock\n";
         } catch (\Throwable $th) {
-
         }
         try {
             Yii::$app->db->createCommand('DROP VIEW IF EXISTS `view_stock_transaction`')->execute();
             echo "Drop view_stock_transaction\n";
         } catch (\Throwable $th) {
-
         }
 
         $sqlViewStock = "CREATE VIEW view_stock as SELECT t.code as type_code ,t.title as asset_type_name,i.code as asset_item,i.title as asset_item_name,s.warehouse_id,w.warehouse_type,w.warehouse_name,s.qty,sum(s.qty*s.unit_price) as total_price FROM stock s 
@@ -441,35 +437,113 @@ class UpdateTableController extends Controller
         $createViewStock = Yii::$app->db->createCommand($sqlViewStock)->execute();
         echo "Create view_stock\n";
 
-        $sqlViewStockTransation = "CREATE VIEW view_stock_transaction AS WITH t as (SELECT so.id as order_id ,si.id as item_id,t.title as asset_type,i.category_id,i.code as asset_item,i.title as asset_name,i.data_json->>'\$.unit' as unit,
-                                    so.code,
-                                    si.po_number,
-                                    wf.warehouse_type as from_warehouse_type,
-                                    wf.warehouse_name  as from_warehouse_name,
-                                    w.warehouse_type,
-                                    w.warehouse_name,
-                                    si.transaction_type,
-                                    so.order_status,
-                                    so.warehouse_id,
-                                    si.qty,
-                                    si.unit_price,
-                                    so.data_json->>'\$.receive_date' as receive_date,
-                                    DATE_FORMAT(so.movement_date, '%Y-%m-%d') AS movement_date,
-                                    so.created_at,
-                                    so.thai_year,
-                                    si.total_price
-                                    
-                                FROM 
-                                    stock_events so
-                                   
-                                WHERE i.category_id <> ''
-                                ) SELECT *,(CASE 
-                                        WHEN (t.transaction_type = 'IN') 
-                                        THEN MONTH(t.receive_date)
-                                        ELSE MONTH(t.created_at)
-                                    END) AS order_month
-                                    
-                                FROM t;";
+        $sqlViewStockTransation = "
+CREATE VIEW `view_stock_transaction` AS
+WITH
+    `t` as (
+        select
+            `t`.`title` AS `asset_type`,
+            `i`.`category_id` AS `category_id`,
+            `i`.`code` AS `asset_item`,
+            `i`.`title` AS `asset_name`,
+            json_unquote(
+                json_extract(`i`.`data_json`, '$.unit')
+            ) AS `unit`,
+            `so`.`code` AS `code`,
+            `si`.`po_number` AS `po_number`,
+            `wf`.`warehouse_type` AS `from_warehouse_type`,
+            `wf`.`warehouse_name` AS `from_warehouse_name`,
+            `w`.`warehouse_type` AS `warehouse_type`,
+            `w`.`warehouse_name` AS `warehouse_name`,
+            `si`.`transaction_type` AS `transaction_type`,
+            `so`.`order_status` AS `order_status`,
+            `so`.`warehouse_id` AS `warehouse_id`,
+            `si`.`qty` AS `qty`,
+            `si`.`unit_price` AS `unit_price`,
+            json_unquote(
+                json_extract(
+                    `so`.`data_json`,
+                    '$.receive_date'
+                )
+            ) AS `receive_date`,
+            `so`.`created_at` AS `created_at`,
+            `so`.`thai_year` AS `thai_year`,
+            `si`.`total_price` AS `total_price`
+        from (
+                (
+                    (
+                        (
+                            (
+                                `stock_events` `so`
+                                left join `stock_events` `si` on (
+                                    (
+                                        (
+                                            `si`.`category_id` = `so`.`id`
+                                        )
+                                        and (`si`.`name` = 'order_item')
+                                    )
+                                )
+                            )
+                            left join `categorise` `i` on (
+                                (
+                                    (
+                                        `i`.`code` = `si`.`asset_item`
+                                    )
+                                    and (`i`.`name` = 'asset_item')
+                                )
+                            )
+                        )
+                        left join `categorise` `t` on (
+                            (
+                                (
+                                    `t`.`code` = `i`.`category_id`
+                                )
+                                and (`t`.`name` = 'asset_type')
+                            )
+                        )
+                    )
+                    left join `warehouses` `w` on (
+                        (
+                            `w`.`id` = `si`.`warehouse_id`
+                        )
+                    )
+                )
+                left join `warehouses` `wf` on (
+                    (
+                        `wf`.`id` = `si`.`from_warehouse_id`
+                    )
+                )
+            )
+        where (`i`.`category_id` <> '')
+    )
+select
+    `t`.`asset_type` AS `asset_type`,
+    `t`.`category_id` AS `category_id`,
+    `t`.`asset_item` AS `asset_item`,
+    `t`.`asset_name` AS `asset_name`,
+    `t`.`unit` AS `unit`,
+    `t`.`code` AS `code`,
+    `t`.`po_number` AS `po_number`,
+    `t`.`from_warehouse_type` AS `from_warehouse_type`,
+    `t`.`from_warehouse_name` AS `from_warehouse_name`,
+    `t`.`warehouse_type` AS `warehouse_type`,
+    `t`.`warehouse_name` AS `warehouse_name`,
+    `t`.`transaction_type` AS `transaction_type`,
+    `t`.`order_status` AS `order_status`,
+    `t`.`warehouse_id` AS `warehouse_id`,
+    `t`.`qty` AS `qty`,
+    `t`.`unit_price` AS `unit_price`,
+    `t`.`receive_date` AS `receive_date`,
+    `t`.`created_at` AS `created_at`,
+    `t`.`thai_year` AS `thai_year`,
+    `t`.`total_price` AS `total_price`,
+    (
+        case
+            when (`t`.`transaction_type` = 'IN') then month(`t`.`receive_date`)
+            else month(`t`.`created_at`)
+        end
+    ) AS `order_month`
+from `t`;";
         $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();
         echo "Create view_stock_transaction\n";
 
@@ -516,6 +590,6 @@ class UpdateTableController extends Controller
                     ('computer_service','telegram', 'งานซ่อมคอมพิวเตอร์'),
                     ('medical_service','telegram', 'ซ่อมเครื่องมือแพทย์');";
             Yii::$app->db->createCommand($sql)->execute();
-    }
+        }
     }
 }
