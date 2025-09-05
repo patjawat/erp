@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                         <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1MmLegsxjTNXpeYnQf47XBZgGKIDNgQXXUdLOuOpO-60/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1Z6I-Y7rTwiy_qF68xIgyZEKPthmTnkkezqMfomLfpyQ/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
                     </ul>
                 </div>
             </div>

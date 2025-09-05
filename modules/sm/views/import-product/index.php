@@ -46,7 +46,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                         
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
-                                ประเภทสินทรัพย์
+                                ประเภทวัสดุ
                             </label>
                             <?= $form->field($model, 'category_id')->widget(Select2::class, [
                                 'data' => $listProductType,
@@ -245,6 +245,11 @@ $(document).ready(function() {
         var filePath = $('#filePath').val();
         var orderId = $('#order_id').val();
         var categoryId = $('#category_id').val();
+        
+        if(categoryId == ''){
+             showErrorToast('ประเภทวัสดุ');
+            return; 
+        }
         
         if(!filePath) { 
             showErrorToast('ไม่พบไฟล์ที่จะนำเข้า');
