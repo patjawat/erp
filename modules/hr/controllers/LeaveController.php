@@ -816,7 +816,7 @@ class LeaveController extends Controller
         } else {
             //จำเป็นต้องนับวัน off หรือไม่
             // $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['dayOff']);
-            $total = ($model['allDays'] - ($date_start_type + $date_end_type));
+            $total = ($model['allDays'] - ($date_start_type + $date_end_type + $model['dayOff']));
         }
 
         return [
