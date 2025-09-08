@@ -73,7 +73,7 @@ class PlanCategoryController extends Controller
 
     public function actionCreate()
     {
-        $model = new PlanCategory(['name' => 'plan_type']);
+        $model = new PlanCategory(['name' => 'plan_category']);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
