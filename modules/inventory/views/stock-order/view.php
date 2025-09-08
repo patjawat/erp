@@ -262,7 +262,7 @@ showOrderItem();
 
 //โหลดรายการวัสดุที่ขอเบิก
 async function showOrderItem() {
-$("#showOrderItem").html('<div class="text-center my-5"><div class="spinner-border text-primary" role="status"></div> กำลังโหลด...</div>');
+$("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.gif" style="width:50px"> กำลังโหลด...</div>');
     try {
         if ($id !== null) {
             var id = $id;
