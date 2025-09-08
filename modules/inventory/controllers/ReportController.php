@@ -474,7 +474,7 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('M' . $numRow, ($value['sum_sub_qty']));
             $sheet2->setCellValue('N' . $numRow, ($value['amonth']));
 
-            //  (last_stock_in_qty + sum_month_qty) as sum_qty,
+            //  ((last_stock_in + sum_month)-sum_sub) as sum_qty,
         }
 
          // เปิด AutoFilter
@@ -825,7 +825,9 @@ class ReportController extends \yii\web\Controller
             SELECT 
                 *,
                  ((last_stock_in_qty + sum_month_qty) - sum_sub_qty) as sum_qty,
-                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
+                -- ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
+                -- ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
+                ((last_stock_in + sum_month)-sum_sub) as amonth
             FROM x2";
 
             return Yii::$app->db->createCommand($sql, [
@@ -918,7 +920,8 @@ class ReportController extends \yii\web\Controller
             SELECT 
                 *,
                 ((last_stock_in_qty + sum_month_qty) - sum_sub_qty) as sum_qty,
-                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
+                -- ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
+                 ((last_stock_in + sum_month)-sum_sub) as amonth
             FROM x2";
 
             return Yii::$app->db->createCommand($sql, [
