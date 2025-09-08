@@ -1,39 +1,35 @@
 window.onbeforeunload = function () {
-
-  showTableLoading()
+  showTableLoading();
   // NProgress.start();
 };
 
 jQuery(document).on("pjax:start", function () {
   NProgress.start();
-  showTableLoading()
+  showTableLoading();
   //  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
   //     offcanvas.hide();
-  const el = document.getElementById('offcanvasRight');
+  const el = document.getElementById("offcanvasRight");
   if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
   console.log("pjax start");
 });
 
 jQuery(document).on("pjax:end", function () {
   NProgress.done();
-  tableLoading1.style.display = 'none';
+  tableLoading1.style.display = "none";
   // ตัวอย่าง: รีโหลด Offcanvas
-  var offcanvasElList = [].slice.call(document.querySelectorAll('.offcanvas'));
+  var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
   if (offcanvasElList.length > 0) {
     var offcanvasList = offcanvasElList.map(function (offcanvasEl) {
       return new bootstrap.Offcanvas(offcanvasEl);
     });
   }
-
 });
 
 //แก้ treeview ไม่ปิดเวลาเลือก
-$("#treeID").on('treeview:change', function(event, key, name) {
-                        $('body').find('.kv-tree-input').removeClass('show')
-                        $('body').find('.kv-tree-dropdown').removeClass('show')
-
+$("#treeID").on("treeview:change", function (event, key, name) {
+  $("body").find(".kv-tree-input").removeClass("show");
+  $("body").find(".kv-tree-dropdown").removeClass("show");
 });
-
 
 /**
  * Handle AJAX form submission with confirmation and success feedback.
@@ -42,7 +38,7 @@ $("#treeID").on('treeview:change', function(event, key, name) {
  * @param {function} [successCallback] - Optional callback on success.
  */
 function handleFormSubmit(formSelector, actionUrl, successCallback) {
-  $(document).on('beforeSubmit', formSelector, function (e) {
+  $(document).on("beforeSubmit", formSelector, function (e) {
     e.preventDefault();
     const form = $(this);
     Swal.fire({
@@ -53,36 +49,36 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       cancelButtonText: "ยกเลิก!",
-      confirmButtonText: "ใช่, ยืนยัน!"
+      confirmButtonText: "ใช่, ยืนยัน!",
     }).then((result) => {
       if (result.isConfirmed) {
         // ซ่อน modal ก่อน submit
         $("#main-modal").modal("hide");
         // แสดง loading
         Swal.fire({
-          title: 'กำลังบันทึก...',
-          text: 'กรุณารอสักครู่',
+          title: "กำลังบันทึก...",
+          text: "กรุณารอสักครู่",
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
-          }
+          },
         });
         $.ajax({
-          url: actionUrl || form.attr('action'),
-          type: 'POST',
+          url: actionUrl || form.attr("action"),
+          type: "POST",
           data: form.serialize(),
-          dataType: 'json',
+          dataType: "json",
           success: function (response) {
             Swal.close();
-            if (response.status === 'success') {
+            if (response.status === "success") {
               Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ!',
-                text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                icon: "success",
+                title: "สำเร็จ!",
+                text: "บันทึกข้อมูลเรียบร้อยแล้ว",
                 timer: 1000,
-                showConfirmButton: false
+                showConfirmButton: false,
               }).then(() => {
-                if (typeof successCallback === 'function') {
+                if (typeof successCallback === "function") {
                   successCallback(response);
                 } else {
                   location.reload();
@@ -90,20 +86,20 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
               });
             } else {
               Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: response.message || 'ไม่สามารถบันทึกข้อมูลได้'
+                icon: "error",
+                title: "เกิดข้อผิดพลาด",
+                text: response.message || "ไม่สามารถบันทึกข้อมูลได้",
               });
             }
           },
           error: function () {
             Swal.close();
             Swal.fire({
-              icon: 'error',
-              title: 'เกิดข้อผิดพลาด',
-              text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+              icon: "error",
+              title: "เกิดข้อผิดพลาด",
+              text: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
             });
-          }
+          },
         });
       }
     });
@@ -111,11 +107,10 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
   });
 }
 
-
 // #### การอัพโหลดรูปภาพ ####
 
 function isFile() {
-  var isFile = $('#editImagePreview').data('isfile');
+  var isFile = $("#editImagePreview").data("isfile");
   console.log(isFile);
 
   if (isFile == true) {
@@ -129,40 +124,42 @@ function isFile() {
   }
 }
 
-
-// ติดดาวหนังสือ 
+// ติดดาวหนังสือ
 $("body").on("click", ".bookmark", function (e) {
   e.preventDefault();
-  var title = $(this).data('title')
-  var id = $(this).attr('id');
-  console.log('update commetn', id);
+  var title = $(this).data("title");
+  var id = $(this).attr("id");
+  console.log("update commetn", id);
   $.ajax({
     type: "get",
-    url: $(this).attr('href'),
+    url: $(this).attr("href"),
     dataType: "json",
     success: async function (res) {
       // var bookmark = $(this).find('i').attr('class', 'fa-solid fa-star text-warning fs-4');
-      var data = $('body').find('.bookmark-star-' + id).html('<h1>1</h1>')
-      console.log(id)
-      if (res.data.bookmark == 'Y') {
-        $('body').find('.bookmark-star-' + id).html('<i class="fa-solid fa-star text-warning"></i>');
-        success('ติดดาว');
-      } else if (res.data.bookmark == 'N') {
-        $('body').find('.bookmark-star-' + id).html('<i class="fa-regular fa-star"></i>');
-        success('ยกเลิกติดดาว');
+      var data = $("body")
+        .find(".bookmark-star-" + id)
+        .html("<h1>1</h1>");
+      console.log(id);
+      if (res.data.bookmark == "Y") {
+        $("body")
+          .find(".bookmark-star-" + id)
+          .html('<i class="fa-solid fa-star text-warning"></i>');
+        success("ติดดาว");
+      } else if (res.data.bookmark == "N") {
+        $("body")
+          .find(".bookmark-star-" + id)
+          .html('<i class="fa-regular fa-star"></i>');
+        success("ยกเลิกติดดาว");
       }
       // location.reload();
-    }
+    },
   });
 });
 
+$("body").on("change", ".file-upload-input", function (e) {
+  $("#editImagePreview").data("newfile", true);
 
-$('body').on('change', '.file-upload-input', function (e) {
-
-  $('#editImagePreview').data('newfile', true);
-
-  console.log('file upload input change');
-
+  console.log("file upload input change");
 
   var fileInput = $(this)[0];
   if (fileInput.files && fileInput.files[0]) {
@@ -177,44 +174,40 @@ $('body').on('change', '.file-upload-input', function (e) {
   }
 });
 
-$('body').on('click', '#editRemoveImage', function (e) {
+$("body").on("click", "#editRemoveImage", function (e) {
   e.preventDefault();
-  $("#editPreviewImg").attr("src", '');
+  $("#editPreviewImg").attr("src", "");
   $("#editImagePreview").hide();
   $("#editUploadBtn").show();
   $("#editRemoveImage").hide();
-  console.log('remove image');
-
-
+  console.log("remove image");
 });
 
 async function uploadImage(name, ref) {
-  console.log('uploadImage', name, ref);
-  var newFile = $('#editImagePreview').data('newfile');
+  console.log("uploadImage", name, ref);
+  var newFile = $("#editImagePreview").data("newfile");
   if (newFile) {
     formdata = new FormData();
-    if ($("input[id='my_file']").prop('files').length > 0) {
-      file = $("input[id='my_file']").prop('files')[0];
+    if ($("input[id='my_file']").prop("files").length > 0) {
+      file = $("input[id='my_file']").prop("files")[0];
       formdata.append(name, file);
       formdata.append("id", 1);
       formdata.append("ref", ref);
       formdata.append("name", name);
       await $.ajax({
-        url: '/filemanager/uploads/single',
+        url: "/filemanager/uploads/single",
         type: "POST",
         data: formdata,
         processData: false,
         contentType: false,
         success: function (res) {
-          success('upload success')
-        }
+          success("upload success");
+        },
       });
     }
   }
 }
 // #### จบการอัพโหลดรูปภาพ ####
-
-
 
 // focus เวลาเปิก select2
 $(document).on("select2:open", () => {
@@ -242,7 +235,9 @@ function beforLoadModal() {
   $("#main-modal").modal("show");
   // $('#modal-dialog').modal('show');
   $("#main-modal-label").html("กำลังโหลด");
-  $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+  $(".modal-dialog").removeClass(
+    "modal-sm modal-md modal-lg modal-xl modal-xxl"
+  );
   $(".modal-dialog").addClass("modal-sm");
   $("#modal-dialog").removeClass("fade");
   $(".modal-body").html(
@@ -340,7 +335,9 @@ $("body").on("click", ".open-modal", function (e) {
       $("#main-modal-label").html(response.title);
       $(".modal-body").html(response.content);
       $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+      $(".modal-dialog").removeClass(
+        "modal-sm modal-md modal-lg modal-xl modal-xxl"
+      );
       $(".modal-dialog").addClass(size);
       $(".modal-content").addClass("card-outline card-primary");
     },
@@ -349,7 +346,9 @@ $("body").on("click", ".open-modal", function (e) {
       $(".modal-body").html(
         '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
       );
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+      $(".modal-dialog").removeClass(
+        "modal-sm modal-md modal-lg modal-xl modal-xxl"
+      );
       $(".modal-dialog").addClass("modal-md");
       console.log(xhr);
 
@@ -466,8 +465,6 @@ $("body").on("click", ".confirm-order", async function (e) {
 $("body").on("click", ".delete-item", async function (e) {
   e.preventDefault();
   var url = $(this).attr("href");
-  // console.log('delete',url);
-  // $('#main-modal').modal('show');
 
   await Swal.fire({
     title: "คุณแน่ใจไหม?",
@@ -486,17 +483,17 @@ $("body").on("click", ".delete-item", async function (e) {
         url: url,
         dataType: "json",
         success: function (response) {
-          if (response.status == "success") {
+          if (response.status == "success" && response.container) {
             $.pjax.reload({
               container: response.container,
               history: false,
               url: response.url,
             });
-
+          } else if (response.status == "success" && response.close) {
             success("ดำเนินการลบสำเร็จ!.");
-            if (response.close) {
-              $("#main-modal").modal("hide");
-            }
+            $("#main-modal").modal("hide");
+          } else {
+            location.reload();
           }
         },
       });
@@ -559,28 +556,28 @@ $("body").on("click", ".select-employee", function (e) {
   });
 });
 
-$(document).on('click', '.cancel-order', function (e) {
+$(document).on("click", ".cancel-order", function (e) {
   e.preventDefault();
-  let url = $(this).attr('href');
+  let url = $(this).attr("href");
   Swal.fire({
-    title: 'คุณแน่ใจหรือไม่?',
+    title: "คุณแน่ใจหรือไม่?",
     text: "คุณต้องการยกเลิกคำขอนี้หรือไม่?",
-    icon: 'warning',
+    icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'ใช่, ยกเลิก!',
-    cancelButtonText: 'ยกเลิก'
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ใช่, ยกเลิก!",
+    cancelButtonText: "ยกเลิก",
   }).then((result) => {
     if (result.isConfirmed) {
       $.ajax({
         url: url,
-        type: 'POST',
+        type: "POST",
         success: function (response) {
           Swal.fire(
-            'ยกเลิกสำเร็จ!',
-            'คำขอของคุณถูกยกเลิกแล้ว.',
-            'success'
+            "ยกเลิกสำเร็จ!",
+            "คำขอของคุณถูกยกเลิกแล้ว.",
+            "success"
           ).then(() => {
             location.reload(); // Reload the page to reflect changes
           });
@@ -590,17 +587,12 @@ $(document).on('click', '.cancel-order', function (e) {
          * If the request fails, show an error message in a modal.
 /*******  eff9be3f-c24a-493d-816a-4f934d6757f2  *******/
         error: function () {
-          Swal.fire(
-            'เกิดข้อผิดพลาด!',
-            'ไม่สามารถยกเลิกคำขอได้.',
-            'error'
-          );
-        }
+          Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถยกเลิกคำขอได้.", "error");
+        },
       });
     }
   });
 });
-
 
 $(".show-setting").on("click", function () {
   $(".right-setting").addClass("show");

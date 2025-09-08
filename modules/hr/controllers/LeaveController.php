@@ -17,6 +17,7 @@ use app\modules\hr\models\Leave;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveStep;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
@@ -27,6 +28,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use app\modules\hr\components\LeaveHelper;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use app\modules\hr\models\LeaveEntitlements;
 use app\modules\hr\models\LeaveSummarySearch;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
@@ -796,6 +798,43 @@ class LeaveController extends Controller
         }
     }
 
+
+    // บุคลากร
+    public function actionGetLeaderApprove($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+     $ids = (new \yii\db\Query())
+    ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1'))"))
+    ->from('tree')
+    ->union(
+        (new \yii\db\Query())
+            ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2'))"))
+            ->from('tree')
+    )
+    ->column();
+
+        $models = Employees::find()
+            ->where(['like', 'fname', $q])
+            ->andWhere(['id' => $ids])
+            ->limit(10)
+            ->all();
+        $data = [['id' => '', 'text' => '']];
+        foreach ($models as $model) {
+            $data[] = [
+                'id' => $model->cid,
+                'text' => $model->fullname,
+                'title' => $model->fname,
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $ids
+        ];
+    }
+
+
     public function actionCalDays()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -809,6 +848,9 @@ class LeaveController extends Controller
 
         $dateStart = $date_start == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_start'));
         $dateEnd = $date_end == '' ? '' : AppHelper::convertToGregorian($this->request->get('date_end'));
+
+
+
         $model = LeaveHelper::CalDay($dateStart, $dateEnd, $emp_id);
         //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
         if ($model['dayOff'] == 0) {
@@ -818,6 +860,18 @@ class LeaveController extends Controller
             // $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['dayOff']);
             $total = ($model['allDays'] - ($date_start_type + $date_end_type + $model['dayOffBetweenLeave']));
         }
+        
+        // ตรวจสอบสิทธิ์การลาป้องกันลาเกินปีงบประมาณ
+        $checkLeaveYear =  AppHelper::YearBudget($dateEnd);
+         $checkLeaveEntitlements  = LeaveEntitlements::find()->andWhere(['thai_year' => $checkLeaveYear])->count();
+        if($checkLeaveEntitlements == 0){
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบข้อมูลสิทธิ์การลาในปี '.$checkLeaveYear.' กรุณาติดต่อเจ้าหน้าที่',
+            ];
+
+        }
+
 
         return [
             $model,

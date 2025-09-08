@@ -3,23 +3,11 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-// use yii\jui\DatePicker;
 use yii\web\JsExpression;
-use app\models\Categorise;
-// use kartik\date\DatePicker;
-// use kartik\date\DatePicker;
-use kartik\date\DatePicker;
 use kartik\widgets\Select2;
-use yii\helpers\ArrayHelper;
-use kartik\sortable\Sortable;
 use app\components\SiteHelper;
-// use karatae99\datepicker\DatePicker;
 use kartik\widgets\ActiveForm;
-use app\widgets\FlatpickrWidget;
 use app\modules\hr\models\Employees;
-use iamsaint\datetimepicker\Datetimepicker;
-use app\widgets\Flatpickr\FlatpickrBuddhistWidget;
 
 $director = SiteHelper::viewDirector();
 
@@ -447,6 +435,29 @@ $js = <<<JS
                 },
                 dataType: "json",
                 success: function (res) {
+
+                    if(res.status == 'error'){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ข้อผิดพลาด',
+                            text: res.message,
+                            confirmButtonText: 'ตกลง'
+                        });
+
+                        \$('#satsunDays').html(0)
+                        \$('#leave-data_json-sat_sun_days').val(0)
+                        
+                        \$('#dayOff').html(0)
+                        \$('#leave-data_json-off_days').val(0)
+                        
+                        \$('#holiday').html(0)
+                       \$('#leave-data_json-holidays').val(0)
+                       
+                       \$('#summaryDay').html(0)
+                       \$('#leave-total_days').val(0)
+                       return false;
+
+                    }
                     console.log(\$('#leave-date_start_type').val());
                     console.log(res.satsunDays);
                     

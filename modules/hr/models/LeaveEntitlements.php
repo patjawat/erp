@@ -101,9 +101,10 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
                 ->all();
     
             $year = AppHelper::YearBudget();
+            $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
             $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
             // รวมข้อมูล
-            $model = ArrayHelper::merge($isYear, $model);
+            $model = ArrayHelper::merge($nextYear,$isYear, $model);
             return ArrayHelper::map($model, 'thai_year', 'thai_year');
         }
         

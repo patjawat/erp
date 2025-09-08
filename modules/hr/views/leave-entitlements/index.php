@@ -74,7 +74,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center fw-semibold"><?php echo $item->days;?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_use'];?></td>
                         <td class="text-center fw-semibold"><?php echo $item->getSummary()['leave_total'];?></td>
-                        <td class="text-center"><?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>',['update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขสิทธิวันลา'],['class' => 'btn btn-warning open-modal','data' => ['size' => 'modal-md']])?></td>
+                        <td class="text-center">
+                        <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                    <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                </ul>
+                            </div>    </td>
                     </tr>
                     <?php endforeach;?>
                 </tbody>

@@ -262,6 +262,7 @@ $config = [
             'finance/*',
             'debug/*',
             'hr/leave/cal-days',
+            'hr/leave/get-leader-approve',
             'hr/document/*',
             'dms/documents/comment-validator',
             'hr/leave/create-validator',

@@ -28,9 +28,9 @@ class LeaveController extends \yii\web\Controller
 
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
-            'date_filter' => 'this_month',
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
+            // 'date_filter' => 'this_month',
+            // 'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
+            // 'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending']
         ]);
 

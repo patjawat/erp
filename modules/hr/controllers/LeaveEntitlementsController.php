@@ -168,7 +168,7 @@ class LeaveEntitlementsController extends Controller
             if ($check > 0) {
                 return [
                     'status' => false,
-                    'message' => 'มีการบันทึกข้อมูลไว้แล้ว'
+                    'message' => 'ปีงบประมาณ '.$thaiYear.' ได้กำหนดวันลาเรียบร้อยแล้ว'
                 ];
             }
             
@@ -258,7 +258,7 @@ foreach ($querys as $item) {
             'days' => $item['froward_days'],
             'thai_year' => $thaiYear,
             'data_json' => [
-                'last_day' => $last_day->getSummary()['leave_total'] ?? 0
+                'last_day' => $last_day ? ($last_day->getSummary()['leave_total'] ?? 0) : 0,
             ]
             ]
         );
@@ -270,10 +270,10 @@ foreach ($querys as $item) {
         }
        
 }
-return [
-    'status' => 'success',
-    'container' => '#leave'
-];
+        return [
+            'status' => 'success',
+            'container' => '#leave'
+        ];
        
 
         
@@ -352,9 +352,14 @@ return [
      */
     public function actionDelete($id)
     {
+           \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+        return [
+            'status' => 'success',
+            'message' => 'ลบข้อมูลสำเร็จ',
+            'container' => '#leave'
+        ];
     }
 
     /**
