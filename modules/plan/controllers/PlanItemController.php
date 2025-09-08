@@ -9,7 +9,6 @@ use kartik\form\ActiveForm;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanItem;
-use app\modules\plan\models\PlanType;
 use app\modules\plan\models\PlanCategory;
 use app\modules\plan\models\PlanItemSearch;
 
@@ -75,7 +74,9 @@ class PlanItemController extends Controller
     
     public function actionCreate()
     {
-        $model = new PlanItem();
+        $model = new PlanItem([
+            'name' => 'plan_item'
+        ]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -114,7 +115,7 @@ class PlanItemController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $model->plan_type_id = $model->planCategory->planType->code;
+        $model->plan_type_id = $model->planCategory->planType->code ?? null;
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

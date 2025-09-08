@@ -18,7 +18,7 @@ use app\modules\plan\models\PlanType;
     ]); ?>
 
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
-    <?= $form->field($model, 'code')->textInput()->label('รหัส') ?>
+   
     <?php
     echo $form->field($model, 'category_id')->widget(Select2::classname(), [
         'data' => ArrayHelper::map(PlanType::find()->where(['name' => 'plan_type'])->all(), 'code', 'title'),
@@ -31,6 +31,7 @@ use app\modules\plan\models\PlanType;
         ],
     ])->label('ประเภท');
     ?>
+     <?= $form->field($model, 'code')->textInput()->label('รหัส') ?>
     <?= $form->field($model, 'title')->textInput()->label('ชื่อของหมวดหมู่') ?>
 
 

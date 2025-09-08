@@ -47,6 +47,11 @@ class PlanItemSearch extends PlanItem
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC, // เรียงจาก id มาก → น้อย
+                ],
+            ],
         ]);
 
         $this->load($params, $formName);
