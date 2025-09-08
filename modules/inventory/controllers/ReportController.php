@@ -469,9 +469,9 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('H' . $numRow, ($value['last_stock_in']));
             $sheet2->setCellValue('I' . $numRow, $value['sum_month_qty']);
             $sheet2->setCellValue('J' . $numRow, ($value['sum_month']));
-            $sheet2->setCellValue('K' . $numRow, $value['sum_sub_qty']);
+            $sheet2->setCellValue('K' . $numRow, $value['sum_qty']);
             $sheet2->setCellValue('L' . $numRow, ($value['sum_sub']));
-            $sheet2->setCellValue('M' . $numRow, ($value['sum_qty']));
+            $sheet2->setCellValue('M' . $numRow, ($value['sum_sub_qty']));
             $sheet2->setCellValue('N' . $numRow, ($value['amonth']));
         }
 
