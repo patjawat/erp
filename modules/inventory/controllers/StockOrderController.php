@@ -160,34 +160,24 @@ class StockOrderController extends Controller
         //ถ้ายังไม่บันทึกจ่ายและยกเลิกให้ updatelot ที่จะจ่าย
         // if(!in_array($model->order_status, ['success','cancel'])){
 
-        $data = [];
-        foreach ($model->getItems() as $stockItem) {
-            $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
-            if ($checkStock) {
-                if (!isset($stockItem->data_json['copy'])) {
-                    $stockItem->lot_number = $checkStock->lot_number;
-                    $stockItem->unit_price = $checkStock->unit_price;
-                }
+        //ถ้าสถานะยังเป็นรอดำเนินการอยู่
+        if ($model->order_status == 'pending') {
+            foreach ($model->getItems() as $stockItem) {
+                $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
+                if ($checkStock) {
+                    if (!isset($stockItem->data_json['copy'])) {
+                        $stockItem->lot_number = $checkStock->lot_number;
+                        $stockItem->unit_price = $checkStock->unit_price;
+                    }
 
-                $stockItem->save();
-            } else {
-                $stockItem->order_status = 'cancel';
-                $stockItem->qty = 0;
-                $stockItem->save();
+                    $stockItem->save();
+                } else {
+                    $stockItem->order_status = 'cancel';
+                    $stockItem->qty = 0;
+                    $stockItem->save();
+                }
             }
         }
-
-
-        // }
-
-        // if($model->checkBalance()  == 0 && $stockItem->qty ==0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
-        // if($model->checkBalance()  == 0 && $stockItem->qty ==0 && !in_array($model->order_status, ['success','cancel']) && $model->countNullQty() == 0){
-        //     $btnSave = true;
-        // }else{
-        //     $btnSave = false;
-
-        // }
-
 
         return [
             'title' => $this->request->get('title'),
@@ -1006,7 +996,7 @@ class StockOrderController extends Controller
             'destination' => Pdf::DEST_BROWSER,
             'content' => $content,
             // 'cssFile' => '@webroot/css/kv-mpdf-bootstrap.css',
-             'cssInline' => '*,body{font-family:thsarabun;font-size:14pt}',
+            'cssInline' => '*,body{font-family:thsarabun;font-size:14pt}',
             'options' => [
                 'title' => 'ใบเบิกวัสดุ - ' . $model->code,
                 'defaultFont' => 'thsarabun'
@@ -1024,8 +1014,8 @@ class StockOrderController extends Controller
         $fontData = $defaultFontConfig['fontdata'];
 
 
-        $pdf->options = array_merge($pdf->options , [
-            'fontDir' => array_merge($fontDirs, [ Yii::$app->basePath . '/web/fonts/THSarabunNew']),  // make sure you refer the right physical path
+        $pdf->options = array_merge($pdf->options, [
+            'fontDir' => array_merge($fontDirs, [Yii::$app->basePath . '/web/fonts/THSarabunNew']),  // make sure you refer the right physical path
             'fontdata' => array_merge($fontData, [
                 'thsarabun' => [
                     'R' => 'THSarabunNew.ttf',
