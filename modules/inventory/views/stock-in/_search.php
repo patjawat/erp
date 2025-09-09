@@ -98,7 +98,23 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <div class="collapse mt-3" id="collapseFilter">
 
+        <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
+                'data' => $model->listVendor(),
+                'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                'pluginEvents' => [
+                    'select2:select' => "function(result) { 
+                $(this).submit()
+                }",
+                    'select2:unselecting' => "function(result) { 
+                    $(this).submit()
+                    }",
 
+                ]
+            ])->label(false);
+            ?>
 </div>
 
 <?php ActiveForm::end(); ?>
