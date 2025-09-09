@@ -82,17 +82,17 @@ class StockInController extends Controller
 
         //ค้นหาช่วบงวันที่
 
-        try {
-            $dataProvider->query->andFilterWhere([
-                'between',
-                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),
-                AppHelper::convertToGregorian($searchModel->date_start),
-                AppHelper::convertToGregorian($searchModel->date_end),
-            ]);
-            //code...
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        // try {
+        //     $dataProvider->query->andFilterWhere([
+        //         'between',
+        //         new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),
+        //         AppHelper::convertToGregorian($searchModel->date_start),
+        //         AppHelper::convertToGregorian($searchModel->date_end),
+        //     ]);
+        //     //code...
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        // }
 
 
         return $this->render('index', [
