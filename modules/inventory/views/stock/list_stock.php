@@ -65,7 +65,7 @@ $balanceQty = 0;
                         <?php endif ?>
                     </td>
                     <td><?=$item2->thai_year?></td>
-                    <td><?= $item2?->ViewReceiveDate();?></td>
+                    <td><?= $item2?->viewMoveMentDate();?></td>
                     <td><?=$item2->lot_number?></td>
 
 
