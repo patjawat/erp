@@ -52,7 +52,6 @@ $emp = UserHelper::GetEmployee();
                         ?>
         <tr class="<?=$trColor?> ">
             <td class="align-middle">
-            <?=$item->id?>     |
             <?php echo $item->product?->Avatar();?></td>
             
             <td class="align-middle text-end"><?php echo $item->unit_price !== null ? number_format($item->unit_price, 2) : '-'; ?></td>

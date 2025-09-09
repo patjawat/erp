@@ -6,12 +6,9 @@ use Yii;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
-use app\models\Categorise;
 use app\components\LineMsg;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\sm\models\Product;
 use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Warehouse;
@@ -40,7 +37,6 @@ class MainStockController extends Controller
     {
         $submWarehouse = \Yii::$app->session->get('sub-warehouse');
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
-        $assetType = \Yii::$app->session->get('asset_type');
 
         // หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
         // if (!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse->id)) {
@@ -49,9 +45,6 @@ class MainStockController extends Controller
 
         $cart = \Yii::$app->cartMain;
         $userCreate = UserHelper::GetEmployee();
-        $name = $this->request->get('name');
-        $order_id = $this->request->get('order_id');
-        $type = $this->request->get('type');
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),

@@ -26,7 +26,7 @@ $assetType = \Yii::$app->session->get('asset_type');
     <?php echo $form->field($model, 'name')->hiddenInput()->label(false); ?>
     <?php echo $form->field($model, 'data_json[checker_confirm]')->hiddenInput()->label(false); ?>
     <?php if($model->isNewRecord):?>
-    <?php echo $form->field($model, 'data_json[asset_type]')->hiddenInput(['value' => $assetType->code ?? ''])->label(false); ?>
+    <?php echo $form->field($model, 'asset_type_id')->hiddenInput(['value' => $assetType->code ?? ''])->label(false); ?>
     <?php echo $form->field($model, 'data_json[asset_type_name]')->hiddenInput(['value' => $assetType->title ?? '' ])->label(false); ?>
     <?php endif;?>
     <?php echo $model->isNewRecord ? $form->field($model, 'category_id')->hiddenInput()->label(false) : null; ?>
