@@ -1,15 +1,10 @@
 <?php
 
-use yii\helpers\Url;
-use yii\helpers\Html;
 use kartik\select2\Select2;
-use yii\bootstrap5\ActiveForm;
-use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEvent $model */
 /** @var yii\widgets\ActiveForm $form */
-
 ?>
 
 
@@ -40,8 +35,8 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 
         <?php
 
-        echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
-            'data' => $model->ListAssetType(),
+        echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+            'data' => $model->ListAssetOnWarehouse(),
             //   'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
             'options' => [
                 'placeholder' => 'ระบุประเภท',
@@ -57,7 +52,25 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
         $('#stockevent-data_json-asset_type_name').val(data.text)
         }",
             ]
-        ])->label('ประเภทวัดุ');
+        ])->label('ประเภทวัสดุ');
+        // echo $form->field($model, 'data_json[asset_type]')->widget(Select2::classname(), [
+        //     'data' => $model->ListAssetOnWarehouse(),
+        //     //   'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
+        //     'options' => [
+        //         'placeholder' => 'ระบุประเภท',
+        //         'disabled' => ($model->category_id ?  true : false)
+        //     ],
+        //     'pluginOptions' => [
+        //         'allowClear' => true,
+        //         'dropdownParent' => '#main-modal',
+        //     ],
+        //     'pluginEvents' => [
+        //         "select2:select" => "function(result) { 
+        // var data = $(this).select2('data')[0]
+        // $('#stockevent-data_json-asset_type_name').val(data.text)
+        // }",
+        //     ]
+        // ])->label('ประเภทวัสดุ');
         ?>
 
     </div>

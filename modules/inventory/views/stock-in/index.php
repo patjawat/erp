@@ -64,9 +64,11 @@ if (isset($warehouseModel->data_json['item_type'])) {
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-column">
                     <h6 class="text-white"><i class="bi bi-ui-checks"></i> รับเข้าจำนวน <span
-                            class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
+                            class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span>
+                        รายการ
                     </h6>
-                    <span class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $searchModel->SummaryTotal(false) ?></span>
+                    <span
+                        class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $searchModel->SummaryTotal(false) ?></span>
                 </div>
 
                 <div class="d-flex gap-3">
@@ -96,49 +98,51 @@ if (isset($warehouseModel->data_json['item_type'])) {
             <tbody class="align-middle table-group-divider">
                 <?php $row = 1;
                 foreach ($dataProvider->getModels() as $item): ?>
-                    <tr>
-                        <td class="text-center"><?= $row++ ?></td>
-                        <td class="fw-light align-middle">
-                            <div class=" d-flex flex-column">
-                                <span class="fw-semibold "><?= $item->code ?></span>
-                                <?= $item->viewMoveMentDate(); ?>
-                            </div>
-                        </td>
-                        <td class="fw-light align-middle">
-                            <div class=" d-flex flex-column">
-                                <span
-                                    class="fw-semibold "><?= isset($item->purchase) ? $item->purchase->pq_number : '-' ?></span>
-                                <?= isset($item->data_json['asset_type_name']) ? $item->data_json['asset_type_name'] : '' ?>
-                            </div>
-                        </td>
-                        <td class="fw-light align-middle">
-                            <div class=" d-flex flex-column">
-                                <?= isset($item->purchase) ? ('<span class="fw-semibold ">' . $item->purchase->po_number . '</span>') : null ?>
-                                <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
-                            </div>
-                        <td><?= $item->CreateBy($item->viewMoveMentDate())['avatar']; ?></td>
-                        </td>
-                        <td class="text-end">
-                            <span class="fw-semibold "><?= number_format($item->getTotalOrderPrice(), 2); ?>
-                            </span>
-                        </td>
-                        <td class="text-center"><?= $item->viewStatus(); ?></td>
+                <tr>
+                    <td class="text-center"><?= $row++ ?></td>
+                    <td class="fw-light align-middle">
+                        <div class=" d-flex flex-column">
+                            <span class="fw-semibold "><?= $item->code ?></span>
+                            <?= $item->viewMoveMentDate(); ?>
+                        </div>
+                    </td>
+                    <td class="fw-light align-middle">
+                        <div class=" d-flex flex-column">
+                            <span
+                                class="fw-semibold "><?= isset($item->purchase) ? $item->purchase->pq_number : '-' ?></span>
+                            <?=$item->assetType?->title ?? '-'?>
+                        </div>
+                    </td>
+                    <td class="fw-light align-middle">
+                        <div class=" d-flex flex-column">
+                            <?= isset($item->purchase) ? ('<span class="fw-semibold ">' . $item->purchase->po_number . '</span>') : null ?>
+                            <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
+                        </div>
+                    <td><?= $item->CreateBy($item->viewMoveMentDate())['avatar']; ?></td>
+                    </td>
+                    <td class="text-end">
+                        <span class="fw-semibold "><?= number_format($item->getTotalOrderPrice(), 2); ?>
+                        </span>
+                    </td>
+                    <td class="text-center"><?= $item->viewStatus(); ?></td>
 
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    จัดการ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> แสดง', ['/inventory/stock-in/view', 'id' => $item->id], ['class' => 'dropdown-item']) ?></li>
-                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                จัดการ
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li><?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> แสดง', ['/inventory/stock-in/view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
+                                </li>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                </li>
 
-                                </ul>
-                            </div>
+                            </ul>
+                        </div>
 
-                        </td>
-                    </tr>
+                    </td>
+                </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>

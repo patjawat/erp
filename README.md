@@ -287,3 +287,7 @@ ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFA
 
 ใบรับเข้า 
 - data_json[receive_date] เป็น movement_date
+
+
+update table
+ALTER TABLE `stock_events` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ประเถทวัสดุ' AFTER `asset_item`;

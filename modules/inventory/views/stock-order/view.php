@@ -120,6 +120,10 @@ foreach ($model->getItems() as $item): ?>
                             'label' => 'รหัสขอเบิก',
                             'value' => $model->code,
                         ],
+                          [
+                            'label' => 'ประเภทวัสดุ',
+                            'value' => $model->assetType->title ?? '-',
+                        ],
                         [
                             'label' => 'จากคลัง',
                             'value' => $model->fromWarehouse->warehouse_name ?? '-',

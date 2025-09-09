@@ -67,13 +67,6 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
 
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
         $dataProvider->query
             ->andFilterWhere(['>=','movement_date',AppHelper::convertToGregorian($searchModel->date_start)])
             ->andFilterWhere(['<=','movement_date',AppHelper::convertToGregorian($searchModel->date_end)]);

@@ -8,6 +8,7 @@ use yii\bootstrap5\LinkPager;
                         <tr>
                             <th class="fw-semibold text-center fw-semibold" style="width:30px">ลำดับ</th>
                             <th class="fw-semibold" style="width:210px">รหัส/วันที่ขอ</th>
+                            <th class="fw-semibold" scope="col">ประเถท</th>
                             <th class="fw-semibold" scope="col">ผู้เบิก</th>
                             <th class="fw-semibold">หัวหน้าตรวจสอบ</th>
                             <th class="fw-semibold text-end">มูลค่า</th>
@@ -29,12 +30,10 @@ use yii\bootstrap5\LinkPager;
                                 ?>
                             </td>
                             <td>
-                              
-                                <div>
                                     <p class="fw-semibold mb-0"><?=$item->code?></p>
                                     <p class="text-muted mb-0 fs-13"><?=$item->viewCreatedAt()?></p>
-                                </div>
                             </td>
+                            <td><?=$item->assetType?->title ?? '-'?></td>
                             <td>
                                 <?php
                                 try {

@@ -20,6 +20,7 @@ class m240820_170545_created_stock_events_table extends Migration
             'code' => $this->string(50)->comment('รหัส'),
             'transaction_type' => $this->string(255)->comment('ธุรกรรม'),
             'asset_item' => $this->string(255)->comment('รหัสสินค้า'),
+            'asset_type_id' => $this->string(255)->comment('ประเถทวัสดุ'),
             'warehouse_id' => $this->integer()->comment('รหัสคลังสินค้า'),
             'vendor_id' => $this->string(255)->comment('ผู้จำหน่าย ผู้บริจาค'),
             'po_number' => $this->string(255)->comment('จากเลขที่สั่งซื้อ'),

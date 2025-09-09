@@ -35,15 +35,12 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('../default/menu',['active' => 'request'])?>
 <?php $this->endBlock(); ?>
-
-
-
-
-<?php  // Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true]); ?>
-
 <div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    </div>
     <div class="card-body">
-          <?php echo $this->render('_search_order', ['model' => $searchModel,'dataProvider' => $dataProvider]); ?>
+        <?php echo $this->render('_search_order', ['model' => $searchModel,'dataProvider' => $dataProvider]); ?>
     </div>
 </div>
 
@@ -63,12 +60,8 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?php // echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/stock-order'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
                         <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
                     </div>
-
                 </div>
-
-
                 <?= $this->render('list_order',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
-
             </div>
         </div>
     </div>

@@ -94,7 +94,8 @@ class StockEvent extends Yii\db\ActiveRecord
                 'category_id',
                 'qty',
                 'date_filter',
-                'items'
+                'items',
+                'asset_type_id'
             ], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
@@ -172,6 +173,13 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
+
+        public function getAssetType()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
+    }
+
 
     public function getLeaderApprove()
 {
@@ -539,6 +547,23 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->all(), 'code', 'title');
     }
+    // ประเภทของวัสดุตามการตั้งค่าของคลัง
+    public function ListAssetOnWarehouse()
+    {
+        try {
+
+        $warehouse = \Yii::$app->session->get('warehouse');
+        $assetType = $warehouse->data_json['item_type'];
+        return ArrayHelper::map(Categorise::find()
+        ->where(['name' => 'asset_type', 'category_id' => 4])
+        ->andwhere(['IN','code',$assetType])->all(), 'code', 'title');
+                    //code...
+        } catch (\Throwable $th) {
+            $this->ListAssetType();
+        }
+    }
+
+
 
     // คณะกรรมการ
     public function ListBoard()
@@ -950,17 +975,18 @@ public function getItems()
     // รวมเงินทั้งหมด
     public function SummaryTotal($status = true)
     {
-
-
         $query = self::find()
             ->select([
-                new \yii\db\Expression('ROUND(SUM(CASE WHEN e.transaction_type = "IN" THEN COALESCE(i.total_price, 0) ELSE COALESCE(i.total_price, 0) END), 2) AS total')
+                new \yii\db\Expression('ROUND(SUM(CASE WHEN e.name = "order_item" THEN COALESCE(i.total_price, 0) ELSE COALESCE(i.total_price, 0) END), 2) AS total')
             ])
             ->alias('e')
             ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
             ->andFilterWhere(['e.thai_year' => $this->thai_year])
             ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
             ->andFilterWhere(['e.transaction_type' => $this->transaction_type])
+            ->andFilterWhere(['e.order_status' => $this->order_status])
+            ->andFilterWhere(['e.vendor_id' => $this->vendor_id])
+            ->andFilterWhere(['e.asset_type_id' => $this->asset_type_id])
             ->andFilterWhere([
                 '>=','e.movement_date',
                 AppHelper::convertToGregorian($this->date_start)
@@ -978,11 +1004,6 @@ public function getItems()
         }
 
         // กรองตามข้อมูล JSON ที่ต้องการ
-        $query->andFilterWhere([
-            '=',
-            new Expression("JSON_EXTRACT(e.data_json, '$.asset_type_name')"),
-            $this->asset_type_name
-        ]);
 
         // กรองข้อมูลตามคำค้นหา $this->q
         $query->andFilterWhere([
@@ -997,31 +1018,36 @@ public function getItems()
         $result = $query->one();
 
         // ตรวจสอบผลลัพธ์
-        $total = isset($result['total']) && $result['total'] !== null ? $result['total'] : 0;
-        return number_format($total, 2);
-    }
-
-
-    public function listOrderItem()
-    {
-        return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
-            ->all();
-    }
-    public function ListOrderType()
-    {
-        $arr = [];
         try {
-            $variable = self::find()->where(['name' => 'order'])->all();
-            foreach ($variable as $model) {
-                $arr[] = ['id' => $model->data_json['asset_type_name'], 'name' => $model->data_json['asset_type_name']];
-            }
-
-            return $arr;
-            // code...
+            $total = $result['total'];
+            return number_format($total, 2);
         } catch (\Throwable $th) {
-            return $arr;
+            return number_format(0, 2);
         }
+       
     }
+
+
+    // public function listOrderItem()
+    // {
+    //     return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
+    //         ->all();
+    // }
+    // public function ListOrderType()
+    // {
+    //     $arr = [];
+    //     try {
+    //         $variable = self::find()->where(['name' => 'order'])->all();
+    //          foreach ($variable as $model) {
+    //             $arr[] = ['id' => $model->asset_type_id,'name' => ($model->assetType?->title ?? '-')];
+    //         }
+
+    //         return $arr;
+    //         // code...
+    //     } catch (\Throwable $th) {
+    //         return $arr;
+    //     }
+    // }
 
     // แสดงปีงบประมานทั้งหมดใน stock event
     public function ListGroupYear()

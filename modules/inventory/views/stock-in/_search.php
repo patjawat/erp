@@ -17,7 +17,6 @@ use iamsaint\datetimepicker\Datetimepicker;
         width: 500px !important;
     }
 </style>
-<div class="stock-in-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -29,50 +28,32 @@ use iamsaint\datetimepicker\Datetimepicker;
     <div class="row">
 
         <div class="col-lg-2 col-md-2 col-sm-12">
-
-            <?= $form->field($model, 'q')->label(false) ?>
-
-
-        </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'asset_type_name')->widget(Select2::classname(), [
-                'data' => ArrayHelper::map($model->ListOrderType(), 'id', 'name'),
+            <?= $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                'data' => $model->ListAssetOnWarehouse(),
                 'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
                 'pluginOptions' => [
                     'allowClear' => true,
                 ],
-                'pluginEvents' => [
-                    'select2:select' => "function(result) { 
-                $(this).submit()
-                }",
-                    'select2:unselecting' => "function(result) { 
-                    $(this).submit()
-                    }",
-
-                ]
             ])->label(false);
             ?>
         </div>
-        <div class="col-2">
-            <?php
-            echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-                'data' =>  DateFilterHelper::getDropdownItems(),
-                'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+        <div class="col-lg-3 col-md-3 col-sm-12">
+            <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
+                'data' => $model->ListVendor(),
+                'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
                 'pluginOptions' => [
                     'allowClear' => true,
-                    // 'width' => '130px',
                 ],
             ])->label(false);
             ?>
 
         </div>
-
-              <div class="col-lg-1 col-md-1 col-sm-12">
-                  <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
-                </div>
-                <div class="col-lg-1 col-md-1 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
-    </div>
+        <div class="col-lg-2 col-md-1 col-sm-12">
+            <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
+        </div>
+        <div class="col-lg-2 col-md-1 col-sm-12">
+            <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
+        </div>
         <div class="col-lg-2 col-md-2 col-sm-12">
             <?= $form->field($model, 'order_status')->widget(Select2::classname(), [
                 'data' => $model->listStatus(),
@@ -94,50 +75,24 @@ use iamsaint\datetimepicker\Datetimepicker;
         </div>
     </div>
 
+    <div class="collapse mt-3" id="collapseFilter">
+        <div class="row">
+            <div class="col-lg-5 col-md-5 col-sm-12">
+                <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา'])->label(false) ?>
+            </div>
+        </div>
+    </div>
+    <?php ActiveForm::end(); ?>
 
-
-<div class="collapse mt-3" id="collapseFilter">
-
-        <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
-                'data' => $model->listVendor(),
-                'options' => ['placeholder' => 'เลือกผู้จำหน่วย'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-                'pluginEvents' => [
-                    'select2:select' => "function(result) { 
-                $(this).submit()
-                }",
-                    'select2:unselecting' => "function(result) { 
-                    $(this).submit()
-                    }",
-
-                ]
-            ])->label(false);
-            ?>
-</div>
-
-<?php ActiveForm::end(); ?>
-
-
-
-
-<?php
-
-
-$js = <<<JS
-
+    <?php
+    $js = <<<JS
 thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
 
     $("#stockeventsearch-date_start").on('change', function() {
             $('#stockeventsearch-thai_year').val(null).trigger('change');
-            $('#stockeventsearch-date_filter').val(null).trigger('change');
-            // $(this).submit();
         });
         $("#stockeventsearch-date_end").on('change', function() {
             $('#stockeventsearch-thai_year').val(null).trigger('change');
-            $('#stockeventsearch-date_filter').val(null).trigger('change');
-            // $(this).submit();
     });
 
 $(".filter-emp").on("click", function(){
@@ -150,7 +105,6 @@ $(".filter-emp-close").on("click", function(){
     localStorage.setItem('right-setting','hide')
 })
 
-
 JS;
-$this->registerJS($js, View::POS_END)
-?>
+    $this->registerJS($js, View::POS_END)
+    ?>
