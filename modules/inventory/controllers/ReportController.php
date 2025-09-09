@@ -68,7 +68,7 @@ class ReportController extends \yii\web\Controller
         ]);
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
          $dataProvider->query->andFilterWhere(['warehouse_type' => 'MAIN']);
-        $dataProvider->query->orderBy = ['receive_date' => SORT_DESC];
+        $dataProvider->query->orderBy = ['movement_date' => SORT_DESC];
 
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
@@ -82,7 +82,7 @@ class ReportController extends \yii\web\Controller
         }
 
 
-        $dataProvider->query->andFilterWhere(['between', 'receive_date', AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['between', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
 
            // ถ้า request มี all=true ให้ปิด pagination
     if (Yii::$app->request->get('all') == 1) {
@@ -606,7 +606,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                         AND warehouse_id = :warehouse_id
                              AND x.warehouse_type = 'MAIN' 
-                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                             AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price
                         ELSE 0 
                     END) AS last_stock_in,
@@ -616,7 +616,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                          AND warehouse_id = :warehouse_id
                              AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                             AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                             AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price
                         ELSE 0 
                     END) AS last_stock_out,
@@ -626,7 +626,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN'
                          AND warehouse_id = :warehouse_id 
                              AND x.warehouse_type = 'MAIN' 
-                             AND x.receive_date BETWEEN :date_start AND :date_end 
+                             AND x.movement_date BETWEEN :date_start AND :date_end 
                         THEN x.total_price
                         ELSE 0 
                     END) AS sum_month,
@@ -675,7 +675,7 @@ class ReportController extends \yii\web\Controller
                             SUM(CASE 
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
-                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                                    AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                                 THEN x.qty*x.unit_price
                                 ELSE 0 
                             END) AS last_stock_in,
@@ -684,7 +684,7 @@ class ReportController extends \yii\web\Controller
                             SUM(CASE 
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                                    AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                                    AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                                 THEN x.qty*x.unit_price
                                 ELSE 0 
                             END) AS last_stock_out,
@@ -693,7 +693,7 @@ class ReportController extends \yii\web\Controller
                             SUM(CASE 
                                 WHEN x.transaction_type = 'IN' 
                                     AND x.warehouse_type = 'MAIN' 
-                                    AND x.receive_date BETWEEN :date_start AND :date_end 
+                                    AND x.movement_date BETWEEN :date_start AND :date_end 
                                 THEN x.total_price
                                 ELSE 0 
                             END) AS sum_month,
@@ -748,7 +748,7 @@ class ReportController extends \yii\web\Controller
                             AND x.warehouse_type = 'MAIN' 
                             AND x.order_status = 'success' 
                             AND x.warehouse_id = :warehouse_id
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price
                         ELSE 0 
                     END) AS last_stock_in,
@@ -757,7 +757,7 @@ class ReportController extends \yii\web\Controller
                             AND x.warehouse_type = 'MAIN' 
                             AND x.order_status = 'success' 
                             AND x.warehouse_id = :warehouse_id
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty 
                         ELSE 0 
                     END) AS last_stock_in_qty,
@@ -766,7 +766,7 @@ class ReportController extends \yii\web\Controller
                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
                             AND x.order_status = 'success' 
                             AND x.warehouse_id = :warehouse_id
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price 
                         ELSE 0 
                     END) AS last_stock_out,
@@ -774,7 +774,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.warehouse_id = :warehouse_id
-                            AND x.receive_date BETWEEN :date_start AND :date_end 
+                            AND x.movement_date BETWEEN :date_start AND :date_end 
                         THEN (x.total_price) 
                         ELSE 0 
                     END) AS sum_month,
@@ -782,7 +782,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.warehouse_id = :warehouse_id
-                            AND x.receive_date BETWEEN :date_start AND :date_end 
+                            AND x.movement_date BETWEEN :date_start AND :date_end 
                         THEN x.qty 
                         ELSE 0 
                     END) AS sum_month_qty,
@@ -851,7 +851,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.order_status = 'success' 
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price
                         ELSE 0 
                     END) AS last_stock_in,
@@ -859,7 +859,7 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
                             AND x.order_status = 'success' 
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty 
                         ELSE 0 
                     END) AS last_stock_in_qty,
@@ -867,21 +867,21 @@ class ReportController extends \yii\web\Controller
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
                             AND x.order_status = 'success' 
-                            AND x.receive_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
+                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
                         THEN x.qty*x.unit_price 
                         ELSE 0 
                     END) AS last_stock_out,
                      SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
-                            AND x.receive_date BETWEEN :date_start AND :date_end 
+                            AND x.movement_date BETWEEN :date_start AND :date_end 
                         THEN (x.total_price) 
                         ELSE 0 
                     END) AS sum_month,
                     SUM(CASE 
                         WHEN x.transaction_type = 'IN' 
                             AND x.warehouse_type = 'MAIN' 
-                            AND x.receive_date BETWEEN :date_start AND :date_end 
+                            AND x.movement_date BETWEEN :date_start AND :date_end 
                         THEN x.qty 
                         ELSE 0 
                     END) AS sum_month_qty,

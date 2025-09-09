@@ -76,7 +76,7 @@ use app\components\ThaiDateHelper;
                         <td><?= $item->asset_name ?></td>
                         <td><?= $item->warehouse_type == 'MAIN' ? 'คลังหลัก' : 'คลังย่อย' ?></td>
                         <td><?= $item->warehouse_name ?></td>
-                        <td class="text-center"><?= ThaiDateHelper::formatThaiDate($item->receive_date) ?></td>
+                        <td class="text-center"><?= ThaiDateHelper::formatThaiDate($item->movement_date) ?></td>
                         <td class="text-center"><?= $item->transaction_type == 'IN' ? 'รับเข้า' : 'จ่ายออก' ?></td>
                         <td class="text-center fw-bold"><?= $item->qty ?></td>
                         <td class="text-center"><?= $item->unit ?></td>

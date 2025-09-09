@@ -10,10 +10,8 @@ use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
-use app\modules\purchase\models\Order;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
-use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\WarehouseSearch;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -118,15 +116,31 @@ class WarehouseController extends Controller
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
             
-            if($searchModel->date_start && $searchModel->date_end) {
-                // ตรวจสอบว่ามีการกรอกวันที่เริ่มต้นและสิ้นสุดหรือไม่
-                $dataProvider->query->andFilterWhere([
-                'between',
-                'created_at',
-                AppHelper::convertToGregorian($searchModel->date_start) . ' 00:00:00',
-                AppHelper::convertToGregorian($searchModel->date_end) . ' 23:59:59',
-            ]);
-            } 
+            // if($searchModel->date_start && $searchModel->date_end) {
+            //     // ตรวจสอบว่ามีการกรอกวันที่เริ่มต้นและสิ้นสุดหรือไม่
+            //     $dataProvider->query->andFilterWhere([
+            //     'between',
+            //     'created_at',
+            //     AppHelper::convertToGregorian($searchModel->date_start) . ' 00:00:00',
+            //     AppHelper::convertToGregorian($searchModel->date_end) . ' 23:59:59',
+            // ]);
+            // } 
+
+             if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        }
+
+
+        $dataProvider->query->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+            
           
 
             if ($all) {

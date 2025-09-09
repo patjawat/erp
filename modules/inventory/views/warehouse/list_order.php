@@ -1,14 +1,7 @@
 <?php
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use yii\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
-use app\modules\inventory\models\StockEvent;
-// คำนวณค่าเริ่มต้นของลำดับที่
-
-
+// คำนวณค่าเริ่มต้นของลำดับที
 ?>
 <table class="table table-striped table-sm">
                     <thead>

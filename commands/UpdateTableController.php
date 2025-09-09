@@ -438,112 +438,68 @@ class UpdateTableController extends Controller
         echo "Create view_stock\n";
 
         $sqlViewStockTransation = "
-CREATE VIEW `view_stock_transaction` AS
-WITH
-    `t` as (
-        select
-            `t`.`title` AS `asset_type`,
-            `i`.`category_id` AS `category_id`,
-            `i`.`code` AS `asset_item`,
-            `i`.`title` AS `asset_name`,
-            json_unquote(
-                json_extract(`i`.`data_json`, '$.unit')
-            ) AS `unit`,
-            `so`.`code` AS `code`,
-            `si`.`po_number` AS `po_number`,
-            `wf`.`warehouse_type` AS `from_warehouse_type`,
-            `wf`.`warehouse_name` AS `from_warehouse_name`,
-            `w`.`warehouse_type` AS `warehouse_type`,
-            `w`.`warehouse_name` AS `warehouse_name`,
-            `si`.`transaction_type` AS `transaction_type`,
-            `so`.`order_status` AS `order_status`,
-            `so`.`warehouse_id` AS `warehouse_id`,
-            `si`.`qty` AS `qty`,
-            `si`.`unit_price` AS `unit_price`,
-            json_unquote(
-                json_extract(
-                    `so`.`data_json`,
-                    '$.receive_date'
-                )
-            ) AS `receive_date`,
-            `so`.`created_at` AS `created_at`,
-            `so`.`thai_year` AS `thai_year`,
-            `si`.`total_price` AS `total_price`
-        from (
-                (
-                    (
-                        (
-                            (
-                                `stock_events` `so`
-                                left join `stock_events` `si` on (
-                                    (
-                                        (
-                                            `si`.`category_id` = `so`.`id`
-                                        )
-                                        and (`si`.`name` = 'order_item')
-                                    )
-                                )
-                            )
-                            left join `categorise` `i` on (
-                                (
-                                    (
-                                        `i`.`code` = `si`.`asset_item`
-                                    )
-                                    and (`i`.`name` = 'asset_item')
-                                )
-                            )
-                        )
-                        left join `categorise` `t` on (
-                            (
-                                (
-                                    `t`.`code` = `i`.`category_id`
-                                )
-                                and (`t`.`name` = 'asset_type')
-                            )
-                        )
-                    )
-                    left join `warehouses` `w` on (
-                        (
-                            `w`.`id` = `si`.`warehouse_id`
-                        )
-                    )
-                )
-                left join `warehouses` `wf` on (
-                    (
-                        `wf`.`id` = `si`.`from_warehouse_id`
-                    )
-                )
-            )
-        where (`i`.`category_id` <> '')
-    )
-select
-    `t`.`asset_type` AS `asset_type`,
-    `t`.`category_id` AS `category_id`,
-    `t`.`asset_item` AS `asset_item`,
-    `t`.`asset_name` AS `asset_name`,
-    `t`.`unit` AS `unit`,
-    `t`.`code` AS `code`,
-    `t`.`po_number` AS `po_number`,
-    `t`.`from_warehouse_type` AS `from_warehouse_type`,
-    `t`.`from_warehouse_name` AS `from_warehouse_name`,
-    `t`.`warehouse_type` AS `warehouse_type`,
-    `t`.`warehouse_name` AS `warehouse_name`,
-    `t`.`transaction_type` AS `transaction_type`,
-    `t`.`order_status` AS `order_status`,
-    `t`.`warehouse_id` AS `warehouse_id`,
-    `t`.`qty` AS `qty`,
-    `t`.`unit_price` AS `unit_price`,
-    `t`.`receive_date` AS `receive_date`,
-    `t`.`created_at` AS `created_at`,
-    `t`.`thai_year` AS `thai_year`,
-    `t`.`total_price` AS `total_price`,
-    (
-        case
-            when (`t`.`transaction_type` = 'IN') then month(`t`.`receive_date`)
-            else month(`t`.`created_at`)
-        end
-    ) AS `order_month`
-from `t`;";
+CREATE VIEW view_stock_transaction AS
+        WITH t AS (
+            SELECT
+                t.title AS asset_type,
+                i.category_id,
+                i.code AS asset_item,
+                i.title AS asset_name,
+                JSON_UNQUOTE(JSON_EXTRACT(i.data_json, '$.unit')) AS unit,
+                so.code,
+                si.po_number,
+                wf.warehouse_type AS from_warehouse_type,
+                wf.warehouse_name AS from_warehouse_name,
+                w.warehouse_type,
+                w.warehouse_name,
+                si.transaction_type,
+                so.order_status,
+                so.warehouse_id,
+                si.qty,
+                si.unit_price,
+                so.movement_date,
+                so.created_at,
+                so.thai_year,
+                si.total_price
+            FROM stock_events so
+            LEFT JOIN stock_events si 
+                ON si.category_id = so.id 
+            AND si.name = 'order_item'
+            LEFT JOIN categorise i 
+                ON i.code = si.asset_item 
+            AND i.name = 'asset_item'
+            LEFT JOIN categorise t 
+                ON t.code = i.category_id 
+            AND t.name = 'asset_type'
+            LEFT JOIN warehouses w 
+                ON w.id = si.warehouse_id
+            LEFT JOIN warehouses wf 
+                ON wf.id = si.from_warehouse_id
+            WHERE i.category_id <> '' AND so.order_status = 'success'
+        )
+        SELECT
+            t.asset_type,
+            t.category_id,
+            t.asset_item,
+            t.asset_name,
+            t.unit,
+            t.code,
+            t.po_number,
+            t.from_warehouse_type,
+            t.from_warehouse_name,
+            t.warehouse_type,
+            t.warehouse_name,
+            t.transaction_type,
+            t.order_status,
+            t.warehouse_id,
+            t.qty,
+            t.unit_price,
+            t.movement_date,
+            t.created_at,
+            t.thai_year,
+            t.total_price,
+            MONTH(t.movement_date) AS order_month
+        FROM t;";
         $createStockTransation = Yii::$app->db->createCommand($sqlViewStockTransation)->execute();
         echo "Create view_stock_transaction\n";
 

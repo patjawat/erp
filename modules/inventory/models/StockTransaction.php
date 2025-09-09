@@ -25,7 +25,7 @@ use app\components\AppHelper;
  * @property int|null $warehouse_id รหัสคลังสินค้า
  * @property float|null $qty จำนวนสินค้าที่เคลื่อนย้าย
  * @property float|null $unit_price ราคาต่อหน่วย
- * @property string|null $receive_date
+ * @property string|null $movement_date
  * @property string|null $created_at วันที่สร้าง
  * @property int|null $thai_year ปีงบประมาณ
  * @property float|null $total_price รวมราคา
@@ -63,8 +63,8 @@ class StockTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['asset_type', 'category_id', 'asset_item', 'asset_name', 'unit', 'code', 'po_number', 'from_warehouse_type', 'from_warehouse_name', 'warehouse_type', 'warehouse_name', 'transaction_type', 'order_status', 'warehouse_id', 'qty', 'unit_price', 'receive_date', 'created_at', 'thai_year', 'total_price', 'order_month'], 'default', 'value' => null],
-            [['asset_type', 'asset_name', 'unit', 'from_warehouse_type', 'warehouse_type', 'receive_date'], 'string'],
+            [['asset_type', 'category_id', 'asset_item', 'asset_name', 'unit', 'code', 'po_number', 'from_warehouse_type', 'from_warehouse_name', 'warehouse_type', 'warehouse_name', 'transaction_type', 'order_status', 'warehouse_id', 'qty', 'unit_price', 'movement_date', 'created_at', 'thai_year', 'total_price', 'order_month'], 'default', 'value' => null],
+            [['asset_type', 'asset_name', 'unit', 'from_warehouse_type', 'warehouse_type', 'movement_date'], 'string'],
             [['warehouse_id', 'thai_year', 'order_month'], 'integer'],
             [['qty', 'unit_price', 'total_price'], 'number'],
             [['created_at', 'date_filter', 'date_start', 'date_end'], 'safe'],
@@ -98,7 +98,7 @@ class StockTransaction extends \yii\db\ActiveRecord
             'warehouse_id' => 'Warehouse ID',
             'qty' => 'Qty',
             'unit_price' => 'Unit Price',
-            'receive_date' => 'Receive Date',
+            'movement_date' => 'Receive Date',
             'created_at' => 'Created At',
             'thai_year' => 'Thai Year',
             'total_price' => 'Total Price',

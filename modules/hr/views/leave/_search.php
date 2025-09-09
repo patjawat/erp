@@ -132,20 +132,12 @@ $js = <<< JS
 
     $("#leavesearch-date_start").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
+            $('#leavesearch-date_filter').val(null).trigger('change');
             // $(this).submit();
-    });
-    $("#leavesearch-date_end").on('change', function() {
+        });
+        $("#leavesearch-date_end").on('change', function() {
             $('#leavesearch-thai_year').val(null).trigger('change');
-            // $(this).submit();
-    });
-
-
-  $("#approvesearch-date_filter").on('change', function() {
-    console.log('xxx');
-    
-            $('#leavesearch-thai_year').val(null).trigger('change');
-            $('#leavesearch-date_start').val(null).trigger('change');
-            $('#leavesearch-date_end').val(null).trigger('change');
+            $('#leavesearch-date_filter').val(null).trigger('change');
             // $(this).submit();
     });
 JS;

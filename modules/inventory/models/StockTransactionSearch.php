@@ -16,7 +16,7 @@ class StockTransactionSearch extends StockTransaction
     public function rules()
     {
         return [
-            [['asset_type', 'category_id', 'asset_item', 'asset_name', 'unit', 'code', 'po_number', 'from_warehouse_type', 'from_warehouse_name', 'warehouse_type', 'warehouse_name', 'transaction_type', 'order_status', 'receive_date', 'created_at','date_start','date_end','date_filter'], 'safe'],
+            [['asset_type', 'category_id', 'asset_item', 'asset_name', 'unit', 'code', 'po_number', 'from_warehouse_type', 'from_warehouse_name', 'warehouse_type', 'warehouse_name', 'transaction_type', 'order_status', 'movement_date', 'created_at','date_start','date_end','date_filter'], 'safe'],
             [['warehouse_id', 'thai_year', 'order_month'], 'integer'],
             [['qty', 'unit_price', 'total_price'], 'number'],
         ];
@@ -50,7 +50,7 @@ class StockTransactionSearch extends StockTransaction
                 'pageSize' => 20, // ปรับได้ตามต้องการ
             ],
             'sort' => [
-                'defaultOrder' => ['receive_date' => SORT_DESC],
+                'defaultOrder' => ['movement_date' => SORT_DESC],
             ],
         ]);
 
@@ -71,7 +71,7 @@ class StockTransactionSearch extends StockTransaction
             'total_price' => $this->total_price,
             'thai_year' => $this->thai_year,
             'order_month' => $this->order_month,
-            'receive_date' => $this->receive_date,
+            'movement_date' => $this->movement_date,
             'created_at' => $this->created_at,
         ]);
 

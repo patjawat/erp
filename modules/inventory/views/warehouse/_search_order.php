@@ -120,15 +120,14 @@ thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
     $('#stockeventsearch-date_start').change(function (e) { 
         e.preventDefault();
         $('#stockeventsearch-thai_year').val(null).trigger('change');
-        // $(this).submit();
+        $('#stockeventsearch-date_filter').val(null).trigger('change');
     });
     
     $('#stockeventsearch-date_end').change(function (e) { 
         e.preventDefault();
         $('#stockeventsearch-thai_year').val(null).trigger('change');
-        // $(this).submit();
+          $('#stockeventsearch-date_filter').val(null).trigger('change');
     });
-
 
 
  

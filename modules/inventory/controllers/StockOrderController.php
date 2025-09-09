@@ -385,11 +385,13 @@ class StockOrderController extends Controller
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
         $model->created_at = AppHelper::convertToThai(isset($model->created_at) ? $model->created_at : date('Y-m-d'));
-        $model->movement_date = AppHelper::convertToThai(isset($model->movement_date) ? $model->movement_date : date('Y-m-d'));
+
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->created_at = AppHelper::convertToGregorian($model->created_at) . ' ' . date('H:i:s');
-            $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
+            if($model->movement_date){
+                $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
+            }
             $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
             if ($model->save(false)) {
                 $model->updateMovementDateItem();
@@ -593,7 +595,6 @@ class StockOrderController extends Controller
         $checkBalanced = 0;
         foreach ($model->getItems() as $item) {
             $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
-            $item->movement_date = Date('Y-m-d H:i:s');
             $item->save();
             if ($item->SumStockQty() <= 0 && $item->qty > 0) {
                 ++$checkBalanced;
@@ -653,7 +654,6 @@ class StockOrderController extends Controller
                 ];
                 $oriJson = $item->data_json;
                 $item->data_json = ArrayHelper::merge($oriJson,  $logQty);
-                $item->movement_date = Date('Y-m-d H:i:s');
                 $item->save();
 
 
