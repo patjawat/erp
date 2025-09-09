@@ -73,7 +73,7 @@ class Leave extends \yii\db\ActiveRecord
 
             [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
-            [['date_start_type','date_end_type','date_filter','balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department','step','export'], 'safe'],
+            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
             ['date_end', 'default', 'value' => function ($model) {
@@ -83,7 +83,7 @@ class Leave extends \yii\db\ActiveRecord
         ];
     }
 
-      /**
+    /**
      * Validates the date range
      * 
      * @param string $attribute the attribute being validated
@@ -94,9 +94,9 @@ class Leave extends \yii\db\ActiveRecord
             $this->addError($attribute, 'วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น');
         }
     }
-    
 
-      /**
+
+    /**
      * ตรวจสอบว่าอีเวนต์อยู่ในวันที่กำหนดหรือไม่
      * 
      * @param string $date วันที่ในรูปแบบ Y-m-d
@@ -123,7 +123,7 @@ class Leave extends \yii\db\ActiveRecord
 
         return round(($eventEnd - $eventStart) / (60 * 60 * 24)) + 1;
     }
-    
+
 
     /**
      * {@inheritdoc}
@@ -188,22 +188,22 @@ class Leave extends \yii\db\ActiveRecord
     //ส่ง Msg เมื่อไม่ผ่านการอนุมัติ
     public function MsgReject()
     {
-        $message = "บันทึกการ".$this->leaveType->title."ไม่ได้รับการอนุมัติ";
+        $message = "บันทึกการ" . $this->leaveType->title . "ไม่ได้รับการอนุมัติ";
         $lineId = $this->employee->user->line_id;
-        LineMsg::sendMsg($lineId,$message);
+        LineMsg::sendMsg($lineId, $message);
     }
-    
+
     //ส่ง Msg เมื่อผ่านการอนุมัติ
     public function MsgApprove()
     {
-        $message = "บันทึกการ".$this->leaveType->title."ได้รับการอนุมัติแล้ว";
+        $message = "บันทึกการ" . $this->leaveType->title . "ได้รับการอนุมัติแล้ว";
         $lineId = $this->employee->user->line_id;
-        LineMsg::sendMsg($lineId,$message);
+        LineMsg::sendMsg($lineId, $message);
     }
-    
+
     public function createApprove()
     {
-    // หัวหน้างาน
+        // หัวหน้างาน
         $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
         try {
             if (!$leaveStep1Check) {
@@ -221,15 +221,13 @@ class Leave extends \yii\db\ActiveRecord
                     $toUserId = $leaveStep1->employee->user->line_id;
                     LineMsg::sendLeave($leaveStep1->id, $toUserId);
                 } catch (\Throwable $th) {
-
                 }
             }
         } catch (\Throwable $th) {
-
         }
 
         try {
-             //หัวหน้ากลุ่มงานเห็นชอบ
+            //หัวหน้ากลุ่มงานเห็นชอบ
             $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
             if (!$leaveStep2Check) {
                 $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
@@ -257,7 +255,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep3->data_json = ['label' => 'ผ่าน'];
                 $leaveStep3->level = 3;
                 $leaveStep3->status = 'None';
-               $leaveStep3->save(false);
+                $leaveStep3->save(false);
             }
         } catch (\Throwable $th) {
         }
@@ -267,7 +265,7 @@ class Leave extends \yii\db\ActiveRecord
         $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
         try {
             if (!$leaveStep4Check) {
-            
+
                 $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
                 $leaveStep4->from_id = $this->id;
                 $leaveStep4->name = 'leave';
@@ -285,7 +283,7 @@ class Leave extends \yii\db\ActiveRecord
 
     public function listApprove()
     {
-        return Approve::find()->where(['name' => 'leave','from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
+        return Approve::find()->where(['name' => 'leave', 'from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
     }
 
 
@@ -322,11 +320,11 @@ class Leave extends \yii\db\ActiveRecord
     {
         $listFfiles = Uploads::find()->where(['ref' => $this->ref, 'name' => 'leave_file'])->all();
         $file = '<ul>';
-        
+
         foreach ($listFfiles as $item) {
-            $file .= '<li>' . Html::a($item->file_name, ['/filemanager/uploads/show', 'id' => $item->id],['target' => '_blank']) . '</li>';
+            $file .= '<li>' . Html::a($item->file_name, ['/filemanager/uploads/show', 'id' => $item->id], ['target' => '_blank']) . '</li>';
         }
-        
+
         $file .= '</ul>';
         return $file;
     }
@@ -335,9 +333,9 @@ class Leave extends \yii\db\ActiveRecord
     {
         $emp = UserHelper::GetEmployee();
         return self::find()
-        ->andWhere(['emp_id' => $this->emp_id,'thai_year' => $this->thai_year,'status' => 'Approve'])
-        ->andWhere(['<','date_start',$this->date_start])
-        ->all();
+            ->andWhere(['emp_id' => $this->emp_id, 'thai_year' => $this->thai_year, 'status' => 'Approve'])
+            ->andWhere(['<', 'date_start', $this->date_start])
+            ->all();
     }
 
 
@@ -370,9 +368,9 @@ class Leave extends \yii\db\ActiveRecord
 
         $year = AppHelper::YearBudget();
         $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
-        $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        $nextYear = [['thai_year' => ($year + 1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         // รวมข้อมูล
-        $model = ArrayHelper::merge($isYear,$nextYear, $model);
+        $model = ArrayHelper::merge($isYear, $nextYear, $model);
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
@@ -401,10 +399,10 @@ class Leave extends \yii\db\ActiveRecord
             ->andwhere(['<', 'date_start', $this->date_start])
             ->one();
 
-            return [
-                'data' => $data ?? null,
-                'sum_all' => $sumAll ?? 0
-            ];
+        return [
+            'data' => $data ?? null,
+            'sum_all' => $sumAll ?? 0
+        ];
     }
 
     // สรุปการลารายบุคคล
@@ -510,13 +508,13 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
-//รายการ Approve ที่รอ HR ตรวจสอบ
+    //รายการ Approve ที่รอ HR ตรวจสอบ
     public function hrChecking()
     {
-        $approve  = Approve::findOne(['name' => 'leave','from_id' => $this->id,'emp_id' => null,'status' =>'Pending']);
-        if($approve){
+        $approve  = Approve::findOne(['name' => 'leave', 'from_id' => $this->id, 'emp_id' => null, 'status' => 'Pending']);
+        if ($approve) {
             return $approve;
-        }else{
+        } else {
             return false;
         }
     }
@@ -542,14 +540,14 @@ class Leave extends \yii\db\ActiveRecord
     // ผู้ตรวจสอบการลา
     public function checkerName($level)
     {
-        $check = Approve::find()->where(['name' => 'leave','from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
+        $check = Approve::find()->where(['name' => 'leave', 'from_id' => $this->id, 'level' => $level])->andWhere(['IS NOT', 'emp_id', null])->one();
         if ($check) {
             return [
                 'employee' => $check->employee,
-                'fullname' => $check->employee ? '( '.$check->employee->fullname.' )' : 'ไม่ระบุชื่อ',
+                'fullname' => $check->employee ? '( ' . $check->employee->fullname . ' )' : 'ไม่ระบุชื่อ',
                 'signature' =>   $check->employee ? $check->employee->signature() : 'ไม่ระบุตำแหน่ง',
                 'position' => $check->employee ? $check->employee->positionName() : 'ไม่ระบุตำแหน่ง',
-                'approve_date' => isset($check->data_json['approve_date']) ? 'วันที่ '.Yii::$app->thaiFormatter->asDate($check->data_json['approve_date'], 'long') : '',
+                'approve_date' => isset($check->data_json['approve_date']) ? 'วันที่ ' . Yii::$app->thaiFormatter->asDate($check->data_json['approve_date'], 'long') : '',
             ];
         } else {
             return [
@@ -567,15 +565,16 @@ class Leave extends \yii\db\ActiveRecord
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['not in', 'status', ['None','Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
             try {
-                $data .=Html::img('@web/img/loading.gif', ['class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
-                        'data' => [
-                            'expand' => '-20',
-                            'sizes' => 'auto',
-                            'src' => $item->employee->showAvatar()
-                        ]]);
-                   
+                $data .= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $item->employee->showAvatar()
+                    ]
+                ]);
             } catch (\Throwable $th) {
                 // throw $th;
             }
@@ -596,7 +595,7 @@ class Leave extends \yii\db\ActiveRecord
             //     'fullname' => $model->fullname,
             //     'position' => $model->positionName(),
             //     'avatar' => $model->getAvatar(false, $msg),
-                
+
             // ];
         } catch (\Throwable $th) {
             // return [
@@ -609,8 +608,8 @@ class Leave extends \yii\db\ActiveRecord
 
     public function statusProcess()
     {
-        $total = Approve::find()->where(['name' => 'leave','from_id' => $this->id])->count();
-        $accept = Approve::find()->where(['name' => 'leave','from_id' => $this->id, 'status' => 'Pass'])->count();
+        $total = Approve::find()->where(['name' => 'leave', 'from_id' => $this->id])->count();
+        $accept = Approve::find()->where(['name' => 'leave', 'from_id' => $this->id, 'status' => 'Pass'])->count();
         if ($total > 0) {
             $percentageCompleted = ($accept / $total) * 100;
         } else {
@@ -652,10 +651,11 @@ class Leave extends \yii\db\ActiveRecord
             ->createCommand($sql)
             ->bindValue('id', $department_id)
             ->queryOne();
-        if ($query) {
-            $leader = Employees::find()->where(['id' => $query['t1_leader']])->one();
-            $leaderGroup = Employees::find()->where(['id' => $query['t2_leader']])->one();
-            $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
+
+            if ($query) {
+                $leader = Employees::find()->where(['id' => $query['t1_leader']])->one();
+                $leaderGroup = Employees::find()->where(['id' => $query['t2_leader']])->one();
+                $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
 
             return [
                 'approve_1' => isset($query['t1_leader']) ? [
@@ -681,29 +681,80 @@ class Leave extends \yii\db\ActiveRecord
                 ]
             ];
         } else {
-            // ถ้าเป็นหัวหน้าลาเอง
-            $leader = Employees::find()->where(['id' => $emp->id])->one();
+
+            $sql2 = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
+                    t1.id,
+                    t1.name as t1name,
+
+                    t1.data_json->>'\$.leader1' as t1_leader,
+                    t1.data_json->>'\$.leader1_fullname' as t1_leader_fullname,
+                    t2.id,t2.name as t2name,
+
+                    t2.data_json->>'\$.leader1' as t2_leader,
+                    t2.data_json->>'\$.leader1_fullname' as t2_leader_fullname,
+                    t3.id,t3.name as t3name,
+                    t3.data_json->>'\$.leader1' as t3_leader,
+                    t3.data_json->>'\$.leader1_fullname' as t3_leader_fullname
+                    FROM tree t1
+                    JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl
+                    JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
+                    WHERE t1.id  = :id";
+        $query2 = Yii::$app
+            ->db
+            ->createCommand($sql2)
+            ->bindValue('id', $department_id)
+            ->queryOne();
+
+            $leader = Employees::find()->where(['id' => $query2['t2_leader']])->one();
+            $director2 = Employees::find()->where(['id' => $query2['t3_leader']])->one();
+
             return [
                 'approve_1' => [
-                    'id' => $leader->id,
-                    'avatar' => $leader->getAvatar(false),
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
+                    'id' =>  $leader->id,
+                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
                     'title' => 'หัวหน้างาน'
                 ],
                 'approve_2' => [
-                    'id' => $leader->id,
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
+                  'id' =>  $leader->id,
+                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
                 'approve_3' => [
-                    'id' => $leader->id,
-                    'fullname' => $leader->fullname,
-                    'position' => $leader->positionName(),
+                     'id' => $query2['t3_leader'],
+                    'avatar' => isset($director2) && $director2 ? $director2->getAvatar(false) : '',
+                    'fullname' => isset($director2) && $director2 ? $director2->fullname : '',
+                    'position' => isset($director2) && $director2 ? $director2->positionName() : '',
                     'title' => 'ผู้อำนวยการ'
                 ]
             ];
+            
+            // ถ้าเป็นหัวหน้าลาเอง
+            // $leader = Employees::find()->where(['id' => $emp->id])->one();
+            // return [
+            //     'approve_1' => [
+            //         'id' => $leader->id,
+            //         'avatar' => $leader->getAvatar(false),
+            //         'fullname' => $leader->fullname,
+            //         'position' => $leader->positionName(),
+            //         'title' => 'หัวหน้างาน'
+            //     ],
+            //     'approve_2' => [
+            //         'id' => $leader->id,
+            //         'fullname' => $leader->fullname,
+            //         'position' => $leader->positionName(),
+            //         'title' => 'หัวหน้ากลุ่มงาน'
+            //     ],
+            //     'approve_3' => [
+            //         'id' => $leader->id,
+            //         'fullname' => $leader->fullname,
+            //         'position' => $leader->positionName(),
+            //         'title' => 'ผู้อำนวยการ'
+            //     ]
+            // ];
         }
     }
 
@@ -734,7 +785,7 @@ class Leave extends \yii\db\ActiveRecord
 
     public function levelStatusCount()
     {
-        return  Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->count();
+        return  Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->count();
     }
     public function showLeaveDate()
     {
@@ -742,7 +793,7 @@ class Leave extends \yii\db\ActiveRecord
     }
     public function showStatus()
     {
-        $leaveStep = Approve::find()->where(['from_id' => $this->id,'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
+        $leaveStep = Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
 
         $color = 'primary';
         $statusName = '';
