@@ -100,7 +100,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
         <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
                 'data' => $model->listVendor(),
-                'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
+                'options' => ['placeholder' => 'เลือกผู้จำหน่วย'],
                 'pluginOptions' => [
                     'allowClear' => true,
                 ],
