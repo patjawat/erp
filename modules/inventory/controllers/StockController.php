@@ -42,17 +42,7 @@ class StockController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
-    {
-        $searchModel = new StockSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
+   
 
     public function actionProduct()
     {
