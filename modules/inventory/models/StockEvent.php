@@ -954,7 +954,7 @@ public function getItems()
 
         $query = self::find()
             ->select([
-                new \yii\db\Expression('ROUND(SUM(CASE WHEN e.transaction_type = "in" THEN COALESCE(i.total_price, 0) ELSE COALESCE(i.total_price, 0) END), 2) AS total')
+                new \yii\db\Expression('ROUND(SUM(CASE WHEN e.transaction_type = "IN" THEN COALESCE(i.total_price, 0) ELSE COALESCE(i.total_price, 0) END), 2) AS total')
             ])
             ->alias('e')
             ->innerJoin(['i' => 'stock_events'], 'i.category_id = e.id AND i.name = "order_item"')
@@ -962,13 +962,11 @@ public function getItems()
             ->andFilterWhere(['e.warehouse_id' => $this->warehouse_id])
             ->andFilterWhere(['e.transaction_type' => $this->transaction_type])
             ->andFilterWhere([
-                '>=',
-                new Expression("JSON_UNQUOTE(JSON_EXTRACT(e.data_json, '$.receive_date'))"),
+                '>=','e.movement_date',
                 AppHelper::convertToGregorian($this->date_start)
             ])
             ->andFilterWhere([
-                '<=',
-                new Expression("JSON_UNQUOTE(JSON_EXTRACT(e.data_json, '$.receive_date'))"),
+                '<=','e.movement_date',
                 AppHelper::convertToGregorian($this->date_end)
             ]);
 

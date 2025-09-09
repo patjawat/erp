@@ -67,29 +67,16 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
 
+
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-
         $dataProvider->query
-            ->andFilterWhere([
-                '>=',
-                'movement_date',
-                AppHelper::convertToGregorian($searchModel->date_start)
-            ])
-            ->andFilterWhere([
-                '<=',
-               'movement_date',
-                AppHelper::convertToGregorian($searchModel->date_end)
-            ]);
+            ->andFilterWhere(['>=','movement_date',AppHelper::convertToGregorian($searchModel->date_start)])
+            ->andFilterWhere(['<=','movement_date',AppHelper::convertToGregorian($searchModel->date_end)]);
 
         $dataProvider->query->andWhere(['name' => 'order']);
 
@@ -410,12 +397,7 @@ class StockInController extends Controller
             }
 
             if ($model->name == 'order') {
-                $convertDate = [
-                    'receive_date' => AppHelper::convertToGregorian($model->data_json['receive_date']),
-                ];
                 $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
-
-                $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
             }
 
             if ($model->name == 'order_item' && $model->auto_lot == '1' && $model->lot_number == '') {
