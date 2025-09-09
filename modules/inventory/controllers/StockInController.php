@@ -7,11 +7,9 @@ use yii\helpers\Html;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
-use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\models\UploadCsvForm;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\purchase\models\Order;
@@ -84,12 +82,12 @@ class StockInController extends Controller
         $dataProvider->query
             ->andFilterWhere([
                 '>=',
-                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.receive_date'))"),
+                'movement_date',
                 AppHelper::convertToGregorian($searchModel->date_start)
             ])
             ->andFilterWhere([
                 '<=',
-                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.receive_date'))"),
+               'movement_date',
                 AppHelper::convertToGregorian($searchModel->date_end)
             ]);
 
@@ -224,10 +222,12 @@ class StockInController extends Controller
             'asset_item' => $asset_item ? $asset_item : '',
             'transaction_type' => $order ? $order->transaction_type : $type,
             'data_json' => [
-                'receive_date' => AppHelper::convertToThai(date('Y-m-d')),
                 'item_type' => ($order->data_json['item_type'] ?? '')
             ],
         ]);
+        if($name == 'order'){
+            $model->movement_date = AppHelper::convertToThai(date('Y-m-d'));
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -237,17 +237,18 @@ class StockInController extends Controller
                     'employee_fullname' => $user->fullname,
                     'employee_position' => $user->positionName(),
                     'employee_department' => $user->departmentName(),
-                    'receive_date' => isset($model->data_json['receive_date']) ? AppHelper::convertToGregorian($model->data_json['receive_date']) : '',
                 ];
                 // สร้างรหัสรับเข้า
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->data_json = ArrayHelper::merge($model->data_json, $created);
-                    $model->thai_year =  AppHelper::YearBudget($model->data_json['receive_date']);
+                    $model->thai_year =  AppHelper::YearBudget($model->movement_date);
+                    $model->movement_date =  AppHelper::convertToGregorian($model->movement_date);
                 }
 
                 if ($model->name == 'order_item') {
-                    $model->thai_year =  AppHelper::YearBudget($order->data_json['receive_date']);
+                    $movementDate = $order->movement_date;
+                    $model->thai_year =  AppHelper::YearBudget($movementDate);
                     $convertDate = [
                         'mfg_date' => $model->data_json['mfg_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['mfg_date']) : '',
                         'exp_date' => $model->data_json['exp_date'] !== '__/__/____' ? AppHelper::convertToGregorian($model->data_json['exp_date']) : '',
@@ -396,6 +397,7 @@ class StockInController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+         $model->movement_date = AppHelper::convertToThai($model->movement_date);
         $oldObj = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
             if ($model->name == 'order_item') {
@@ -411,6 +413,8 @@ class StockInController extends Controller
                 $convertDate = [
                     'receive_date' => AppHelper::convertToGregorian($model->data_json['receive_date']),
                 ];
+                $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
+
                 $model->data_json = ArrayHelper::merge($model->data_json, $convertDate);
             }
 

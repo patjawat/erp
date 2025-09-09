@@ -61,6 +61,9 @@ $resultsJs = <<< JS
         margin-bottom: 1px;
     }
 </style>
+<?php
+echo $model->movement_date;
+?>
 <div class="row">
     <div class="col-6">
 <?=$form->field($model, 'data_json[mfg_date]')->widget(Datetimepicker::className(),[

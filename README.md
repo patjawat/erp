@@ -281,3 +281,9 @@ ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFA
 
 
 
+
+
+แก้ไขปรับปรุงวันี่ stock
+
+ใบรับเข้า 
+- data_json[receive_date] เป็น movement_date

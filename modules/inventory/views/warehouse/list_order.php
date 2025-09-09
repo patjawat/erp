@@ -14,11 +14,12 @@ use app\modules\inventory\models\StockEvent;
                     <thead>
                         <tr>
                             <th class="fw-semibold text-center fw-semibold" style="width:30px">ลำดับ</th>
-                            <th class="fw-semibold" style="width:210px">รหัส</th>
+                            <th class="fw-semibold" style="width:210px">รหัส/วันที่ขอ</th>
                             <th class="fw-semibold" scope="col">ผู้เบิก</th>
                             <th class="fw-semibold">หัวหน้าตรวจสอบ</th>
                             <th class="fw-semibold text-end">มูลค่า</th>
-                            <th class="fw-semibold text-center" style="width:300px">สถานะ</th>
+                            <th class="fw-semibold text-center" style="width:160px">วันที่จ่าย</th>
+                            <th class="fw-semibold text-center" style="width:160px">สถานะ</th>
                             <th class="fw-semibold" style="width:100px">ดำเนินการ</th>
                         </tr>
                     </thead>
@@ -55,19 +56,20 @@ use app\modules\inventory\models\StockEvent;
                                     <?php echo $item->order_status == 'success' ? number_format($item->getTotalOrderPriceSuccess(),2) : number_format($item->getTotalOrderPrice(),2) ?>        
                                 </span>
                             </td>
+                            <td class="text-center"><?=$item->viewMoveMentDate()?></td>
                             <td class="text-center"><?=$item->viewstatus()?></td>
                             <td>
 
-                            <div class="btn-group">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock-order/view','id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
-                                    <i class="bi bi-caret-down-fill"></i>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
                                 </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> แสดง', ['/inventory/stock-order/view','id' => $item->id], ['class' => 'dropdown-item']) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?></li>
 
-                                <ul class="dropdown-menu">
-                                <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/inventory/document/stock-order','id' => $item->id], ['class' => 'dropdown-item open-modal','data-pjax' => '0','data' => ['size' => 'modal-xl']]) ?>
-                                </ui>
+                                </ul>
                             </div>
 
                             </td>

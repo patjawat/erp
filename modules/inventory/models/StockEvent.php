@@ -886,10 +886,10 @@ public function getItems()
         }
     }
 
-    public function ViewReceiveDate()
-    {
-        return $date = isset($this->data_json['receive_date']) ? \Yii::$app->thaiFormatter->asDate($this->data_json['receive_date'], 'long') : '-';
-    }
+    // public function ViewReceiveDate()
+    // {
+    //     return $date = isset($this->data_json['receive_date']) ? \Yii::$app->thaiFormatter->asDate($this->data_json['receive_date'], 'long') : '-';
+    // }
 
     public function viewCreatedAt()
     {

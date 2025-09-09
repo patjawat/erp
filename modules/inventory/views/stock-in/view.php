@@ -50,6 +50,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     'model' => $model,
                     'attributes' => [
                         [
+                            'label' => 'วันที่รับเข้า',
+                            'value' => $model->viewMoveMentDate()
+                        ],
+                         [
                             'label' => 'ประเภทวัสดุ',
                             'value' => $model->viewAssetType()
                         ],

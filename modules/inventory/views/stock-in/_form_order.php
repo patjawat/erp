@@ -62,10 +62,7 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 
     </div>
     <div class="col-6">
-
-        <?php
-
-        echo $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
+        <?= $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
             'data' =>  ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม', 'บริจาค' => 'บริจาค'],
             'options' => [
                 'placeholder' => 'ระบุประเภทการรับเข้า',
@@ -78,14 +75,13 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'pluginEvents' => []
         ])->label('ประเภทการรับเข้า');
         ?>
-
-
     </div>
-
 </div>
 <?= $form->field($model, 'data_json[do_number]')->textInput()->label('เลขที่ส่งสินค้า'); ?>
 
-<?= $form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า'); ?>
+<?php //  $form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า'); 
+?>
+<?= $form->field($model, 'movement_date')->textInput()->label('วันที่รับเข้า'); ?>
 
 <?= $form->field($model, 'auto_lot')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('ล็อตอัตโนมัติ'); ?>
 
@@ -93,13 +89,10 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 <?php
 $js = <<< JS
 
-    thaiDatepicker('#stockevent-data_json-receive_date')
+    thaiDatepicker('#stockevent-movement_date')
     console.log($("#stockevent-auto_lot").val())
     if($("#stockevent-auto_lot").val()){
     $( "#stockevent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );
-
-
-
     }
 
 
