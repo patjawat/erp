@@ -9,7 +9,13 @@ use app\modules\approve\models\Approve;
 $this->registerCssFile('@web/css/timeline.css');
 $me = UserHelper::GetEmployee();
 
-$listApprove = Approve::find()->where(['name' => $name,'from_id' => $model->id])->all();
+$listApprove = Approve::find()
+    ->where([
+        'name' => $name,
+        'from_id' => $model->id
+    ])
+    ->orderBy(['level' => SORT_ASC]) // เรียงจากน้อยไปมาก 1 → 2
+    ->all();
 ?>
 
 

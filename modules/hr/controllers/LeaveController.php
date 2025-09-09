@@ -821,7 +821,7 @@ class LeaveController extends Controller
         $data = [['id' => '', 'text' => '']];
         foreach ($models as $model) {
             $data[] = [
-                'id' => $model->cid,
+                'id' => $model->id,
                 'text' => $model->fullname,
                 'title' => $model->fname,
                 // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
@@ -913,6 +913,7 @@ class LeaveController extends Controller
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
 
             $model->save();
+            $model->createApprove();
             return [
                 'status' => 'success',
                 'container' => '#leave'
