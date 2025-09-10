@@ -35,9 +35,10 @@ $months = [
         ],
     ]); ?>
 
+
 <div class="row">
 
-<div class="col-lg-4 col-lg-4 col-sm-12">
+<div class="col-lg-5 col-md-5 col-sm-12">
 
     <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
         'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
@@ -57,25 +58,10 @@ $months = [
                 
                 ?>
                 </div>
-<div class="col-lg-3 col-md-3 col-sm-12">
-     <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '130px',
-            ],
-            ])->label(false);
-            ?>
-
-    
- 
-                            </div>
-                  <div class="col-2">
+                  <div class="col-3">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
     </div>
-    <div class="col-2">
+    <div class="col-3">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
     </div>
     

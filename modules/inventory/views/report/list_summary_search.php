@@ -23,33 +23,7 @@ use app\modules\inventory\models\Warehouse;
 
 <div class="row">
 
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-                'pluginEvents' => [
-        "select2:clear" => "function() {
-            $('#stocktransactionsearch-date_start, #stocktransactionsearch-date_end').val('');
-        }",
-    ],
-        ])->label(false);
-        ?>
-
-
-
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
-    </div>
-   <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
+<div class="col-lg-2 col-md-2 col-sm-12">
 
         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name'),
@@ -70,7 +44,7 @@ use app\modules\inventory\models\Warehouse;
         ?>
     </div>
 
-    <div class="col-lg-2 col-md-2 col-sm-12">
+    <div class="col-lg-3 col-md-3 col-sm-12">
         <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
             'data' => $model->ListAssetType(),
             'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
@@ -80,7 +54,7 @@ use app\modules\inventory\models\Warehouse;
         ])->label(false);
         ?>
     </div>
-    <div class="col-lg-1 col-md-1 col-sm-12">
+    <div class="col-lg-2 col-md-2 col-sm-12">
          <?= $form->field($model, 'transaction_type')->widget(Select2::classname(), [
             'data' => ['IN' => 'รับเข้า', 'OUT' => 'จ่ายออก'],
             'options' => ['placeholder' => 'เลือกความเคลื่อนไหว'],
@@ -90,7 +64,13 @@ use app\modules\inventory\models\Warehouse;
         ])->label(false);
         ?>
     </div>
-
+    <div class="col-lg-2 col-md-2 col-sm-12">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
+    </div>
+   <div class="col-lg-2 col-md-2 col-sm-12">
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
+    </div>
+    
 
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">

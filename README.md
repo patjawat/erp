@@ -295,3 +295,65 @@ ALTER TABLE `stock_events` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ปร
 UPDATE stock_events
 SET asset_type_id = JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.asset_type'))
 WHERE name = 'order';
+
+
+
+หาวัสดุที่รับเข้าในเดือน
+SELECT sum(i.qty * i.unit_price) as total FROM `stock_events` o 
+LEFT JOIN stock_events i ON i.category_id = o.id
+LEFT JOIN categorise asset_item ON asset_item.code = i.asset_item
+LEFT JOIN warehouses w ON w.id = o.warehouse_id
+WHERE o.movement_date BETWEEN '2025-08-01' AND '2025-08-30'
+AND w.warehouse_type = 'MAIN'
+AND o.transaction_type = 'IN'
+AND o.name = 'order'
+AND o.asset_type_id = 'M4'
+AND i.name = 'order_item'
+
+AND o.warehouse_id = 7;
+
+
+SELECT sum(i.qty * i.unit_price) as total FROM `stock_events` o 
+LEFT JOIN stock_events i ON i.category_id = o.id
+LEFT JOIN categorise asset_item ON asset_item.code = i.asset_item
+LEFT JOIN warehouses w ON w.id = o.warehouse_id
+WHERE o.movement_date BETWEEN '2025-08-01' AND '2025-08-30'
+AND w.warehouse_type = 'MAIN'
+AND o.transaction_type = 'IN'
+AND o.name = 'order'
+AND o.asset_type_id = 'M4'
+AND i.name = 'order_item'
+
+AND o.warehouse_id = 7;
+
+
+
+
+
+WITH x AS (
+    SELECT
+        -- IN
+        (
+            SELECT SUM(i.qty * i.unit_price)
+            FROM stock_events o
+            LEFT JOIN stock_events i ON i.category_id = o.id
+            WHERE o.movement_date <= '2025-07-31'
+              AND o.transaction_type = 'IN'
+              AND i.name = 'order_item'
+              AND o.asset_type_id = 'M4'
+        ) AS total_in,
+
+        -- OUT
+        (
+            SELECT SUM(i.qty * i.unit_price)
+            FROM stock_events o
+            LEFT JOIN stock_events i ON i.category_id = o.id
+            WHERE o.movement_date <= '2025-07-31'
+              AND o.transaction_type = 'OUT'
+              AND i.name = 'order_item'
+              AND o.asset_type_id = 'M4'
+        ) AS total_out
+)
+SELECT x.*,
+(x.total_in - x.total_out) as amonth
+FROM x;

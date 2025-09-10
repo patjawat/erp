@@ -1,132 +1,62 @@
-SELECT 
-    i.title,
-    i.category_id,
-     SUM(CASE WHEN e.transaction_type = 'IN'  THEN e.qty ELSE 0 END) AS qty_in,
-    SUM(CASE WHEN e.transaction_type = 'OUT' THEN e.qty ELSE 0 END) AS qty_out,
-    SUM(CASE WHEN e.transaction_type = 'IN'  THEN e.qty * e.unit_price ELSE 0 END) AS total_price_in,
-    SUM(CASE WHEN e.transaction_type = 'OUT' THEN e.qty * e.unit_price ELSE 0 END) AS total_price_out,
-    (
-        SUM(CASE WHEN e.transaction_type = 'IN'  THEN e.qty ELSE 0 END) -
-        SUM(CASE WHEN e.transaction_type = 'OUT' THEN e.qty ELSE 0 END)
-    ) AS result_qty,
-        (
-        SUM(CASE WHEN e.transaction_type = 'IN'  THEN e.qty * e.unit_price ELSE 0 END) -
-        SUM(CASE WHEN e.transaction_type = 'OUT' THEN e.qty * e.unit_price ELSE 0 END)
-    ) AS result_price
-FROM stock_events e
-LEFT JOIN categorise i 
-    ON i.code = e.asset_item 
-   AND i.name = 'asset_item'
-WHERE e.warehouse_id = 7
-  AND DATE_FORMAT(e.movement_date, '%Y-%m-%d') BETWEEN '2025-01-01' AND '2025-08-31'
-GROUP BY i.title;
-
-
-
-
-
-WITH
-    t as (
-        select
-            t.title AS asset_type,
-            i.category_id AS category_id,
-            i.code AS asset_item,
-            i.title AS asset_name,
-            json_unquote(
-                json_extract(i.data_json, '$.unit')
-            ) AS unit,
-            so.code AS code,
-            si.po_number AS po_number,
-            wf.warehouse_type AS from_warehouse_type,
-            wf.warehouse_name AS from_warehouse_name,
-            w.warehouse_type AS warehouse_type,
-            w.warehouse_name AS warehouse_name,
-            si.transaction_type AS transaction_type,
-            so.order_status AS order_status,
-            so.warehouse_id AS warehouse_id,
-            si.qty AS qty,
-            si.unit_price AS unit_price,
-            json_unquote(
-                json_extract(
-                    so.data_json,
-                    '$.receive_date'
-                )
-            ) AS receive_date,
-            so.created_at AS created_at,
-            so.thai_year AS thai_year,
-            si.total_price AS total_price
-        from (
-                (
-                    (
-                        (
-                            (
-                                stock_events so
-                                left join stock_events si on (
-                                    (
-                                        (
-                                            si.category_id = so.id
-                                        )
-                                        and (si.name = 'order_item')
-                                    )
-                                )
-                            )
-                            left join categorise i on (
-                                (
-                                    (
-                                        i.code = si.asset_item
-                                    )
-                                    and (i.name = 'asset_item')
-                                )
-                            )
-                        )
-                        left join categorise t on (
-                            (
-                                (
-                                    t.code = i.category_id
-                                )
-                                and (t.name = 'asset_type')
-                            )
-                        )
-                    )
-                    left join warehouses w on (
-                        (
-                            w.id = si.warehouse_id
-                        )
-                    )
-                )
-                left join warehouses wf on (
-                    (
-                        wf.id = si.from_warehouse_id
-                    )
-                )
+WITH stock_data AS (
+                SELECT 
+                    x.category_id, 
+                    x.asset_type,
+                    x.warehouse_id,
+                    
+                    -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
+                    SUM(CASE
+                        WHEN x.transaction_type = 'IN' 
+                        AND warehouse_id = 7
+                             AND x.warehouse_type = 'MAIN' 
+                             AND x.movement_date <= LAST_DAY(DATE_SUB('2025-08-01', INTERVAL 1 MONTH)) 
+                        THEN x.qty*x.unit_price
+                        ELSE 0 
+                    END) AS last_stock_in,
+            
+                    -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
+                    SUM(CASE 
+                        WHEN x.transaction_type = 'IN' 
+                         AND warehouse_id = 7
+                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
+                             AND x.movement_date <= LAST_DAY(DATE_SUB('2025-08-01', INTERVAL 1 MONTH)) 
+                        THEN x.qty*x.unit_price
+                        ELSE 0 
+                    END) AS last_stock_out,
+            
+                    -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
+                    SUM(CASE 
+                        WHEN x.transaction_type = 'IN'
+                         AND warehouse_id = 7 
+                             AND x.warehouse_type = 'MAIN' 
+                             AND x.movement_date BETWEEN '2025-08-01' AND '2025-08-30' 
+                        THEN x.total_price
+                        ELSE 0 
+                    END) AS sum_month,
+            
+                    -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
+                    SUM(CASE 
+                        WHEN x.transaction_type = 'OUT'
+                         AND warehouse_id = 7 
+                             AND x.warehouse_type = 'BRANCH' 
+                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN '2025-08-01' AND '2025-08-30' 
+                        THEN x.qty*x.unit_price 
+                        ELSE 0 
+                    END) AS sum_branch,
+            
+                    -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
+                    SUM(CASE 
+                        WHEN x.transaction_type = 'OUT' 
+                         AND warehouse_id = 7
+                             AND x.warehouse_type = 'MAIN' 
+                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN '2025-08-01' AND '2025-08-30' 
+                        THEN x.qty*x.unit_price
+                        ELSE 0 
+                    END) AS sum_sub
+                FROM view_stock_transaction x
+                WHERE x.order_status = 'success'
+                GROUP BY x.category_id, x.asset_type
             )
-        where (i.category_id <> '')
-    )
-select
-    t.asset_type AS asset_type,
-    t.category_id AS category_id,
-    t.asset_item AS asset_item,
-    t.asset_name AS asset_name,
-    t.unit AS unit,
-    t.code AS code,
-    t.po_number AS po_number,
-    t.from_warehouse_type AS from_warehouse_type,
-    t.from_warehouse_name AS from_warehouse_name,
-    t.warehouse_type AS warehouse_type,
-    t.warehouse_name AS warehouse_name,
-    t.transaction_type AS transaction_type,
-    t.order_status AS order_status,
-    t.warehouse_id AS warehouse_id,
-    t.qty AS qty,
-    t.unit_price AS unit_price,
-    t.receive_date AS receive_date,
-    t.created_at AS created_at,
-    t.thai_year AS thai_year,
-    t.total_price AS total_price,
-    (
-        case
-            when (t.transaction_type = 'IN') then month(t.receive_date)
-            else month(t.created_at)
-        end
-    ) AS order_month
-from t
+            SELECT *,
+                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
+            FROM stock_data

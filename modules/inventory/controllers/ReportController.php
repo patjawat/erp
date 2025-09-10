@@ -30,26 +30,28 @@ class ReportController extends \yii\web\Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
+        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+        // if ($searchModel->date_filter) {
+        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
+        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
+        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        // }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         // $dataProvider->query->groupBy('type_code');
+        try {
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $querys = $this->GroupSummary($searchModel->warehouse_id, $dateStart, $dateEnd);
+    } catch (\Throwable $th) {
+        $dateStart = '';
+        $dateEnd = '';
+    }
+    $querys = $this->GroupSummary($searchModel->warehouse_id, $dateStart, $dateEnd);
+
 
         return $this->render('index', [
             'querys' => $querys,
