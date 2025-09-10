@@ -289,5 +289,9 @@ ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFA
 - data_json[receive_date] เป็น movement_date
 
 
-update table
+update table stock ใหม่
+ALTER TABLE `stock_events` CHANGE `movement_date` `movement_date` DATE NULL DEFAULT NULL COMMENT 'วันที่และเวลาที่เกิดการเคลื่อนไหว';
 ALTER TABLE `stock_events` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ประเถทวัสดุ' AFTER `asset_item`;
+UPDATE stock_events
+SET asset_type_id = JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.asset_type'))
+WHERE name = 'order';
