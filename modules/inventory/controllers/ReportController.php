@@ -44,13 +44,13 @@ class ReportController extends \yii\web\Controller
 
         // $dataProvider->query->groupBy('type_code');
         try {
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-    } catch (\Throwable $th) {
-        $dateStart = '';
-        $dateEnd = '';
-    }
-    $querys = $this->GroupSummary($searchModel->warehouse_id, $dateStart, $dateEnd);
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        } catch (\Throwable $th) {
+            $dateStart = '';
+            $dateEnd = '';
+        }
+        $querys = $this->GroupSummary($searchModel->warehouse_id, $dateStart, $dateEnd);
 
 
         return $this->render('index', [
@@ -65,32 +65,30 @@ class ReportController extends \yii\web\Controller
     //รายงานแบบแยกรายตัว
     public function actionListSummary()
     {
-        $searchModel = new StockTransactionSearch([
-            'thai_year' => AppHelper::YearBudget(),
+        $searchModel = new StockEventSearch([
+            'name' => 'order_item', // กรองเฉพาะรายการที่เป็น item
         ]);
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-         $dataProvider->query->andFilterWhere(['warehouse_type' => 'MAIN']);
-        $dataProvider->query->orderBy = ['movement_date' => SORT_DESC];
+        $dataProvider->query
+            ->alias('e') // stock_events เป็น e
+            ->joinWith(['stockOrder order_event']) // alias = order_event
+            ->joinWith(['warehouse w']); // alias = order_event
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        $dataProvider->query->andFilterWhere(['w.warehouse_type' => 'main']);
+        $dataProvider->query->andFilterWhere(['order_event.asset_type_id' => $searchModel->q_asset_type]);
+        $dataProvider->query->andFilterWhere(['order_event.warehouse_id' => $searchModel->q_warehouse_id]);
+        $dataProvider->query->andFilterWhere(['order_event.code' => $searchModel->q_code]);
+        $dataProvider->query->andFilterWhere(['order_event.vendor_id' => $searchModel->q_vendor]);
+        $dataProvider->query->andFilterWhere(['order_event.order_status' => 'success']);
+
+
+        $dataProvider->query->andFilterWhere(['between', 'order_event.movement_date', AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // ถ้า request มี all=true ให้ปิด pagination
+        if (Yii::$app->request->get('all') == 1) {
+            $dataProvider->pagination = false;
         }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-
-        $dataProvider->query->andFilterWhere(['between', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start),AppHelper::convertToGregorian($searchModel->date_end)]);
-
-           // ถ้า request มี all=true ให้ปิด pagination
-    if (Yii::$app->request->get('all') == 1) {
-        $dataProvider->pagination = false;
-    }
-    
 
         return $this->render('list_summary', [
             'searchModel' => $searchModel,
@@ -479,7 +477,7 @@ class ReportController extends \yii\web\Controller
             //  ((last_stock_in + sum_month)-sum_sub) as sum_qty,
         }
 
-         // เปิด AutoFilter
+        // เปิด AutoFilter
         $sheet2->setAutoFilter("A2:N" . ($StartRowSheet2));
         // set font style ตั้งค่า font
         $setHeader = 'A1:Z3000';
@@ -736,7 +734,7 @@ class ReportController extends \yii\web\Controller
         // ถ้ามีการเลือกคลัง
         if ($warehouse_id && $warehouse_id !== '') {
 
-             $sql = "WITH x2 AS (
+            $sql = "WITH x2 AS (
                 SELECT 
                     x.category_id,
                     x.warehouse_id,

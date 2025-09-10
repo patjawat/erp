@@ -25,7 +25,7 @@ use app\modules\inventory\models\Warehouse;
 
 <div class="col-lg-2 col-md-2 col-sm-12">
 
-        <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+        <?= $form->field($model, 'q_warehouse_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name'),
             // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
             'options' => ['placeholder' => 'คลังทั้งหมด'],
@@ -45,7 +45,7 @@ use app\modules\inventory\models\Warehouse;
     </div>
 
     <div class="col-lg-3 col-md-3 col-sm-12">
-        <?= $form->field($model, 'asset_type')->widget(Select2::classname(), [
+        <?= $form->field($model, 'q_asset_type')->widget(Select2::classname(), [
             'data' => $model->ListAssetType(),
             'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
             'pluginOptions' => [
@@ -88,7 +88,7 @@ use app\modules\inventory\models\Warehouse;
 <div class="collapse mt-3" id="collapseFilter">
     <div class="row">
           <div class="col-2">
-                <?= $form->field($model, 'code')->widget(Select2::classname(), [
+                <?= $form->field($model, 'q_code')->widget(Select2::classname(), [
                 'data' => $model->ListCode(),
                 'options' => ['placeholder' => 'เลขที่'],
                 'pluginOptions' => [
@@ -97,38 +97,24 @@ use app\modules\inventory\models\Warehouse;
                 ],
             ])->label(false); ?>
             </div>
-            <div class="col-2">
-                  <?= $form->field($model, 'asset_name')->widget(Select2::classname(), [
-                'data' => $model->ListAssetName(),
-                'options' => ['placeholder' => 'ชื่อวัสดุ'],
+                <div class="col-3">
+                <?= $form->field($model, 'q_vendor')->widget(Select2::classname(), [
+                'data' => $model->ListVendor(),
+                'options' => ['placeholder' => 'ผู้ขาย'],
                 'pluginOptions' => [
                     'allowClear' => true,
-                    // 'width' => '120px',
                 ],
             ])->label(false); ?>
-                </div>
-
-    
-        <div class="col-3">
-            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                'data' => $model->ListThaiYear(),
-                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    // 'width' => '120px',
-                ],
-            ])->label(false); ?>
-
-        </div>
-
+            </div>
          <div class="col-3">
-           <?= $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
-            'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],
-            'options' => ['placeholder' => 'เลือกประเภทคลัง'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label(false);
+           <?php
+        //     $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
+        //     'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],
+        //     'options' => ['placeholder' => 'เลือกประเภทคลัง'],
+        //     'pluginOptions' => [
+        //         'allowClear' => true,
+        //     ],
+        // ])->label(false);
         ?>
 
         </div>
@@ -142,22 +128,22 @@ use app\modules\inventory\models\Warehouse;
 <?php
 $js = <<< JS
 
-thaiDatepicker('#stocktransactionsearch-date_start,#stocktransactionsearch-date_end')
+thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
 
-    $('#stocktransactionsearch-date_start').change(function (e) { 
+    $('#stockeventsearch-date_start').change(function (e) { 
         e.preventDefault();
-        $('#stocktransactionsearch-thai_year').val(null).trigger('change');
+        $('#stockeventsearch-thai_year').val(null).trigger('change');
     });
     
-    $('#stocktransactionsearch-date_end').change(function (e) { 
+    $('#stockeventsearch-date_end').change(function (e) { 
         e.preventDefault();
-        $('#stocktransactionsearch-thai_year').val(null).trigger('change');
+        $('#stockeventsearch-thai_year').val(null).trigger('change');
 
     });
 
-        $('#stocktransactionsearch-date_filter').change(function (e) { 
+        $('#stockeventsearch-date_filter').change(function (e) { 
         e.preventDefault();
-        $('#stocktransactionsearch-thai_year').val(null).trigger('change');
+        $('#stockeventsearch-thai_year').val(null).trigger('change');
     });
 
 

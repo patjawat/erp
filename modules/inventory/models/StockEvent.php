@@ -55,6 +55,8 @@ class StockEvent extends Yii\db\ActiveRecord
     public $warehouse_name;
     public $total;
     public $q;
+    public $q_asset_type;
+    public $q_warehouse_id;
     public $mfgDate;
     public $expDate;
     public $note;
@@ -62,6 +64,8 @@ class StockEvent extends Yii\db\ActiveRecord
     public $date_start;
     public $date_end;
     public $q_month;
+    public $q_code;
+    public $q_vendor;
     public $receive_month;
     public $date_filter;
     public $items;
@@ -95,7 +99,11 @@ class StockEvent extends Yii\db\ActiveRecord
                 'qty',
                 'date_filter',
                 'items',
-                'asset_type_id'
+                'asset_type_id',
+                'q_asset_type',
+                'q_warehouse_id',
+                'q_vendor',
+                'q_code',
             ], 'safe'],
             [['name', 'code', 'lot_number'], 'string', 'max' => 50],
             [['asset_item', 'vendor_id', 'receive_type', 'order_status', 'ref'], 'string', 'max' => 255],
@@ -174,18 +182,30 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+    public function getStockEventItem()
+    {
+        return $this->hasMany(StockEvent::class, ['category_id' => $this->id])->andOnCondition(['name' => 'order_item']);
+    }
 
-        public function getAssetType()
+public function getStockOrder()
+{
+    return $this->hasOne(StockEvent::class, ['id' => 'category_id'])
+        ->alias('order_event')
+        ->andOnCondition(['order_event.name' => 'order']);
+}
+
+
+    public function getAssetType()
     {
         return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
 
     public function getLeaderApprove()
-{
-    return $this->hasOne(Approve::class, ['from_id' => 'id'])
-        ->andOnCondition(['name' => 'main_stock']);
-}
+    {
+        return $this->hasOne(Approve::class, ['from_id' => 'id'])
+            ->andOnCondition(['name' => 'main_stock']);
+    }
 
 
     public function updateMovementDateItem()
@@ -195,6 +215,19 @@ class StockEvent extends Yii\db\ActiveRecord
             $item->movement_date = $this->movement_date;
             $item->save(false);
         }
+    }
+
+public function ListCode()
+    {
+        $model = self::find()
+            ->select('code')
+            ->where(['name' => 'order'])
+            ->groupBy('code')
+            ->orderBy(['code' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($model, 'code', 'code');
     }
 
     // แสดงปีงบประมานทั้งหมด
@@ -233,6 +266,13 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
     }
+
+
+public function getVendor()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
+    }
+
 
 
     public function getWarehouse()
@@ -552,12 +592,12 @@ class StockEvent extends Yii\db\ActiveRecord
     {
         try {
 
-        $warehouse = \Yii::$app->session->get('warehouse');
-        $assetType = $warehouse->data_json['item_type'];
-        return ArrayHelper::map(Categorise::find()
-        ->where(['name' => 'asset_type', 'category_id' => 4])
-        ->andwhere(['IN','code',$assetType])->all(), 'code', 'title');
-                    //code...
+            $warehouse = \Yii::$app->session->get('warehouse');
+            $assetType = $warehouse->data_json['item_type'];
+            return ArrayHelper::map(Categorise::find()
+                ->where(['name' => 'asset_type', 'category_id' => 4])
+                ->andwhere(['IN', 'code', $assetType])->all(), 'code', 'title');
+            //code...
         } catch (\Throwable $th) {
             $this->ListAssetType();
         }
@@ -584,16 +624,16 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     // แสดงรายการย่อยของ stock
-public function getItems()
-{
-    return StockEvent::find()
-        ->where(['name' => 'order_item', 'category_id' => $this->id])
-        ->orderBy([
-            'asset_item' => SORT_DESC,
-            'id' => SORT_ASC,
-        ])
-        ->all();
-}
+    public function getItems()
+    {
+        return StockEvent::find()
+            ->where(['name' => 'order_item', 'category_id' => $this->id])
+            ->orderBy([
+                'asset_item' => SORT_DESC,
+                'id' => SORT_ASC,
+            ])
+            ->all();
+    }
 
     // แสดงรายกาผู้ขาย/ผู้บริจาค
     public function listVendor()
@@ -988,11 +1028,13 @@ public function getItems()
             ->andFilterWhere(['e.vendor_id' => $this->vendor_id])
             ->andFilterWhere(['e.asset_type_id' => $this->asset_type_id])
             ->andFilterWhere([
-                '>=','e.movement_date',
+                '>=',
+                'e.movement_date',
                 AppHelper::convertToGregorian($this->date_start)
             ])
             ->andFilterWhere([
-                '<=','e.movement_date',
+                '<=',
+                'e.movement_date',
                 AppHelper::convertToGregorian($this->date_end)
             ]);
 
@@ -1024,7 +1066,6 @@ public function getItems()
         } catch (\Throwable $th) {
             return number_format(0, 2);
         }
-       
     }
 
 
@@ -1358,34 +1399,34 @@ public function getItems()
     {
 
         $query = (new \yii\db\Query())
-        ->select([
-            'i.title',
-            'qty_in'        => 'SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty ELSE 0 END)',
-            'qty_out'       => 'SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty ELSE 0 END)',
-            'total_price_in'  => 'SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty * e.unit_price ELSE 0 END)',
-            'total_price_out' => 'SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty * e.unit_price ELSE 0 END)',
-            'result_qty'    => '(SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty ELSE 0 END) - SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty ELSE 0 END))',
-            'result_price'  => '(SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty * e.unit_price ELSE 0 END) - SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty * e.unit_price ELSE 0 END))',
-        ])
-        ->from(['e' => 'stock_events'])
-        ->innerJoin(['i' => 'categorise'], 'i.code = e.asset_item AND i.name = "asset_item"')
-        ->groupBy(['i.code', 'i.title']);
+            ->select([
+                'i.title',
+                'qty_in'        => 'SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty ELSE 0 END)',
+                'qty_out'       => 'SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty ELSE 0 END)',
+                'total_price_in'  => 'SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty * e.unit_price ELSE 0 END)',
+                'total_price_out' => 'SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty * e.unit_price ELSE 0 END)',
+                'result_qty'    => '(SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty ELSE 0 END) - SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty ELSE 0 END))',
+                'result_price'  => '(SUM(CASE WHEN e.transaction_type = "IN"  THEN e.qty * e.unit_price ELSE 0 END) - SUM(CASE WHEN e.transaction_type = "OUT" THEN e.qty * e.unit_price ELSE 0 END))',
+            ])
+            ->from(['e' => 'stock_events'])
+            ->innerJoin(['i' => 'categorise'], 'i.code = e.asset_item AND i.name = "asset_item"')
+            ->groupBy(['i.code', 'i.title']);
 
-    // ✅ ใช้ $where = ['and']
-    $where = ['and'];
+        // ✅ ใช้ $where = ['and']
+        $where = ['and'];
 
-    if ($this->warehouse_id) {
-        $where[] = ['e.warehouse_id' => $this->warehouse_id];
-    }
+        if ($this->warehouse_id) {
+            $where[] = ['e.warehouse_id' => $this->warehouse_id];
+        }
 
-    if ($this->date_from && $this->date_to) {
-        $where[] = ['between', 'e.movement_date', $this->date_from, $this->date_to];
-    }
+        if ($this->date_from && $this->date_to) {
+            $where[] = ['between', 'e.movement_date', $this->date_from, $this->date_to];
+        }
 
-    if ($this->title) {
-        $where[] = ['like', 'i.title', $this->title];
-    }
+        if ($this->title) {
+            $where[] = ['like', 'i.title', $this->title];
+        }
 
-    $query->andWhere($where);
+        $query->andWhere($where);
     }
 }
