@@ -3,10 +3,8 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
-use DateTime;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
-use app\components\DateFilterHelper;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -16,7 +14,6 @@ use app\modules\inventory\models\Warehouse;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\inventory\models\StockEventSearch;
-use app\modules\inventory\models\StockTransactionSearch;
 
 class ReportController extends \yii\web\Controller
 {
@@ -29,20 +26,6 @@ class ReportController extends \yii\web\Controller
             'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-
-        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        // }
-
-        // if ($searchModel->date_filter) {
-        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
-        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
-        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        // }
-
-
-        // $dataProvider->query->groupBy('type_code');
         try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
@@ -265,7 +248,7 @@ class ReportController extends \yii\web\Controller
         // $a = [];
         foreach ($datas as $key => $value) {
             $numRow = $StartRow++;
-            $total =  ($value['sum_month'] + ($value['last_stock_in'] - $value['last_stock_out'])) - ($value['sum_branch'] + $value['sum_sub']);
+            $total =  $value['balance_after'];
             // $a[] = ['B' => 'B'.$StartRow++];
             $sheet->setCellValue('A' . $numRow, $numRow);
             $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -274,14 +257,14 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('A' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('A' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
 
-            $sheet->setCellValue('B' . $numRow, $value['asset_type']);
+            $sheet->setCellValue('B' . $numRow, $value['asset_type_name']);
             $sheet->getStyle('B' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle('B' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('B' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
 
-            $sheet->setCellValue('C' . $numRow, ($value['last_stock_in'] - $value['last_stock_out']));
+            $sheet->setCellValue('C' . $numRow, ($value['balance_before']));
             $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('C' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -289,43 +272,42 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('C' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
             // $sheet->setCellValue('D' . $numRow, $value['sum_month']);
-            $sheet->setCellValue('D' . $numRow, $value['sum_month']);
-
+            $sheet->setCellValue('D' . $numRow, $value['total_in_month']);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('E' . $numRow, ($value['sum_month'] + ($value['last_stock_in'] - $value['last_stock_out'])));
+            $sheet->setCellValue('E' . $numRow, ($value['total_before_out']));
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('E' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('F' . $numRow, $value['sum_branch']);
+            $sheet->setCellValue('F' . $numRow, '0.00');
             $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('F' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('F' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('G' . $numRow, $value['sum_sub']);
+            $sheet->setCellValue('G' . $numRow, $value['total_out_month']);
             $sheet->getStyle('G' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('G' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('H' . $numRow, ($value['sum_branch'] + $value['sum_sub']));
+            $sheet->setCellValue('H' . $numRow, ($value['balance_after']));
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('H' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('I' . $numRow, $total);
+            $sheet->setCellValue('I' . $numRow, $value['balance_after']);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('I' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -414,7 +396,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('H2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet->getStyle('I2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
 
-        // เพิ่มแผ่นงานที่สอง
+        // // เพิ่มแผ่นงานที่สอง
         $sheet2 = $spreadsheet->createSheet();  // สร้างแผ่นงานใหม่
         $sheet2->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
         $sheet2->setCellValue('A1', 'วดป.ที่รายงาน');
@@ -463,16 +445,16 @@ class ReportController extends \yii\web\Controller
 
             $sheet2->setCellValue('D' . $numRow, $value['asset_name']);
 
-            $sheet2->setCellValue('E' . $numRow, $value['asset_type']);
+            $sheet2->setCellValue('E' . $numRow, $value['asset_type_name']);
             $sheet2->setCellValue('F' . $numRow, $value['unit']);
-            $sheet2->setCellValue('G' . $numRow, $value['last_stock_in_qty']);
-            $sheet2->setCellValue('H' . $numRow, ($value['last_stock_in']));
-            $sheet2->setCellValue('I' . $numRow, $value['sum_month_qty']);
-            $sheet2->setCellValue('J' . $numRow, ($value['sum_month']));
-            $sheet2->setCellValue('K' . $numRow, $value['sum_qty']);
-            $sheet2->setCellValue('L' . $numRow, ($value['sum_sub']));
-            $sheet2->setCellValue('M' . $numRow, ($value['sum_sub_qty']));
-            $sheet2->setCellValue('N' . $numRow, ($value['amonth']));
+            $sheet2->setCellValue('G' . $numRow, 0);
+            $sheet2->setCellValue('H' . $numRow, 0);
+            $sheet2->setCellValue('I' . $numRow, 0);
+            $sheet2->setCellValue('J' . $numRow, 0);
+            $sheet2->setCellValue('K' . $numRow, 0);
+            $sheet2->setCellValue('L' . $numRow, 0);
+            $sheet2->setCellValue('M' . $numRow,0);
+            $sheet2->setCellValue('N' . $numRow,0);
 
             //  ((last_stock_in + sum_month)-sum_sub) as sum_qty,
         }
@@ -595,68 +577,52 @@ class ReportController extends \yii\web\Controller
     protected function GroupSummary($warehouse_id, $dateStart, $dateEnd)
     {
         if ($warehouse_id && $warehouse_id !== '') {
-            $sql = "WITH stock_data AS (
-                SELECT 
-                    x.category_id, 
-                    x.asset_type,
-                    x.warehouse_id,
-                    
-                    -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
-                    SUM(CASE
-                        WHEN x.transaction_type = 'IN' 
-                        AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS last_stock_in,
-            
-                    -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                         AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                             AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS last_stock_out,
-            
-                    -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN'
-                         AND warehouse_id = :warehouse_id 
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.movement_date BETWEEN :date_start AND :date_end 
-                        THEN x.total_price
-                        ELSE 0 
-                    END) AS sum_month,
-            
-                    -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT'
-                         AND warehouse_id = :warehouse_id 
-                             AND x.warehouse_type = 'BRANCH' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price 
-                        ELSE 0 
-                    END) AS sum_branch,
-            
-                    -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                         AND warehouse_id = :warehouse_id
-                             AND x.warehouse_type = 'MAIN' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS sum_sub
-                FROM view_stock_transaction x
-                WHERE x.order_status = 'success'
-                GROUP BY x.category_id, x.asset_type
-            )
-            SELECT *,
-                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
-            FROM stock_data";
+            $sql = "WITH stock_summary AS (
+                            SELECT 
+                                
+                                asset_type.code AS asset_type_code,
+                                asset_type.title AS asset_type_name,
+
+                                -- ยอดยกมา (ก่อนเดือน)
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
+                                        THEN i.qty * i.unit_price ELSE 0 END) 
+                                -
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+
+                                -- รับเข้าระหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'IN' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
+
+                                -- จ่ายไประหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+
+                            FROM stock_events o
+                            LEFT JOIN stock_events i ON i.category_id = o.id
+                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
+                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
+                            WHERE o.name = 'order'
+                            AND i.name = 'order_item'
+                            AND w.warehouse_type = 'MAIN'
+                            AND o.warehouse_id = :warehouse_id
+                            AND asset_type.category_id = 4
+                            AND asset_type.name = 'asset_type'
+                            GROUP BY asset_type.code, asset_type.title
+                        )
+
+                        SELECT 
+                            asset_type_code,
+                            asset_type_name,
+                            balance_before,                     -- 1. ยอดยกมา
+                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
+                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
+                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
+                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
+                        FROM stock_summary
+                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);";
 
             return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
@@ -665,63 +631,52 @@ class ReportController extends \yii\web\Controller
             ])->queryAll();
         } else {
             // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-            $sql = "WITH stock_data AS (
+           $sql = "WITH stock_summary AS (
+                            SELECT 
+                                
+                                asset_type.code AS asset_type_code,
+                                asset_type.title AS asset_type_name,
+
+                                -- ยอดยกมา (ก่อนเดือน)
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
+                                        THEN i.qty * i.unit_price ELSE 0 END) 
+                                -
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+
+                                -- รับเข้าระหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'IN' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
+
+                                -- จ่ายไประหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+
+                            FROM stock_events o
+                            LEFT JOIN stock_events i ON i.category_id = o.id
+                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
+                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
+                            WHERE o.name = 'order'
+                            AND i.name = 'order_item'
+                            AND w.warehouse_type = 'MAIN'
+                            AND asset_type.category_id = 4
+                            AND asset_type.name = 'asset_type'
+                            GROUP BY asset_type.code, asset_type.title
+                        )
+
                         SELECT 
-                            x.category_id, 
-                            x.asset_type,
-                            x.warehouse_id,
-                            
-                            -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type = 'MAIN' 
-                                    AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.qty*x.unit_price
-                                ELSE 0 
-                            END) AS last_stock_in,
-
-                            -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                                    AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                                THEN x.qty*x.unit_price
-                                ELSE 0 
-                            END) AS last_stock_out,
-
-                            -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'IN' 
-                                    AND x.warehouse_type = 'MAIN' 
-                                    AND x.movement_date BETWEEN :date_start AND :date_end 
-                                THEN x.total_price
-                                ELSE 0 
-                            END) AS sum_month,
-
-                            -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'OUT' 
-                                    AND x.warehouse_type = 'BRANCH' 
-                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.qty*x.unit_price
-                                ELSE 0 
-                            END) AS sum_branch,
-
-                            -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
-                            SUM(CASE 
-                                WHEN x.transaction_type = 'OUT' 
-                                    AND x.warehouse_type = 'MAIN' 
-                                    AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                                THEN x.qty*x.unit_price
-                                ELSE 0 
-                            END) AS sum_sub
-                        FROM view_stock_transaction x
-                        WHERE x.order_status = 'success'
-                        GROUP BY x.category_id, x.asset_type
-                    )
-                    SELECT *,
-                        ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
-                    FROM stock_data";
+                            asset_type_code,
+                            asset_type_name,
+                            balance_before,                     -- 1. ยอดยกมา
+                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
+                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
+                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
+                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
+                        FROM stock_summary
+                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);
+                        ";
 
             return Yii::$app->db->createCommand($sql, [
                 ':date_start' => $dateStart,
@@ -734,101 +689,68 @@ class ReportController extends \yii\web\Controller
         // ถ้ามีการเลือกคลัง
         if ($warehouse_id && $warehouse_id !== '') {
 
-            $sql = "WITH x2 AS (
-                SELECT 
-                    x.category_id,
-                    x.warehouse_id,
-                    x.asset_type,
-                    x.asset_item,
-                    x.asset_name,
-                    x.warehouse_name,
-                    x.unit,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type = 'MAIN' 
-                            AND x.order_status = 'success' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS last_stock_in,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type = 'MAIN' 
-                            AND x.order_status = 'success' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.qty 
-                        ELSE 0 
-                    END) AS last_stock_in_qty,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                            AND x.order_status = 'success' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND x.movement_date <= LAST_DAY(DATE_SUB(:date_start, INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price 
-                        ELSE 0 
-                    END) AS last_stock_out,
-                     SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type = 'MAIN' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND x.movement_date BETWEEN :date_start AND :date_end 
-                        THEN (x.total_price) 
-                        ELSE 0 
-                    END) AS sum_month,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                            AND x.warehouse_type = 'MAIN' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND x.movement_date BETWEEN :date_start AND :date_end 
-                        THEN x.qty 
-                        ELSE 0 
-                    END) AS sum_month_qty,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'BRANCH' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS sum_branch,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'BRANCH' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty 
-                        ELSE 0 
-                    END) AS sum_branch_qty,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'MAIN' 
-                            AND x.warehouse_id = :warehouse_id
-                            AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS sum_sub,
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                            AND x.warehouse_type = 'MAIN'
-                            AND x.warehouse_id = :warehouse_id
-                            AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN :date_start AND :date_end 
-                        THEN x.qty 
-                        ELSE 0 
-                    END) AS sum_sub_qty
-                FROM view_stock_transaction x
-                WHERE x.order_status = 'success' AND x.warehouse_id = :warehouse_id
-                GROUP BY x.category_id, x.asset_type, x.asset_item, x.asset_name
-            )
-            SELECT 
-                *,
-                 ((last_stock_in_qty + sum_month_qty) - sum_sub_qty) as sum_qty,
-                -- ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
-                -- ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS amonth 
-                ((last_stock_in + sum_month)-sum_sub) as amonth
-            FROM x2";
+             $sql = "WITH stock_summary AS (
+                            SELECT 
+                                
+                                asset_type.code AS asset_type_code,
+                                asset_type.title AS asset_type_name,
+                                p.title as asset_name,
+                                p.code as asset_item,
+                                p.data_json->>'$.unit' AS unit,
+                                w.warehouse_name as warehouse_name,
+	-- จำนวนคงเหลือ (ก่อนเดือน)
+            SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'IN'  
+                 THEN i.qty ELSE 0 END) 
+        -
+        SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'OUT' 
+                 THEN i.qty  ELSE 0 END) AS balance_before_qty,
+                                -- ยอดยกมา (ก่อนเดือน)
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
+                                        THEN i.qty * i.unit_price ELSE 0 END) 
+                                -
+                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+
+                                -- รับเข้าระหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'IN' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
+
+                                -- จ่ายไประหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'OUT' 
+                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+
+                            FROM stock_events o
+                            LEFT JOIN stock_events i ON i.category_id = o.id
+                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
+                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
+                            LEFT JOIN categorise p ON p.code = i.asset_item
+                            WHERE o.name = 'order'
+                            AND i.name = 'order_item'
+                            AND w.warehouse_type = 'MAIN'
+                            AND o.warehouse_id = :warehouse_id
+                            AND asset_type.category_id = 4
+                            AND asset_type.name = 'asset_type'
+                            AND p.name = 'asset_item'
+                            GROUP BY i.asset_item
+                        )
+
+                        SELECT 
+                            warehouse_name,
+                            asset_item,
+                            asset_name,
+                            unit,
+                            asset_type_code,
+                            asset_type_name,
+                            balance_before_qty
+                            balance_before,                     -- 1. ยอดยกมา
+                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
+                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
+                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
+                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
+                        FROM stock_summary
+                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);";
 
             return Yii::$app->db->createCommand($sql, [
                 ':warehouse_id' => $warehouse_id,

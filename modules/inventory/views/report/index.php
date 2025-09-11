@@ -97,21 +97,24 @@ $this->params['breadcrumbs'][] = $this->title;
                         <!-- ที่ -->
                         <td class="text-center"><?= $num++; ?></td>
                         <!-- รายการ -->
-                        <td><?= $item['asset_type'] ?></td>
+                        <td>
+                            (<?= $item['asset_type_code'] ?>)
+                            <?= $item['asset_type_name'] ?>
+                        </td>
                         <!-- สินค้าคงเหลือ -->
-                        <td class="text-end fw-bolder"><?= nf($last_stock) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['balance_before']) ?></td>
                         <!-- ซื้อระหว่างเดือน -->
-                        <td class="text-end fw-bolder"><?= nf($month) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['total_in_month']) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= nf($month + $last_stock) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['total_before_out']) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
-                        <td class="text-end fw-bolder"><?= nf($branch) ?></td>
+                        <td class="text-end fw-bolder">0.00</td>
                         <!-- จ่ายส่วนของโรงพยาบาล -->
-                        <td class="text-end fw-bolder"><?= nf($sub) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['total_out_month']) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= nf($branch + $sub) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['balance_after']) ?></td>
                         <!-- ยอดยกไป -->
-                        <td class="text-end fw-bolder"><?= nf($total) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['balance_after']) ?></td>
                     </tr>
                 <?php endforeach; ?>
 

@@ -1,62 +1,45 @@
-WITH stock_data AS (
-                SELECT 
-                    x.category_id, 
-                    x.asset_type,
-                    x.warehouse_id,
-                    
-                    -- คำนวณ stock_in ใน MAIN warehouse ก่อนเดือนนี้
-                    SUM(CASE
-                        WHEN x.transaction_type = 'IN' 
-                        AND warehouse_id = 7
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.movement_date <= LAST_DAY(DATE_SUB('2025-08-01', INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS last_stock_in,
-            
-                    -- คำนวณ stock_out ใน SUB และ BRANCH warehouse ก่อนเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN' 
-                         AND warehouse_id = 7
-                             AND x.warehouse_type IN ('SUB', 'BRANCH') 
-                             AND x.movement_date <= LAST_DAY(DATE_SUB('2025-08-01', INTERVAL 1 MONTH)) 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS last_stock_out,
-            
-                    -- คำนวณ stock_in ใน MAIN warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'IN'
-                         AND warehouse_id = 7 
-                             AND x.warehouse_type = 'MAIN' 
-                             AND x.movement_date BETWEEN '2025-08-01' AND '2025-08-30' 
-                        THEN x.total_price
-                        ELSE 0 
-                    END) AS sum_month,
-            
-                    -- คำนวณ stock_out ใน BRANCH warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT'
-                         AND warehouse_id = 7 
-                             AND x.warehouse_type = 'BRANCH' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN '2025-08-01' AND '2025-08-30' 
-                        THEN x.qty*x.unit_price 
-                        ELSE 0 
-                    END) AS sum_branch,
-            
-                    -- คำนวณ stock_out ใน SUB warehouse สำหรับเดือนนี้
-                    SUM(CASE 
-                        WHEN x.transaction_type = 'OUT' 
-                         AND warehouse_id = 7
-                             AND x.warehouse_type = 'MAIN' 
-                             AND DATE_FORMAT(x.created_at, '%Y-%m-%d') BETWEEN '2025-08-01' AND '2025-08-30' 
-                        THEN x.qty*x.unit_price
-                        ELSE 0 
-                    END) AS sum_sub
-                FROM view_stock_transaction x
-                WHERE x.order_status = 'success'
-                GROUP BY x.category_id, x.asset_type
-            )
-            SELECT *,
-                ((last_stock_in - last_stock_out) + sum_month - (sum_branch + sum_sub)) AS total
-            FROM stock_data
+WITH stock_summary AS (
+    SELECT 
+        asset_type.code AS asset_type_code,
+        asset_type.title AS asset_type_name,
+
+        -- ยอดยกมา (ก่อนเดือน)
+        SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'IN'  
+                 THEN i.qty * i.unit_price ELSE 0 END) 
+        -
+        SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'OUT' 
+                 THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+
+        -- รับเข้าระหว่างเดือน
+        SUM(CASE WHEN o.movement_date BETWEEN '2025-09-01' AND '2025-09-30' 
+                 AND o.transaction_type = 'IN' 
+                 THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
+
+        -- จ่ายไประหว่างเดือน
+        SUM(CASE WHEN o.movement_date BETWEEN '2025-09-01' AND '2025-09-30' 
+                 AND o.transaction_type = 'OUT' 
+                 THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+
+    FROM stock_events o
+    LEFT JOIN stock_events i ON i.category_id = o.id
+    LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
+    LEFT JOIN warehouses w ON w.id = o.warehouse_id
+    WHERE o.name = 'order'
+      AND i.name = 'order_item'
+      AND w.warehouse_type = 'MAIN'
+      AND o.warehouse_id = 7
+      AND asset_type.category_id = 4
+      AND asset_type.name = 'asset_type'
+    GROUP BY asset_type.code, asset_type.title
+)
+
+SELECT 
+    asset_type_code,
+    asset_type_name,
+    balance_before,                     -- 1. ยอดยกมา
+    total_in_month,                     -- 2. รับเข้าระหว่างเดือน
+    (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
+    total_out_month,                    -- 4. จ่ายไประหว่างเดือน
+    (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
+FROM stock_summary
+ORDER BY asset_type_code;
