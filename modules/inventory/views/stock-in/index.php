@@ -108,8 +108,10 @@ if (isset($warehouseModel->data_json['item_type'])) {
                     </td>
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
+                            <?php if(isset($item->purchase)):?>
                             <span
-                                class="fw-semibold "><?= isset($item->purchase) ? $item->purchase->pq_number : '-' ?></span>
+                                class="fw-semibold "><?=$item->purchase->pq_number?></span>
+                                <?php endif;?>
                             <?=$item->assetType?->title ?? '-'?>
                         </div>
                     </td>

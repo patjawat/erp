@@ -241,9 +241,10 @@ public function ListCode()
             ->all();
 
         $year = AppHelper::YearBudget();
+        $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         // รวมข้อมูล
-        $model = ArrayHelper::merge($isYear, $model);
+        $model = ArrayHelper::merge($nextYear,$isYear, $model);
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
@@ -326,7 +327,7 @@ public function getVendor()
     public function viewAssetType()
     {
         try {
-            $typeCode = $this->data_json['asset_type'];
+            $typeCode = $this->asset_type_id;
             $assetType = Categorise::findOne(['name' => 'asset_type', 'code' => $typeCode]);
             return $assetType->title;
         } catch (\Throwable $th) {

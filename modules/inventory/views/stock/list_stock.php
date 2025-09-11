@@ -6,28 +6,38 @@ use yii\db\Expression;
 use yii\widgets\DetailView;
 use app\modules\inventory\models\StockEvent;
 $warehouse = Yii::$app->session->get('warehouse');
-$stockEvents = StockEvent::find()
-    ->select([
-        'stock_events.*',
-        new Expression('SUM(qty * unit_price) AS total')
-    ])
-    ->where([
-        'asset_item' => $asset_item,
-        'warehouse_id' => $warehouse->id,
-        'order_status' => 'success'
-    ])
-    ->groupBy('id')
-    ->orderBy(['movement_date' => SORT_ASC]);
+// $stockEvents = StockEvent::find()
+//     ->select([
+//         'stock_events.*',
+//         new Expression('SUM(qty * unit_price) AS total')
+//     ])
+//     ->where([
+//         'asset_item' => $asset_item,
+//         'warehouse_id' => $warehouse->id,
+//         'order_status' => 'success'
+//     ])
+//     ->groupBy('id')
+//     ->orderBy(['movement_date' => SORT_ASC]);
 
 // Debug raw SQL
 // echo $stockEvents->createCommand()->getRawSql();
 
-$stockEvents = $stockEvents->all();
+$sql = "SELECT e.movement_date,i.qty,i.unit_price,e.thai_year,i.lot_number,i.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
+LEFT JOIN stock_events e ON e.id = i.category_id
+WHERE i.asset_item = :asset_item
+AND e.warehouse_id = :warehouse_id
+AND e.order_status = 'success'
+GROUP BY i.id
+ORDER BY e.movement_date ASC";
+$stockEvents = Yii::$app->db->createCommand($sql)
+    ->bindValue(':asset_item',$asset_item)
+    ->bindValue(':warehouse_id', $warehouse->id)
+    ->queryAll();
+
 
 $balance = 0;
 $balanceQty = 0;
 ?>
-
 <table class="table">
             <thead>
                 <tr>
@@ -46,17 +56,17 @@ $balanceQty = 0;
             <tbody class="align-middle table-group-divider">
                 <?php foreach($stockEvents as $item2):?>
                 <?php
-                        if ($item2->transaction_type == 'IN') {
+                        if ($item2['transaction_type'] == 'IN') {
                             $balance += $item2['total'];
-                            $balanceQty += $item2->qty;
-                        } elseif ($item2->transaction_type == 'OUT') {
+                            $balanceQty += $item2['qty'];
+                        } elseif ($item2['transaction_type'] == 'OUT') {
                             $balance -= $item2['total'];
-                            $balanceQty -= $item2->qty;
+                            $balanceQty -= $item2['qty'];
                         }
                     ?>
                 <tr>
                     <td>
-                        <?php if ($item2->transaction_type == 'IN'): ?>
+                        <?php if ($item2['transaction_type'] == 'IN'): ?>
                         <div class="badge rounded-pill badge-soft-primary text-primary fs-13"><i
                                 class="fa-solid fa-circle-plus"></i> รับ</div>
                         <?php else: ?>
@@ -64,15 +74,15 @@ $balanceQty = 0;
                                 class="fa-solid fa-circle-minus"></i> จ่าย</div>
                         <?php endif ?>
                     </td>
-                    <td><?=$item2->thai_year?></td>
-                    <td><?= $item2?->viewMoveMentDate();?></td>
-                    <td><?=$item2->lot_number?></td>
+                    <td><?=$item2['thai_year']?></td>
+                    <td><?=Yii::$app->thaiDate->toThaiDate($item2['movement_date'], false, 'short');?></td>
+                    <td><?=$item2['lot_number']?></td>
 
 
                     </td>
-                    <td class="fw-semibold text-end"><?= $item2->unit_price !== null ? number_format($item2->unit_price, 2) : '-' ?></td>
-                    <td class="fw-semibold text-center"><?=$item2->transaction_type == 'IN' ? $item2->qty : ''?></td>
-                    <td class="fw-semibold text-center"><?=$item2->transaction_type == 'OUT' ? -ABS($item2->qty) : ''?>
+                    <td class="fw-semibold text-end"><?= $item2['unit_price'] !== null ? number_format($item2['unit_price'], 2) : '-' ?></td>
+                    <td class="fw-semibold text-center"><?=$item2['transaction_type'] == 'IN' ? $item2['qty'] : ''?></td>
+                    <td class="fw-semibold text-center"><?=$item2['transaction_type'] == 'OUT' ? -ABS($item2['qty']) : ''?>
                     </td>
                     <td class="fw-semibold text-center"><?= $balanceQty?></td>
                     <td class="fw-semibold text-end">

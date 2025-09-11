@@ -50,7 +50,6 @@ services:
         "--max-heap-table-size=64M",
         "--max-connections=200",
         "--table-open-cache=400",
-        "--max-allowed-packet=64M",
         "--wait_timeout=28800",
         "--interactive_timeout=28800",
         "--character-set-server=utf8",

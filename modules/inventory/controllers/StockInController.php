@@ -11,7 +11,6 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
 use app\modules\purchase\models\Order;
 use app\modules\inventory\models\Stock;
 use app\modules\sm\models\ProductSearch;
@@ -54,11 +53,11 @@ class StockInController extends Controller
         $searchModel = new StockEventSearch([
             'warehouse_id' => $warehouse->id,
             'transaction_type' => 'IN',
-            'thai_year' => AppHelper::YearBudget(),
-            'date_filter' => 'this_month',
+            // 'thai_year' => AppHelper::YearBudget(),
+            // 'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.asset_type_name')"), $searchModel->asset_type_name]);
+        $dataProvider->query->andWhere(['name' => 'order']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -67,25 +66,12 @@ class StockInController extends Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
         ]);
 
+        //ค้นหาช่วบงวันที่
         $dataProvider->query
             ->andFilterWhere(['>=','movement_date',AppHelper::convertToGregorian($searchModel->date_start)])
             ->andFilterWhere(['<=','movement_date',AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        $dataProvider->query->andWhere(['name' => 'order']);
 
-        //ค้นหาช่วบงวันที่
-
-        // try {
-        //     $dataProvider->query->andFilterWhere([
-        //         'between',
-        //         new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.receive_date'))"),
-        //         AppHelper::convertToGregorian($searchModel->date_start),
-        //         AppHelper::convertToGregorian($searchModel->date_end),
-        //     ]);
-        //     //code...
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        // }
 
 
         return $this->render('index', [
@@ -196,6 +182,7 @@ class StockInController extends Controller
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
+            'thai_year' => AppHelper::YearBudget(),
             'category_id' => $order_id,
             'code' => $order ? $order->code : '',
             'name' => $name,
@@ -222,8 +209,8 @@ class StockInController extends Controller
                 if ($model->name == 'order') {
                     $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->data_json = ArrayHelper::merge($model->data_json, $created);
-                    $model->thai_year =  AppHelper::YearBudget($model->movement_date);
                     $model->movement_date =  AppHelper::convertToGregorian($model->movement_date);
+                    $model->thai_year =  AppHelper::YearBudget($model->movement_date);
                 }
 
                 if ($model->name == 'order_item') {
@@ -507,8 +494,6 @@ class StockInController extends Controller
 
     protected function updateStock($id)
     {
-        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
-        // $order = StockEvent::find()->where(['category_id' => $id,'name'=> 'order_item','order_status' => 'pending'])->One();
         $model = $this->findModel($id);
         $order = Order::findOne(['name' => 'order', 'po_number' => $model->po_number]);
         if ($order) {
@@ -605,7 +590,7 @@ class StockInController extends Controller
 
         $model = StockEvent::findOne($id);
         $searchModel = new ProductSearch([
-            'category_id' => $model->data_json['asset_type']
+            'category_id' => $model->asset_type_id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item', 'group_id' => 4]);
