@@ -107,14 +107,13 @@ use app\modules\inventory\models\Warehouse;
             ])->label(false); ?>
             </div>
          <div class="col-3">
-           <?php
-        //     $form->field($model, 'warehouse_type')->widget(Select2::classname(), [
-        //     'data' => ['MAIN' => 'คลังหลัก', 'SUB' => 'คลังย่อย'],
-        //     'options' => ['placeholder' => 'เลือกประเภทคลัง'],
-        //     'pluginOptions' => [
-        //         'allowClear' => true,
-        //     ],
-        // ])->label(false);
+           <?=$form->field($model, 'asset_item')->widget(Select2::classname(), [
+            'data' => $model->ListAssetItem(),
+            'options' => ['placeholder' => 'เลือกรายการวัสดุ'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
         ?>
 
         </div>

@@ -447,14 +447,14 @@ class ReportController extends \yii\web\Controller
 
             $sheet2->setCellValue('E' . $numRow, $value['asset_type_name']);
             $sheet2->setCellValue('F' . $numRow, $value['unit']);
-            $sheet2->setCellValue('G' . $numRow, 0);
-            $sheet2->setCellValue('H' . $numRow, 0);
-            $sheet2->setCellValue('I' . $numRow, 0);
-            $sheet2->setCellValue('J' . $numRow, 0);
-            $sheet2->setCellValue('K' . $numRow, 0);
-            $sheet2->setCellValue('L' . $numRow, 0);
-            $sheet2->setCellValue('M' . $numRow,0);
-            $sheet2->setCellValue('N' . $numRow,0);
+            $sheet2->setCellValue('G' . $numRow, $value['balance_before_qty']);
+            $sheet2->setCellValue('H' . $numRow, $value['balance_before']);
+            $sheet2->setCellValue('I' . $numRow, $value['total_in_month_qty']);
+            $sheet2->setCellValue('J' . $numRow, $value['total_in_month']);
+            $sheet2->setCellValue('K' . $numRow, $value['total_out_month_qty']);
+            $sheet2->setCellValue('L' . $numRow, $value['total_out_month']);
+            $sheet2->setCellValue('M' . $numRow,($value['balance_before_qty']+$value['total_in_month_qty']) - $value['total_out_month_qty']);
+            $sheet2->setCellValue('N' . $numRow,$value['balance_after']);
 
             //  ((last_stock_in + sum_month)-sum_sub) as sum_qty,
         }
@@ -473,10 +473,16 @@ class ReportController extends \yii\web\Controller
 
         $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+         $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($dataItems) + 2) . ')');
+        $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+         $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($dataItems) + 2) . ')');
+        $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+          $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($dataItems) + 2) . ')');
+        $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('N1', '=SUBTOTAL(9,N3:N' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
 
@@ -605,6 +611,7 @@ class ReportController extends \yii\web\Controller
                             LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
                             LEFT JOIN warehouses w ON w.id = o.warehouse_id
                             WHERE o.name = 'order'
+                             AND o.order_status = 'success'
                             AND i.name = 'order_item'
                             AND w.warehouse_type = 'MAIN'
                             AND o.warehouse_id = :warehouse_id
@@ -659,6 +666,7 @@ class ReportController extends \yii\web\Controller
                             LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
                             LEFT JOIN warehouses w ON w.id = o.warehouse_id
                             WHERE o.name = 'order'
+                            AND o.order_status = 'success'
                             AND i.name = 'order_item'
                             AND w.warehouse_type = 'MAIN'
                             AND asset_type.category_id = 4
@@ -699,10 +707,10 @@ class ReportController extends \yii\web\Controller
                                 p.data_json->>'$.unit' AS unit,
                                 w.warehouse_name as warehouse_name,
 	-- จำนวนคงเหลือ (ก่อนเดือน)
-            SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'IN'  
+            SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
                  THEN i.qty ELSE 0 END) 
         -
-        SUM(CASE WHEN o.movement_date < '2025-09-01' AND o.transaction_type = 'OUT' 
+        SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
                  THEN i.qty  ELSE 0 END) AS balance_before_qty,
                                 -- ยอดยกมา (ก่อนเดือน)
                                 SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
@@ -711,10 +719,19 @@ class ReportController extends \yii\web\Controller
                                 SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
 
+                               -- จำนวนรับเข้าระหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'IN' 
+                                        THEN i.qty ELSE 0 END) AS total_in_month_qty,
+
                                 -- รับเข้าระหว่างเดือน
                                 SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
                                         AND o.transaction_type = 'IN' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
+ -- จำนวนจ่ายไประหว่างเดือน
+                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                        AND o.transaction_type = 'OUT' 
+                                        THEN i.qty  ELSE 0 END) AS total_out_month_qty,
 
                                 -- จ่ายไประหว่างเดือน
                                 SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
@@ -727,13 +744,15 @@ class ReportController extends \yii\web\Controller
                             LEFT JOIN warehouses w ON w.id = o.warehouse_id
                             LEFT JOIN categorise p ON p.code = i.asset_item
                             WHERE o.name = 'order'
+                            AND o.order_status = 'success'
                             AND i.name = 'order_item'
                             AND w.warehouse_type = 'MAIN'
                             AND o.warehouse_id = :warehouse_id
                             AND asset_type.category_id = 4
                             AND asset_type.name = 'asset_type'
                             AND p.name = 'asset_item'
-                            GROUP BY i.asset_item
+                            GROUP BY i.id
+                            ORDER BY i.id
                         )
 
                         SELECT 
@@ -743,11 +762,13 @@ class ReportController extends \yii\web\Controller
                             unit,
                             asset_type_code,
                             asset_type_name,
-                            balance_before_qty
+                            balance_before_qty,
                             balance_before,                     -- 1. ยอดยกมา
                             total_in_month,                     -- 2. รับเข้าระหว่างเดือน
+                            total_in_month_qty,                     -- 2. รับเข้าระหว่างเดือน
                             (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
                             total_out_month,                    -- 4. จ่ายไประหว่างเดือน
+                            total_out_month_qty,                    -- 4. จ่ายไประหว่างเดือน
                             (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
                         FROM stock_summary
                         ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);";

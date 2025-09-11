@@ -69,29 +69,34 @@ $this->params['breadcrumbs'][] = $this->title;
                     return number_format(floatval($value ?? 0), $decimals);
                 }
 
-                $sum_last = 0;
+                $sum_balance_before = 0;
                 $sum_month = 0;
                 $sum_last_total = 0;
-                $sum_branch = 0;
-                $sum_sub = 0;
-                $sum_out = 0;
-                $sum_total = 0;
+                $sum_total_before_out = 0;
+                $sum_total_in_month = 0;
+                $sum_total_out_month = 0;
+                $sum_balance_after = 0;
 
                 $num = 1;
                 foreach ($querys as $item):
-                    $last_stock = floatval($item['last_stock_in'] ?? 0) - floatval($item['last_stock_out'] ?? 0);
-                    $month = floatval($item['sum_month'] ?? 0);
-                    $branch = floatval($item['sum_branch'] ?? 0);
-                    $sub = floatval($item['sum_sub'] ?? 0);
-                    $total = floatval($item['total'] ?? 0);
+                    $balance_before = floatval($item['balance_before'] ?? 0);
+                    // จำนวนรับเข้าระหว่างเดือน
+                    $total_in_month = floatval($item['total_in_month'] ?? 0);
+                    // รวม
+                    $total_before_out = floatval($item['total_before_out'] ?? 0);
+                    // จำนวนจ่ายไประหว่างเดือน
+                    $total_out_month = floatval($item['total_out_month'] ?? 0);
+                    // ยอดยกไป
+                    $balance_after = floatval($item['balance_after'] ?? 0);
 
-                    $sum_last       += $last_stock;
-                    $sum_month      += $month;
-                    $sum_last_total += ($month + $last_stock);
-                    $sum_branch     += $branch;
-                    $sum_sub        += $sub;
-                    $sum_out        += ($branch + $sub);
-                    $sum_total      += $total;
+                    $sum_balance_before       += $balance_before;
+                    $sum_month      += $total_in_month;
+                    $sum_last_total += 0;
+
+                    $sum_total_in_month     += $total_in_month;
+                    $sum_total_before_out        += $total_before_out;
+                    $sum_total_out_month        += ($total_out_month);
+                    $sum_balance_after      += $balance_after;
                 ?>
                     <tr>
                         <!-- ที่ -->
@@ -102,32 +107,32 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $item['asset_type_name'] ?>
                         </td>
                         <!-- สินค้าคงเหลือ -->
-                        <td class="text-end fw-bolder"><?= nf($item['balance_before']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($balance_before) ?></td>
                         <!-- ซื้อระหว่างเดือน -->
-                        <td class="text-end fw-bolder"><?= nf($item['total_in_month']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($total_in_month) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= nf($item['total_before_out']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($total_before_out) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
                         <td class="text-end fw-bolder">0.00</td>
                         <!-- จ่ายส่วนของโรงพยาบาล -->
-                        <td class="text-end fw-bolder"><?= nf($item['total_out_month']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($total_out_month) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= nf($item['balance_after']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($balance_after) ?></td>
                         <!-- ยอดยกไป -->
-                        <td class="text-end fw-bolder"><?= nf($item['balance_after']) ?></td>
+                        <td class="text-end fw-bolder"><?= nf($balance_after) ?></td>
                     </tr>
                 <?php endforeach; ?>
 
                 <tr>
                     <td class="text-center"></td>
                     <td>รวม</td>
-                    <td class="text-end fw-bolder"><?= nf($sum_last) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_month) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_last_total) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_branch) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_sub) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_out) ?></td>
-                    <td class="text-end fw-bolder"><?= nf($sum_total) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_before) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_in_month) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_before_out) ?></td>
+                    <td class="text-end fw-bolder">0.00</td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_out_month) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_after) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_after) ?></td>
                 </tr>
             </tbody>
 

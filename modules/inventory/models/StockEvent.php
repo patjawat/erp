@@ -583,6 +583,12 @@ public function getVendor()
         //    ->queryScalar();
     }
 
+// รายการวัสดุ
+        public function ListAssetItem()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
+    }
+
     // ประเภทของวัสดุ
     public function ListAssetType()
     {
