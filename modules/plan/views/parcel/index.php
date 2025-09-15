@@ -1,8 +1,6 @@
 <?php
-
 use yii\web\View;
 use yii\helpers\Html;
-
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -75,11 +73,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item->assetType?->title ?></td>
                         <td><?= $item->description ?></td>
                         <td class="text-end fw-semibold"><?= number_format((float)($item->order_price ?? 0), 2) ?></td>
-                        <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
+                        <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view'] ?></td>
                         <td class="text-center">
-                            <?= $this->render('action', ['model' => $item]) ?>
+                            <?=$this->render('action',['model' => $item])?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

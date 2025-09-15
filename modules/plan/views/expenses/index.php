@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?= $item->planTypeItem?->title ?></td>
+                        <td><?= $item->planType?->title ?></td>
                         <td><?= $item->description ?></td>
                         <td class="text-end fw-semibold"><?= number_format($item->order_price, 2) ?></td>
                         <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>

@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 ?>
-<div class="dropdown mb-2">
+<div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button"
                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-bars"></i> จัดการ

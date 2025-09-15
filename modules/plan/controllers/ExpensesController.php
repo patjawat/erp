@@ -76,7 +76,7 @@ class ExpensesController extends Controller
             'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'expenses',
             'plan_category_id' => 'PER_04', //รายจ่ายจากการดำเนินงาน
-            'plan_type_id' => 'PER', //ค่าใช้สอย
+            'plan_type_id' => 'OPS', //ค่าใช้สอย
         ]);
         $items = []; // ไม่มีรายการเดิม
 

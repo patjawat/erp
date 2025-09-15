@@ -26,15 +26,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-between">
-            <h6><i class="fa-solid fa-eye"></i> แสดงรายละเอียดแผนคำขอบุคลากร</h6>
-             <?=$this->render('action',['model' => $model])?>
+        <div class="d-flex justify-content-between mb-3">
+            <h6><i class="fa-solid fa-eye"></i> แสดงรายละเอียด<?=$this->title?></h6>
+            <div class="d-flex align-items-center gap-2">
+                <?= Html::a('<i class="fa-solid fa-file-invoice me-1"></i> หน้าหลัก', ['/plan/expenses'], ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-primary']) ?>
+                <?= $this->render('action', ['model' => $model]) ?>
+            </div>
         </div>
 
         <?= DetailView::widget([
             'model' => $model,
             'attributes' => [
-                  [
+                [
                     'attribute' => 'status',
                     'label' => 'สถานะ',
                     'value' => function ($model) {
@@ -52,7 +56,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'attribute' => 'plan_budget_type',
                     'label' => 'ค่าใช้จ่าย',
                     'value' => function ($model) {
-                        return $model->planType->title;
+                        return $model->planType?->title ?? '-';
                     }
                 ],
                 [
@@ -88,7 +92,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <table class="table table-striped">
     <thead>
         <tr>
-            <th class="fw-semibold" scope="col" style="text-align: center;width:100px">ลำดับ</th>
+            <th class="fw-semibold text-center" scope="col" style="text-align: center;width:100px">ลำดับ</th>
             <th>ชื่อรายการ</th>
             <th width="150">จำนวน</th>
             <th width="200" class="text-end">ราคาต่อหน่วย</th>
@@ -99,7 +103,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php $num = 1;
         foreach ($model->getPlanItems()->all() as $item): ?>
             <tr>
-                <td><?= $num++ ?></td>
+                <td class="text-center"><?= $num++ ?></td>
                 <td><?= $item->item_name ?></td>
                 <td><?= $item->qty ?></td>
                 <td class="text-end fw-semibold"><?= $item->unit_price ?></td>

@@ -12,6 +12,18 @@ use app\modules\am\components\AssetHelper;
 /** @var $model app\modules\plan\models\Plan */
 /** @var $items app\modules\plan\models\PlanItem[] */
 
+$planItems = Categorise::find()
+    ->alias('i')
+    ->select(['i.code AS id', 'i.title AS name'])
+    ->leftJoin('categorise t', 't.code = i.category_id')
+    ->where(['i.name' => 'plan_item'])
+    ->andWhere(['t.name' => 'plan_category'])
+    ->andWhere('t.category_id = :category_id', [':category_id' => 'OPS'])
+    ->asArray()
+    ->all();
+
+$listPlanItems = ArrayHelper::map($planItems, 'id', 'name');
+
 $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -50,7 +62,7 @@ $form = ActiveForm::begin([
                           <?php
 
                         echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_item', 'category_id' =>  $model->plan_category_id])->all(), 'code', 'title'),
+                            'data' => $listPlanItems,
                             'options' => [
                                 'id' => 'plan_category_id',
                                 'placeholder' => 'เลือกรายการค่าใช้สอย',
