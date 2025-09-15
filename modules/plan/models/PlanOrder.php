@@ -181,6 +181,12 @@ class PlanOrder extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);
     }
 
+        public function getPlanItem()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'plan_item_id'])->andOnCondition(['name' => 'plan_item']);
+    }
+
+
     public function getBudge()
     {
         return $this->hasOne(Categorise::class, ['code' => 'plan_budget_type_id'])->andOnCondition(['name' => 'budget_type']);
