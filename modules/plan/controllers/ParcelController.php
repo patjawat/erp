@@ -10,7 +10,7 @@ use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\plan\models\PlanItem;
+use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\am\models\AssetItemSearch;
 use app\modules\plan\models\PlanOrderSearch;
@@ -48,6 +48,7 @@ class ParcelController extends Controller
         $searchModel = new PlanOrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'parcel']);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -123,35 +124,47 @@ class ParcelController extends Controller
      * @return string|\yii\web\Response
      */
     public function actionCreate()
-    {
+{
     $model = new PlanOrder([
-            'thai_year' => (AppHelper::YearBudget() + 1),
-            'plan_group_id' => 'parcel', // Default to material type
-            'plan_type_id' => 'INV',
-            'plan_category_id' => 'INV_01',
-        ]);
-        $items = []; // ไม่มีรายการเดิม
+        'thai_year'        => (AppHelper::YearBudget() + 1),
+        'plan_group_id'    => 'parcel',   // Default to material type
+        'plan_type_id'     => 'INV',
+        'plan_category_id' => 'INV_01',
+    ]);
 
-        if ($model->load(Yii::$app->request->post())) {
+    $items = []; // ไม่มีรายการเดิม
 
-            $model->save(false);
-
-            $postItems = Yii::$app->request->post('items', []);
-            foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save(false);
+           if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                try {
+                    if ($model->save(false)) {
+                        $postItems = Yii::$app->request->post('items', []);
+                        foreach ($postItems as $item) {
+                            if (!empty($item['item_name'])) {
+                                $pi = new PlanOrderItem();
+                                $pi->plan_order_id = $model->id;
+                                $pi->item_name = $item['item_name'];
+                                $pi->qty = (int)$item['qty'];
+                                $pi->unit_price = (float)$item['unit_price'];
+                                $pi->save(false);
+                            }
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    //throw $th;
                 }
+                return $this->redirect(['view', 'id' => $model->id]);
             }
-            return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            $model->loadDefaultValues();
         }
 
-        return $this->render('create', ['model' => $model, 'items' => $items]);
-    }
+    return $this->render('create', [
+        'model' => $model,
+        'items' => $items,
+    ]);
+}
+
     /**
      * Updates an existing PlanOrder model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -165,11 +178,11 @@ class ParcelController extends Controller
         $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            PlanItem::deleteAll(['plan_order_id' => $model->id]);
+            PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
                 if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
+                    $pi = new PlanOrderItem();
                     $pi->plan_order_id = $model->id;
                     $pi->item_name = $item['item_name'];
                     $pi->qty = (int)$item['qty'];

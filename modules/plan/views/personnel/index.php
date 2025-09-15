@@ -1,6 +1,8 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Html;
+
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -55,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" class="text-center">แหล่งของเงิน</th>
                     <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
-                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
+                    <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -64,14 +66,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?=$item->planType?->title ?></td>
+                        <td><?= $item->planType?->title ?></td>
                         <td><?= $item->description ?></td>
                         <td class="text-end fw-semibold"><?= number_format($item->order_price ?? 0, 2) ?></td>
-                         <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
+                        <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
                         <td><?= $item->departmentName() ?></td>
-                        <td><?= $item->viewStatus()['view']?></td>
+                        <td><?= $item->viewStatus()['view'] ?></td>
                         <td class="text-center">
-                            <?=$this->render('action',['model' => $item])?>
+                            <?= $this->render('action', ['model' => $item]) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -129,13 +131,16 @@ $('.update-status').click(function (e) {
                             location.reload(); // โหลดใหม่ถ้าต้องการ
                         });
                     }
-                },
-                error: function () {
-                    Swal.fire({
+                       if (response.status === 'error') {
+                          Swal.fire({
                         icon: 'error',
                         title: 'ผิดพลาด!',
                         text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
                     });
+                    }
+                },
+                error: function () {
+                  
                 }
             });
         }

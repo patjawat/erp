@@ -25,12 +25,7 @@ use yii\helpers\Html;
                     
                    <li> 
                     <?= Html::a('<i class="fa-solid fa-trash me-2"></i> ลบ', ['delete', 'id' => $model->id], [
-                        'class' => 'dropdown-item',
-                        'data' => [
-                            'confirm' => 'Are you sure you want to delete this item?',
-                            'method' => 'post',
-                        ],
-                    ]) ?>
+                        'class' => 'dropdown-item delete-item']) ?>
                     </li>
                 </ul>
             </div>

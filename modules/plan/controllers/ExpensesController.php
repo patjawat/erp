@@ -8,7 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
-use app\modules\plan\models\PlanItem;
+use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderSearch;
 
@@ -81,19 +81,25 @@ class ExpensesController extends Controller
         $items = []; // ไม่มีรายการเดิม
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save(false)) {
-                 $postItems = Yii::$app->request->post('items', []);
-                foreach ($postItems as $item) {
-                    if (!empty($item['item_name'])) {
-                        $pi = new PlanItem();
-                        $pi->plan_order_id = $model->id;
-                        $pi->item_name = $item['item_name'];
-                        $pi->qty = (int)$item['qty'];
-                        $pi->unit_price = (float)$item['unit_price'];
-                        $pi->save(false);
+            if ($model->load($this->request->post())) {
+                try {
+                    if ($model->save(false)) {
+                        $postItems = Yii::$app->request->post('items', []);
+                        foreach ($postItems as $item) {
+                            if (!empty($item['item_name'])) {
+                                $pi = new PlanOrderItem();
+                                $pi->plan_order_id = $model->id;
+                                $pi->item_name = $item['item_name'];
+                                $pi->qty = (int)$item['qty'];
+                                $pi->unit_price = (float)$item['unit_price'];
+                                $pi->save(false);
+                            }
+                        }
                     }
+                } catch (\Throwable $th) {
+                    //throw $th;
                 }
-                 return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
@@ -114,19 +120,27 @@ class ExpensesController extends Controller
         $model = $this->findModel($id);
 
         $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save(false)) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            PlanItem::deleteAll(['plan_order_id' => $model->id]);
-            $postItems = Yii::$app->request->post('items', []);
-            foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new PlanItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save(false);
+            try {
+                if ($model->save(false)) {
+
+                    PlanOrderItem::deleteAll(['plan_order_id' => $model->id]); // Ensure the table name matches the PlanItem model's table
+                    $postItems = Yii::$app->request->post('items', []);
+                    foreach ($postItems as $item) {
+                        if (!empty($item['item_name'])) {
+                            $pi = new PlanOrderItem();
+                            $pi->plan_order_id = $model->id;
+                            $pi->item_name = $item['item_name'];
+                            $pi->qty = (int)$item['qty'];
+                            $pi->unit_price = (float)$item['unit_price'];
+                            $pi->save(false);
+                        }
+                    }
                 }
+            } catch (\Throwable $th) {
+                //throw $th;
+                return $th->getMessage();
             }
 
             return $this->redirect(['view', 'id' => $model->id]);

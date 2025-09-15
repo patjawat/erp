@@ -50,6 +50,7 @@ class PlanOrderSearch extends PlanOrder
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         $this->load($params, $formName);
 

@@ -130,13 +130,16 @@ $('.update-status').click(function (e) {
                             location.reload(); // โหลดใหม่ถ้าต้องการ
                         });
                     }
-                },
-                error: function () {
-                    Swal.fire({
+                    if (response.status === 'error') {
+                         Swal.fire({
                         icon: 'error',
                         title: 'ผิดพลาด!',
                         text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
                     });
+                    }
+                },
+                error: function () {
+                   
                 }
             });
         }
