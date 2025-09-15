@@ -144,18 +144,20 @@ class StoreV2Controller extends \yii\web\Controller
         $id = \Yii::$app->user->id;
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->leftJoin('warehouses tw', 'tw.id=stock_events.warehouse_id');
-        $dataProvider->query->leftJoin('warehouses fw', 'fw.id=stock_events.from_warehouse_id');
-        // $dataProvider->query->andFilterWhere(new Expression("JSON_CONTAINS(w.data_json->'$.officer','\"$id\"')"));
-        $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(fw.data_json->'\$.officer','\"$id\"')"));
-        // $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
+
+        // ตั้ง alias ให้ชัดเจน
+        $dataProvider->query->alias('e');
+
+        $dataProvider->query->leftJoin('warehouses tw', 'tw.id = e.warehouse_id');
+        $dataProvider->query->leftJoin('warehouses fw', 'fw.id = e.from_warehouse_id');
+
+        $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(fw.data_json->'$.officer','\"$id\"')"));
 
         $dataProvider->query->andFilterWhere([
-            'stock_events.name' => 'order',
-            'transaction_type' => 'OUT',
-            // 'stock_events.created_by' => Yii::$app->user->id
+            'e.name' => 'order',
+            'e.transaction_type' => 'OUT',
         ]);
-        // $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
+
 
         return $this->render('order_in', [
             'searchModel' => $searchModel,

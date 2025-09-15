@@ -46,6 +46,7 @@ class PlanItemController extends Controller
              'name' => 'plan_item'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -74,9 +75,11 @@ class PlanItemController extends Controller
     
     public function actionCreate()
     {
+        
         $model = new PlanItem([
             'name' => 'plan_item'
         ]);
+        $model->code = $model->nextItemCode();
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

@@ -14,7 +14,7 @@ use yii\helpers\Html;
     <?php echo  Html::a('<i class="fa-solid fa-user-plus me-1"></i> แผนคำขอบุคลากร <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/personnel'],['class' => 'nav-link ' . (isset($active) && $active == 'personnel' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-solid fa-file-invoice me-1"></i> แผนคำขอค่าใช้สอย <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/expenses'],['class' => 'nav-link ' . (isset($active) && $active == 'expenses' ? 'active' : '')])?>
+    <?php echo  Html::a('<i class="fa-solid fa-file-invoice me-1"></i> แผนคำขอรายจ่ายอื่น <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/expenses'],['class' => 'nav-link ' . (isset($active) && $active == 'expenses' ? 'active' : '')])?>
 </li>
 
 <li class="nav-item dropdown">

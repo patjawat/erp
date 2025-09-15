@@ -19,6 +19,7 @@ use app\modules\plan\models\PlanType;
     ]); ?>
 
     <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
+    <?= $form->field($model, 'code')->hiddenInput(['maxlength' => true])->label(false) ?>
    
     <?php
     echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
@@ -56,7 +57,7 @@ use app\modules\plan\models\PlanType;
         ],
 
     ])->label('หมวด'); ?>
-     <?= $form->field($model, 'code')->textInput()->label('รหัส') ?>
+    
     <?= $form->field($model, 'title')->textInput()->label('ชื่อของหมวดหมู่') ?>
 
 
@@ -78,20 +79,20 @@ $js = <<< JS
         await location.reload();
     });
 
-        $('#category_id').on('change', function() {
-    var categoryId = $(this).val();
-    if (categoryId) {
-        $.ajax({
-            url: '$generateUrl',
-            data: { category_id: categoryId },
-            success: function(res) {
-                if(res.success) {
-                    $('#planitem-code').val(res.code);
-                }
-            }
-        });
-    }
-});
+//     $('#category_id').on('change', function() {
+//     var categoryId = $(this).val();
+//     if (categoryId) {
+//         $.ajax({
+//             url: '$generateUrl',
+//             data: { category_id: categoryId },
+//             success: function(res) {
+//                 if(res.success) {
+//                     $('#planitem-code').val(res.code);
+//                 }
+//             }
+//         });
+//     }
+// });
 
 JS;
 $this->registerJs($js);

@@ -211,7 +211,8 @@ $("body").on("click", "#checkout", function (e) {
                                 showConfirmButton: false
                             }).then(() => {
                                 // location.reload();
-                                window.location.href = "/me/store-v2/order-in";
+                                // window.location.href = "/me/store-v2/order-in";
+                                window.location.href = "/me/stock-event/reuqest-order";
                             });
                         }else{
                             Swal.fire({

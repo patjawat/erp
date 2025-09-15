@@ -357,3 +357,36 @@ WITH x AS (
 SELECT x.*,
 (x.total_in - x.total_out) as amonth
 FROM x;
+
+
+ีupdate plan_item
+
+UPDATE categorise c
+JOIN (
+    SELECT id, @rownum := @rownum + 1 AS rn
+    FROM categorise, (SELECT @rownum := 0) r
+    WHERE name = 'plan_item'
+    ORDER BY id ASC
+) x ON x.id = c.id
+SET c.data_json = JSON_SET(
+    JSON_SET(
+        COALESCE(c.data_json, JSON_OBJECT()),
+        '$.old_code',
+        c.code
+    ),
+    '$.code',
+    CONCAT('P', x.rn)  -- อัปเดตเป็นค่าใหม่
+)
+WHERE c.name = 'plan_item';
+
+
+UPDATE categorise
+SET code = JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.code'))
+WHERE name = 'plan_item';
+
+UPDATE plan_order po
+JOIN categorise c 
+  ON JSON_UNQUOTE(JSON_EXTRACT(c.data_json, '$.old_code')) = po.plan_item_id
+  AND c.name = 'plan_item'
+SET po.plan_item_id = c.code
+WHERE po.plan_item_id IS NOT NULL;

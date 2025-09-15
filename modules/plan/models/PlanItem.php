@@ -3,6 +3,7 @@
 namespace app\modules\plan\models;
 
 use Yii;
+use yii\db\Expression;
 
 /**
  * This is the model class for table "categorise".
@@ -98,4 +99,22 @@ class PlanItem extends \yii\db\ActiveRecord
 
         return $categoryId . '_' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
     }
+
+    function nextItemCode()
+{
+    // ดึง code ล่าสุด
+    $lastCode = self::find()
+        ->where(['name' => 'plan_item'])
+        ->select(new Expression("MAX(CAST(SUBSTRING(code, 2) AS UNSIGNED))"))
+        ->scalar();
+
+    // ถ้าไม่มี code ให้เริ่มที่ 1
+    $nextNumber = $lastCode ? ((int)$lastCode + 1) : 1;
+
+    // สร้าง code ใหม่
+    $nextCode = 'P' . $nextNumber;
+
+    return $nextCode;
+}
+
 }
