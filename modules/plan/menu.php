@@ -8,10 +8,10 @@ use yii\helpers\Html;
     <?php echo  Html::a('<i class="fa-solid fa-chart-simple me-1"></i> ติดตามแผนรายจ่าย <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/overview'],['class' => 'nav-link ' . (isset($active) && $active == 'overview' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-solid fa-dolly me-1"></i> แผนคำขอพัสดุ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/parcel'],['class' => 'nav-link ' . (isset($active) && $active == 'parcel' ? 'active' : '')])?>
+    <?php echo  Html::a('<i class="fa-solid fa-dolly me-1"></i> แผนครุภัณฑ์ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/parcel'],['class' => 'nav-link ' . (isset($active) && $active == 'parcel' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-solid fa-user-plus me-1"></i> แผนคำขอบุคลากร <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/personnel'],['class' => 'nav-link ' . (isset($active) && $active == 'personnel' ? 'active' : '')])?>
+    <?php echo  Html::a('<i class="fa-solid fa-user-plus me-1"></i> แผนคน <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/personnel'],['class' => 'nav-link ' . (isset($active) && $active == 'personnel' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
     <?php echo  Html::a('<i class="fa-solid fa-file-invoice me-1"></i> แผนคำขอรายจ่ายอื่น <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/plan/expenses'],['class' => 'nav-link ' . (isset($active) && $active == 'expenses' ? 'active' : '')])?>
