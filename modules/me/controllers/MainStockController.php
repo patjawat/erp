@@ -69,6 +69,7 @@ class MainStockController extends Controller
                     $model->order_status = 'pending';
                     $model->warehouse_id = $mainWarehouse->id;
                     $model->from_warehouse_id = $submWarehouse->id;
+                    $model->movement_date = date('Y-m-d');
 
                     if (!$model->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');
