@@ -373,23 +373,52 @@ $this->params['breadcrumbs'][] = $this->title;
             <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">0.00</td>
 
         </tr>
+        <?php
+        //ค่าใช้สอย
+        $queryExpense = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
+                    SUM(o.order_price) as total,
+                    SUM(o.month_1) as m1,
+                    SUM(o.month_2) as m2,
+                    SUM(o.month_3) as m3,
+                    SUM(o.month_4) as m4,
+                    SUM(o.month_5) as m5,
+                    SUM(o.month_6) as m6,
+                    SUM(o.month_7) as m7,
+                    SUM(o.month_8) as m8,
+                    SUM(o.month_9) as m9,
+                    SUM(o.month_10) as m10,
+                    SUM(o.month_11) as m11,
+                    SUM(o.month_12) as m12
+                    FROM `plan_order` o
+                    LEFT JOIN categorise i ON i.code = o.plan_item_id
+                    LEFT JOIN categorise c ON c.code = i.category_id
+                    LEFT JOIN categorise t ON t.code = c.category_id
+                    WHERE i.name = 'plan_item'
+                    AND c.name = 'plan_category'
+                    AND t.name = 'plan_type'
+                    AND c.category_id = 'OPS'
+                    AND c.code = 'OPS_05'";
+
+        $OPS = Yii::$app->db->createCommand($queryExpense)->queryOne();
+        ?>
         <tr class="yellow">
+
             <td width="10px"></td>
             <td width="10px"></td>
             <td colspan="2">ค่าใช้สอย</td>
-            <td class="text-end fw-semibold">9,063,600.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
-            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25">755,300.00</td>
+            <td class="text-end fw-semibold"><?=$OPS['total']?></td>
+            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?=$OPS['m10']?></td>
+            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?=$OPS['m11']?></td>
+            <td class="text-end fw-semibold bg-primary text-dark bg-opacity-25"><?=$OPS['m12']?></td>
+            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?=$OPS['m1']?></td>
+            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?=$OPS['m2']?></td>
+            <td class="text-end fw-semibold bg-secondary text-dark bg-opacity-25"><?=$OPS['m3']?></td>
+            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m4']?></td>
+            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m5']?></td>
+            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m6']?></td>
+            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?=$OPS['m7']?></td>
+            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?=$OPS['m8']?></td>
+            <td class="text-end fw-semibold bg-danger text-dark bg-opacity-25"><?=$OPS['m9']?></td>
 
         </tr>
         <tr class="yellow">

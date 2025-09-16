@@ -50,6 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th scope="col">ประเภท</th>
+                    <th scope="col">หมวด</th>
                     <th scope="col">รายการค่าใช้สอย</th>
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col" class="text-end">วงเงิน</th>
@@ -65,7 +66,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
-                        <td><?= $item->planType?->title ?></td>
+                        <td><?= $item->planItem?->planCategory?->planType->title ?? '-' ?></td>
+                       <td> <?= $item->planItem?->planCategory?->title ?? '-' ?></td>
                         <td><?= $item->planItem?->title ?></td>
                         <td><?= $item->description ?></td>
                         <td class="text-end fw-semibold"><?= number_format($item->order_price, 2) ?></td>

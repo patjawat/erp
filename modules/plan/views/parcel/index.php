@@ -53,8 +53,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th scope="col">หมวดพัสดุ</th>
                     <th scope="col">ประเภท</th>
+                    <th scope="col">หมวดพัสดุ</th>
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col" class="text-end">วงเงิน</th>
                     <th scope="col" class="text-center">แหล่งของเงิน</th>
@@ -70,7 +70,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td><?= $item->planType?->title ?></td>
-                        <td><?= $item->assetType?->title ?></td>
+                        <td>
+                            <?= $item->planItem?->title ?>
+                            <?= $item->assetType?->title ?>
+                        </td>
                         <td><?= $item->description ?></td>
                         <td class="text-end fw-semibold"><?= number_format((float)($item->order_price ?? 0), 2) ?></td>
                         <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
