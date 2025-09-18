@@ -12,8 +12,7 @@ use app\modules\hr\models\Leave;
             <th scope="col">ผู้ขออนุมัติการลา</th>
             <th scope="col">เหตุผล</th>
             <th class="text-center" scope="col">เป็นเวลา/วัน</th>
-            <th scope="col">จากวันที่</th>
-            <th scope="col">ถึงวันที่</th>
+            <th scope="col">วันที่</th>
             <th scope="col">ปีงบประมาณ</th>
            
         </tr>
@@ -26,8 +25,7 @@ use app\modules\hr\models\Leave;
             </td>
             <td class="text-start"><?php echo $item->data_json['reason']?></td>
             <td class="text-center fw-semibold"><?php echo $item->total_days?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?></td>
-            <td><?=Yii::$app->thaiFormatter->asDate($item->date_end, 'medium')?></td>
+            <td><?=$item->showLeaveDate()?></td>
             <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
             
         </tr>

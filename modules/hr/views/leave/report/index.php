@@ -72,10 +72,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td><?php echo $item->employee->positionName()?></td>
                     <td class="text-center"><?php echo $item->employee->cid?></td>
                     <td><?php echo $item->employee->departmentName()?></td>
-                    <td class="text-center fw-bolder"><?php echo $item->sum_lt1?></td>
-                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt3?></td>
-                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt2?></td>
-                    <td class="text-center fw-bolder"><?php  echo $item->sum_lt4?></td>
+                    <td class="text-center fw-bolder">
+                        <?= Html::a($item->sum_lt1, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                </td>
+                    <td class="text-center fw-bolder">
+                        <?= Html::a($item->sum_lt3, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT3'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                </td>
+                    <td class="text-center fw-bolder">
+                        <?= Html::a($item->sum_lt2, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT2'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                    </td>
+                    <td class="text-center fw-bolder">
+                    <?= Html::a($item->sum_lt4, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT4'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                    <?php  // echo $item->sum_lt4?>
+                </td>
                     <td class="text-center fw-bolder">
                         <?php echo ($item->sum_lt1 + $item->sum_lt2 +$item->sum_lt3 +$item->sum_lt4)?></td>
                 </tr>
@@ -101,50 +110,81 @@ $this->params['breadcrumbs'][] = $this->title;
 $url = Url::to(['/hr/leave/export']);
 $params = Yii::$app->request->queryParams;
 $js = <<< JS
-    $("body").on("click", ".export-report", function (e) {
-           e.preventDefault();
-           var form = $('#search-leave').serialize();
-           $('#leavesearch-export').val('true')
-           console.log(form);
-           
+   $("body").on("click", ".export-report", function (e) {
+    e.preventDefault();
+
+    var form = $('#search-leave').serialize();
+    $('#leavesearch-export').val('true');
+
+    Swal.fire({
+        title: "ยืนยันการดาวน์โหลด?",
+        text: "คุณต้องการดาวน์โหลดรายงานวันลาใช่หรือไม่?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก",
+        confirmButtonText: "ใช่, ดาวน์โหลด!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            Swal.fire({
+                title: 'กำลังดาวน์โหลด...',
+                text: 'โปรดรอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 type: "get",
-                url:"/hr/leave/report",
-                data:$('#search-leave').serialize(),
+                url: "/hr/leave/report",
+                data: $('#search-leave').serialize(),
                 xhrFields: {
-                    responseType: 'blob' // Important for handling binary data
-                },
-                beforeSend: function(){
-                    // $('#page-content').hide()
-                    // $('#loader').show()
+                    responseType: 'blob'
                 },
                 success: function(response) {
-                    // $('#page-content').show()
-                    // $('#loader').hide()
-                    $('#leavesearch-export').val('')
+                    $('#leavesearch-export').val('');
+                    
+                    Swal.close(); // ปิด loading
+
                     const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'รายงานวันลา.xlsx'; // The default file name
+                    a.download = 'รายงานวันลา.xlsx';
                     document.body.appendChild(a);
                     a.click();
                     URL.revokeObjectURL(url);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ดาวน์โหลดเสร็จสิ้น',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                 },
                 error: function(xhr, status, error) {
-                    $('#page-content').show()
-                    $('#loader').hide()
-                    warning(xhr.responseText)
+                    $('#leavesearch-export').val('');
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถดาวน์โหลดไฟล์ได้'
+                    });
+
                     console.log('Error occurred:', error);
                     console.log('Status:', status);
-                    console.log('Response:', error);
+                    console.log('Response:', xhr.responseText);
                 }
             });
-        });
+        } else {
+            $('#leavesearch-export').val('');
+        }
+    });
+});
 
-
-
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
 ?>

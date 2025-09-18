@@ -115,6 +115,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการลา', ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT4','title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
                                     <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                 </ul>
                             </div>

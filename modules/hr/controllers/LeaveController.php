@@ -1093,6 +1093,28 @@ class LeaveController extends Controller
 
 
 
+        //ประวัติการลา
+    public function actionLeaveHistory()
+    {
+         \Yii::$app->response->format = Response::FORMAT_JSON;
+         $empId = $this->request->get('emp_id');
+         $thaiYear = $this->request->get('thai_year');
+         $leaveType = $this->request->get('leave_type_id');
+        $model = Leave::find()
+            ->andFilterWhere(['status' => 'Approve'])
+            ->andFilterWhere(['emp_id' => $empId])
+            ->andFilterWhere(['thai_year' => $thaiYear])
+            ->andFilterWhere(['emp_id' => $empId])
+            ->andFilterWhere(['leave_type_id' => $leaveType])
+            ->all();
+            return [
+                'title' => 'ประวัติการลา'.($thaiYear ? 'ประจำปี '.$thaiYear : ''),
+                'content' => $this->renderAjax('leave_history',['model' => $model])
+            ];
+         
+    }
+
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();

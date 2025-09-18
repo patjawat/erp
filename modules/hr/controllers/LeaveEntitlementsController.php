@@ -10,17 +10,18 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\LogHelper;
 use app\components\UserHelper;
+use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
-use app\modules\hr\models\Employees;
 
+use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\Warehouse;
-use app\modules\hr\models\LeaveEntitlements;
 // Microsoft Excel
+use app\modules\hr\models\LeaveEntitlements;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\hr\models\LeaveEntitlementsSearch;
@@ -513,7 +514,7 @@ class LeaveEntitlementsController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
         $sheet->mergeCells('A1:I1');
-        $sheet->setCellValue('A1', 'รายงานกำหนดวันลาประจำปีงบประมาณ '.$searchModel->thai_year);
+        $sheet->setCellValue('A1', 'รายงานกำหนดวันลาประจำปีงบประมาณ ' . $searchModel->thai_year);
         $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
         $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
         $sheet->setCellValue('B2', 'อายุงาน');
@@ -556,7 +557,7 @@ class LeaveEntitlementsController extends Controller
         $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
         $sheet->getStyle('A1:I1')->getFont()->setBold(true)->setItalic(false);
-        $sheet2->setAutoFilter("A2:I2" . ($StartRowSheet2));
+        $sheet->setAutoFilter("A2:I2" . ($StartRowSheet));
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
@@ -569,6 +570,8 @@ class LeaveEntitlementsController extends Controller
             throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
     }
+
+
 
     /**
      * Finds the LeaveEntitlements model based on its primary key value.
