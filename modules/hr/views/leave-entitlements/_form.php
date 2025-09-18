@@ -69,7 +69,7 @@ $resultsJs = <<< JS
 
 
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
-
+<?= $form->field($model, 'data_json[before_leave_use]')->hiddenInput()->label(false) ?>
 <?php
 try {
     $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->getAvatar(false);
@@ -126,12 +126,13 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 
 <div class="row">
     <div class="col-6">
+        
         <?= $form->field($model, 'data_json[before_leave_balance]')->textInput()->label('ยอกยกมา') ?>
         <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสมสมวันลา') ?>
     </div>
     <div class="col-6">
         <?= $form->field($model, 'data_json[leave_days]')->textInput(['value' => 10])->label('สิทธิลาประจำปี(10)') ?>
-        <?= $form->field($model, 'data_json[leave_max_days]')->textInput(['value' => 10])->label('สะสมวันลาได้สูงสุด') ?>
+        <?= $form->field($model, 'data_json[leave_max_days]')->textInput()->label('สะสมวันลาได้สูงสุด') ?>
     </div>
 </div>
 
@@ -217,6 +218,11 @@ $('#emp_id').on('select2:select', function (e) {
         dataType: "json",
         success: function (response) {
             console.log(response);
+            $('#leaveentitlements-data_json-leave_max_days').val(response.leave_max_days);
+            $('#leaveentitlements-data_json-before_leave_balance').val(response.leave_balance);
+            $('#leaveentitlements-data_json-before_leave_use').val(response.leave_use);
+            $('#leaveentitlements-days').val(response.leave_forward_days);
+
             
         }
     });
