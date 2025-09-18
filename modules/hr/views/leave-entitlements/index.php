@@ -249,7 +249,7 @@ $("body").on("click", "#download-button", function (e) {
                 data:$('#w0').serialize(),
                 success: function(data) {
                     Swal.close(); // ปิด Loading
-                    var filename = 'รายงานสรุปวัสดุคงคลังประจำเดือน ' + monthName + ' ปี ' + year + '.xlsx';
+                    var filename = 'รายงานสรุปวันลา ปี ' + year + '.xlsx';
                     const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);

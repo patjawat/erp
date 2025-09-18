@@ -1100,12 +1100,16 @@ class LeaveController extends Controller
          $empId = $this->request->get('emp_id');
          $thaiYear = $this->request->get('thai_year');
          $leaveType = $this->request->get('leave_type_id');
+         $dateStart = $this->request->get('date_start');
+         $dateEnd = $this->request->get('date_end');
+         $status = $this->request->get('status');
         $model = Leave::find()
-            ->andFilterWhere(['status' => 'Approve'])
+            ->andFilterWhere(['status' => ($status ? $status : 'Approve')])
             ->andFilterWhere(['emp_id' => $empId])
             ->andFilterWhere(['thai_year' => $thaiYear])
             ->andFilterWhere(['emp_id' => $empId])
             ->andFilterWhere(['leave_type_id' => $leaveType])
+            ->andFilterWhere(['>=', 'date_start',$dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd])
             ->all();
             return [
                 'title' => 'ประวัติการลา'.($thaiYear ? 'ประจำปี '.$thaiYear : ''),

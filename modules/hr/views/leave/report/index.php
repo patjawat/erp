@@ -2,6 +2,7 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use app\components\AppHelper;
 $this->title = 'รายงานวันลา';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -65,6 +66,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
+
+            <?php
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+            echo $dateStart;
+            ?>
                 <?php  foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
@@ -73,16 +80,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center"><?php echo $item->employee->cid?></td>
                     <td><?php echo $item->employee->departmentName()?></td>
                     <td class="text-center fw-bolder">
-                        <?= Html::a($item->sum_lt1, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                        <?= Html::a($item->sum_lt1, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'date_start' => $dateStart,'date_end' => $dateEnd,'status' => $searchModel->status,'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
                 </td>
                     <td class="text-center fw-bolder">
-                        <?= Html::a($item->sum_lt3, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT3'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                        <?= Html::a($item->sum_lt3, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'date_start' => $dateStart,'date_end' => $dateEnd,'status' => $searchModel->status,'leave_type_id' => 'LT3'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
                 </td>
                     <td class="text-center fw-bolder">
-                        <?= Html::a($item->sum_lt2, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT2'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                        <?= Html::a($item->sum_lt2, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'date_start' => $dateStart,'date_end' => $dateEnd,'status' => $searchModel->status,'leave_type_id' => 'LT2'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
                     </td>
                     <td class="text-center fw-bolder">
-                    <?= Html::a($item->sum_lt4, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT4'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
+                    <?= Html::a($item->sum_lt4, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'date_start' => $dateStart,'date_end' => $dateEnd,'status' => $searchModel->status,'leave_type_id' => 'LT4'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
                     <?php  // echo $item->sum_lt4?>
                 </td>
                     <td class="text-center fw-bolder">
