@@ -6,12 +6,23 @@ use Yii;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\LogHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\hr\models\Employees;
+
 use app\modules\hr\models\Organization;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use app\modules\inventory\models\Warehouse;
 use app\modules\hr\models\LeaveEntitlements;
+// Microsoft Excel
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\hr\models\LeaveEntitlementsSearch;
 
 /**
@@ -75,7 +86,8 @@ class LeaveEntitlementsController extends Controller
         } else {
             $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         }
-        
+
+        // $dataProvider->query->orderBy(['emp_id' => SORT_ASC]); // เรียงจากน้อยไปมาก
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -104,7 +116,7 @@ class LeaveEntitlementsController extends Controller
     public function actionCreate()
     {
         $model = new LeaveEntitlements([
-           'thai_year' => AppHelper::YearBudget()
+            'thai_year' => $this->request->get('thai_year') ?? AppHelper::YearBudget()
         ]);
 
         if ($this->request->isPost) {
@@ -115,21 +127,24 @@ class LeaveEntitlementsController extends Controller
                     ->andWhere(['leave_type_id' => $model->leave_type_id])
                     ->andWhere(['thai_year' => $model->thai_year])
                     ->one();
-                if($check){
+                if ($check) {
                     return [
                         'status' => 'error',
                         'message' => 'มีการบันทึกข้อมูลไว้แล้ว'
                     ];
                 }
-
-                if($model->save()){
+                $json = [
+                    'max_days' => $model->calLeaveMaxDays(),
+                ];
+                $model->data_json = ArrayHelper::merge($model->data_json, $json);
+                if ($model->save()) {
 
                     $data = [
                         'title' => 'กำหนดสิทธิลาพักผ่อน',
                         'data' => $model
                     ];
-                    LogHelper::log('leaev_entitlements',$data);
-                    
+                    LogHelper::log('leaev_entitlements', $data);
+
                     return [
                         'status' => 'success',
                         'message' => 'บันทึกข้อมูลสำเร็จ',
@@ -156,8 +171,59 @@ class LeaveEntitlementsController extends Controller
         }
     }
 
-    // กำหนดสิทธทั้งหมด
+    public function actionLeaveSummaryByEmp()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $emp_id = $this->request->get('emp_id');
+        $thai_year = $this->request->get('thai_year');
+        $model = LeaveEntitlements::find()->where(['emp_id' => $emp_id, 'thai_year' => ($thai_year - 1)])->one();
+        return $model->leaveSummaryDays();
+    }
+
     public function actionCreateAll()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            $thaiYear = $this->request->post('thai_year');
+            $check = LeaveEntitlements::find()->andWhere(['thai_year' => $thaiYear])->count();
+
+            if ($check > 0) {
+                return [
+                    'status' => false,
+                    'message' => 'ปีงบประมาณ ' . $thaiYear . ' ได้กำหนดวันลาเรียบร้อยแล้ว'
+                ];
+            }
+
+            $data = [];
+            foreach (Employees::find()->where(['status' => 1])->andWhere(['<>', 'id', 1])->all() as $emp) {
+                $leaveBefore = LeaveEntitlements::find()->where(['emp_id' => $emp->id, 'thai_year' => ($thaiYear - 1)])->one();
+
+                $newModel = new LeaveEntitlements();
+                $newModel->emp_id = $emp->id;
+                $newModel->leave_type_id = 'LT4';
+                $newModel->position_type_id = $emp->position_type;
+                $newModel->year_of_service = $emp->workYear()['year'];
+                $newModel->month_of_service = $emp->workYear()['month'];
+                $newModel->days =  isset($leaveBefore) ? $leaveBefore->leaveSummaryDays()['leave_forward_days'] : 0;
+                $newModel->thai_year = $thaiYear;
+                $newModel->data_json = [
+                    'before_days' => isset($leaveBefore->days) ? $leaveBefore->days : 0,
+                    'before_leave_use' => isset($leaveBefore) ?  $leaveBefore->leaveSummaryDays()['leave_use'] : 0,
+                    'before_leave_balance' => isset($leaveBefore) ? $leaveBefore->leaveSummaryDays()['leave_balance'] : 0,
+                    'leave_max_days' => $newModel->calLeaveMaxDays()['leave_max_days'],
+                    'accumulation' => $newModel->calLeaveMaxDays()['accumulation'],
+                ];
+                $newModel->save(false);
+            }
+            return [
+                'status' => 'success',
+                'container' => '#leave'
+            ];
+        }
+    }
+
+    // กำหนดสิทธทั้งหมด
+    public function actionCreateAllOld()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
@@ -168,16 +234,16 @@ class LeaveEntitlementsController extends Controller
             if ($check > 0) {
                 return [
                     'status' => false,
-                    'message' => 'ปีงบประมาณ '.$thaiYear.' ได้กำหนดวันลาเรียบร้อยแล้ว'
+                    'message' => 'ปีงบประมาณ ' . $thaiYear . ' ได้กำหนดวันลาเรียบร้อยแล้ว'
                 ];
             }
-            
-            $sql = "SELECT x4.*, (x4.days - x4.use_leave) AS total,
+
+            $sql = "SELECT x4.*, (x4.days - x4.days_use) AS days_balance,
                         (
                             CASE 
                                 WHEN x4.accumulation = 0 THEN 10
-                                WHEN (x4.days - x4.use_leave + 10) > x4.max_days AND x4.accumulation = 1 THEN x4.max_days
-                                ELSE (x4.days - x4.use_leave + 10)
+                                WHEN (x4.days - x4.days_use + 10) > x4.max_days AND x4.accumulation = 1 THEN x4.max_days
+                                ELSE (x4.days - x4.days_use + 10)
                             END
                         ) AS froward_days
                     FROM (
@@ -198,7 +264,7 @@ class LeaveEntitlementsController extends Controller
                                 AND leave_type_id = x3.leave_type_id 
                                 AND thai_year = :thai_year), 
                                 0
-                            ) AS use_leave
+                            ) AS days_use
                         FROM (
                             SELECT 
                                 x2.*,
@@ -235,53 +301,57 @@ class LeaveEntitlementsController extends Controller
                                     JOIN categorise pt 
                                         ON e.position_type = pt.code 
                                     AND pt.name = 'position_type'
+                                    AND e.status = 1
                                     GROUP BY e.id
                                     ORDER BY e.id ASC
                                 ) AS x1
                             ) AS x2
                         ) AS x3
                     ) AS x4";
-$querys = Yii::$app->db->createCommand($sql)
-->bindValue('thai_year',($thaiYear-1))
-->queryAll();
-$data = [];
-foreach ($querys as $item) {
+            $querys = Yii::$app->db->createCommand($sql)
+                ->bindValue('thai_year', ($thaiYear - 1))
+                ->queryAll();
+            $data = [];
+            foreach ($querys as $item) {
 
-    $last_day = LeaveEntitlements::find()->where(['emp_id' => $item['emp_id'],'thai_year' =>($thaiYear -1) ])->one();
-    $newModel = new LeaveEntitlements(
-        [
-            'emp_id' => $item['emp_id'],
-            'leave_type_id' => $item['leave_type_id'],
-            'position_type_id' => $item['position_type'],
-            'year_of_service' => (int)$item['years_of_service'],
-            'month_of_service' => 0,
-            'days' => $item['froward_days'],
-            'thai_year' => $thaiYear,
-            'data_json' => [
-                'last_day' => $last_day ? ($last_day->getSummary()['leave_total'] ?? 0) : 0,
-            ]
-            ]
-        );
-        if($newModel->save(false)){
-            $data[] = [
-                'emp_id' => $item['emp_id'],
-                'fullname' => $item['fullname'],
+                $last_day = LeaveEntitlements::find()->where(['emp_id' => $item['emp_id'], 'thai_year' => ($thaiYear - 1)])->one();
+                $newModel = new LeaveEntitlements(
+                    [
+                        'emp_id' => $item['emp_id'],
+                        'leave_type_id' => $item['leave_type_id'],
+                        'position_type_id' => $item['position_type'],
+                        'year_of_service' => (int)$item['years_of_service'],
+                        'month_of_service' => 0,
+                        'days' => $item['froward_days'],
+                        'thai_year' => $thaiYear,
+                        'data_json' => [
+                            'before_days' => $last_day ? ($last_day->getSummary()['leave_total'] ?? 0) : 0,
+                            // 'before_days' => $item['days'],
+                            'before_leave_use' => $item['days_use'],
+                            'before_leave_balance' => $item['days_balance'],
+                            'leave_max_days' => $item['max_days'],
+                            'accumulation' => $item['accumulation'],
+                        ]
+                    ]
+                );
+                if ($newModel->save(false)) {
+                    $data[] = [
+                        'emp_id' => $item['emp_id'],
+                        'fullname' => $item['fullname'],
+                    ];
+                }
+            }
+            return [
+                'status' => 'success',
+                'container' => '#leave'
             ];
-        }
-       
-}
-        return [
-            'status' => 'success',
-            'container' => '#leave'
-        ];
-       
 
-        
-       
+
+
+
             return $this->request->post();
         } else {
             return 'No';
-            
         }
         // if ($this->request->isAJax) {
 
@@ -310,15 +380,15 @@ foreach ($querys as $item) {
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post())) {
-            if($model->save()){
+            if ($model->save()) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $me = UserHelper::GetEmployee();
                 $data = [
-                    "fullname" =>$me->fullname,
+                    "fullname" => $me->fullname,
                     'title' => 'แก้ไขสิทธิลาพักผ่อน',
                     'data' => $model
                 ];
-                LogHelper::log('leaev_entitlements',$data);
+                LogHelper::log('leaev_entitlements', $data);
                 return [
                     'status' => 'success',
                     'message' => 'บันทึกข้อมูลสำเร็จ',
@@ -352,7 +422,7 @@ foreach ($querys as $item) {
      */
     public function actionDelete($id)
     {
-           \Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->findModel($id)->delete();
 
         return [
@@ -360,6 +430,144 @@ foreach ($querys as $item) {
             'message' => 'ลบข้อมูลสำเร็จ',
             'container' => '#leave'
         ];
+    }
+
+    public function actionUpdateMaxDays()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        try {
+
+            $thaiYear = $this->request->get('thai_year');
+
+            $max_days = LeaveEntitlements::find()
+                ->where(['thai_year' => $thaiYear])
+                ->all();
+
+            foreach ($max_days as $item) {
+                $leavePolicy = \app\modules\hr\models\LeavePolicies::find()
+                    ->where(['position_type_id' => $item->position_type_id])
+                    ->andWhere(['<=', 'year_of_service', $item->year_of_service])
+                    ->orderBy(['year_of_service' => SORT_DESC])
+                    ->one();
+                if ($leavePolicy) {
+                    $item->data_json = ArrayHelper::merge($item->data_json, ['max_days' => $leavePolicy->max_days]);
+                    $item->save(false);
+                }
+            }
+
+            return [
+                'status' => 'success',
+                'max_days' => $max_days
+            ];
+            //code...
+        } catch (\Throwable $th) {
+            return [
+                'status' => 'error',
+                'message' => 'เกิดข้อผิดพลาด',
+                'msg' => $th->getMessage()
+            ];
+        }
+    }
+
+    public function actionExport()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $searchModel = new LeaveEntitlementsSearch([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        // ค้นหาคามกลุ่มโครงสร้าง
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+            FROM tree t1
+            JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+            WHERE t2.name = :name;';
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+        }
+
+        $dataProvider->pagination = false;
+        $data = [];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
+        $sheet->mergeCells('A1:I1');
+        $sheet->setCellValue('A1', 'รายงานกำหนดวันลาประจำปีงบประมาณ '.$searchModel->thai_year);
+        $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('B2', 'อายุงาน');
+        $sheet->setCellValue('C2', 'ประเภท');
+        $sheet->setCellValue('D2', 'ยอดยกมา');
+        $sheet->setCellValue('E2', 'สิทธิพักผ่อนประจำปี');
+        $sheet->setCellValue('F2', 'สะสมวันลาสูงสุด');
+        $sheet->setCellValue('G2', 'รวมสิทธิที่ลาได้');
+        $sheet->setCellValue('H2', 'ใช้ไปแล้ว');
+        $sheet->setCellValue('I2', 'วันลาคงเหลือ');
+
+        $sheet->getColumnDimension('A')->setWidth(40);
+        $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(25);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(25);
+        $sheet->getColumnDimension('F')->setWidth(20);
+        $sheet->getColumnDimension('G')->setWidth(18);
+        $sheet->getColumnDimension('H')->setWidth(15);
+        $sheet->getColumnDimension('I')->setWidth(15);
+
+        $StartRowSheet = 3;
+        foreach ($dataProvider->getModels() as $item) {
+            $numRow = $StartRowSheet++;
+            $sheet->setCellValue('A' . $numRow, $item->employee->fullname);
+            $sheet->setCellValue('B' . $numRow, $item->employee?->workYear()['ym']);
+            $sheet->setCellValue('C' . $numRow, $item->employee?->positionType?->title ?? '-');
+            $sheet->setCellValue('D' . $numRow, $item->data_json['before_leave_balance'] ?? '-');
+            $sheet->setCellValue('E' . $numRow, 10);
+            $sheet->setCellValue('F' . $numRow, isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0);
+            $sheet->setCellValue('G' . $numRow, $item->days);
+            $sheet->setCellValue('H' . $numRow, $item->leaveSummaryDays()['leave_use']);
+            $sheet->setCellValue('I' . $numRow, $item->leaveSummaryDays()['leave_balance']);
+        }
+        $setHeader = 'A1:Z3000';
+        $sheet->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+        $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true)->setItalic(false);
+        $sheet2->setAutoFilter("A2:I2" . ($StartRowSheet2));
+
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
+        $writer->save($filePath);  // สร้าง excel
+
+
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
     }
 
     /**

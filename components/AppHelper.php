@@ -430,6 +430,7 @@ class AppHelper extends Component
             'year' => $query['years'],
             'month' => $query['months'],
             'day' => $query['days'],
+            'ym' => ($query['years'] > 0 ? ($query['years'].' ปี ') : null).($query['months'] > 0 ? ($query['months'].' เดือน') : null)
         ];
         // if ($year) {
         //     return $query['years'];

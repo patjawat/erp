@@ -17,8 +17,8 @@ class LeaveEntitlementsSearch extends LeaveEntitlements
     public function rules()
     {
         return [
-            [['id', 'month_of_service', 'year_of_service', 'days', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['emp_id', 'position_type_id', 'leave_type_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
+            [['id','emp_id','month_of_service', 'year_of_service', 'days', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['position_type_id', 'leave_type_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department'], 'safe'],
         ];
     }
 

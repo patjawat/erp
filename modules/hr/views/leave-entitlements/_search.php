@@ -16,29 +16,24 @@ use app\modules\hr\models\Organization;
 /** @var yii\widgets\ActiveForm $form */
 
 ?>
-<style>
-    .field-leaveentitlementssearch-q_department {
-    width: 400px !important; /* เพิ่ม !important เพื่อความแน่นอน */
-}
-</style>
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-          'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
-    ]); ?>
 
-    <div class="d-flex gap-2">
-        <?php // echo $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label('คำค้นหา') ?>
+<?php $form = ActiveForm::begin([
+    'action' => ['index'],
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+]); ?>
+
+<div class="row">
+    <div class="col-3">
         <?php
         echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
             'data' => $model->ListThaiYear(),
             'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
-                'width' => '120px',
             ],
             'pluginEvents' => [
                 'select2:select' => 'function(result) { 
@@ -50,6 +45,8 @@ use app\modules\hr\models\Organization;
             ]
         ])->label(false);
         ?>
+    </div>
+    <div class="col-4">
         <?php
         $url = Url::to(['/depdrop/employee-by-id']);
         try {
@@ -61,7 +58,6 @@ use app\modules\hr\models\Organization;
             'initValueText' => $initEmployee,
             'options' => ['placeholder' => 'เลือกบุคลากร ...'],
             'pluginOptions' => [
-                'width' => '230px',
                 'allowClear' => true,
                 'minimumInputLength' => 1,
                 'language' => [
@@ -92,31 +88,46 @@ use app\modules\hr\models\Organization;
             ]
         ])->label(false);
         ?>
-<?=$form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-    'name' => 'department',
-    'id' => 'treeID',
-    'query' => Organization::find()->addOrderBy('root, lft'),
-    'value' => 1,
-    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-    'fontAwesome' => true,
-    'asDropdown' => true,
-    'multiple' => false,
-    'options' => [
-        'placeholder' => 'หน่วยงานทั้งหมด...',
-        'disabled' => false,
-        'allowClear' => true,
-    ],
-    'pluginOptions' => [
-        'allowClear' => true
-    ],
-     'dropdownConfig' => [
-        'input' => [
-            'placeholder' => 'หน่วยงานทั้งหมด...', // อีกจุดที่สามารถกำหนด placeholder ได้เช่นกัน
-        ],
-    ],
-])->label(false);?>
-
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
     </div>
-        <?php ActiveForm::end(); ?>
+    <div class="col-4">
+
+
+        <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+            'name' => 'department',
+            'id' => 'treeID',
+            'query' => Organization::find()->addOrderBy('root, lft'),
+            'value' => 1,
+            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+            'fontAwesome' => true,
+            'asDropdown' => true,
+            'multiple' => false,
+            'options' => [
+                'placeholder' => 'หน่วยงานทั้งหมด...',
+                'disabled' => false,
+                'allowClear' => true,
+            ],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+            'dropdownConfig' => [
+                'input' => [
+                    'placeholder' => 'หน่วยงานทั้งหมด...', // อีกจุดที่สามารถกำหนด placeholder ได้เช่นกัน
+                ],
+            ],
+        ])->label(false); ?>
+    </div>
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="collapse mt-3" id="collapseFilter">
+</div>
+<?php ActiveForm::end(); ?>

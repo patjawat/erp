@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -51,87 +52,102 @@ $resultsJs = <<< JS
 
 ?>
 <style>
-    :not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-    height: calc(2.875rem + 2px);
-    padding: 4px;
-    font-size: 1.0rem;
-    line-height: 1.5;
-    border-radius: .3rem;
-}
+    :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
+    :not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
+        height: calc(2.875rem + 2px);
+        padding: 4px;
+        font-size: 1.0rem;
+        line-height: 1.5;
+        border-radius: .3rem;
+    }
 
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #e5e5e5;
-    color: #fff;
-}
+    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+        background-color: #e5e5e5;
+        color: #fff;
+    }
 </style>
-<div class="leave-entitlements-form">
 
-    <?php $form = ActiveForm::begin(['id' => 'form']); ?>
 
-    <?php
-                try {
-                    $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->getAvatar(false);
-                } catch (\Throwable $th) {
-                    $initEmployee = '';
-                }
-                echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
-                    'initValueText' => $initEmployee,
-                    'options' => ['placeholder' => 'เลือกบุคลากร...'],
-                    'size' => Select2::LARGE,
-                    // 'theme' => Select2::THEME_MATERIAL,
-                    'pluginEvents' => [
-                        'select2:unselect' => 'function() {
+<?php $form = ActiveForm::begin(['id' => 'form']); ?>
+
+<?php
+try {
+    $initEmployee = Employees::find()->where(['id' => $model->emp_id])->one()->getAvatar(false);
+} catch (\Throwable $th) {
+    $initEmployee = '';
+}
+echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
+    'initValueText' => $initEmployee,
+    'options' => ['placeholder' => 'เลือกบุคลากร...', 'id' => 'emp_id'],
+    'size' => Select2::LARGE,
+
+    // 'theme' => Select2::THEME_MATERIAL,
+    'pluginEvents' => [
+        'select2:unselect' => 'function() {
                             $("#leave-data_json-leave_work_send").val("")
                             }',
-                                'select2:select' => 'function() {
+        'select2:select' => 'function() {
                                     var fullname = $(this).select2("data")[0].fullname;
                                     $("#leaveentitlements-position_type_id").val($(this).select2("data")[0].position_type_id)
                                     $("#leaveentitlements-year_of_service").val($(this).select2("data")[0].years_of_service)
                                     $("#leaveentitlements-month_of_service").val($(this).select2("data")[0].month_of_service)
-                                    console.log($(this).select2("data")[0])
+                                    // console.log($(this).select2("data")[0])
                                     
                             }',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                        'minimumInputLength' => 1,
-                        'ajax' => [
-                            'url' => Url::to(['/depdrop/employee-by-id']),
-                            'dataType' => 'json',
-                            'delay' => 250,
-                            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                            'processResults' => new JsExpression($resultsJs),
-                            'cache' => true,
-                        ],
-                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        'templateResult' => new JsExpression('formatRepo'),
-                    ],
-                ])->label(false)
-                ?>
-            
+    ],
+    'pluginOptions' => [
+        'allowClear' => true,
+        'dropdownParent' => '#main-modal',
+        'minimumInputLength' => 1,
+        'ajax' => [
+            'url' => Url::to(['/depdrop/employee-by-id']),
+            'dataType' => 'json',
+            'delay' => 250,
+            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+            'processResults' => new JsExpression($resultsJs),
+            'cache' => true,
+        ],
+        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+        'templateResult' => new JsExpression('formatRepo'),
+    ],
+])->label(false)
+?>
+
+
 <div class="row">
-<div class="col-6">
-    <?= $form->field($model, 'year_of_service')->textInput() ?>
-</div>
+    <div class="col-6">
+        <?= $form->field($model, 'year_of_service')->textInput() ?>
+    </div>
     <div class="col-6">
         <?= $form->field($model, 'thai_year')->textInput(['disabled' => false]) ?>
     </div>
 </div>
 
+<div class="row">
+    <div class="col-6">
+        <?= $form->field($model, 'data_json[before_leave_balance]')->textInput()->label('ยอกยกมา') ?>
+        <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสมสมวันลา') ?>
+    </div>
+    <div class="col-6">
+        <?= $form->field($model, 'data_json[leave_days]')->textInput(['value' => 10])->label('สิทธิลาประจำปี(10)') ?>
+        <?= $form->field($model, 'data_json[leave_max_days]')->textInput(['value' => 10])->label('สะสมวันลาได้สูงสุด') ?>
+    </div>
+</div>
 
-<?= $form->field($model, 'days')->textInput(['type' => 'number', 'step' => '0.5', 'min' => '0.5']) ?>
+
+
+<?= $form->field($model, 'days')->textInput(['type' => 'number', 'step' => '0.5', 'min' => '0.5'])->label('รวมสิทธลาพักผ่อน') ?>
 
 <?= $form->field($model, 'month_of_service')->hiddenInput(['value' => 0])->label(false) ?>
-    <?= $form->field($model, 'position_type_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?= $form->field($model, 'position_type_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
-    <?= $form->field($model, 'leave_type_id')->hiddenInput(['value' =>'LT4'])->label(false) ?>
+<?= $form->field($model, 'leave_type_id')->hiddenInput(['value' => 'LT4'])->label(false) ?>
 
-    <div class="form-group mt-3 d-flex justify-content-center gap-3">
-            <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-        </div>
-    <?php ActiveForm::end(); ?>
+<div class="form-group mt-3 d-flex justify-content-center gap-3">
+    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+</div>
+<?php ActiveForm::end(); ?>
 
 </div>
 
@@ -186,6 +202,25 @@ $('#form').on('beforeSubmit', function (e) {
         return false;
     });
 
+
+$('#emp_id').on('select2:select', function (e) {
+    var data = e.params.data;
+    var emp_id = $(this).val();
+    var thai_year = $('#leaveentitlements-thai_year').val();
+    $.ajax({
+        type: "get",
+        url: "/hr/leave-entitlements/leave-summary-by-emp",
+        data: {
+            emp_id:emp_id,
+            thai_year:thai_year
+        },
+        dataType: "json",
+        success: function (response) {
+            console.log(response);
+            
+        }
+    });
+});
 JS;
 $this->registerJs($js);
 ?>

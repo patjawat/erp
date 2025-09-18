@@ -34,8 +34,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
     <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
-                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-                </td>
+                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                 <td class="text-center fw-semibold "><?php echo $item->thai_year ?></td>
                 <td class="text-truncate" style="max-width: 230px;">
                     <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
