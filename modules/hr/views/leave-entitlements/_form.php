@@ -128,7 +128,7 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
     <div class="col-6">
         
         <?= $form->field($model, 'data_json[before_leave_balance]')->textInput()->label('ยอกยกมา') ?>
-        <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสมสมวันลา') ?>
+        <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสะสมวันลา') ?>
     </div>
     <div class="col-6">
         <?= $form->field($model, 'data_json[leave_days]')->textInput(['value' => 10])->label('สิทธิลาประจำปี(10)') ?>
