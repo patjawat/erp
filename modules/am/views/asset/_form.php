@@ -205,11 +205,7 @@ $group = Yii::$app->request->get('group');
                             <p class="mb-0">
                                 <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
                                 <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
-                                    'class' => 'btn btn-danger',
-                                    'data' => [
-                                        'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
-                                        'method' => 'post',
-                                    ],
+                                    'class' => 'btn btn-danger delete-item',
                                 ]) ?>
                             </p>
                         </div>

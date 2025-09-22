@@ -492,6 +492,8 @@ $("body").on("click", ".delete-item", async function (e) {
           } else if (response.status == "success" && response.close) {
             success("ดำเนินการลบสำเร็จ!.");
             $("#main-modal").modal("hide");
+          }else if (response.status == "success" && response.url) {
+             window.location.href = response.url;
           } else {
             location.reload();
           }

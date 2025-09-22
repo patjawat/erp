@@ -17,7 +17,7 @@ use app\modules\am\models\Asset;
                     <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
                     <th class="fw-semibold" scope="col" style="width:70px;">รูปภาพ</th>
                     <th class="fw-semibold" scope="col" tyle="width:280px;">ชื่อครุภัณฑ์</th>
-                    <th class="fw-semibold" scope="col">ทะเบียน</th>
+                    <th class="fw-semibold" scope="col">หมายเลขทะเบียน(รถยนต์)</th>
                     <th class="fw-semibold" scope="col">ครุภัณฑ์</th>
                     <th class="fw-semibold" scope="col">ประเภทครุภัณฑ์</th>
                     <th class="fw-semibold" scope="col">หมวดหมู่</th>
@@ -71,7 +71,7 @@ use app\modules\am\models\Asset;
                         <td class="align-middle"><?= $item->assetType->title ?? '' ?></td>
                         <td class="align-middle"><?= $item->assetCategory?->title ?? '' ?></td>
                         <td class="align-middle"><?= $item->viewReceiveDate() ?></td>
-                        <td class="align-middle"><?= $item->purchaseName->title ?></td>
+                        <td class="align-middle"><?= $item->purchaseName?->title ?? '' ?></td>
                         <td class="align-middle"><?= $item->budgetTypeName() ?></td>
 
                         <td class="align-middle text-end fw-semibold"><?= number_format($item->price, 0) ?></td>

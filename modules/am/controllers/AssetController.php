@@ -3,6 +3,7 @@
 namespace app\modules\am\controllers;
 
 use yii;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
@@ -345,6 +346,14 @@ class AssetController extends Controller
             }
         }
 
+        $viewDate = [
+                'expire_date' => AppHelper::DateFormDb($model->data_json['expire_date']),
+                'inspection_date' => AppHelper::DateFormDb($model->data_json['inspection_date']),
+            ];
+
+       $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+       $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+
         return $this->render('update', [
             'model' => $model,
             // 'group' => $model->asset_group_id
@@ -520,7 +529,7 @@ class AssetController extends Controller
         if ($model->save(false)) {
             return [
                 'status' => 'success',
-                'message' => 'ลบข้อมูลสำเร็จ'
+                'url' => Url::to(['/am/asset/index'])
             ];
         } else {
             return [

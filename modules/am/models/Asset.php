@@ -79,6 +79,7 @@ class Asset extends \yii\db\ActiveRecord
     public $q_lastDay;
     public $item_options;
     public $fsn_auto;  // กำหนดการให้หมายเลขอัตโนมัติถ้า true;
+    public $csvFile;
 
     public static function tableName()
     {
@@ -92,11 +93,12 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type','csvFile'], 'safe'],
             [['price'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],
             [['ref', 'code'], 'string', 'max' => 255],
+             [['csvFile'], 'file', 'skipOnEmpty' => false],
         ];
     }
 

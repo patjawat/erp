@@ -75,9 +75,15 @@ $("body").on("click", ".delete-item", function (e) {
         url: url,
         dataType: "json",
         success:   async function (response) {
+          
           if (response.status == "success") {
               await success("ดำเนินการลบสำเร็จ!.");
-              location.reload();
+              if(response.url){
+               window.location.href = response.url;
+              }else{
+                location.reload();
+
+              }
           }
         },
       });

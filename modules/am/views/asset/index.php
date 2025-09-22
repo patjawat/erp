@@ -77,7 +77,25 @@ $this->params['breadcrumbs'][] = $this->title;
             </h6>
             <div class="d-flex justify-content-between gap-3">
                   <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-light']) ?>
-                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
+                <div class="dropdown">
+                                <button class="btn btn-secondary shadow dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-gear"></i> จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                                    <li>
+                                        <?= Html::a(
+                                            '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
+                                            '#',
+                                            ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
+                                        ) ?>
+
+                                    </li>
+                                </ul>
+                            </div>
+
             </div>
         </div>
     </div>
