@@ -347,8 +347,8 @@ class AssetController extends Controller
         }
 
         $viewDate = [
-                'expire_date' => AppHelper::DateFormDb($model->data_json['expire_date']),
-                'inspection_date' => AppHelper::DateFormDb($model->data_json['inspection_date']),
+                'expire_date' => (isset($model->data_json['expire_date']) ? AppHelper::DateFormDb($model->data_json['expire_date']) : ''),
+                'inspection_date' => (isset($model->data_json['inspection_date']) ? AppHelper::DateFormDb($model->data_json['inspection_date']) : ''),
             ];
 
        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);

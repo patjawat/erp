@@ -23,8 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <div class="row">
-    <div class="col-lg-4 col-md-4 col-sm-12"></div>
-    <div class="col-lg-8 col-md-8 col-sm-12">
+    <div class="col-lg-12 col-md-12 col-sm-12">
 
 
     <div class="card mb-4">
@@ -89,81 +88,3 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
-<?= DetailView::widget([
-    'model' => $model,
-    'attributes' => [
-        [
-            'label' => 'หมวดพัสดุ',
-            'value' => function ($model) {
-                return $model->assetGroup ? $model->assetGroup->title : 'ไม่ระบุ';
-            },
-        ],
-        [
-            'label' => 'รหัสคุม',
-            'value' => function ($model) {
-                return $model->code;
-            },
-        ],
-        [
-            'label' => 'เลขที่โฉนด',
-            'value' => function ($model) {
-                return $model->code;
-            },
-        ],
-        [
-            'label' => 'แหล่งงบประมาณ',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'วิธีได้มา',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'เลขที่สัญญา',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'วันที่รับ',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'ที่เอกสาร',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'เนื้อที่',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'รหัสคุม GFMIS',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'ผู้ขาย/ผู้รับจ้าง',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-        [
-            'label' => 'วงเงิน',
-            'value' => function ($model) {
-                return '-';
-            },
-        ],
-    ],
-]) ?>
