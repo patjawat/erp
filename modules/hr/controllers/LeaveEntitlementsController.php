@@ -203,8 +203,8 @@ class LeaveEntitlementsController extends Controller
                 $newModel->emp_id = $emp->id;
                 $newModel->leave_type_id = 'LT4';
                 $newModel->position_type_id = $emp->position_type;
-                $newModel->year_of_service = $emp->workYear()['year'];
-                $newModel->month_of_service = $emp->workYear()['month'];
+                $newModel->year_of_service = isset($emp->workYear()['year']) ? $emp->workYear()['year'] : 0;
+                $newModel->month_of_service = isset($emp->workYear()['month']) ? $emp->workYear()['month'] : 0;
                 $newModel->days =  isset($leaveBefore) ? $leaveBefore->leaveSummaryDays()['leave_forward_days'] : 0;
                 $newModel->thai_year = $thaiYear;
                 $newModel->data_json = [

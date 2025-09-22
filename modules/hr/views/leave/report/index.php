@@ -70,7 +70,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            echo $dateStart;
             ?>
                 <?php  foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
