@@ -53,57 +53,22 @@ foreach ($model->getItems() as $item): ?>
     }
     ?>
 <?php endforeach; ?>
+
 <div class="row">
+    <div class="co-lg-12 col-md-12 col-sm-12">
 
-    <div class="col-8">
+
         <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
-                            class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
-                        รายการ
-                    </h6>
-                    <?php if (Yii::$app->user->can('warehouse')) { ?>
-                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])
-                        ?>
-                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])
-                        ?>
-                    <?php } else { ?>
-                        <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : ''
-                        ?>
-                    <?php } ?>
-                </div>
-                <!-- รายละเอียดรายการขอเบิก -->
-                <?php // echo $this->render('order_items',['model' => $model,'office' => $office])
-                ?>
-                <?php // echo $this->render('list_items',['model' => $model])
-                ?>
-                <div id="showOrderItem"></div>
-            </div>
-        </div>
-
-    </div>
-    <div class="col-4">
-        <!-- Star Card -->
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-3">
-                    <?php
-                    // echo $model->CreateBy()['avatar'];
-                    ?>
-
-                    <?php
-                    //  try {
-                    echo $model->CreateBy('<code>ผู้ขอเบิก</code> ' . $model->fromWarehouse->warehouse_name . ' | เมื่อ ' . $model->viewCreated())['avatar'];
-                    //  } catch (Throwable $th) {
-
-                    //     }
-                    ?>
+            <div class="card-header bg-primary-gradient d-flex justify-content-between  align-items-center">
+                <h6 class="text-white mb-0">ใบเบิกวัสดุเลขที่ : <?= $model->code ?></h6>
+                <div class="d-flex  align-items-center gap-3">
+                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['class' => 'btn btn-light open-modal', 'data-pjax' => '0', 'data' => ['size' => 'modal-xl']]) ?>
+                    <div class="d-flex justify-content-between">
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <div class="dropdown float-end">
-                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
+                            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false">
-                                <i class="fa-solid fa-ellipsis"></i>
+                                <i class="fa-solid fa-bars"></i>  จัดการ
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
                                 <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
@@ -112,50 +77,52 @@ foreach ($model->getItems() as $item): ?>
                         </div>
                     <?php endif; ?>
                 </div>
+                </div>
+            </div>
+            <div class="card-body">
 
-                <?php echo DetailView::widget([
-                    'model' => $model,
-                    'attributes' => [
-                        [
-                            'label' => 'รหัสขอเบิก',
-                            'value' => $model->code,
-                        ],
-                          [
-                            'label' => 'ประเภทวัสดุ',
-                            'value' => $model->assetType->title ?? '-',
-                        ],
-                        [
-                            'label' => 'จากคลัง',
-                            'value' => $model->fromWarehouse->warehouse_name ?? '-',
-                        ],
-                        [
-                            'label' => 'วันที่ตัดจ่าย',
-                            'value' => $model->viewMoveMentDate(),
-                        ],
-                        [
-                            'label' => 'สถานะคำขอ',
-                            'format' => 'html',
-                            'value' => $model->viewStatus(),
-                        ],
-                        [
-                            'label' => 'มูลค่า',
-                            'format' => 'html',
-                            'value' => function ($model) {
-                                return '<span>' . number_format($model->getTotalOrderPrice(), 2) . '</span>';
-                            },
-                            'contentOptions' => ['id' => 'sumPrice', 'class' => 'fw-semibold']
-                        ],
-                        [
-                            'label' => 'พิมพ์เอกสาร',
-                            'format' => 'raw',
-                            // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow','target' => '_blank','data' => ['pjax' => false]])
-                            // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['target' => '_blank', 'data-pjax' => '0']),
-                            // 'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order','id' => $model->id], ['target' => '_blank','data' => ['pjax' => false]])
-                            'value' => Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['class' => 'open-modal', 'data-pjax' => '0', 'data' => ['size' => 'modal-xl']]),
-                        ],
-                    ],
-                ]); ?>
 
+                <table class="table border-0 table-striped-columns mt-3">
+                    <tbody>
+                        <tr>
+
+                            <td>ผู้ขอเบิก : </td>
+                            <td>
+                                <?php
+                                    try {
+                                    echo $model->CreateBy('<code>ผู้ขอเบิก</code> ' . $model->fromWarehouse->warehouse_name . ' | เมื่อ ' . $model->viewCreated())['avatar'];
+                                    } catch (Throwable $th) {
+
+                                        }
+                                    ?>
+                            </td>
+                            <td>ประเภทวัสดุ </td>
+                            <td><?= $model->assetType->title ?? '-' ?></td>
+                        </tr>
+                        <tr>
+
+                            <td>วันที่ส่งใบเบิก</td>
+                            <td><span><?= $model->viewCreatedAt() ?></span></td>
+                            <td>วันที่ตัดจ่าย</td>
+                            <td><?= $model->viewMoveMentDate() ?></td>
+                        </tr>
+                        <tr>
+                            <td>คลังของผู้เบิก</td>
+                            <td><?= $model->fromWarehouse->warehouse_name ?? '-' ?></td>
+                            <td>มูลค่า</td>
+                            <td><span><?= number_format($model->getTotalOrderPrice(), 2) ?></span></td>
+
+                        </tr>
+                        <tr>
+
+                            <td>สถานะ</td>
+                            <td colspan="3"><?= $model->viewStatus() ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+
+                
             </div>
             <div class="card-footer">
                 <div class="d-flex justify-content-between">
@@ -191,6 +158,42 @@ foreach ($model->getItems() as $item): ?>
             </div>
 
         </div>
+
+    </div>
+</div>
+<div class="row">
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
+                            class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
+                        รายการ
+                    </h6>
+                    <?php if (Yii::$app->user->can('warehouse')) { ?>
+                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/add-new-item','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])
+                        ?>
+                        <?php // Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/store','id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']])
+                        ?>
+                    <?php } else { ?>
+                        <?php //  ($model->order_status !== 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ',['/inventory/stock-order/create','order_id' => $model->id,'name' => 'order_item','title' => 'เลือกวัสดุเพิ่มเติม'],['class' => 'btn btn-sm btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : ''
+                        ?>
+                    <?php } ?>
+                </div>
+                <!-- รายละเอียดรายการขอเบิก -->
+                <?php // echo $this->render('order_items',['model' => $model,'office' => $office])
+                ?>
+                <?php // echo $this->render('list_items',['model' => $model])
+                ?>
+                <div id="showOrderItem"></div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-4">
+        <!-- Star Card -->
+
         <!-- End Card -->
         <?php if ($model->order_status == 'success' && $model->transaction_type == 'OUT'): ?>
             <div class="card">
@@ -279,11 +282,11 @@ $("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.g
         $("#sumPrice").html(res.sumPrice);
         
         if(res.balance == 0){
-            $('#btnSave').show();
+            // $('#btnSave').show();
             console.log('show');
             
         }else{
-            $('#btnSave').hide();
+            // $('#btnSave').hide();
             console.log('hide');
         }
         $("#checkout").html(res.sumPrice);
@@ -314,7 +317,8 @@ function showLimitWarning() {
 // ฟังก์ชันจัดการการเพิ่ม/ลดจำนวนสินค้า
 async function handleQuantityChange(button, isIncrement) {
     let quantityField = isIncrement ? button.prev() : button.next();
-    let setVal = parseInt(quantityField.val()) + (isIncrement ? 1 : -1);
+    // let setVal = parseInt(quantityField.val()) + (isIncrement ? 1 : -1);
+    let setVal = parseFloat(quantityField.val()) + (isIncrement ? 1 : -1);
     let lotQty = button.data('lot_qty'), id = button.data('id');
 
     // if (setVal > lotQty) return showLimitWarning();
@@ -323,12 +327,19 @@ async function handleQuantityChange(button, isIncrement) {
 }
 
 // ตรวจสอบค่าที่กรอกใน input
-$("body").on("input", ".qty", function () {
-    const maxlot = $(this).data('maxlot');
-    this.value = this.value.replace(/\D/g, '');
-    if (parseInt(this.value) > maxlot) $(this).val(maxlot);
-    
-});
+// $("body").on("input", ".qty", function () {
+//     const maxlot = parseFloat($(this).data('maxlot'));
+
+//     // อนุญาตเฉพาะตัวเลข + จุดทศนิยม (1 จุดเท่านั้น)
+//     this.value = this.value
+//         .replace(/[^0-9.]/g, '')      // ลบทุกตัวที่ไม่ใช่เลข/จุด
+//         .replace(/(\..*)\./g, '$1');  // กันไม่ให้มี . เกิน 1 จุด
+
+//     let val = parseFloat(this.value);
+//     if (!isNaN(val) && val > maxlot) {
+//         $(this).val(maxlot);
+//     }
+// });
 
 // จัดการปุ่มลดจำนวน
 $("body").on("click", ".minus", function () {

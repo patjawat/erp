@@ -80,6 +80,17 @@ $("body").on("click", ".btn-approve", async function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
+        $('#main-modal').hide();
+              // 🔹 แสดง Loading ก่อนยิง AJAX
+                        Swal.fire({
+                            title: 'กำลังดำเนินการ...',
+                            text: 'กรุณารอสักครู่',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
             $.ajax({
                 type: "POST",
                 url: url,

@@ -97,6 +97,19 @@ async function ViewMainCar()
                 }).then(async (result) => {
                 if (result.value == true) {
                     var form = \$(this);
+
+                        $('#main-modal').hide();
+
+                        // 🔹 แสดง Loading ก่อนยิง AJAX
+                        Swal.fire({
+                            title: 'กำลังดำเนินการ...',
+                            text: 'กรุณารอสักครู่',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
                     $.ajax({
                         url: form.attr('action'),
                         type: 'post',
@@ -113,7 +126,7 @@ async function ViewMainCar()
                                         });
                                     }
                                     if(response.status == 'success') {
-                                            location.reload()
+                                            // location.reload()
                                             // closeModal()
                                             // success()
                                             // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               

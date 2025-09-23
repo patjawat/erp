@@ -594,7 +594,7 @@ class StockOrderController extends Controller
         // ตรวจสอบว่า stock พอจ่ายหรือไม่
         $checkBalanced = 0;
         foreach ($model->getItems() as $item) {
-            $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
+            $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (float)$item->qty) : 0;
             $item->save();
             if ($item->SumStockQty() <= 0 && $item->qty > 0) {
                 ++$checkBalanced;
@@ -671,7 +671,7 @@ class StockOrderController extends Controller
                     $newStockItem->asset_item = $item->asset_item;
                     $newStockItem->lot_number = $item->lot_number;
                     // $newStockItem->qty = ($item->SumStockQty() > 0) ? $item->qty : 0;
-                    $newStockItem->qty = (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (int)$item->qty) : 0;
+                    $newStockItem->qty = (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (float)$item->qty) : 0;
                     $newStockItem->unit_price = $item->unit_price;
                     $newStockItem->transaction_type = 'IN';
                     $newStockItem->warehouse_id = $model->from_warehouse_id;
@@ -742,6 +742,7 @@ class StockOrderController extends Controller
 
             // return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว'];
             return $this->redirect(['/inventory/warehouse']);
+            
         } catch (\Exception $e) {
             $transaction->rollBack();
 

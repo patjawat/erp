@@ -76,15 +76,22 @@ $emp = UserHelper::GetEmployee();
                         <!-- <i class="fa-regular fa-square-minus fs-3"></i> -->
                         <i class="fa-solid fa-minus"></i>
                     </span>
-                    <input name="qty" id="<?=$item->id?>" type="text" min="0" max="2" value="<?php echo $item->qty; ?>"
-                        class="form-control qty" data-maxlot="<?=$item->SumLotQty()?>"
+                    <input name="qty" 
+                        id="<?=$item->id?>" 
+                        type="number" 
+                        min="0" 
+                        max="2" 
+                        step="0.01" 
+                        value="<?= $item->qty ?>" 
+                        class="form-control qty" 
+                        data-maxlot="<?= $item->SumLotQty()?>"
                         style="width:100px;font-weight: 500;">
+
 
                     <span type="button" class="plus btn btn-sm btn-light" id="plus"
                         data-lot_qty="<?php echo $item->SumLotQty();?>" data-id="<?php echo $item->id;?>"
                         data-total="<?php echo $item->SumStockQty();?>">
                         <i class="fa-solid fa-plus"></i>
-                        <!-- <i class="fa-regular fa-square-plus fs-3"></i> -->
                     </span>
                 </div>
                 <?php else:?>
