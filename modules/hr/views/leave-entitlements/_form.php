@@ -7,6 +7,7 @@ use yii\web\JsExpression;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\LeaveEntitlements;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\LeaveEntitlements $model */
@@ -69,6 +70,15 @@ $resultsJs = <<< JS
 
 
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
+
+<?php
+ $yearBudget = LeaveEntitlements::find()
+                    ->select('thai_year')
+                    ->orderBy(['thai_year' => SORT_DESC])
+                    ->scalar();
+echo  $yearBudget;
+                    
+?>
 <?= $form->field($model, 'data_json[before_leave_use]')->hiddenInput()->label(false) ?>
 <?php
 try {
@@ -127,11 +137,11 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 <div class="row">
     <div class="col-6">
         
-        <?= $form->field($model, 'data_json[before_leave_balance]')->textInput()->label('ยอดยกมา') ?>
+        <?= $form->field($model, 'data_json[before_leave_balance]')->textInput(['class' => 'cal-days'])->label('ยอดยกมา') ?>
         <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสะสมวันลา') ?>
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'data_json[leave_days]')->textInput(['value' => 10])->label('สิทธิลาประจำปี(10)') ?>
+        <?= $form->field($model, 'data_json[leave_days]')->textInput(['class' => 'cal-days','value' => 10])->label('สิทธิลาประจำปี(10)') ?>
         <?= $form->field($model, 'data_json[leave_max_days]')->textInput()->label('สะสมวันลาได้สูงสุด') ?>
     </div>
 </div>
@@ -155,6 +165,18 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 
 <?php
 $js = <<< JS
+
+$(document).on('input', '.cal-days', function () {
+    let beforeLeaveBalance = parseFloat($('#leaveentitlements-data_json-before_leave_balance').val()) || 0;
+    let beforeLeaveDays = parseFloat($('#leaveentitlements-data_json-leave_days').val()) || 0;
+
+    let total = beforeLeaveBalance + beforeLeaveDays;
+
+    $('#leaveentitlements-days').val(total);
+});
+
+
+
 $('#form').on('beforeSubmit', function (e) {
     Swal.fire({
         title: "ยืนยัน?",

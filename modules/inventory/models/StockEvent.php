@@ -63,6 +63,8 @@ class StockEvent extends Yii\db\ActiveRecord
     public $asset_type_name;
     public $date_start;
     public $date_end;
+    public $req_date_start; //วันที่ขอ
+    public $req_date_end; //วันที่ขอ
     public $q_month;
     public $q_code;
     public $q_vendor;
@@ -91,9 +93,11 @@ class StockEvent extends Yii\db\ActiveRecord
                 'asset_type_name',
                 'q',
                 'date_start',
+                'date_end',
+                'req_date_start',
+                'req_date_end',
                 'q_month',
                 'receive_month',
-                'date_end',
                 'transaction_type',
                 'category_id',
                 'qty',
@@ -1432,6 +1436,7 @@ public function getVendor()
 
         if ($this->title) {
             $where[] = ['like', 'i.title', $this->title];
+
         }
 
         $query->andWhere($where);

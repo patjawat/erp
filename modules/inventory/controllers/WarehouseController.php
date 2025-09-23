@@ -117,7 +117,7 @@ class WarehouseController extends Controller
             ]);
             
 
-             if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -130,6 +130,7 @@ class WarehouseController extends Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['>=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_start)])->andFilterWhere(['<=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_end)]);
 
             
           

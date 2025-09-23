@@ -44,13 +44,30 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            ['thai_year', 'compare', 'compareValue' => AppHelper::YearBudget(), 'operator' => '<=', 'message' => 'มากกว่าปีงบประมาณได้'],
+            // ['thai_year', 'compare', 'compareValue' => AppHelper::YearBudget(), 'operator' => '<=', 'message' => 'มากกว่าปีงบประมาณได้'],
+                    [
+            'thai_year',
+            'compare',
+            'compareValue' => function () {
+                // ดึงค่าจาก DB ด้วย ActiveRecord
+                $yearBudget = LeaveEntitlements::find()
+                    ->select('thai_year')
+                    ->orderBy(['thai_year' => SORT_DESC])
+                    ->scalar();
+                return $yearBudget;
+            },
+            'operator' => '<=',
+            'message' => 'ยังไม่ได้กำหนดสิทธิการลาในปี '.$this->thai_year
+        ],
             [['emp_id', 'month_of_service', 'year_of_service', 'days', 'thai_year'], 'required'],
             [['emp_id','month_of_service', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department'], 'safe'],
             [['position_type_id', 'leave_type_id'], 'string', 'max' => 255],
         ];
     }
+
+
+
 
     /**
      * {@inheritdoc}

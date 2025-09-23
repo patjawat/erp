@@ -18,6 +18,7 @@ use app\modules\am\models\Asset;
 use app\modules\sm\models\Product;
 use yii\web\NotFoundHttpException;
 use app\components\CategoriseHelper;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Employees;
 
 class DepdropController extends \yii\web\Controller
@@ -557,6 +558,23 @@ class DepdropController extends \yii\web\Controller
         return [
             'results' => $data,
             'items' => $query
+        ];
+    }
+
+    public function actionDateFilter()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $dateStart = '';
+        $dateEnd = '';
+        $dateFilter = $this->request->get('date_filter');
+            if ($dateFilter) {
+                $range = DateFilterHelper::getRange($dateFilter);
+                $dateStart = AppHelper::convertToThai($range[0]);
+                $dateEnd = AppHelper::convertToThai($range[1]);
+        }
+        return [
+            'date_start' => $dateStart,
+            'date_end' => $dateEnd
         ];
     }
 }
