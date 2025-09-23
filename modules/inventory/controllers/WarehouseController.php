@@ -92,7 +92,7 @@ class WarehouseController extends Controller
         if ($warehouse) {
             $searchModel = new StockEventSearch([
                 'thai_year' => AppHelper::YearBudget(),
-                'date_filter' => 'today',
+                'date_filter' => 'this_month',
                 'order_status' =>   ['pending'],
                 'warehouse_id' => $warehouse->id,
                 'transaction_type' => 'OUT'
@@ -101,12 +101,6 @@ class WarehouseController extends Controller
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andFilterWhere(['name' => 'order']);
             $dataProvider->query->andFilterWhere(['order_status' => $searchModel->order_status]);
-
-            if ($searchModel->date_filter) {
-                $range = DateFilterHelper::getRange($searchModel->date_filter);
-                $searchModel->date_start = AppHelper::convertToThai($range[0]);
-                $searchModel->date_end = AppHelper::convertToThai($range[1]);
-            }
 
 
             $dataProvider->query->andFilterWhere([
@@ -119,13 +113,8 @@ class WarehouseController extends Controller
 
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+            $searchModel->req_date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->req_date_end = AppHelper::convertToThai($range[1]);
         }
 
 

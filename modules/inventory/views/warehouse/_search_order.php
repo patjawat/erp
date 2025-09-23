@@ -188,6 +188,7 @@ $('.reset').click(function (e) {
             $('#formRequestSearch').trigger('reset');
             $('#formRequestSearch').find('select').val(null).trigger('change');
             $('#formRequestSearch').find('input[type=text]').val('');
+             $('#formRequestSearch').submit();
             
             // Swal.fire('ล้างข้อมูลแล้ว!', '', 'success');
         }
