@@ -386,6 +386,10 @@ class StockOrderController extends Controller
         $oldObj = $model->data_json;
         $model->created_at = AppHelper::convertToThai(isset($model->created_at) ? $model->created_at : date('Y-m-d'));
 
+          if($model->movement_date){
+                $model->movement_date = AppHelper::convertToThai($model->movement_date);
+            }
+
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->created_at = AppHelper::convertToGregorian($model->created_at) . ' ' . date('H:i:s');
