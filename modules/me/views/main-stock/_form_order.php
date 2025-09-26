@@ -69,6 +69,10 @@ $resultsJs = <<< JS
     color: #3F51B5;
 }
 </style>
+
+<div class="row">
+<div class="col-lg-6 col-md-6 col-sm-12">
+
 <?php
 
 try {
@@ -112,24 +116,9 @@ try {
             ],
         ])->label('ผู้เห็นชอบ')
     ?>
-
-    <?php
-    //    $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-    //                                     'data' => $model->listWareHouseMain(),
-    //                                     'options' => ['placeholder' => 'เลือกคลังที่ต้องการเบิก'],
-    //                                     'pluginEvents' => [
-    //                                         "select2:unselect" => "function() { 
-
-    //                                         }",
-    //                                         "select2:select" => "function() {
-    //                                            console.log($(this).val());
-    //                                     }",],
-    //                                     'pluginOptions' => [
-    //                                         'allowClear' => true,
-    //                                         'dropdownParent' => '#main-modal',
-    //                                     ],
-    //                                 ])->label('คลังวัสดุ');
-                                    
-                                    ?>
-<?= $form->field($model, 'data_json[note]')->textArea(['rows' => 5])->label('เหตุผล');?>
-<?php //  $form->field($model, 'data_json[checker_confirm]')->textInput(['value' => ''])->label('เหตุผล');?>
+    
+</div>
+<div class="col-lg-6 col-md-6 col-sm-12">
+    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 2])->label('เหตุผล');?>
+</div>
+</div>

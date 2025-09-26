@@ -347,13 +347,16 @@ class MainStockController extends Controller
         $cart = \Yii::$app->cartMain;
 
         $model = Stock::findOne($id);
+        return $model;
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
+        
         if (!$mainWarehouse) {
             $mainWarehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
             \Yii::$app->session->set('main-warehouse', $mainWarehouse);
             \Yii::$app->session->set('asset_type',$model->product->productType);
         }
+
         $cart->create($model, 1);
         $totalCount = $cart->getCount();
 
