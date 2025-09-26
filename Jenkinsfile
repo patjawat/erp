@@ -8,6 +8,19 @@ pipeline {
     }
 
     stages {
+
+         stage('Cleanup') {
+            steps {
+                deleteDir() // ลบ workspace เก่า ก่อน checkout
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/patjawat/erp.git'
+            }
+        }
+        
         stage('Build Image') {
             steps {
                 script {
