@@ -27,12 +27,12 @@ services:
     image: patjawat/erp:1.1
     container_name: demo
     platform: linux/amd64
-    labels:
-    - "com.centurylinklabs.watchtower.enable=true"
     env_file:
       - ./.env
     ports:
       - "81:80"
+    labels:
+    - "com.centurylinklabs.watchtower.enable=true"
   watchtower:
     container_name: watchtower
     image: containrrr/watchtower
