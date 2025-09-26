@@ -27,15 +27,18 @@ services:
     image: patjawat/erp:1.1
     container_name: demo
     platform: linux/amd64
+    labels:
+    - "com.centurylinklabs.watchtower.enable=true"
     env_file:
       - ./.env
     ports:
       - "81:80"
   watchtower:
+    container_name: watchtower
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300  # เช็คทุก 5 นาที
+    command: --interval 3600  # เช็คทุก 5 นาที
 
   mysqlDB:
     image: mysql:8.0
