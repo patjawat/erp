@@ -92,22 +92,3 @@ volumes:
 networks:
     proxy-network:
       driver: bridge
-
-
-#  การ backup mysql
-  # mysqlbackup:
-  #   image: selim13/automysqlbackup:2.6-9
-  #   volumes:
-  #     - "./docker/backup:/backup"
-  #   environment:
-  #     USERNAME: root
-  #     PASSWORD: "docker"
-  #     DBNAMES: ${CONTAINER_NAME}
-  #     DBHOST: mysqlDB
-  #     DBEXCLUDE: "performance_schema information_schema"
-  #     # CRON_SCHEDULE: "*/2 * * * *"
-  #     CRON_SCHEDULE: "0 0 * * *" 
-  #     EXTRA_OPTS: "--single-transaction"
-  #   depends_on:
-  #     - mysqlDB
-

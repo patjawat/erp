@@ -109,9 +109,26 @@ foreach ($model->getItems() as $item): ?>
 
                         </tr>
                         <tr>
-
                             <td>ผู้เห็นชอบ</td>
-                            <td> <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?></td>
+                            <td> 
+                                <div class="d-flex justify-content-between">
+                                   
+                                        <?php if ($model->leaderApprove && $model->leaderApprove->status == 'Pending'): ?>
+                                    <?= Html::a(
+                                        '<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',
+                                        ['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApprove->id],
+                                        [
+                                            'class' => 'btn btn-warning rounded-pill shadow open-modal',
+                                            'data' => ['size' => 'modal-md']
+                                        ]
+                                    ) ?>
+                                    <?php else:?>
+                                         <?php echo $model->viewChecker('ผู้เห็นชอบ')['avatar']; ?>
+                        <?php endif; ?>
+                        
+                                </div>
+                        
+                        </td>
                             <td>สถานะ</td>
                             <td><?= $model->viewStatus() ?></td>
                         </tr>
@@ -131,16 +148,7 @@ foreach ($model->getItems() as $item): ?>
 
 <div class="d-flex justify-content-center">
 
-    <?php if ($model->leaderApprove && $model->leaderApprove->status == 'Pending'): ?>
-        <?= Html::a(
-            '<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',
-            ['/inventory/stock-order/approve-form-store', 'id' => $model->leaderApprove->id],
-            [
-                'class' => 'btn btn-light rounded-pill shadow open-modal',
-                'data' => ['size' => 'modal-md']
-            ]
-        ) ?>
-    <?php endif; ?>
+
 
     <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouse->id)): ?>
         <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout', 'id' => 'btnSave']); ?>
