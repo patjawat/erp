@@ -3,7 +3,6 @@ services:
   php:
     container_name: ${CONTAINER_NAME}
     image: yiisoftware/yii2-php:8.2-apache
-    cpus: 0.5
     environment:
       - TZ=Asia/Bangkok
       - PHP_MEMORY_LIMIT=2048M
