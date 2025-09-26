@@ -7,7 +7,7 @@ use app\components\UserHelper;
 // $this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
 // $this->registerCssFile('@web/owl/owl.carousel.min.css');
 
-$this->title = 'MyDashboard-';
+$this->title = 'MyDashboard';
 $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 ?>
 
