@@ -8,13 +8,6 @@ pipeline {
     }
 
     stages {
-
-         stage('Cleanup') {
-            steps {
-                deleteDir() // ลบ workspace เก่า ก่อน checkout
-            }
-        }
-        
         stage('Build Image') {
             steps {
                 script {
