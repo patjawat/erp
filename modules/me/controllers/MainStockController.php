@@ -347,7 +347,6 @@ class MainStockController extends Controller
         $cart = \Yii::$app->cartMain;
 
         $model = Stock::findOne($id);
-        return $model;
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
         
