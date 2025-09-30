@@ -184,6 +184,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<< JS
 loadStore()
 
+
 $("body").on("click", "#checkout", function (e) {
     e.preventDefault();
     Swal.fire({
@@ -276,13 +277,15 @@ $('#edit-order').click(function (e) {
         });
     
 });
-
 function updateQuantity(itemId, change) {
     let inputField = $("#qty-" + itemId);
-    let currentQuantity = parseInt(inputField.val()) || 1;
-    
+    let currentQuantity = parseFloat(inputField.val()) || 1;
+
     let newQty = currentQuantity + change;
-    if (newQty < 1) newQty = 1; // ป้องกันค่าต่ำกว่า 1
+    if (newQty < 0.1) newQty = 0.1; // กำหนดค่าต่ำสุด (เปลี่ยนได้ตามต้องการ)
+
+    // ปรับให้เป็นทศนิยม 2 ตำแหน่ง
+    newQty = parseFloat(newQty.toFixed(2));
 
     inputField.val(newQty);
     sendUpdateRequest(itemId, newQty);
@@ -291,22 +294,23 @@ function updateQuantity(itemId, change) {
 // ตรวจจับการเปลี่ยนแปลงจากคีย์บอร์ด
 $("body").on("input", ".quantity-input", function() {
     let itemId = $(this).data("item-id");
-    let newQty = parseInt($(this).val()) || 1;
+    let newQty = parseFloat($(this).val()) || 1;
 
-    if (newQty < 1) {
-        newQty = 1;
-        $(this).val(1);
+    if (newQty < 0.1) {
+        newQty = 0.1;
+        $(this).val(newQty);
     }
+
+    newQty = parseFloat(newQty.toFixed(2));
 
     sendUpdateRequest(itemId, newQty);
     console.log('update');
-    
 });
 
 // ฟังก์ชันส่งค่าปรับปรุงไปยังเซิร์ฟเวอร์
 function sendUpdateRequest(itemId, qty) {
     $.ajax({
-        url: "/me/store-v2/update-quantity", // เปลี่ยนเป็น URL ของคุณ
+        url: "/me/store-v2/update-quantity",
         type: "POST",
         data: { id: itemId, qty: qty },
         success: function(response) {

@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
- <?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary shadow'])?>
+<?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary shadow'])?>
 <?php $this->endBlock(); ?>
 
 
@@ -41,12 +41,14 @@ $products = $cart->getItems();
 <div class="card">
     <div class="card-body d-flex justify-content-between align-items-center">
         <div class="d-flex flex-column">
-            <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?></span> รายการ</h6>
+            <h6><i class="bi bi-ui-checks"></i> จำนวนวัสดุในคลัง <span
+                    class="badge rounded-pill text-bg-primary"><?php echo number_format($dataProvider->getTotalCount()); ?></span>
+                รายการ</h6>
             <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
+        </div>
         <div>
 
-        <?php
+            <?php
             try {
                 echo Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิกxx', ['/me/main-stock/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]);
                 //code...
@@ -55,17 +57,18 @@ $products = $cart->getItems();
             }
             ?>
             <div>
-<?php if($cart->getCount() == 0):?>
-    <button type="button" class="btn btn-primary rounded-pfill disabled">
-                    <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount"> 0 </span> รายการ
-                    </button>
-<?php else:?>
+                <?php if($cart->getCount() == 0):?>
+                <button type="button" class="btn btn-primary rounded-pfill disabled">
+                    <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount"> 0
+                    </span> รายการ
+                </button>
+                <?php else:?>
                 <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
                     </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
-                    <?php endif;?>
-                   
-                    </div>
+                <?php endif;?>
+
+            </div>
         </div>
     </div>
 </div>
@@ -74,33 +77,33 @@ $products = $cart->getItems();
     <?php foreach ($dataProvider->getModels() as $model) { ?>
     <div class="p-2 col-2">
         <div class="card position-relative">
-        <p class="position-absolute top-0 end-0 p-2">
-                        <i class="fa-solid fa-circle-info fs-4"></i>
-                    </p>
+            <p class="position-absolute top-0 end-0 p-2">
+                <i class="fa-solid fa-circle-info fs-4"></i>
+            </p>
             <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover rounded-top','style' => 'max-height: 155px;']); ?>
             <div class="card-body w-100">
-            <div class="d-flex justify-content-start align-items-center">
-                            <?php if($model->SumQty() >= 1):?>
-                            <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
-                                <?php echo $model->product->unit_name; ?></span>
-                            <?php else:?>
-                            <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
-                            <?php endif;?>
-                        </div>
-                        <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
-                        
-                        <div class="d-flex justify-content-between">
-                            <div class="fw-semibold text-danger">
-                            <?php echo number_format($model->unit_price,2); ?>
-                            </div>
-                                <?php
+                <div class="d-flex justify-content-start align-items-center">
+                    <?php if($model->SumQty() >= 1):?>
+                    <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
+                        <?php echo $model->product->unit_name; ?></span>
+                    <?php else:?>
+                    <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
+                    <?php endif;?>
+                </div>
+                <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
+
+                <div class="d-flex justify-content-between">
+                    <div class="fw-semibold text-danger">
+                        <?php echo number_format($model->unit_price,2); ?>
+                    </div>
+                    <?php
                                                 try {
                                                     echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/main-stock/add-to-cart', 'id' => $model->id], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
                                                 } catch (Throwable $th) {
                                                     // throw $th;
                                                 }
                                 ?>
-                        </div>
+                </div>
             </div>
         </div>
 
@@ -274,4 +277,3 @@ $("body").on("click", ".checkout", async function (e) {
 
 JS;
 $this->registerJS($js, View::POS_END);
-

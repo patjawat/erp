@@ -1,9 +1,11 @@
 <?php
+
 use yii\web\View;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\SiteHelper;
 use yii\bootstrap5\ActiveForm;
+
 $site = Categorise::findOne(['name' => 'site']);
 $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
@@ -12,52 +14,52 @@ $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                  <div>
-                    <h3>กรุณายืนยันตัวตน</h3>
-                    <p>ยังไม่มีบัญชี ? <?=Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน',['/site/conditions-register'],['class' => 'text-primary'])?></p>
-                  </div>
-                  <div>
-                  <?php echo Html::img($site->logo(),['class' => 'object-fit-cover rounded mt-0','style' =>'margin-top: 25px;max-width: 110px;max-height: 110px;    width: 100%;height: 100%;']) ?>
-                  </div>
-                </div>
-  
-          <?php $form = ActiveForm::begin(['id' => 'blank-form','enableAjaxValidation' => false,]); ?>
-            <div class="col-lg-12 col-md-12 col-sm-12">
-                <?= $form->field($model, 'username')->textInput(['autofocus' => true,'placeholder' => 'ระบุอีเมล','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('อีเมล') ?>
-                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10'])->label('รหัสผ่าน') ?>
-                <div class="d-inline-block w-100">
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3>กรุณายืนยันตัวตน</h3>
+    <p>ยังไม่มีบัญชี ? <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียน', ['/site/conditions-register'], ['class' => 'text-primary']) ?></p>
+  </div>
+  <div>
+    <?php echo Html::img($site->logo(), ['class' => 'object-fit-cover rounded mt-0', 'style' => 'margin-top: 25px;max-width: 110px;max-height: 110px;    width: 100%;height: 100%;']) ?>
+  </div>
+</div>
 
-                   
-
-                    <div class="d-grid gap-2 mt-3">
-                        <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login" type="submit">
-                            <i class="fa-solid fa-fingerprint"></i> เข้าสู่ระบบ
-                        </button>
-
-                        <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btnAwait" type="submit">
-                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            รอสักครู่...
-                        </button>
-
-                        <button class="btn btn-lg btn-primary account-btn rounded-pill d-none" id="btnLoading"
-                            type="button" disabled="">
-                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            Loading...
-                        </button>
-                    </div>
-                </div>
-        <?php ActiveForm::end(); ?>
+<?php $form = ActiveForm::begin(['id' => 'blank-form', 'enableAjaxValidation' => false,]); ?>
+<div class="col-lg-12 col-md-12 col-sm-12">
+  <?= $form->field($model, 'username')->textInput(['autofocus' => true, 'placeholder' => 'ระบุอีเมล', 'class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary text-opacity-100 bg-opacity-10'])->label('อีเมล') ?>
+  <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'กำหนดรหัสผ่าน', 'class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10'])->label('รหัสผ่าน') ?>
+  <div class="d-inline-block w-100">
 
 
-            <div class="row">
-              <div class="col-12">
-              <div class="d-flex justify-content-between mt-3 p-3">
-                  <p class="">Or continue with</p>
 
-                    <?=Html::a('<i class="fa-solid fa-unlock"></i> ลืมรหัสผ่าน',['/site/forgot-password'],['class' => 'text-primary'])?>
-                    </div>
-                <!-- <div class="d-flex gap-2 gap-sm-3 justify-content-centerX">
+    <div class="d-grid gap-2 mt-3">
+      <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btn-login" type="submit">
+        <i class="fa-solid fa-fingerprint"></i> เข้าสู่ระบบ
+      </button>
+
+      <button class="btn btn-lg btn-primary account-btn rounded-pill" id="btnAwait" type="submit">
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        รอสักครู่...
+      </button>
+
+      <button class="btn btn-lg btn-primary account-btn rounded-pill d-none" id="btnLoading"
+        type="button" disabled="">
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        Loading...
+      </button>
+    </div>
+  </div>
+  <?php ActiveForm::end(); ?>
+
+
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between mt-3 p-3">
+        <p class="">Or continue with</p>
+
+        <?= Html::a('<i class="fa-solid fa-unlock"></i> ลืมรหัสผ่าน', ['/site/forgot-password'], ['class' => 'text-primary']) ?>
+      </div>
+      <!-- <div class="d-flex gap-2 gap-sm-3 justify-content-centerX">
                   <a href="#!" class="btn btn-outline-danger bsb-btn-circle bsb-btn-circle-2xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
                       <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" />
@@ -75,12 +77,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     </svg>
                   </a>
                 </div> -->
-              </div>
-            </div>
+    </div>
+  </div>
 
-            
-<?php
-$js = <<< JS
+
+  <?php
+  $js = <<< JS
  $('#btnAwait').hide();
 
 $('#blank-form').on('beforeSubmit', function (e) {
@@ -119,5 +121,5 @@ e.preventDefault
 
 
 JS;
-$this->registerJs($js,View::POS_END);
-?>
+  $this->registerJs($js, View::POS_END);
+  ?>

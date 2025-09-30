@@ -214,22 +214,18 @@ class MainStockController extends Controller
         $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouseModel->data_json['item_type'];
         
-        // $product = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->andWhere(['IN', 'code', $item])->all(), 'code', 'title');
 
         $searchModel = new StockSearch([
             'warehouse_id' => isset($mainWarehouse->id) ? $mainWarehouse->id : '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->leftJoin('categorise', 'categorise.code = stock.asset_item AND categorise.name = :name', [':name' => 'asset_item'])
         $dataProvider->query->joinWith('warehouse');
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['warehouse_id' => ($mainWarehouse ? $mainWarehouse->id : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere(['warehouse_type' =>'MAIN']);
-        // $dataProvider->query->andFilterWhere(['p.category_id' =>$product]);
 
-        // ->where(['categorise.category_id' => ['M1', 'M2']])
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_item', $searchModel->q],

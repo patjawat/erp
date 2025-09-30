@@ -12,9 +12,6 @@ $stockEvents = Stock::find()
 ])
 ->andWhere(['>', 'qty', 0]);
 
-// Debug raw SQL
-// echo $stockEvents->createCommand()->getRawSql();
-
 $stockEvents = $stockEvents->all();
 
 $balance = 0;

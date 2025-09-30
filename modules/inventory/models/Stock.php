@@ -313,6 +313,13 @@ public function listLotNumber()
         return $total;
     }
 
+
+    // เรียง lotnumber ตามการรับเข้า
+    public function getLotNumberLevelQty()
+    {
+
+    }
+
     // // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
     // public function ReceiveMainSummary()
     // {

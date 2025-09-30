@@ -108,13 +108,7 @@ class SiteController extends Controller
         if (\Yii::$app->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load(\Yii::$app->request->post()) && $model->login()) {
-                // return $this->goBack();
                 return $this->redirect(['/me']);
-                // return $this->asJson([
-                //     'success' => true,
-                //     'model' => $model,
-
-                // ]);
             }
             $result = [];
             foreach ($model->getErrors() as $attribute => $errors) {

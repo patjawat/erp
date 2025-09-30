@@ -112,7 +112,6 @@ foreach ($model->getItems() as $item): ?>
                             <td>ผู้เห็นชอบ</td>
                             <td> 
                                 <div class="d-flex justify-content-between">
-                                   
                                         <?php if ($model->leaderApprove && $model->leaderApprove->status == 'Pending'): ?>
                                     <?= Html::a(
                                         '<i class="fa-solid fa-circle-check text-primary"></i> อนุมัติเห็นชอบแทนหัวหน้า',
