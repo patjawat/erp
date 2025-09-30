@@ -789,16 +789,13 @@ public function getVendor()
         switch ($this->order_status) {
              case 'none':
                 $msg = '<div class="badge badge-soft-secondary fs-13"><i class="fa-regular fa-circle-question"></i> ฉบับร่าง</div>';
-                // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
                 break;
             case 'await':
                 $msg = '<div class="badge badge-soft-success fs-13">รอดำเนินการ</div>';
-                // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
                 break;
 
             case 'pending':
                 $msg = '<div class="badge rounded-pill badge-soft-warning text-warning fs-13"><i class="fa-solid fa-hourglass"></i> รอดำเนินการ</div>';
-                // $msg = '<i class="fa-solid fa-hourglass"></i> <span>รอดำเนินการ</span>';
                 break;
 
             case 'cancel':
@@ -806,7 +803,6 @@ public function getVendor()
                 break;
             case 'success':
                 $msg = '<div class="badge rounded-pill badge-soft-success text-success fs-13"> <i class="bi bi-check2-circle text-success"></i> สำเร็จ </div>';
-                // $msg = '<i class="bi bi-check2-circle text-success"></i> <span>สำเร็จ</span>';
                 break;
 
             default:
