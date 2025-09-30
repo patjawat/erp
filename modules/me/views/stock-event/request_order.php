@@ -86,15 +86,9 @@ $products = $cart->getItems();
                             <td><?=$item->viewChecker()['avatar']?></td>
                             <td>
                             <?php echo $item->warehouse->warehouse_name?></td>
-                            <td class="text-start">
-                                <?php  if($item->order_status == 'success' && isset($item->data_json['player'])):?>
-                                <?php
-                                    $datetime = \Yii::$app->thaiDate->toThaiDate($item->data_json['player_date'], true, false);
-                                    $msg = $item->viewstatus().' '.$datetime;
-                                    echo $item->ShowPlayer($msg)['avatar'];
-                                    ?>
-                                <?php else:?>
+                            <td class="text-center">
                                 <?php echo $item->viewstatus()?>
+                                <?php  if($item->order_status == 'success' && isset($item->data_json['player'])):?>
                                 <?php endif;?>
                             </td>
                             <td class="text-end">

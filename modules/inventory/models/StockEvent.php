@@ -787,6 +787,10 @@ public function getVendor()
     public function viewStatus()
     {
         switch ($this->order_status) {
+             case 'none':
+                $msg = '<div class="badge badge-soft-secondary fs-13"><i class="fa-regular fa-circle-question"></i> ฉบับร่าง</div>';
+                // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
+                break;
             case 'await':
                 $msg = '<div class="badge badge-soft-success fs-13">รอดำเนินการ</div>';
                 // $msg = '<i class="fa-regular fa-clock"></i> <span>อยู่ระหว่างดำเนินการ</span>';
