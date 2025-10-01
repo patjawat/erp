@@ -124,7 +124,6 @@ class DocumentsController extends Controller
     {
         $searchModel = new DocumentSearch([
             'date_filter' => 'today',
-            'thai_year' => AppHelper::YearBudget(),
             'document_group' => 'receive',
         ]);
 
