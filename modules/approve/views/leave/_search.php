@@ -34,23 +34,41 @@ use app\modules\hr\models\Organization;
     </div>
     <div class="col-2">
         <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '130px',
-            ],
+            echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
+                'data' => DateFilterHelper::getDropdownItems(),
+                'options' => [
+                    'placeholder' => 'ช่วงเวลาทั้งหมด',
+                    'id' => 'dateFilter', // 👈 เพิ่ม id ตรงนี้
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '130px',
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function(result) { 
+                        $.ajax({
+                            type: 'get',
+                            url: '/depdrop/date-filter',
+                            data: { date_filter: $(this).val() },
+                            dataType: 'json',
+                            success: function (res) {
+                            $('#dateStart').val(res.date_start)
+                            $('#dateEnd').val(res.date_end)
+                            }
+                        });
+                    }",
+                ]
             ])->label(false);
             ?>
 
+
     </div>
 
     <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'id' => 'dateStart','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'id' => 'dateEnd','placeholder' => 'ถึงวีนที่'])->label(false);?>
     </div>
     <div class="col-2">
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
@@ -128,14 +146,14 @@ use app\modules\hr\models\Organization;
 
 $js = <<< JS
 
-    thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
+ thaiDatepicker('#dateStart,#dateEnd')
 
     $("#approvesearch-date_start").on('change', function() {
-            $('#approvesearch-date_filter').val(null).trigger('change');
+            $('#dateFilter').val(null).trigger('change');
             // $(this).submit();
     });
     $("#approvesearch-date_end").on('change', function() {
-            $('#approvesearch-date_filter').val(null).trigger('change');
+            $('#dateFilter').val(null).trigger('change');
             // $(this).submit();
     });
 

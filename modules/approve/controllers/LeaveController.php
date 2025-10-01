@@ -3,15 +3,11 @@
 namespace app\modules\approve\controllers;
 
 use Yii;
-use DateTime;
 use yii\web\Response;
 use yii\db\Expression;
-use yii\web\Controller;
-use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
@@ -22,15 +18,11 @@ class LeaveController extends \yii\web\Controller
     public function actionIndex()
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $me = UserHelper::GetEmployee();
 
         $searchModel = new ApproveSearch([
             'thai_year' => AppHelper::YearBudget(),
-            // 'date_filter' => 'this_month',
-            // 'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            // 'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending']
         ]);
 
@@ -40,28 +32,19 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        // $dataProvider->query->andFilterWhere(['NOT IN', 'approve.status',['None']]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
+        if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-
-
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 
         return $this->render('index', [
@@ -96,18 +79,12 @@ class LeaveController extends \yii\web\Controller
                     $model->leave->save();
                     $model->leave->MsgReject();
 
-                    // return [
-                    //     'status' => 'success'
-                    // ];
                 }
                 //ถ้าเป็น level สุดท้ายให้ Approve
                 if ($model->maxLevel() && $model->status == 'Pass') {
                     $model->leave->status = 'Approve';
                     $model->leave->save();
                     $model->leave->MsgApprove();
-                    // return [
-                    //     'status' => 'success'
-                    // ];
                 }
 
 
@@ -197,11 +174,6 @@ class LeaveController extends \yii\web\Controller
                     $model->leave->MsgApprove();
                 }
 
-                // if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'purchase') {
-                //     $model->purchase->status = 2;
-                //     $model->purchase->save();
-                //     // $model->leave->MsgApprove();
-                // }
             }
         }
         return [
@@ -222,8 +194,6 @@ class LeaveController extends \yii\web\Controller
     public function actionGetEvents()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $start = Yii::$app->request->get('start');
-        $end = Yii::$app->request->get('end');
 
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch();
@@ -238,10 +208,6 @@ class LeaveController extends \yii\web\Controller
                 'title' => $event->leave->data_json['reason'] ?? '-',
                 'start' => $event->leave->date_start . ' 08:00',
                 'end' => $event->leave->date_end . ' 16:00',
-                // 'start' => $event->date_start . ' ' . $event->start_time,
-                // 'end' => $event->date_end . ' ' . $event->end_time,
-                // 'description' => $event->description,
-                // 'color' => $event->color,
             ];
         }
 
