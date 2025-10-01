@@ -4,13 +4,11 @@ $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 $db2 = require __DIR__ . '/db2.php';
 $modules = require __DIR__ . '/add_modules.php';
-// $gitVersion = trim(@exec('git describe --tags --always --dirty'));
-// $gitVersion = trim(@exec('git describe --tags --always'));
-$gitVersion = trim(@exec('git describe --tags --abbrev=0'));
+$version = require __DIR__ . '/version.php';
 
 $config = [
     'id' => 'basic',
-    'version' => $gitVersion ?: 'dev', // ถ้าไม่เจอใช้ dev,
+    'version' => $version,
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'homeUrl' => ['/site'],
