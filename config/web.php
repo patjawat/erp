@@ -4,7 +4,8 @@ $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 $db2 = require __DIR__ . '/db2.php';
 $modules = require __DIR__ . '/add_modules.php';
-$gitVersion = trim(@exec('git describe --tags --always --dirty'));
+// $gitVersion = trim(@exec('git describe --tags --always --dirty'));
+$gitVersion = trim(@exec('git describe --tags --always'));
 
 $config = [
     'id' => 'basic',
