@@ -950,6 +950,7 @@ class StockOrderController extends Controller
                     'checker_position' => $checkData->positionName(),
                     'checker_confirm' => ($model->status == 'Pass' ? 'Y' : 'N')
                 ];
+           
 
                 if ($model->status == 'Pass') {
                     $model->stock->order_status = 'pending';

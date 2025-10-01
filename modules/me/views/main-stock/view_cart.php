@@ -1,13 +1,16 @@
 <?php
 use yii\web\View;
 use yii\helpers\Html;
+use app\modules\inventory\models\Stock;
 ?>
 <?php  yii\widgets\Pjax::begin(['id' => 'inventory']); ?>
 <?php
 
 $cart = \Yii::$app->cartMain;
 $products = $cart->getItems();
-$warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
+// $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
+$mainWarehouse = \Yii::$app->session->get('main-warehouse');
+// print_r($mainWarehouse->id);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
@@ -22,6 +25,8 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>
+                        <th scope="col">หมายเลขล็อต</th>
+                        <th class="text-center">คงเหลือ</th>
                         <th class="text-center">หน่วย</th>
                         <th class="text-end">มูลค่า</th>
                         <th class="text-center" style="width:300px">จำนวนเบิก</th>
@@ -37,10 +42,15 @@ $warehouseSelect = Yii::$app->session->get('selectMainWarehouse');
                     <tr class="">
                         <td scope="row">
                             <?=$item->product->Avatar();?>
-                            <?php
-                            print_r($item->lot_number);
-                            ?>
+                         
                         </td>
+                        <td class="text-start"><?=$item->lot_number?></td>
+                        <td class="text-center">
+                           <?php
+                            $checkStock = Stock::findOne(['warehouse_id' => $mainWarehouse->id,'lot_number' => $item->lot_number]);
+                            echo $checkStock->qty;
+                            ?>    
+                            </td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
                         <td class="text-end"><span class="fw-semibold"><?=number_format($item->unit_price,2)?></span></td>
                         <td class="text-center">

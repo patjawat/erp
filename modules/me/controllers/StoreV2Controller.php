@@ -377,7 +377,7 @@ class StoreV2Controller extends \yii\web\Controller
         }
 
         $id = $request->post('id');
-        $qty = (int) $request->post('qty');
+        $qty = (float) $request->post('qty');
 
         if (!$id || $qty < 1) {
             throw new BadRequestHttpException('ข้อมูลไม่ถูกต้อง');

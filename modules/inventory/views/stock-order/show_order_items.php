@@ -1,12 +1,6 @@
 <?php
-use yii\web\View;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use yii\db\Expression;
-use yii\widgets\DetailView;
 use app\components\UserHelper;
-use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\Warehouse;
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
 // $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
@@ -24,8 +18,8 @@ $emp = UserHelper::GetEmployee();
             <th class="text-start">ล็อตผลิต</th>
             <th class="text-center">ขอเบิก</th>
             <th class="text-center">หน่วย</th>
-            <th class="text-end">คงเหลือ</th>
-            <!-- <th class="text-center">คงเหลือ</th> -->
+            <th class="text-center">คงเหลือ</th>
+
             <th class="text-center">อนุมัติจ่าย</th>
             <th class="text-center" scope="col" style="width:180px;">ดำเนินการ</th>
         </tr>
