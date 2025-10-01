@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('@app/modules/sm/views/default/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
-
+<?php Pjax::begin(['id' => 'sm-container']); ?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
@@ -123,7 +123,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
-
+<?php Pjax::end(); ?>
 
 <?php
 $chageActiveUrl = Url::to(['/sm/product/set-active']);
