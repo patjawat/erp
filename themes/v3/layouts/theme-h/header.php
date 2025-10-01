@@ -13,12 +13,10 @@ use app\components\UserHelper;
                 <a href="<?=Url::to(['/'])?>" class="logo logo-dark">
                     <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
                     <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                    
                 </a>
                 <a href="<?=Url::to(['/'])?>" class="logo logo-light">
                     <span class="logo-sm"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
                     <span class="logo-lg"><?=Html::img('@web/images/logo_new.png',['alt' => 'ERP logo'])?></span>
-                    <span class="position-absolute text-white" style="top: 14px;left: 143px;"><?=\Yii::$app->version?></span>
                 </a>
             </div>
             <a class="navbar-toggle collapsed" href="javascript:void(0)" data-bs-toggle="collapse"
