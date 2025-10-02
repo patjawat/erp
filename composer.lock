@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "12b002752622eaecdc42683a3eed7e60",
+    "content-hash": "5d7a7520e4b436a24e2378205cd28ea0",
     "packages": [
         {
             "name": "asyou99/yii2-cart",
