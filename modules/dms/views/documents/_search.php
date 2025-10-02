@@ -98,12 +98,10 @@ thaiDatepicker('#dateStart,#dateEnd')
 $("#dateStart").on('change', function() {
     $('#documentsearch-thai_year').val(null).trigger('change');
     $('#documentsearch-date_filter').val(null).trigger('change');
-    // $(this).submit();
 });
 $("#dateEnd").on('change', function() {
     $('#documentsearch-thai_year').val(null).trigger('change');
     $('#documentsearch-date_filter').val(null).trigger('change');
-    // $(this).submit();
 });
 JS;
 $this->registerJS($js, View::POS_END);

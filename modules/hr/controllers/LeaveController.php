@@ -61,7 +61,6 @@ class LeaveController extends Controller
     {
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
             'status' =>   $status ? [$status] : ['Pending']
         ]);

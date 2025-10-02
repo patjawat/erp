@@ -42,7 +42,6 @@ use app\modules\hr\models\Organization;
                 ],
                 'pluginOptions' => [
                     'allowClear' => true,
-                    // 'width' => '130px',
                 ],
                 'pluginEvents' => [
                     "select2:select" => "function(result) { 
@@ -99,7 +98,9 @@ use app\modules\hr\models\Organization;
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'options' => [
+                        'placeholder' => 'ปีงบประมาณทั้งหมด'
+                    ],
                     'pluginOptions' => [
                         'allowClear' => true,
                         // 'width' => '120px',
@@ -146,16 +147,25 @@ use app\modules\hr\models\Organization;
 
 $js = <<< JS
 
- thaiDatepicker('#dateStart,#dateEnd')
 
-    $("#approvesearch-date_start").on('change', function() {
-            $('#dateFilter').val(null).trigger('change');
-            // $(this).submit();
-    });
-    $("#approvesearch-date_end").on('change', function() {
-            $('#dateFilter').val(null).trigger('change');
-            // $(this).submit();
-    });
+thaiDatepicker('#dateStart,#dateEnd')
+$("#dateStart").on('change', function() {
+    $('#thaiYear').val(null).trigger('change');
+    $('#dateFilter').val(null).trigger('change');
+});
+$("#dateEnd").on('change', function() {
+    $('#thaiYear').val(null).trigger('change');
+    $('#dateFilter').val(null).trigger('change');
+});
+
+//  thaiDatepicker('#dateStart,#dateEnd')
+
+//     $("#approvesearch-date_start").on('change', function() {
+//             $('#dateFilter').val(null).trigger('change');
+//     });
+//     $("#approvesearch-date_end").on('change', function() {
+//             $('#dateFilter').val(null).trigger('change');
+//     });
 
 JS;
 $this->registerJS($js, View::POS_END);
