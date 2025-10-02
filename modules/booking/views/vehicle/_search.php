@@ -22,89 +22,48 @@ use app\components\DateFilterHelper;
 <?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])
 ?>
 
+<?= $this->render('@app/components/ui/_filter', [
+    'form' => $form,
+    'model' => $model,
+    'label' => false,
+    'status' => $model->listStatus()
+])
+?>
+
 <div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-12">
+    <div class="col-lg-6 col-md-6 col-sm-12">
 
         <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา'])->label(false); ?>
     </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' => DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+    <div class="col-lg-6 col-md-6 col-sm-12">
+        <?= $form->field($model, 'location')->widget(Select2::classname(), [
+            'data' => $model->ListOrg(),
+            'options' => ['placeholder' => 'สถานที่ไปทั้งหมด'],
             'pluginOptions' => [
+                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
                 'allowClear' => true,
             ],
         ])->label(false) ?>
     </div>
 
 
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
-    </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'status')->widget(Select2::classname(), [
-            'data' => $model->listStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-
-                }',
-                'select2:unselecting' => 'function() {
-
-                }',
-            ]
-        ])->label(false) ?>
-    </div>
-    <div class="col-lg-1 col-md-1 col-sm-12">
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-filter"></i>
-        </button>
-    </div>
-
-
-
-    <div class="collapse mt-3" id="collapseFilter">
-        <div class="row">
-
-        <div class="col-lg-3 col-md-3 col-sm-12">
-                <?= $form->field($model, 'location')->widget(Select2::classname(), [
-                    'data' => $model->ListOrg(),
-                    'options' => ['placeholder' => 'สถานที่ไปทั้งหมด'],
-                    'pluginOptions' => [
-                        'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                        'allowClear' => true,
-                    ],
-                ])->label(false) ?>
-            </div>
-
-            <div class="col-lg-3 col-md-3 col-sm-12">
-                <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
-            </div>
-            <div class="col-lg-3 col-md-3 col-sm-12">
-
-                <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                    'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ])->label(false) ?>
-            </div>
-        </div>
-    </div>
-
-    <?php ActiveForm::end(); ?>
 </div>
+<div class="collapse mt-3" id="collapseFilter">
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-12">
+            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                'data' => $model->ListThaiYear(),
+                'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ])->label(false) ?>
+        </div>
+
+    </div>
+</div>
+
+<?php ActiveForm::end(); ?>
 
 <?php
 $js = <<< JS

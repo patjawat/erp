@@ -24,7 +24,7 @@ use kartik\widgets\Select2;
         ],
         ])->label(false);?>
     </div>
-        <div class="col-3">
+    <div class="col-3">
         <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
     </div>
     <div class="col-1">

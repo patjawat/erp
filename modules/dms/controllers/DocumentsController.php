@@ -129,6 +129,20 @@ class DocumentsController extends Controller
 
         $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'receive');
 
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
+
+        $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
+
         return $this->render('receive', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -152,16 +166,7 @@ class DocumentsController extends Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
         $dataProvider->query->andFilterWhere([
             'between',
             'doc_transactions_date',
@@ -390,16 +395,6 @@ class DocumentsController extends Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         $dataProvider->query->andFilterWhere([
             'between',

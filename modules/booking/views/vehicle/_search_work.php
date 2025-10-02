@@ -19,63 +19,21 @@ use app\components\DateFilterHelper;
     ],
     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']]
 ]); ?>
-<?php // $this->render('@app/components/ui/Search',['form' => $form,'model' => $model])
+
+<?= $this->render('@app/components/ui/_filter', [
+    'form' => $form,
+    'model' => $model,
+    'label' => false,
+    'status' => $model->listStatus()
+])
 ?>
 
-<div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-12">
 
+<div class="row">
+    <div class="col-lg-4 col-md-4 col-sm-12">
         <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false, 'placeholder' => 'พขร.', 'fieldName' => 'driver_id']) ?>
     </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' => DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label(false) ?>
-    </div>
-
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
-    </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'status')->widget(Select2::classname(), [
-            'data' => $model->listStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-
-                }',
-                'select2:unselecting' => 'function() {
-
-                }',
-            ]
-        ])->label(false) ?>
-    </div>
-    <div class="col-lg-1 col-md-1 col-sm-12">
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-filter"></i>
-        </button>
-    </div>
-
-
-
-    <div class="collapse mt-3" id="collapseFilter">
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-12">
+    <div class="col-lg-8 col-md-8 col-sm-12">
                 <?= $form->field($model, 'location')->widget(Select2::classname(), [
                     'data' => $model->ListOrg(),
                     'options' => ['placeholder' => 'สถานที่ไปทั้งหมด'],
@@ -85,10 +43,10 @@ use app\components\DateFilterHelper;
                     ],
                 ])->label(false) ?>
             </div>
-            <div class="col-lg-3">
-                <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
-            </div>
-            <div class="col-lg-3">
+    <div class="collapse mt-3" id="collapseFilter">
+        <div class="row">
+
+            <div class="col-lg-4">
                 <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
                     'options' => ['placeholder' => 'ทั้งหมดทุกปี'],

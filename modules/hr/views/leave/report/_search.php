@@ -31,62 +31,23 @@ use app\modules\hr\models\Organization;
         <?php echo $form->field($model, 'export')->hiddenInput()->label(false) ?>
 
 
-        
-<div class="row">
-    <div class="col-3">
+       <?=$this->render('@app/components/ui/_filter',[
+    'form' => $form,
+    'model' => $model,
+    'label' => false,
+    'status' => $model->listStatus()
+    ])
+    ?>
 
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
-    </div>
-    <div class="col-2">
-        <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '130px',
-            ],
-            ])->label(false);
-            ?>
-
-    </div>
-
-    <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
-    </div>
-    <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
-    </div>
-    <div class="col-2">
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
-        'data' => $model->listStatus(),
-        'options' => ['placeholder' => 'สถานะทั้งหมด'],
-        'pluginOptions' => [
-            'allowClear' => true,
-            // 'width' => '150px',
-        ],
-        ])->label(false);?>
-    </div>
-    <div class="col-1">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
-            </button>
-        </div>
-    </div>
-
-</div>
-
-<div class="collapse mt-3" id="collapseFilter">
-    <!-- การกรองแบบละเอียด -->
-    <div class="row">
-        <div class="col-3">
+     <div class="row">
+        <div class="col-2">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'options' => [
+                        'placeholder' => 'ปีงบประมาณทั้งหมด',
+                        'id' => 'thaiYear',
+                    ],
                     'pluginOptions' => [
                         'allowClear' => true,
                         // 'width' => '120px',
@@ -94,7 +55,18 @@ use app\modules\hr\models\Organization;
         ])->label(false);?>
 
         </div>
+        
         <div class="col-4">
+
+            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                'data' => $model->listLeaveType(),
+                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false);?>
+        </div>
+        <div class="col-6">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
@@ -111,17 +83,12 @@ use app\modules\hr\models\Organization;
                     ],
                 ])->label(false); ?>
         </div>
-        <div class="col-4">
-
-            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                'data' => $model->listLeaveType(),
-                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ])->label(false);?>
-        </div>
     </div>
+
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    
 
 
 </div>

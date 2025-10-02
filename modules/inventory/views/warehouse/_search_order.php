@@ -161,6 +161,22 @@ $js = <<< JS
 
 thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end,#stockeventsearch-req_date_start,#stockeventsearch-req_date_end')
 
+
+
+
+    $('#stockeventsearch-req_date_start').change(function (e) { 
+        e.preventDefault();
+        $('#stockeventsearch-date_filter').val(null).trigger('change');
+    });
+
+        $('#stockeventsearch-req_date_end').change(function (e) { 
+        e.preventDefault();
+        $('#stockeventsearch-date_filter').val(null).trigger('change');
+    });
+
+
+
+
     $('#stockeventsearch-date_start').change(function (e) { 
         e.preventDefault();
         $('#stockeventsearch-thai_year').val(null).trigger('change');

@@ -19,9 +19,7 @@ class ComputerController extends \yii\web\Controller
     {
 
         $searchModel = new HelpdeskSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 2,
-            'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
@@ -31,11 +29,7 @@ class ComputerController extends \yii\web\Controller
             ['like', 'repair_number', $searchModel->q],
             ['like', 'title', $searchModel->q],
         ]);
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+
         $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
 
 

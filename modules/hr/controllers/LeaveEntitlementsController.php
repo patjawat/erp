@@ -572,6 +572,11 @@ class LeaveEntitlementsController extends Controller
     }
 
 
+    public function actionImport()
+    {
+        return $this->render('_form_import');
+    }
+
 
     /**
      * Finds the LeaveEntitlements model based on its primary key value.

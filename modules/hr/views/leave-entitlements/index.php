@@ -51,7 +51,19 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex gap-2">
                 <?= Html::a('<i class="bi bi-plus-circle-fill"></i> กำหนดสิทธิรายบุคคล', ['create', 'title' => 'กำหนดสิทธิลาพักผ่อน','thai_year' => $searchModel->thai_year], ['class' => 'btn btn-light open-modal rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="fa-solid fa-user-clock"></i> กำหนดสิทธิทั้งหมด', ['create-all', 'title' => 'กำหนดสิทธิลาพักผ่อนทั้งหมด'], ['class' => 'btn btn-warning create-all  rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
-                <button id="download-button" class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                
+                                <div class="dropdown">
+                    <button class="btn btn-success shadow dropdown-toggle" type="button"
+                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        
+                        <li><button id="download-button" class="dropdown-item export-leave"><i class="fa-solid fa-file-arrow-down me-2"></i> ส่งออก</button></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1Z6I-Y7rTwiy_qF68xIgyZEKPthmTnkkezqMfomLfpyQ/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                    </ul>
+                </div>
             </div>
         </div>
       

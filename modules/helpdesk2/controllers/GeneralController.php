@@ -19,9 +19,7 @@ class GeneralController extends \yii\web\Controller
     {
 
         $searchModel = new HelpdeskSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'repair_group' => 1,
-            'date_filter' => 'this_month',
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -34,11 +32,7 @@ class GeneralController extends \yii\web\Controller
             ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"),$searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+
         $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
 
 

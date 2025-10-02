@@ -61,7 +61,7 @@ class LeaveController extends Controller
     {
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch([
-            'date_filter' => 'this_month',
+            // 'date_filter' => 'this_month',
             'status' =>   $status ? [$status] : ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -76,16 +76,6 @@ class LeaveController extends Controller
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
@@ -163,8 +153,8 @@ class LeaveController extends Controller
     {
 
         $searchModel = new LeaveSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_filter' => 'this_month'
+            // 'thai_year' => AppHelper::YearBudget(),
+            // 'date_filter' => 'this_month'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -178,15 +168,15 @@ class LeaveController extends Controller
         ]);
         // $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
+        // if ($searchModel->date_filter) {
+        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
+        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
+        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        // }
+        // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
+        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
+        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        // }
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
         if (!empty($searchModel->leave_type_id)) {

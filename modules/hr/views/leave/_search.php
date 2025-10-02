@@ -30,7 +30,6 @@ use app\modules\hr\models\Organization;
     'label' => false,
     'status' => $model->listStatus()
     ])
-    
     ?>
     <div class="row">
         <div class="col-2">

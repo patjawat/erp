@@ -59,14 +59,14 @@ class DocumentSearch extends Documents
         }
 
 
-        if ($this->date_filter) {
-            $range = DateFilterHelper::getRange($this->date_filter);
-            if ($range) {
-                $date_start = date('Y-m-d', strtotime($range[0]));
-                $date_end = date('Y-m-d', strtotime($range[1]));
-                $query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
-            }
-        }
+        // if ($this->date_filter) {
+        //     $range = DateFilterHelper::getRange($this->date_filter);
+        //     if ($range) {
+        //         $date_start = date('Y-m-d', strtotime($range[0]));
+        //         $date_end = date('Y-m-d', strtotime($range[1]));
+        //         $query->andWhere(['between', 'doc_transactions_date', $date_start, $date_end]);
+        //     }
+        // }
 
         // grid filtering conditions
         $query->andFilterWhere([

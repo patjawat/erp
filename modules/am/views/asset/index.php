@@ -21,120 +21,137 @@ $this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
-<?php Pjax::begin(['id' => 'title-container','timeout' => 50000 ]); ?>
+<?php Pjax::begin(['id' => 'title-container', 'timeout' => 50000]); ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
+<i class="bi bi-folder-check fs-1"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
-ทั้งหมด <span id="showTotalCount"><?=$dataProvider->getTotalCount()?></span> รายการ
+ทั้งหมด <span id="showTotalCount"><?= $dataProvider->getTotalCount() ?></span> รายการ
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?=$this->render('../default/menu')?>
+<?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?= $this->render('../default/menu', ['active' => 'asset']) ?>
 <?php $this->endBlock(); ?>
 
 
 <?php Pjax::end(); ?>
-<?php // Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); ?>
+<?php // Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); 
+?>
 
 
-<?php if($group):?>
-<?=app\components\AppHelper::Btn([
-                    'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน'.$title,
-                    'url' =>['create','group' => $group,'title' => $title],
-                    'model' =>true,
-                    'size' => 'lg',
-            ])?>
-<?php else:?>
+<?php if ($group): ?>
+    <?= app\components\AppHelper::Btn([
+        'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน' . $title,
+        'url' => ['create', 'group' => $group, 'title' => $title],
+        'model' => true,
+        'size' => 'lg',
+    ]) ?>
+<?php else: ?>
 
-<?php endif;?>
+<?php endif; ?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-  <div>
-                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-                </div>
+        <div>
+            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
+            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
+        </div>
     </div>
     <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
+<?php if (SiteHelper::getDisplay() == 'list'): ?>
+    <div class="card">
+        <div class="card-header bg-primary-gradient text-white">
+            <div class="d-flex justify-content-between">
+                <h6 class="text-white mt-2">
+                    <i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน
+                    <span class="badge text-bg-light">
+                        <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+                </h6>
+                <div class="d-flex justify-content-between gap-3">
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-light']) ?>
+                    <div class="dropdown">
+                        <button class="btn btn-success shadow dropdown-toggle" type="button"
+                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                           <i class="fa-solid fa-file-excel"></i> Excel
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                            <li>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
+                                    '#',
+                                    ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
+                                ) ?>
 
-        <?php if(SiteHelper::getDisplay() == 'list'):?>
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="text-white mt-2">
-                <i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน
-                <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
-            </h6>
-            <div class="d-flex justify-content-between gap-3">
-                  <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-light']) ?>
-                <div class="dropdown">
-                                <button class="btn btn-secondary shadow dropdown-toggle" type="button"
-                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-gear"></i> จัดการ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
-                                            '#',
-                                            ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
-                                        ) ?>
-
-                                    </li>
-                                </ul>
-                            </div>
-
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body">
-        <?=$this->render('show/list', [
+        <div class="card-body">
+            <?= $this->render('show/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-            ]);?>
+            ]); ?>
+        </div>
     </div>
-</div>
-        <?php else:?>
+<?php else: ?>
 
-            <div class="d-flex justify-content-between mb-3">
-    <h6>
-        <i class="bi bi-ui-checks"></i> <?=$this->title?>
-        <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
-    </h6>
-    <div>
-          <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-primary']) ?>
-                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> ส่งออก</button>
+    <div class="d-flex justify-content-between mb-3">
+        <h6>
+            <i class="bi bi-ui-checks"></i> <?= $this->title ?>
+            <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
+        </h6>
+        <div class="d-flex justify-content-between gap-3">
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/asset/create'], ['class' => 'btn btn-light']) ?>
+                    <div class="dropdown">
+                        <button class="btn btn-success shadow dropdown-toggle" type="button"
+                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                            <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                            <li>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
+                                    '#',
+                                    ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
+                                ) ?>
+
+                            </li>
+                        </ul>
+                    </div>
+                </div>
     </div>
+
+    <?= $this->render('show/grid', [
+        'searchModel' => $searchModel,
+        'dataProvider' => $dataProvider,
+    ]); ?>
+
+<?php endif ?>
+
+
+
+
+
 </div>
+<span id="totalCount" class="d-none"><?= $dataProvider->getTotalCount(); ?></span>
 
-        <?=$this->render('show/grid', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);?>
-
-        <?php endif?>
-
-
-
-
-
-</div>
-<span id="totalCount" class="d-none"><?=$dataProvider->getTotalCount();?></span>
-
-<?php // Pjax::end(); ?>
+<?php // Pjax::end(); 
+?>
 
 <?php
 $js = <<< JS

@@ -19,48 +19,16 @@ use app\components\DateFilterHelper;
     ],
 ]); ?>
 
+
 <div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-12">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'คำค้นหา...'])->label(false) ?>
+    <div class="col-3">
+        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-
-    <div class="col-lg-2 col-md-3 col-sm-12">
-        <?= $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' => DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                "select2:select" => "function(result) { 
-                                    $.ajax({
-                                        type: 'get',
-                                        url: '/depdrop/date-filter',
-                                        data:{date_filter:$(this).val()},
-                                        dataType: 'json',
-                                        success: function (res) {
-                                           $('#dateStart').val(res.date_start)
-                                           $('#dateEnd').val(res.date_end)
-                                        }
-                                    });
-                            }",
-            ]
-        ])->label(false) ?>
+    <div class="col-3">
+        <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'date_start')->textInput([
-            'class' => 'form-control',
-            'id' => 'dateStart',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?= $form->field($model, 'date_end')->textInput([
-            'class' => 'form-control',
-            'id' => 'dateEnd',
-            'placeholder' => '__/__/____'
-        ])->label(false) ?>
+    <div class="col-3">
+        <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-12">
         <?= $form->field($model, 'status')->widget(Select2::classname(), [
@@ -78,6 +46,11 @@ use app\components\DateFilterHelper;
             aria-expanded="false" aria-controls="collapseFilter">
             <i class="fa-solid fa-filter"></i>
         </button>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-6">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'คำค้นหา...'])->label(false) ?>
     </div>
 </div>
 
@@ -98,10 +71,12 @@ thaiDatepicker('#dateStart,#dateEnd')
 $("#dateStart").on('change', function() {
     $('#documentsearch-thai_year').val(null).trigger('change');
     $('#documentsearch-date_filter').val(null).trigger('change');
+    // $(this).submit();
 });
 $("#dateEnd").on('change', function() {
     $('#documentsearch-thai_year').val(null).trigger('change');
     $('#documentsearch-date_filter').val(null).trigger('change');
+    // $(this).submit();
 });
 JS;
 $this->registerJS($js, View::POS_END);
