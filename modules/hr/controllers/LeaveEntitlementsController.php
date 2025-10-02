@@ -5,22 +5,24 @@ namespace app\modules\hr\controllers;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\LogHelper;
+use app\models\UploadCsvForm;
 use app\components\UserHelper;
+
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
-
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+// Microsoft Excel
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\Warehouse;
-// Microsoft Excel
 use app\modules\hr\models\LeaveEntitlements;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -572,10 +574,120 @@ class LeaveEntitlementsController extends Controller
     }
 
 
-    public function actionImport()
+    public function actionFormImport()
     {
-        return $this->render('_form_import');
+          $model = new LeaveEntitlements();
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_import',['model' => $model])
+            ];
+        } else {
+            return $this->render('_form_import', ['model' => $model]);
+        }
     }
+
+    public function actionPreview()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = new UploadCsvForm();
+        $model->csvFile = UploadedFile::getInstanceByName('csvFile');
+
+        if ($model && $model->validate()) {
+            // บันทึกไฟล์ชั่วคราว
+            $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
+            $model->csvFile->saveAs($filePath);
+
+            // อ่าน CSV แถวแรก 10 แถว
+            $previewData = [];
+            if (($handle = fopen($filePath, "r")) !== false) {
+                $row = 0;
+                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                    $previewData[] = $data;
+                    $row++;
+                    // if ($row >= 10) break;
+                }
+                fclose($handle);
+            }
+
+            return [
+                'status' => 'success',
+                'preview' => $previewData,
+                'filePath' => $filePath,
+            ];
+        }
+
+        return [
+            'status' => 'error',
+            'errors' => $model->getErrors(),
+        ];
+    }
+
+    /**
+     * POST: นำเข้าข้อมูลจริง
+     */
+    public function actionImportCsv()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $filePath = Yii::$app->request->post('filePath');
+        $thaiYear= Yii::$app->request->post('thai_year');
+
+        if (!$filePath || !file_exists($filePath)) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+
+        $imported = 0;
+        $demo = [];
+        if (($handle = fopen($filePath, "r")) !== false) {
+            $row = 0;
+            $error = 0;
+
+            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                $row++;
+                if ($row == 1) continue; // ข้าม header
+                // $demo[] = $data[1];
+                // $result = $this->findProduct($data[0], $data[1], $categoryId, $data[2]);
+                $result = $data[1];
+                $emp = Employees::findOne(['fname' => $data[0],'lname' => $data[1]]);
+                
+                if ($emp) {
+                    $demo [] = [
+                    'status' => true,
+                    'fullname' => $emp->fullname
+                ];
+                $imported++;
+            } else {
+                $demo [] = [
+                         'status' => false,
+                    'fullname' => $data[0].$data[1]
+                    ];
+                    $error++;
+                    // คุณอาจเก็บ log ของ error แถวนี้ได้
+                }
+            }
+            fclose($handle);
+            if ($error >= 1) {
+                return [
+                    'status' => 'error',
+                    'message' => "xx",
+                    'demo' => $demo
+                ];
+            }
+            return [
+                'status' => 'success',
+                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
+                'demo' => $demo
+            ];
+        }
+
+        // return ['status' => 'success', 'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว"];
+    }
+    
 
 
     /**

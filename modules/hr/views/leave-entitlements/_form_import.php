@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use app\models\Categorise;
 use kartik\widgets\Select2;
@@ -6,109 +7,89 @@ use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
 
 $this->title = 'นำเข้าไฟล์ CSV';
-$listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => [4]])->all(), 'code', 'title');
 ?>
 
-    <!-- Upload Form Section -->
-    <div class="row justify-content-center">
-        <div class="col-lg-12 col-md-12">
+<!-- Upload Form Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-12 col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <?php $form = ActiveForm::begin([
+                    'options' => [
+                        'enctype' => 'multipart/form-data',
+                        'id' => 'upload-form',
+                        'class' => 'needs-validation'
+                    ]
+                ]) ?>
+
+                <!-- File Upload Section -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <?php
+                        echo $form->field($model, 'thai_year')->textInput();
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csvFile" class="form-label fw-semibold">
+                            เลือกไฟล์ CSV
+                        </label>
+                        <div class="position-relative">
+                            <?= Html::fileInput('csvFile', null, [
+                                'id' => 'csvFile',
+                                'class' => 'form-control',
+                                'accept' => '.csv',
+                            ]) ?>
+                            <div class="invalid-feedback">
+                                กรุณาเลือกไฟล์ CSV
+                            </div>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle text-info me-1"></i>
+                            รองรับไฟล์ .csv เท่านั้น
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <?php ActiveForm::end() ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div id="preview-section" style="display: none;">
             <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <?php $form = ActiveForm::begin([
-                        'options' => [
-                            'enctype' => 'multipart/form-data', 
-                            'id' => 'upload-form',
-                            'class' => 'needs-validation'
-                        ]
-                    ]) ?>
-                    
-                    <!-- File Upload Section -->
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="csvFile" class="form-label fw-semibold">
-                                เลือกไฟล์ CSV
-                            </label>
-                            <div class="position-relative">
-                                <?= Html::fileInput('csvFile', null, [
-                                    'id' => 'csvFile',
-                                    'class' => 'form-control',
-                                    'accept' => '.csv',
-                                ]) ?>
-                                <div class="invalid-feedback">
-                                    กรุณาเลือกไฟล์ CSV
-                                </div>
-                            </div>
-                            <div class="form-text">
-                                <i class="fas fa-info-circle text-info me-1"></i>
-                                รองรับไฟล์ .csv เท่านั้น
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                ประเภทวัสดุ
-                            </label>
-                            <?= $form->field($model, 'category_id')->widget(Select2::class, [
-                                'data' => $listProductType,
-                                'options' => [
-                                    'id' => 'category_id',
-                                    'placeholder' => 'กรุณาเลือกประเภทสินทรัพย์',
-                                    'class' => 'form-select-lg'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                    'theme' => 'bootstrap-5',
-                                ],
-                                'pluginEvents' => [
-                                    "select2:unselect" => "function() { $(this).submit(); }",
-                                    'select2:select' => "function(result) { 
-                                        var data = $(this).select2('data')[0].text;
-                                        $('#order-data_json-product_type_name').val(data);
-                                    }",
-                                ]
-                            ])->label(false) ?>
-                        </div>
-                    </div>
-                    
-                    <?= Html::hiddenInput('order_id', $order_id ?? null, ['id' => 'order_id']) ?>
-                    <?php ActiveForm::end() ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Preview Section -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div id="preview-section" style="display: none;">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <div id="preview-table"></div>
-                        </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <div id="preview-table"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Import Button Section -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-center">
-                <div id="import-btn" style="display:none;">
-                    <button class="btn btn-success btn-lg px-5 py-3 shadow-sm" id="btn-import" type="button">
-                        <i class="fas fa-file-import me-2"></i>
-                        <span class="fw-semibold">ยืนยันนำเข้าข้อมูล</span>
-                        <div class="spinner-border spinner-border-sm ms-2 d-none" id="import-spinner" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </button>
-                    <?= Html::hiddenInput('filePath', null, ['id' => 'filePath']) ?>
-                </div>
+<!-- Import Button Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-center">
+            <div id="import-btn" style="display:none;">
+                <button class="btn btn-success" id="btn-import" type="button">
+                    <i class="fas fa-file-import me-2"></i>
+                    <span class="fw-semibold">ยืนยันนำเข้าข้อมูล</span>
+                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="import-spinner" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </button>
+                <?= Html::hiddenInput('filePath', null, ['id' => 'filePath']) ?>
             </div>
         </div>
     </div>
+</div>
 
 
 <!-- Loading Overlay -->
@@ -188,7 +169,7 @@ $(document).ready(function() {
         formData.append('csvFile', file);
 
         $.ajax({
-            url: '/inventory/import/preview',
+            url: '/hr/leave-entitlements/preview',
             type: 'POST',
             data: formData,
             processData: false,
@@ -285,7 +266,7 @@ $(document).ready(function() {
             showLoading();
 
             $.ajax({
-                url: '/sm/import-product/import-csv',
+                url: '/hr/leave-entitlements/import-csv',
                 type: 'POST',
                 data: { 
                     filePath: filePath, 
@@ -300,18 +281,18 @@ $(document).ready(function() {
                         showSuccessToast(res.message || 'นำเข้าข้อมูลสำเร็จ');
                         
                         // Reset form
-                        setTimeout(() => {
-                            $('#preview-table').html('');
-                            $('#preview-section').slideUp();
-                            $('#import-btn').fadeOut();
-                            $('#csvFile').val('');
-                            $('#filePath').val('');
-                        }, 1500);
+                        // setTimeout(() => {
+                        //     $('#preview-table').html('');
+                        //     $('#preview-section').slideUp();
+                        //     $('#import-btn').fadeOut();
+                        //     $('#csvFile').val('');
+                        //     $('#filePath').val('');
+                        // }, 1500);
                         
-                        // Reload page after success message
-                        setTimeout(() => {
-                            window.location.reload(true);
-                        }, 2500);
+                        // // Reload page after success message
+                        // setTimeout(() => {
+                        //     window.location.reload(true);
+                        // }, 2500);
                         
                     } else {
                         showErrorToast(res.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
@@ -340,58 +321,59 @@ $this->registerJs($js);
 ?>
 
 <style>
-/* Custom CSS for enhanced styling */
-.card {
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.btn-success:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(25, 135, 84, 0.3) !important;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.1);
-}
-
-.bg-gradient {
-    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-}
-
-#preview-section {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    /* Custom CSS for enhanced styling */
+    .card {
+        transition: all 0.3s ease;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    .card:hover {
+        transform: translateY(-2px);
     }
-}
 
-.spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-}
+    .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px rgba(25, 135, 84, 0.3) !important;
+    }
 
-/* Select2 Bootstrap 5 theme adjustments */
-.select2-container--bootstrap-5 .select2-selection {
-    min-height: calc(2.25rem + 2px);
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
-}
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .bg-gradient {
+        background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+    }
+
+    #preview-section {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    /* Select2 Bootstrap 5 theme adjustments */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: calc(2.25rem + 2px);
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+    }
 </style>
