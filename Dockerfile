@@ -50,7 +50,7 @@ RUN composer install --ignore-platform-reqs
 RUN rm -rf /app/web/assets/*
 
 # Step 5: ตั้งค่าให้โฟลเดอร์ runtime และ web/assets สามารถเขียนได้
-RUN mkdir -p /app/web/downloads /app/web/msword/results/leave /app/web/msword/results/development /app/web/import-csv /app/runtime/cache /app/runtime/backup && \
+RUN mkdir -p /app/web/assets /app/web/downloads /app/web/msword/results/leave /app/web/msword/results/development /app/web/import-csv /app/runtime/cache /app/runtime/backup && \
     chmod -R 777 /app/runtime /app/runtime/backup /app/runtime/cache /app/web/assets /app/web/import-csv /app/web/downloads /app/web/msword /app/web/msword/results && \
     chown -R www-data:www-data /app/modules/filemanager && \
     chown -R www-data:www-data /app/web/msword

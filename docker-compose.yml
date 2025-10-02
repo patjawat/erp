@@ -24,6 +24,7 @@ services:
 
   demo:
     image: patjawat/erp:1.1
+    # image: erp:1.1
     container_name: demo
     platform: linux/amd64
     env_file:
@@ -37,7 +38,7 @@ services:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 3600  # เช็คทุก 5 นาที
+    command: --interval 300  # เช็คทุก 5 นาที
 
   mysqlDB:
     image: mysql:8.0
