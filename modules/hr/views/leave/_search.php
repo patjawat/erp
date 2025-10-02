@@ -24,16 +24,23 @@ use app\modules\hr\models\Organization;
      'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<?=$this->render('@app/components/ui/_filter',['form' => $form,'model' => $model,'label' => false])?>
-
-<div class="collapse mt-3" id="collapseFilter">
-    <!-- การกรองแบบละเอียด -->
+<?=$this->render('@app/components/ui/_filter',[
+    'form' => $form,
+    'model' => $model,
+    'label' => false,
+    'status' => $model->listStatus()
+    ])
+    
+    ?>
     <div class="row">
-        <div class="col-3">
+        <div class="col-2">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'options' => [
+                        'placeholder' => 'ปีงบประมาณทั้งหมด',
+                        'id' => 'thaiYear',
+                    ],
                     'pluginOptions' => [
                         'allowClear' => true,
                         // 'width' => '120px',
@@ -41,7 +48,18 @@ use app\modules\hr\models\Organization;
         ])->label(false);?>
 
         </div>
+        
         <div class="col-4">
+
+            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                'data' => $model->listLeaveType(),
+                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false);?>
+        </div>
+        <div class="col-6">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
@@ -58,17 +76,11 @@ use app\modules\hr\models\Organization;
                     ],
                 ])->label(false); ?>
         </div>
-        <div class="col-4">
-
-            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                'data' => $model->listLeaveType(),
-                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ])->label(false);?>
-        </div>
     </div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    
 
 
 </div>

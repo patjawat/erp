@@ -22,10 +22,8 @@ class LeaveController extends \yii\web\Controller
         $me = UserHelper::GetEmployee();
 
         $searchModel = new ApproveSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'status' =>   $status ? [$status] : ['Pending']
         ]);
-
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('leave');

@@ -3,7 +3,7 @@
 use yii\bootstrap5\Html;
 use kartik\widgets\Select2;
 ?>
-<div class="row">
+<div class="row mb-2">
     <div class="col-2">
         <?=$this->render('@app/components/ui/_date_filter',['form' => $form,'model' => $model,'label' => false])?>
     </div>
@@ -16,7 +16,7 @@ use kartik\widgets\Select2;
     </div>
     <div class="col-2">
         <?=$form->field($model, 'status')->widget(Select2::classname(), [
-        'data' => $model->listStatus(),
+        'data' => $status,
         'options' => ['placeholder' => 'สถานะทั้งหมด'],
         'pluginOptions' => [
             'allowClear' => true,

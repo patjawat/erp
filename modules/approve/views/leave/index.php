@@ -25,7 +25,7 @@ $msg = 'ขอ';
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('@app/modules/hr/views/leave/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
