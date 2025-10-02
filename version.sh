@@ -8,7 +8,7 @@ git checkout $LATEST_TAG
 echo "===> สร้างไฟล์ version.php"
 echo "<?php return '$LATEST_TAG';" > config/version.php
 
-echo "===> ล้าง cache Yii2"
-php yii cache/flush-all || true
+# echo "===> ล้าง cache Yii2"
+# php yii cache/flush-all || true
 
 echo "✅ Deploy สำเร็จ Version: $LATEST_TAG"
