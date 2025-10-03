@@ -3,13 +3,16 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
+use setasign\Fpdi\Fpdi;
 use yii\web\Response;
+use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
+
 
 
 class ServiceController extends \yii\web\Controller
@@ -45,7 +48,7 @@ class ServiceController extends \yii\web\Controller
                 }
 
                 if ($model->save()) {
-                   
+
                     return [
                         'status' => 'success'
                     ];
@@ -70,17 +73,17 @@ class ServiceController extends \yii\web\Controller
         }
     }
 
-public function UpdateAssetStatus($model)
-{
-    if ($model->asset_number !== '' && $model->status == 'success') {
-        $asset = Asset::findOne(['code' => $model->asset_number]);
-        if ($asset) {
-            $asset->asset_status = 1;
-            return $asset->save(false);
+    public function UpdateAssetStatus($model)
+    {
+        if ($model->asset_number !== '' && $model->status == 'success') {
+            $asset = Asset::findOne(['code' => $model->asset_number]);
+            if ($asset) {
+                $asset->asset_status = 1;
+                return $asset->save(false);
+            }
         }
+        return false;
     }
-    return false;
-}
 
 
 
@@ -135,7 +138,7 @@ public function UpdateAssetStatus($model)
         $serviceRecord->status = 'รับเรื่อง';
         $serviceRecord->title = 'รับเรื่องเรียบร้อยแล้วรอให้ช่างดำเนินการตรวจเช็ค';
         $serviceRecord->save();
-          return ['status' => 'success'];
+        return ['status' => 'success'];
     }
 
 
@@ -152,16 +155,75 @@ public function UpdateAssetStatus($model)
         $model->status = 'Cancel';
         $model->save();
         return ['status' => 'success'];
-        
     }
-        public function actionDelete($id)
+    public function actionDelete($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
         $model->delete();
         return ['status' => 'success'];
-        
     }
+
+    public function actionFormLayoutServiceSetting()
+    {
+        $check = Categorise::findOne(['name' => 'form_layout_service']);
+
+        $model = $check ? $check : new Categorise;
+        $model->name = 'form_layout_service';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->save();
+            return [
+                'status' => 'success'
+            ];
+        }
+
+        return $this->render('_form_layout_service_setting', ['model' => $model]);
+    }
+
+    private function t($text)
+    {
+        return iconv('UTF-8', 'cp874', $text ?? '');
+    }
+
+    public function actionPrint($id)
+    {
+
+        $model = $this->findModel($id);
+        $layout = Categorise::findOne(['name' => 'form_layout_service']);
+
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        // 1️⃣ กำหนด PDF Template ก่อน
+        $templateFile = \Yii::getAlias('@app/web/files/service_form.pdf');
+        $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
+        // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+
+        // 2️⃣ เลือกหน้าที่ต้องการ
+        $tplIdx = $pdf->importPage(1);
+
+        // 3️⃣ ใช้ template
+        $pdf->useTemplate($tplIdx, 0, 0, 210);
+
+        // 4️⃣ เขียนข้อความลงไป
+        $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
+        // แปลง UTF-8 → cp874
+        $pdf->SetXY((float)$layout->data_json['location_x'], (float)$layout->data_json['location_y']);
+        $pdf->Write(10, $this->t($model->data_json['location']));
+
+        $pdf->SetXY((float)$layout->data_json['urgency_x'], (float)$layout->data_json['urgency_y']);
+        $pdf->Write(10, $this->t($model->viewUrgent()['title']));
+
+        $pdf->SetXY(59, 40);
+        $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
+
+        // 5️⃣ Output PDF
+        $pdf->Output('I', 'filled.pdf');
+    }
+
+
 
     protected function findModel($id)
     {

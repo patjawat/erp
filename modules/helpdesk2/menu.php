@@ -28,6 +28,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     </a>
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
         <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทอุปกรณ์',['/helpdesk/device-type'],['class' => 'dropdown-item'])?>
+        <?=Html::a('<i class="fa-solid fa-caret-right me-2"></i> แบบฟอร์มแจ้งซ่อม',['/helpdesk/service/form-layout-service-setting'],['class' => 'dropdown-item'])?>
 
     </div>
 </li>
