@@ -230,7 +230,7 @@ $moduleId = Yii::$app->controller->module->id;
                     <div class="row align-items-center">
                         <div class="col-md-5 mb-1 mb-md-0">
                             <span><span id="date">2025</span> &copy; ERP Hospital.</span>
-                            <h6><?=\Yii::$app->version?>-</h6>
+                            <h6><?=\Yii::$app->version?></h6>
                         </div>
 
                         <div class="col-md-5 text-md-end">
