@@ -1062,6 +1062,7 @@ class LeaveController extends Controller
      */
     public function actionCancel($id)
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
         $model = $this->findModel($id);
         $model->status = "Cancel";
@@ -1077,7 +1078,10 @@ class LeaveController extends Controller
         $message = 'ขอยกเลิกวัน' . ($model->leaveType->title ?? '-') . ' วันที่ ' . Yii::$app->thaiFormatter->asDate($model->date_start, 'long') . ' ถึง ' . Yii::$app->thaiFormatter->asDate($model->date_end, 'long') . 'ได้รับการอนุมัติแล้ว';
         LineMsg::sendMsg($lineId, $message);
 
-        return $this->redirect(['/hr/leave', 'status' => 'ReqCancel']);
+        // return $this->redirect(['/hr/leave', 'status' => 'ReqCancel']);
+        return [
+            'status' => 'success'
+        ];
     }
 
 

@@ -83,6 +83,7 @@ $js = <<<JS
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        $("#main-modal").modal("hide");
                         Swal.fire({
                             title: 'กำลังดำเนินการ...',
                             allowOutsideClick: false,
@@ -96,13 +97,17 @@ $js = <<<JS
                             dataType: "json",
                             success: function (res) {
                                 if (res.status == 'success') {
-                                    Swal.fire({
-                                        title: 'สำเร็จ',
-                                        text: 'ดำเนินการเรียบร้อยแล้ว',
-                                        icon: 'success'
-                                    }).then(() => {
+                        Swal.fire({
+                                    title: 'สำเร็จ',
+                                    text: 'ดำเนินการเรียบร้อยแล้ว',
+                                    icon: 'success',
+                                    timer: 1000,           // ปิดอัตโนมัติหลัง 1 วินาที
+                                    timerProgressBar: true, // แสดง progress bar (ถ้าต้องการ)
+                                    showConfirmButton: false,
+                                    didClose: () => {
                                         location.reload();
-                                    });
+                                    }
+                                });
                                 } else {
                                     Swal.close();
                                     Swal.fire('เกิดข้อผิดพลาด', res.message || '', 'error');

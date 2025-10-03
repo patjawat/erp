@@ -153,73 +153,94 @@ $(document).ready(function() {
     }
 
     // 1️⃣ AJAX preview with enhanced UI
-    $('#csvFile').on('change', function() {
-        var file = this.files[0];
-        if(!file) return;
-        
-        // Validate file type
-        if (!file.name.toLowerCase().endsWith('.csv')) {
-            showErrorToast('กรุณาเลือกไฟล์ .csv เท่านั้น');
-            $(this).val('');
-            return;
-        }
-        
-        showLoading();
-        var formData = new FormData();
-        formData.append('csvFile', file);
+   $('#csvFile').on('change', function() {
+    var file = this.files[0];
+    if(!file) return;
 
-        $.ajax({
-            url: '/hr/leave-entitlements/preview',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(res) {
-                hideLoading();
-                if(res.status === 'success'){
-                    // Expand modal if exists
-                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
-                    $(".modal-dialog").addClass('modal-xl');
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showErrorToast('กรุณาเลือกไฟล์ .csv เท่านั้น');
+        $(this).val('');
+        return;
+    }
 
-                    // Create beautiful table
-                    var html = '<table class="table table-hover table-striped table-bordered mb-0">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    res.preview[0].forEach(function(h){ 
-                        html += '<th class="text-center fw-semibold">' + h + '</th>'; 
-                    });
-                    html += '</tr></thead>';
-                    html += '<tbody class="table-group-divider">';
+    showLoading();
+    var formData = new FormData();
+    formData.append('csvFile', file);
+
+    $.ajax({
+        url: '/hr/leave-entitlements/preview',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            hideLoading();
+            if(res.status === 'success'){
+                // Expand modal if exists
+                $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
+                $(".modal-dialog").addClass('modal-xl');
+
+                // สร้างตาราง
+                var html = '<table class="table table-hover table-striped table-bordered mb-0">';
+                html += '<thead><tr>';
+
+                // สร้างหัวตารางจากแถวแรก
+                res.preview[0].data.forEach(function(h){ 
+                    html += '<th class="text-center fw-semibold">' + h + '</th>'; 
+                });
+                html += '</tr></thead>';
+
+                html += '<tbody class="table-group-divider">';
+
+                // Loop แถวข้อมูล
+                res.preview.slice(1).forEach(function(row, index){
+                    var rowClass = (index % 2 === 0 ? 'table-light' : '');
                     
-                    res.preview.slice(1).forEach(function(row, index){
-                        html += '<tr class="' + (index % 2 === 0 ? 'table-light' : '') + '">';
-                        row.forEach(function(cell){ 
-                            html += '<td class="text-center">' + (cell || '-') + '</td>'; 
-                        });
-                        html += '</tr>';
-                    });
-                    html += '</tbody></table>';
+                    // ถ้าไม่มีใน DB ให้ทำสีพื้นแดง
+                    if(row.exists === false){
+                        rowClass += ' table-danger';
+                    }
                     
-                    $('#preview-table').html(html);
-                    $('#preview-section').slideDown();
-                    $('#filePath').val(res.filePath);
+                    html += '<tr class="' + rowClass + '">';
+                    row.data.forEach(function(cell){ 
+                        html += '<td class="text-center">' + (cell || '-') + '</td>'; 
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+
+                $('#preview-table').html(html);
+                $('#preview-section').slideDown();
+                $('#filePath').val(res.filePath);
+                
+                // แสดงปุ่ม import เฉพาะเมื่อทุกแถวมีอยู่ใน DB
+                var allExist = res.preview.slice(1).every(function(row){
+                    return row.exists === true;
+                });
+                if(allExist){
                     $('#import-btn').fadeIn();
-                    
-                    // Scroll to preview
-                    $('html, body').animate({
-                        scrollTop: $("#preview-section").offset().top - 20
-                    }, 1000);
-                    
                 } else {
-                    showErrorToast(res.message || 'เกิดข้อผิดพลาดในการอัปโหลด');
+                    $('#import-btn').hide();
                 }
-            },
-            error: function(xhr, status, error){
-                hideLoading();
-                showErrorToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+
+                // Scroll to preview
+                $('html, body').animate({
+                    scrollTop: $("#preview-section").offset().top - 20
+                }, 1000);
+
+            } else {
+                showErrorToast(res.message || 'เกิดข้อผิดพลาดในการอัปโหลด');
             }
-        });
+        },
+        error: function(xhr, status, error){
+            hideLoading();
+            showErrorToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        }
     });
+});
+
 
     // 2️⃣ AJAX import with enhanced UI
     $('#btn-import').on('click', function() {

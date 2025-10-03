@@ -607,7 +607,12 @@ class LeaveEntitlementsController extends Controller
             if (($handle = fopen($filePath, "r")) !== false) {
                 $row = 0;
                 while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $previewData[] = $data;
+                    $checkEmp = Employees::findOne(['fname' => $data[0],'lname' => $data[1]]);
+                   // เพิ่มสถานะว่าพบหรือไม่
+                $previewData[] = [
+                    'data' => $data,
+                    'exists' => $checkEmp ? true : false
+                ];
                     $row++;
                     // if ($row >= 10) break;
                 }
