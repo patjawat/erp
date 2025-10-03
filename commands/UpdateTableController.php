@@ -86,6 +86,7 @@ class UpdateTableController extends Controller
 
             // ยานพาหนะ
             ['name' => '/booking/vehicle/*', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/asset/*', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/events', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/list-event-tomorrow', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/list-event-todays', 'type' => 2, 'description' => ''],
@@ -235,6 +236,7 @@ class UpdateTableController extends Controller
 
             // ยานพาหนะ
             ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
+            ['child' => '/booking/asset/*', 'parent' => 'vehicle'],
             ['child' => '/booking/vehicle/list-event-todays', 'parent' => 'user'],
             ['child' => '/booking/vehicle/list-event-tomorrow', 'parent' => 'user'],
             ['child' => '/booking/vehicle/view', 'parent' => 'user'],

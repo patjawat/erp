@@ -57,7 +57,8 @@ class AssetController extends Controller
              'asset_group_id' => 4,
              'asset_type_id' => $assetTypeItem
         ]);
-$dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere(['<>','asset_status',2]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_name', $searchModel->q],
