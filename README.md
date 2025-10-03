@@ -390,3 +390,10 @@ JOIN categorise c
   AND c.name = 'plan_item'
 SET po.plan_item_id = c.code
 WHERE po.plan_item_id IS NOT NULL;
+
+
+
+ปรับวันลา ปีงบประมาณ
+
+UPDATE `leave`
+SET thai_year =  IF(MONTH(date_start) > 9, YEAR(date_start) + 1, YEAR(date_start)) + 543;

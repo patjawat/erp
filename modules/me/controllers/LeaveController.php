@@ -56,9 +56,6 @@ class LeaveController extends Controller
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch([
             'emp_id' => $me->id,
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
             // 'status' =>   $status ? [$status] : ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -75,20 +72,7 @@ class LeaveController extends Controller
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.leave_work_send')"), $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
-
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-       
 
 
         if (!empty($searchModel->leave_type_id)) {
@@ -371,7 +355,6 @@ class LeaveController extends Controller
             'leave_type_id' => $leaveTypeId,
             'date_start' => $dateStart,
             'date_end' => $dateEnd,
-            'thai_year' => AppHelper::YearBudget(),
             'on_holidays' => 0,
             'total_days' => 0
         ]);
@@ -390,11 +373,13 @@ class LeaveController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+                $dateStart =  AppHelper::convertToGregorian($model->date_start);
+                $dateEnd =  AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'Pending';
                 $model->emp_id = $me->id;
-                $model->thai_year = AppHelper::YearBudget();
-                $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $model->thai_year = AppHelper::YearBudget($dateStart);
+                $model->date_start = $dateStart;
+                $model->date_end = $dateEnd;
 
                 if ($model->save()) {
                     $model->createApprove();
