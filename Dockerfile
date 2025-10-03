@@ -46,6 +46,9 @@ RUN composer install --ignore-platform-reqs
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
 
+# Patch ปัญหา yii\base\Object -> yii\base\BaseObject
+RUN find /app/vendor/asyou99/yii2-cart -type f -name "*.php" -exec sed -i 's/yii\\base\\Object/yii\\base\\BaseObject/g' {} +
+
 # ลบ  Cache Asset ออก
 RUN rm -rf /app/web/assets/*
 
