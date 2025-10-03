@@ -20,16 +20,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 <div class="row">
 <div class="col-12">
     
-<?php echo $form->field($model, 'date_start')->widget(Datetimepicker::className(),[
-        'options' => [
-            'timepicker' => false,
-            'datepicker' => true,
-            'mask' => '99/99/9999',
-            'lang' => 'th',
-            'yearOffset' => 543,
-            'format' => 'd/m/Y', 
-        ],
-        ])->label('วันที่') ?>
+<?php echo $form->field($model, 'date_start')->textInput()->label('วันที่') ?>
 </div>
 
 </div>
@@ -47,7 +38,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 <?php
 $js = <<<JS
-
+thaiDatepicker('#calendar-date_start')
 $('#form').on('beforeSubmit', function (e) {
     var form = $(this);
     $.ajax({
