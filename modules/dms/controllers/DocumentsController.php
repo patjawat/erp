@@ -128,6 +128,12 @@ class DocumentsController extends Controller
 
         $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'receive');
 
+        if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
+
 
         $dataProvider->query->andFilterWhere([
             'between',
@@ -155,6 +161,7 @@ class DocumentsController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
+            ['like', 'doc_number', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
@@ -331,6 +338,8 @@ class DocumentsController extends Controller
         ]);
 
         $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'send');
+        
+
         return $this->render('send', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -388,6 +397,11 @@ class DocumentsController extends Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
 
+               if ($searchModel->date_filter) {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            $searchModel->date_start = AppHelper::convertToThai($range[0]);
+            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        }
 
         $dataProvider->query->andFilterWhere([
             'between',
