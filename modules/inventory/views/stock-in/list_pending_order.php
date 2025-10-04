@@ -32,7 +32,9 @@ use yii\widgets\Pjax;
                         <?=$model->assetType->title?>
                         <?php //  $model->data_json['order_type_name'] ?>
                     </td>
-                    <td><?=isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '';?></td>
+                    <td>
+                        <?=$model->vendor->title?>
+                    </td>
                     <td class="text-end">
                         <span class="fw-semibold"><?=number_format($model->calculateVAT()['priceAfterVAT'],2)?></span>
                     </td>

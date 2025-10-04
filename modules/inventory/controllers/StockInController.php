@@ -272,6 +272,7 @@ class StockInController extends Controller
             // 'receive_type' => $this->request->get('receive_type'),
             'warehouse_id' => $warehouse->id,
             'data_json' => [
+                'item_type' => 'จัดซื้อ',
                 'receive_date' => AppHelper::convertToThai(date('Y-m-d')),
                 'po_number' => $order->po_number,
                 'do_number' => isset($order->data_json['gr_number']) ? $order->data_json['gr_number'] : '',
@@ -303,12 +304,15 @@ class StockInController extends Controller
                         'category_id' => $model->id,
                         'po_number' => $model->po_number,
                         'name' => 'order_item',
-                        'qty' => $item->qty,
-                        'data_json' => [
-                            'order_qty' => $item->qty,
-                        ],
-                        'unit_price' => $item->price,
+                        'qty' => (int)($item->qty ?? 0),
+                        'unit_price' => (float)($item->price ?? 0),
+                        'total_price' => ( (int)($item->qty ?? 0) * (float)($item->price ?? 0) ),
                         'order_status' => 'pending',
+                         'data_json' => [
+                            'item_type' => 'จัดซื้อ',
+                            'order_qty' => $item->qty,
+                            
+                        ],
                     ]);
                     $stockItem->save(false);
                 }
@@ -537,6 +541,7 @@ class StockInController extends Controller
                     $model->data_json['item_type'] == '' ? $model->addError('data_json[item_type]', $requiredName) : null;
                 }
 
+                $model->movement_date == '' ? $model->addError('movement_date', $requiredName) : null;
                 $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
             }
             if ($model->name == 'order_item') {

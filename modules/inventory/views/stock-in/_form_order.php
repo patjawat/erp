@@ -76,7 +76,13 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
     </div>
     <div class="col-6">
         <?= $form->field($model, 'data_json[item_type]')->widget(Select2::classname(), [
-            'data' =>  ['รายการปกติ' => 'รายการปกติ', 'ยอดยกมา' => 'ยอดยกมา', 'ของแถม' => 'ของแถม', 'บริจาค' => 'บริจาค'],
+            'data' =>  [
+                'รายการปกติ' => 'รายการปกติ',
+                'จัดซื้อ' => 'จัดซื้อ',
+                'ยอดยกมา' => 'ยอดยกมา',
+                'ของแถม' => 'ของแถม',
+                'บริจาค' => 'บริจาค'
+            ],
             'options' => [
                 'placeholder' => 'ระบุประเภทการรับเข้า',
                 'disabled' => ($model->category_id ?  true : false)
