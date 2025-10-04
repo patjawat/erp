@@ -18,7 +18,6 @@ use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -128,12 +127,6 @@ class DocumentsController extends Controller
         ]);
 
         $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'receive');
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
 
 
         $dataProvider->query->andFilterWhere([
@@ -334,7 +327,6 @@ class DocumentsController extends Controller
     {
         $searchModel = new DocumentSearch([
             'date_filter' => 'today',
-            'thai_year' => AppHelper::YearBudget(),
             'document_group' => 'send',
         ]);
 
@@ -391,6 +383,7 @@ class DocumentsController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
+            ['like', 'doc_number', $searchModel->q],
             ['like', 'doc_regis_number', $searchModel->q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);

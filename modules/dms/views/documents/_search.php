@@ -52,6 +52,25 @@ use app\components\DateFilterHelper;
     <div class="col-6">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'คำค้นหา...'])->label(false) ?>
     </div>
+    <div class="col-6">
+                              <?php
+            echo $form->field($model, 'document_org')->widget(Select2::classname(), [
+                'data' => $model->ListDocumentOrg(),
+                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                ],
+                'pluginEvents' => [
+                    'select2:select' => 'function(result) { 
+                                }',
+                    'select2:unselecting' => 'function() {
+
+                                }',
+                ]
+            ])->label(false);
+            ?>
+</div>
 </div>
 
 <div class="collapse mt-3" id="collapseFilter">
@@ -67,17 +86,7 @@ use app\components\DateFilterHelper;
 <?php
 
 $js = <<<JS
-thaiDatepicker('#dateStart,#dateEnd')
-$("#dateStart").on('change', function() {
-    $('#documentsearch-thai_year').val(null).trigger('change');
-    $('#documentsearch-date_filter').val(null).trigger('change');
-    // $(this).submit();
-});
-$("#dateEnd").on('change', function() {
-    $('#documentsearch-thai_year').val(null).trigger('change');
-    $('#documentsearch-date_filter').val(null).trigger('change');
-    // $(this).submit();
-});
+
 JS;
 $this->registerJS($js, View::POS_END);
 

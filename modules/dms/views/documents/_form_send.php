@@ -3,16 +3,11 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 use kartik\file\FileInput;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
-// use softark\duallistbox\DualListbox;
-use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
-// $this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if($model->document_group == 'receive'){
     $this->title = 'ออกเลขหนังสือรับ';
