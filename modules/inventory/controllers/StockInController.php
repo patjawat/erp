@@ -88,8 +88,9 @@ class StockInController extends Controller
 
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andFilterWhere(['name' => 'order', 'status' => 5]);
-            $dataProvider->query->andFilterWhere(['!=', 'category_id', 'M25']);
+            $dataProvider->query->andWhere(['name' => 'order']);
+            $dataProvider->query->andWhere(['status' => 5]);
+            $dataProvider->query->andWhere(['!=', 'category_id', 'M25']);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'pr_number', $searchModel->q],
@@ -98,11 +99,6 @@ class StockInController extends Controller
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
             $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
-            // $dataProvider->query->andWhere(['IN', 'category_id', $item]);
-            // $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->vendor_name]);
-            // $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
-            // $dataProvider->query->andWhere(new Expression("JSON_EXTRACT(data_json->'$.vendor_name','\"$id\"')"));
-
 
             if ($this->request->isAjax) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -289,13 +285,7 @@ class StockInController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                $model->code = \mdm\autonumber\AutoNumber::generate('RC-' . substr(AppHelper::YearBudget(), 2) . '????');
-                if ($order) {
-                    // $order->status = 5;
-                    // $order->save(false);
-                    // ถ้าเป็นการรับจ้าใบสั่่งซื้อ
-                }
-
+                $model->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
                 $model->transaction_type = 'IN';
                 $model->order_status = 'pending';
                 $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
@@ -322,6 +312,12 @@ class StockInController extends Controller
                     ]);
                     $stockItem->save(false);
                 }
+                if ($order) {
+                    $order->status = 6; //สถานะส่งวัสดุเข้าคลัง
+                    $order->save(false);
+                    // ถ้าเป็นการรับจ้าใบสั่่งซื้อ
+                }
+
 
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -544,13 +540,6 @@ class StockInController extends Controller
                 $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
             }
             if ($model->name == 'order_item') {
-
-                // if (isset($model->data_json['mfg_date'])) {
-                //     preg_replace('/\D/', '', $model->data_json['mfg_date']) == "" ? $model->addError('data_json[mfg_date]', $requiredName) : null;
-                // }
-                // if (isset($model->data_json['exp_date'])) {
-                //     preg_replace('/\D/', '', $model->data_json['exp_date']) == "" ? $model->addError('data_json[exp_date]', $requiredName) : null;
-                // }
 
                 if (isset($model->asset_item)) {
                     $model->asset_item == '' ? $model->addError('asset_item', $requiredName) : null;

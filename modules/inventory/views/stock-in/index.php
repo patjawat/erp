@@ -118,7 +118,7 @@ if (isset($warehouseModel->data_json['item_type'])) {
                     <td class="fw-light align-middle">
                         <div class=" d-flex flex-column">
                             <?= isset($item->purchase) ? ('<span class="fw-semibold ">' . $item->purchase->po_number . '</span>') : null ?>
-                            <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
+                            <?= isset($item->vendor) ? $item->vendor->title : '' ?>
                         </div>
                     <td><?= $item->CreateBy($item->viewMoveMentDate())['avatar']; ?></td>
                     </td>

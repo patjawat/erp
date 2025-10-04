@@ -95,18 +95,7 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 <?php //  $form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่รับเข้า'); 
 ?>
 <div class="row">
-<div class="col-lg-6 col-md-6 col-sm-6">
-     <?php
-        echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'เลือกปีงบประมาณ'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label('ปีงบประมาณ');
-        ?>
-    </div>
-    <div class="col-lg-6 col-md-6 col-sm-6">
+    <div class="col-lg-12 col-md-12 col-sm-6">
         <?= $form->field($model, 'movement_date')->textInput()->label('วันที่รับเข้า'); ?>
     </div>
 </div>
