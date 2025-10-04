@@ -318,7 +318,7 @@ class StockInController extends Controller
                 }
                 if ($order) {
                     $order->status = 6; //สถานะส่งวัสดุเข้าคลัง
-                    $order->save(false);
+                     $order->save(false);
                     // ถ้าเป็นการรับจ้าใบสั่่งซื้อ
                 }
 
@@ -491,7 +491,7 @@ class StockInController extends Controller
         $model = $this->findModel($id);
         $order = Order::findOne(['name' => 'order', 'po_number' => $model->po_number]);
         if ($order) {
-            $order->status = 5;
+            $order->status = 6;
             $order->save(false);
         }
         foreach ($model->getItems() as $item) {
