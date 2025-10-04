@@ -28,13 +28,16 @@ use yii\widgets\Pjax;
                 <tr class="">
                     <td style="width:120px" scope="row"><?= $model->pq_number ?></td>
                     <td style="width:100px"><?= $model->po_number ?></td>
-                    <td><?= $model->data_json['order_type_name'] ?></td>
+                    <td>
+                        <?=$model->assetType->title?>
+                        <?php //  $model->data_json['order_type_name'] ?>
+                    </td>
                     <td><?=isset($model->data_json['vendor_name']) ? $model->data_json['vendor_name'] : '';?></td>
                     <td class="text-end">
                         <span class="fw-semibold"><?=number_format($model->calculateVAT()['priceAfterVAT'],2)?></span>
                     </td>
                     <td class="text-center">
-                    <?php   echo Html::a('ดำเนินการ', ['/inventory/stock-in/create-by-po', 'id' =>  $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?php  echo Html::a('ดำเนินการ', ['/inventory/stock-in/create-by-po', 'id' =>  $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ : '.$model->po_number], ['class' => 'btn btn-sm btn-primary shadow rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                     <?php   Html::a('ดำเนินการ', ['/inventory/receive/view-order', 'id' => $model->id, 'receive_type' => 'purchase', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill create-confirm', 'data' => ['size' => 'modal-md']]) ?>
                         <?php Html::a('ดำเนินการ', ['/inventory/receive/create', 'category_id' => $model->po_number, 'receive_type' => 'po', 'title' => '<i class="fa-solid fa-file-circle-plus"></i> รับสินค้าจากใบสั่งซื้อ'], ['class' => 'btn btn-sm btn-primary shadow rounded-pill create-confirm', 'data' => [
                             'size' => 'modal-md',

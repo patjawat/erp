@@ -71,15 +71,11 @@ class StockInController extends Controller
             ->andFilterWhere(['>=','movement_date',AppHelper::convertToGregorian($searchModel->date_start)])
             ->andFilterWhere(['<=','movement_date',AppHelper::convertToGregorian($searchModel->date_end)]);
 
-
-
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
-
 
 
     // แสดงรายการส่งซื้อที่รอรับเข้าคลัง
@@ -274,6 +270,7 @@ class StockInController extends Controller
         $model = new StockEvent([
             'name' => 'order',
             'category_id' => $order->id,
+            'asset_type_id' => $order->category_id,
             'po_number' => $order->po_number,
             'vendor_id' => $order->vendor_id,
             // 'receive_type' => $this->request->get('receive_type'),
@@ -301,11 +298,8 @@ class StockInController extends Controller
 
                 $model->transaction_type = 'IN';
                 $model->order_status = 'pending';
-                $convertDate = [
-                    'receive_date' =>  AppHelper::convertToGregorian($model->data_json['receive_date']),
-                ];
-                $model->thai_year = AppHelper::YearBudget(AppHelper::convertToGregorian($model->data_json['receive_date']));
-                $model->data_json =  ArrayHelper::merge($model->data_json, $convertDate);
+                $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
+                $model->thai_year = AppHelper::YearBudget(AppHelper::convertToGregorian($model->movement_date));
 
                 $model->save(false);
                 foreach ($order->ListOrderItems() as $item) {

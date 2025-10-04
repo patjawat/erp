@@ -4,7 +4,6 @@ namespace app\modules\purchase\models;
 
 use Yii;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\db\Expression;
 use app\models\Categorise;
 use app\components\LineMsg;
@@ -14,15 +13,11 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\sm\models\Product;
 use app\components\CategoriseHelper;
-use app\modules\am\models\AssetItem;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\approve\models\Approve;
-use app\modules\hr\models\Organization;
 use app\modules\inventory\models\Stock;
-use app\modules\helpdesk\models\Helpdesk;
-use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
