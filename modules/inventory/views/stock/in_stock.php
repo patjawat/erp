@@ -67,14 +67,17 @@ $products = $cart->getItems();
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
+                    <?php 
+                        $product = isset($item->product) ? $item->product->Avatar() : '';
+                        ?>
                 <tr>
-                    <th scope="row"><?=Html::a($item->product->Avatar(),['/inventory/stock/view-stock-card','id' => $item->id])?>
+                    <th scope="row"><?=Html::a($product,['/inventory/stock/view-stock-card','id' => $item->id])?>
                     </th>
                     <td class="text-start">
                         <?=isset($item->product->productType->title) ? $item->product->productType->title : 'ไม่พบข้อมูล' ?>
                     </td>
                     <td class="text-center"><?=$item->SumQty()?></td>
-                    <td class="text-center"><?=$item->product->data_json['unit']?></td>
+                    <td class="text-center"><?=isset($item->product) ? $item->product->data_json['unit'] : ''?></td>
                     <td class="text-end">
                         <span class="fw-semibold"><?=$item->SumPriceByItem()?></span>
                     </td>
