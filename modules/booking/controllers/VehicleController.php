@@ -156,7 +156,6 @@ class VehicleController extends Controller
     public function actionWorkOfficial()
     {
         $searchModel = new VehicleDetailSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month'
         ]);
 
@@ -196,7 +195,6 @@ class VehicleController extends Controller
     public function actionWorkAmbulance()
     {
         $searchModel = new VehicleDetailSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month'
         ]);
 
