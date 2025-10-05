@@ -127,11 +127,6 @@ class VehicleController extends Controller
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
-
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
 
