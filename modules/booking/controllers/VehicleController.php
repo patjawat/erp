@@ -66,7 +66,6 @@ class VehicleController extends Controller
     {
         $type = 'official';
         $searchModel = new VehicleSearch([
-            'thai_year' => AppHelper::YearBudget(),
             'date_filter' => 'this_month',
             'vehicle_type_id' => $type
         ]);
@@ -108,14 +107,10 @@ class VehicleController extends Controller
 
     public function actionAmbulance()
     {
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
 
         $type = 'ambulance';
         $searchModel = new VehicleSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
             'status' =>   $status ? [$status] : ['Pending'],
             'vehicle_type_id' => $type
         ]);
