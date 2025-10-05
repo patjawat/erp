@@ -3,12 +3,14 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
-use setasign\Fpdi\Fpdi;
+use yii\helpers\Url;
 use yii\web\Response;
+use setasign\Fpdi\Fpdi;
 use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\modules\filemanager\components\FileManagerHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
@@ -190,12 +192,35 @@ class ServiceController extends \yii\web\Controller
     {
 
         $model = $this->findModel($id);
-        $layout = Categorise::findOne(['name' => 'form_layout_service']);
+        $formName = 'form_layout_service';
+        $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        $checkLayout = Categorise::findOne(['name' => $formName]);
+        if($checkLayout){
+            $layout = $checkLayout;
+        }else{
+            $layout = new Categorise();
+            $layout->name = $formName;
+            $layout->ref = $ref;
+            $layout->save();
+        }
+
+
+
+        $urgency = isset($model->data_json['urgency']) ? $model->data_json['urgency'] : '';
+        $urgencyX = isset($layout->data_json['urgency_x']) ? (float)$layout->data_json['urgency_x'] : 0;
+        $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
+
+
 
         $pdf = new \setasign\Fpdi\Fpdi();
         $pdf->AddPage();
         // 1️⃣ กำหนด PDF Template ก่อน
-        $templateFile = \Yii::getAlias('@app/web/files/service_form.pdf');
+        $templateUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref]);
+
+        $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
+        if($templateFile){
+
+  
         $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
         // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
@@ -209,18 +234,56 @@ class ServiceController extends \yii\web\Controller
 
         // 4️⃣ เขียนข้อความลงไป
         $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
-        // แปลง UTF-8 → cp874
-        $pdf->SetXY((float)$layout->data_json['location_x'], (float)$layout->data_json['location_y']);
-        $pdf->Write(10, $this->t($model->data_json['location']));
 
-        $pdf->SetXY((float)$layout->data_json['urgency_x'], (float)$layout->data_json['urgency_y']);
-        $pdf->Write(10, $this->t($model->viewUrgent()['title']));
+        // รายละเอียดปัญหา
+        $title = $model->title;
+        $titleX = isset($layout->data_json['title_x']) ? (float)$layout->data_json['title_x'] : 0;
+        $titleY = isset($layout->data_json['title_y']) ? (float)$layout->data_json['title_y'] : 0;
+        $pdf->SetXY($titleX, $titleY);
+        $pdf->Write(10,  $this->t($title));
+
+        //สถานที่
+        $location = isset($model->data_json['location']) ? $model->data_json['location'] : '';
+        $locationX = isset($layout->data_json['location_x']) ? (float)$layout->data_json['location_x'] : 0;
+        $locationy = isset($layout->data_json['location_y']) ? (float)$layout->data_json['location_y'] : 0;
+        $pdf->SetXY($locationX, $locationy);
+        $pdf->Write(10,  $this->t($location));
+
+
+        // ประเภทอุปกรณ์
+        $deviceType = $model->deviceType->title ?? '-';
+        $locationX = isset($layout->data_json['device_x']) ? (float)$layout->data_json['device_x'] : 0;
+        $locationy = isset($layout->data_json['device_y']) ? (float)$layout->data_json['device_y'] : 0;
+        $pdf->SetXY($locationX, $locationy);
+        $pdf->Write(10,  $this->t($deviceType));
+
+        // ผู้ส่งซ่อม
+        $createdBy = $model->emp->fullname ?? '-';
+        $createdByX = isset($layout->data_json['createdby_x']) ? (float)$layout->data_json['createdby_x'] : 0;
+        $createdByY = isset($layout->data_json['createdby_y']) ? (float)$layout->data_json['createdby_y'] : 0;
+        $pdf->SetXY($createdByX, $createdByY);
+        $pdf->Write(10,  $this->t($createdBy));
+
+        $createDate = $model->viewCreated()['full'];
+        $createDateX = isset($layout->data_json['created_x']) ? (float)$layout->data_json['created_x'] : 0;
+        $createDateY = isset($layout->data_json['created_y']) ? (float)$layout->data_json['created_y'] : 0;
+        $pdf->SetXY($createDateX, $createDateY);
+        $pdf->Write(10,  $this->t($createDate));
+
+
+
+        
+        $pdf->SetXY($urgencyX, $urgencyY);
+        $pdf->Write(10,  $this->t($model->viewUrgent()['title']));
+
 
         $pdf->SetXY(59, 40);
         $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
 
         // 5️⃣ Output PDF
         $pdf->Output('I', 'filled.pdf');
+    }
+
     }
 
 

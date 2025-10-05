@@ -377,6 +377,19 @@ class FileManagerHelper extends Component
         }
     }
 
+    //ดึง file จาก ref
+     public static function getFileFormRef($ref)
+    {
+            $fileUpload = Uploads::findOne(['ref' => $ref]);
+            if($fileUpload){
+                $filename = $fileUpload->real_filename;
+                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
+                return $filepath;
+            }else{
+                return false;
+            }
+    }
+
     //ตรวจสอบที่ยังไม่มี Thempnail และให้ลร้าง
     public static function RecheckThumbnail()
     {
