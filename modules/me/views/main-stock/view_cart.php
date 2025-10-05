@@ -25,10 +25,8 @@ $mainWarehouse = \Yii::$app->session->get('main-warehouse');
                 <thead>
                     <tr>
                         <th scope="col">ชื่อรายการ</th>
-                        <th scope="col">หมายเลขล็อต</th>
                         <th class="text-center">คงเหลือ</th>
                         <th class="text-center">หน่วย</th>
-                        <th class="text-end">มูลค่า</th>
                         <th class="text-center" style="width:300px">จำนวนเบิก</th>
                         <th scope="col" class="text-center align-center" style="width:32px;">#</th>
                     </tr>
@@ -44,7 +42,6 @@ $mainWarehouse = \Yii::$app->session->get('main-warehouse');
                             <?=$item->product->Avatar();?>
                          
                         </td>
-                        <td class="text-start"><?=$item->lot_number?></td>
                         <td class="text-center">
                            <?php
                             $checkStock = Stock::findOne(['warehouse_id' => $mainWarehouse->id,'lot_number' => $item->lot_number]);
@@ -52,7 +49,6 @@ $mainWarehouse = \Yii::$app->session->get('main-warehouse');
                             ?>    
                             </td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
-                        <td class="text-end"><span class="fw-semibold"><?=number_format($item->unit_price,2)?></span></td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center flex-row">
                                 <?=Html::a('<i class="fa-solid fa-chevron-left"></i>',['/me/main-stock/update-cart','id' => $item->id,'quantity' => ($item->getQuantity()-1)],['class' => 'btn update-cart'])?>

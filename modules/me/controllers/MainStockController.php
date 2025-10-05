@@ -55,15 +55,6 @@ class MainStockController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                // test
-                // $demo = [];
-                // foreach ($cart->getItems() as $item1) {
-                //     $demo[] = [
-                //         'qty' => $item1->getQuantity()
-                //     ];
-                // }
-                // return $demo;
-
                 try {
                     $transaction = \Yii::$app->db->beginTransaction();
                     // $transaction->commit();

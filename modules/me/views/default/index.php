@@ -39,6 +39,11 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 //echo Yii::$app->urlManager->createAbsoluteUrl(['site/create-document']);
 
 ?>
+
+<div class="p-3">
+                            <i class="far fa-check-square text-danger"></i> 
+                            <span class="text-success"></span>
+                        </div>
 <div class="row">
     <div class="col-12">
         <div class="row">
