@@ -50,7 +50,7 @@ $products = $cart->getItems();
 
             <?php
             try {
-                echo Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิกxx', ['/me/main-stock/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]);
+                echo Html::a('<i class="fa-solid fa-cart-shopping"></i> บันทึกเบิก', ['/me/main-stock/create','name' => 'order','type' => 'OUT','title' => 'เบิก'.$warehouseSelect['warehouse_name']], ['class' => 'btn btn-primary rounded-pill shadow position-relative open-modal','data' => ['size' => 'modal-ld']]);
                 //code...
             } catch (\Throwable $th) {
                 //throw $th;
@@ -96,13 +96,20 @@ $products = $cart->getItems();
                     <div class="fw-semibold text-danger">
                         <?php echo number_format($model->unit_price,2); ?>
                     </div>
+                    <?php if($model->SumQty() >= 1):?>
                     <?php
+                    
                                                 try {
+                                                    
                                                     echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/me/main-stock/add-to-cart', 'id' => $model->id], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
                                                 } catch (Throwable $th) {
                                                     // throw $th;
                                                 }
+                    
                                 ?>
+                                <?php else:?>
+                                    <button type="button" class=" btn btn-sm btn-secondary rounded-pill" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>
+                                <?php endif?>
                 </div>
             </div>
         </div>

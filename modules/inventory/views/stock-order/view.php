@@ -138,6 +138,22 @@ foreach ($model->getItems() as $item): ?>
                     <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
                         รายการ
                     </h6>
+                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มสินค้า',
+                    [
+                        '/inventory/stock/product',
+                        'asset_type_id' => $model->asset_type_id,
+                        'order_id' => $model->id,
+                        'title' => 'รายการ'.$model->assetType->title,
+                    
+                    ''
+                ],
+                    [
+                        'class' => 'btn btn-primary open-modal',
+                        'data' => [
+                            'size' => 'modal-xl'
+                        ]
+                        
+                    ])?>
                 </div>
                 <div id="showOrderItem"></div>
             </div>
@@ -181,9 +197,9 @@ foreach ($model->getItems() as $item): ?>
 
 
 
-    <?php
-    $id = isset($model->id) ? $model->id : null;
-    $js = <<< JS
+<?php
+$id = isset($model->id) ? $model->id : null;
+$js = <<< JS
 
 
 showOrderItem();

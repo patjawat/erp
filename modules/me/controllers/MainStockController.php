@@ -9,6 +9,7 @@ use yii\web\Controller;
 use app\components\LineMsg;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\components\StockHelper;
 use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Warehouse;
@@ -84,8 +85,8 @@ class MainStockController extends Controller
                             'warehouse_id' => $model->warehouse_id,
                             'from_warehouse_id' => $model->from_warehouse_id,
                             'asset_item' => $item->asset_item,
-                            // 'lot_number' => $item->lot_number,
-                            // 'unit_price' => $item->unit_price,
+                            'lot_number' => $item->lot_number,
+                            'unit_price' => $item->unit_price,
                             'qty' => 0,
                             'qty' => $item->getQuantity(), //ระบุจำนวนจริงตาม lot ที่เหลือ
                             'data_json' => [
@@ -332,7 +333,7 @@ class MainStockController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $cart = \Yii::$app->cartMain;
-
+        //ใช้ id เพื่อหา asset_item เฉยๆ
         $model = Stock::findOne($id);
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
@@ -342,15 +343,19 @@ class MainStockController extends Controller
             \Yii::$app->session->set('main-warehouse', $mainWarehouse);
             \Yii::$app->session->set('asset_type',$model->product->productType);
         }
+        //หา ID ที่สามารถจ่ายได้จาก stock
+        $firstOut = StockHelper::firstOut($model->asset_item,$model->warehouse_id);
+        //นำ id ที่หาได้ไปค้นหาเพื่อจะใส่ตีะกร้า
+        $product = Stock::findOne($firstOut['id']);
 
-        $cart->create($model, 1);
+        $cart->create($product, 1);
         $totalCount = $cart->getCount();
 
         return [
             'status' => 'success',
             'container' => '#inventory-container',
             'totalCount' => $totalCount,
-            'model' => $model,
+            'model' => $product,
             'mainWarehouse' => Yii::$app->session->get('main-warehouse')
         ];
     }

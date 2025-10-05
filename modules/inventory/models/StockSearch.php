@@ -18,7 +18,7 @@ class StockSearch extends Stock
     {
         return [
             [['id', 'warehouse_id', 'qty', 'created_by'], 'integer'],
-            [['name', 'code', 'asset_item', 'data_json', 'created_at', 'updated_at','q','asset_type'], 'safe'],
+            [['name', 'code', 'asset_item', 'data_json', 'created_at', 'updated_at','q','asset_type','order_id'], 'safe'],
         ];
     }
 

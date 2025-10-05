@@ -46,10 +46,25 @@ class StockController extends Controller
 
     public function actionProduct()
     {
-        $searchModel = new StockSearch();
+        $assetTypeId = $this->request->get('asset_type_id');
+        $orderId = $this->request->get('order_id');
+        $searchModel = new StockSearch([
+            'asset_type' => $assetTypeId,
+            'order_id' => $orderId
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
-        $dataProvider->query->andFilterWhere(['like', 'title', $searchModel->q]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'title', $searchModel->q],
+            ['LIKE', 'p.code', $searchModel->q],
+        ]);
+        if($assetTypeId){
+            $dataProvider->query->andFilterWhere(['p.category_id'=>$assetTypeId ]);
+        }else{
+            $dataProvider->query->andFilterWhere(['p.category_id'=> $searchModel->asset_type]);
+
+        }
         $dataProvider->query->groupBy('asset_item');
 
         if ($this->request->isAjax) {

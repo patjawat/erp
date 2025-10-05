@@ -75,7 +75,7 @@ $product = ArrayHelper::map(Categorise::find()
   
   echo $form->field($model, 'asset_type')->widget(Select2::classname(), [
       'data' => $product,
-      'options' => ['placeholder' => 'เลือกประเภทวัสดุ','value' =>($assetType ?? $model->code),'class' => 'rounded-pill border-0'],
+      'options' => ['placeholder' => 'เลือกประเภทวัสดุ','class' => 'rounded-pill border-0'],
       'disabled' => ($assetType ?  true : false),
       'pluginOptions' => [
           'allowClear' => true,

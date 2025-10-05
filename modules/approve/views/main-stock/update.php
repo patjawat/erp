@@ -19,6 +19,7 @@ use app\modules\purchase\models\Order;
             </tr>
         </thead>
         <tbody class="table-group-divider">
+            <?php $totalPrice = 0?>
             <?php foreach ($model->stock->ListItems() as $item): ?>
             <tr class="">
                 <td class="align-middle">
@@ -43,7 +44,7 @@ use app\modules\purchase\models\Order;
                 <td class="align-middle text-end fw-semibold">
                     <?php
                             try {
-                                echo number_format($item->price, 2);
+                                echo number_format($item->unit_price, 2);
                             } catch (\Throwable $th) {
 
                             }
@@ -55,8 +56,10 @@ use app\modules\purchase\models\Order;
                 <td class="align-middle text-end">
                     <div class="d-flex justify-content-end fw-semibold">
                         <?php
-                                try {
-                                    echo number_format(($item->qty * $item->price), 2);
+                                    $sumPrice = ($item->qty * $item->unit_price);
+                                    echo number_format($sumPrice);
+                                    $totalPrice +=$sumPrice;
+                                    try {
                                 } catch (\Throwable $th) {
                                     // throw $th;
                                 }
@@ -66,7 +69,10 @@ use app\modules\purchase\models\Order;
                
             </tr>
             <?php endforeach; ?>
-
+<tr>
+    <td colspan="4" class="text-center">รวม</td>
+    <td class="text-end fw-semibold"><?=number_format($totalPrice)?></td>
+</tr>
         </tbody>
     </table>
 </div>

@@ -811,6 +811,45 @@ class StockOrderController extends Controller
         }
     }
 
+
+//เพิ่มรายการสินค้าใหม่จากหน้าจ่ายวัสดุ
+    public function actionAddNewOrderItem()
+    {
+        $id = $this->request->get('id');
+        $orderId = $this->request->get('order_id');
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $order = $this->findModel($orderId);
+        
+        
+            $inStock = Stock::findOne($id);
+            $model = new StockEvent();
+            $model->category_id = $order->id;
+            $model->thai_year = AppHelper::YearBudget();
+            $model->name = 'order_item';
+            $model->asset_item = $inStock->asset_item;
+            $model->unit_price = $inStock->unit_price;
+            $model->lot_number = $inStock->lot_number;
+            $model->qty = 1;
+            $model->transaction_type = 'OUT';
+            $model->category_id = $order->id;
+            $model->warehouse_id = $order->warehouse_id;
+            $model->from_warehouse_id = $order->from_warehouse_id;
+            $model->data_json = [
+                'req_qty' => 0
+            ];
+
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $model->save(false);
+
+            return [
+                'status' => 'success',
+                'container' => '#inventory-container',
+            ];
+
+
+    }
+
     // update รายการ Items ที่บันทึกใหม่ให้เป็น success
     public function actionConfirmOrder($id)
     {

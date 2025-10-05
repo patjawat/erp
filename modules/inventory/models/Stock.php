@@ -34,6 +34,7 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
 
     public $total;
     public $asset_type;
+    public $order_id;
 
     public static function tableName()
     {
@@ -61,7 +62,7 @@ class Stock extends Yii\db\ActiveRecord implements ItemInterface
     {
         return [
             [['warehouse_id','created_by'], 'integer'],
-            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total','asset_type', 'qty'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'unit_price', 'q', 'total','asset_type', 'qty','order_id'], 'safe'],
             [['name', 'code'], 'string', 'max' => 50],
             [['asset_item'], 'string', 'max' => 255],
         ];
@@ -311,6 +312,13 @@ public function listLotNumber()
             ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
             ->scalar();
         return $total;
+    }
+
+    //ผลรวมจำนวนคงเหลือแยกตาม รายการสิค้า
+    public function sumStockItem()
+    {
+        return self::find()->where(['warehouse_id' => $this->warehouse_id,'asset_item' => $this->asset_item])->sum('qty');
+
     }
 
 

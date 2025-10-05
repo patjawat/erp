@@ -44,8 +44,8 @@ $mainWarehouse = \Yii::$app->session->get('main-warehouse');
                         </td>
                         <td class="text-center">
                            <?php
-                            $checkStock = Stock::findOne(['warehouse_id' => $mainWarehouse->id,'lot_number' => $item->lot_number]);
-                            echo $checkStock->qty;
+                            $checkStock = Stock::find()->where(['warehouse_id' => $mainWarehouse->id,'asset_item' => $item->asset_item])->sum('qty');
+                            echo $checkStock;
                             ?>    
                             </td>
                         <td class="text-center"><?=$item->product->unit_name?></td>
