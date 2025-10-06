@@ -87,6 +87,7 @@ use app\modules\hr\models\Organization;
             ])->label(false) ?>
 
     </div>
+    
     <div class="col-xl-1 col-lg-1 col-md-1 col-sm-12 col-sx-12">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
         <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
@@ -150,6 +151,21 @@ use app\modules\hr\models\Organization;
                     ],
             ])->label('สถานนะการลงทะเบียน') ?>
         </div>
+
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'branch')->widget(Select2::classname(), [
+                'data' => [
+                    'MAIN' => 'โรงพยาบาล',
+                    'ฺBRANCH' => 'รพ.สต.',
+                ],
+                'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+            ])->label() ?>
+
+    </div>
+
         <div class="col-3 d-flex align-items-center align-self-center">
                 <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
         </div>
