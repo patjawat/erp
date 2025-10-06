@@ -53,8 +53,6 @@ class StockInController extends Controller
         $searchModel = new StockEventSearch([
             'warehouse_id' => $warehouse->id,
             'transaction_type' => 'IN',
-            // 'thai_year' => AppHelper::YearBudget(),
-            // 'date_filter' => 'this_month',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['name' => 'order']);
@@ -174,7 +172,7 @@ class StockInController extends Controller
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-            'thai_year' => AppHelper::YearBudget(),
+            'thai_year' => AppHelper::YearBudget($order->movement_date),
             'category_id' => $order_id,
             'code' => $order ? $order->code : '',
             'name' => $name,

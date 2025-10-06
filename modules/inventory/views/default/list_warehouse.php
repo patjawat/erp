@@ -60,13 +60,12 @@ use app\modules\inventory\models\Warehouse;
                     </td>
                     <td class="text-end">
                         <span class="fw-semibold "> <?php // echo $model->SumPiceStockWarehouse()?></span>
-                        <span class="fw-semibold "> <?php echo $model->SumPiceStockWarehouse()?></span>
-
-                        <!-- <div class="progress-stacked">
-        <div class="progress" role="progressbar" aria-label="Segment one" aria-valuenow="<?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>" aria-valuemin="0" aria-valuemax="100" style="width: <?=isset($model->TransactionStock()['progress']) ? $model->TransactionStock()['progress'] : 0?>%">
-          <div class="progress-bar"><?=isset($model->TransactionStock()['progress']) ? ($model->TransactionStock()['progress'] >=1 ? $model->TransactionStock()['progress'].'%' : '') : 0?></div>
-        </div>
-        </div> -->
+                        <span class="fw-semibold "> 
+                            <?php 
+                                $sum = $model->SumPiceStockWarehouse();
+                                echo $sum !== null ? number_format((float)$sum, 2) : '';
+                                ?>
+                        </span>
                     </td>
                 </tr>
                 <?php endforeach;?>

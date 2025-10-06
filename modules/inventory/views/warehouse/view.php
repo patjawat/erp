@@ -6,18 +6,12 @@
 
 use yii\web\View;
 use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\widgets\Pjax;
-use app\models\Categorise;
-use app\modules\inventory\models\Stock;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory']];
-// $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['/inventory/warehouse']];
-// $this->params['breadcrumbs'][] = 'Update';
 
 ?>
 

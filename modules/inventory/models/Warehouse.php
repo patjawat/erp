@@ -4,14 +4,10 @@ namespace app\modules\inventory\models;
 
 use Yii;
 use yii\helpers\Html;
-use yii\helpers\Json;
-use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\modules\hr\models\Employees;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Organization;
