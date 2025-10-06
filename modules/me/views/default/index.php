@@ -23,18 +23,11 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 <?php $this->endBlock(); ?>
 
 
-
-<?php // Pjax::begin(['id' => 'me-container', 'timeout' => 500000]); ?>
 <style>
 #pr-order>.card {
     height: 291px;
 }
 </style>
-
-<?php
-//echo Yii::$app->urlManager->createAbsoluteUrl(['site/create-document']);
-
-?>
 
 <div class="row">
     <div class="col-12">
@@ -48,62 +41,13 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                 <?php echo $this->render('leave', ['searchModel' => $searchModel]); ?>
             </div>
             <div class="col-12">
-
-                <!-- <div class="d-flex justify-content-between">
-                    <h6><i class="fa-regular fa-bell"></i> กิจกรรมสำคัญ</h6>
-                    <?php echo Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด', ['/me/activity'], ['class' => 'btn btn-light']); ?>
-                </div>
-                <div id="viewApproveStock">Loading...</div>
-                <div id="viewApprovePurchase">Loading...</div> -->
-
-
-                <?php // echo $this->render('document'); ?>
+                <?php echo Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด', ['/me/activity'], ['class' => 'btn btn-light']); ?>
                 <div id="viewDocument"></div>
-                <?php // echo $this->render('list_committee'); ?>
 
             </div>
         </div>
     </div>
-
-    <!-- <div class="col-4">
-        <div class="card" style="height: 620px;">
-            <div class="card-body">
-                <h6><i class="bi bi-app-indicator"></i> บริการ</h6>
-                <?php // echo $this->render('app_indicator'); ?>
-            </div>
-        </div>
-    </div> -->
 </div>
-<div class="row">
-
-    <div class="col-3">
-
-        <?php //  $this->render('@app/modules/hr/views/employees/avatar', ['model' => $model])?>
-        <!-- <div class="card" style="height:300px;">
-                    <div class="card-body">
-                        <?php echo $this->render('leave_total'); ?>
-                    </div>
-                </div> -->
-        <?php Pjax::begin(['id' => 'repair-container', 'timeout' => 5000]); ?>
-        <!-- <div class="card" style="height:300px;">
-            <div class="card-body">
-                <h5>กิจกรรม/ความเคลื่อนไหวss</h5>
-                <div id="viewRepair" class="mt-4"></div>
-                <?php //  $this->render('activity')?>
-
-            </div>
-        </div> -->
-        <?php Pjax::end(); ?>
-    </div>
-</div>
-
-<div class="row">
-
-    <div class="col-12">
-        <!-- <div id="viewOwnerAsset">Loading...</div> -->
-    </div>
-</div>
-
 
 
 

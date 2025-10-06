@@ -34,7 +34,9 @@ class DefaultController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        
+        if(Yii::$app->user->can('branch')){
+            return $this->redirect(['/me/store-v2/dashboard']);
+        }
         return $this->render('index', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,

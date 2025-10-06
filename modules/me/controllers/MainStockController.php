@@ -349,10 +349,6 @@ class MainStockController extends Controller
         //นำ id ที่หาได้ไปค้นหาเพื่อจะใส่ตีะกร้า
         $product = Stock::findOne($firstOut['id']);
 
-        return $model->warehouse_id;
-        // 07-00028
-
-
         $cart->create($product, 1);
         $totalCount = $cart->getCount();
 

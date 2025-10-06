@@ -194,7 +194,7 @@ try {
     <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">กำหนดประเภทที่รับเข้า</button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">กำหนดหน่วยงานเบิก</button>
+    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">กำหนดหน่วยงานที่มีสิทธิเบิก</button>
   </li>
 </ul>
 <div class="tab-content" id="pills-tabContent">

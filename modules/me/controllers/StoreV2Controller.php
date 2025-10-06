@@ -30,7 +30,7 @@ class StoreV2Controller extends \yii\web\Controller
         $callbackUrl = Yii::$app->request->get('callback');
         try {
             $emp = UserHelper::GetEmployee();
-            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => 'SUB'])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
+            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => ['SUB','BRANCH']])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
             $warehouse = Warehouse::findOne($checkWarehouse->id);
             if (!$checkWarehouse) {
                 return $this->render('not_set_warehouse', [
