@@ -104,7 +104,7 @@ class ImportController extends Controller
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $row++;
                 if ($row == 1) continue; // ข้าม header
-                $assetType = $stockOrder->data_json['asset_type'] ?? '';
+                $assetType = $stockOrder->asset_type_id;
 
                 $product = $this->findProduct($data[0], $data[1], $assetType, $data[2]);
                 if ($product['status'] == 'error') {

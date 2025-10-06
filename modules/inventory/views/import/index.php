@@ -13,7 +13,7 @@ $this->title = 'นำเข้าไฟล์ CSV';
 
 <div id="preview-table"></div>
 
-<div id="import-btn" style="display:none; margin-top:10px;">
+<div id="import-btn" style="display:none; margin-top:10px; text-align:center;">
     <button class="btn btn-success" id="btn-import" type="button">
         <i class="fa-solid fa-file-import me-2"></i>ยืนยันนำเข้า
     </button>
@@ -69,25 +69,61 @@ $('#csvFile').on('change', function() {
 $('#btn-import').on('click', function() {
     var filePath = $('#filePath').val();
     var orderId = $('#order_id').val();
-    if(!filePath) { alert('ไม่พบไฟล์'); return; }
+    if(!filePath) { 
+        Swal.fire('ไม่พบไฟล์', '', 'warning'); 
+        return; 
+    }
 
-    $.ajax({
-        url: '/inventory/import/import-csv',
-        type: 'POST',
-        data: { filePath: filePath, order_id: orderId },
-        success: function(res) {
-            if(res.status === 'success'){
-                // alert(res.message);
-                $('#preview-table').html('');
-                $('#import-btn').hide();
-                $('#csvFile').val('');
-                  window.location.reload(true);
-            } else {
-                // alert(res.message);
-            }
+    // แสดง SweetAlert Confirm
+    Swal.fire({
+        title: 'ยืนยันการนำเข้า?',
+        text: "คุณต้องการนำเข้าข้อมูลนี้ใช่หรือไม่",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ใช่, นำเข้าเลย',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ซ่อน modal
+            $('#main-modal').hide();
+
+            // แสดง sweetalert loading
+            Swal.fire({
+                title: 'กำลังนำเข้า...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/inventory/import/import-csv',
+                type: 'POST',
+                data: { filePath: filePath, order_id: orderId },
+                success: function(res) {
+                    if(res.status === 'success'){
+                        $('#preview-table').html('');
+                        $('#import-btn').hide();
+                        $('#csvFile').val('');
+
+                        // รอ 1 วินาทีค่อยปิด loading
+                        setTimeout(function(){
+                            Swal.close(); 
+                            window.location.reload(true);
+                        }, 1000);
+
+                    } else {
+                        Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+                    }
+                }
+            });
         }
     });
 });
+
+
 JS;
 
 $this->registerJs($js);
