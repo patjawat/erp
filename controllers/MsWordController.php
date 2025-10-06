@@ -203,14 +203,13 @@ class MsWordController extends \yii\web\Controller
             $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
             $model->save(false);
 
-            $listBoards = Order::find()->where(['category_id' => $model->id, 'name' => 'board_detail'])->all();
-
             @unlink(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);
             $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
             $templateProcessor->setValue('title', 'ขออนุมัติแต่งตั้ง กก. กำหนดรายละเอียด');
             $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
             $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']);
+            // $templateProcessor->setValue('vendor_name',  $model->vendor->title);
             // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
             $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
             $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');

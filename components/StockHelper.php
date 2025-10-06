@@ -20,7 +20,7 @@ class StockHelper extends Component
                 WHERE e.name = 'order_item'
                 AND s.asset_item = :asset_item
                 AND s.warehouse_id = :warehouse_id
-                AND s.qty > 1
+                AND s.qty > 0
                 ORDER BY e.movement_date DESC
                 LIMIT 1
                 ")

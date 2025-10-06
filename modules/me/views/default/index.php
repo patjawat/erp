@@ -3,10 +3,6 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
-use app\components\UserHelper;
-// $this->registerJsFile('@web/owl/owl.carousel.min.js', ['depends' => [yii\web\JqueryAsset::className()]]);
-// $this->registerCssFile('@web/owl/owl.carousel.min.css');
-
 $this->title = 'MyDashboard';
 $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 ?>
@@ -40,10 +36,6 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 
 ?>
 
-<div class="p-3">
-                            <i class="far fa-check-square text-danger"></i> 
-                            <span class="text-success"></span>
-                        </div>
 <div class="row">
     <div class="col-12">
         <div class="row">

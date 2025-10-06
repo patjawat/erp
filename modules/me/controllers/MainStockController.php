@@ -335,6 +335,7 @@ class MainStockController extends Controller
         $cart = \Yii::$app->cartMain;
         //ใช้ id เพื่อหา asset_item เฉยๆ
         $model = Stock::findOne($id);
+        // return $model;
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
         
@@ -347,6 +348,10 @@ class MainStockController extends Controller
         $firstOut = StockHelper::firstOut($model->asset_item,$model->warehouse_id);
         //นำ id ที่หาได้ไปค้นหาเพื่อจะใส่ตีะกร้า
         $product = Stock::findOne($firstOut['id']);
+
+        return $model->warehouse_id;
+        // 07-00028
+
 
         $cart->create($product, 1);
         $totalCount = $cart->getCount();

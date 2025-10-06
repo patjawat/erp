@@ -116,7 +116,7 @@ class DepdropController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Employees::find()
             ->Where(['or', ['LIKE', 'fname', $q]])
-            // ->andWhere(['name' => 'position_group'])
+            ->andWhere(['status' => 1])
             ->limit(10)
             ->all();
         $data = [['id' => '', 'text' => '']];
@@ -192,6 +192,7 @@ class DepdropController extends \yii\web\Controller
             ['LIKE', 'lname', $q],
             ])
             ->andWhere(['<>', 'user_id', '0'])
+            ->andWhere(['status' => 1])
             ->limit(10)
             ->all();
 
