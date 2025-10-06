@@ -16,7 +16,6 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
 use app\models\Calendar;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\approve\models\Approve;
@@ -375,14 +374,20 @@ class LeaveController extends Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $dateStart =  AppHelper::convertToGregorian($model->date_start);
                 $dateEnd =  AppHelper::convertToGregorian($model->date_end);
-                $model->status = 'Pending';
+                
+                //ถ้าเป็น ผอ. ให้อนุมัติเลย
+                $model->status = $me->isDirector() ? 'Approve' : 'Pending';
+
                 $model->emp_id = $me->id;
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
                 $model->date_end = $dateEnd;
 
                 if ($model->save()) {
-                    $model->createApprove();
+                    //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
+                    if(!$me->isDirector()){
+                        $model->createApprove();
+                    }
                 }
 
                 return $this->redirect(['/me/leave']);

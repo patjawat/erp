@@ -28,6 +28,7 @@ class DefaultController extends Controller
         $searchModel = new EmployeesSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
+        $dataProvider->query->andWhere(['branch' => 'MAIN']);
         if (!$searchModel->status) {
             $dataProvider->query->andWhere(['status' => 1]);
         }
@@ -35,12 +36,7 @@ class DefaultController extends Controller
         
         //แบ่งชายหญิงจามช่วงอายุ
         $dataProviderGender = $searchModel->search($this->request->queryParams);
-        // $dataProviderGender->query->select(["CONCAT(5 * FLOOR(((YEAR(NOW()) - YEAR(birthday))/5)), ' - ', 5 * FLOOR(((YEAR(NOW()) - YEAR(birthday))/5)) + 4) AS `_age_generation`,
-        //         SUM(IF(gender = 'ชาย',1,0)* -1) AS _male, SUM(IF(gender = 'หญิง',1,0)) AS _female, SUM(IF(gender = 'ชาย',1,0)* -1) * 100 /
-        //         (select count(id) FROM employees WHERE status not in(5,8,7)) as _male_percen, SUM(IF(gender = 'หญิง',1,0)) * 100 / (select count(id)
-        //         FROM employees WHERE status not in(5,8,7)) as _female_percen, (select count(id)
-        //         FROM employees WHERE status not in(5,8,7)) as cnt", ]);
-
+   
         $dataProviderGender->query->select(["CONCAT(5 * FLOOR(((YEAR(NOW()) - YEAR(birthday))/5)), ' - ', 5 * FLOOR(((YEAR(NOW()) - YEAR(birthday))/5)) + 4) AS `_age_generation`,
                 SUM(IF(gender = 'ชาย',1,0)* -1) AS _male, SUM(IF(gender = 'หญิง',1,0)) AS _female, SUM(IF(gender = 'ชาย',1,0)* -1) * 100 /
                 (select count(id) FROM employees WHERE status = 1 ) as _male_percen, SUM(IF(gender = 'หญิง',1,0)) * 100 / (select count(id)

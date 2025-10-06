@@ -627,6 +627,8 @@ class Leave extends \yii\db\ActiveRecord
 
     public function Approve()
     {
+        try {
+
         $emp = $this->CreateBy();
         $department_id = $emp->department;
         $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
@@ -732,29 +734,33 @@ class Leave extends \yii\db\ActiveRecord
                 ]
             ];
             
-            // ถ้าเป็นหัวหน้าลาเอง
-            // $leader = Employees::find()->where(['id' => $emp->id])->one();
-            // return [
-            //     'approve_1' => [
-            //         'id' => $leader->id,
-            //         'avatar' => $leader->getAvatar(false),
-            //         'fullname' => $leader->fullname,
-            //         'position' => $leader->positionName(),
-            //         'title' => 'หัวหน้างาน'
-            //     ],
-            //     'approve_2' => [
-            //         'id' => $leader->id,
-            //         'fullname' => $leader->fullname,
-            //         'position' => $leader->positionName(),
-            //         'title' => 'หัวหน้ากลุ่มงาน'
-            //     ],
-            //     'approve_3' => [
-            //         'id' => $leader->id,
-            //         'fullname' => $leader->fullname,
-            //         'position' => $leader->positionName(),
-            //         'title' => 'ผู้อำนวยการ'
-            //     ]
-            // ];
+           
+        }
+
+        } catch (\Throwable $th) {
+             return [
+                'approve_1' => [
+                    'id' =>  '',
+                    'avatar' => '',
+                    'fullname' => '',
+                    'position' =>'',
+                    'title' => 'หัวหน้างาน'
+                ],
+                'approve_2' => [
+                  'id' =>  '',
+                    'avatar' => '',
+                    'fullname' => '',
+                    'position' => '',
+                    'title' => 'หัวหน้ากลุ่มงาน'
+                ],
+                'approve_3' => [
+                     'id' => '',
+                    'avatar' => '',
+                    'fullname' => '',
+                    'position' => '',
+                    'title' => 'ผู้อำนวยการ'
+                ]
+            ];
         }
     }
 
