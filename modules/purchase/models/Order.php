@@ -283,7 +283,11 @@ class Order extends \yii\db\ActiveRecord
                       //ส่งข้อความและผุ้อนุมัติไม่ใช่ตัวเอง
                       if($item['level'] == 1){
                         $employeeLeader = Employees::find()->where(['user_id' => $item['emp_id']])->one();
-                        LineMsg::sendPurchase($newItem->id, $employeeLeader->user->line_id);
+                        try {
+                            LineMsg::sendPurchase($newItem->id, $employeeLeader->user->line_id);
+                        } catch (\Throwable $th) {
+
+                        }
                     }
                     
         }
