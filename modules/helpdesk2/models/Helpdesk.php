@@ -18,6 +18,7 @@ use yii\behaviors\TimestampBehavior;
 use app\modules\filemanager\models\Uploads;
 use app\modules\inventory\models\StockEvent;
 use app\modules\filemanager\components\FileManagerHelper;
+use Google\Service\Compute\Help;
 
 /**
  * This is the model class for table "helpdesk".
@@ -77,7 +78,7 @@ class Helpdesk extends \yii\db\ActiveRecord
         return [
             [['repair_number', 'device_type_id', 'asset_number', 'request_repair_date', 'repair_result', 'repair_type', 'emp_id', 'ref', 'code', 'receive_date', 'date_start', 'date_end', 'name', 'title', 'data_json', 'status', 'rating', 'move_out', 'repair_group', 'thai_year', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'default', 'value' => null],
             [['category_id'], 'default', 'value' => 0],
-            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at','q'], 'safe'],
+            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'q'], 'safe'],
             [['category_id', 'emp_id', 'move_out', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['repair_number', 'device_type_id', 'asset_number', 'repair_result', 'repair_type'], 'string', 'max' => 100],
             [['ref', 'code', 'name', 'title', 'status', 'rating', 'repair_group'], 'string', 'max' => 255],
@@ -309,46 +310,44 @@ class Helpdesk extends \yii\db\ActiveRecord
 
 
     // ผู้แจ่งซ่อม
- public function getUserReq()
+    public function getUserReq()
     {
         try {
             $emp = $this->emp;
-        $createDate = $this->viewCreated()['full'] !=='' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+            $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
             return [
-                'avatar' => $emp->getAvatar(false,$createDate),
+                'avatar' => $emp->getAvatar(false, $createDate),
                 'fullname' => $emp->fullname,
                 'department' => $emp->departmentName(),
             ];
         } catch (\Throwable $th) {
-        
+
             return [
                 'avatar' => '',
                 'fullname' => '',
                 'department' => '',
             ];
         }
-
     }
 
-        //แสดงวันเวลาที่แสดง
+    //แสดงวันเวลาที่แสดง
     public function viewCreated()
     {
         try {
-        $datetime = explode(' ',$this->created_at);
-        $date = ThaiDateHelper::formatThaiDate($datetime[0]);
-        $time = $datetime[1].'.น';
-        return [
-            'full' => $date.' '.$time,
-            'date' => $date,
-            'time' => $time
-        ];
-
+            $datetime = explode(' ', $this->created_at);
+            $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+            $time = $datetime[1] . '.น';
+            return [
+                'full' => $date . ' ' . $time,
+                'date' => $date,
+                'time' => $time
+            ];
         } catch (\Throwable $th) {
-           return [
-            'full' => '',
-            'date' =>'',
-            'time' => ''
-        ];
+            return [
+                'full' => '',
+                'date' => '',
+                'time' => ''
+            ];
         }
     }
 
@@ -736,21 +735,32 @@ class Helpdesk extends \yii\db\ActiveRecord
         }
     }
 
-    // แสดงวันที่แล้วสร็จ
-    // public function viewEndJob()
-    // {
-    //     try {
-    //         return \Yii::$app->thaiFormatter->asDateTime($this->data_json['end_job'], 'medium');
-    //     } catch (\Throwable $th) {
-    //     }
-    // }
-
     // วันที่แสดงความคิดเห็น
     public function viewCommentDate()
     {
         try {
             return \Yii::$app->thaiFormatter->asDateTime($this->data_json['comment_date'], 'medium');
         } catch (\Throwable $th) {
+        }
+    }
+
+    // ผู้รับงาน
+    public function viewTechRevice()
+    {
+        // update emp_id จาก helpdesk_detail
+        // $sql = "UPDATE  `helpdesk_detail` d 
+        // LEFT JOIN employees e ON e.user_id = d.created_by SET d.emp_id = e.id 
+        // WHERE name = 'service_record';";
+
+        try {
+            $helpdeskDetail = HelpdeskDetail::find()
+                ->where(['helpdesk_id' => $this->id, 'name' => 'service_record'])
+                ->orderBy(['id' => SORT_ASC])
+                ->one();
+            $emp = Employees::findOne(['id' => $helpdeskDetail->emp_id]);
+            return $emp;
+        } catch (\Throwable $th) {
+            return '';
         }
     }
 

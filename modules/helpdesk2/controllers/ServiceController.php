@@ -126,6 +126,7 @@ class ServiceController extends \yii\web\Controller
     public function actionReceive($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
         //บันทึกเปลี่ยนสถานะและออกเลขใขรับซ่อม
         $model = $this->findModel($id);
         $model->status = 'receive';
@@ -135,6 +136,7 @@ class ServiceController extends \yii\web\Controller
 
         //เขียนลงบน timeline
         $serviceRecord = new HelpdeskDetail;
+        $serviceRecord->emp_id = $me->id;
         $serviceRecord->helpdesk_id = $model->id;
         $serviceRecord->name = 'service_record';
         $serviceRecord->status = 'รับเรื่อง';
@@ -195,13 +197,36 @@ class ServiceController extends \yii\web\Controller
         $formName = 'form_layout_service';
         $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         $checkLayout = Categorise::findOne(['name' => $formName]);
-        if($checkLayout){
-            $layout = $checkLayout;
-        }else{
+
+        if (!$checkLayout) {
             $layout = new Categorise();
             $layout->name = $formName;
             $layout->ref = $ref;
+            $layout->data_json = [
+                "title_x" => "80",
+                "title_y" => "48",
+                "device_x" => "80",
+                "device_y" => "40",
+                "created_x" => "135",
+                "created_y" => "27",
+                "urgency_x" => "190",
+                "urgency_y" => "33",
+                "location_x" => "120",
+                "location_y" => "32",
+                "createdby_x" => "150",
+                "createdby_y" => "75",
+                "createtime_x" => "181",
+                "createtime_y" => "27",
+                "department_x" => "65",
+                "department_y" => "33",
+                "tech_receive_x" => "142",
+                "tech_receive_y" => "207",
+                "repair_number_x" => "165",
+                "repair_number_y" => "10",
+            ];
             $layout->save();
+        } else {
+            $layout = $checkLayout;
         }
 
 
@@ -218,72 +243,100 @@ class ServiceController extends \yii\web\Controller
         $templateUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref]);
 
         $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
-        if($templateFile){
-
-  
-        $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
-        // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
-        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
-
-        // 2️⃣ เลือกหน้าที่ต้องการ
-        $tplIdx = $pdf->importPage(1);
-
-        // 3️⃣ ใช้ template
-        $pdf->useTemplate($tplIdx, 0, 0, 210);
-
-        // 4️⃣ เขียนข้อความลงไป
-        $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
-
-        // รายละเอียดปัญหา
-        $title = $model->title;
-        $titleX = isset($layout->data_json['title_x']) ? (float)$layout->data_json['title_x'] : 0;
-        $titleY = isset($layout->data_json['title_y']) ? (float)$layout->data_json['title_y'] : 0;
-        $pdf->SetXY($titleX, $titleY);
-        $pdf->Write(10,  $this->t($title));
-
-        //สถานที่
-        $location = isset($model->data_json['location']) ? $model->data_json['location'] : '';
-        $locationX = isset($layout->data_json['location_x']) ? (float)$layout->data_json['location_x'] : 0;
-        $locationy = isset($layout->data_json['location_y']) ? (float)$layout->data_json['location_y'] : 0;
-        $pdf->SetXY($locationX, $locationy);
-        $pdf->Write(10,  $this->t($location));
+        if ($templateFile) {
 
 
-        // ประเภทอุปกรณ์
-        $deviceType = $model->deviceType->title ?? '-';
-        $locationX = isset($layout->data_json['device_x']) ? (float)$layout->data_json['device_x'] : 0;
-        $locationy = isset($layout->data_json['device_y']) ? (float)$layout->data_json['device_y'] : 0;
-        $pdf->SetXY($locationX, $locationy);
-        $pdf->Write(10,  $this->t($deviceType));
+            $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
+            // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
+            $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
+            $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
 
-        // ผู้ส่งซ่อม
-        $createdBy = $model->emp->fullname ?? '-';
-        $createdByX = isset($layout->data_json['createdby_x']) ? (float)$layout->data_json['createdby_x'] : 0;
-        $createdByY = isset($layout->data_json['createdby_y']) ? (float)$layout->data_json['createdby_y'] : 0;
-        $pdf->SetXY($createdByX, $createdByY);
-        $pdf->Write(10,  $this->t($createdBy));
+            // 2️⃣ เลือกหน้าที่ต้องการ
+            $tplIdx = $pdf->importPage(1);
 
-        $createDate = $model->viewCreated()['full'];
-        $createDateX = isset($layout->data_json['created_x']) ? (float)$layout->data_json['created_x'] : 0;
-        $createDateY = isset($layout->data_json['created_y']) ? (float)$layout->data_json['created_y'] : 0;
-        $pdf->SetXY($createDateX, $createDateY);
-        $pdf->Write(10,  $this->t($createDate));
+            // 3️⃣ ใช้ template
+            $pdf->useTemplate($tplIdx, 0, 0, 210);
+
+            // 4️⃣ เขียนข้อความลงไป
+            $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
+
+            // เลขที่ใบแจ้งซ่อม
+            $repairNumber = $model->repair_number;
+            $repairNumberX = isset($layout->data_json['repair_number_x']) ? (float)$layout->data_json['repair_number_x'] : 0;
+            $repairNumberY = isset($layout->data_json['repair_number_y']) ? (float)$layout->data_json['repair_number_y'] : 0;
+            $pdf->SetXY($repairNumberX, $repairNumberY);
+            $pdf->Write(10,  $this->t($repairNumber));
+
+            // รายละเอียดปัญหา
+            $title = $model->title;
+            $titleX = isset($layout->data_json['title_x']) ? (float)$layout->data_json['title_x'] : 0;
+            $titleY = isset($layout->data_json['title_y']) ? (float)$layout->data_json['title_y'] : 0;
+            $pdf->SetXY($titleX, $titleY);
+            $pdf->Write(10,  $this->t($title));
+
+            //สถานที่
+            $location = isset($model->data_json['location']) ? $model->data_json['location'] : '';
+            $locationX = isset($layout->data_json['location_x']) ? (float)$layout->data_json['location_x'] : 0;
+            $locationY = isset($layout->data_json['location_y']) ? (float)$layout->data_json['location_y'] : 0;
+            $pdf->SetXY($locationX, $locationY);
+            $pdf->Write(10,  $this->t($location));
+
+            //ฝ่ายงานที่ส่งซ่อม
+            $department = $model->emp->departmentName() ?? '-';
+            $ldepartmentX = isset($layout->data_json['department_x']) ? (float)$layout->data_json['department_x'] : 0;
+            $departmentY = isset($layout->data_json['department_y']) ? (float)$layout->data_json['department_y'] : 0;
+            $pdf->SetXY($ldepartmentX, $departmentY);
+            $pdf->Write(10,  $this->t($department));
+
+
+            // ประเภทอุปกรณ์
+            $deviceType = $model->deviceType->title ?? '-';
+            $deviceX = isset($layout->data_json['device_x']) ? (float)$layout->data_json['device_x'] : 0;
+            $deviceY = isset($layout->data_json['device_y']) ? (float)$layout->data_json['device_y'] : 0;
+            $pdf->SetXY($deviceX, $deviceY);
+            $pdf->Write(10,  $this->t($deviceType));
+
+            // ผู้ส่งซ่อม
+            $createdBy = $model->emp->fullname ?? '-';
+            $createdByX = isset($layout->data_json['createdby_x']) ? (float)$layout->data_json['createdby_x'] : 0;
+            $createdByY = isset($layout->data_json['createdby_y']) ? (float)$layout->data_json['createdby_y'] : 0;
+            $pdf->SetXY($createdByX, $createdByY);
+            $pdf->Write(10,  $this->t($createdBy));
+
+            // วันที่ส่งซ่อม
+            $createDate = $model->viewCreated()['full'];
+            $createDateX = isset($layout->data_json['created_x']) ? (float)$layout->data_json['created_x'] : 0;
+            $createDateY = isset($layout->data_json['created_y']) ? (float)$layout->data_json['created_y'] : 0;
+            $pdf->SetXY($createDateX, $createDateY);
+            $pdf->Write(10,  $this->t($createDate));
+
+            // วันที่ส่งซ่อม (time)
+            $createDateTime = $model->viewCreated()['time'];
+            $createDateTimeX = isset($layout->data_json['createtime_x']) ? (float)$layout->data_json['createtime_x'] : 0;
+            $createDateTimeY = isset($layout->data_json['createtime_y']) ? (float)$layout->data_json['createtime_y'] : 0;
+            $pdf->SetXY($createDateTimeX, $createDateTimeY);
+            $pdf->Write(10,  $this->t($createDateTime));
+
+
+            // ช่างผู้รับงาน
+            $techReceive = $model->viewTechRevice()->fullname ?? '-';
+            $techReceiveX = isset($layout->data_json['tech_receive_x']) ? (float)$layout->data_json['tech_receive_x'] : 0;
+            $techReceiveY = isset($layout->data_json['tech_receive_y']) ? (float)$layout->data_json['tech_receive_y'] : 0;
+            $pdf->SetXY($techReceiveX, $techReceiveY);
+            $pdf->Write(10,  $this->t($techReceive));
 
 
 
-        
-        $pdf->SetXY($urgencyX, $urgencyY);
-        $pdf->Write(10,  $this->t($model->viewUrgent()['title']));
+            $pdf->SetXY($urgencyX, $urgencyY);
+            $pdf->Write(10,  $this->t($model->viewUrgent()['title']));
 
 
-        $pdf->SetXY(59, 40);
-        $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
+            $pdf->SetXY(59, 40);
+            $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
 
-        // 5️⃣ Output PDF
-        $pdf->Output('I', 'filled.pdf');
-    }
-
+            // 5️⃣ Output PDF
+            $pdf->Output('I', 'filled.pdf');
+        }
     }
 
 

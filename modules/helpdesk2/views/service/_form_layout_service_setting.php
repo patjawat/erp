@@ -8,8 +8,14 @@ use app\modules\helpdesk2\models\Helpdesk;
 
 $helpdesk = Helpdesk::find()
     ->where(['IS NOT', 'title', null])
+    ->andWhere(['id' => 125])
     ->orderBy(['id' => SORT_DESC]) // id จากมาก → น้อย
     ->one();
+
+    // echo "<pre>";
+    // print_r($helpdesk->viewTechRevice());
+    // echo "</pre>";
+
 ?>
 
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
@@ -35,56 +41,59 @@ $helpdesk = Helpdesk::find()
         <div class="row">
             <div class="col-6">
 
-                <label for="">ความเร่งด่วน</label>
+
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[urgency_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[urgency_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[repair_number_x]')->textInput()->label('เลขที่ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[repair_number_y]')->textInput()->label('เลขที่ส่งซ่อม-แนวตั้ง') ?>
                 </div>
 
-                <label for="">สาเหตุที่ส่งซ่อม</label>
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[title_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[title_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[urgency_x]')->textInput()->label('ความเร่งด่วน-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[urgency_y]')->textInput()->label('ความเร่งด่วน-แนวตั้ง') ?>
                 </div>
 
-                <label for="">ประเภทอุปกรณ์</label>
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[device_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[device_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[title_x]')->textInput()->label('สาเหตุที่ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[title_y]')->textInput()->label('สาเหตุที่ส่งซ่อม-แนวตั้ง') ?>
                 </div>
-                       <label for="">วันที่ซ่อม</label>
+
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[created_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[created_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[device_x]')->textInput()->label('ประเภทอุปกรณ์-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[device_y]')->textInput()->label('ประเภทอุปกรณ์-แนวตั้ง') ?>
                 </div>
+                <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[created_x]')->textInput()->label('วันที่ซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[created_y]')->textInput()->label('วันที่ซ่อม-แนวตั้ง') ?>
+                </div>
+
 
             </div>
             <div class="col-6">
-
-
-                <label for="">ฝ่ายงนาที่ส่งซ่อม</label>
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[department_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[department_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[department_x]')->textInput()->label('ฝ่ายงนาที่ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[department_y]')->textInput()->label('ฝ่ายงนาที่ส่งซ่อม-แนวตั้ง') ?>
                 </div>
 
-                <label for="">สถานที่</label>
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[location_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[location_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[location_x]')->textInput()->label('สถานที่-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[location_y]')->textInput()->label('สถานที่-แนวตั้ง') ?>
                 </div>
 
-
-                <label for="">ผู่ส่งซ่อม</label>
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[createdby_x]')->textInput()->label('X') ?>
-                    <?= $form->field($model, 'data_json[createdby_y]')->textInput()->label('Y') ?>
+                    <?= $form->field($model, 'data_json[createdby_x]')->textInput()->label('ผู่ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[createdby_y]')->textInput()->label('ผู่ส่งซ่อม-แนวตั้ง') ?>
+                </div>
+                <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[createtime_x]')->textInput()->label('เวลาซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[createtime_y]')->textInput()->label('เวลาซ่อม-แนวตั้ง') ?>
                 </div>
 
-         
+                <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[tech_receive_x]')->textInput()->label('ช่างผู้รับงาน-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[tech_receive_y]')->textInput()->label('ช่างผู้รับงาน-แนวตั้ง') ?>
+                </div>
 
             </div>
-
         </div>
     </div>
 
