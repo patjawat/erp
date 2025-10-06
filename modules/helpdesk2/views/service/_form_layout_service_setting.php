@@ -31,7 +31,7 @@ $helpdesk = Helpdesk::find()
         <div class="position-relative">
             <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
                 <i class="fa-solid fa-upload"></i>
-                <span>คลิกอัปโหลดไฟล์ที่นี่</span>
+                <span>คลิกอัปโหลดไฟล์แบบฟอร์มแจ้งซ่อมที่นี่</span>
             </div>
             <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
         </div>
