@@ -42,7 +42,7 @@ class DepdropController extends \yii\web\Controller
             if ($parents != null) {
                 $planCategoryId = $parents[0];
                 $out = PlanOrder::find()
-                    ->select(['id' => 'id', 'name' => 'description'])
+                    ->select(['id' => 'plan_category_id', 'name' => 'description'])
                     ->where(['plan_category_id' => $planCategoryId])
                     ->asArray()
                     ->all();
