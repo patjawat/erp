@@ -52,6 +52,10 @@ RUN find /app/vendor/asyou99/yii2-cart -type f -name "*.php" -exec sed -i 's/yii
 # ลบ  Cache Asset ออก
 RUN rm -rf /app/web/assets/*
 
+# ✅ เพิ่มขั้นตอนคัดลอกฟอนต์เข้าไปใน FPDF
+COPY web/fonts/THSarabunNew* /app/vendor/setasign/fpdf/font/
+
+
 # Step 5: ตั้งค่าให้โฟลเดอร์ runtime และ web/assets สามารถเขียนได้
 RUN mkdir -p /app/web/assets /app/web/downloads /app/web/msword/results/leave /app/web/msword/results/development /app/web/import-csv /app/runtime/cache /app/runtime/backup && \
     chmod -R 777 /app/runtime /app/runtime/backup /app/runtime/cache /app/web/assets /app/web/import-csv /app/web/downloads /app/web/msword /app/web/msword/results && \

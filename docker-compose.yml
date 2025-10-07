@@ -23,7 +23,7 @@ services:
       bash -c "docker-php-ext-install calendar && apache2-foreground"
 
   demo:
-    image: patjawat/erp:1.1
+    image: erp:1.1
     # image: erp:1.1
     container_name: demo
     platform: linux/amd64
