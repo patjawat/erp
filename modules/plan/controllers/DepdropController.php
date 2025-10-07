@@ -4,6 +4,7 @@ namespace app\modules\plan\controllers;
 
 use Yii;
 use app\models\Categorise;
+use app\modules\plan\models\PlanItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanCategory;
 
@@ -54,8 +55,6 @@ class DepdropController extends \yii\web\Controller
         return ['output' => '', 'selected' => ''];
     }
 
-
-    INV_01
      public function actionPlanOrder($id = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -64,7 +63,6 @@ class DepdropController extends \yii\web\Controller
             $parents = $_POST['depdrop_parents'];
             if ($parents != null) {
                 $planItemId = $parents[0];
-                return $planItemId;
                 $out = PlanOrder::find()
                     ->select(['id' => 'id', 'name' => 'description'])
                     ->where(['plan_item_id' => $planItemId])

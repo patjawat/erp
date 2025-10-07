@@ -72,7 +72,7 @@ try {
                     <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
                 </div>
 
-                <div class="col-6">
+                <div class="col-4">
                     <?php
                     echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
                         'data' => $model->listPlanType(),
@@ -88,7 +88,7 @@ try {
                     ])->label('ประเภทแผนงาน');
                     ?>
                 </div>
-                <div class="col-6">
+                <div class="col-4">
                     <?php
                     echo $form->field($model, 'plan_category_id')->widget(DepDrop::classname(), [
                         'options' => [
@@ -113,10 +113,13 @@ try {
                     ?>
 
                 </div>
-                <div class="col-6">
+                <div class="col-4">
 <?php
                     echo $form->field($model, 'plan_item_id')->widget(DepDrop::classname(), [
-                        'options' => ['placeholder' => 'เลือกแผนงาน...'],
+                        'options' => [
+                            'placeholder' => 'เลือกแผนงาน...',
+                             'id' => 'plan_item_id'
+                        ],
                         'type' => DepDrop::TYPE_SELECT2,
                         'select2Options' => [
                             'pluginOptions' => [
@@ -126,31 +129,11 @@ try {
                         ],
                         'pluginOptions' => [
                             'depends' => ['plan_category_id'], // ให้โหลดตามหมวด
-                            'url' => Url::to(['/plan/depdrop/plan-order']),
+                            'url' => Url::to(['/plan/depdrop/plan-item']),
                             'loadingText' => 'กำลังโหลด ...',
                            'initialize' => true,
                             'initDepends' => ['plan_category_id'], // 🟢 ให้โหลดค่าตามหมวดเมื่อเป็นหน้า update
                             'params' => ['plan_category_id'],      // 🟢 เพิ่ม params เพื่อให้โหลดค่าเดิม
-                        ],
-                        'pluginEvents' => [
-                            'select2:select' => new \yii\web\JsExpression("
-                                    function(e) {
-                                        var selectedId = e.params.data.id; // ค่าที่เลือก
-                                        $.ajax({
-                                            url: '/plan/depdrop/get-plan-info', // <- แก้ให้เป็น endpoint จริง
-                                            type: 'get',
-                                            data: { id: selectedId },
-                                            dataType: 'json',
-                                            success: function(response) {
-                                                console.log(response.data.plan_budget_type_id);
-                                                $('#order-data_json-pq_budget_type').val(response.data.plan_budget_type_id).trigger('change');
-                                            },
-                                            error: function() {
-                                                console.error('โหลดข้อมูลไม่สำเร็จ');
-                                            }
-                                        });
-                                    }
-                                "),
                         ],
                     ])->label('ชื่อแผนงาน/โครงการ');
                     ?>
@@ -168,12 +151,12 @@ try {
                             ],
                         ],
                         'pluginOptions' => [
-                            'depends' => ['plan_category_id'], // ให้โหลดตามหมวด
+                            'depends' => ['plan_item_id'], // ให้โหลดตามหมวด
                             'url' => Url::to(['/plan/depdrop/plan-order']),
                             'loadingText' => 'กำลังโหลด ...',
                            'initialize' => true,
-                            'initDepends' => ['plan_category_id'], // 🟢 ให้โหลดค่าตามหมวดเมื่อเป็นหน้า update
-                            'params' => ['plan_category_id'],      // 🟢 เพิ่ม params เพื่อให้โหลดค่าเดิม
+                            'initDepends' => ['plan_item_id'], // 🟢 ให้โหลดค่าตามหมวดเมื่อเป็นหน้า update
+                            'params' => ['plan_item_id'],      // 🟢 เพิ่ม params เพื่อให้โหลดค่าเดิม
                         ],
                         'pluginEvents' => [
                             'select2:select' => new \yii\web\JsExpression("
