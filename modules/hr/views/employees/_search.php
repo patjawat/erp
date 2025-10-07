@@ -156,7 +156,7 @@ use app\modules\hr\models\Organization;
         <?= $form->field($model, 'branch')->widget(Select2::classname(), [
                 'data' => [
                     'MAIN' => 'โรงพยาบาล',
-                    'ฺBRANCH' => 'รพ.สต.',
+                    'BRANCH' => 'รพ.สต.',
                 ],
                 'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
                     'pluginOptions' => [

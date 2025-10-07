@@ -172,7 +172,7 @@ class StockInController extends Controller
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-            'thai_year' => AppHelper::YearBudget($order->movement_date),
+            
             'category_id' => $order_id,
             'code' => $order ? $order->code : '',
             'name' => $name,
