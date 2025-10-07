@@ -16,6 +16,7 @@ use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\plan\models\PlanType;
 use app\modules\approve\models\Approve;
 use app\modules\inventory\models\Stock;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -99,7 +100,9 @@ class Order extends \yii\db\ActiveRecord
                 'date_end',
                 'date_between',
                 'plan_group_id',
+                'plan_type_id',
                 'plan_category_id',
+                'plan_item_id',
                 'plan_order_id'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
@@ -833,9 +836,9 @@ class Order extends \yii\db\ActiveRecord
     }
 
     //กลุ่มแผนงาน
-    public function listPlanGroup()
+    public function listPlanType()
     {
-        $list = Categorise::find()->where(['code' => ['parcel', 'expenses']])->all();
+        $list = PlanType::find()->where(['name' => 'plan_type'])->all();
         return ArrayHelper::map($list, 'code', 'title');
     }
 

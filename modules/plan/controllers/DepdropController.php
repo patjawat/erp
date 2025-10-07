@@ -5,6 +5,7 @@ namespace app\modules\plan\controllers;
 use Yii;
 use app\models\Categorise;
 use app\modules\plan\models\PlanOrder;
+use app\modules\plan\models\PlanCategory;
 
 class DepdropController extends \yii\web\Controller
 {
@@ -20,10 +21,10 @@ class DepdropController extends \yii\web\Controller
         if (isset($_POST['depdrop_parents'])) {
             $parents = $_POST['depdrop_parents'];
             if ($parents != null) {
-                $planGroupId = $parents[0];
-                $out = PlanOrder::find()
-                    ->select(['id' => 'plan_category_id', 'name' => 'description'])
-                    ->where(['plan_group_id' => $planGroupId])
+                $categoryId = $parents[0];
+                $out = PlanCategory::find()
+                    ->select(['id' => 'code', 'name' => 'title'])
+                    ->where(['name' => 'plan_category','category_id' => $categoryId])
                     ->asArray()
                     ->all();
 
@@ -33,6 +34,28 @@ class DepdropController extends \yii\web\Controller
         return ['output' => '', 'selected' => ''];
     }
 
+     public function actionPlanItem($id = null)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $out = [];
+        if (isset($_POST['depdrop_parents'])) {
+            $parents = $_POST['depdrop_parents'];
+            if ($parents != null) {
+                $categoryId = $parents[0];
+                $out = PlanItem::find()
+                    ->select(['id' => 'code', 'name' => 'title'])
+                    ->where(['category_id' => $categoryId])
+                    ->asArray()
+                    ->all();
+
+                return ['output' => $out, 'selected' => ''];
+            }
+        }
+        return ['output' => '', 'selected' => ''];
+    }
+
+
+    INV_01
      public function actionPlanOrder($id = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -40,10 +63,11 @@ class DepdropController extends \yii\web\Controller
         if (isset($_POST['depdrop_parents'])) {
             $parents = $_POST['depdrop_parents'];
             if ($parents != null) {
-                $planCategoryId = $parents[0];
+                $planItemId = $parents[0];
+                return $planItemId;
                 $out = PlanOrder::find()
-                    ->select(['id' => 'plan_category_id', 'name' => 'description'])
-                    ->where(['plan_category_id' => $planCategoryId])
+                    ->select(['id' => 'id', 'name' => 'description'])
+                    ->where(['plan_item_id' => $planItemId])
                     ->asArray()
                     ->all();
 

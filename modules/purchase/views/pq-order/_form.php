@@ -74,18 +74,18 @@ try {
 
                 <div class="col-6">
                     <?php
-                    echo $form->field($model, 'plan_group_id')->widget(Select2::classname(), [
-                        'data' => $model->listPlanGroup(),
+                    echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
+                        'data' => $model->listPlanType(),
                         'options' => [
                             'placeholder' => 'เลือกกลุ่มแผนงาน',
-                            'id' => 'plan_group_id'
+                            'id' => 'plan_type_id'
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
                             'dropdownParent' => '#main-modal',
                         ],
 
-                    ])->label('กลุ่มแผนงาน');
+                    ])->label('ประเภทแผนงาน');
                     ?>
                 </div>
                 <div class="col-6">
@@ -101,17 +101,59 @@ try {
                             'dropdownParent' => '#main-modal',
                         ]],
                         'pluginOptions' => [
-                            'depends' => ['plan_group_id'],
+                            'depends' => ['plan_type_id'],
                             'url' => Url::to(['/plan/depdrop/plan-category']),
                             'loadingText' => 'กำลังโหลด ...',
                            'initialize' => true,
-                            'initDepends' => ['plan_group_id'], // 🟢 สำคัญมาก
-                            'params' => ['plan_group_id'],      // 🟢 ช่วยส่งค่าไปให้ DepDrop โหลดค่าเริ่มต้นได้
+                            'initDepends' => ['plan_type_id'], // 🟢 สำคัญมาก
+                            'params' => ['plan_type_id'],      // 🟢 ช่วยส่งค่าไปให้ DepDrop โหลดค่าเริ่มต้นได้
 
                         ]
                     ])->label('หมวดหมู่');
                     ?>
 
+                </div>
+                <div class="col-6">
+<?php
+                    echo $form->field($model, 'plan_item_id')->widget(DepDrop::classname(), [
+                        'options' => ['placeholder' => 'เลือกแผนงาน...'],
+                        'type' => DepDrop::TYPE_SELECT2,
+                        'select2Options' => [
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                        ],
+                        'pluginOptions' => [
+                            'depends' => ['plan_category_id'], // ให้โหลดตามหมวด
+                            'url' => Url::to(['/plan/depdrop/plan-order']),
+                            'loadingText' => 'กำลังโหลด ...',
+                           'initialize' => true,
+                            'initDepends' => ['plan_category_id'], // 🟢 ให้โหลดค่าตามหมวดเมื่อเป็นหน้า update
+                            'params' => ['plan_category_id'],      // 🟢 เพิ่ม params เพื่อให้โหลดค่าเดิม
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => new \yii\web\JsExpression("
+                                    function(e) {
+                                        var selectedId = e.params.data.id; // ค่าที่เลือก
+                                        $.ajax({
+                                            url: '/plan/depdrop/get-plan-info', // <- แก้ให้เป็น endpoint จริง
+                                            type: 'get',
+                                            data: { id: selectedId },
+                                            dataType: 'json',
+                                            success: function(response) {
+                                                console.log(response.data.plan_budget_type_id);
+                                                $('#order-data_json-pq_budget_type').val(response.data.plan_budget_type_id).trigger('change');
+                                            },
+                                            error: function() {
+                                                console.error('โหลดข้อมูลไม่สำเร็จ');
+                                            }
+                                        });
+                                    }
+                                "),
+                        ],
+                    ])->label('ชื่อแผนงาน/โครงการ');
+                    ?>
                 </div>
 
                 <div class="col-12">
