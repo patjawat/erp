@@ -3,6 +3,7 @@
 use yii\web\View;
 use yii\bootstrap5\Html;
 use yii\helpers\ArrayHelper;
+use app\components\ThaiDateHelper;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 
@@ -35,6 +36,7 @@ $balanceQty = 0;
     <table class="table">
         <thead>
             <tr>
+                <th class="fw-semibold" scope="col" style="width:130px">วันที่รับเข้า</th>
                 <th class="fw-semibold" scope="col" style="width:130px">หมายเลขล็อต</th>
                 <th class="fw-semibold text-center">คงเหลือ</th>
                 <th class="fw-semibold text-center">ราคาต่อหน่วย</th>
@@ -43,12 +45,13 @@ $balanceQty = 0;
         </thead>
         <tbody class="align-middle table-group-divider">
         <tbody class="align-middle table-group-divider">
-            <?php foreach ($stockEvents as $item2): ?>
+            <?php foreach ($stockEvents as $key => $item2): ?>
                 <!-- ถ้า lot_number ตรงกัน -->
                 <?php if ($item2->lot_number == $lot_number): ?>
                     <!-- จำนวนที่มีน้อยกว่าจำนวนที่เบิกไม่สารมรถเบิกได้ -->
                     <?php if ($item2->qty < $qty): ?>
                         <tr>
+                            <td></td>
                             <td><?= $item2->lot_number ?></td>
                             <td class="fw-semibold text-center"><?= $item2->qty ?></td>
                             <td class="text-center"></td>
@@ -57,12 +60,14 @@ $balanceQty = 0;
                 <?php else: ?>
                       <!-- จำนวนที่มีน้อยกว่าจำนวนที่เบิกให้เพิ่ม Lot number ใหม่ได้ -->
                     <tr>
+ 
+                        <td><?= ThaiDateHelper::formatThaiDate($item2->getLotDate()['movement_date'] ?? '') ?></td>
                         <td><?= $item2->lot_number ?></td>
                         <td class="fw-semibold text-center"><?= $item2->qty ?></td>
                         <td class="fw-semibold text-center"><?= $item2->unit_price ?></td>
                         <td class="text-center">
 
-                            <?= $new_lotnumber == 'Y' ? Html::a(
+                            <?= $key == 0 && $new_lotnumber == 'Y' ? Html::a(
                                 '<i class="fa-solid fa-circle-plus"></i> เพิ่มล๊อตจ่าย',
                                 [
                                     '/inventory/stock-order/add-new-lot',

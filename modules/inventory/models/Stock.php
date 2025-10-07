@@ -322,11 +322,27 @@ public function listLotNumber()
     }
 
 
-    // เรียง lotnumber ตามการรับเข้า
-    public function getLotNumberLevelQty()
-    {
+    // แสดง วันรับเข้าจาก lotnumber
+public function getLotDate()
+{
+    $sql = "SELECT s.lot_number, o.movement_date, s.qty 
+            FROM stock s 
+            LEFT JOIN stock_events i ON i.lot_number = s.lot_number
+            LEFT JOIN stock_events o ON o.id = i.category_id
+            WHERE s.warehouse_id = :warehouse_id
+              AND o.name = 'order'
+              AND i.name = 'order_item'
+              AND s.qty > 0 
+              AND s.lot_number = :lot_number
+            GROUP BY s.lot_number;";
 
-    }
+    $query = Yii::$app->db->createCommand($sql)
+        ->bindValue(':lot_number', $this->lot_number)
+        ->bindValue(':warehouse_id', $this->warehouse_id)
+        ->queryOne();
+
+    return $query ?: [];
+}
 
     // // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
     // public function ReceiveMainSummary()

@@ -103,7 +103,7 @@ $emp = UserHelper::GetEmployee();
                                    'new_lotnumber' => ((int)$item->qty >= (int)$item->SumLotQty() ? 'Y' : 'N')
                                 ],
 
-                                ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-md']]
+                                ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]
                             ) ?>
 
 
@@ -113,13 +113,9 @@ $emp = UserHelper::GetEmployee();
                             </button>
 
                             <ul class="dropdown-menu">
-
-                                <?php if ($model->OrderApprove() && isset($office) &&  $item->SumStockQty() > 1): ?>
-                                    <li>
-                                        <?php echo $item->data_json['req_qty'] > $item->SumlotQty() ? in_array($model->order_status, ['success', 'cancel']) ? '' : Html::a('<i class="fa-solid fa-copy me-1"></i> เพิ่มล๊อตจ่าย', ['/inventory/stock-order/copy-item', 'id' => $item->id], ['class' => 'dropdown-item copy-item']) : ''; ?>
-                                    </li>
-                                <?php endif; ?>
-                                <?php if (!in_array($model->order_status, ['success', 'cancel']) && $userid == $item->created_by): ?>
+                                <!-- เงื่อนไขเดิม ถ้า ไม่ใช่เจ้าของไมาสารมารถลบรายการได้ -->
+                                <?php // if (!in_array($model->order_status, ['success', 'cancel']) && $userid == $item->created_by): ?>
+                                <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                                     <li>
                                         <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash me-1"></i> ลบรายการ', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']); ?>
                                     </li>

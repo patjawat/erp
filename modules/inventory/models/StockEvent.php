@@ -515,7 +515,16 @@ public function getVendor()
     public function SumLotQty()
     {
         try {
-            return Stock::find()->where(['asset_item' => $this->asset_item, 'lot_number' => $this->lot_number, 'warehouse_id' => $this->warehouse_id])->sum('qty');
+            $sum = Stock::find()
+            ->where([
+                'asset_item' => $this->asset_item,
+                'lot_number' => $this->lot_number,
+                'warehouse_id' => $this->warehouse_id
+            ])
+            ->sum('qty');
+
+        return $sum ?? 0; // ถ้า $sum เป็น null จะคืนค่า 0
+        
         } catch (\Throwable $th) {
             return 0;
         }

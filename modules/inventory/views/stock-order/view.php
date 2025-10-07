@@ -219,11 +219,11 @@ $("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.g
         $("#sumPrice").html(res.sumPrice);
         
         if(res.balance == 0){
-            // $('#btnSave').show();
+            $('#btnSave').show();
             console.log('show');
             
         }else{
-            // $('#btnSave').hide();
+            $('#btnSave').hide();
             console.log('hide');
         }
         $("#checkout").html(res.sumPrice);
@@ -239,11 +239,11 @@ $("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.g
 // ฟังก์ชันอัปเดตค่าจำนวนสินค้า
 async function updateQuantity(id, qty, quantityField) {
     let res = await $.getJSON("/inventory/stock-order/update-qty", { id, qty });
-    // if (res.status === "error") {
-    //     Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
-    // } else {
-    //     quantityField.val(qty);
-    // }
+    if (res.status === "error") {
+        Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
+    } else {
+        quantityField.val(qty);
+    }
 }
 
 // ฟังก์ชันแจ้งเตือนเมื่อเกินจำนวน

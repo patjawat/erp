@@ -129,7 +129,11 @@ class StockOrderController extends Controller
             $this->setWarehouse($model->warehouse_id);
         }
         if ($model) {
-            // $this->checkUpdateQty($id);
+            //ถ้ายังไม่บันทึกจ่ายและยกเลิกให้ updatelot ที่จะจ่ายไม่ให้เกินจำนวนที่มีใน stock
+            if (!in_array($model->order_status, ['success', 'cancel'])){
+                $this->checkUpdateQty($id);
+            }
+
             return $this->render('view', [
                 'model' => $model,
             ]);
@@ -884,55 +888,6 @@ class StockOrderController extends Controller
             $stock->save(false);
         }
     }
-
-    // public function actionCopyItem()
-    // {
-    //     $id = $this->request->get('id');
-    //     $lot_number = $this->request->get('lot_number');
-    //     \Yii::$app->response->format = Response::FORMAT_JSON;
-
-
-    //     // $order = StockEvent::findOne($id);
-    //     $order = StockEvent::findOne($id);
-    //     $lastLotNumber = Stock::find()
-    //         ->where(['>', 'lot_number', $order->lot_number])
-    //         ->andWhere(['warehouse_id' => $order->warehouse_id, 'asset_item' => $order->asset_item])
-    //         ->orderBy(['lot_number' => SORT_ASC])
-    //         ->one();
-
-    //     if ($lastLotNumber) {
-    //         $qty = ($order->data_json['req_qty'] - $order->SumlotQty());
-    //         $model = new StockEvent([
-    //             'name' => 'order_item',
-    //             'category_id' => $order->category_id,
-    //             'transaction_type' => 'OUT',
-    //             'lot_number' => $lastLotNumber->lot_number,
-    //             'warehouse_id' => $order->warehouse_id,
-    //             'order_status' => 'pending',
-    //             'thai_year' => $order->thai_year,
-    //             'unit_price' => $lastLotNumber->unit_price,
-    //             'asset_item' => $lastLotNumber->asset_item,
-    //             'qty' => $qty,
-    //             'data_json' => [
-    //                 'req_qty' => $qty,
-    //                 'copy' => true
-    //             ],
-    //         ]);
-
-    //         if ($model->save(false)) {
-    //             return [
-    //                 'status' => 'success',
-    //                 'container' => '#inventory-container',
-    //             ];
-    //         }
-    //     } else {
-    //         return [
-    //             'status' => 'error',
-    //             'massage' => 'เกิดข้อผิดพลาด',
-    //             'container' => '#inventory-container',
-    //         ];
-    //     }
-    // }
 
 
     //เพิ่มรายการ lot_number ใหม่ถ้า lot ที่เลือกหมด
