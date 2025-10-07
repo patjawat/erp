@@ -2,21 +2,22 @@
 
 namespace app\controllers;
 
+use yii;
+use yii\helpers\Url;
+use yii\helpers\Html;
+use yii\web\Response;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use yii\helpers\ArrayHelper;
-use app\modules\am\components\AssetHelper;
-use app\modules\am\models\Asset;
-use app\modules\inventory\models\Stock;
-use app\modules\purchase\models\Order;
 use PhpOffice\PhpWord\Settings;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\Response;
 use yii\helpers\BaseFileHelper;
-use yii;
+use app\modules\am\models\Asset;
+use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
+use app\modules\purchase\models\Order;
+use app\modules\inventory\models\Stock;
+use app\modules\am\components\AssetHelper;
 
 class MsWordController extends \yii\web\Controller
 {
@@ -54,7 +55,7 @@ class MsWordController extends \yii\web\Controller
             'leader_position' => $info['leader_position'], // 
             'address' => $info['address'],  // ที่อยู่
             'phone' => $info['phone'],  // โทรศัพท์
-            'province' => $info['province'],  // ที่อยู่
+            'province' => $info['province'],  // จังหวด
             'director_name' => $info['director_name'],  // ชื่อผู้บริหาร ผอ.
             'director_fullname' => SiteHelper::viewDirector()['fullname'],  // ชื่อผู้บริหาร ผอ.
             'director_position' => $info['director_position'],  // ตำแหน่งของ ผอ.
@@ -613,11 +614,13 @@ class MsWordController extends \yii\web\Controller
             $this->GetInfo()['phone'],
         );
 
+        $templateProcessor->setValue('pr_date', isset($model->data_json['pr_create_date']) ? ThaiDateHelper::formatThaiDate($model->data_json['pr_create_date'],'medium') : ''); //วันที่ขอซื้อ
         $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']); //ลย.0033.301/1578
         $templateProcessor->setValue('qr_number', isset($model->data_json['qr_number']) ? $model->data_json['qr_number'] : '');
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
-        $templateProcessor->setValue('vendor_name', $model->vendor_name);
-        $templateProcessor->setValue('vendor_address', $model->vendor_address);
+        $templateProcessor->setValue('po_number', $model->po_number);
+        $templateProcessor->setValue('vendor_name', $model->vendor->title);
+        $templateProcessor->setValue('vendor_address', $model->vendor->data_json['address'] ?? '');
         $templateProcessor->setValue('credit', $model->data_json['credit_days']);
         $templateProcessor->setValue('deliveryDay', $model->deliveryDay());
         $templateProcessor->setValue('project_id', isset($model->data_json['pq_project_id']) ? $model->data_json['pq_project_id'] : ''); //เลขที่โครงการ

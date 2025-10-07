@@ -3,20 +3,14 @@
 namespace app\controllers;
 
 use Yii;
-use yii\helpers\Html;
 use yii\web\Response;
 use app\models\Amphure;
 use app\models\Company;
-use app\models\Profile;
-use yii\web\Controller;
 use app\models\District;
 use app\models\Categorise;
-use yii\filters\VerbFilter;
 use app\components\AppHelper;
-use app\models\ProfileSearch;
 use app\modules\am\models\Asset;
 use app\modules\sm\models\Product;
-use yii\web\NotFoundHttpException;
 use app\components\CategoriseHelper;
 use app\components\DateFilterHelper;
 use app\modules\hr\models\Employees;

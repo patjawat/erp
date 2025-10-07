@@ -15,7 +15,9 @@ class OrderSearch extends Order
         return [
             [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['ref', 'name', 'category_id', 'code', 'pr_number', 'po_number', 'pq_number', 'approve', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'vendor_name', 'order_type_name', 'thai_year', 'date_start',
-                'date_end','date_between'], 'safe'],
+                'date_end','date_between','plan_group_id',
+                'plan_category_id',
+                'plan_order_id'], 'safe'],
             [['price'], 'number'],
         ];
     }
