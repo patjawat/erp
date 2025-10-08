@@ -70,8 +70,8 @@ $helpdesk = Helpdesk::find()
             </div>
             <div class="col-6">
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[department_x]')->textInput()->label('ฝ่ายงนาที่ส่งซ่อม-แนวนอน') ?>
-                    <?= $form->field($model, 'data_json[department_y]')->textInput()->label('ฝ่ายงนาที่ส่งซ่อม-แนวตั้ง') ?>
+                    <?= $form->field($model, 'data_json[department_x]')->textInput()->label('ฝ่ายงานที่ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[department_y]')->textInput()->label('ฝ่ายงานที่ส่งซ่อม-แนวตั้ง') ?>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -80,8 +80,8 @@ $helpdesk = Helpdesk::find()
                 </div>
 
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[createdby_x]')->textInput()->label('ผู่ส่งซ่อม-แนวนอน') ?>
-                    <?= $form->field($model, 'data_json[createdby_y]')->textInput()->label('ผู่ส่งซ่อม-แนวตั้ง') ?>
+                    <?= $form->field($model, 'data_json[createdby_x]')->textInput()->label('ผู้ส่งซ่อม-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[createdby_y]')->textInput()->label('ผู้ส่งซ่อม-แนวตั้ง') ?>
                 </div>
                 <div class="d-flex gap-2">
                     <?= $form->field($model, 'data_json[createtime_x]')->textInput()->label('เวลาซ่อม-แนวนอน') ?>
