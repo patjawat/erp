@@ -1,28 +1,9 @@
 
 
 <?php
-use yii\helpers\Html;
-use yii\db\Expression;
-use yii\widgets\DetailView;
-use app\modules\inventory\models\StockEvent;
 $warehouse = Yii::$app->session->get('warehouse');
-// $stockEvents = StockEvent::find()
-//     ->select([
-//         'stock_events.*',
-//         new Expression('SUM(qty * unit_price) AS total')
-//     ])
-//     ->where([
-//         'asset_item' => $asset_item,
-//         'warehouse_id' => $warehouse->id,
-//         'order_status' => 'success'
-//     ])
-//     ->groupBy('id')
-//     ->orderBy(['movement_date' => SORT_ASC]);
-
-// Debug raw SQL
-// echo $stockEvents->createCommand()->getRawSql();
-
-$sql = "SELECT e.movement_date,i.qty,i.unit_price,e.thai_year,i.lot_number,i.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
+/
+$sql = "SELECT e.movement_date,i.qty,i.unit_price,e.thai_year,i.lot_number,e.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
 LEFT JOIN stock_events e ON e.id = i.category_id
 WHERE i.asset_item = :asset_item
 AND e.warehouse_id = :warehouse_id
