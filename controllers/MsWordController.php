@@ -63,6 +63,12 @@ class MsWordController extends \yii\web\Controller
         ];
     }
 
+    public function actionDemo()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->getInfo()['leader_fullname'];
+    }
+
     private function Show($filename)
     {
         if ($this->request->isAjax) {
@@ -614,12 +620,12 @@ class MsWordController extends \yii\web\Controller
             $this->GetInfo()['phone'],
         );
 
-        $templateProcessor->setValue('pr_date', isset($model->data_json['pr_create_date']) ? ThaiDateHelper::formatThaiDate($model->data_json['pr_create_date'],'medium') : ''); //วันที่ขอซื้อ
+        $templateProcessor->setValue('pr_date', isset($model->data_json['pr_create_date']) ? ThaiDateHelper::formatThaiDate($model->data_json['pr_create_date'], 'medium') : ''); //วันที่ขอซื้อ
         $templateProcessor->setValue('doc_number',  $this->getInfo()['doc_number']); //ลย.0033.301/1578
         $templateProcessor->setValue('qr_number', isset($model->data_json['qr_number']) ? $model->data_json['qr_number'] : '');
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
         $templateProcessor->setValue('po_number', $model->po_number);
-        $templateProcessor->setValue('vendor_name', $model->vendor->title);
+        $templateProcessor->setValue('vendor_name', $model->vendor->title ?? '-');
         $templateProcessor->setValue('vendor_address', $model->vendor->data_json['address'] ?? '');
         $templateProcessor->setValue('credit', $model->data_json['credit_days']);
         $templateProcessor->setValue('deliveryDay', $model->deliveryDay());
@@ -673,7 +679,7 @@ class MsWordController extends \yii\web\Controller
         $templateProcessor->setValue('po_number', $model->po_number);
         $templateProcessor->setValue('order_item_checker', isset($model->data_json['order_item_checker']) ? $model->data_json['order_item_checker'] : '-');
         $templateProcessor->setValue('fine', isset($model->data_json['fine']) ? $model->data_json['fine'] : '-');
-        $templateProcessor->setValue('vendor_name', $model->vendor_name);
+        $templateProcessor->setValue('vendor_name', $model->vendor->title ?? '-');
         $templateProcessor->setValue('po_date', Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'));
         $templateProcessor->setValue('province', $this->GetInfo()['province']);
         $templateProcessor->setValue('asset_type', $model->assetType->title);
@@ -709,30 +715,40 @@ class MsWordController extends \yii\web\Controller
             $model->data_json =  ArrayHelper::merge($oldObj, $model->data_json, $setDate);
             $model->save(false);
 
-
+            $committee = $this->getCommitee($model->id);
             $data = [
                 'word_name' => $word_name,
                 'result_name' => $result_name,
                 'items' => [
                     'title' => 'รายงานผลการตรวจรับ',
                     'doc_number' => $this->getInfo()['doc_number'],
+                    'po_number' => $model->po_number,
+                    'vendor_name' => $model->vendor->title ?? '-',
                     'date' => Yii::$app->thaiFormatter->asDate($model->data_json['report_checker_date'], 'long'),
                     'org_name' => $this->GetInfo()['company_name'],
                     'org_name_full' => $this->GetInfo()['company_full'],
                     'order_type_name' => $model->data_json['order_type_name'],
                     'province' => $this->GetInfo()['province'],
-                    'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . ' เวลา ' . explode(" ", $model->data_json['gr_date'])[1],
+                    'gr_number' => $model->data_json['gr_number'] ?? '-',
+                    'gr_date' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long'),
+                    'gr_datetime' => Yii::$app->thaiFormatter->asDate($model->data_json['gr_date'], 'long') . ' เวลา ' . explode(" ", $model->data_json['gr_date'])[1],
                     'po_date' => Yii::$app->thaiFormatter->asDate($model->data_json['po_date'], 'long'),
                     'po_expire' => Yii::$app->thaiFormatter->asDate($model->data_json['po_expire_date'], 'long'),
                     'qty' => $model->SumQty(),
                     'price' =>  number_format($model->calculateVAT()['priceAfterVAT'], 2),
                     'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2),
-                    'po_number' => $model->po_number,
                     'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
+                    'leader_fullname' => $this->getInfo()['leader_fullname'],//หัวหน้าเจ้าหน้าที่
+                    'leader_position' => $this->getInfo()['leader_position'],//ตำแหน่งหัวหน้าเจ้าหน้าที่
                     'me' => $model->getMe()['fullname'],
                     'me_position' => $model->getMe()['position'],
                     'leader' => $model->getMe()['leader']['leader1_fullname'],
-                    'leader_position' => $model->getMe()['leader']['leader1_position']
+                    'chairman_fullname'   => $committee['chairman']['emp_fullname'] ?? '',
+                    'chairman_position'   => $committee['chairman']['emp_position'] ?? '',
+                    'committee1_fullname' => $committee['committee1']['emp_fullname'] ?? '',
+                    'committee1_position' => $committee['committee1']['emp_position'] ?? '',
+                    'committee2_fullname' => $committee['committee2']['emp_fullname'] ?? '',
+                    'committee2_position' => $committee['committee2']['emp_position'] ?? '',
                 ]
             ];
             return $this->CreateFile($data);
@@ -759,6 +775,46 @@ class MsWordController extends \yii\web\Controller
                 'model' => $model,
             ]);
         }
+    }
+
+    //ดึงคณะกรรมการตรวจรับพัสดุลงในบตรวจรับ
+    public function getCommitee($category_id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $lists = Order::find()->where(['category_id' => $category_id])->all();
+
+        // เตรียมค่าเริ่มต้น (กันกรณีไม่มีข้อมูล)
+        $result = [
+            'chairman' => null,
+            'committee1' => null,
+            'committee2' => null,
+        ];
+
+        $committees = [];
+
+        foreach ($lists as $item) {
+            $data_json = $item->data_json;
+            if (!isset($data_json['committee_name'])) {
+                continue;
+            }
+
+            if ($data_json['committee_name'] === 'ประธานกรรมการ' && $result['chairman'] === null) {
+                $result['chairman'] = $data_json;
+            } elseif ($data_json['committee_name'] === 'กรรมการ') {
+                $committees[] = $data_json;
+            }
+
+            // ถ้ามีครบทั้งประธานและกรรมการ 2 คนแล้วหยุดเลย
+            if ($result['chairman'] && count($committees) >= 2) {
+                break;
+            }
+        }
+
+        // เติมกรรมการลงใน array (ถ้ามีไม่ครบ)
+        $result['committee1'] = $committees[0] ?? null;
+        $result['committee2'] = $committees[1] ?? null;
+
+        return $result;
     }
 
     public function actionPurchase_11()
@@ -934,9 +990,9 @@ class MsWordController extends \yii\web\Controller
     public static function CreateDir($folderName)
     {
 
-            $downloadPath = Yii::getAlias('@app') . '/web/downloads';
+        $downloadPath = Yii::getAlias('@app') . '/web/downloads';
         if ($downloadPath != null) {
-            BaseFileHelper::createDirectory($downloadPath ,0777);
+            BaseFileHelper::createDirectory($downloadPath, 0777);
         }
 
         if ($folderName != null) {

@@ -29,16 +29,7 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
     'fieldConfig' => ['labelSpan' => 3, 'options' => ['class' => 'form-group mb-1 mr-2 me-2']]
 ]); ?>
 
-  <?=$form->field($model, 'set_date')->widget(Datetimepicker::className(),[
-    'options' => [
-        'timepicker' => false,
-        'datepicker' => true,
-        'mask' => '99/99/9999',
-        'lang' => 'th',
-        'yearOffset' => 543,
-        'format' => 'd/m/Y', 
-    ],
-    ])->label('ลงวันที่');
+  <?=$form->field($model, 'set_date')->textInput()->label('ลงวันที่');
 ?>
 
 
@@ -53,42 +44,18 @@ $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
 
 <?php
 $js = <<< JS
+    thaiDatepicker('#order-set_date')
 
-    var thaiYear = function (ct) {
-        var leap=3;  
-        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
-        if(ct){  
-            var yearL=new Date(ct).getFullYear()-543;  
-            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
-            if(leap==2){  
-                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
-            }  
-        }              
-        this.setOptions({  
-            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
-        })                
-    };    
-     
-   
-    $("#order-set_date").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });   
-
-
-    // $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-    // $(".modal-dialog").addClass("modal-sm");
     $("#main-modal").removeClass('modal-md modal-xl').addClass("modal-md")
-
 
         \$('#form-order').on('beforeSubmit', function (e) {
                 var form = \$(this);
-                
+                $("#main-modal").modal("hide")
+                  Swal.fire({
+                    title: 'กำลังบันทึก...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
                 \$.ajax({
                     url: form.attr('action'),
                     type: 'post',
@@ -101,15 +68,17 @@ $js = <<< JS
                             await $("#main-modal-label").html(response.title);
                             await $(".modal-body").html(response.content);
                             await $("#main-modal").removeClass('modal-md').addClass("modal-xl")
-                            try {
-                                // loadRepairHostory()
-                            } catch (error) {
-                                
-                            }
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                            // await  \$.pjax.reload({ container:'#order', history:false,replace: false,timeout: false});                               
+                            await Swal.close();
                         }
-                    }
+                    },
+                    error: function (xhr) {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: xhr.responseText || 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+                    });
+                }
                 });
                 return false;
             });
