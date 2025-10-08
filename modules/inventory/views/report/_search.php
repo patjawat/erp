@@ -38,34 +38,36 @@ $months = [
 
 <div class="row">
 
-<div class="col-lg-5 col-md-5 col-sm-12">
+<!-- <div class="col-lg-5 col-md-5 col-sm-12"> -->
 
-    <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-        'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-        // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
-        'options' => ['placeholder' => 'คลังทั้งหมด'],
-        'pluginEvents' => [
-            "select2:unselect" => "function() { 
-                }",
-                "select2:select" => "function() {
+    <?php
+    
+    // $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+    //     'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
+    //     // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
+    //     'options' => ['placeholder' => 'คลังทั้งหมด'],
+    //     'pluginEvents' => [
+    //         "select2:unselect" => "function() { 
+    //             }",
+    //             "select2:select" => "function() {
 
-                    }",
-                ],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-                ])->label(false);
+    //                 }",
+    //             ],
+    //             'pluginOptions' => [
+    //                 'allowClear' => true,
+    //             ],
+    //             ])->label(false);
                 
                 ?>
-                </div>
-                  <div class="col-3">
+                <!-- </div> -->
+                  <div class="col-5">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
     </div>
-    <div class="col-3">
+    <div class="col-5">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
     </div>
     
-    <div class="col-1">
+    <div class="col-2">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"

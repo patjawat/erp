@@ -8,34 +8,34 @@ WITH stock_summary AS (
                                 p.data_json->>'$.unit' AS unit,
                                 w.warehouse_name as warehouse_name,
 	-- จำนวนคงเหลือ (ก่อนเดือน)
-            SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
+            SUM(CASE WHEN o.movement_date < '2025-09-02' AND o.transaction_type = 'IN'  
                  THEN i.qty ELSE 0 END) 
         -
-        SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
+        SUM(CASE WHEN o.movement_date < '2025-09-02' AND o.transaction_type = 'OUT' 
                  THEN i.qty  ELSE 0 END) AS balance_before_qty,
                                 -- ยอดยกมา (ก่อนเดือน)
-                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
+                                SUM(CASE WHEN o.movement_date < '2025-09-02' AND o.transaction_type = 'IN'  
                                         THEN i.qty * i.unit_price ELSE 0 END) 
                                 -
-                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
+                                SUM(CASE WHEN o.movement_date < '2025-09-02' AND o.transaction_type = 'OUT' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
 
                                -- จำนวนรับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                SUM(CASE WHEN o.movement_date BETWEEN '2025-09-02' AND '2025-09-30' 
                                         AND o.transaction_type = 'IN' 
                                         THEN i.qty ELSE 0 END) AS total_in_month_qty,
 
                                 -- รับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                SUM(CASE WHEN o.movement_date BETWEEN '2025-09-02' AND '2025-09-30' 
                                         AND o.transaction_type = 'IN' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
  -- จำนวนจ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                SUM(CASE WHEN o.movement_date BETWEEN '2025-09-02' AND '2025-09-30' 
                                         AND o.transaction_type = 'OUT' 
                                         THEN i.qty  ELSE 0 END) AS total_out_month_qty,
 
                                 -- จ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
+                                SUM(CASE WHEN o.movement_date BETWEEN '2025-09-02' AND '2025-09-30' 
                                         AND o.transaction_type = 'OUT' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
 
