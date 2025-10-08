@@ -74,7 +74,7 @@ class DevelopmentController extends Controller
         //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
         // }
 
-       if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -87,8 +87,8 @@ class DevelopmentController extends Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-    
-         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
+
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
 
         return $this->render('index', [
@@ -338,6 +338,17 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('v_type', ($model->vehicleType?->title ?? '-') . ' ทะเบียน ' . ($model->data_json['license_plate'] ?? '-'));
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
+
+        $templateProcessor->cloneRow('num', count($model->listMember()));
+        $i = 1;
+        $num = 1;
+        foreach ($model->listMember() as $memberItem) {
+            $templateProcessor->setValue('num#' . $i, $num++);
+            $templateProcessor->setValue('member_name#' . $i, $memberItem->emp?->fullname ?? '-');
+
+            $i++;
+        }
+
 
         // ผู้ขออนุญาต
         try {

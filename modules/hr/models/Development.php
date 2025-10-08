@@ -636,6 +636,12 @@ class Development extends \yii\db\ActiveRecord
         ];
     }
 
+    // รายชื่อคณะเดินทาง
+    public function listMember()
+    {
+        return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])->all();
+    }
+
     // การตอบรับเป็นวิทยากร
     public function viewResponseStatus()
     {
