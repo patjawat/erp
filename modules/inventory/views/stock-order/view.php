@@ -138,7 +138,7 @@ foreach ($model->getItems() as $item): ?>
                     <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span class="badge rounded-pill text-bg-primary"><?php echo count($model->getItems()); ?> </span>
                         รายการ
                     </h6>
-                    <?=Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มสินค้า',
+                    <?=  ($model->order_status != 'success') ? Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มสินค้า',
                     [
                         '/inventory/stock/product',
                         'asset_type_id' => $model->asset_type_id,
@@ -153,7 +153,7 @@ foreach ($model->getItems() as $item): ?>
                             'size' => 'modal-xl'
                         ]
                         
-                    ])?>
+                    ]) : ''?>
                 </div>
                 <div id="showOrderItem"></div>
             </div>
