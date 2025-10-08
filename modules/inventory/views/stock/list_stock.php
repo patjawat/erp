@@ -2,7 +2,7 @@
 
 <?php
 $warehouse = Yii::$app->session->get('warehouse');
-/
+
 $sql = "SELECT e.movement_date,i.qty,i.unit_price,e.thai_year,i.lot_number,e.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
 LEFT JOIN stock_events e ON e.id = i.category_id
 WHERE i.asset_item = :asset_item
