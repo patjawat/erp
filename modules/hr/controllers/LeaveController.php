@@ -831,6 +831,7 @@ class LeaveController extends Controller
         $date_start_type = (float) ($this->request->get('date_start_type'));
         $date_end_type = (float) ($this->request->get('date_end_type'));
         $on_holidays = $this->request->get('on_holidays');
+        $leave_type_id = $this->request->get('leave_type_id');
 
         $date_start = preg_replace('/\D/', '', $this->request->get('date_start'));
         $date_end = preg_replace('/\D/', '', $this->request->get('date_end'));
@@ -841,8 +842,13 @@ class LeaveController extends Controller
 
 
         $model = LeaveHelper::CalDay($dateStart, $dateEnd, $emp_id);
-        //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
-        if ($model['dayOff'] == 0) {
+
+       
+        if ($leave_type_id == 'LT2') {
+            //ถ้าเป็นลาคลอดบุตร ไม่ต้องนับวันหยุด
+            $total = ($model['allDays']);
+        } else if($model['dayOff'] == 0) { 
+             //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
             $total = ($model['allDays'] - ($date_start_type + $date_end_type) - $model['satsunDays'] - $model['holiday']);
         } else {
             //จำเป็นต้องนับวัน off หรือไม่

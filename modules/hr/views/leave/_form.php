@@ -142,6 +142,14 @@ $resultsJs = <<<JS
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
                     ],
+                        'pluginEvents' => [
+                                'select2:unselect' => 'function() {
+                                    calDays();
+                                    }',
+                                'select2:select' => 'function() {
+                                        calDays();
+                                    }',
+                            ],
                 ])->label('ประเภท');
                 ?>
             </div>
@@ -430,7 +438,8 @@ $js = <<<JS
                     date_end:\$('#leave-date_end').val(),
                     date_start_type:\$('#leave-date_start_type').val(),
                     date_end_type:\$('#leave-date_end_type').val(),
-                    on_holidays:\$('#leave-on_holidays').val()
+                    on_holidays:\$('#leave-on_holidays').val(),
+                    leave_type_id:\$('#leave-leave_type_id').val()
                     
                 },
                 dataType: "json",
