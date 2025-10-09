@@ -24,6 +24,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
         <?=Html::a('<i class="fa-solid fa-gauge me-2"></i> สรุปรายงานวัสดุคงคลัง ',['/inventory/report'],['class' => 'dropdown-item'])?>
         <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุคงคลังหลัก ',['/inventory/report/list-summary'],['class' => 'dropdown-item'])?>
+        <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุคงคลังหลักรายตัว ',['/inventory/report/list-by-item'],['class' => 'dropdown-item'])?>
     </div>
 </li>
 

@@ -3,70 +3,29 @@
 use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
-use yii\helpers\ArrayHelper;
-use app\components\DateFilterHelper;
-use app\modules\inventory\models\Warehouse;
-use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductTypeSearch $model */
 /** @var yii\widgets\ActiveForm $form */
-$months = [
-    10 => "ตุลาคม",
-    11 => "พฤศจิกายน",
-    12 => "ธันวาคม",
-    1 => "มกราคม",
-    2 => "กุมภาพันธ์",
-    3 => "มีนาคม",
-    4 => "เมษายน",
-    5 => "พฤษภาคม",
-    6 => "มิถุนายน",
-    7 => "กรกฎาคม",
-    8 => "สิงหาคม",
-    9 => "กันยายน"
-];
 ?>
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['/inventory/report/index'],
-        'method' => 'get',
-        'options' => [
-            'data-pjax' => 1
-        ],
-    ]); ?>
+<?php $form = ActiveForm::begin([
+    'method' => 'get',
+    'options' => [
+        'data-pjax' => 1
+    ],
+]); ?>
 
 
 <div class="row">
 
-<!-- <div class="col-lg-5 col-md-5 col-sm-12"> -->
-
-    <?php
-    
-    // $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
-    //     'data' => ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all(),'id','warehouse_name'),
-    //     // 'data' => ArrayHelper::map(Warehouse::find()->all(),'id','warehouse_name'),
-    //     'options' => ['placeholder' => 'คลังทั้งหมด'],
-    //     'pluginEvents' => [
-    //         "select2:unselect" => "function() { 
-    //             }",
-    //             "select2:select" => "function() {
-
-    //                 }",
-    //             ],
-    //             'pluginOptions' => [
-    //                 'allowClear' => true,
-    //             ],
-    //             ])->label(false);
-                
-                ?>
-                <!-- </div> -->
-                  <div class="col-5">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+    <div class="col-5">
+        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
     </div>
     <div class="col-5">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวีนที่'])->label(false); ?>
     </div>
-    
+
     <div class="col-2">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
@@ -76,31 +35,31 @@ $months = [
             </button>
         </div>
     </div>
-                
+
 </div>
 
 
 <div class="collapse mt-3" id="collapseFilter">
-<div class="row">
+    <div class="row">
         <div class="col-3">
 
-            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
-                    'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        // 'width' => '120px',
-                    ],
-        ])->label(false);?>
+            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                'data' => $model->ListThaiYear(),
+                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '120px',
+                ],
+            ])->label(false); ?>
 
         </div>
 
-    
+
     </div>
     <?php ActiveForm::end(); ?>
 
-<?php
-$js = <<< JS
+    <?php
+    $js = <<< JS
 
 thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
 
@@ -120,5 +79,5 @@ thaiDatepicker('#stockeventsearch-date_start,#stockeventsearch-date_end')
 
  
 JS;
-$this->registerJS($js);
-?>
+    $this->registerJS($js);
+    ?>

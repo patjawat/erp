@@ -51,6 +51,8 @@ WITH stock_summary AS (
                             AND asset_type.category_id = 4
                             AND asset_type.name = 'asset_type'
                             AND p.name = 'asset_item'
+                            GROUP BY p.code
+                            ORDER BY p.code
                         )
 
                         SELECT 

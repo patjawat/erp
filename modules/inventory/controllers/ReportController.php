@@ -453,8 +453,8 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('J' . $numRow, $value['total_in_month']);
             $sheet2->setCellValue('K' . $numRow, $value['total_out_month_qty']);
             $sheet2->setCellValue('L' . $numRow, $value['total_out_month']);
-            $sheet2->setCellValue('M' . $numRow,($value['balance_before_qty']+$value['total_in_month_qty']) - $value['total_out_month_qty']);
-            $sheet2->setCellValue('N' . $numRow,$value['balance_after']);
+            $sheet2->setCellValue('M' . $numRow, ($value['balance_before_qty'] + $value['total_in_month_qty']) - $value['total_out_month_qty']);
+            $sheet2->setCellValue('N' . $numRow, $value['balance_after']);
 
             //  ((last_stock_in + sum_month)-sum_sub) as sum_qty,
         }
@@ -473,15 +473,15 @@ class ReportController extends \yii\web\Controller
 
         $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-         $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($dataItems) + 2) . ')');
+        $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-         $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($dataItems) + 2) . ')');
+        $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-          $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($dataItems) + 2) . ')');
+        $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('N1', '=SUBTOTAL(9,N3:N' . (count($dataItems) + 2) . ')');
         $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
@@ -582,63 +582,9 @@ class ReportController extends \yii\web\Controller
 
     protected function GroupSummary($warehouse_id, $dateStart, $dateEnd)
     {
-        if ($warehouse_id && $warehouse_id !== '') {
-            $sql = "WITH stock_summary AS (
-                            SELECT 
-                                
-                                asset_type.code AS asset_type_code,
-                                asset_type.title AS asset_type_name,
 
-                                -- ยอดยกมา (ก่อนเดือน)
-                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'IN'  
-                                        THEN i.qty * i.unit_price ELSE 0 END) 
-                                -
-                                SUM(CASE WHEN o.movement_date < :date_start AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
-
-                                -- รับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
-                                        AND o.transaction_type = 'IN' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
-
-                                -- จ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN :date_start AND :date_end 
-                                        AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
-
-                            FROM stock_events o
-                            LEFT JOIN stock_events i ON i.category_id = o.id
-                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
-                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
-                            WHERE o.name = 'order'
-                             AND o.order_status = 'success'
-                            AND i.name = 'order_item'
-                            AND w.warehouse_type = 'MAIN'
-                            AND o.warehouse_id = :warehouse_id
-                            AND asset_type.category_id = 4
-                            AND asset_type.name = 'asset_type'
-                            GROUP BY asset_type.code, asset_type.title
-                        )
-
-                        SELECT 
-                            asset_type_code,
-                            asset_type_name,
-                            balance_before,                     -- 1. ยอดยกมา
-                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
-                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
-                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
-                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
-                        FROM stock_summary
-                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);";
-
-            return Yii::$app->db->createCommand($sql, [
-                ':date_start' => $dateStart,
-                ':date_end' => $dateEnd,
-                ':warehouse_id' => $warehouse_id,
-            ])->queryAll();
-        } else {
-            // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
-           $sql = "WITH stock_summary AS (
+        // ถ้าไม่เลือกคลังให้แสดงทั้งหมด
+        $sql = "WITH stock_summary AS (
                             SELECT 
                                 
                                 asset_type.code AS asset_type_code,
@@ -686,17 +632,16 @@ class ReportController extends \yii\web\Controller
                         ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);
                         ";
 
-            return Yii::$app->db->createCommand($sql, [
-                ':date_start' => $dateStart,
-                ':date_end' => $dateEnd,
-            ])->queryAll();
-        }
+        return Yii::$app->db->createCommand($sql, [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ])->queryAll();
     }
     protected function ItemSummary($warehouse_id, $dateStart, $dateEnd)
     {
         // ถ้ามีการเลือกคลัง
 
-            $sql = "WITH stock_summary AS (
+        $sql = "WITH stock_summary AS (
                             SELECT 
                                 
                                 asset_type.code AS asset_type_code,
@@ -771,10 +716,127 @@ class ReportController extends \yii\web\Controller
                         FROM stock_summary
                         ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);";
 
-            return Yii::$app->db->createCommand($sql, [
-                ':date_start' => $dateStart,
-                ':date_end' => $dateEnd
-            ])->queryAll();
+        return Yii::$app->db->createCommand($sql, [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd
+        ])->queryAll();
+    }
 
+    //แสดงรายงานแบบละเอียดแยกตามรายการสินค้า
+    public function actionListByItem()
+    {
+
+        $searchModel = new StockEventSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        } catch (\Throwable $th) {
+            $dateStart = '';
+            $dateEnd = '';
+        }
+
+        $q = $searchModel->q;
+
+        // สร้างเงื่อนไข WHERE แบบ dynamic
+        $where = "e.name = 'order' AND w.warehouse_type = 'MAIN' AND i.asset_item IS NOT NULL";
+
+        // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
+        if (!empty($q)) {
+            $where .= " AND (i.asset_item = :q OR a.code = :q)";
+        }
+        $sql = "SELECT 
+                a.category_id,
+                a.title,
+                    i.asset_item,
+                    -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty
+                            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS begin_qty,
+                    -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+                            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS begin_price,
+                    -- รับเข้าเดือนสิงหาคม
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'IN' THEN i.qty
+                            ELSE 0 
+                        END
+                    ) AS qty_in,
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS price_in,
+                    -- จ่ายออกเดือนสิงหาคม
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'OUT' THEN i.qty
+                            ELSE 0 
+                        END
+                    ) AS qty_out,
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS price_out,
+                    -- คงเหลือสิ้นเดือน (ปริมาณ)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty
+                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS end_qty,
+                    -- คงเหลือสิ้นเดือน (มูลค่า)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS end_price
+
+                FROM stock_events e
+                LEFT JOIN stock_events i 
+                    ON i.category_id = e.id 
+                AND i.name = 'order_item'
+                LEFT JOIN warehouses w ON w.id = e.warehouse_id
+                LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+                WHERE $where
+                GROUP BY i.asset_item
+                ORDER BY i.asset_item";
+
+        $q = $searchModel->q;
+
+        $command = Yii::$app->db->createCommand($sql)
+        ->bindValue(':date_start', $dateStart)
+        ->bindValue(':date_end', $dateEnd);
+        
+        if (!empty($q)) {
+            $command->bindValue(':q', $q); // bind :q เฉพาะกรณีมีค่า
+        }
+        $querys = $command->queryAll();
+        return $this->render('list_by_item', [
+            'querys' => $querys,
+             'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 }

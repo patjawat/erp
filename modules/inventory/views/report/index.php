@@ -2,9 +2,6 @@
 
 use yii\web\View;
 use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\widgets\Pjax;
-use app\components\AppHelper;
 
 $this->title = 'สรุปรายงานวัสดุคงคลัง';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
@@ -109,7 +106,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         <!-- สินค้าคงเหลือ -->
                         <td class="text-end fw-bolder"><?= nf($balance_before) ?></td>
                         <!-- ซื้อระหว่างเดือน -->
-                        <td class="text-end fw-bolder"><?= nf($total_in_month) ?></td>
+                        <td class="text-end fw-bolder">
+                            <?= nf($total_in_month) ?>
+                        </td>
                         <!-- รวม -->
                         <td class="text-end fw-bolder"><?= nf($total_before_out) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
