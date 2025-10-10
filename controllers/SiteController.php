@@ -3,14 +3,11 @@
 namespace app\controllers;
 
 use Yii;
-use Google\Client;
 use yii\filters\Cors;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
-use Google\Service\Docs;
 use app\models\LoginForm;
-use Google\Service\Drive;
 use app\models\SignupForm;
 use yii\filters\VerbFilter;
 use app\components\UserHelper;
@@ -54,19 +51,6 @@ class SiteController extends Controller
         ];
     }
 
-    // public function actions()
-    // {
-    //     return [
-    //         'error' => [
-    //             'class' => 'yii\web\ErrorAction',
-    //         ],
-    //         'captcha' => [
-    //             'class' => 'yii\captcha\CaptchaAction',
-    //             'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
-    //         ],
-    //     ];
-    // }
-
     public function actionError()
     {
         // $this->layout = 'error_404';
@@ -81,11 +65,7 @@ class SiteController extends Controller
         }
     }
 
-    public function actionLoginThaid()
-    {
-        $this->layout = 'none';
-        return $this->render('login_thaid');
-    }
+ 
 
     public function actionIndex()
     {
@@ -250,5 +230,42 @@ class SiteController extends Controller
         } else {
             return $this->render('reset_false');
         }
+    }
+
+   public function actionLoginV2()
+    {
+        $this->layout = 'none';
+         $model = new LoginForm();
+        if (\Yii::$app->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load(\Yii::$app->request->post()) && $model->login()) {
+                return $this->redirect(['/me']);
+            }
+            $result = [];
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[Html::getInputId($model, $attribute)] = $errors;
+            }
+
+            return $this->asJson(['validation' => $result]);
+        }
+
+        $model->password = '';
+
+        return $this->render('login_thaid',['model' => $model]);
+    }
+
+    public function actionLoginThaid()
+    {
+        return $this->redirect(Yii::$app->thaidAuth->getLoginUrl());
+    }
+
+    public function actionCallbackThaid($code = null)
+    {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $user = Yii::$app->thaidAuth->getUserFromCode($code);
+        return $user;
+        Yii::$app->user->login($user);
+        return $this->goHome();
     }
 }

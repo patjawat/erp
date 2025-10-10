@@ -1,104 +1,125 @@
 <?php
+
 use yii\helpers\Html;
+use app\models\Categorise;
+use app\components\SiteHelper;
+use kartik\widgets\ActiveForm;
+$site = Categorise::findOne(['name' => 'site']);
+$color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
+$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
+$this->title = 'กรุณายืนยันตัวตน';
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="container-fluid min-vh-100 d-flex p-0">
-  <!-- Left Column - Image and Text -->
-  <div class="d-none d-md-flex col-md-6 bg-primary text-white align-items-center justify-content-center">
-    <div class="px-4 py-5 text-center">
-      <!-- <h1 class="display-5 fw-bold mb-4">ยินดีต้อนรับกลับ</h1> -->
-        <?=Html::img('@web/images/logo_new.png',['class' => 'img-fluid', 'style' => 'max-width:400px; height:auto;'])?>
-      <p class="lead mb-4">เข้าสู่ระบบเพื่อจัดการโปรเจค และติดตามความคืบหน้าการพัฒนาแอปพลิเคชันของคุณ</p>
-      <div class="mb-4">
-        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" alt="Developer workspace" class="img-fluid rounded shadow">
-      </div>
-      <div class="bg-primary-dark p-3 rounded">
-        <p class="fst-italic small">
-          "Angular ช่วยให้ทีมของเราพัฒนาแอปพลิเคชันที่ซับซ้อนได้อย่างรวดเร็วและมีประสิทธิภาพ เรามั่นใจในความปลอดภัยและประสิทธิภาพของแอปพลิเคชันของเรา"
-        </p>
-        <div class="d-flex align-items-center mt-3">
-          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
-            <span class="fw-bold">ธ</span>
-          </div>
-          <div class="ms-2">
-            <p class="mb-0 fw-medium">ธนวัฒน์ กุลธนาวัฒน์</p>
-            <p class="text-white-50 small mb-0">CEO, AngularApp</p>
-          </div>
+    <!-- Left Column - Image and Text -->
+    <div class="d-none d-md-flex col-md-6 bg-primary text-white align-items-center justify-content-center">
+        <div class="px-4 py-5 text-center">
+            <!-- <h1 class="display-5 fw-bold mb-4">ยินดีต้อนรับกลับ</h1> -->
+            <?= Html::img('@web/images/logo_new.png', ['class' => 'img-fluid', 'style' => 'max-width:400px; height:auto;']) ?>
+           
+            <div class="mb-4 mt-3">
+                <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" alt="Developer workspace" class="img-fluid rounded shadow">
+            </div>
+            <div class="bg-primary-dark p-3 rounded">
+                 <p class="lead mb-4">   <?=SiteHelper::getInfo()['company_name'] !='' ?  (SiteHelper::getInfo()['company_name']) : ''?></p>
+                <p class="fst-italic small">
+                    "ผู้ให้การสนับสนุนและรวมพลังพัฒนาโดย มูลนิธิรามาธิบดี โรงพยาบาลสมเด็จพระยุพราชด่านซ้าย และ โรงพยาบาลอุบลรัตน์"
+                </p>
+           <div class="text-endx">
+                  <div class="d-flex justify-content-center align-items-center gap-3 gap-md-5 mt-4 flex-wrap">
+                    <?=Html::img('@web/banner/banner2.png',['style'=> 'width:70px;height:70px'])?>
+                    <?=Html::img('@web/banner/banner1.png',['style'=> 'width:170px;height:100px'])?>
+                    <?=Html::img('@web/banner/banner3.png',['style'=> 'width:100px;height:100px'])?>
+                  </div>
+                </div>
+                
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Right Column - Login Form -->
-  <div class="col-12 col-md-6 d-flex align-items-center justify-content-center">
-    <div class="w-100 px-4 py-5" style="max-width: 420px;">
-      <div class="text-center mb-4">
-        <h2 class="fw-bold mb-2">เข้าสู่ระบบ</h2>
-        <p class="text-muted">กรอกข้อมูลเพื่อเข้าสู่บัญชีของคุณ</p>
-      </div>
-
-      <form method="GET" action="/admin/dashboard">
-        <!-- Email Input -->
-        <div class="mb-3">
-          <label for="email" class="form-label">อีเมล</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-envelope"></i>
-            </span>
-            <input type="email" class="form-control" id="email" name="email" placeholder="อีเมลของคุณ" value="admin@gmail.com" required>
-          </div>
+    <!-- Right Column - Login Form -->
+    <div class="col-12 col-md-6 d-flex flex-column align-items-center justify-content-center">
+        <div class="text-center mb-4">
+        <?php echo Html::img($site->logo(), ['class' => 'object-fit-cover rounded mt-0', 'style' => 'margin-top: 25px;max-width: 110px;max-height: 110px;    width: 100%;height: 100%;']) ?>
         </div>
+        <div class="w-100 px-4 py-5" style="max-width: 420px;">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold mb-2">เข้าสู่ระบบ</h2>
+                <p class="text-muted">กรอกข้อมูลเพื่อเข้าสู่บัญชีของคุณ</p>
+            </div>
+            <?php $form = ActiveForm::begin(['id' => 'blank-form', 'enableAjaxValidation' => false,]); ?>
 
-        <!-- Password Input -->
-        <div class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <label for="password" class="form-label mb-0">รหัสผ่าน</label>
-            <a href="/fogotpassword" class="small text-primary">ลืมรหัสผ่าน?</a>
-          </div>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-lock"></i>
-            </span>
-            <input type="password" class="form-control" id="password" name="password" placeholder="รหัสผ่านของคุณ" value="123456" required>
-          </div>
+            <!-- Email Input -->
+<?= $form->field($model, 'email', [
+    'addon' => [
+        'prepend' => [
+            'content' => '<i class="bi bi-envelope"></i>',
+            'options' => ['class' => 'input-group-text']
+        ],
+    ],
+])->textInput([
+    'placeholder' => 'อีเมลของคุณ',
+    'value' => 'admin@gmail.com',
+])->label('อีเมล', ['class' => 'form-label']) ?>
+
+<!-- Password Input -->
+<?= $form->field($model, 'password', [
+    'addon' => [
+        'prepend' => [
+            'content' => '<i class="bi bi-lock"></i>',
+            'options' => ['class' => 'input-group-text']
+        ],
+    ],
+])->passwordInput([
+    'placeholder' => 'รหัสผ่านของคุณ',
+    'value' => '123456',
+])->label('รหัสผ่าน', ['class' => 'form-label']) ?>
+
+            <!-- Remember Me -->
+            <?php  
+            // $form->field($model, 'remember_me')->checkbox([
+            //     'class' => 'form-check-input',
+            //     'template' => "<div class='form-check mb-3'>{input} {label}\n{error}</div>"
+            // ])->label('จดจำฉันไว้ในระบบ', ['class' => 'form-check-label']) 
+            ?>
+
+            <!-- Login Button -->
+            <div class="d-grid mb-3">
+                <?= Html::submitButton('เข้าสู่ระบบ', ['class' => 'btn btn-primary btn-lg']) ?>
+            </div>
+
+            <?php ActiveForm::end(); ?>
+
+           
+
+            <!-- Divider -->
+            <div class="d-flex align-items-center my-3">
+                <hr class="flex-grow-1">
+                <span class="mx-2 text-muted small">หรือเข้าสู่ระบบด้วย</span>
+                <hr class="flex-grow-1">
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div class="d-grid gap-2 d-md-flex">
+                <a href="<?= \yii\helpers\Url::to(['site/login-google']) ?>"
+                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
+                    <i class="bi bi-google me-2"></i> Google
+                </a>
+
+                <a href="<?= \yii\helpers\Url::to(['site/login-thaid']) ?>"
+                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+                    <?= Html::img('@web/images/thaid_logo.jpg', ['class' => 'rounded me-2', 'style' => 'max-width: 25px']) ?> ThaiD
+                </a>
+            </div>
+
+
+            <!-- Sign Up Link -->
+            <div class="text-center mt-4">
+                <p class="small text-muted mb-0">
+                    ยังไม่มีบัญชี? 
+                    <?=Html::a('สมัครสมาชิก',['/site/sign-up'],['class' => 'text-primary fw-medium'])?>
+                </p>
+            </div>
         </div>
-
-        <!-- Remember Me -->
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" value="" id="remember_me" name="remember_me">
-          <label class="form-check-label" for="remember_me">
-            จดจำฉันไว้ในระบบ
-          </label>
-        </div>
-
-        <!-- Login Button -->
-        <div class="d-grid mb-3">
-          <button type="submit" class="btn btn-primary btn-lg">เข้าสู่ระบบ</button>
-        </div>
-      </form>
-
-      <!-- Divider -->
-      <div class="d-flex align-items-center my-3">
-        <hr class="flex-grow-1">
-        <span class="mx-2 text-muted small">หรือเข้าสู่ระบบด้วย</span>
-        <hr class="flex-grow-1">
-      </div>
-
-      <!-- Social Login Buttons -->
-      <div class="d-grid gap-2 d-md-flex">
-        <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
-          <i class="bi bi-google me-2"></i> Google
-        </button>
-        <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
-          <i class="bi bi-facebook me-2"></i> Facebook
-        </button>
-      </div>
-
-      <!-- Sign Up Link -->
-      <div class="text-center mt-4">
-        <p class="small text-muted mb-0">
-          ยังไม่มีบัญชี? <a href="/register" class="text-primary fw-medium">สมัครสมาชิก</a>
-        </p>
-      </div>
     </div>
-  </div>
 </div>

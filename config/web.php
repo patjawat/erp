@@ -37,6 +37,9 @@ $config = [
         'class' => 'app\components\Telegram',
         // ไม่ต้องใส่ botToken เพราะดึงจาก DB
     ],
+     'thaidAuth' => [
+        'class' => \app\components\ThaidAuth::class,
+    ],
         'thaiDate' => [
         'class' => 'app\components\ThaiDate',
     ],
@@ -316,7 +319,7 @@ $config = [
         ],
     ],
     'controllerMap' => [
-        'auth' => 'app\modules\usermanager\controllers\AuthController',
+        // 'auth' => 'app\modules\usermanager\controllers\AuthController',
         'elfinder' => [
             'class' => 'mihaildev\elfinder\Controller',
             'access' => ['@'],  // глобальный доступ к фаил менеджеру @ - для авторизорованных , ? - для гостей , чтоб открыть всем ['@', '?']

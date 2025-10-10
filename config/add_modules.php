@@ -49,6 +49,7 @@ $modules['user'] = [
 ];
 $modules['gridview'] = ['class' => '\kartik\grid\Module'];  // system
 $modules['admins'] = ['class' => 'mdm\admin\Module'];  // จัดการระบ
+$modules['auth'] = ['class' => 'app\modules\auth\Module'];  // ระบยืนยันตัวตน
 $modules['gridviewKrajee'] = ['class' => '\kartik\grid\Module'];  // system
 $modules['usermanager'] = ['class' => 'app\modules\usermanager\Usermanager'];  // จัดการผู้ใช้งานระบบ
 $modules['rbac'] = ['class' => 'dektrium\rbac\RbacWebModule'];  // จัดการสิทธิของผู้ใช้งาน

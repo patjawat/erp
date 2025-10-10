@@ -279,8 +279,6 @@ class Employees extends Yii\db\ActiveRecord
             'position_type' => '',
             'department' => '',
             'department_name' => ''
-            // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
-            // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
         ];
         }
         return[
@@ -292,8 +290,6 @@ class Employees extends Yii\db\ActiveRecord
             'position_type' => $this->positionTypeName(),
             'department' => $this->department,
             'department_name' => $this->departmentName(),
-            // 'leader1' => $this->empDepartment->data_json['leader1'],//หัวหน้า
-            // 'leader2' => $this->empDepartment->data_json['leader2']//รองหัวหน้า
         ];
     }
     public function getImg()
@@ -1282,11 +1278,7 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'avatar'])->one();
-
-            // return $this->ref;
-            // return FileManagerHelper::getImg($model->id);
             if ($model) {
-                // return Html::img('@web/avatar/' . $this->avatar, ['class' => 'view-avatar']);
                 return FileManagerHelper::getImg($model->id);
             } else {
                 return \Yii::getAlias('@web').'/img/placeholder_cid.png';
