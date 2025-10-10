@@ -39,11 +39,12 @@ WITH stock_summary AS (
                                         AND o.transaction_type = 'OUT' 
                                         THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
 
-                            FROM stock_events o
-                            LEFT JOIN stock_events i ON i.category_id = o.id
+                            FROM categorise p
+                            LEFT JOIN stock_events i ON p.code = i.asset_item
+    						LEFT JOIN stock_events o ON i.category_id = o.id
                             LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
                             LEFT JOIN warehouses w ON w.id = o.warehouse_id
-                            LEFT JOIN categorise p ON p.code = i.asset_item
+                            
                             WHERE o.name = 'order'
                             AND o.order_status = 'success'
                             AND i.name = 'order_item'

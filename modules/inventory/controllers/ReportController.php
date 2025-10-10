@@ -3,15 +3,17 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use yii\web\Response;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use app\modules\inventory\models\Warehouse;
 // Microsoft Excel
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use app\modules\inventory\models\Warehouse;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -729,6 +731,154 @@ class ReportController extends \yii\web\Controller
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+
+
+        $querys = $this->geteportByItem($searchModel);
+        return $this->render('list_by_item', [
+            'querys' => $querys,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionExportExcelByItem()
+    {
+        $searchModel = new StockEventSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        $rows = $this->geteportByItem($searchModel);
+
+        // ✅ สร้างไฟล์ Excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Stock Summary');
+        // ตั้งค่า default font ทั้งหมด
+        $spreadsheet->getDefaultStyle()
+            ->getFont()
+            ->setName('TH Sarabun New')
+            ->setSize(16);
+
+        // --------------------------------------------------
+        // สร้างหัวตาราง 2 แถวเหมือนใน HTML
+        // --------------------------------------------------
+
+        // แถวที่ 1
+        $sheet->setCellValue('A1', 'รหัสสินค้า');
+        $sheet->setCellValue('B1', 'รายการสินค้า');
+        $sheet->setCellValue('C1', 'ประเภทวัสดุ');
+        $sheet->setCellValue('D1', 'คลัง');
+        $sheet->setCellValue('E1', 'ยอดยกมา');
+        $sheet->setCellValue('G1', 'รับเข้า');
+        $sheet->setCellValue('I1', 'จ่ายออก');
+        $sheet->setCellValue('K1', 'คงเหลือสิ้นเดือน');
+
+        // รวมเซลล์ตามโครงสร้าง
+        $sheet->mergeCells('A1:A2');
+        $sheet->mergeCells('B1:B2');
+        $sheet->mergeCells('C1:C2');
+        $sheet->mergeCells('D1:D2');
+        $sheet->mergeCells('E1:F1');
+        $sheet->mergeCells('G1:H1');
+        $sheet->mergeCells('I1:J1');
+        $sheet->mergeCells('K1:L1');
+
+        // แถวที่ 2
+        $sheet->setCellValue('E2', 'จำนวน');
+        $sheet->setCellValue('F2', 'มูลค่า');
+        $sheet->setCellValue('G2', 'จำนวน');
+        $sheet->setCellValue('H2', 'มูลค่า');
+        $sheet->setCellValue('I2', 'จำนวน');
+        $sheet->setCellValue('J2', 'มูลค่า');
+        $sheet->setCellValue('K2', 'จำนวนคงเหลือ');
+        $sheet->setCellValue('L2', 'มูลค่าคงเหลือ');
+
+        // --------------------------------------------------
+        // จัดสไตล์หัวตาราง
+        // --------------------------------------------------
+        $headerRange = 'A1:L2';
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCE5FF');
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+            // ฟังก์ชันช่วยเปลี่ยน NULL หรือว่างเป็น 0
+      $checkNumber = function($val) {
+            return ($val === null || $val === '') ? 0 : $val;
+        };
+            
+        // --------------------------------------------------
+        // ข้อมูลเริ่มแถวที่ 3
+        // --------------------------------------------------
+        $rowIndex = 3;
+        foreach ($rows as $r) {
+            $sheet->fromArray([
+                $r['asset_item'],
+                $r['title'],
+                $r['asset_type_name'],
+                $r['warehouse_name'],
+                $checkNumber($r['begin_qty']),
+                $checkNumber($r['begin_price']),
+                $checkNumber($r['qty_in']),
+                $checkNumber($r['price_in']),
+                $checkNumber($r['qty_out']),
+                $checkNumber($r['price_out']),
+                $checkNumber($r['end_qty']),
+                $checkNumber($r['end_price']),
+            ], NULL, "A{$rowIndex}");
+             // ทำตัวเลข (E-L) เป็นตัวหนา
+            $sheet->getStyle("E{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
+
+            $rowIndex++;
+        }
+
+        // ปรับความกว้างคอลัมน์อัตโนมัติ
+        foreach (range('A', 'L') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $sheet->setCellValue("A{$rowIndex}", 'รวมทั้งหมด');
+        $sheet->mergeCells("A{$rowIndex}:D{$rowIndex}");
+
+        $sheet->setCellValue("E{$rowIndex}", "=SUM(E3:E" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("F{$rowIndex}", "=SUM(F3:F" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("G{$rowIndex}", "=SUM(G3:G" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("H{$rowIndex}", "=SUM(H3:H" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("I{$rowIndex}", "=SUM(I3:I" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("J{$rowIndex}", "=SUM(J3:J" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("K{$rowIndex}", "=SUM(K3:K" . ($rowIndex - 1) . ")");
+        $sheet->setCellValue("L{$rowIndex}", "=SUM(L3:L" . ($rowIndex - 1) . ")");
+        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+
+        // ส่งไฟล์ออกไปยัง Browser
+    
+            try {
+            $dateStart = $searchModel->date_start;
+            $dateEnd = $searchModel->date_end;
+        } catch (\Throwable $th) {
+            $dateStart = '';
+            $dateEnd = '';
+        }
+        $filename = 'รายงานวัสดุคงคลังวันที่ ' . $dateStart.'-'.$dateEnd . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        Yii::$app->response->headers->set('Content-Disposition', "attachment;filename=\"{$filename}\"");
+        Yii::$app->response->headers->set('Cache-Control', 'max-age=0');
+
+        ob_start();
+        $writer->save('php://output');
+        return ob_get_clean();
+    }
+
+
+    
+
+    private function geteportByItem($searchModel)
+    {
+
         try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
@@ -738,18 +888,32 @@ class ReportController extends \yii\web\Controller
         }
 
         $q = $searchModel->q;
+        $warehouseId = $searchModel->warehouse_id;
+        $assetTypeId = $searchModel->asset_type_id;
 
         // สร้างเงื่อนไข WHERE แบบ dynamic
         $where = "e.name = 'order' AND w.warehouse_type = 'MAIN' AND i.asset_item IS NOT NULL";
 
         // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
         if (!empty($q)) {
-            $where .= " AND (i.asset_item = :q OR a.code = :q)";
+            $where .= " AND (LOWER(a.title) LIKE LOWER(:q) OR LOWER(a.code) LIKE LOWER(:q))";
+            $params[':q'] = "%{$q}%";
         }
+
+        if (!empty($warehouseId)) {
+            $where .= " AND (e.warehouse_id = :warehouse_id)";
+        }
+
+        if (!empty($assetTypeId)) {
+            $where .= " AND (a.category_id = :asset_type_id)";
+        }
+
         $sql = "SELECT 
+                w.warehouse_name,
+                t.title as asset_type_name,
                 a.category_id,
+                i.asset_item,
                 a.title,
-                    i.asset_item,
                     -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
                     SUM(
                         CASE 
@@ -819,6 +983,7 @@ class ReportController extends \yii\web\Controller
                 AND i.name = 'order_item'
                 LEFT JOIN warehouses w ON w.id = e.warehouse_id
                 LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+                LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
                 WHERE $where
                 GROUP BY i.asset_item
                 ORDER BY i.asset_item";
@@ -826,17 +991,21 @@ class ReportController extends \yii\web\Controller
         $q = $searchModel->q;
 
         $command = Yii::$app->db->createCommand($sql)
-        ->bindValue(':date_start', $dateStart)
-        ->bindValue(':date_end', $dateEnd);
-        
+            ->bindValue(':date_start', $dateStart)
+            ->bindValue(':date_end', $dateEnd);
+
         if (!empty($q)) {
-            $command->bindValue(':q', $q); // bind :q เฉพาะกรณีมีค่า
+            $command->bindValue(':q', "%{$q}%");
         }
-        $querys = $command->queryAll();
-        return $this->render('list_by_item', [
-            'querys' => $querys,
-             'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+
+        if (!empty($warehouseId)) {
+            $command->bindValue(':warehouse_id', $warehouseId); // bind :warehouse_id เฉพาะกรณีมีค่า
+        }
+
+        if (!empty($assetTypeId)) {
+            $command->bindValue(':asset_type_id', $assetTypeId); // bind :warehouse_id เฉพาะกรณีมีค่า
+        }
+
+        return  $command->queryAll();
     }
 }

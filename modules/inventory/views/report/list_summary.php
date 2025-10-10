@@ -88,7 +88,7 @@ use app\components\ThaiDateHelper;
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="12" class="text-end fw-bold bg-warning">รวมราคาทั้งหมด</td>
-                    <td class="fw-bold text-end  bg-warning"><?=number_format((clone $dataProvider->query)->sum('(CEIL(e.qty * e.unit_price * 100) / 100)') ?? 0, 2); ?></td>
+                    <td class="fw-bold text-end  bg-warning"><?=number_format((clone $dataProvider->query)->sum('((e.qty * e.unit_price * 100) / 100)') ?? 0, 2); ?></td>
                 </tr>
             </tbody>
         </table>
