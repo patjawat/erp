@@ -166,10 +166,6 @@ $config = [
             'database' => 0,
         ],
         
-        // 'user' => [
-        //     'identityClass' => 'app\models\User',
-        //     'enableAutoLogin' => true,
-        // ],
         'user' => [
             // 'identityClass' => 'mdm\admin\models\User',
             'identityClass' => 'app\modules\usermanager\models\User',
@@ -186,29 +182,6 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        // 'mailer' => [
-        //     'class' => 'yii\swiftmailer\Mailer',
-        //     // send all mails to a file by default. You have to set
-        //     // 'useFileTransport' to false and configure transport
-        //     // for the mailer to send real emails.
-        //     'useFileTransport' => true,
-        // ],
-        // 'mailer' => [ //กำหนดการส่ง Email ผ่าน SMTP ของ Google
-        //     'class' => 'yii\swiftmailer\Mailer',
-        //     'viewPath' => '@app/mail',
-        //     // send all mails to a file by default. You have to set
-        //     // 'useFileTransport' to false and configure a transport
-        //     // for the mailer to send real emails.
-        //     'useFileTransport' => false,
-        //     'transport' => [
-        //         'class' => 'Swift_SmtpTransport',
-        //         'host' => 'smtp.google.com',
-        //         'username' => 'patjawat@gmail.com', //user ทีจะใช้ smtp
-        //         'password' => 'Patjawat@2528x',//รหัสผ่านของ user
-        //         'port' => '587',
-        //         'encryption' => 'ssl',
-        //     ],
-        // ],
         'mailer' => [  // กำหนดการส่ง Email ผ่าน SMTP ของ Google
             'class' => 'yii\swiftmailer\Mailer',
             'viewPath' => '@app/mail',
