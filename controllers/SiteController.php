@@ -81,6 +81,12 @@ class SiteController extends Controller
         }
     }
 
+    public function actionLoginThaid()
+    {
+        $this->layout = 'none';
+        return $this->render('login_thaid');
+    }
+
     public function actionIndex()
     {
         return $this->redirect(['/me']);
@@ -101,7 +107,7 @@ class SiteController extends Controller
         $this->layout = 'login';
         if (!\Yii::$app->user->isGuest) {
             // return $this->goHome();
-             return $this->redirect(['/me']);
+            return $this->redirect(['/me']);
         }
 
         $model = new LoginForm();
@@ -162,9 +168,9 @@ class SiteController extends Controller
             return $this->asJson(['validation' => $result]);
         }
 
-        if(!Yii::$app->session->get('accept_condition')){
+        if (!Yii::$app->session->get('accept_condition')) {
             return $this->redirect(['site/conditions-register']);
-        }else{
+        } else {
             return $this->render('signup', [
                 'model' => $model,
             ]);
@@ -197,12 +203,12 @@ class SiteController extends Controller
             $createPdpa->data_json = Yii::$app->session->get('accept_condition');
             $createPdpa->save(false);
             return $this->redirect(['/me']);
-        }else{
+        } else {
             return $this->redirect(['/site/sign-up']);
         }
-        
+
         // Yii::$app->session->remove('accept_condition');
-        
+
     }
 
     // public function actionSuccess(){
@@ -245,9 +251,4 @@ class SiteController extends Controller
             return $this->render('reset_false');
         }
     }
-
-
-
 }
-
-

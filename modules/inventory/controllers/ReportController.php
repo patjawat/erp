@@ -6,14 +6,15 @@ use Yii;
 use yii\web\Response;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-// Microsoft Excel
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\Warehouse;
+// Microsoft Excel
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -802,35 +803,48 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCE5FF');
         $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-            // ฟังก์ชันช่วยเปลี่ยน NULL หรือว่างเป็น 0
-      $checkNumber = function($val) {
-            return ($val === null || $val === '') ? 0 : $val;
+        // ฟังก์ชันช่วยเปลี่ยน NULL หรือว่างเป็น 0
+        $checkNumber = function ($val) {
+            // trim ก่อน
+            $val = trim((string)$val);
+            return 0;
+
+            // ถ้าเป็น '', 'null', NULL, หรือไม่ใช่ตัวเลข ให้เป็น 0
+            if ($val === '' || strtolower($val) === 'null' || !is_numeric($val)) {
+                return 0;
+            }
+
+            return (float)$val;
         };
-            
+
         // --------------------------------------------------
         // ข้อมูลเริ่มแถวที่ 3
         // --------------------------------------------------
-        $rowIndex = 3;
-        foreach ($rows as $r) {
-            $sheet->fromArray([
-                $r['asset_item'],
-                $r['title'],
-                $r['asset_type_name'],
-                $r['warehouse_name'],
-                $checkNumber($r['begin_qty']),
-                $checkNumber($r['begin_price']),
-                $checkNumber($r['qty_in']),
-                $checkNumber($r['price_in']),
-                $checkNumber($r['qty_out']),
-                $checkNumber($r['price_out']),
-                $checkNumber($r['end_qty']),
-                $checkNumber($r['end_price']),
-            ], NULL, "A{$rowIndex}");
-             // ทำตัวเลข (E-L) เป็นตัวหนา
-            $sheet->getStyle("E{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
+       $rowIndex = 3;
+foreach ($rows as $r) {
+    $sheet->fromArray([
+        $r['asset_item'],
+        $r['title'],
+        $r['asset_type_name'],
+        $r['warehouse_name'],
+        (string)$r['begin_qty'],
+        (string)$r['begin_price'],
+        (string)$r['qty_in'],
+        (string)$r['price_in'],
+        (string)$r['qty_out'],
+        (string)$r['price_out'],
+        (string)$r['end_qty'],
+        (string)$r['end_price'],
+    ], NULL, "A{$rowIndex}");
 
-            $rowIndex++;
-        }
+    // ทำตัวเลข (E-L) เป็นตัวหนาและกำหนด NumberFormat
+    $sheet->getStyle("E{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
+    $sheet->getStyle("E{$rowIndex}:L{$rowIndex}")
+          ->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_0);
+
+    $rowIndex++;
+}
+
 
         // ปรับความกว้างคอลัมน์อัตโนมัติ
         foreach (range('A', 'L') as $col) {
@@ -853,15 +867,15 @@ class ReportController extends \yii\web\Controller
 
 
         // ส่งไฟล์ออกไปยัง Browser
-    
-            try {
+
+        try {
             $dateStart = $searchModel->date_start;
             $dateEnd = $searchModel->date_end;
         } catch (\Throwable $th) {
             $dateStart = '';
             $dateEnd = '';
         }
-        $filename = 'รายงานวัสดุคงคลังวันที่ ' . $dateStart.'-'.$dateEnd . '.xlsx';
+        $filename = 'รายงานวัสดุคงคลังวันที่ ' . $dateStart . '-' . $dateEnd . '.xlsx';
         $writer = new Xlsx($spreadsheet);
         Yii::$app->response->format = Response::FORMAT_RAW;
         Yii::$app->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -874,7 +888,7 @@ class ReportController extends \yii\web\Controller
     }
 
 
-    
+
 
     private function geteportByItem($searchModel)
     {
