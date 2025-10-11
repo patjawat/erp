@@ -13,19 +13,6 @@ $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-
-
-<h1>
-    hello world
-    <?php
-$state = Yii::$app->security->generateRandomString(16);
-?>
-    <a href="https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/?response_type=code&client_id=xxx&redirect_uri=http://127.0.0.1:11447/auth/login/callback-thaid&scope=pid%20birthdate&state=<?=$state?>">
-    <img  src="/images/ThaiD.png" class="rounded mr-3" width="29">
-    <span>เข้าสู่ระบบด้วย ThaID</span>
-    <div class="ripple-container"></div>
-</a>
-</h1>
 <div class="container-fluid min-vh-100 d-flex p-0">
     <!-- Left Column - Image and Text -->
     <div class="d-none d-md-flex col-md-6 bg-primary text-white align-items-center justify-content-center">

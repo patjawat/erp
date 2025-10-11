@@ -169,7 +169,7 @@ $config = [
         'user' => [
             // 'identityClass' => 'mdm\admin\models\User',
             'identityClass' => 'app\modules\usermanager\models\User',
-            'loginUrl' => ['/site/login'],
+            'loginUrl' => ['/auth/login'],
             'enableAutoLogin' => false,
             'enableSession' => true,
             // ตั้งเวลา timeout 1 ชั่วโมง 60 วินาที * 60 นาที
