@@ -10,7 +10,6 @@ use app\models\LoginForm;
 use app\modules\hr\models\Employees;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\EmployeeDetail;
-use app\modules\usermanager\models\Profile;
 
 class LoginController extends Controller
 {

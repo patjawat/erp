@@ -38,7 +38,7 @@ $config = [
         // ไม่ต้องใส่ botToken เพราะดึงจาก DB
     ],
      'thaidAuth' => [
-        'class' => \app\components\ThaidAuth::class,
+        'class' => \app\modules\auth\components\ThaidAuth::class,
     ],
         'thaiDate' => [
         'class' => 'app\components\ThaiDate',
