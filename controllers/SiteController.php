@@ -82,34 +82,39 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
+
     public function actionLogin()
     {
-        $this->layout = 'login';
-        if (!\Yii::$app->user->isGuest) {
-            // return $this->goHome();
-            return $this->redirect(['/me']);
-        }
-
-        $model = new LoginForm();
-        if (\Yii::$app->request->isAjax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            if ($model->load(\Yii::$app->request->post()) && $model->login()) {
-                return $this->redirect(['/me']);
-            }
-            $result = [];
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[Html::getInputId($model, $attribute)] = $errors;
-            }
-
-            return $this->asJson(['validation' => $result]);
-        }
-
-        $model->password = '';
-
-        return $this->render('login', [
-            'model' => $model,
-        ]);
+        return $this->redirect(['/auth/login']);
     }
+    // public function actionLogin()
+    // {
+    //     $this->layout = 'login';
+    //     if (!\Yii::$app->user->isGuest) {
+    //         // return $this->goHome();
+    //         return $this->redirect(['/me']);
+    //     }
+
+    //     $model = new LoginForm();
+    //     if (\Yii::$app->request->isAjax) {
+    //         \Yii::$app->response->format = Response::FORMAT_JSON;
+    //         if ($model->load(\Yii::$app->request->post()) && $model->login()) {
+    //             return $this->redirect(['/me']);
+    //         }
+    //         $result = [];
+    //         foreach ($model->getErrors() as $attribute => $errors) {
+    //             $result[Html::getInputId($model, $attribute)] = $errors;
+    //         }
+
+    //         return $this->asJson(['validation' => $result]);
+    //     }
+
+    //     $model->password = '';
+
+    //     return $this->render('login', [
+    //         'model' => $model,
+    //     ]);
+    // }
 
     /**
      * Logout action.
