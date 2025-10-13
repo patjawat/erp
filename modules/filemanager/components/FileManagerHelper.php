@@ -9,7 +9,6 @@ use yii\imagine\Image;
 use yii\base\Component;
 use yii\web\UploadedFile;
 use kartik\file\FileInput;
-use yii\helpers\FileHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\filemanager\models\Uploads;
 

@@ -37,7 +37,7 @@ class AppAsset extends AssetBundle
         'css/tour.min.css',
         'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
         'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
-        // 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'
+        'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'
     ];
 
     public $js = [

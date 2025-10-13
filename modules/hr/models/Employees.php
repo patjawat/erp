@@ -3,6 +3,7 @@
 namespace app\modules\hr\models;
 
 use Yii;
+use yii\helpers\Url;
 use yii\db\Expression;
 use app\models\Amphure;
 use app\models\District;
@@ -1278,6 +1279,7 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'avatar'])->one();
+            return Url::to(['/filemanager/uploads/show', 'id' => $model->id]);
             if ($model) {
                 return FileManagerHelper::getImg($model->id);
             } else {

@@ -3,6 +3,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\AppHelper;
 use app\modules\hr\models\EmployeeDetail;
+$avatar = $model->showAvatar();
 ?>
 
 <div class="card hover-card">
@@ -16,7 +17,7 @@ use app\modules\hr\models\EmployeeDetail;
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
-                        'src' =>$model->showAvatar()
+                        'src' =>$avatar
                         ]
                         ]) ?>
                 <div class="position-absolute top-0 start-500 translate-middle">

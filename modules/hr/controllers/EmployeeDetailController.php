@@ -104,7 +104,6 @@ class EmployeeDetailController extends Controller
         }else{
             $last=false;
         }
-        
 
         $model = new EmployeeDetail([
             'emp_id' => $emp_id,

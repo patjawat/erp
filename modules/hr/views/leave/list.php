@@ -39,7 +39,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                 <td class="text-truncate" style="max-width: 230px;">
                     <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                         class="open-modal" data-size="modal-xl">
-                        <?= $item->getAvatar(false)['avatar'] ?>
+                        <?php echo  $item->employee->getAvatar(false) ?>
                     </a>
                 </td>
                 <td>
@@ -47,26 +47,26 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                     <div class="d-flex flex-column justofy-content-start align-items-start">
                         <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
                                 class="bi bi-exclamation-circle-fill"></i>
-                            <?php echo $item->leaveType?->title ?? '-' ?>
+                            <?php  echo $item->leaveType?->title ?? '-' ?>
                             <code><?php echo $item->total_days ?> </code> วัน</span>
                     </div>
                 </td>
                 <td>
-                    <?= $item->showLeaveDate() ?>
+                    <?php echo $item->showLeaveDate() ?>
                 </td>
                 <td class="text-start text-truncate" style="max-width:150px;">
-                    <?= $item->getAvatar(false)['department'] ?>
+                    <?php echo $item->employee->departmentName() ?>
                 </td>
                 <td>
                     <?php echo $item->stackChecker() ?>
                 </td>
-                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?>
+                <td class="fw-light align-middle text-start" style="width:150px;"><?php // echo $item->showStatus(); ?>
                 </td>
                 <td class="fw-center align-middle text-start">
 
                     <?php
                     try {
-                        echo $item->viewStatus();
+                        // echo $item->viewStatus();
                     } catch (\Throwable $th) {
                         //throw $th;
                     }
