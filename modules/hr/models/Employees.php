@@ -1287,7 +1287,7 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'avatar'])->one();
-            return Url::to(['/filemanager/uploads/get-img', 'id' => $model->id]);
+            return Url::to(['/filemanager/uploads/get-image', 'id' => $model->id]);
         } catch (\Throwable $th) {
             return \Yii::getAlias('@web') . '/img/placeholder_cid.png';
         }
