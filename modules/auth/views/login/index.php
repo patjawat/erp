@@ -83,20 +83,19 @@ $this->params['breadcrumbs'][] = $this->title;
             echo $form->field($model, 'rememberMe')->checkbox([
                 'class' => 'form-check-input',
                 'template' => "<div class='form-check mb-3'>{input} {label}\n{error}</div>"
-            ])->label('จดจำฉันไว้ในระบบ', ['class' => 'form-check-label']) 
+            ])->label('จดจำฉันไว้ในระบบ', ['class' => 'form-check-label'])
             ?>
-
             <!-- Login Button -->
             <div class="d-grid mb-3">
-                <?php //  Html::submitButton('เข้าสู่ระบบ', ['class' => 'btn btn-primary btn-lg']) ?>
-                      <button class="btn btn-primary account-btn shadowr" id="btn-login" type="submit">
-       เข้าสู่ระบบ
-      </button>
-
-      <button class="btn btn-primary account-btn" id="btnAwait" type="submit">
-        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-        รอสักครู่...
-      </button>
+                <?php //  Html::submitButton('เข้าสู่ระบบ', ['class' => 'btn btn-primary btn-lg']) 
+                ?>
+                <button class="btn btn-primary account-btn shadowr" id="btn-login" type="submit">
+                    เข้าสู่ระบบ
+                </button>
+                <button class="btn btn-primary account-btn" id="btnAwait" type="submit">
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    รอสักครู่...
+                </button>
             </div>
 
             <?php ActiveForm::end(); ?>
@@ -139,41 +138,41 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $js = <<< JS
- $('#btnAwait').hide();
-
-$('#blank-form').on('beforeSubmit', function (e) {
-e.preventDefault
+$('#btnAwait').hide();
+$('#btn-login').show();
+ $('#blank-form').on('beforeSubmit', function (e) {
+    e.preventDefault(); // ✅ ต้องมีวงเล็บ
     var yiiform = $(this);
     $('#btnAwait').show();
     $('#btn-login').hide();
 
     $.ajax({
         type: yiiform.attr('method'),
-            url: yiiform.attr('action'),
-            data: yiiform.serializeArray(),
+        url: yiiform.attr('action'),
+        data: yiiform.serialize(),
         dataType: "json",
         success: function (data) {
-            if(data.success) {
-                // data is saved
-                $('#success-container').html(data.content);
-                $('#signup-container').hide();
-                success()
+            if (data.success) {
+                window.location.href = data.redirect; // ✅ redirect ทันที
             } else if (data.validation) {
-                // server validation failed
-                yiiform.yiiActiveForm('updateMessages', data.validation, true); // renders validation messages at appropriate places
+                yiiform.yiiActiveForm('updateMessages', data.validation, true);
                 $('#btnAwait').hide();
                 $('#btn-login').show();
-            
             } else {
-                // incorrect server response
+                alert('Login error occurred');
+                $('#btnAwait').hide();
+                $('#btn-login').show();
             }
+        },
+        error: function () {
+            alert('Network or server error');
+            $('#btnAwait').hide();
+            $('#btn-login').show();
         }
     });
-    
-        return false;
 
-})
-
+    return false;
+});
 
 
 JS;

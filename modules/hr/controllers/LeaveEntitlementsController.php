@@ -146,7 +146,7 @@ class LeaveEntitlementsController extends Controller
                         'title' => 'กำหนดสิทธิลาพักผ่อน',
                         'data' => $model
                     ];
-                    LogHelper::log('leaev_entitlements', $data);
+                    // LogHelper::log('leaev_entitlements', $data);
 
                     return [
                         'status' => 'success',
@@ -391,7 +391,7 @@ class LeaveEntitlementsController extends Controller
                     'title' => 'แก้ไขสิทธิลาพักผ่อน',
                     'data' => $model
                 ];
-                LogHelper::log('leaev_entitlements', $data);
+                // LogHelper::log('leaev_entitlements', $data);
                 return [
                     'status' => 'success',
                     'message' => 'บันทึกข้อมูลสำเร็จ',

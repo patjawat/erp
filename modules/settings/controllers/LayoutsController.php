@@ -27,7 +27,7 @@ class LayoutsController extends \yii\web\Controller
                     'title' => 'แก้ไข layout',
                     'data' => $model
                 ];
-                LogHelper::log('update_setting',$data);
+                // LogHelper::log('update_setting',$data);
                 return $this->redirect('/settings/layouts');
             }
         }

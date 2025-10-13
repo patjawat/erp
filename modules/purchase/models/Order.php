@@ -355,7 +355,6 @@ class Order extends \yii\db\ActiveRecord
             }
 
             if ($this->data_json['pr_director_confirm'] == 'N') {
-                // $userId = $this->data_json['leader1'];
                 return '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่อนุมัติ';
             }
 
@@ -560,7 +559,7 @@ class Order extends \yii\db\ActiveRecord
 
             $data .= Html::a(
                 Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',

@@ -61,12 +61,12 @@ class LeaveController extends Controller
     {
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch([
-            // 'date_filter' => 'this_month',
             'status' =>   $status ? [$status] : ['Pending']
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere([
+        $query = $dataProvider->query;
+        $query->with('employee');
+        $query->andFilterWhere([
             'or',
             ['like', 'cid', $searchModel->q],
             ['like', 'email', $searchModel->q],
@@ -76,59 +76,63 @@ class LeaveController extends Controller
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
         ]);
 
+        $start = AppHelper::convertToGregorian($searchModel->date_start);
+        $end = AppHelper::convertToGregorian($searchModel->date_end);
+        $query->andFilterWhere(['>=', 'date_start', $start])
+            ->andFilterWhere(['<=', 'date_end', $end]);
 
-
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
         if (!empty($searchModel->leave_type_id)) {
-            $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+            $query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
 
         if ($status) {
-            $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->status]);
+            $query->andFilterWhere(['leave.status' => $searchModel->status]);
         }
+
 
         // search employee department
         // ค้นหาคามกลุ่มโครงสร้าง
-        $org1 = Organization::findOne($searchModel->q_department);
-        // ถ้ามีกลุ่มย่อย
-        if (isset($org1) && $org1->lvl == 1) {
-            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
-             FROM tree t1
-             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-             WHERE t2.name = :name;';
-            $querys = Yii::$app
-                ->db
-                ->createCommand($sql)
-                ->bindValue(':name', $org1->name)
-                ->queryAll();
-            $arrDepartment = [];
-            foreach ($querys as $tree) {
-                $arrDepartment[] = $tree['id'];
-            }
-            if (count($arrDepartment) > 0) {
-                $dataProvider->query->andWhere(['in', 'department', $arrDepartment]);
-            } else {
-                $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
-            }
-        } else {
-            $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
+       if ($searchModel->q_department) {
+    $org1 = Organization::findOne($searchModel->q_department);
+
+    if ($org1 && $org1->lvl == 1) {
+        $cacheKey = 'org_child_' . $org1->id;
+        $arrDepartment = Yii::$app->cache->get($cacheKey);
+        if ($arrDepartment === false) {
+            $arrDepartment = Organization::find()
+                ->select('id')
+                ->where(['between', 'lft', $org1->lft, $org1->rgt])
+                ->column();
+            Yii::$app->cache->set($cacheKey, $arrDepartment, 3600);
         }
 
+        // ✅ ใช้ emp_id จาก employees ที่อยู่ใน department เหล่านั้น
+        $empIds = Employees::find()
+            ->select('id')
+            ->andWhere(['department' => $arrDepartment])
+            ->column();
 
-        // $dataProvider->sort->defaultOrder = ['date_start' => SORT_DESC];
+        $query->andWhere(['in', 'emp_id', $empIds]);
+    } else {
+        $empIds = Employees::find()
+            ->select('id')
+            ->andWhere(['department' => $searchModel->q_department])
+            ->column();
+
+        $query->andWhere(['in', 'emp_id', $empIds]);
+    }
+}
+
 
         $dataProvider->setSort(['defaultOrder' => [
             // 'total_days' => SORT_DESC,
             'created_at' => SORT_DESC,
         ]]);
 
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            // 'dateStart' => $dateStart,
-            // 'dateEnd' => $dateEnd,
         ]);
     }
 
@@ -792,15 +796,15 @@ class LeaveController extends Controller
     public function actionGetLeaderApprove($q = null, $id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-     $ids = (new \yii\db\Query())
-    ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1'))"))
-    ->from('tree')
-    ->union(
-        (new \yii\db\Query())
-            ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2'))"))
+        $ids = (new \yii\db\Query())
+            ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1'))"))
             ->from('tree')
-    )
-    ->column();
+            ->union(
+                (new \yii\db\Query())
+                    ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2'))"))
+                    ->from('tree')
+            )
+            ->column();
 
         $models = Employees::find()
             ->where(['like', 'fname', $q])
@@ -843,28 +847,27 @@ class LeaveController extends Controller
 
         $model = LeaveHelper::CalDay($dateStart, $dateEnd, $emp_id);
 
-       
+
         if ($leave_type_id == 'LT2') {
             //ถ้าเป็นลาคลอดบุตร ไม่ต้องนับวันหยุด
             $total = ($model['allDays']);
-        } else if($model['dayOff'] == 0) { 
-             //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
+        } else if ($model['dayOff'] == 0) {
+            //ถ้าไม่กำหนดวัน OFF ให้นับวันหยุด
             $total = ($model['allDays'] - ($date_start_type + $date_end_type) - $model['satsunDays'] - $model['holiday']);
         } else {
             //จำเป็นต้องนับวัน off หรือไม่
             // $total = ($model['allDays']-($date_start_type+$date_end_type) - $model['dayOff']);
             $total = ($model['allDays'] - ($date_start_type + $date_end_type + $model['dayOffBetweenLeave']));
         }
-        
+
         // ตรวจสอบสิทธิ์การลาป้องกันลาเกินปีงบประมาณ
         $checkLeaveYear =  AppHelper::YearBudget($dateEnd);
-         $checkLeaveEntitlements  = LeaveEntitlements::find()->andWhere(['thai_year' => $checkLeaveYear])->count();
-        if($checkLeaveEntitlements == 0){
+        $checkLeaveEntitlements  = LeaveEntitlements::find()->andWhere(['thai_year' => $checkLeaveYear])->count();
+        if ($checkLeaveEntitlements == 0) {
             return [
                 'status' => 'error',
-                'message' => 'ไม่พบข้อมูลสิทธิ์การลาในปี '.$checkLeaveYear.' กรุณาติดต่อเจ้าหน้าที่',
+                'message' => 'ไม่พบข้อมูลสิทธิ์การลาในปี ' . $checkLeaveYear . ' กรุณาติดต่อเจ้าหน้าที่',
             ];
-
         }
 
 
@@ -1092,29 +1095,28 @@ class LeaveController extends Controller
 
 
 
-        //ประวัติการลา
+    //ประวัติการลา
     public function actionLeaveHistory()
     {
-         \Yii::$app->response->format = Response::FORMAT_JSON;
-         $empId = $this->request->get('emp_id');
-         $thaiYear = $this->request->get('thai_year');
-         $leaveType = $this->request->get('leave_type_id');
-         $dateStart = $this->request->get('date_start');
-         $dateEnd = $this->request->get('date_end');
-         $status = $this->request->get('status');
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $empId = $this->request->get('emp_id');
+        $thaiYear = $this->request->get('thai_year');
+        $leaveType = $this->request->get('leave_type_id');
+        $dateStart = $this->request->get('date_start');
+        $dateEnd = $this->request->get('date_end');
+        $status = $this->request->get('status');
         $model = Leave::find()
             ->andFilterWhere(['status' => ($status ? $status : 'Approve')])
             ->andFilterWhere(['emp_id' => $empId])
             ->andFilterWhere(['thai_year' => $thaiYear])
             ->andFilterWhere(['emp_id' => $empId])
             ->andFilterWhere(['leave_type_id' => $leaveType])
-            ->andFilterWhere(['>=', 'date_start',$dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd])
+            ->andFilterWhere(['>=', 'date_start', $dateStart])->andFilterWhere(['<=', 'date_end', $dateEnd])
             ->all();
-            return [
-                'title' => 'ประวัติการลา'.($thaiYear ? 'ประจำปี '.$thaiYear : ''),
-                'content' => $this->renderAjax('leave_history',['model' => $model])
-            ];
-         
+        return [
+            'title' => 'ประวัติการลา' . ($thaiYear ? 'ประจำปี ' . $thaiYear : ''),
+            'content' => $this->renderAjax('leave_history', ['model' => $model])
+        ];
     }
 
 

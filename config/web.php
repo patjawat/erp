@@ -110,10 +110,6 @@ $config = [
             'nullDisplay' => '',
             'locale' => 'th_TH',
         ],
-        // 'formatter' => [
-        //     'class' => 'yii\i18n\Formatter',
-        //     'nullDisplay' => '-',
-        // ],
         'line' => [
             'class' => 'app\components\LineAuthClient',
             'channelId' => '2006812489',
@@ -154,7 +150,6 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'UDNVjHYuFN4F2HiYRvQjPXW-kbcki6C8',
-            // 'class' => 'app\components\Request',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -167,13 +162,10 @@ $config = [
         ],
         
         'user' => [
-            // 'identityClass' => 'mdm\admin\models\User',
             'identityClass' => 'app\modules\usermanager\models\User',
             'loginUrl' => ['/auth/login'],
             'enableAutoLogin' => false,
             'enableSession' => true,
-            // ตั้งเวลา timeout 1 ชั่วโมง 60 วินาที * 60 นาที
-            // 'authTimeout' => 12960000,
         ],
         'authManager' => [
             'class' => 'dektrium\rbac\components\DbManager',

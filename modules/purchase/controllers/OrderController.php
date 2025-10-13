@@ -68,11 +68,13 @@ class OrderController extends Controller
        //ค้นหาช่วบงวันที่
        if($searchModel->date_between){
         try {
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
            $dataProvider->query->andFilterWhere([
                'between', 
                new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),  
-               AppHelper::convertToGregorian($searchModel->date_start), 
-               AppHelper::convertToGregorian($searchModel->date_end), 
+               $dateStart, 
+               $dateEnd, 
             ]);
                         //code...
         } catch (\Throwable $th) {

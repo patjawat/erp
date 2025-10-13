@@ -16,19 +16,17 @@ class LoginController extends Controller
     {
         $this->layout = '@app/views/layouts/none';
         $model = new LoginForm();
+        $model->password = '';
         if (\Yii::$app->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->load(\Yii::$app->request->post()) && $model->login()) {
-                return $this->redirect(['/me']);
+                return [
+                    'success' => true,
+                    'redirect' => \yii\helpers\Url::to(['/me']),
+                ];
             }
-            $result = [];
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[Html::getInputId($model, $attribute)] = $errors;
-            }
-
-            return $this->asJson(['validation' => $result]);
         }
-        $model->password = '';
+
         return $this->render('index', ['model' => $model]);
     }
 
@@ -38,5 +36,4 @@ class LoginController extends Controller
         $this->layout = '@app/views/layouts/none';
         return $this->render('login_fail');
     }
-
 }

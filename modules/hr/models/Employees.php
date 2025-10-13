@@ -315,12 +315,12 @@ class Employees extends Yii\db\ActiveRecord
             ],
         ]);
 
-        $fullname = Html::encode($this->fullname);
-        $position = Html::encode($this->positionName());
-        $msg = Html::encode($msg);
+        $fullname = $this->fullname;
+        $position = $this->positionName();
+        $msg =$msg;
 
         if ($msg !== '') {
-            return <<<HTML
+            return <<< HTML
         <div class="d-flex align-items-center">
             {$img}
             <div class="avatar-detail">
