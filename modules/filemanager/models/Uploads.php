@@ -56,55 +56,44 @@ class Uploads extends \yii\db\ActiveRecord
     }
 
 
-    public function Show(){
-        $file_path = SystemHelper::getUploadPath() .$this->ref.'/'.$this->real_filename;
-        // return 'hello';
-        $width = 1080;
-        $height = 1080;
-        $files = SystemHelper::getImage($file_path, $width, $height);
-       
-        // return Html::img('/soc/events/image?file_path='.$file_path,['loading'=>'lazy','class' =>'card-image-top','alt' =>'thumbnail']);
+    // public function viewFileHttp(){
 
-    }
+    //     $type = explode('.', $this->file_name);
+    //     $file_path = SystemHelper::getUploadPath() . $this->ref . '/' . $this->real_filename;
+    //     $file_ = pathinfo($file_path);
+    //     if (file_exists($file_path)) {
+    //         if($file_['extension'] == 'mp4' || $file_['extension'] == 'mov'){
+    //             $file_path = "/soc/events/video?id=$this->upload_id&width=100%&height=500";
+    //             return '<video width="320" height="240" controls>
+    //             <source src="'.$file_path.'" type="video/mp4">
+    //                 </video>';
+    //         }else{
+    //             // return 'xx';
+    //             $file_path = "/soc/events/image?file_path=$file_path&width=500&height=500";
+    //             return Html::img($file_path, ['class' => 'file-preview-image', 'loading' => 'lazy','data-original' => $file_path]);
+    //         }
+    //     }
+    // }
 
-    public function viewFileHttp(){
+    // public function viewFile(){
+    //     $type = explode('.', $this->file_name);
+    //     $file_path = SystemHelper::getUploadPath() . $this->ref . '/' . $this->real_filename;
+    //     $file_ = pathinfo($file_path);
+    //     if (file_exists($file_path)) {
+    //         if($file_['extension'] == 'mp4' || $file_['extension'] == 'mov'){
+    //             $file_path = "/soc/events/video?id=$this->upload_id&width=100%&height=500";
+    //             return '<video width="320" height="240" controls>
+    //             <source src="'.$file_path.'" type="video/mp4">
+    //                 </video>';
+    //         }else{
+    //             // return 'xx';
+    //             // $file_path = "/soc/events/image?file_path=$file_path&width=500&height=500";
+    //             $pathUrl = '@web/'.$file_path;
+    //             return Html::img( '@web/'.$file_path, ['class' => 'file-preview-image','data-original' => $file_path]);
+    //         }
+    //     }
 
-        $type = explode('.', $this->file_name);
-        $file_path = SystemHelper::getUploadPath() . $this->ref . '/' . $this->real_filename;
-        $file_ = pathinfo($file_path);
-        if (file_exists($file_path)) {
-            if($file_['extension'] == 'mp4' || $file_['extension'] == 'mov'){
-                $file_path = "/soc/events/video?id=$this->upload_id&width=100%&height=500";
-                return '<video width="320" height="240" controls>
-                <source src="'.$file_path.'" type="video/mp4">
-                    </video>';
-            }else{
-                // return 'xx';
-                $file_path = "/soc/events/image?file_path=$file_path&width=500&height=500";
-                return Html::img($file_path, ['class' => 'file-preview-image', 'loading' => 'lazy','data-original' => $file_path]);
-            }
-        }
-    }
-
-    public function viewFile(){
-        $type = explode('.', $this->file_name);
-        $file_path = SystemHelper::getUploadPath() . $this->ref . '/' . $this->real_filename;
-        $file_ = pathinfo($file_path);
-        if (file_exists($file_path)) {
-            if($file_['extension'] == 'mp4' || $file_['extension'] == 'mov'){
-                $file_path = "/soc/events/video?id=$this->upload_id&width=100%&height=500";
-                return '<video width="320" height="240" controls>
-                <source src="'.$file_path.'" type="video/mp4">
-                    </video>';
-            }else{
-                // return 'xx';
-                // $file_path = "/soc/events/image?file_path=$file_path&width=500&height=500";
-                $pathUrl = '@web/'.$file_path;
-                return Html::img( '@web/'.$file_path, ['class' => 'file-preview-image','data-original' => $file_path]);
-            }
-        }
-
-    }
+    // }
     // public function getEvent() {
     //     return $this->hasOne(Events::className(), ['ref' => 'ref']);
     // }
