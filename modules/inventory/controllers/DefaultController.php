@@ -43,13 +43,13 @@ class DefaultController extends Controller
         $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'\$.officer','\"$id\"')"));
         $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
         $dataProvider->pagination->pageSize = 100;
-        
-        if($dataProvider->getTotalCount() == 1){
+
+        if ($dataProvider->getTotalCount() == 1) {
             $setWarehouse = $dataProvider->getModels()[0];
-            Yii::$app->session->set('warehouse',$setWarehouse);
+            Yii::$app->session->set('warehouse', $setWarehouse);
             return $this->redirect(['/inventory/warehouse']);
         }
-        
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -66,45 +66,57 @@ class DefaultController extends Controller
             ]);
         }
     }
-    
+
     public function actionDashboard()
     {
         \Yii::$app->session->remove('warehouse');
         \Yii::$app->session->remove('selectMainWarehouse');
         \Yii::$app->cartMain->checkOut(false);
         \Yii::$app->cartSub->checkOut(false);
-        $searchModel = new StockEventSearch([
-            'thai_year' => AppHelper::YearBudget(),
-        ]);
+        $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        // เรียกครั้งเดียว
+        $warehouseData = $this->Warehouse();
+        $productSummary = $this->ProductSummary();
+
 
         return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'searchModelWarehouse' => $this->Warehouse()['searchModelWarehouse'],
-            'dataProviderWarehouse' => $this->Warehouse()['dataProviderWarehouse'],
+            'searchModelWarehouse' => $warehouseData['searchModelWarehouse'],
+            'dataProviderWarehouse' => $warehouseData['dataProviderWarehouse'],
             'series' => $this->ProductSummary()['series'],
             'label' => $this->ProductSummary()['label'],
         ]);
     }
-
     protected function Warehouse()
     {
         $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['delete' => null]);
-        if (!\Yii::$app->user->can('admin')) {
-            if (\Yii::$app->user->can('warehouse')) {
-                $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
+
+        $query = $dataProvider->query;
+        $query->where(['delete' => null]);
+
+        // ดึงสิทธิ์ครั้งเดียว
+        $isAdmin = \Yii::$app->user->can('admin');
+        $isWarehouse = \Yii::$app->user->can('warehouse');
+
+        if (!$isAdmin) {
+            if ($isWarehouse) {
+                // ใช้ parameter binding ปลอดภัยกว่า
+                $query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer', JSON_QUOTE(:id))", [':id' => (string)$id]));
             } else {
                 $emp = UserHelper::GetEmployee();
-                $dataProvider->query->andWhere(['warehouse_type' => 'SUB']);
-                $dataProvider->query->andWhere(['>', new Expression('FIND_IN_SET('.$emp->department.', department)'), 0]);
+                $query->andWhere(['warehouse_type' => 'SUB']);
+                // FIND_IN_SET ไม่มี index — แนะนำเก็บ department แยกตาราง mapping
+                $query->andWhere(new Expression('FIND_IN_SET(:dept, department)'), [':dept' => $emp->department]);
             }
         }
-        $dataProvider->query->orderBy(['warehouse_type' => SORT_ASC]);
-        $dataProvider->pagination->pageSize = 100;
+
+        $query->orderBy(['warehouse_type' => SORT_ASC]);
+        $dataProvider->pagination->pageSize = 50; // ลดลงเล็กน้อย
 
         return [
             'searchModelWarehouse' => $searchModel,
@@ -113,10 +125,10 @@ class DefaultController extends Controller
     }
 
 
- 
 
 
-    
+
+
     // ปริมาณวัสดุตามหมวดหมู่
     protected function ProductSummary()
     {

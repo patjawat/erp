@@ -2,15 +2,15 @@
 
 namespace app\modules\sm\controllers;
 
-use app\models\Categorise;
-use app\models\CategoriseSearch;
+use app\modules\sm\models\ProductUnit;
+use app\modules\sm\models\ProductUnitSearch;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\Response;
 use Yii;
 
 /**
- * ProductUnitController implements the CRUD actions for Categorise model.
+ * ProductUnitController implements the CRUD actions for ProductUnit model.
  */
 class ProductUnitController extends Controller
 {
@@ -33,15 +33,20 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Lists all Categorise models.
+     * Lists all ProductUnit models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new CategoriseSearch();
+        $searchModel = new ProductUnitSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'unit']);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'code', $searchModel->q],
+            ['LIKE', 'title', $searchModel->q],
+        ]);
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -51,7 +56,7 @@ class ProductUnitController extends Controller
                     'dataProvider' => $dataProvider,
                 ])
             ];
-        }else{
+        } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
@@ -60,7 +65,7 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Displays a single Categorise model.
+     * Displays a single ProductUnit model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -73,13 +78,13 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Creates a new Categorise model.
+     * Creates a new ProductUnit model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Categorise([
+        $model = new ProductUnit([
             'name' => 'unit',
             'category_id' => $this->request->get('product_id'),
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
@@ -166,15 +171,15 @@ class ProductUnitController extends Controller
     }
 
     /**
-     * Finds the Categorise model based on its primary key value.
+     * Finds the ProductUnit model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Categorise the loaded model
+     * @return ProductUnit the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Categorise::findOne(['id' => $id])) !== null) {
+        if (($model = ProductUnit::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

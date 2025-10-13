@@ -21,7 +21,7 @@ use Yii;
  * @property string|null $ma_items รายการบำรุงรักษา
  * @property int|null $active
  */
-class ProductType extends \yii\db\ActiveRecord
+class ProductUnit extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -38,7 +38,7 @@ class ProductType extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name','code','title'], 'required'],
+            [['name','title'], 'required'],
             [['qty', 'active'], 'integer'],
             [['data_json', 'unit_items', 'ma_items','q'], 'safe'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
@@ -57,7 +57,7 @@ class ProductType extends \yii\db\ActiveRecord
             'code' => 'รหัสประเภทวัสดุ',
             'emp_id' => 'Emp ID',
             'name' => 'Name',
-            'title' => 'ชื่อของประเภทวัสดุ',
+            'title' => 'ชื่อหน่วยนับ',
             'qty' => 'Qty',
             'description' => 'Description',
             'data_json' => 'Data Json',

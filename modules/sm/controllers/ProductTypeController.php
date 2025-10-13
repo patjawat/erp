@@ -41,12 +41,13 @@ class ProductTypeController extends Controller
     {
         $searchModel = new ProductTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'asset_type','category_id' => 4]);
-        $dataProvider->query->orderBy(new \yii\db\Expression("CAST(SUBSTRING(code, 2) AS UNSIGNED) DESC"));
-        // $dataProvider->query->orderBy(new \yii\db\Expression("SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, 'M'), 'M', 1), 'M', -1) + 0
-        // , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, 'M'), 'M', 2), 'M', -1) + 0
-        // , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, 'M'), 'M', 3), 'M', -1) + 0
-        // , SUBSTRING_INDEX(SUBSTRING_INDEX(CONCAT(code, 'M'), 'M', 4), 'M', -1) + 0"));
+        $dataProvider->query->andFilterWhere(['name' => 'asset_type', 'category_id' => 4]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'code', $searchModel->q],
+            ['LIKE', 'title', $searchModel->q],
+        ]);
+        $dataProvider->query->orderBy(new \yii\db\Expression("CAST(SUBSTRING(code, 2) AS UNSIGNED) ASC"));
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -56,7 +57,7 @@ class ProductTypeController extends Controller
                     'dataProvider' => $dataProvider,
                 ])
             ];
-        }else{
+        } else {
             return $this->render('index', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
@@ -150,7 +151,7 @@ class ProductTypeController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        if(!$model->ref){
+        if (!$model->ref) {
             $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
         }
 

@@ -14,8 +14,7 @@ use yii\helpers\Html;
 </style>
 
     <?php $form = ActiveForm::begin([
-        'id' => 'form-unit',
-        'type' => ActiveForm::TYPE_HORIZONTAL,
+        'id' => 'form',
         'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']],
         'formConfig' => ['labelSpan' => 3, 'deviceSize' => ActiveForm::SIZE_SMALL],
     ]); ?>
@@ -33,25 +32,9 @@ use yii\helpers\Html;
 
 <?php
 $js = <<< JS
-
-                    \$('#form-unit').on('beforeSubmit', function (e) {
-                        var form = \$(this);
-                        \$.ajax({
-                            url: form.attr('action'),
-                            type: 'post',
-                            data: form.serialize(),
-                            dataType: 'json',
-                            success: async function (response) {
-                                form.yiiActiveForm('updateMessages', response, true);
-                                if(response.status == 'success') {
-                                    closeModal()
-                                    success()
-                                    await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                }
-                            }
-                        });
-                        return false;
-                    });
+    handleFormSubmit('#form', null, async function(response) {
+        await location.reload();
+    });
     JS;
-$this->registerJS($js);
+$this->registerJS($js)
 ?>

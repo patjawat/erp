@@ -1088,28 +1088,6 @@ public function getVendor()
         }
     }
 
-
-    // public function listOrderItem()
-    // {
-    //     return  self::find()->where(['name' => 'order_item', 'category_id' => $this->id])
-    //         ->all();
-    // }
-    // public function ListOrderType()
-    // {
-    //     $arr = [];
-    //     try {
-    //         $variable = self::find()->where(['name' => 'order'])->all();
-    //          foreach ($variable as $model) {
-    //             $arr[] = ['id' => $model->asset_type_id,'name' => ($model->assetType?->title ?? '-')];
-    //         }
-
-    //         return $arr;
-    //         // code...
-    //     } catch (\Throwable $th) {
-    //         return $arr;
-    //     }
-    // }
-
     // แสดงปีงบประมานทั้งหมดใน stock event
     public function ListGroupYear()
     {
@@ -1130,29 +1108,6 @@ public function getVendor()
     // ยอดยกมา
     public function LastTotalStock()
     {
-
-        // $sql = "SELECT 
-        //         asset_item,
-        //         ROUND(SUM(CASE WHEN transaction_type = 'in' THEN qty * unit_price ELSE 0 END),2) AS total_in_value,
-        //         ROUND(SUM(CASE WHEN transaction_type = 'out' THEN qty * unit_price ELSE 0 END),2) AS total_out_value,
-        //         ROUND(SUM(CASE WHEN transaction_type = 'in' THEN qty * unit_price ELSE -qty * unit_price END),2) AS total
-        //         FROM 
-        //             stock_events
-        //         WHERE  thai_year =(:thai_year-1)";
-        //     $sql = "SELECT ROUND(COALESCE(SUM(qty*unit_price),0),2) FROM stock WHERE thai_year =(:thai_year-1);";
-        //    return \Yii::$app
-        //     ->db
-        //     ->createCommand($sql)
-        //     ->bindValue(':thai_year', $this->thai_year)
-        //     ->queryScalar();
-        //     $total = self::find()
-        //     ->select([new Expression('ROUND(COALESCE(SUM(qty * unit_price), 0), 2)')])
-        //     ->where(['thai_year' => $year])
-        //     ->andFilterWhere(['warehouse_id' => $this->warehouse_id])
-        //     ->scalar();
-        //     return $total;
-
-        // $year = ($this->thai_year) ? ($this->thai_year - 1) : '';
         $where = ['and'];
         if ($this->thai_year) {
             $where[] = ['thai_year' => ($this->thai_year - 1)];  // ใช้กรองถ้าค่ามี
@@ -1160,9 +1115,6 @@ public function getVendor()
         }
 
         $query = self::find()->select([
-            // 'asset_item',
-            // 'total_in_value' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN qty * unit_price ELSE 0 END), 2)',
-            // 'total_out_value' => 'ROUND(SUM(CASE WHEN transaction_type = "out" THEN qty * unit_price ELSE 0 END), 2)',
             'total' => 'ROUND(SUM(CASE WHEN transaction_type = "in" THEN COALESCE(qty, 0) * COALESCE(unit_price, 0) ELSE -COALESCE(qty, 0) * COALESCE(unit_price, 0) END), 2)'
         ])
             ->where($where)

@@ -49,13 +49,11 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-                <div class="d-flex justify-content-between gap-2">
+            <div class="d-flex justify-content-between gap-2">
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 <div class="dropdown">
                     <button class="btn btn-success shadow dropdown-toggle" type="button"
@@ -78,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <th class="fw-semibold" style="width:500px">รายการ</th>
                 <th class="fw-semibold text-center" style="width:100px">ประเภท</th>
                 <th class="fw-semibold text-center" style="width:20px">สถานะ</th>
-                <th class="fw-semibold text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
+                <th class="fw-semibold text-center" scope="col" style="width: 80px;">จัดการ</th>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $model): ?>
@@ -96,10 +94,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?= $model->active == 1 ? 'checked' : '' ?>>
                             </div>
                         </td>
+
                         <td class="text-center">
-                            <?= Html::a('<i class="fa-solid fa-eye"></i>', ['/sm/product/view', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                            <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/sm/product/delete', 'id' => $model->id], ['class' => 'btn btn-sm btn-danger rounded-pill  delete-item',]) ?>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    จัดการ
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item',]) ?></li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

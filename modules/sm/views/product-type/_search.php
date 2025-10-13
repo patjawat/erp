@@ -8,8 +8,6 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="product-type-search">
-
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
@@ -17,8 +15,12 @@ use yii\widgets\ActiveForm;
             'data-pjax' => 1
         ],
     ]); ?>
- <?php echo $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
-
+    <div class="row">
+        <div class="col-11">
+            <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
+        </div>
+        <div class="col-1">
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+        </div>
+    </div>
     <?php ActiveForm::end(); ?>
-
-</div>

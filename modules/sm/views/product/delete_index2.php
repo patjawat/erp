@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 
 use app\modules\sm\models\Product;
 use yii\grid\ActionColumn;
@@ -69,4 +69,4 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<?php Pjax::end(); ?>
+<?php Pjax::end(); ?> -->
