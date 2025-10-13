@@ -117,7 +117,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= Html::img('@web/images/provider_logo.png', ['class' => 'rounded me-2', 'style' => 'max-width: 55px']) ?>
                 </a>
 
-                <a href="<?= \yii\helpers\Url::to(['/auth/login/thaid']) ?>"
+                <a href="<?= \yii\helpers\Url::to(['/auth/thaid/']) ?>"
                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
                     <?= Html::img('@web/images/thaid_logo.jpg', ['class' => 'rounded me-2', 'style' => 'max-width: 25px']) ?> ThaiD
                 </a>

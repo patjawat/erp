@@ -1,4 +1,5 @@
 <?php
+
 namespace app\modules\auth\components;
 
 use Yii;
@@ -48,7 +49,7 @@ class ThaidAuth extends Component
             'state' => $state,
         ]);
     }
-    
+
     /**
      * ดึง token และข้อมูลผู้ใช้จาก code
      */
@@ -74,8 +75,10 @@ class ThaidAuth extends Component
             ->send();
 
         if (!$response->isOk) {
-            throw new ServerErrorHttpException("Token request failed");
+            Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
+            return "<h1>Token Request Failed</h1><p>ไม่สามารถขอ Token ได้</p>";
         }
+
 
         $data = $response->data;
 
@@ -86,30 +89,13 @@ class ThaidAuth extends Component
 
         $parts = explode(".", $idToken);
         $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
-        return $payload;
 
-        $thaiId = $payload['sub'] ?? null;
-        $email = $payload['email'] ?? null;
-        $name = $payload['name'] ?? null;
+        $thaiId = $payload['pid'] ?? null;
 
         if (!$thaiId) {
             throw new ServerErrorHttpException("Invalid id_token payload");
         }
 
-        // ------ Register/Login user ------
-        $user = User::findOne(['thaid' => $thaiId]);
-        if (!$user) {
-            $user = new User();
-            $user->username = hash('sha256', $thaiId . 'abc123');
-            $user->thaid = $thaiId;
-            $user->email = $email ?? $thaiId . '@thaid.local';
-            $user->setPassword(Yii::$app->security->generateRandomString(12));
-            $user->generateAuthKey();
-            $user->created_at = time();
-            $user->updated_at = time();
-            $user->save(false);
-        }
-
-        return $user;
+        return $payload;
     }
 }
