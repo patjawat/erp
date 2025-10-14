@@ -23,18 +23,27 @@ class GeneralController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'repair_number',$searchModel->q],
-            ['like', 'title',$searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"),$searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"),$searchModel->q],
-        ]);
-        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
+        // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
+        $dataProvider->query
+            ->andFilterWhere(['name' => 'repair'])
+            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency])
+            ->andFilterWhere([
+                'between',
+                new Expression('DATE(created_at)'),
+                AppHelper::convertToGregorian($searchModel->date_start),
+                AppHelper::convertToGregorian($searchModel->date_end)
+            ]);
 
-        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
-
+        // ย้าย search condition มาไว้ท้ายสุด และเช็ค empty ก่อน
+        if (!empty($searchModel->q)) {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'repair_number', $searchModel->q],
+                ['like', 'title', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ]);
+        }
 
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
@@ -54,22 +63,22 @@ class GeneralController extends \yii\web\Controller
             'repair_group' => 1,
             'auth_item' => 'technician'
         ]);
-        
+
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'repair']);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'repair_number',$searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"),$searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"),$searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"),$searchModel->q],
+            ['like', 'repair_number', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.title')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
-             'active' => 'dashboard',
+            'active' => 'dashboard',
             'title' => 'ศูนย์งานซ่อมบำรุง',
             'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
             'searchModel' => $searchModel,
@@ -95,8 +104,8 @@ class GeneralController extends \yii\web\Controller
         $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'asset_name',$searchModel->q],
-            ['like', 'code',$searchModel->q],
+            ['like', 'asset_name', $searchModel->q],
+            ['like', 'code', $searchModel->q],
         ]);
 
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
@@ -135,8 +144,8 @@ class GeneralController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code',$searchModel->q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"),$searchModel->q],
+            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
         ]);
 
         // ค้นหาตามอายุ
@@ -164,7 +173,7 @@ class GeneralController extends \yii\web\Controller
         ]);
     }
 
-        public function actionView($id)
+    public function actionView($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
@@ -177,5 +186,4 @@ class GeneralController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    
 }

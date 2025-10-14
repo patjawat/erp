@@ -22,22 +22,33 @@ class ComputerController extends \yii\web\Controller
             'repair_group' => 2,
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair']);
+        // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
+        $dataProvider->query
+            ->andFilterWhere(['name' => 'repair'])
+            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency])
+            ->andFilterWhere([
+                'between',
+                new Expression('DATE(created_at)'),
+                AppHelper::convertToGregorian($searchModel->date_start),
+                AppHelper::convertToGregorian($searchModel->date_end)
+            ]);
 
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'repair_number', $searchModel->q],
-            ['like', 'title', $searchModel->q],
-        ]);
-
-        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
-
+        // ย้าย search condition มาไว้ท้ายสุด และเช็ค empty ก่อน
+        if (!empty($searchModel->q)) {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'repair_number', $searchModel->q],
+                ['like', 'title', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ]);
+        }
 
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
             'active' => 'index',
-             'title' => 'ศูนย์คอมพิวเตอร์',
+            'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -66,7 +77,7 @@ class ComputerController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
-             'active' => 'dashboard',
+            'active' => 'dashboard',
             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'searchModel' => $searchModel,
@@ -145,7 +156,7 @@ class ComputerController extends \yii\web\Controller
         ]);
 
         return $this->render('@app/modules/helpdesk2/views/service/list_asset', [
-             'active' => 'asset',
+            'active' => 'asset',
             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'listAssetType' => $listAssetType,

@@ -22,23 +22,32 @@ class MedicalController extends \yii\web\Controller
             'repair_group' => 3,
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'repair']);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'repair_number', $searchModel->q],
-            ['like', 'title', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
-        ]);
-        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency]);
+        // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
+        $dataProvider->query
+            ->andFilterWhere(['name' => 'repair'])
+            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency])
+            ->andFilterWhere([
+                'between',
+                new Expression('DATE(created_at)'),
+                AppHelper::convertToGregorian($searchModel->date_start),
+                AppHelper::convertToGregorian($searchModel->date_end)
+            ]);
 
-        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
-
+        // ย้าย search condition มาไว้ท้ายสุด และเช็ค empty ก่อน
+        if (!empty($searchModel->q)) {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'repair_number', $searchModel->q],
+                ['like', 'title', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+            ]);
+        }
 
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
-              'active' => 'index',
+            'active' => 'index',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'searchModel' => $searchModel,
@@ -67,7 +76,7 @@ class MedicalController extends \yii\web\Controller
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/dashboard', [
-              'active' => 'dashboard',
+            'active' => 'dashboard',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'searchModel' => $searchModel,
@@ -91,8 +100,8 @@ class MedicalController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'asset_name',$searchModel->q],
-            ['like', 'code',$searchModel->q],
+            ['like', 'asset_name', $searchModel->q],
+            ['like', 'code', $searchModel->q],
         ]);
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
@@ -146,7 +155,7 @@ class MedicalController extends \yii\web\Controller
         ]);
 
         return $this->render('@app/modules/helpdesk2/views/service/list_asset', [
-              'active' => 'asset',
+            'active' => 'asset',
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'listAssetType' => $listAssetType,
@@ -155,7 +164,7 @@ class MedicalController extends \yii\web\Controller
         ]);
     }
 
-        public function actionView($id)
+    public function actionView($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
@@ -168,5 +177,4 @@ class MedicalController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    
 }
