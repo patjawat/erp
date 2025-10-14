@@ -141,8 +141,12 @@ class Documents extends \yii\db\ActiveRecord
         return true; // ดำเนินการลบต่อ
     }
 
-
-
+//  ผู้สร้าง
+  public function getCreateBy()
+    {
+        return $this->hasOne(Employees::class, ['user_id' => 'created_by'])
+          ->select(['id', 'user_id', 'fname', 'lname', 'department']); 
+    } 
 
     // สถานะ
     public function getDocumentStatus()
@@ -466,79 +470,124 @@ class Documents extends \yii\db\ActiveRecord
         return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->count();
     }
 
-    // แสดงการส่งต่อรายบุคคล
     public function StackDocumentTags($tag_name)
-    {
-        try {
-            $querys = DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => $tag_name])->all();
-            $count = count($querys) - 2;
-            $data = '';
-            $data .= '<div class="avatar-stack">';
-            $count > 0 ? $data .= Html::a('+' . $count, ['/dms/documents/list-comment', 'id' => $this->id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'], ['class' => 'open-modal avatar-sm rounded-circle shadow bg-secondary text-white text-center p-2 fs-13', 'data' => [
-                'size' => 'modal-md',
-            ]]) : '';
-            foreach ($querys as $key => $item) {
-                $emp = Employees::findOne(['id' => $item->to_id]);
-                if ($key <= 1) {
-                    $data .= Html::a(
-                        Html::img('@web/img/placeholder-img.jpg', [
-                            'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
-                            'data' => [
-                                'expand' => '-20',
-                                'sizes' => 'auto',
-                                'src' => $emp->showAvatar()
-                            ]
-                        ]),
-                        ['/dms/documents/list-comment', 'id' => $item->document_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
-                        [
-                            'class' => 'open-modal',
-                            'data' => [
-                                'size' => 'modal-md',
-                                'bs-trigger' => 'hover focus',
-                                'bs-toggle' => 'popover',
-                                'bs-placement' => 'top',
-                                'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
-                                'bs-html' => 'true',
-                                'bs-content' => $emp->fullname . '<br>' . $item->comment
-                            ]
-                        ]
-                    );
-                } else {
-                }
-            }
+{
+    try {
+        $querys = DocumentsDetail::find()
+            ->where(['document_id' => $this->id, 'name' => $tag_name])
+            ->all();
 
-            $data .= '</div>';
-            return $data;
-        } catch (\Throwable $th) {
-            // return 'เกิดข้อผิดพลาด';
+        $count = count($querys) - 2;
+
+        $data = '<div class="avatar-stack">';
+        if ($count > 0) {
+            $data .= Html::a(
+                '+' . $count,
+                ['/dms/documents/list-comment', 'id' => $this->id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                [
+                    'class' => 'open-modal avatar-sm rounded-circle shadow bg-secondary text-white text-center p-2 fs-13',
+                    'data' => ['size' => 'modal-md']
+                ]
+            );
         }
+
+        // preload employees
+        $toIds = array_column($querys, 'to_id');
+        $emps = Employees::find()->where(['id' => $toIds])->indexBy('id')->all();
+
+        foreach ($querys as $key => $item) {
+            if ($key > 1) continue;
+
+            $emp = $emps[$item->to_id] ?? null;
+            if (!$emp) continue;
+
+            $data .= Html::a(
+                Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $emp->showAvatar()
+                    ]
+                ]),
+                ['/dms/documents/list-comment', 'id' => $item->document_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+                [
+                    'class' => 'open-modal',
+                    'data' => [
+                        'size' => 'modal-md',
+                        'bs-trigger' => 'hover focus',
+                        'bs-toggle' => 'popover',
+                        'bs-placement' => 'top',
+                        'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
+                        'bs-html' => 'true',
+                        'bs-content' => $emp->fullname . '<br>' . $item->comment
+                    ]
+                ]
+            );
+        }
+
+        $data .= '</div>';
+        return $data;
+    } catch (\Throwable $th) {
+        return '';
     }
+}
+
 
 
     // แสดงข้อมูลผู้รับเข้า
     public function viewCreate()
-    {
-        try {
-            $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            $createDate = ThaiDateHelper::formatThaiDate($this->doc_transactions_date) . ' ' . $this->doc_time;
-            // $msg = $employee->departmentName();
-            return [
-                'avatar' => $employee->getAvatar(false, $createDate),
-                'department' => $employee->departmentName(),
-                'fullname' => $employee->fullname,
-                'position_name' => $employee->positionName(),
-                'create_date' => $createDate
-            ];
-        } catch (\Throwable $th) {
-            return [
-                'avatar' => '',
-                'department' => '',
-                'fullname' => '',
-                'position_name' => '',
-                'product_type_name' => ''
-            ];
+{
+    try {
+        $employee = $this->createBy; // ใช้ relation แทน query ใหม่
+
+        if (!$employee) {
+            throw new \Exception('Employee not found');
         }
+
+        $createDate = ThaiDateHelper::formatThaiDate($this->doc_transactions_date) . ' ' . $this->doc_time;
+
+        return [
+            'avatar' => $employee->getAvatar(false, $createDate),
+            'department' => $employee->departmentName(),
+            'fullname' => $employee->fullname,
+            'position_name' => $employee->positionName(),
+            'create_date' => $createDate
+        ];
+    } catch (\Throwable $th) {
+        return [
+            'avatar' => '',
+            'department' => '',
+            'fullname' => '',
+            'position_name' => '',
+            'product_type_name' => ''
+        ];
     }
+}
+
+    // public function viewCreate()
+    // {
+    //     try {
+    //         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
+    //         $createDate = ThaiDateHelper::formatThaiDate($this->doc_transactions_date) . ' ' . $this->doc_time;
+    //         // $msg = $employee->departmentName();
+    //         return [
+    //             'avatar' => $employee->getAvatar(false, $createDate),
+    //             'department' => $employee->departmentName(),
+    //             'fullname' => $employee->fullname,
+    //             'position_name' => $employee->positionName(),
+    //             'create_date' => $createDate
+    //         ];
+    //     } catch (\Throwable $th) {
+    //         return [
+    //             'avatar' => '',
+    //             'department' => '',
+    //             'fullname' => '',
+    //             'position_name' => '',
+    //             'product_type_name' => ''
+    //         ];
+    //     }
+    // }
 
     // ข้อมูลการลงความเห็น
     public function documentApprove()

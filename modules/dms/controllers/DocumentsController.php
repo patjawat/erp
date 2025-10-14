@@ -130,17 +130,10 @@ class DocumentsController extends Controller
 
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+            $start = AppHelper::convertToGregorian($range[0]);
+            $end = AppHelper::convertToGregorian($range[1]);
+            $dataProvider->query->andFilterWhere(['between', 'doc_transactions_date', $start, $end]);
         }
-
-
-        $dataProvider->query->andFilterWhere([
-            'between',
-            'doc_transactions_date',
-            AppHelper::convertToGregorian($searchModel->date_start),
-            AppHelper::convertToGregorian($searchModel->date_end)
-        ]);
 
         return $this->render('receive', [
             'searchModel' => $searchModel,
@@ -193,20 +186,20 @@ class DocumentsController extends Controller
                 $title = 'หนังประกาศ/นโยบาย';
                 break;
             default:
-               $title = '';
+                $title = '';
                 break;
         }
 
-        $this->ExportExcel($dataProvider, $searchModel,$title);
+        $this->ExportExcel($dataProvider, $searchModel, $title);
     }
-    protected function ExportExcel($dataProvider, $searchModel,$title)
+    protected function ExportExcel($dataProvider, $searchModel, $title)
     {
         // ดึงข้อมูลทั้งหมดจาก dataProvider
         $models = $dataProvider->getModels();
-          //วันที่ข้อมูลรายงาน
-            $dateStart= AppHelper::convertToGregorian($searchModel->date_start);
-            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-            $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart,$dateEnd, 'long', 'short');
+        //วันที่ข้อมูลรายงาน
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
 
         // ถ้าไม่มีข้อมูล
         if (empty($models)) {
@@ -223,7 +216,7 @@ class DocumentsController extends Controller
         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
 
-        $sheet->setCellValue($rowTitle, 'ทะเบียน'.$title.' ปีงบประมาณ '.$searchModel->thai_year .' วันที่ '.$dateReport);
+        $sheet->setCellValue($rowTitle, 'ทะเบียน' . $title . ' ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport);
         $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
@@ -338,7 +331,7 @@ class DocumentsController extends Controller
         ]);
 
         $dataProvider = $this->listDocument($searchModel->search($this->request->queryParams), $searchModel, 'send');
-        
+
 
         return $this->render('send', [
             'searchModel' => $searchModel,
@@ -397,7 +390,7 @@ class DocumentsController extends Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
         ]);
 
-               if ($searchModel->date_filter) {
+        if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
@@ -865,8 +858,8 @@ class DocumentsController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             try {
-            //## ตรวจสอบสถานะส่งเสนอ ผอ.
-            $director = SiteHelper::getInfo()['director']->id;
+                //## ตรวจสอบสถานะส่งเสนอ ผอ.
+                $director = SiteHelper::getInfo()['director']->id;
                 //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
                 if (in_array($director, $model->tags_employee)) {
                     $docStatus =  $model->document;

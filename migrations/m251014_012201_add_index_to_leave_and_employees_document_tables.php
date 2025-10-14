@@ -2,7 +2,7 @@
 
 use yii\db\Migration;
 
-class m251014_012201_add_index_to_leave_and_employees_tables extends Migration
+class m251014_012201_add_index_to_leave_and_employees_document_tables extends Migration
 {
    public function safeUp()
     {
@@ -23,6 +23,15 @@ class m251014_012201_add_index_to_leave_and_employees_tables extends Migration
          * ============================ */
         $this->createIndex('idx-employees-user_id', '{{%employees}}', 'user_id');
         $this->createIndex('idx-employees-department', '{{%employees}}', 'department');
+        $this->createIndex('idx-caegorise-name', '{{%categorise}}', 'name');
+        $this->createIndex('idx-caegorise-code', '{{%categorise}}', 'code');
+        
+        // *  เพิ่ม index สำหรับหนังสือระบบสารบรรณ
+         $this->createIndex(
+        'idx-document-doc_transactions_date',
+        '{{%documents}}',
+        'doc_transactions_date'
+    );
     }
 
     public function safeDown()
@@ -39,5 +48,12 @@ class m251014_012201_add_index_to_leave_and_employees_tables extends Migration
         // employees
         $this->dropIndex('idx-employees-user_id', '{{%employees}}');
         $this->dropIndex('idx-employees-department', '{{%employees}}');
+        //Categorise
+        $this->dropIndex('idx-caegorise-name', '{{%categorise}}');
+        $this->dropIndex('idx-caegorise-code', '{{%categorise}}');
+
+
+        // documents
+         $this->dropIndex('idx-document-doc_transactions_date', '{{%documents}}');
     }
 }
