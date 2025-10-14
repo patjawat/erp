@@ -63,17 +63,6 @@ class LeaveSearch extends Leave
             return $dataProvider;
         }
 
-        // if ($this->date_filter) {
-        //     $range = DateFilterHelper::getRange($this->date_filter);
-        //     if ($range) {
-        //         $date_start = date('Y-m-d', strtotime($range[0]));
-        //         $date_end = date('Y-m-d', strtotime($range[1]));
-        //         $query->andWhere(['>=', 'date_start', $date_start]);
-        //         $query->andWhere(['<=', 'date_end', $date_end]);
-        //     }
-        // }
-
-
         // grid filtering conditions
         $query->andFilterWhere([
             'leave.emp_id' => $this->emp_id,

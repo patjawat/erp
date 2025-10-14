@@ -19,12 +19,10 @@ class DefaultController extends Controller
 {
     public function actionIndex()
     {
-        // $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
-
         // clear session คลัง
-        Yii::$app->session->remove('sub-warehouse');
-        Yii::$app->session->remove('main-warehouse');
-        Yii::$app->session->remove('asset_type');
+        foreach (['sub-warehouse', 'main-warehouse', 'asset_type'] as $key) {
+            Yii::$app->session->remove($key);
+        }
 
         $model = UserHelper::GetEmployee();
 
@@ -34,20 +32,20 @@ class DefaultController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        if(Yii::$app->user->can('branch')){
+        if (Yii::$app->user->can('branch')) {
             return $this->redirect(['/me/store-v2/dashboard']);
         }
+
         return $this->render('index', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
+            'dataProvider' => $dataProvider,
         ]);
-
     }
 
-public function actionV2()
-{
-     $model = UserHelper::GetEmployee();
+    public function actionV2()
+    {
+        $model = UserHelper::GetEmployee();
 
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
@@ -55,21 +53,19 @@ public function actionV2()
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        
+
         return $this->render('me_v2', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
+            'dataProvider' => $dataProvider,
         ]);
-}
+    }
 
 
 
     public function actionTeam()
     {
-        return $this->render('team_work', [
-           
-        ]);
+        return $this->render('team_work', []);
     }
 
     public function actionRepairMe()
@@ -104,6 +100,4 @@ public function actionV2()
             ])
         ];
     }
-
-    
 }

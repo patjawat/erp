@@ -66,15 +66,16 @@ class LeaveController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $query = $dataProvider->query;
         $query->with('employee');
-        $query->andFilterWhere([
-            'or',
-            ['like', 'cid', $searchModel->q],
-            ['like', 'email', $searchModel->q],
-
-            ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
-        ]);
+        if ($searchModel->q) {
+            $query->andFilterWhere([
+                'or',
+                ['like', 'cid', $searchModel->q],
+                ['like', 'email', $searchModel->q],
+                ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
+                ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
+                ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
+            ]);
+        }
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -93,40 +94,39 @@ class LeaveController extends Controller
 
         // search employee department
         // ค้นหาคามกลุ่มโครงสร้าง
-       if ($searchModel->q_department) {
-    $org1 = Organization::findOne($searchModel->q_department);
+        if ($searchModel->q_department) {
+            $org1 = Organization::findOne($searchModel->q_department);
 
-    if ($org1 && $org1->lvl == 1) {
-        $cacheKey = 'org_child_' . $org1->id;
-        $arrDepartment = Yii::$app->cache->get($cacheKey);
-        if ($arrDepartment === false) {
-            $arrDepartment = Organization::find()
-                ->select('id')
-                ->where(['between', 'lft', $org1->lft, $org1->rgt])
-                ->column();
-            Yii::$app->cache->set($cacheKey, $arrDepartment, 3600);
+            if ($org1 && $org1->lvl == 1) {
+                $cacheKey = 'org_child_' . $org1->id;
+                $arrDepartment = Yii::$app->cache->get($cacheKey);
+                if ($arrDepartment === false) {
+                    $arrDepartment = Organization::find()
+                        ->select('id')
+                        ->where(['between', 'lft', $org1->lft, $org1->rgt])
+                        ->column();
+                    Yii::$app->cache->set($cacheKey, $arrDepartment, 3600);
+                }
+
+                // ✅ ใช้ emp_id จาก employees ที่อยู่ใน department เหล่านั้น
+                $empIds = Employees::find()
+                    ->select('id')
+                    ->andWhere(['department' => $arrDepartment])
+                    ->column();
+
+                $query->andWhere(['in', 'emp_id', $empIds]);
+            } else {
+                $empIds = Employees::find()
+                    ->select('id')
+                    ->andWhere(['department' => $searchModel->q_department])
+                    ->column();
+
+                $query->andWhere(['in', 'emp_id', $empIds]);
+            }
         }
-
-        // ✅ ใช้ emp_id จาก employees ที่อยู่ใน department เหล่านั้น
-        $empIds = Employees::find()
-            ->select('id')
-            ->andWhere(['department' => $arrDepartment])
-            ->column();
-
-        $query->andWhere(['in', 'emp_id', $empIds]);
-    } else {
-        $empIds = Employees::find()
-            ->select('id')
-            ->andWhere(['department' => $searchModel->q_department])
-            ->column();
-
-        $query->andWhere(['in', 'emp_id', $empIds]);
-    }
-}
 
 
         $dataProvider->setSort(['defaultOrder' => [
-            // 'total_days' => SORT_DESC,
             'created_at' => SORT_DESC,
         ]]);
 
