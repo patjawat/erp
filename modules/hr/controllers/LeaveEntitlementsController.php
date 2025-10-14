@@ -371,13 +371,19 @@ class LeaveEntitlementsController extends Controller
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
+                try {
+
                 $me = UserHelper::GetEmployee();
                 $data = [
                     "fullname" => $me->fullname,
                     'title' => 'แก้ไขสิทธิลาพักผ่อน',
                     'data' => $model
                 ];
-                // LogHelper::log('leaev_entitlements', $data);
+                LogHelper::log('leaev_entitlements', $data);
+                                    
+                } catch (\Throwable $th) {
+
+                }
                 return [
                     'status' => 'success',
                     'message' => 'บันทึกข้อมูลสำเร็จ',
