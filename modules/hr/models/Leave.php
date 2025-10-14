@@ -296,6 +296,7 @@ class Leave extends \yii\db\ActiveRecord
     public function getEmployee()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+        //   ->select(['id', 'fname', 'lname', 'department','position']);
     }
 
     public function getLeaveStatus()
