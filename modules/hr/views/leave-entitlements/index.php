@@ -4,9 +4,6 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use app\modules\hr\models\LeaveEntitlements;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\LeaveEntitlementsSearch $searchModel */
@@ -44,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header bg-primary-gradient text-white">
          <div class="d-flex justify-content-between  align-top align-items-center">
              <h6 class="text-white">
-                <i class="bi bi-ui-checks"></i> นโยบายการลา
+                <i class="bi bi-ui-checks"></i> <?=$this->title?>
                 <span class="badge rounded-pill text-bg-primary"><?php echo $dataProvider->getTotalCount() ?></span>
                 รายการ
             </h6>

@@ -1,10 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use app\models\Categorise;
-use kartik\widgets\Select2;
-use yii\widgets\ActiveForm;
-use yii\helpers\ArrayHelper;
+use kartik\widgets\ActiveForm;
 
 $this->title = 'นำเข้าไฟล์ CSV';
 ?>
@@ -25,12 +22,7 @@ $this->title = 'นำเข้าไฟล์ CSV';
                 <!-- File Upload Section -->
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <?php
-                        echo $form->field($model, 'thai_year')->textInput();
-                        ?>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="csvFile" class="form-label fw-semibold">
+                        <label for="csvFile" class="form-label fw-semibold mb-0">
                             เลือกไฟล์ CSV
                         </label>
                         <div class="position-relative">
@@ -48,7 +40,11 @@ $this->title = 'นำเข้าไฟล์ CSV';
                             รองรับไฟล์ .csv เท่านั้น
                         </div>
                     </div>
-
+                    <div class="col-md-6">
+                        <?php
+                        echo $form->field($model, 'thai_year')->textInput(['id' => 'thai_year']);
+                        ?>
+                    </div>
 
                 </div>
 
@@ -194,20 +190,20 @@ $(document).ready(function() {
                 html += '<tbody class="table-group-divider">';
 
                 // Loop แถวข้อมูล
-                res.preview.slice(1).forEach(function(row, index){
-                    var rowClass = (index % 2 === 0 ? 'table-light' : '');
-                    
-                    // ถ้าไม่มีใน DB ให้ทำสีพื้นแดง
-                    if(row.exists === false){
-                        rowClass += ' table-danger';
-                    }
-                    
-                    html += '<tr class="' + rowClass + '">';
-                    row.data.forEach(function(cell){ 
-                        html += '<td class="text-center">' + (cell || '-') + '</td>'; 
+                    res.preview.slice(1).forEach(function(row, index){
+                        var rowClass = '';
+                        if (row.exists === false) {
+                            rowClass = 'table-danger';
+                        } else if (index % 2 === 0) {
+                            rowClass = 'table-light';
+                        }
+
+                        html += '<tr class="' + rowClass + '">';
+                        row.data.forEach(function(cell){ 
+                            html += '<td class="text-center">' + (cell || '-') + '</td>'; 
+                        });
+                        html += '</tr>';
                     });
-                    html += '</tr>';
-                });
 
                 html += '</tbody></table>';
 
@@ -246,10 +242,10 @@ $(document).ready(function() {
     $('#btn-import').on('click', function() {
         var filePath = $('#filePath').val();
         var orderId = $('#order_id').val();
-        var categoryId = $('#category_id').val();
+        var thaiYear = $('#thai_year').val();
         
-        if(categoryId == ''){
-             showErrorToast('ประเภทวัสดุ');
+        if(thaiYear == ''){
+             showErrorToast('ระบุปีงบประมาน');
             return; 
         }
         
@@ -291,33 +287,61 @@ $(document).ready(function() {
                 type: 'POST',
                 data: { 
                     filePath: filePath, 
-                    category_id: categoryId
+                    thai_year: thaiYear
                 },
                 success: function(res) {
                     hideLoading();
                     $('#import-spinner').addClass('d-none');
                     $('#btn-import').prop('disabled', false);
                     
-                    if(res.status === 'success'){
-                        showSuccessToast(res.message || 'นำเข้าข้อมูลสำเร็จ');
-                        
-                        // Reset form
-                        // setTimeout(() => {
-                        //     $('#preview-table').html('');
-                        //     $('#preview-section').slideUp();
-                        //     $('#import-btn').fadeOut();
-                        //     $('#csvFile').val('');
-                        //     $('#filePath').val('');
-                        // }, 1500);
-                        
-                        // // Reload page after success message
-                        // setTimeout(() => {
-                        //     window.location.reload(true);
-                        // }, 2500);
-                        
-                    } else {
-                        showErrorToast(res.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
+                    $.ajax({
+    url: '/hr/leave-entitlements/import-csv',
+    type: 'POST',
+    data: { 
+        filePath: filePath, 
+        thai_year: thaiYear
+    },
+    success: function(res) {
+        hideLoading();
+        $('#import-spinner').addClass('d-none');
+        $('#btn-import').prop('disabled', false);
+
+        if (res.status === 'success') {
+            showSuccessToast(res.message || 'นำเข้าข้อมูลสำเร็จ');
+              $.pjax.reload({ 
+                container: res.container, 
+                history: false,
+                replace: false,
+                timeout: false
+              });
+               $("#main-modal").modal("toggle");
+        } 
+        else if (res.status === 'error') {
+            // แสดงข้อความหลัก
+            showErrorToast(res.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
+
+            // ถ้ามี errorData -> แสดงรายละเอียดแต่ละรายการ
+            if (Array.isArray(res.errorData) && res.errorData.length > 0) {
+                let delay = 0;
+                res.errorData.forEach(function(item, index) {
+                    delay += 1500; // หน่วงเวลาเล็กน้อยเพื่อให้ toast ไม่ชนกัน
+                    setTimeout(() => {
+                        showErrorToast(`❌ \${item.fullname || 'ไม่ทราบชื่อ'}: นำเข้าซ้ำ`);
+                            }, delay);
+                        });
                     }
+                } else {
+                        showErrorToast('เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideLoading();
+                    $('#import-spinner').addClass('d-none');
+                    $('#btn-import').prop('disabled', false);
+                    showErrorToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                }
+            });
+
                 },
                 error: function(xhr, status, error) {
                     hideLoading();

@@ -121,7 +121,7 @@ class LeaveEntitlementsController extends Controller
         $model = new LeaveEntitlements([
             'thai_year' => $this->request->get('thai_year') ?? AppHelper::YearBudget()
         ]);
-
+        $model->scenario = 'no-thai-year';
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -146,7 +146,7 @@ class LeaveEntitlementsController extends Controller
                         'title' => 'กำหนดสิทธิลาพักผ่อน',
                         'data' => $model
                     ];
-                    // LogHelper::log('leaev_entitlements', $data);
+                    LogHelper::log('leaev_entitlements', $data);
 
                     return [
                         'status' => 'success',
@@ -356,19 +356,6 @@ class LeaveEntitlementsController extends Controller
         } else {
             return 'No';
         }
-        // if ($this->request->isAJax) {
-
-        //     return [
-        //         'title' => $this->request->get('title'),
-        //         'content' => $this->renderAjax('create_all', [
-        //             'model' => $model,
-        //         ]),
-        //     ];
-        // } else {
-        //     return $this->render('create_all', [
-        //         'model' => $model,
-        //     ]);
-        // }
     }
 
     /**
@@ -382,8 +369,7 @@ class LeaveEntitlementsController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            if ($model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $me = UserHelper::GetEmployee();
                 $data = [
@@ -397,7 +383,6 @@ class LeaveEntitlementsController extends Controller
                     'message' => 'บันทึกข้อมูลสำเร็จ',
                     'container' => '#leave'
                 ];
-            }
         }
 
         if ($this->request->isAJax) {
@@ -576,14 +561,14 @@ class LeaveEntitlementsController extends Controller
 
     public function actionFormImport()
     {
-          $model = new LeaveEntitlements();
+        $model = new LeaveEntitlements();
 
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_import',['model' => $model])
+                'content' => $this->renderAjax('_form_import', ['model' => $model])
             ];
         } else {
             return $this->render('_form_import', ['model' => $model]);
@@ -607,12 +592,13 @@ class LeaveEntitlementsController extends Controller
             if (($handle = fopen($filePath, "r")) !== false) {
                 $row = 0;
                 while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $checkEmp = Employees::findOne(['fname' => $data[0],'lname' => $data[1]]);
-                   // เพิ่มสถานะว่าพบหรือไม่
-                $previewData[] = [
-                    'data' => $data,
-                    'exists' => $checkEmp ? true : false
-                ];
+                    $emp = Employees::findOne(['cid' => $data[0]]);
+                    // เพิ่มสถานะว่าพบหรือไม่
+                    $previewData[] = [
+                        'data' => $data,
+                        'emp' => $emp,
+                        'exists' => $emp ? true : false
+                    ];
                     $row++;
                     // if ($row >= 10) break;
                 }
@@ -640,59 +626,75 @@ class LeaveEntitlementsController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $filePath = Yii::$app->request->post('filePath');
-        $thaiYear= Yii::$app->request->post('thai_year');
+        $thaiYear = Yii::$app->request->post('thai_year');
 
         if (!$filePath || !file_exists($filePath)) {
             return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
         }
 
         $imported = 0;
-        $demo = [];
+        $errorData = [];
         if (($handle = fopen($filePath, "r")) !== false) {
             $row = 0;
             $error = 0;
-
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $row++;
                 if ($row == 1) continue; // ข้าม header
-                // $demo[] = $data[1];
-                // $result = $this->findProduct($data[0], $data[1], $categoryId, $data[2]);
-                $result = $data[1];
-                $emp = Employees::findOne(['fname' => $data[0],'lname' => $data[1]]);
-                
+                $emp = Employees::findOne(['cid' => $data[0]]);
+                $checkDuplicate = LeaveEntitlements::find()->where(['emp_id' => $emp->id, 'thai_year' => $thaiYear])->one();
+
                 if ($emp) {
-                    $demo [] = [
-                    'status' => true,
-                    'fullname' => $emp->fullname
-                ];
-                $imported++;
-            } else {
-                $demo [] = [
-                         'status' => false,
-                    'fullname' => $data[0].$data[1]
+                    $workYear = $emp->workYear();
+                    $model = new LeaveEntitlements;
+                    $model->emp_id = $emp->id;
+                    $model->position_type_id = $emp->position_type;
+                    $model->leave_type_id = 'LT4';
+                    $model->thai_year = $thaiYear;
+                    $model->days = $data[9] ?? 0;
+
+                    $model->year_of_service = $data[3] === '' ? ($workYear['year'] ?? 0) : $data[3];
+                    $model->month_of_service = $data[4] === '' ? ($workYear['month'] ?? 0) : $data[4];
+
+                    $model->data_json = [
+                        'before_leave_balance' => $data[5] ?? 0,
+                        'leave_days' => $data[6] ?? 0,
+                        'accumulation' => $data[7] ?? 0,
+                        'leave_max_days' => $data[8] ?? 0,
                     ];
-                    $error++;
-                    // คุณอาจเก็บ log ของ error แถวนี้ได้
+
+                    if ($model->save()) {
+                        $imported++;
+                    } else {
+                        $errorData[] = [
+                            'status' => false,
+                            'fullname' => $data[1] . ' ' . $data[2],
+                            'reason' => json_encode($model->getErrors())
+                        ];
+                    }
+                } else {
+                    $errorData[] = [
+                        'status' => false,
+                        'fullname' => $data[1] . ' ' . $data[2],
+                        'reason' => 'ไม่พบพนักงานในระบบ'
+                    ];
                 }
             }
             fclose($handle);
             if ($error >= 1) {
                 return [
                     'status' => 'error',
-                    'message' => "xx",
-                    'demo' => $demo
+                    'message' => "เกิดข้อผิดพลาด",
+                    'errorData' => $errorData
                 ];
             }
             return [
                 'status' => 'success',
+                'container' => '#leave',
                 'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
-                'demo' => $demo
             ];
         }
-
-        // return ['status' => 'success', 'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว"];
     }
-    
+
 
 
     /**

@@ -38,35 +38,50 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
         return 'leave_entitlements';
     }
 
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            // ['thai_year', 'compare', 'compareValue' => AppHelper::YearBudget(), 'operator' => '<=', 'message' => 'มากกว่าปีงบประมาณได้'],
-                    [
-            'thai_year',
-            'compare',
-            'compareValue' => function () {
-                // ดึงค่าจาก DB ด้วย ActiveRecord
-                $yearBudget = LeaveEntitlements::find()
-                    ->select('thai_year')
-                    ->orderBy(['thai_year' => SORT_DESC])
-                    ->scalar();
-                return $yearBudget;
-            },
-            'operator' => '<=',
-            'message' => 'ยังไม่ได้กำหนดสิทธิการลาในปี '.$this->thai_year
-        ],
+            [['thai_year', 'emp_id'], 'unique', 'targetAttribute' => ['thai_year', 'emp_id'],
+            'message' => 'ปีงบประมาณ {value} มีข้อมูลพนักงานคนนี้อยู่แล้ว'],
             [['emp_id', 'month_of_service', 'year_of_service', 'days', 'thai_year'], 'required'],
-            [['emp_id','month_of_service', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['emp_id', 'month_of_service', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department'], 'safe'],
             [['position_type_id', 'leave_type_id'], 'string', 'max' => 255],
         ];
     }
 
+    // public function scenarios()
+    // {
+    //     $scenarios = parent::scenarios();
 
+    //     // กรณีปกติ (ต้องกรอก thai_year)
+    //     $scenarios['default'] = [
+    //         'emp_id', 'month_of_service', 'year_of_service', 'days', 'thai_year',
+    //         [
+    //             'thai_year',
+    //             'compare',
+    //             'compareValue' => function () {
+    //                 $yearBudget = LeaveEntitlements::find()
+    //                     ->select('thai_year')
+    //                     ->orderBy(['thai_year' => SORT_DESC])
+    //                     ->scalar();
+    //                 return $yearBudget;
+    //             },
+    //             'operator' => '<=',
+    //             'message' => 'ยังไม่ได้กำหนดสิทธิการลาในปี ' . $this->thai_year
+    //         ],
+    //     ];
+
+    //     // กรณีที่ไม่ต้องกรอก thai_year
+    //     $scenarios['notcheck-thai-year'] = [
+    //         'emp_id', 'month_of_service', 'year_of_service', 'days','thai_year'];
+
+    //     return $scenarios;
+    // }
 
 
     /**
@@ -179,21 +194,21 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
             ->bindValue(':thai_year', $this->thai_year)
             ->bindValue(':emp_id', $this->emp_id)
             ->queryOne();
-            $leaveUse = $query['leave_use'] == null ? 0 : $query['leave_use'];
-            $leaveBalance = ($this->days - $leaveUse);
-            $leaveNextDays = ($leaveBalance+10);
-            if($leaveNextDays >= $this->calLeaveMaxDays()['leave_max_days'])
-                $forwardDays = $this->calLeaveMaxDays()['leave_max_days'];
-            else{
-                $forwardDays = $leaveNextDays;
-            }
+        $leaveUse = $query['leave_use'] == null ? 0 : $query['leave_use'];
+        $leaveBalance = ($this->days - $leaveUse);
+        $leaveNextDays = ($leaveBalance + 10);
+        if ($leaveNextDays >= $this->calLeaveMaxDays()['leave_max_days'])
+            $forwardDays = $this->calLeaveMaxDays()['leave_max_days'];
+        else {
+            $forwardDays = $leaveNextDays;
+        }
 
-            return [
-                'leave_use' => $leaveUse ?? 0,
-                'leave_balance' => $leaveBalance ?? 0, 
-                'leave_forward_days' =>$forwardDays ?? 0, 
-                'leave_max_days' => $this->calLeaveMaxDays()['leave_max_days']
-            ];
+        return [
+            'leave_use' => $leaveUse ?? 0,
+            'leave_balance' => $leaveBalance ?? 0,
+            'leave_forward_days' => $forwardDays ?? 0,
+            'leave_max_days' => $this->calLeaveMaxDays()['leave_max_days']
+        ];
     }
 
     public function calLeaveMaxDays()
@@ -212,7 +227,7 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
                 'accumulation' => 0
             ];
         } else {
-             return [
+            return [
                 'leave_max_days' => $query['max_days'],
                 'accumulation' => $query['accumulation']
             ];
