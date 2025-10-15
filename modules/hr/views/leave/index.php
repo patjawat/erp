@@ -68,7 +68,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-center gap-2">
-                  <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/hr/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
             </div>
         </div>

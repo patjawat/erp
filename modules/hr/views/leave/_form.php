@@ -78,46 +78,6 @@ $resultsJs = <<<JS
 
 <div class="row d-flex justify-content-center">
     <div class="col-lg-12 col-md-12">
-
-      <?php
-                        try {
-                            //code...
-                            $initEmployee =  Employees::find()->where(['id' => $model->emp_id])->one()->getAvatar(false);
-                        } catch (\Throwable $th) {
-                            $initEmployee = '';
-                        }
-                        echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
-                            'initValueText' => $initEmployee,
-                            'options' => ['placeholder' => 'เลือกบุคลากร...','id' => 'emp_id'],
-                            'size' => Select2::LARGE,
-                            'pluginEvents' => [
-                                'select2:unselect' => 'function() {
-                                    calDays()
-                                    }',
-                                'select2:select' => 'function() {
-                                    calDays()
-                                        
-                                    }',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
-                                'minimumInputLength' => 1,
-                                'ajax' => [
-                                    'url' => Url::to(['/depdrop/employee-by-id']),
-                                    'dataType' => 'json',
-                                    'delay' => 250,
-                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                                    'processResults' => new JsExpression($resultsJs),
-                                    'cache' => true,
-                                ],
-                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                                'templateResult' => new JsExpression('formatRepo'),
-                            ],
-                        ])->label('บุลากร')
-                        ?>
-
         <!-- Row -->
         <div class="row">
             <div class="col-6">
@@ -376,6 +336,7 @@ $js = <<<JS
     calDays()
       thaiDatepicker('#leave-date_start,#leave-date_end')
 
+
         function toggleDateEndType() {
             let dateStart = \$('#leave-date_start').val();
             let dateEnd = \$('#leave-date_end').val();
@@ -398,6 +359,9 @@ $js = <<<JS
 
       \$('#form-elave').on('beforeSubmit', function (e) {
         var form = \$(this);
+        
+        
+        // let totalDays = parseInt(\$('#leave-total_days').val(), 10);
         let totalDays = parseFloat($('#leave-total_days').val());
         console.log(totalDays);
 
@@ -422,7 +386,7 @@ $js = <<<JS
         confirmButtonText: "ใช่, ยืนยัน!"
         }).then((result) => {
         if (result.isConfirmed) {
-            // beforLoadModal()
+            beforLoadModal()
             \$.ajax({
                 url: form.attr('action'),
                 type: 'post',
@@ -432,8 +396,9 @@ $js = <<<JS
                     // form.yiiActiveForm('updateMessages', response, true);
                     if(response.status == 'success') {
                         closeModal()
+                        location.reload();
                         // success()
-                        await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                        // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
                     }
                 }
             });
@@ -465,17 +430,16 @@ $js = <<<JS
 
     function calDays()
     {
-            $.ajax({
+            \$.ajax({
                 type: "get",
-                url:'/hr/leave/cal-days',
+                url: "$calDaysUrl",
                 data:{
-                    emp_id:$('#emp_id').val(),
-                    date_start:$('#leave-date_start').val(),
-                    date_end:$('#leave-date_end').val(),
-                    date_start_type:$('#leave-date_start_type').val(),
-                    date_end_type:$('#leave-date_end_type').val(),
-                    on_holidays:$('#leave-on_holidays').val(),
-                    leave_type_id:$('#leave-leave_type_id').val()
+                    date_start:\$('#leave-date_start').val(),
+                    date_end:\$('#leave-date_end').val(),
+                    date_start_type:\$('#leave-date_start_type').val(),
+                    date_end_type:\$('#leave-date_end_type').val(),
+                    on_holidays:\$('#leave-on_holidays').val(),
+                    leave_type_id:\$('#leave-leave_type_id').val()
                     
                 },
                 dataType: "json",

@@ -17,9 +17,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="fw-semibold" scope="col">ประเภท</th>
                         <th class="fw-semibold" scope="col">แผนก/ฝ่าย</th>
                         <th class="fw-semibold" scope="col" class="text-center">เริ่มงาน</th>
+                        <th class="fw-semibold" scope="col" class="text-center">ประเภทงาน</th>
                         <th class="fw-semibold" scope="col">อายุราชการ</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>
                         <th class="fw-semibold" scope="col" style="width:250px">เหลืออีก | สิ้นสุดสัญญาจ้าง</th>
+                        <th class="fw-semibold text-center" scope="col" style="width:100px">ดำเนินการ</th>
+
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
@@ -31,11 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?=$item->positionType?->title ?? 'ไม่ระบุ'?></td>
                         <td class="text-truncate"><?= $item->departmentName() ?></td>
                         <td class="align-middle"><?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?></td>
+                        <td class="text-center align-middle"><?=$item->viewWorkType()?></td>
                         <td class="align-middle">
                              <?= $item->age_join_date['full'] ?>                   
                         </td>
-
-                                                <td class="align-middle">
+                        <td class="align-middle">
                            <label class="badge rounded-pill text-primary-emphasis bg-success-subtle me-1"><i
                                             class="bi bi-clipboard-check"></i> <?= $item->statusName() ?></label>               
                         </td>
@@ -55,7 +58,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <!-- จบการกำหนดวันหมดอายุ -->
                         </td>
+                        <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                            จัดการ
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i>แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                        </ul>
+                    </div>
+                </td>
                     </tr>
+                    
                     <?php endforeach; ?>
                 </tbody>
             </table>

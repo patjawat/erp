@@ -230,6 +230,7 @@ class Employees extends Yii\db\ActiveRecord
             'status' => 'สถานะ',
             'join_date' => 'วันที่เริ่มงาน',
             'branch' => 'สาขา',
+            'work_type' => 'ประเภทงาน',
             'data_json' => 'Data Json',
             'updated_at' => 'Updated At',
             'created_at' => 'Created At',
@@ -306,7 +307,7 @@ class Employees extends Yii\db\ActiveRecord
                 break;
 
             case 'shift':
-                $workTypename = 'เวช 8 ชั่วโมง';
+                $workTypename = 'เวร 8 ชั่วโมง';
                 break;
 
             default:

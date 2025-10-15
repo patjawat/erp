@@ -234,7 +234,7 @@ use app\modules\filemanager\components\FileManagerHelper;
                     <?= $form->field($model, 'branch')->radioList(['MAIN' => 'โรงพยาบาล', 'BRANCH' => 'รพ.สต.'], ['inline' => true])->label('สาขา') ?>
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'work_type')->radioList(['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'], ['inline' => true])->label('ประเภทการทำงาน') ?>
+                    <?= $form->field($model, 'work_type')->radioList(['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'], ['inline' => true])->label('ประเภทงาน') ?>
                 </div>
                 <div class="alert alert-primary mt-3" role="alert">
                     <span class="address2"><?= isset($model->data_json['address2']) ? $model->data_json['address2'] : '-' ?></span>

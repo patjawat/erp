@@ -1,14 +1,10 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 use yii\helpers\Url;
 use kartik\depdrop\DepDrop;
 use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
-use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
-use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
@@ -17,19 +13,6 @@ use app\modules\hr\models\Organization;
 ?>
 
 
-<style>
-    .field-employeessearch-q {
-        margin-bottom: 0px !important;
-    }
-
-    .right-setting {
-        width: 500px !important;
-    }
-
-    .field-employeessearch-position_name {
-        width: 300px !important;
-    }
-</style>
 
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
@@ -52,7 +35,6 @@ use app\modules\hr\models\Organization;
             'data' => $model->ListPositionType(),
             'options' => ['placeholder' => 'ประเภททั้งหมด ...'],
             'pluginOptions' => [
-                // 'dropdownParent' => '#offcanvasExample',
                 'allowClear' => true
             ],
         ])->label(false) ?>
@@ -96,82 +78,82 @@ use app\modules\hr\models\Organization;
         </button>
 
     </div>
-    <div class="row mt-2">
-        <div class="col-5">
-            <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                'name' => 'department',
-                'id' => 'treeID',
-                'query' => Organization::find()->addOrderBy('root, lft'),
-                'value' => null,  // ไม่ตั้งค่าเริ่มต้น
-                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                'fontAwesome' => true,
-                'asDropdown' => true,
-                'multiple' => false,
-                'options' => [
-                    'class' => 'close',
-                    'allowClear' => true,
-                ],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'placeholder' => 'เลือกหน่วยงาน...',
-                ],
-            ])->label(false); ?>
-        </div>
+</div>
+<div class="row mt-2">
+    <div class="col-5">
+        <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+            'name' => 'department',
+            'id' => 'treeID',
+            'query' => Organization::find()->addOrderBy('root, lft'),
+            'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+            'fontAwesome' => true,
+            'asDropdown' => true,
+            'multiple' => false,
+            'options' => [
+                'class' => 'close',
+                'allowClear' => true,
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'placeholder' => 'เลือกหน่วยงาน...',
+            ],
+        ])->label(false); ?>
+    </div>
 
-        <div class="col-3">
+    <div class="col-3">
 
-            <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label(false) ?>
-        </div>
-        <div class="col-3">
+        <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label(false) ?>
+    </div>
+    <div class="col-3">
 
-            <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label(false) ?>
-        </div>
-        <div class="col-3">
-            <?= $form->field($model, 'gender')->widget(Select2::classname(), [
-                'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
-                'options' => ['placeholder' => 'เพศทั้งหมด...'],
-                'pluginOptions' => [
-                    'allowClear' => true
-                ],
-            ])->label(false) ?>
-        </div>
-        <div class="col-2">
-            <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
-                'data' => [1 => 'ลงทะเบียนสำเร็จ', 0 => 'ยังไม่ลงทะเบียน'],
-                'options' => ['placeholder' => 'สถานะการลงทะเบียนทั้งหมด ...'],
-                'pluginOptions' => [
-                    'allowClear' => true
-                ],
-            ])->label(false) ?>
-        </div>
+        <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label(false) ?>
+    </div>
+    <div class="col-3">
+        <?= $form->field($model, 'gender')->widget(Select2::classname(), [
+            'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
+            'options' => ['placeholder' => 'เพศทั้งหมด...'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false) ?>
+    </div>
+    <div class="col-2">
+        <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
+            'data' => [1 => 'ลงทะเบียนสำเร็จ', 0 => 'ยังไม่ลงทะเบียน'],
+            'options' => ['placeholder' => 'สถานะการลงทะเบียนทั้งหมด ...'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false) ?>
+    </div>
 
-        <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
-            <?= $form->field($model, 'branch')->widget(Select2::classname(), [
-                'data' => [
-                    'MAIN' => 'โรงพยาบาล',
-                    'BRANCH' => 'รพ.สต.',
-                ],
-                'options' => ['placeholder' => 'สาขาทั้งหมด ...'],
-                'pluginOptions' => [
-                    'allowClear' => true
-                ],
-            ])->label(false) ?>
+    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'branch')->widget(Select2::classname(), [
+            'data' => [
+                'MAIN' => 'โรงพยาบาล',
+                'BRANCH' => 'รพ.สต.',
+            ],
+            'options' => ['placeholder' => 'สาขาทั้งหมด ...'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false) ?>
 
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-sx-12">
-            <?= $form->field($model, 'work_type')->widget(Select2::classname(), [
-                'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
-                'options' => ['placeholder' => 'ประเภทการทำงานทั้งหมด ...'],
-                'pluginOptions' => [
-                    'allowClear' => true
-                ],
-            ])->label(false) ?>
-        </div>
+    </div>
+    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'work_type')->widget(Select2::classname(), [
+            'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
+            'options' => ['placeholder' => 'ประเภทการทำงานทั้งหมด ...'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false) ?>
+    </div>
 
-        <div class="col-2 d-flex align-items-center align-self-center">
-            <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
-        </div>
+    <div class="col-2 d-flex align-items-center align-self-center">
+        <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
     </div>
 </div>
 
@@ -179,7 +161,7 @@ use app\modules\hr\models\Organization;
 
     <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...', 'id' => 'show'])->label(false) ?>
 
-    
+
 </div>
 
 
