@@ -88,7 +88,7 @@ $resultsJs = <<<JS
                         }
                         echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
                             'initValueText' => $initEmployee,
-                            'options' => ['placeholder' => 'เลือกรายการ...','id' => 'emp_id'],
+                            'options' => ['placeholder' => 'เลือกบุคลากร...','id' => 'emp_id'],
                             'size' => Select2::LARGE,
                             'pluginEvents' => [
                                 'select2:unselect' => 'function() {
