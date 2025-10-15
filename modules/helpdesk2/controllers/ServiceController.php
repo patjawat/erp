@@ -228,23 +228,12 @@ class ServiceController extends \yii\web\Controller
             $layout = $checkLayout;
         }
 
-
-
-        $urgency = isset($model->data_json['urgency']) ? $model->data_json['urgency'] : '';
-        $urgencyX = isset($layout->data_json['urgency_x']) ? (float)$layout->data_json['urgency_x'] : 0;
-        $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
-
-
-
         $pdf = new \setasign\Fpdi\Fpdi();
         $pdf->AddPage();
 
         // 1️⃣ กำหนด PDF Template ก่อน
-        // $templateUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref]);
-
         $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
         if ($templateFile) {
-
 
             $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
             // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
@@ -334,8 +323,8 @@ class ServiceController extends \yii\web\Controller
             $pdf->SetXY($techReceiveX, $techReceiveY);
             $pdf->Write(10,  $this->t($techReceive));
 
-
-
+            $urgencyX = isset($layout->data_json['urgency_x']) ? (float)$layout->data_json['urgency_x'] : 0;
+            $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
             $pdf->SetXY($urgencyX, $urgencyY);
             $pdf->Write(10,  $this->t('ด่วน'));
 
@@ -489,7 +478,7 @@ class ServiceController extends \yii\web\Controller
             $createDateY = isset($layout->data_json['created_y']) ? (float)$layout->data_json['created_y'] : 0;
             $pdf->SetXY($createDateX, $createDateY);
             $pdf->Write(10,  $this->t($createDate));
-            
+
             // ช่างผู้รับงาน
             $techReceive = $model->viewTechRevice()->fullname ?? '-';
             $techReceiveX = isset($layout->data_json['tech_receive_x']) ? (float)$layout->data_json['tech_receive_x'] : 0;
