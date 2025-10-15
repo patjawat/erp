@@ -47,7 +47,9 @@ $this->params['breadcrumbs'][] = $this->title;
     transform: scale(1.04);
 }
 </style>
-
+<h1>
+    <?=$searchModel->emp_id;?>
+</h1>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>

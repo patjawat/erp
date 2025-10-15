@@ -66,16 +66,6 @@ class LeaveController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $query = $dataProvider->query;
         $query->with('employee');
-        if ($searchModel->q) {
-            $query->andFilterWhere([
-                'or',
-                ['like', 'cid', $searchModel->q],
-                ['like', 'email', $searchModel->q],
-                ['like', new Expression("concat(fname,' ',lname)"), $searchModel->q],
-                ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.reason'))"), $searchModel->q],
-                ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(leave.data_json, '$.leave_work_send'))"), $searchModel->q],
-            ]);
-        }
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -695,18 +685,22 @@ class LeaveController extends Controller
      */
     public function actionCreate()
     {
-        $me = UserHelper::GetEmployee();
         $leaveTypeId = $this->request->get('leave_type_id');
+        $dateStart = AppHelper::convertToThai($this->request->get('date_start')) ?? '';
+        $dateEnd = AppHelper::convertToThai($this->request->get('date_end')) ?? '';
         $model = new Leave([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
             'leave_type_id' => $leaveTypeId,
-            'thai_year' => AppHelper::YearBudget(),
-            'on_holidays' => 0
+            'date_start' => $dateStart,
+            'date_end' => $dateEnd,
+            'on_holidays' => 0,
+            'total_days' => 0
         ]);
 
         $model->data_json = [
             'title' => $this->request->get('title'),
-            'address' => $model->CreateBy()->fulladdress,
+            'address' => strip_tags($model->CreateBy()->fulladdress),
+            'phone' => $model->CreateBy()->phone,
             'approve_1' => $model->Approve()['approve_1']['id'],
             'approve_2' => $model->Approve()['approve_2']['id'],
             'leave_contact_phone' => $model->CreateBy()->phone,
@@ -717,21 +711,26 @@ class LeaveController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->status = 'Pending';
-                $model->emp_id = $me->id;
-                $model->thai_year = AppHelper::YearBudget();
-                $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $dateStart =  AppHelper::convertToGregorian($model->date_start);
+                $dateEnd =  AppHelper::convertToGregorian($model->date_end);
+                
+                //ถ้าเป็น ผอ. ให้อนุมัติเลย
+                $model->status = $model->employee->isDirector() ? 'Approve' : 'Pending';
+
+                $model->thai_year = AppHelper::YearBudget($dateStart);
+                $model->date_start = $dateStart;
+                $model->date_end = $dateEnd;
 
                 if ($model->save()) {
-                    $model->createApprove();
+                    //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
+                    if(!$model->employee->isDirector()){
+                        $model->createApprove();
+                    }
                 }
-
-                return $this->redirect(['view', 'id' => $model->id]);
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#leave'
-                // ];
+                return [
+                    'status' => 'success',
+                    'container' => '#leave'
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -751,6 +750,7 @@ class LeaveController extends Controller
             ]);
         }
     }
+
     // ตรวจสอบความถูกต้อง
     public function actionCreateValidator()
     {

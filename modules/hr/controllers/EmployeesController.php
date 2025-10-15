@@ -396,8 +396,14 @@ class EmployeesController extends Controller
             }
 
             $model->data_json = ArrayHelper::merge($model_old_data_json, $model->data_json);
-            $model->save();
-            return $this->redirect(['view', 'id' => $model->id]);
+            if($model->save()){
+                return [
+                    'status' => 'success',
+                    'container' => ''
+                ];
+            }
+            
+            // return $this->redirect(['view', 'id' => $model->id]);
         }
 
         if ($this->request->isAjax) {

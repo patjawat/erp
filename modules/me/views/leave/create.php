@@ -13,6 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-    <?= $this->render('@app/modules/hr/views/leave/_form', [
+    <?= $this->render('_form', [
         'model' => $model,
     ]) ?>

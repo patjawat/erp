@@ -20,8 +20,8 @@ use app\modules\filemanager\components\FileManagerHelper;
         'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
         'validationUrl' => ['/hr/employees/create-validator'],
     ]); ?>
-  
-        
+
+
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 
@@ -71,20 +71,20 @@ use app\modules\filemanager\components\FileManagerHelper;
                     </div>
                 </div>
                 <div class="col-3 text-center">
-                <input type="file" id="file" accept="image/*" hidden>
-                
+                    <input type="file" id="file" accept="image/*" hidden>
+
                     <input type="file" id="my_file" style="display: none;" />
 
                     <!-- <a href="#" class="select-photo-emp"> -->
-                        <?php if ($model->isNewRecord): ?>
+                    <?php if ($model->isNewRecord): ?>
                         <?= Html::img('@web/img/placeholder_cid.png', ['class' => 'avatar-profile object-fit-cover rounded shadow', 'style' => 'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) ?>
-                        <?php else: ?>
+                    <?php else: ?>
 
                         <?= Html::img($model->showAvatar(), ['class' => 'avatar-profile object-fit-cover rounded shadow', 'style' => 'margin-top: 25px;max-width: 135px;max-height: 135px;    width: 100%;height: 100%;']) ?>
-                        <?php endif ?>
+                    <?php endif ?>
                     <!-- </a>     -->
                     <span class="select-image btn btn-primary shadow rounded-pill w-50 mt-2"><i
-                        class="fa-solid fa-cloud-arrow-up"></i></span>
+                            class="fa-solid fa-cloud-arrow-up"></i></span>
 
                     <?= $form->field($model, 'province')->hiddenInput(['maxlength' => true])->label(false) ?>
                     <?= $form->field($model, 'amphure')->hiddenInput(['maxlength' => true])->label(false) ?>
@@ -222,146 +222,149 @@ use app\modules\filemanager\components\FileManagerHelper;
             <div class="row">
                 <div class="col-12">
                     <?= $form->field($model, 'address')->textarea(['maxlength' => true, 'style' => 'height:50px'])->label('ที่อยู่ตามบัตรประชาชน') ?>
-                    
+
                 </div>
                 <div class="col-6">
-                        <?= $form->field($model, 'email')->label('อีเมลย์') ?>
-                    </div>
-                    <div class="col-6">
-                        <?= $form->field($model, 'phone')->textInput(['type' => 'number'])->label('โทรศัพท์') ?>
-                    </div>
-                    <div class="col-12">
+                    <?= $form->field($model, 'email')->label('อีเมลย์') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'phone')->textInput(['type' => 'number'])->label('โทรศัพท์') ?>
+                </div>
+                <div class="col-6">
                     <?= $form->field($model, 'branch')->radioList(['MAIN' => 'โรงพยาบาล', 'BRANCH' => 'รพ.สต.'], ['inline' => true])->label('สาขา') ?>
-                    <div class="alert alert-primary mt-3" role="alert">
-                        <span
-                            class="address2"><?= isset($model->data_json['address2']) ? $model->data_json['address2'] : '-' ?></span>
-                    </div>
-                </div>
-
-
-            </div>
-            <!-- End Row -->
-
-
-        </div>
-
-
-        
-
-        <div class="form-group d-flex justify-content-center">
-            <?= AppHelper::BtnSave() ?>
-        </div>
-
-
-        <div class="d-none">
-
-        <?= $form->field($model, 'education')->hiddenInput()->label(false) ?>
-            <div class="row">
-                <div class="col-12">
-                    <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
-                        'data' => $model->ListPositionName(),
-                        'options' => ['placeholder' => 'เลือก ...'],
-                        'pluginOptions' => [
-                            'dropdownParent' => '#main-modal',
-                            'tags' => true,
-                            'maximumInputLength' => 10,
-                        ],
-                    ])->label('ชื่อตำแหน่ง') ?>
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'position_number')->textInput()->label('เลขประจำตำแหน่ง') ?>
-
+                    <?= $form->field($model, 'work_type')->radioList(['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'], ['inline' => true])->label('ประเภทการทำงาน') ?>
                 </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
-                        'data' => $model->ListPositionType(),
-                        'options' => ['placeholder' => 'เลือก ...'],
-                        'pluginOptions' => [
-                            'dropdownParent' => '#main-modal',
-                            'tags' => true,
-                            'maximumInputLength' => 10,
-                        ],
-                    ])->label('ประเภท') ?>
+                <div class="alert alert-primary mt-3" role="alert">
+                    <span class="address2"><?= isset($model->data_json['address2']) ? $model->data_json['address2'] : '-' ?></span>
                 </div>
-                <div class="col-6">
-                    <?= $form->field($model, 'position_level')->widget(Select2::classname(), [
-                        'data' => $model->ListPositionLevel(),
-                        'options' => ['placeholder' => 'เลือก ...'],
-                        'pluginOptions' => [
-                            'dropdownParent' => '#main-modal',
-                            'tags' => true,
-                            'maximumInputLength' => 10,
-                        ],
-                    ])->label('ระดับตำแหน่ง') ?>
-                </div>
-
-                <div class="col-6">
-                    <?= $form->field($model, 'salary')->textInput()->label('อัตราเงินเดือน') ?>
-                </div>
-
-                <div class="col-12">
-                    <?= $form->field($model, 'department')->widget(Select2::classname(), [
-                        'data' => $model->ListDepartment(),
-                        'options' => ['placeholder' => 'เลือก ...'],
-                        'pluginOptions' => [
-                            'dropdownParent' => '#main-modal',
-                            'tags' => true,
-                            'maximumInputLength' => 10,
-                        ],
-                    ])->label('แผนก') ?>
-
-                </div>
-
-                <div class="col-12">
-                    <?=
-                    $form->field($model, 'join_date')->widget(Datetimepicker::className(), [
-                        'options' => [
-                            'timepicker' => false,
-                            'datepicker' => true,
-                            'mask' => '99/99/9999',
-                            'lang' => 'th',
-                            'yearOffset' => 543,
-                            'format' => 'd/m/Y',
-                        ],
-                    ]);
-                    ?>
-                </div>
-                <div class="col-12">
-                    <?= $form->field($model, 'status')->widget(Select2::classname(), [
-                        'data' => $model->ListStatus(),
-                        'options' => ['placeholder' => 'เลือก ...'],
-                        'pluginOptions' => [
-                            'dropdownParent' => '#main-modal',
-                            'tags' => true,
-                            'maximumInputLength' => 10,
-                        ],
-                    ])->label('สถานะ') ?>
-
-
-                    <div class="col-12">
-                        <?= $form->field($model, 'data_json[comment]')->textArea(['style' => 'height: 142px;'])->label('หมายเหตุ') ?>
-
-                    </div>
-                   
-                </div>
-
-
             </div>
 
 
         </div>
-
-        
-        <?php ActiveForm::end(); ?>
-
+        <!-- End Row -->
 
 
     </div>
-    <?php
-    $ref = $model->ref;
-    $urlUpload = Url::to('/filemanager/uploads/single');
-    $getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
-    $js = <<<JS
+
+
+
+
+    <div class="form-group d-flex justify-content-center">
+        <?= AppHelper::BtnSave() ?>
+    </div>
+
+
+    <div class="d-none">
+
+        <?= $form->field($model, 'education')->hiddenInput()->label(false) ?>
+        <div class="row">
+            <div class="col-12">
+                <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
+                    'data' => $model->ListPositionName(),
+                    'options' => ['placeholder' => 'เลือก ...'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'tags' => true,
+                        'maximumInputLength' => 10,
+                    ],
+                ])->label('ชื่อตำแหน่ง') ?>
+            </div>
+            <div class="col-6">
+                <?= $form->field($model, 'position_number')->textInput()->label('เลขประจำตำแหน่ง') ?>
+
+            </div>
+            <div class="col-6">
+                <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
+                    'data' => $model->ListPositionType(),
+                    'options' => ['placeholder' => 'เลือก ...'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'tags' => true,
+                        'maximumInputLength' => 10,
+                    ],
+                ])->label('ประเภท') ?>
+            </div>
+            <div class="col-6">
+                <?= $form->field($model, 'position_level')->widget(Select2::classname(), [
+                    'data' => $model->ListPositionLevel(),
+                    'options' => ['placeholder' => 'เลือก ...'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'tags' => true,
+                        'maximumInputLength' => 10,
+                    ],
+                ])->label('ระดับตำแหน่ง') ?>
+            </div>
+
+            <div class="col-6">
+                <?= $form->field($model, 'salary')->textInput()->label('อัตราเงินเดือน') ?>
+            </div>
+
+            <div class="col-12">
+                <?= $form->field($model, 'department')->widget(Select2::classname(), [
+                    'data' => $model->ListDepartment(),
+                    'options' => ['placeholder' => 'เลือก ...'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'tags' => true,
+                        'maximumInputLength' => 10,
+                    ],
+                ])->label('แผนก') ?>
+
+            </div>
+
+            <div class="col-12">
+                <?=
+                $form->field($model, 'join_date')->widget(Datetimepicker::className(), [
+                    'options' => [
+                        'timepicker' => false,
+                        'datepicker' => true,
+                        'mask' => '99/99/9999',
+                        'lang' => 'th',
+                        'yearOffset' => 543,
+                        'format' => 'd/m/Y',
+                    ],
+                ]);
+                ?>
+            </div>
+            <div class="col-12">
+                <?= $form->field($model, 'status')->widget(Select2::classname(), [
+                    'data' => $model->ListStatus(),
+                    'options' => ['placeholder' => 'เลือก ...'],
+                    'pluginOptions' => [
+                        'dropdownParent' => '#main-modal',
+                        'tags' => true,
+                        'maximumInputLength' => 10,
+                    ],
+                ])->label('สถานะ') ?>
+
+
+                <div class="col-12">
+                    <?= $form->field($model, 'data_json[comment]')->textArea(['style' => 'height: 142px;'])->label('หมายเหตุ') ?>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+    <?php ActiveForm::end(); ?>
+
+
+
+</div>
+<?php
+$ref = $model->ref;
+$urlUpload = Url::to('/filemanager/uploads/single');
+$getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
+$js = <<<JS
         getAvatar()
 
         function getAvatar(){
@@ -524,5 +527,5 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 
         JS;
-    $this->registerJS($js, View::POS_END)
-    ?>
+$this->registerJS($js, View::POS_END)
+?>

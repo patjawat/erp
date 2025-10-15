@@ -1,36 +1,35 @@
 <?php
+
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\AppHelper;
-use app\modules\hr\models\EmployeeDetail;
+
 $avatar = $model->showAvatar();
 ?>
 
 <div class="card hover-card">
     <div class="card-body">
-
-
-
         <div class="d-flex">
             <div class="position-relative">
-                <?= Html::img('@web/img/loading.gif', ['class' => 'avatar avatar-xl border border-primary-subtl border-0 shadow  lazyload',
+                <?= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar avatar-xl border border-primary-subtl border-0 shadow  lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
-                        'src' =>$avatar
-                        ]
-                        ]) ?>
+                        'src' => $avatar
+                    ]
+                ]) ?>
                 <div class="position-absolute top-0 start-500 translate-middle">
-                    <?php if($model->user_id == 0):?>
-                    <i class="bi bi-exclamation-circle-fill text-warning fs-4"></i>
-                    <?php else:?>
-                    <i class="bi bi-check-circle-fill text-primary fs-4"></i>
-                    <?php endif?>
+                    <?php if ($model->user_id == 0): ?>
+                        <i class="bi bi-exclamation-circle-fill text-warning fs-4"></i>
+                    <?php else: ?>
+                        <i class="bi bi-check-circle-fill text-primary fs-4"></i>
+                    <?php endif ?>
                 </div>
                 <!-- <span class="contact-status offline"></span> -->
             </div>
             <div class="flex-grow-1 w-50">
-            <div class="row">
+                <div class="row">
                     <div class="col-lg-9 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
                         <h6>
                             <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>"
@@ -54,7 +53,8 @@ $avatar = $model->showAvatar();
                                 ]) ?>
 
                                 <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) 
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -65,63 +65,65 @@ $avatar = $model->showAvatar();
                             <?= $model->positionName(['icon' => true]) ?>
                         </p>
                         <?php if ($model->joinDate()): ?>
-                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                            <code>
-                                <?php 
-                                        try {
-                                            echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
-                                        } catch (\Throwable $th) {
-
-                                        }
-                                        ?>
-                                    </code>
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
+                                <code>
+                                    <?php
+                                    try {
+                                        echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
+                                    } catch (\Throwable $th) {
+                                    }
+                                    ?>
+                                </code>
+                            </p>
+                        <?php endif; ?>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-check2-circle text-primary"></i>
+                            อายุราชการ <?= $model->workLife()['full'] ?>
                         </p>
-                        <p><i class="bi bi-check2-circle text-primary"></i>
-                            อายุราชการ <?= $model->workLife()['full'] ?></p>
 
-
-                        <?php endif; ?>
                         <?php if (isset($showAge) && $showAge == true): ?>
-                        <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i>
-                            อายุราชการ<?= $model->age_join_date ?> </p>
+                            <p class="text-muted mb-0"><i class="bi bi-check2-circle text-primary"></i>
+                                อายุราชการ<?= $model->age_join_date ?> </p>
                         <?php endif; ?>
+
+                        <?php if ($model->departmentName()): ?>
+                            <div class="d-flex">
+                                <i class="bi bi-tags-fill me-1"></i>
+                                <span class="text-primary fw-normal"><?= $model->departmentName() ?></span>
+                            </div>
+                        <?php else: ?>
+                            <div class="d-flex gap-2">
+                                <i class="fa-solid fa-circle-exclamation text-warning"></i>
+                                <span class="text-primary fw-normal">ไม่ระบุ</span>
+                            </div>
+                        <?php endif ?>
+
                     </div>
                 </div>
-
-
             </div>
         </div>
     </div>
     <div class="card-footer">
         <div class="row">
             <div class="col-6 text-truncate">
-
-                <?php if ($model->departmentName()): ?>
-                <div class="d-flex">
-                    <i class="bi bi-tags-fill me-1"></i>
-                    <span class="text-primary fw-normal"><?= $model->departmentName() ?></span>
-                </div>
-                <?php else: ?>
-                <div class="d-flex gap-2">
-                    <i class="fa-solid fa-circle-exclamation text-warning"></i>
-                    <span class="text-primary fw-normal">ไม่ระบุ</span>
-                </div>
-                <?php endif ?>
+                 <p class="mb-0"><i class="fa-regular fa-clock"></i> การทำงาน : <?=$model->viewWorkType()?></p>
             </div>
             <!-- End col-6 -->
             <div class="col-6 text-truncate">
                 <?php if ($model->positionTypeName()): ?>
-                <label class="badge rounded-pill text-primary-emphasis bg-primary-subtle p-2  text-truncate float-end">
-                    <i class="bi bi-clipboard-check"></i> <?= $model->statusName() ?>
-                </label>
+                    <label class="badge rounded-pill text-primary-emphasis bg-primary-subtle p-2  text-truncate float-end">
+                        <i class="bi bi-clipboard-check"></i> <?= $model->statusName() ?>
+                    </label>
                 <?php else: ?>
-                <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
-                    <i class="fa-solid fa-circle-exclamation text-warning"></i> ไม่ระบุสถานะ
-                </label>
+                    <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
+                        <i class="fa-solid fa-circle-exclamation text-warning"></i> ไม่ระบุสถานะ
+                    </label>
                 <?php endif ?>
             </div>
             <!-- End col-6 -->
         </div>
         <!-- End Row -->
+       
     </div>
 </div>

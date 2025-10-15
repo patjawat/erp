@@ -47,7 +47,6 @@ $menus = [
                               <?=Html::a('<i class="fa-solid fa-caret-right  me-1"></i> นโยบายการลา',['/hr/leave-policies'],['class' => 'dropdown-item'])?>
                             <?=Html::a('<i class="fa-solid fa-caret-right  me-1"></i> กำหนดสิทธิลาพักผ่อน',['/hr/leave-entitlements'],['class' => 'dropdown-item'])?>
                             <?=Html::a('<i class="fa-solid fa-caret-right  me-1"></i> วันหยุด',['/hr/holiday'],['class' => 'dropdown-item'])?>
-                            <?=Html::a('<i class="fa-solid fa-caret-right  me-1"></i> กำหนดเวร 8',['/hr/holiday'],['class' => 'dropdown-item'])?>
                             <?=Html::a('<i class="fa-solid fa-caret-right  me-1"></i> แบบฟอร์มใบลา',['/formtemplate/leave-template'],['class' => 'dropdown-item'])?>
                         </div>
                      </li>

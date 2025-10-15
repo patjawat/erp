@@ -12,7 +12,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-folder-check"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-    <h1>xxx</h1>
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>

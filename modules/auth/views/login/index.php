@@ -124,12 +124,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
             <!-- Sign Up Link -->
-            <!-- <div class="text-center mt-4">
+            <div class="text-center mt-4">
                 <p class="small text-muted mb-0">
                     ยังไม่มีบัญชี?
                     <?= Html::a('สมัครสมาชิก', ['/site/sign-up'], ['class' => 'text-primary fw-medium']) ?>
                 </p>
-            </div> -->
+            </div>
         </div>
     </div>
 </div>
