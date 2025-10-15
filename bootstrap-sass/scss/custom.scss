@@ -1023,7 +1023,7 @@ textarea:focus {
 [data-bs-theme="purple"] {
   --bs-primary: #6e81d9;
   --bs-blue: #6e81d9;
-
+  --bs-primary-rgb: 110, 129, 217;
   .bg-primary-gradient {
     background: linear-gradient(153deg, #6e81d9 0%, #9173ec 100%) !important;
   }
@@ -1065,6 +1065,7 @@ textarea:focus {
 [data-bs-theme="cyan"] {
   --bs-primary: #078da9;
   --bs-blue: #078da9;
+  --bs-primary-rgb: 7, 141, 169;
   .bg-primary-gradient {
     background: linear-gradient(153deg, #078da9 0%, #0e6e7e 100%) !important;
   }
@@ -1093,7 +1094,7 @@ textarea:focus {
 [data-bs-theme="blue"] {
   --bs-primary: #255fad;
   --bs-blue: #0866ad;
-
+  --bs-primary-rgb: 8, 102, 173;
     .bg-primary-gradient{
       background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
     }

@@ -100,8 +100,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?php ActiveForm::end(); ?>
 
-
-
             <!-- Divider -->
             <div class="d-flex align-items-center my-3">
                 <hr class="flex-grow-1">
