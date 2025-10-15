@@ -5,7 +5,6 @@ namespace app\modules\helpdesk2\controllers;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Response;
-use setasign\Fpdi\Fpdi;
 use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\SiteHelper;
@@ -262,14 +261,15 @@ class ServiceController extends \yii\web\Controller
             $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
 
 
-            
 
+            // ส่วนราชการ
             $companyName = $this->GetInfo()['company_name'];
             $companyNameX = isset($layout->data_json['company_name_x']) ? (float)$layout->data_json['company_name_x'] : 0;
             $companyNameY = isset($layout->data_json['company_name_y']) ? (float)$layout->data_json['company_name_y'] : 0;
             $pdf->SetXY($companyNameX, $companyNameY);
             $pdf->Write(10,  $this->t($companyName));
 
+            //แผนกงานซ่อม
             $tecDep = 'ซ่อมบำรุง';
             $tecDepNumberX = isset($layout->data_json['tecdev_number_x']) ? (float)$layout->data_json['tecdev_number_x'] : 0;
             $tecDepNumberY = isset($layout->data_json['tecdev_number_y']) ? (float)$layout->data_json['tecdev_number_y'] : 0;
@@ -342,7 +342,6 @@ class ServiceController extends \yii\web\Controller
             // 5️⃣ Output PDF
             $pdf->Output('I', 'filled.pdf');
         }
-
     }
 
 
@@ -389,16 +388,11 @@ class ServiceController extends \yii\web\Controller
 
 
 
-        $urgency = isset($model->data_json['urgency']) ? $model->data_json['urgency'] : '';
-        $urgencyX = isset($layout->data_json['urgency_x']) ? (float)$layout->data_json['urgency_x'] : 0;
-        $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
-
 
 
         $pdf = new \setasign\Fpdi\Fpdi();
         $pdf->AddPage();
         // 1️⃣ กำหนด PDF Template ก่อน
-        $templateUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref]);
 
         $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
         if ($templateFile) {
@@ -417,6 +411,35 @@ class ServiceController extends \yii\web\Controller
 
             // 4️⃣ เขียนข้อความลงไป
             $pdf->SetFont('THSarabunNew', 'B', 13); // ใช้ขนาดฟอนต์ 13 pt
+
+
+            // ส่วนราชการ
+            $companyName = $this->GetInfo()['company_name'];
+            $companyNameX = isset($layout->data_json['company_name_x']) ? (float)$layout->data_json['company_name_x'] : 0;
+            $companyNameY = isset($layout->data_json['company_name_y']) ? (float)$layout->data_json['company_name_y'] : 0;
+            $pdf->SetXY($companyNameX, $companyNameY);
+            $pdf->Write(10,  $this->t($companyName));
+
+            //แผนกงานซ่อม
+            switch ($model->repair_group) {
+                case 1:
+                    $tecDep = 'ศูนย์ซ่อมบำรุง';
+                    break;
+                case 2:
+                    $tecDep = 'ศูนย์คอมพิวเตอร์';
+                    break;
+                case 2:
+                    $tecDep = 'ศูนย์เครื่องมือแพทย์';
+                    break;
+                default:
+                    $tecDep = '';
+                    break;
+            }
+            $tecDepNumberX = isset($layout->data_json['tecdev_number_x']) ? (float)$layout->data_json['tecdev_number_x'] : 0;
+            $tecDepNumberY = isset($layout->data_json['tecdev_number_y']) ? (float)$layout->data_json['tecdev_number_y'] : 0;
+            $pdf->SetXY($tecDepNumberX, $tecDepNumberY);
+            $pdf->Write(10,  $this->t($tecDep));
+
 
             // เลขที่ใบแจ้งซ่อม
             $repairNumber = $model->repair_number;
@@ -446,7 +469,6 @@ class ServiceController extends \yii\web\Controller
             $pdf->SetXY($ldepartmentX, $departmentY);
             $pdf->Write(10,  $this->t($department));
 
-
             // ประเภทอุปกรณ์
             $deviceType = $model->deviceType->title ?? '-';
             $deviceX = isset($layout->data_json['device_x']) ? (float)$layout->data_json['device_x'] : 0;
@@ -467,15 +489,7 @@ class ServiceController extends \yii\web\Controller
             $createDateY = isset($layout->data_json['created_y']) ? (float)$layout->data_json['created_y'] : 0;
             $pdf->SetXY($createDateX, $createDateY);
             $pdf->Write(10,  $this->t($createDate));
-
-            // วันที่ส่งซ่อม (time)
-            $createDateTime = $model->viewCreated()['time'];
-            $createDateTimeX = isset($layout->data_json['createtime_x']) ? (float)$layout->data_json['createtime_x'] : 0;
-            $createDateTimeY = isset($layout->data_json['createtime_y']) ? (float)$layout->data_json['createtime_y'] : 0;
-            $pdf->SetXY($createDateTimeX, $createDateTimeY);
-            $pdf->Write(10,  $this->t($createDateTime));
-
-
+            
             // ช่างผู้รับงาน
             $techReceive = $model->viewTechRevice()->fullname ?? '-';
             $techReceiveX = isset($layout->data_json['tech_receive_x']) ? (float)$layout->data_json['tech_receive_x'] : 0;
@@ -483,11 +497,10 @@ class ServiceController extends \yii\web\Controller
             $pdf->SetXY($techReceiveX, $techReceiveY);
             $pdf->Write(10,  $this->t($techReceive));
 
-
-
+            $urgencyX = isset($layout->data_json['urgency_x']) ? (float)$layout->data_json['urgency_x'] : 0;
+            $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
             $pdf->SetXY($urgencyX, $urgencyY);
             $pdf->Write(10,  $this->t($model->viewUrgent()['title']));
-
 
             $pdf->SetXY(59, 40);
             $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
@@ -517,7 +530,7 @@ class ServiceController extends \yii\web\Controller
             'director_type' => $info['director_type']  // ประเภทตำแหน่งของ ผอ.
         ];
     }
-    
+
 
     protected function findModel($id)
     {
