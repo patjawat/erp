@@ -3,12 +3,10 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
-use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\WarehouseSearch;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -31,7 +29,6 @@ class DefaultController extends Controller
 
         //clear cart
         $cart = Yii::$app->cartSub;
-        $items = $cart->getItems();
         $cart->checkOut(false);
 
 
@@ -78,8 +75,6 @@ class DefaultController extends Controller
 
         // เรียกครั้งเดียว
         $warehouseData = $this->Warehouse();
-        $productSummary = $this->ProductSummary();
-
 
         return $this->render('dashboard', [
             'searchModel' => $searchModel,

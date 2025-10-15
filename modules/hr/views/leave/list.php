@@ -60,13 +60,13 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                 <td>
                     <?php echo $item->stackChecker() ?>
                 </td>
-                <td class="fw-light align-middle text-start" style="width:150px;"><?php // echo $item->showStatus(); ?>
+                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?>
                 </td>
                 <td class="fw-center align-middle text-start">
 
                     <?php
                     try {
-                        // echo $item->viewStatus();
+                        echo $item->viewStatus();
                     } catch (\Throwable $th) {
                         //throw $th;
                     }

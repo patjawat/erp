@@ -21,7 +21,7 @@ $helpdesk = Helpdesk::find()
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
 <div class="row">
     <div class="col-6">
-        <iframe id="preview-frame" src="<?= \yii\helpers\Url::to(['service/print', 'id' => $helpdesk->id]) ?>" width="100%"
+        <iframe id="preview-frame" src="<?= \yii\helpers\Url::to(['service/preview-setting']) ?>" width="100%"
             height="800px">
         </iframe>
     </div>
@@ -42,6 +42,15 @@ $helpdesk = Helpdesk::find()
             <div class="col-6">
 
 
+                <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[company_name_x]')->textInput()->label('ส่วนราชการ-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[company_name_y]')->textInput()->label('ส่วนราชการ-แนวตั้ง') ?>
+                </div>
+
+                          <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[tecdev_number_x]')->textInput()->label('แผนกช่าง-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[tecdev_number_y]')->textInput()->label('แผนกช่าง-แนวตั้ง') ?>
+                </div>
                 <div class="d-flex gap-2">
                     <?= $form->field($model, 'data_json[repair_number_x]')->textInput()->label('เลขที่ส่งซ่อม-แนวนอน') ?>
                     <?= $form->field($model, 'data_json[repair_number_y]')->textInput()->label('เลขที่ส่งซ่อม-แนวตั้ง') ?>

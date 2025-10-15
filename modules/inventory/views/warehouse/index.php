@@ -29,12 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('../default/menu_dashbroad',['active' => 'warehouse'])?>
 <?php $this->endBlock(); ?>
 
-
-
 <?php Pjax::begin(['id' => 'inventory']); ?>
-
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>

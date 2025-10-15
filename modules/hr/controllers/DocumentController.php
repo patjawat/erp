@@ -47,9 +47,6 @@ class DocumentController extends \yii\web\Controller
         
         $lastDays = $model->LastDays();
         $lastDateStart = is_object($lastDays['data']) ? Yii::$app->thaiFormatter->asDate($lastDays['data']->date_start, 'long') : '-';
-        $lastDateEnd = is_object($lastDays['data']) ? Yii::$app->thaiFormatter->asDate($lastDays['data']->date_end, 'long') : '-';
-
-        $createDate = new DateTime($model->created_at ?? '-');
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
 

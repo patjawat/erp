@@ -40,42 +40,57 @@ class WarehouseController extends Controller
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
-        $id = \Yii::$app->user->id;
-        $searchModel = new WarehouseSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['delete' => null]);
+        $userId = \Yii::$app->user->id;
 
-        if (!\Yii::$app->user->can('admin')) {
-            $dataProvider->query->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$id\"')"));
-        } else {
-        }
-
-        // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
-            $warehouseId = $warehouse->id;
+            // ใช้ StockEventSearch เมื่อมีคลัง
             $searchModel = new StockEventSearch([
-                'thai_year' => AppHelper::YearBudget(),
-                'warehouse_id' => $warehouseId
+                'thai_year'    => AppHelper::YearBudget(),
+                'warehouse_id' => $warehouse->id,
             ]);
             $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andwhere(['name' => 'order']);
-            $dataProvider->query->andwhere(['transaction_type' => 'OUT']);
-            $dataProvider->query->andwhere(['warehouse_id' => $warehouseId]);
-            $dataProvider->query->andwhere(['order_status' => 'pending']);
-            $dataProvider->query->andFilterWhere([
-                'or',
-                ['like', 'code', $searchModel->q],
-                ['like', 'thai_year', $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+
+            $query = $dataProvider->query;
+
+            // เงื่อนไขคงที่
+            $query->andWhere([
+                'name'             => 'order',
+                'transaction_type' => 'OUT',
+                'warehouse_id'     => $warehouse->id,
+                'order_status'     => 'pending',
             ]);
 
+            // ค้นหาตาม keyword q
+            if (!empty($searchModel->q)) {
+                $query->andFilterWhere([
+                    'or',
+                    ['like', 'code', $searchModel->q],
+                    ['like', 'thai_year', $searchModel->q],
+                    ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
+                ]);
+            }
+
             return $this->render('view', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
+                'searchModel'   => $searchModel,
+                'dataProvider'  => $dataProvider,
             ]);
         } else {
+            // ใช้ WarehouseSearch เมื่อไม่ได้เลือกคลัง
+            $searchModel = new WarehouseSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+
+            // ลบรายการที่ถูกลบ
+            $dataProvider->query->andWhere(['delete' => null]);
+
+            // กรองสิทธิ์ user
+            if (!\Yii::$app->user->can('admin')) {
+                $dataProvider->query->andWhere(
+                    new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userId\"')")
+                );
+            }
+
             return $this->render('index', [
-                'searchModel' => $searchModel,
+                'searchModel'  => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
@@ -109,20 +124,20 @@ class WarehouseController extends Controller
                 ['like', 'thai_year', $searchModel->q],
                 ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
             ]);
-            
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->req_date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->req_date_end = AppHelper::convertToThai($range[1]);
-        }
 
 
-        $dataProvider->query->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
-        $dataProvider->query->andFilterWhere(['>=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_start)])->andFilterWhere(['<=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_end)]);
+            if ($searchModel->date_filter) {
+                $range = DateFilterHelper::getRange($searchModel->date_filter);
+                $searchModel->req_date_start = AppHelper::convertToThai($range[0]);
+                $searchModel->req_date_end = AppHelper::convertToThai($range[1]);
+            }
 
-            
-          
+
+            $dataProvider->query->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
+            $dataProvider->query->andFilterWhere(['>=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_start)])->andFilterWhere(['<=', 'created_at', AppHelper::convertToGregorian($searchModel->req_date_end)]);
+
+
+
 
             if ($all) {
                 $dataProvider->pagination = false; // ปิดการแบ่งหน้า
