@@ -60,10 +60,40 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php
-               
+                // helper function กัน null
+                function nf($value, $decimals = 2)
+                {
+                    return number_format(floatval($value ?? 0), $decimals);
+                }
+
+                $sum_balance_before = 0;
+                $sum_month = 0;
+                $sum_last_total = 0;
+                $sum_total_before_out = 0;
+                $sum_total_in_month = 0;
+                $sum_total_out_month = 0;
+                $sum_balance_after = 0;
+
                 $num = 1;
                 foreach ($querys as $item):
-                 
+                    $balance_before = floatval($item['begin_price'] ?? 0);
+                    // // จำนวนรับเข้าระหว่างเดือน
+                    $total_in_month = floatval($item['price_in'] ?? 0);
+                    // // รวม
+                    $total_before_out = floatval(($item['begin_price']+$item['price_in']) ?? 0);
+                    // // จำนวนจ่ายไประหว่างเดือน
+                    $total_out_month = floatval($item['price'] ?? 0);
+                    // // ยอดยกไป
+                    $balance_after = floatval($item['end_price'] ?? 0);
+
+                    // $sum_balance_before       += $balance_before;
+                    // $sum_month      += $total_in_month;
+                    // $sum_last_total += 0;
+
+                    // $sum_total_in_month     += $total_in_month;
+                    // $sum_total_before_out        += $total_before_out;
+                    // $sum_total_out_month        += ($total_out_month);
+                    // $sum_balance_after      += $balance_after;
                 ?>
                     <tr>
                         <!-- ที่ -->
@@ -74,24 +104,35 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $item['asset_type_name'] ?>
                         </td>
                         <!-- สินค้าคงเหลือ -->
-                        <td class="text-end fw-bolder"><?= $item['begin_price']?></td>
+                        <td class="text-end fw-bolder"><?= nf($item['begin_price']) ?></td>
                         <!-- ซื้อระหว่างเดือน -->
                         <td class="text-end fw-bolder">
-                            <?= $item['price_in']?>
+                            <?= nf($total_in_month) ?>
                         </td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= $item['begin_price']+$item['price_in'] ?></td>
+                        <td class="text-end fw-bolder"><?= nf($total_before_out) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
                         <td class="text-end fw-bolder">0.00</td>
                         <!-- จ่ายส่วนของโรงพยาบาล -->
-                        <td class="text-end fw-bolder"><?= $item['price_out'] ?></td>
+                        <td class="text-end fw-bolder"><?= nf($total_out_month) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?=(($item['begin_price']+$item['price_in'])-$item['begin_price'])?></td>
+                        <td class="text-end fw-bolder"><?= nf($balance_after) ?></td>
                         <!-- ยอดยกไป -->
-                        <td class="text-end fw-bolder"><?= $item['end_price'] ?></td>
+                        <td class="text-end fw-bolder"><?= nf($balance_after) ?></td>
                     </tr>
                 <?php endforeach; ?>
 
+                <tr>
+                    <td class="text-center"></td>
+                    <td>รวม</td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_before) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_in_month) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_before_out) ?></td>
+                    <td class="text-end fw-bolder">0.00</td>
+                    <td class="text-end fw-bolder"><?= nf($sum_total_out_month) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_after) ?></td>
+                    <td class="text-end fw-bolder"><?= nf($sum_balance_after) ?></td>
+                </tr>
             </tbody>
 
         </table>
@@ -105,10 +146,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php
-$url = Url::to(array_merge(
-    ['/inventory/report/export-excel'],
-    Yii::$app->request->queryParams
-));
+$url = Url::to(['/inventory/report/export-excel', 'warehouse_id' => $searchModel->warehouse_id, 'date_start' => $dateStart, 'date_end' => $dateEnd]);
 $js = <<< JS
     \$("body").on("click", "#download-button", function (e) {
             var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();

@@ -94,33 +94,33 @@ class StockEventSearch extends StockEvent
 
         // filter ที่มีคอลัมน์ซ้ำ ต้อง prefix ด้วย alias
         $query->andFilterWhere([
-            'e.id' => $this->id,
-            'e.warehouse_id' => $this->warehouse_id,
-            'e.from_warehouse_id' => $this->from_warehouse_id,
-            'e.transaction_type' => $this->transaction_type,
-            'e.asset_type_id' => $this->asset_type_id,
-            'e.qty' => $this->qty,
-            'e.emp_id' => $this->emp_id,
-            'e.total_price' => $this->total_price,
-            'e.unit_price' => $this->unit_price,
-            'e.movement_date' => $this->movement_date,
-            'e.vendor_id' => $this->vendor_id,
-            'e.thai_year' => $this->thai_year,   // ✅ ระบุ alias
-            'e.created_at' => $this->created_at,
-            'e.updated_at' => $this->updated_at,
-            'e.created_by' => $this->created_by,
-            'e.updated_by' => $this->updated_by,
+            'id' => $this->id,
+            'warehouse_id' => $this->warehouse_id,
+            'from_warehouse_id' => $this->from_warehouse_id,
+            'transaction_type' => $this->transaction_type,
+            'asset_type_id' => $this->asset_type_id,
+            'qty' => $this->qty,
+            'emp_id' => $this->emp_id,
+            'total_price' => $this->total_price,
+            'unit_price' => $this->unit_price,
+            'movement_date' => $this->movement_date,
+            'vendor_id' => $this->vendor_id,
+            'thai_year' => $this->thai_year,   // ✅ ระบุ alias
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'e.name', $this->name])
-            ->andFilterWhere(['like', 'e.code', $this->code])
-            ->andFilterWhere(['like', 'e.asset_item', $this->asset_item])
-            ->andFilterWhere(['like', 'e.receive_type', $this->receive_type])
-            ->andFilterWhere(['like', 'e.lot_number', $this->lot_number])
-            ->andFilterWhere(['like', 'e.category_id', $this->category_id])
-            ->andFilterWhere(['like', 'e.order_status', $this->order_status])
-            ->andFilterWhere(['like', 'e.ref', $this->ref])
-            ->andFilterWhere(['like', 'e.data_json', $this->data_json]);
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'code', $this->code])
+            ->andFilterWhere(['like', 'asset_item', $this->asset_item])
+            ->andFilterWhere(['like', 'receive_type', $this->receive_type])
+            ->andFilterWhere(['like', 'lot_number', $this->lot_number])
+            ->andFilterWhere(['like', 'category_id', $this->category_id])
+            ->andFilterWhere(['like', 'order_status', $this->order_status])
+            ->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

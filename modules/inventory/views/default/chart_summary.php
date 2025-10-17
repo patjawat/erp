@@ -11,7 +11,6 @@ use yii\helpers\Json;
 
 <?php
  $query = $model->SummaryChart();
-
 try {
   $chartSummary = [
       'in' => [$query['in10'], $query['in11'], $query['in12'], $query['in1'], $query['in2'], $query['in3'], $query['in4'], $query['in5'], $query['in6'], $query['in7'], $query['in8'], $query['in9']],

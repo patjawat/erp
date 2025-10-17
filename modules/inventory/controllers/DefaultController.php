@@ -6,7 +6,9 @@ use Yii;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
+use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\WarehouseSearch;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -30,7 +32,6 @@ class DefaultController extends Controller
         //clear cart
         $cart = Yii::$app->cartSub;
         $cart->checkOut(false);
-
 
         $id = \Yii::$app->user->id;
         $searchModel = new WarehouseSearch();
@@ -70,13 +71,43 @@ class DefaultController extends Controller
         \Yii::$app->session->remove('selectMainWarehouse');
         \Yii::$app->cartMain->checkOut(false);
         \Yii::$app->cartSub->checkOut(false);
-        $searchModel = new StockEventSearch();
+        $searchModel = new StockEventSearch([
+            'thai_year' => AppHelper::YearBudget()
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-
         // เรียกครั้งเดียว
         $warehouseData = $this->Warehouse();
 
+        $range = AppHelper::BudgetYearRange($searchModel->thai_year);
+        $dateStart =  $range['start']; // 2025-10-01
+        $dateEnd =  $range['end'];   // 2026-09-30
+
+
+        $params = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
+        $conditions = [
+            "e.name = 'order'",
+            "w.warehouse_type = 'MAIN'",
+            "i.asset_item IS NOT NULL",
+        ];
+
+        // ----- Auto GROUP / ORDER -----
+        $groupBy = '';
+        list($sql, $params) = StockEvent::buildStockOrderSql(
+            $conditions,
+            $params,
+            $groupBy ?? null,
+            $orderBy ?? null
+        );
+
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryOne();
+
         return $this->render('dashboard', [
+            'querys' => $querys,
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'searchModelWarehouse' => $warehouseData['searchModelWarehouse'],

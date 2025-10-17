@@ -40,7 +40,7 @@ class Warehouse extends \yii\db\ActiveRecord
             [['warehouse_name', 'warehouse_type'], 'required'],
             [['warehouse_type'], 'string'],
             [['is_main'], 'integer'],
-            [['data_json', 'created_at', 'updated_at','category_id','department','warehouse_type'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'category_id', 'department', 'warehouse_type'], 'safe'],
             [['warehouse_name', 'warehouse_code'], 'string', 'max' => 100],
         ];
     }
@@ -74,8 +74,8 @@ class Warehouse extends \yii\db\ActiveRecord
 
         $sql = "select x.*,ROUND(((x.qty / total) * 100),0) as progress FROM(SELECT s.*,(SELECT sum(qty) FROM stock WHERE qty > 0) as total FROM stock s WHERE warehouse_id = :warehouse_id AND qty > 0) as x;";
         $query = Yii::$app->db->createCommand($sql)
-        ->bindValue(':warehouse_id', $this->id)
-        ->queryOne();
+            ->bindValue(':warehouse_id', $this->id)
+            ->queryOne();
         return $query;
     }
     //  ภาพทีมผู้ดูและคลัง
@@ -128,34 +128,93 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
     //ลค่าสินค้าแยกตาม Stock
-    public function SumPiceStockWarehouse()
-    {
+    // public function SumPiceStockWarehouse($thai_year = null)
+    // {
+    //     $sql = "SELECT 
+    //             w.warehouse_name,
+    //             t.title as asset_type_name,
+    //             a.category_id,
+    //             i.asset_item,
+    //             a.title,
+    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year < :thai_year AND i.transaction_type = 'IN'  THEN i.qty
+    //                         WHEN e.thai_year < :thai_year AND i.transaction_type = 'OUT' THEN -i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS begin_qty,
+    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year < :thai_year AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+    //                         WHEN e.thai_year < :thai_year AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS begin_price,
+    //                 -- รับเข้าเดือนสิงหาคม
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year =  :thai_year
+    //                             AND i.transaction_type = 'IN' THEN i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS qty_in,
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year =  :thai_year
+    //                             AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS price_in,
+    //                 -- จ่ายออกเดือนสิงหาคม
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year =  :thai_year
+    //                             AND i.transaction_type = 'OUT' THEN i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS qty_out,
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year =  :thai_year
+    //                             AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS price_out,
+    //                 -- คงเหลือสิ้นเดือน (ปริมาณ)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year<= :thai_year AND i.transaction_type = 'IN'  THEN i.qty
+    //                         WHEN e.thai_year<= :thai_year AND i.transaction_type = 'OUT' THEN -i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS end_qty,
+    //                 -- คงเหลือสิ้นเดือน (มูลค่า)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.thai_year<= :thai_year AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+    //                         WHEN e.thai_year<= :thai_year AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS end_price
 
-        // $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id AND thai_year <> :thai_year";
-        // $sql = "SELECT IFNULL(sum(qty * unit_price),0) as total FROM stock WHERE warehouse_id = :warehouse_id";
-        // $model =  Yii::$app->db->createCommand($sql, [
-        //     ':warehouse_id' => $this->id,
-        //     // ':thai_year' => AppHelper::YearBudget()
-        //     ])->queryScalar();
-        //     return number_format($model,2);
+    //             FROM stock_events e
+    //             LEFT JOIN stock_events i 
+    //                 ON i.category_id = e.id 
+    //             AND i.name = 'order_item'
+    //             LEFT JOIN warehouses w ON w.id = e.warehouse_id
+    //             LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+    //             LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+    //             WHERE e.name = 'order' AND w.warehouse_type = 'MAIN' AND i.asset_item IS NOT NULL AND e.warehouse_id = :warehouse_id";
 
-        $model = StockEvent::find()
-            ->select([
-                'order_in' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)',
-                'order_out' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)',
-                'total_price' => 'ROUND(SUM(CASE WHEN stock_events.transaction_type = "IN" THEN stock_events.qty * stock_events.unit_price ELSE 0 END) - SUM(CASE WHEN stock_events.transaction_type = "OUT" THEN stock_events.qty * stock_events.unit_price ELSE 0 END), 2)'
-            ])
-            ->leftJoin('categorise', 'categorise.code = stock_events.asset_item AND categorise.name = "asset_item"')
-            ->where([
-                'stock_events.name' => 'order_item',
-                'stock_events.order_status' => 'success',
-                'stock_events.warehouse_id' => $this->id
-            ])
-            ->one();
-            return $model['total_price'];
-        //     return number_format($model['total_price'],2);
-        
-    }
+
+    //     $querySummary = Yii::$app->db->createCommand($sql)
+    //         ->bindValue(':thai_year', $thai_year)
+    //         ->bindValue(':warehouse_id', $this->id)
+    //         ->queryOne();
+    //     return $querySummary['end_price'];
+    // }
 
     // ยอดรับเข้า
     public function SumPiceIn()
@@ -165,17 +224,17 @@ class Warehouse extends \yii\db\ActiveRecord
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
             ':thai_year' => AppHelper::YearBudget()
-            ])->queryScalar();
-            return $model;
+        ])->queryScalar();
+        return $model;
     }
-// ยอดจ่ายออก
+    // ยอดจ่ายออก
     public function SumPiceOut()
     {
         $sql = "SELECT COALESCE(sum(qty* unit_price),0) as total FROM stock_events  WHERE transaction_type ='OUT' AND order_status = 'success' AND warehouse_id  = :warehouse_id";
         $model =  Yii::$app->db->createCommand($sql, [
             ':warehouse_id' => $this->id,
-            ])->queryScalar();
-            return $model;
+        ])->queryScalar();
+        return $model;
     }
 
 
@@ -196,8 +255,8 @@ class Warehouse extends \yii\db\ActiveRecord
                 return '<span class="badge bg-light text-dark">ไม่ระบุ</span>';
                 break;
         }
-    }   
-   
+    }
+
     public function departmentName()
     {
         $department = Organization::findOne(['id' => $this->department]);
@@ -208,11 +267,10 @@ class Warehouse extends \yii\db\ActiveRecord
         }
     }
 
-//แสดงจำนวนรายการที่ขอเบิก
+    //แสดงจำนวนรายการที่ขอเบิก
     public function countOrderRequest()
     {
-            // return StockEvent::find()->where(['warehouse_id' => $this->id,'name' => 'order', 'order_status' => 'pending'])->count('id');
-            return StockEvent::find()->where(['warehouse_id' => $this->id,'name' => 'order', 'order_status' => 'pending','transaction_type' => 'OUT'])->count('id');
+        return StockEvent::find()->where(['warehouse_id' => $this->id, 'name' => 'order', 'order_status' => 'pending', 'transaction_type' => 'OUT'])->count('id');
     }
     //แสดงประเภทสินค้าบริการ
     public function ListOrderType()

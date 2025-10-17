@@ -25,6 +25,28 @@ jQuery(document).on("pjax:end", function () {
   }
 });
 
+
+// ฟังก์ชันเลื่อนขึ้นบนสุด
+document.getElementById('btnScrollTop').addEventListener('click', function() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ฟังก์ชันเลื่อนลงล่างสุด
+document.getElementById('btnScrollBottom').addEventListener('click', function() {
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+});
+
+// แสดงปุ่มเมื่อ scroll ลงมา
+window.addEventListener('scroll', function() {
+  const buttons = document.getElementById('scroll-buttons');
+  if (window.scrollY > 100) {
+    buttons.style.display = 'block';
+  } else {
+    buttons.style.display = 'none';
+  }
+});
+
+
 //แก้ treeview ไม่ปิดเวลาเลือก
 $("#treeID").on("treeview:change", function (event, key, name) {
   $("body").find(".kv-tree-input").removeClass("show");

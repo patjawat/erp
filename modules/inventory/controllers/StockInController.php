@@ -66,8 +66,8 @@ class StockInController extends Controller
 
         //ค้นหาช่วบงวันที่
         $dataProvider->query
-            ->andFilterWhere(['>=','movement_date',AppHelper::convertToGregorian($searchModel->date_start)])
-            ->andFilterWhere(['<=','movement_date',AppHelper::convertToGregorian($searchModel->date_end)]);
+            ->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])
+            ->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -172,7 +172,7 @@ class StockInController extends Controller
 
         $model = new StockEvent([
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
-            
+
             'category_id' => $order_id,
             'code' => $order ? $order->code : '',
             'name' => $name,
@@ -182,7 +182,7 @@ class StockInController extends Controller
                 'item_type' => ($order->data_json['item_type'] ?? '')
             ],
         ]);
-        if($name == 'order'){
+        if ($name == 'order') {
             $model->movement_date = AppHelper::convertToThai(date('Y-m-d'));
         }
 
@@ -304,19 +304,19 @@ class StockInController extends Controller
                         'name' => 'order_item',
                         'qty' => (int)($item->qty ?? 0),
                         'unit_price' => (float)($item->price ?? 0),
-                        'total_price' => ( (int)($item->qty ?? 0) * (float)($item->price ?? 0) ),
+                        'total_price' => ((int)($item->qty ?? 0) * (float)($item->price ?? 0)),
                         'order_status' => 'pending',
-                         'data_json' => [
+                        'data_json' => [
                             'item_type' => 'จัดซื้อ',
                             'order_qty' => $item->qty,
-                            
+
                         ],
                     ]);
                     $stockItem->save(false);
                 }
                 if ($order) {
                     $order->status = 6; //สถานะส่งวัสดุเข้าคลัง
-                     $order->save(false);
+                    $order->save(false);
                     // ถ้าเป็นการรับจ้าใบสั่่งซื้อ
                 }
 
@@ -356,7 +356,7 @@ class StockInController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-         $model->movement_date = AppHelper::convertToThai($model->movement_date);
+        $model->movement_date = AppHelper::convertToThai($model->movement_date);
         $oldObj = $model->data_json;
         if ($this->request->isPost && $model->load($this->request->post())) {
             if ($model->name == 'order_item') {
@@ -650,6 +650,76 @@ class StockInController extends Controller
 
         return ['status' => 'success'];
     }
+
+    //การยกเลิก order พร้อมกับคืนค่า Stock ในกรณีมีการรับเข้าจากใบสั่งซื้อ
+    public function actionUndoStatus()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $id = Yii::$app->request->post('id');
+
+        /** @var StockEvents $model */
+        $model = $this->findModel($id);
+        if (!$model) {
+            return [
+                'status' => 'error',
+                'msg' => 'ไม่พบข้อมูลคำสั่งซื้อนี้'
+            ];
+        }
+        // ตรวจสอบว่ามีการเบิกจ่ายหรือไม่
+        $sql = "
+        SELECT COUNT(i.id) AS total 
+        FROM stock_events i
+        INNER JOIN stock_events o 
+            ON o.lot_number = i.lot_number 
+            AND o.transaction_type = 'OUT'
+        WHERE i.category_id = :id
+    ";
+
+        $countPayStock = Yii::$app->db->createCommand($sql)
+            ->bindValue(':id', $id)
+            ->queryScalar();
+
+        if ($countPayStock >= 1) {
+            return [
+                'status' => 'error',
+                'msg' => 'มีการเบิกจ่ายวัสดุแล้ว ไม่สามารถย้อนสถานะได้'
+            ];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // คืนสถานะหลักเป็น "รอดำเนินการ"
+            $model->order_status = 'cancel';
+            $model->save(false);
+
+            // คืนสถานะใบสั่งซื้อเป็น "รอดำรับเข้า" (ถ้ามี purchase)
+            if ($model->purchase) {
+                $model->purchase->status = 5;
+                $model->purchase->save(false);
+            }
+
+            // คืนสถานะรายการย่อยทั้งหมด
+            foreach ($model->ListItems() as $item) {
+                $item->order_status = 'cancel';
+                $item->save(false);
+            }
+
+            $transaction->commit();
+
+            return [
+                'status' => 'success',
+                'msg' => 'คืนสถานะเรียบร้อยแล้ว'
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e->getMessage(), __METHOD__);
+            return [
+                'status' => 'error',
+                'msg' => 'เกิดข้อผิดพลาดระหว่างดำเนินการ: ' . $e->getMessage()
+            ];
+        }
+    }
+
     /**
      * Finds the StockEvent model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

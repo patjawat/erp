@@ -210,6 +210,8 @@ $moduleId = Yii::$app->controller->module->id;
                         <div id="page-content">
                             <div class="table-container">
                                 <?= $content; ?>
+
+                                
                             </div>
                         </div>
 
@@ -244,6 +246,20 @@ $moduleId = Yii::$app->controller->module->id;
 
 
         </div>
+
+
+                <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
+        <div id="scroll-buttons" class="position-fixed bottom-50 end-0 p-3" style="z-index: 1030;">
+        <!-- ปุ่มขึ้นบนสุด -->
+        <button type="button" id="btnScrollTop" class="btn btn-primary rounded-circle mb-2 shadow">
+            <i class="fa-solid fa-arrow-up"></i>
+        </button>
+        <!-- ปุ่มลงล่างสุด -->
+        <button type="button" id="btnScrollBottom" class="btn btn-secondary rounded-circle shadow">
+            <i class="fa-solid fa-arrow-down"></i>
+        </button>
+        </div>
+
 
 
 

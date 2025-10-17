@@ -2,6 +2,7 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\inventory\models\Warehouse;
+use app\modules\inventory\models\StockEvent;
 ?>
 <div class="card">
     <div class="card-body">
@@ -62,9 +63,37 @@ use app\modules\inventory\models\Warehouse;
                         <span class="fw-semibold "> <?php // echo $model->SumPiceStockWarehouse()?></span>
                         <span class="fw-semibold "> 
                             <?php 
-                                $sum = $model->SumPiceStockWarehouse();
-                                echo $sum !== null ? number_format((float)$sum, 2) : '';
-                                ?>
+
+                            $params = [
+                                ':date_start' => $dateStart,
+                                ':date_end' => $dateEnd,
+                            ];
+                            $conditions = [
+                                "e.name = 'order'",
+                                "w.warehouse_type = 'MAIN'",
+                                "i.asset_item IS NOT NULL",
+
+                            ];
+                            $warehouseId = $model->id;
+                            if (!empty($warehouseId)) {
+                                $conditions[] = "e.warehouse_id = :warehouse_id";
+                                $params[':warehouse_id'] = $warehouseId;
+                            }
+
+                        // ----- Auto GROUP / ORDER -----
+                        $groupBy = '';
+
+                        list($sql, $params) = StockEvent::buildStockOrderSql(
+                            $conditions,
+                            $params,
+                            $groupBy ?? null,
+                            $orderBy ?? null
+                        );
+
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryOne();
+                        echo $querys['end_price'];
+ 
+                            ?>
                         </span>
                     </td>
                 </tr>

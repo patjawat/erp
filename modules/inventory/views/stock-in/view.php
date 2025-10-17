@@ -3,8 +3,6 @@
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
-use app\components\AppHelper;
-use app\modules\inventory\models\StockEvent;
 
 $totalPrice = 0;
 /** @var yii\web\View $this */
@@ -41,7 +39,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                            <?= Html::a('<i class="fa-solid fa-rotate-left me-2"></i> ยกเลิก', ['/inventory/stock-in/cancel', 'id' => $model->id, 'title' => 'ยกเลิกใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?php if($model->po_number):?>
+                                <?php // Html::a('<i class="fa-solid fa-circle-xmark me-2"></i> ยกเลิก', ['/inventory/stock-in/cancel', 'title' => 'ยกเลิกใบรับเข้า'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'ยกเลิกใบรับเข้านี้']]) ?>
+                        <?php else:?>
+                            <?php //  Html::a('<i class="fa-solid fa-rotate-left me-2"></i> คืนสถานะรอดำเนินการ', ['/inventory/stock-in/undo-status', 'title' => 'คืนสถานะรอดำเนินการ'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'คืนสถานะเป็นรอ (ดำเนินการ)']]) ?>
+                        <?php endif;?>
                         </div>
                     </div>
                 </div>
@@ -53,18 +55,22 @@ $this->params['breadcrumbs'][] = $this->title;
                             'label' => 'วันที่รับเข้า',
                             'value' => $model->viewMoveMentDate()
                         ],
-                         [
+                        [
                             'label' => 'ประเภทวัสดุ',
                             'value' => $model->viewAssetType()
+                        ],
+                          [
+                            'label' => 'เลขที่สั่งซื้อ',
+                            'value' => $model->po_number
+                        ],
+                        [
+                            'label' => 'มูลค่า',
+                            'value' => number_format($model->getTotalOrderPrice(), 2)
                         ],
                         [
                             'label' => 'สถานะ',
                             'format' => 'raw',
                             'value' => $model->viewStatus()
-                        ],
-                        [
-                            'label' => 'มูลค่า',
-                            'value' => number_format($model->getTotalOrderPrice(), 2)
                         ],
 
                     ],
@@ -215,6 +221,72 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 
 $js = <<< JS
+$('.cancel-stock-order').click(function (e) {
+  e.preventDefault();
+  const el = $(this);
+  const url = el.attr('href');
+  const id = el.data('id');
+  const title = el.data('title');
+
+  Swal.fire({
+    title: 'ยืนยัน?',
+    text: 'คุณต้องการ'+title+'?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'ใช่, ยืนยัน!',
+    cancelButtonText: 'ยกเลิก'
+  }).then((result) => {
+    if (result.isConfirmed) {
+
+      // แสดง loading ขณะรอ AJAX
+      Swal.fire({
+        title: 'กำลังดำเนินการ...',
+        text: 'กรุณารอสักครู่',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      $.ajax({
+        type: "POST",
+        url: url,
+        data: { id: id },
+        dataType: "json",
+        success: function (res) {
+          if (res.status === "success") {
+            Swal.fire({
+              title: 'สำเร็จ!',
+              text: 'ดำเนินการลบสำเร็จ!',
+              icon: 'success',
+              showConfirmButton: false,
+              timer: 1000
+            });
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          } else {
+            Swal.fire(
+              'ผิดพลาด!',
+              res.msg || 'ไม่สามารถดำเนินการได้',
+              'error'
+            );
+          }
+        },
+        error: function () {
+          Swal.fire(
+            'ผิดพลาด!',
+            'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+            'error'
+          );
+        }
+      });
+    }
+  });
+});
 
 
 $("body").on("click", ".delete-order-item", async function (e) {

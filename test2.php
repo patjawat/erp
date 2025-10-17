@@ -1,75 +1,203 @@
-WITH stock_summary AS (
-                            SELECT 
-                                
-                                asset_type.code AS asset_type_code,
-                                asset_type.title AS asset_type_name,
-                                p.title as asset_name,
-                                p.code as asset_item,
-                                p.data_json->>'$.unit' AS unit,
-                                w.warehouse_name as warehouse_name,
-	-- จำนวนคงเหลือ (ก่อนเดือน)
-            SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'IN'  
-                 THEN i.qty ELSE 0 END) 
-        -
-        SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'OUT' 
-                 THEN i.qty  ELSE 0 END) AS balance_before_qty,
-                                -- ยอดยกมา (ก่อนเดือน)
-                                SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'IN'  
-                                        THEN i.qty * i.unit_price ELSE 0 END) 
-                                -
-                                SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+SELECT 
+    i.thai_year,
 
-                               -- จำนวนรับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'IN' 
-                                        THEN i.qty ELSE 0 END) AS total_in_month_qty,
+    -- ตุลาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 10  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in10,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 10 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out10,
 
-                                -- รับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'IN' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
- -- จำนวนจ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'OUT' 
-                                        THEN i.qty  ELSE 0 END) AS total_out_month_qty,
+    -- พฤศจิกายน
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 11  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in11,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 11 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out11,
 
-                                -- จ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+    -- ธันวาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 12  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in12,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 12 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out12,
 
-                            FROM categorise p
-                            LEFT JOIN stock_events i ON p.code = i.asset_item
-    						LEFT JOIN stock_events o ON i.category_id = o.id
-                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
-                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
-                            
-                            WHERE o.name = 'order'
-                            AND o.order_status = 'success'
-                            AND i.name = 'order_item'
-                            AND w.warehouse_type = 'MAIN'
-                            AND asset_type.category_id = 4
-                            AND asset_type.name = 'asset_type'
-                            AND p.name = 'asset_item'
-                            GROUP BY p.code
-                            ORDER BY p.code
-                        )
+    -- มกราคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 1  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in1,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 1 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out1,
 
-                        SELECT 
-                            warehouse_name,
-                            asset_item,
-                            asset_name,
-                            unit,
-                            asset_type_code,
-                            asset_type_name,
-                            balance_before_qty,
-                            balance_before,                     -- 1. ยอดยกมา
-                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
-                            total_in_month_qty,                     -- 2. รับเข้าระหว่างเดือน
-                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
-                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
-                            total_out_month_qty,                    -- 4. จ่ายไประหว่างเดือน
-                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
-                        FROM stock_summary
-                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);
+    -- กุมภาพันธ์
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 2  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in2,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 2 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out2,
+
+    -- มีนาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 3  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in3,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 3 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out3,
+
+    -- เมษายน
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 4  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in4,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 4 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out4,
+
+    -- พฤษภาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 5  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in5,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 5 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out5,
+
+    -- มิถุนายน
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 6  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in6,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 6 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out6,
+
+    -- กรกฎาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 7  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in7,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 7 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out7,
+
+    -- สิงหาคม
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 8  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in8,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 8 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out8,
+
+    -- กันยายน
+    SUM(CASE 
+        WHEN i.transaction_type = 'IN'  
+             AND MONTH(e.movement_date) = 9  
+             AND w.warehouse_type = 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS in9,
+    SUM(CASE 
+        WHEN i.transaction_type = 'OUT' 
+             AND MONTH(e.movement_date) = 9 
+             AND w.warehouse_type != 'MAIN' 
+        THEN i.qty * i.unit_price 
+        ELSE 0 
+    END) AS out9
+
+FROM stock_events AS i
+LEFT JOIN warehouses AS w ON w.id = i.warehouse_id
+LEFT JOIN stock_events AS e ON e.id = i.category_id
+WHERE 
+    i.thai_year = '2569'
+    AND i.order_status = 'success'
+GROUP BY 
+    i.thai_year;

@@ -7,15 +7,14 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
-use yii\db\Expression;
-use app\modules\inventory\models\Stock;
+use app\components\AppHelper;
 use app\modules\inventory\models\StockEvent;
 
 $this->title = 'Dashboard';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
+// $priceSummary = StockEvent::priceSummaryOfYear($searchModel->thai_year);
 ?>
-
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
@@ -23,24 +22,26 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('../default/menu_dashbroad'); ?>
+<?php $this->beginBlock('action'); ?>
+
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu_dashbroad',['active' => 'dashboard'])?>
+<?= $this->render('menu_dashbroad', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
-
 
 
 <div class="row">
     <div class="col-xl-6">
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่ารับ-จ่ายวัสดุ</h6>
-                    <div class="mb-3">
-                        <?php echo $this->render('_search_year', ['model' => $searchModel]); ?></div>
+                <div class="row">
+                    <div class="col-5">
+                        <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> มูลค่ารับ-จ่ายวัสดุ</h6>
+                    </div>
+                    <div class="col-7">
+                        <?php echo $this->render('_search_date', ['model' => $searchModel]); ?>
+                    </div>
                 </div>
                 <?php echo $this->render('chart_summary', ['model' => $searchModel]); ?>
             </div>
@@ -49,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-xl-6">
         <!-- #### -->
         <div class="row">
-        <div class="col-6">
+            <div class="col-6">
                 <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                     <div class="card-body">
                         <div>
@@ -67,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo number_format($searchModel->LastTotalStock(),2); ?>
+                                    <?php echo number_format($querys['begin_price'], 2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -100,23 +101,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                             <div>
-                            <?php
-                                    //echo $searchModel->OutSummary('SUB');
-                                // echo $searchModel->OutSummary('BRANCH');
-                                ?>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    
-                      
-                                <?php  echo  number_format(($searchModel->OutSummary('SUB')+$searchModel->OutSummary('BRANCH')),2); ?>
-                                    </h4>
-                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                        <div class="flex-grow-1">
-                                            <p class="text-muted mb-0 text-truncate">รวมมูลค่าที่ใช้ไป</p>
-                                        </div>
-                                        <div class="flex-shrink-0" style="position: relative;">
-
-                                        </div>
+                                    <?php echo number_format($querys['price_out'], 2); ?>
+                                </h3>
+                                <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-0 text-truncate">รวมมูลค่าที่ใช้ไป</p>
                                     </div>
+                                    <div class="flex-shrink-0" style="position: relative;">
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -137,17 +132,18 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                             <div>
-                                
-                                <h3 class="mt-4 pt-1 mb-0 font-size-22"> <?php echo number_format($searchModel->ReceiveMainSummary(),2); ?>
-                                    </h4>
-                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                        <div class="flex-grow-1">
-                                            <p class="text-muted mb-0 text-truncate">ยอดรับเข้า</p>
-                                        </div>
-                                        <div class="flex-shrink-0" style="position: relative;">
 
-                                        </div>
+                                <h3 class="mt-4 pt-1 mb-0 font-size-22">
+                                    <?php echo number_format($querys['price_in'], 2); ?>
+                                </h3>
+                                <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-0 text-truncate">ยอดรับเข้า</p>
                                     </div>
+                                    <div class="flex-shrink-0" style="position: relative;">
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -174,16 +170,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                <?php echo number_format($searchModel->TotalPrice(),2); ?>
-                                    </h4>
-                                    <div class="d-flex mt-1 align-items-end overflow-hidden">
-                                        <div class="flex-grow-1">
-                                            <p class="text-muted mb-0 text-truncate">มูลค่าคงเหลือ</p>
-                                        </div>
-                                        <div class="flex-shrink-0" style="position: relative;">
-
-                                        </div>
+                                    <?php echo number_format($querys['end_price'], 2); ?>
+                                </h3>
+                                <div class="d-flex mt-1 align-items-end overflow-hidden">
+                                    <div class="flex-grow-1">
+                                        <p class="text-muted mb-0 text-truncate">มูลค่าคงเหลือ</p>
                                     </div>
+                                    <div class="flex-shrink-0" style="position: relative;">
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -195,17 +191,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="col-xl-8">
         <?php
-        
-        // try {
-            echo $this->render('list_warehouse', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                'searchModelWarehouse' => $searchModelWarehouse,
-                'dataProviderWarehouse' => $dataProviderWarehouse,
-            ]);
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        // }
+
+        try {
+        echo $this->render('list_warehouse', [
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'searchModelWarehouse' => $searchModelWarehouse,
+            'dataProviderWarehouse' => $dataProviderWarehouse,
+        ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
         ?>
         <div id="showWarehouse"></div>
     </div>

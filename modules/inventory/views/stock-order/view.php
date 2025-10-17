@@ -166,7 +166,7 @@ foreach ($model->getItems() as $item): ?>
 
 
     <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouse->id)): ?>
-        <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout', 'id' => 'btnSave']); ?>
+        <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout-xxx open-modal', 'id' => 'btnSave','data' => ['size' => 'modal-md']]); ?>
     <?php endif; ?>
 
 </div>

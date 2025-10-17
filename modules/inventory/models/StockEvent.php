@@ -190,12 +190,12 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasMany(StockEvent::class, ['category_id' => $this->id])->andOnCondition(['name' => 'order_item']);
     }
 
-public function getStockOrder()
-{
-    return $this->hasOne(StockEvent::class, ['id' => 'category_id'])
-        ->alias('order_event')
-        ->andOnCondition(['order_event.name' => 'order']);
-}
+    public function getStockOrder()
+    {
+        return $this->hasOne(StockEvent::class, ['id' => 'category_id'])
+            ->alias('order_event')
+            ->andOnCondition(['order_event.name' => 'order']);
+    }
 
 
     public function getAssetType()
@@ -220,7 +220,7 @@ public function getStockOrder()
         }
     }
 
-public function ListCode()
+    public function ListCode()
     {
         $model = self::find()
             ->select('code')
@@ -244,10 +244,10 @@ public function ListCode()
             ->all();
 
         $year = AppHelper::YearBudget();
-        $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        $nextYear = [['thai_year' => ($year + 1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         // รวมข้อมูล
-        $model = ArrayHelper::merge($nextYear,$isYear, $model);
+        $model = ArrayHelper::merge($nextYear, $isYear, $model);
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
@@ -272,7 +272,7 @@ public function ListCode()
     }
 
 
-public function getVendor()
+    public function getVendor()
     {
         return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
     }
@@ -515,15 +515,15 @@ public function getVendor()
     {
         try {
             $sum = Stock::find()
-            ->where([
-                'asset_item' => $this->asset_item,
-                'lot_number' => $this->lot_number,
-                'warehouse_id' => $this->warehouse_id
-            ])
-            ->sum('qty');
+                ->where([
+                    'asset_item' => $this->asset_item,
+                    'lot_number' => $this->lot_number,
+                    'warehouse_id' => $this->warehouse_id
+                ])
+                ->sum('qty');
 
-        return $sum ?? 0; // ถ้า $sum เป็น null จะคืนค่า 0
-        
+            return $sum ?? 0; // ถ้า $sum เป็น null จะคืนค่า 0
+
         } catch (\Throwable $th) {
             return 0;
         }
@@ -595,8 +595,8 @@ public function getVendor()
         //    ->queryScalar();
     }
 
-// รายการวัสดุ
-        public function ListAssetItem()
+    // รายการวัสดุ
+    public function ListAssetItem()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
     }
@@ -745,57 +745,57 @@ public function getVendor()
 
 
     //สรุปราคาและจำนวนคลังหลัก
-    public function mainOrderSummary($status = null)
-    {
-        try {
-            $dateStart = AppHelper::convertToGregorian($this->date_start);
-            $dateEnd = AppHelper::convertToGregorian($this->date_end);
-        } catch (\Throwable $th) {
-            $dateStart = null;
-            $dateEnd = null;
-        }
+    // public function mainOrderSummary($status = null)
+    // {
+    //     try {
+    //         $dateStart = AppHelper::convertToGregorian($this->date_start);
+    //         $dateEnd = AppHelper::convertToGregorian($this->date_end);
+    //     } catch (\Throwable $th) {
+    //         $dateStart = null;
+    //         $dateEnd = null;
+    //     }
 
-        // Query นับจำนวนออเดอร์
-        $queryTotalOrder = self::find()
-            ->where([
-                'name' => 'order',
-                'warehouse_id' => $this->warehouse_id
-            ])
-            ->andFilterWhere(['from_warehouse_id' => $this->from_warehouse_id])
-            ->andFilterWhere(['transaction_type' => $this->transaction_type])
-            ->andFilterWhere(['order_status' => $status])
-            ->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
+    //     // Query นับจำนวนออเดอร์
+    //     $queryTotalOrder = self::find()
+    //         ->where([
+    //             'name' => 'order',
+    //             'warehouse_id' => $this->warehouse_id
+    //         ])
+    //         ->andFilterWhere(['from_warehouse_id' => $this->from_warehouse_id])
+    //         ->andFilterWhere(['transaction_type' => $this->transaction_type])
+    //         ->andFilterWhere(['order_status' => $status])
+    //         ->andFilterWhere(['between', 'created_at', $dateStart, $dateEnd]);
 
-        $totalOrder = $queryTotalOrder->count();
-        $totalOrderSql = $queryTotalOrder->createCommand()->getRawSql(); // ดึง SQL ออกมา
+    //     $totalOrder = $queryTotalOrder->count();
+    //     $totalOrderSql = $queryTotalOrder->createCommand()->getRawSql(); // ดึง SQL ออกมา
 
-        // Query คำนวณยอดรวม
-        $queryTotalPrice = self::find()
-            ->select(['total' => new \yii\db\Expression('SUM(stock_events.qty * stock_events.unit_price)')])
-            ->leftJoin('categorise i', 'i.code = stock_events.asset_item')
-            ->where(['warehouse_id' => $this->warehouse_id])
-            ->andFilterWhere(['stock_events.from_warehouse_id' => $this->from_warehouse_id])
-            ->andFilterWhere(['stock_events.transaction_type' => $this->transaction_type])
-            ->andFilterWhere(['stock_events.order_status' => $status])
-            ->andFilterWhere(['between', 'stock_events.created_at', $dateStart, $dateEnd])
-            ->groupBy('stock_events.transaction_type');
+    //     // Query คำนวณยอดรวม
+    //     $queryTotalPrice = self::find()
+    //         ->select(['total' => new \yii\db\Expression('SUM(stock_events.qty * stock_events.unit_price)')])
+    //         ->leftJoin('categorise i', 'i.code = stock_events.asset_item')
+    //         ->where(['warehouse_id' => $this->warehouse_id])
+    //         ->andFilterWhere(['stock_events.from_warehouse_id' => $this->from_warehouse_id])
+    //         ->andFilterWhere(['stock_events.transaction_type' => $this->transaction_type])
+    //         ->andFilterWhere(['stock_events.order_status' => $status])
+    //         ->andFilterWhere(['between', 'stock_events.created_at', $dateStart, $dateEnd])
+    //         ->groupBy('stock_events.transaction_type');
 
-        $totalPrice = $queryTotalPrice->scalar();
-        $totalPriceSql = $queryTotalPrice->createCommand()->getRawSql(); // ดึง SQL ออกมา
+    //     $totalPrice = $queryTotalPrice->scalar();
+    //     $totalPriceSql = $queryTotalPrice->createCommand()->getRawSql(); // ดึง SQL ออกมา
 
-        return [
-            'totalPrice' => $totalPrice,
-            'totalOrder' => $totalOrder,
-            'totalPriceSql' => $totalPriceSql,
-            'totalOrderSql' => $totalOrderSql
-        ];
-    }
+    //     return [
+    //         'totalPrice' => $totalPrice,
+    //         'totalOrder' => $totalOrder,
+    //         'totalPriceSql' => $totalPriceSql,
+    //         'totalOrderSql' => $totalOrderSql
+    //     ];
+    // }
 
 
     public function viewStatus()
     {
         switch ($this->order_status) {
-             case 'none':
+            case 'none':
                 $msg = '<div class="badge badge-soft-secondary fs-13"><i class="fa-regular fa-circle-question"></i> ฉบับร่าง</div>';
                 break;
             case 'await':
@@ -852,8 +852,6 @@ public function getVendor()
             return
                 [
                     'status' => $status,
-                    // 'fullname' => isset($this->data_json['checker_name']) ? $this->data_json['checker_name'] : '',
-                    // 'checker_date' => isset($this->data_json['checker_confirm_date']) ?   explode(' ',Yii::$app->thaiFormatter->asDateTime($this->data_json['checker_confirm_date'], 'php:d/m/Y H:i:s'))[0] : '',
                     'fullname' => $this->getAvatar($approve->emp_id)['fullname'],
                     'position' => $this->getAvatar($approve->emp_id)['position_name'],
                     'approve_date' => isset($approve->data_json['approve_date']) ?  Yii::$app->thaiDate->toThaiDate($approve->data_json['approve_date'], true, false) : '',
@@ -1265,7 +1263,7 @@ public function getVendor()
         return $query ?? 0;
     }
 
-    // สถิติมูลค่าการับเข้าจ่ายออกตามปีงบประมาณ
+    // chart สถิติมูลค่าการับเข้าจ่ายออกตามปีงบประมาณ
     public function SummaryPriceYear()
     {
         $sql = "SELECT thai_year,
@@ -1326,42 +1324,42 @@ public function getVendor()
     public function SummaryChart($warehouseType = null)
     {
         $where = ['and'];
-        $where[] = ['thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
+        $where[] = ['e.thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
         // $where[] = ['w.warehouse_type' => $warehouseType];  // ใช้กรองถ้าค่ามี
 
         return StockEvent::find()
             ->alias('i')
             ->select([
-                'thai_year',
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 10  AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in10"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 10 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out10"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 11 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in11"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 11 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out11"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 12 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in12"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 12 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out12"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 1 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in1"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 1 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out1"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 2 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in2"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 2 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out2"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 3 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in3"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 3 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out3"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 4 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in4"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 4 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out4"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 5 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in5"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 5 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out5"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 6 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in6"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 6 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out6"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 7 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in7"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 7 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out7"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 8 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in8"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 8 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out8"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(i.created_at) = 9 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in9"),
-                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(i.created_at) = 9 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out9"),
+                'e.thai_year',
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 10  AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in10"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 10 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out10"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 11 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in11"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 11 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out11"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 12 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in12"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 12 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out12"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 1 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in1"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 1 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out1"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 2 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in2"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 2 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out2"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 3 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in3"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 3 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out3"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 4 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in4"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 4 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out4"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 5 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in5"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 5 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out5"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 6 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in6"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 6 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out6"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 7 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in7"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 7 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out7"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 8 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in8"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 8 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out8"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'IN' AND MONTH(e.movement_date) = 9 AND w.warehouse_type = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as in9"),
+                new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 9 AND w.warehouse_type != 'MAIN' THEN i.qty * i.unit_price ELSE 0 END) as out9"),
             ])
             ->where($where)
-            ->andWhere(['order_status' => 'success'])
+            ->andWhere(['e.order_status' => 'success'])
             ->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
-            ->groupBy('thai_year')
+            ->leftJoin(['e' => 'stock_events'], 'e.id = i.category_id')
             ->asArray()
             ->one();
     }
@@ -1396,9 +1394,206 @@ public function getVendor()
 
         if ($this->title) {
             $where[] = ['like', 'i.title', $this->title];
-
         }
 
         $query->andWhere($where);
+    }
+    //สรุปข้อมูล ยอดยกมา,ยอดใช้ไป,ยอดรับเข้า,มูลค่าคงเหลือ หาจากปีงบประมาน
+    public static function priceSummaryOfYear($thaiYear = null)
+    {
+        $sql = "SELECT 
+                w.warehouse_name,
+                t.title as asset_type_name,
+                a.category_id,
+                i.asset_item,
+                a.title,
+                    -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year < :thai_year AND i.transaction_type = 'IN'  THEN i.qty
+                            WHEN e.thai_year < :thai_year AND i.transaction_type = 'OUT' THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS begin_qty,
+                    -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year < :thai_year AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+                            WHEN e.thai_year < :thai_year AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS begin_price,
+                    -- รับเข้าเดือนสิงหาคม
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year =  :thai_year
+                                AND i.transaction_type = 'IN' THEN i.qty
+                            ELSE 0 
+                        END
+                    ) AS qty_in,
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year =  :thai_year
+                                AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS price_in,
+                    -- จ่ายออกเดือนสิงหาคม
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year =  :thai_year
+                                AND i.transaction_type = 'OUT' THEN i.qty
+                            ELSE 0 
+                        END
+                    ) AS qty_out,
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year =  :thai_year
+                                AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS price_out,
+                    -- คงเหลือสิ้นเดือน (ปริมาณ)
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year<= :thai_year AND i.transaction_type = 'IN'  THEN i.qty
+                            WHEN e.thai_year<= :thai_year AND i.transaction_type = 'OUT' THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS end_qty,
+                    -- คงเหลือสิ้นเดือน (มูลค่า)
+                    SUM(
+                        CASE 
+                            WHEN e.thai_year<= :thai_year AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+                            WHEN e.thai_year<= :thai_year AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+                            ELSE 0 
+                        END
+                    ) AS end_price
+
+                FROM stock_events e
+                LEFT JOIN stock_events i 
+                    ON i.category_id = e.id 
+                AND i.name = 'order_item'
+                LEFT JOIN warehouses w ON w.id = e.warehouse_id
+                LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+                LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+                WHERE e.name = 'order' AND w.warehouse_type = 'MAIN' AND i.asset_item IS NOT NULL";
+
+
+        $querySummary = Yii::$app->db->createCommand($sql)
+            ->bindValue(':thai_year', $thaiYear)
+            ->queryOne();
+        return $querySummary;
+    }
+
+
+    // summary คลัง queryc แบบ Dynamic
+    public static function buildStockOrderSql($conditions, $params = [], $groupBy = null, $orderBy = null)
+    {
+
+        /**
+         // ########## ตัวอย่าง ดารเรียกข้อมูล #############################
+          try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        } catch (\Throwable $th) {
+            $dateStart = $dateEnd = '';
+        }
+        // ----- Dynamic Filters -----
+        $params = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
+        $conditions = [
+            "e.name = 'order'",
+            "w.warehouse_type = 'MAIN'",
+            "i.asset_item IS NOT NULL",
+            "e.movement_date BETWEEN :date_start AND :date_end"
+        ];
+
+        ----- Auto GROUP / ORDER -----
+        $groupFields = [
+            'w.warehouse_name', 'w.warehouse_type', 't.title',
+            'e.movement_date', 'e.code', 'e.transaction_type',
+            'a.category_id', 'i.asset_item', 'a.title'
+        ];
+        $groupBy = implode(', ', $groupFields);
+        $orderBy = 'e.movement_date ASC, a.code DESC';
+
+        // ########## End  ############################# 
+
+         */
+
+        $where = implode(' AND ', $conditions);
+        $groupBySql = $groupBy ? "GROUP BY $groupBy" : '';
+        $orderBySql = $orderBy ? "ORDER BY $orderBy" : '';
+
+        $sql = "
+        SELECT 
+            w.warehouse_name,
+            w.warehouse_type,
+            t.title AS asset_type_name,
+            e.movement_date,
+            e.code,
+            e.transaction_type,
+            a.category_id,
+            i.asset_item,
+            a.title,
+            a.data_json->>'$.unit' AS unit,
+            i.qty AS item_qty,
+            ROUND(i.unit_price, 2) AS item_unit_price,
+            ROUND(SUM(i.qty * i.unit_price), 2) AS item_total_price,
+
+            SUM(CASE 
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success'THEN i.qty
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty
+                ELSE 0 END
+            ) AS begin_qty,
+            ROUND(SUM(CASE 
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty * i.unit_price
+                ELSE 0 END
+            ),2) AS begin_price,
+
+            SUM(CASE 
+                WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty
+                ELSE 0 END
+            ) AS qty_in,
+            ROUND(SUM(CASE 
+                WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+                ELSE 0 END
+            ),2) AS price_in,
+
+            SUM(CASE 
+                WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN i.qty
+                ELSE 0 END
+            ) AS qty_out,
+            ROUND(SUM(CASE 
+                WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN i.qty * i.unit_price
+                ELSE 0 END
+            ),2) AS price_out,
+
+            SUM(CASE 
+                WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty
+                WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty
+                ELSE 0 END
+            ) AS end_qty,
+            ROUND(SUM(CASE 
+                WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+                WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty * i.unit_price
+                ELSE 0 END
+            ),2) AS end_price
+
+        FROM stock_events e
+        INNER JOIN stock_events i ON i.category_id = e.id AND i.name = 'order_item'
+        INNER JOIN warehouses w ON w.id = e.warehouse_id
+        INNER JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+        INNER JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+        WHERE $where
+        $groupBySql
+        $orderBySql
+    ";
+
+        return [$sql, $params];
     }
 }

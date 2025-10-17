@@ -39,11 +39,6 @@ class MainStockController extends Controller
         $submWarehouse = \Yii::$app->session->get('sub-warehouse');
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
 
-        // หากหม่มีการเลือกคลัง .ให้ redirec ไปที่ Dashbroad
-        // if (!isset($toWarehouse['warehouse_id']) && !isset($formWarehouse->id)) {
-        // return $this->redirec(['/me']);
-        // }
-
         $cart = \Yii::$app->cartMain;
         $userCreate = UserHelper::GetEmployee();
 
@@ -70,7 +65,6 @@ class MainStockController extends Controller
                     $model->order_status = 'pending';
                     $model->warehouse_id = $mainWarehouse->id;
                     $model->from_warehouse_id = $submWarehouse->id;
-                    $model->movement_date = date('Y-m-d');
 
                     if (!$model->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล Order ได้');

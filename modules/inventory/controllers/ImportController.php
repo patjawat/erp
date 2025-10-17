@@ -109,38 +109,48 @@ class ImportController extends Controller
                 $product = $this->findProduct($data[0], $data[1], $assetType, $data[2]);
                 if ($product['status'] == 'error') {
                     $error++;
-                }else{
-                $assetItem = $product['data']['code'];
-                $checkInOrder = StockEvent::findOne(['name' => 'order_item','asset_item' => $assetItem,'category_id' => $stockOrder->id]);
-                if(!$checkInOrder){
+                } else {
+                    $assetItem = $product['data']['code'];
+                    $checkInOrder = StockEvent::findOne(['name' => 'order_item', 'asset_item' => $assetItem, 'category_id' => $stockOrder->id]);
+                    if (!$checkInOrder) {
 
-                $lotNumber = $data[5] !== '' ? $data[5] : \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
+                        $lotNumber = $data[5] !== '' ? $data[5] : \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
 
-                    $item = new StockEvent([
-                        'name' => 'order_item',
-                        'asset_item' => $assetItem,
-                        'qty' => $data[3],
-                        'unit_price' => ($data[4] / $data[3]),
-                        'total_price' => $data[4],
-                        'order_status' => 'pending',
-                        'transaction_type' => 'IN',
-                        'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
-                        'code' => $stockOrder->code,
-                        'category_id' => $stockOrder->id,
-                        'lot_number' => $lotNumber,
-                        'data_json' => [
-                            "req_qty" =>  "",
-                            "exp_date" => "",
-                            "mfg_date" => "",
-                            "item_type" =>  "ยอดยกมา",
-                            "po_number" => "",
-                            "pq_number" => "",
-                            "vendor_name" => "",
-                            "receive_date" => "",
-                            "asset_type_name" => "",
-                            "employee_fullname" => "",
-                            "employee_position"=> " ",
-                            "employee_department" => ""
+                        $totalPrice = 0;
+                        $unitPrice = 0;
+                        if (!empty($data[3])) {
+                            $unitPrice = (float) str_replace(',', '', $data[3]);
+                        }
+
+                        if (!empty($data[4])) {
+                            $totalPrice = (float) str_replace(',', '', $data[4]);
+                        }
+
+                        $item = new StockEvent([
+                            'name' => 'order_item',
+                            'asset_item' => $assetItem,
+                            'qty' => $data[3],
+                            'unit_price' => ($totalPrice / $unitPrice),
+                            'total_price' => $totalPrice,
+                            'order_status' => 'pending',
+                            'transaction_type' => 'IN',
+                            'warehouse_id' => $stockOrder->warehouse_id, // แนบ order_id
+                            'code' => $stockOrder->code,
+                            'category_id' => $stockOrder->id,
+                            'lot_number' => $lotNumber,
+                            'data_json' => [
+                                "req_qty" =>  "",
+                                "exp_date" => "",
+                                "mfg_date" => "",
+                                "item_type" =>  "ยอดยกมา",
+                                "po_number" => "",
+                                "pq_number" => "",
+                                "vendor_name" => "",
+                                "receive_date" => "",
+                                "asset_type_name" => "",
+                                "employee_fullname" => "",
+                                "employee_position" => " ",
+                                "employee_department" => ""
                             ]
                         ]);
                         if ($item->save(false)) $imported++;
@@ -148,9 +158,9 @@ class ImportController extends Controller
                 }
                 // $demo[] = $product['status'];
 
-            
 
-                
+
+
             }
             fclose($handle);
             if ($error >= 1) {
@@ -191,20 +201,20 @@ class ImportController extends Controller
                     'data' => $checkCodeDuplicate['data']
                 ];
             } else {
-            //ถ้าไม่ซ้ำให้สาร้างใหม่
-            $newProduct = new Product;
-            $newProduct->group_id = 4;
-            $newProduct->name = 'asset_item';
-            $newProduct->category_id = $categoryId;
-            $newProduct->title = $title;
-            $newProduct->code  = \mdm\autonumber\AutoNumber::generate($categoryId.'-?');
+                //ถ้าไม่ซ้ำให้สาร้างใหม่
+                $newProduct = new Product;
+                $newProduct->group_id = 4;
+                $newProduct->name = 'asset_item';
+                $newProduct->category_id = $categoryId;
+                $newProduct->title = $title;
+                $newProduct->code  = \mdm\autonumber\AutoNumber::generate($categoryId . '-?');
 
-            $newProduct->data_json = [
-                'unit' => $unit,
-                'asset_type' => $categoryId
-            ];
-            $newProduct->save(false);
-             $this->UpdateUnit($newProduct);
+                $newProduct->data_json = [
+                    'unit' => $unit,
+                    'asset_type' => $categoryId
+                ];
+                $newProduct->save(false);
+                $this->UpdateUnit($newProduct);
                 return [
                     'status' => 'success',
                     'msg' => 'Yes',
@@ -214,12 +224,12 @@ class ImportController extends Controller
         }
     }
 
-protected function UpdateUnit($model)
- {
-    $unit  = Categorise::findOne(['name' => 'unit','title' => $model->data_json['unit']]);
-    if(!$unit){
-        $newUnit = new Categorise(['name' => 'unit','title' => $model->data_json['unit']]);
-        $newUnit->save(false);
+    protected function UpdateUnit($model)
+    {
+        $unit  = Categorise::findOne(['name' => 'unit', 'title' => $model->data_json['unit']]);
+        if (!$unit) {
+            $newUnit = new Categorise(['name' => 'unit', 'title' => $model->data_json['unit']]);
+            $newUnit->save(false);
+        }
     }
- }
 }
