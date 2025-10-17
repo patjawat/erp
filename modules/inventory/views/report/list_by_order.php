@@ -81,7 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="12" class="text-end fw-bold bg-warning">รวมราคาทั้งหมด</td>
-                    <td class="fw-bold text-end  bg-warning"><?=$totalPrice?></td>
+                    <td class="fw-bold text-end  bg-warning"><?=number_format($totalPrice,2)?></td>
                 </tr>
             </tbody>
         </table>

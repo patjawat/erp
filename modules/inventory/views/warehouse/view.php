@@ -7,11 +7,44 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
+use app\components\AppHelper;
+use app\modules\inventory\models\StockEvent;
 
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory']];
+
+ $range = AppHelper::BudgetYearRange($searchModel->thai_year);
+        $dateStart =  $range['start']; // 2025-10-01
+        $dateEnd =  $range['end'];   // 2026-09-30
+
+
+        $params = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
+        $conditions = [
+            "e.name = 'order'",
+            "w.warehouse_type = 'MAIN'",
+            "i.asset_item IS NOT NULL",
+        ];
+    $warehouseId = $warehouse->id;
+    if (!empty($warehouseId)) {
+        $conditions[] = "e.warehouse_id = :warehouse_id";
+        $params[':warehouse_id'] = $warehouseId;
+    }
+
+        // ----- Auto GROUP / ORDER -----
+        $groupBy = '';
+        list($sql, $params) = StockEvent::buildStockOrderSql(
+            $conditions,
+            $params,
+            $groupBy ?? null,
+            $orderBy ?? null
+        );
+
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryOne();
 
 ?>
 
@@ -34,7 +67,7 @@ Dashboard
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2><?php  echo number_format($searchModel->LastTotalStock(),2); ?> </h2>
+                    <h2><?php  echo number_format($querys['begin_price'],2); ?> </h2>
                 </div>
                 <div class="card-footer border-0">ยอดยกมา</div>
             </div>
@@ -44,12 +77,12 @@ Dashboard
     <div class="col-3">
         <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
             <div class="card-body">
+                <h2><?php echo number_format($querys['price_in'],2); ?></h2>
             <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-            <h2><?php echo number_format($searchModel->ReceiveMainSummary(),2); ?></h2>
             <?php endif?>
 
             <?php if($warehouse['warehouse_type'] == 'SUB'):?>
-                <h2><?php echo number_format($searchModel->ReceiveSubSummary(),2); ?></h2>
+                <h2><?php // echo number_format($searchModel->ReceiveSubSummary(),2); ?></h2>
             <?php endif?>
 
             </div>
@@ -60,7 +93,7 @@ Dashboard
     <div class="col-3">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2><?=number_format($searchModel->OutSummary(),2)?></h2>
+                    <h2><?=number_format($querys['price_out'],2)?></h2>
 
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
@@ -72,7 +105,7 @@ Dashboard
                 <div class="card-body">
                     <h2> <?php 
                     // echo number_format(($searchModel->LastTotalStock()+$searchModel->ReceiveSubSummary()) - $searchModel->OutSummary(),2)
-                    echo number_format($searchModel->SumSubStock(),2);
+                    echo number_format($querys['end_price'],2);
                      ?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>

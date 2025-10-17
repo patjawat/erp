@@ -91,7 +91,7 @@ use app\modules\inventory\models\StockEvent;
                         );
 
         $querys = Yii::$app->db->createCommand($sql, $params)->queryOne();
-                        echo $querys['end_price'];
+                        echo number_format($querys['end_price'] ?? 0,2);
  
                             ?>
                         </span>

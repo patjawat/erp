@@ -46,7 +46,7 @@ use app\modules\hr\models\Organization;
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวีนที่'])->label(false);?>
+        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวันที่'])->label(false);?>
     </div>
         <div class="col-lg-2 col-md-2 col-sm-12">
       <?=$form->field($model, 'status')->widget(Select2::classname(), [

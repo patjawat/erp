@@ -11,8 +11,26 @@ use yii\helpers\Json;
 <div id="inventoryCharts"></div>
 
 <?php
-$chartSummeryIn = Json::encode($model->SummaryPriceYear()['in']);
-$chartSummeryOut = Json::encode($model->SummaryPriceYear()['out']);
+// echo $model->warehouse_id;
+// $chartSummeryIn = Json::encode($model->SummaryPriceYear()['in']);
+// $chartSummeryOut = Json::encode($model->SummaryPriceYear()['out']);
+
+ $query = $model->SummaryChart($model->warehouse_id);
+try {
+  $chartSummary = [
+      'in' => [$query['in10'], $query['in11'], $query['in12'], $query['in1'], $query['in2'], $query['in3'], $query['in4'], $query['in5'], $query['in6'], $query['in7'], $query['in8'], $query['in9']],
+      'out' => [$query['out10'], $query['out11'], $query['out12'], $query['out1'], $query['out2'], $query['out3'], $query['out4'], $query['out5'], $query['out6'], $query['out7'], $query['out8'], $query['out9']]
+  ];
+} catch (\Throwable $th) {
+  $chartSummary = [
+      'in' => [],
+      'out' => [],
+  ];
+}
+
+$chartSummeryIn = Json::encode($chartSummary['in']);
+$chartSummeryOut = Json::encode($chartSummary['out']);
+
 
 $js = <<< JS
   // getPendingOrder()
