@@ -242,14 +242,11 @@ $moduleId = Yii::$app->controller->module->id;
                     </div>
                 </div>
             </footer>
-
-
-
         </div>
 
 
                 <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
-        <div id="scroll-buttons" class="position-fixed bottom-50 end-0 p-3" style="z-index: 1030;">
+        <div id="scroll-buttons" class="d-flex flex-column  position-fixed bottom-50 end-0 p-3" style="z-index: 1030;">
         <!-- ปุ่มขึ้นบนสุด -->
         <button type="button" id="btnScrollTop" class="btn btn-primary rounded-circle mb-2 shadow">
             <i class="fa-solid fa-arrow-up"></i>

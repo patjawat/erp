@@ -33,7 +33,7 @@ use yii\widgets\Pjax;
                         <?php //  $model->data_json['order_type_name'] ?>
                     </td>
                     <td>
-                        <?=$model->vendor->title?>
+                        <?=$model->vendor->title ?? '-'?>
                     </td>
                     <td class="text-end">
                         <span class="fw-semibold"><?=number_format($model->calculateVAT()['priceAfterVAT'],2)?></span>

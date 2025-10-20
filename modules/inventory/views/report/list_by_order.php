@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?=$item['warehouse_type'] == 'MAIN' ? 'คลังหลัก' : 'คลังย่อย' ?></td>
                         <td><?= $item['asset_type_name']?></td>
                         <td><?= AppHelper::convertToThai($item['movement_date']);?></td>
-                        <td><?= $item['code']?></td>
+                        <td><?= $item['asset_item']?></td>
                         <td  class="text-center"><?=$item['transaction_type'] == 'IN' ? 'รับเข้า' : 'จ่ายออก' ?></td>
                         <td><?= $item['asset_item']?></td>
                         <td><?= $item['title']?></td>

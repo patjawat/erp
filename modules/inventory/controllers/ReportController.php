@@ -458,7 +458,6 @@ class ReportController extends \yii\web\Controller
         // --------------------------------------------------
         // สร้างหัวตาราง 2 แถวเหมือนใน HTML
         // --------------------------------------------------
-
         // แถวที่ 1
         $sheet->setCellValue('A1', 'รหัสสินค้า');
         $sheet->setCellValue('B1', 'รายการสินค้า');
@@ -603,7 +602,7 @@ class ReportController extends \yii\web\Controller
             "e.name = 'order'",
             "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
-            "e.movement_date BETWEEN :date_start AND :date_end"
+
         ];
 
         // ----- Auto GROUP / ORDER -----
@@ -619,8 +618,6 @@ class ReportController extends \yii\web\Controller
             $groupBy ?? null,
             $orderBy ?? null
         );
-
-
 
         list($sql, $params) = StockEvent::buildStockOrderSql(
             $conditions,
@@ -974,28 +971,56 @@ class ReportController extends \yii\web\Controller
         $StartRowSheet2 = 3;
         // $dataItems = $this->findModelItem($params);
         // $dataItems = $this->ItemSummary($warehouseId, $dateStart, $dateEnd);
-        // foreach ($dataItems as $key => $value) {
-        //     $numRow = $StartRowSheet2++;
-        //     // $a[] = ['B' => 'B'.$StartRow++];
-        //     $sheet2->setCellValue('A' . $numRow, $numRow);
 
-        //     $sheet2->setCellValue('B' . $numRow, $value['warehouse_name']);
+         $params2 = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
+        $conditions2 = [
+            "e.name = 'order'",
+            "w.warehouse_type = 'MAIN'",
+            "i.asset_item IS NOT NULL",
 
-        //     $sheet2->setCellValue('C' . $numRow, $value['asset_item']);
+        ];
 
-        //     $sheet2->setCellValue('D' . $numRow, $value['asset_name']);
+        // ----- Auto GROUP / ORDER -----
+        $groupFields2 = [
+            'a.code'
+        ];
+        $groupBy2 = implode(', ', $groupFields2);
+        $orderBy2 = 'CAST(SUBSTRING(t.code, 2) AS UNSIGNED) ASC';
 
-        //     $sheet2->setCellValue('E' . $numRow, $value['asset_type_name']);
-        //     $sheet2->setCellValue('F' . $numRow, $value['unit']);
-        //     $sheet2->setCellValue('G' . $numRow, $value['balance_before_qty']);
-        //     $sheet2->setCellValue('H' . $numRow, $value['balance_before']);
-        //     $sheet2->setCellValue('I' . $numRow, $value['total_in_month_qty']);
-        //     $sheet2->setCellValue('J' . $numRow, $value['total_in_month']);
-        //     $sheet2->setCellValue('K' . $numRow, $value['total_out_month_qty']);
-        //     $sheet2->setCellValue('L' . $numRow, $value['total_out_month']);
-        //     $sheet2->setCellValue('M' . $numRow, ($value['balance_before_qty'] + $value['total_in_month_qty']) - $value['total_out_month_qty']);
-        //     $sheet2->setCellValue('N' . $numRow, $value['balance_after']);
-        // }
+        list($sql2, $params2) = StockEvent::buildStockOrderSql(
+            $conditions2,
+            $params2,
+            $groupBy2 ?? null,
+            $orderBy2 ?? null
+        );
+
+        $querys2 = Yii::$app->db->createCommand($sql2, $params2)->queryAll();
+
+        foreach ($querys2 as $key => $value) {
+            $numRow = $StartRowSheet2++;
+            // $a[] = ['B' => 'B'.$StartRow++];
+            $sheet2->setCellValue('A' . $numRow, $numRow);
+
+            $sheet2->setCellValue('B' . $numRow, '');
+
+            $sheet2->setCellValue('C' . $numRow, $value['asset_item']);
+
+            $sheet2->setCellValue('D' . $numRow, $value['title']);
+
+            $sheet2->setCellValue('E' . $numRow, $value['asset_type_name']);
+            $sheet2->setCellValue('F' . $numRow, $value['unit']);
+            $sheet2->setCellValue('G' . $numRow, $value['begin_qty']);
+            $sheet2->setCellValue('H' . $numRow, $value['begin_price']);
+            $sheet2->setCellValue('I' . $numRow, $value['qty_in']);
+            $sheet2->setCellValue('J' . $numRow, $value['price_in']);
+            $sheet2->setCellValue('K' . $numRow, $value['qty_out']);
+            $sheet2->setCellValue('L' . $numRow, $value['price_out']);
+            $sheet2->setCellValue('M' . $numRow, $value['end_qty']);
+            $sheet2->setCellValue('N' . $numRow, $value['end_price']);
+        }
 
         // เปิด AutoFilter
         $sheet2->setAutoFilter("A2:N" . ($StartRowSheet2));

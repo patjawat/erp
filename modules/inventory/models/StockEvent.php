@@ -1534,7 +1534,6 @@ class StockEvent extends Yii\db\ActiveRecord
             w.warehouse_type,
             t.title AS asset_type_name,
             e.movement_date,
-            e.code,
             e.transaction_type,
             a.category_id,
             i.asset_item,
