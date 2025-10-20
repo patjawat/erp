@@ -168,6 +168,7 @@ class ReportController extends \yii\web\Controller
         "i.asset_item IS NOT NULL",
         "e.order_status = 'success'",
         "i.order_status = 'success'",
+        "e.movement_date BETWEEN :date_start AND :date_end"
     ];
 
     // ----- Dynamic Filters (append to $conditions / $params) -----
@@ -229,19 +230,6 @@ class ReportController extends \yii\web\Controller
             $dateStart = $dateEnd = '';
         }
 
-        // ----- Dynamic Filters -----
-        $params = [
-            ':date_start' => $dateStart,
-            ':date_end' => $dateEnd,
-        ];
-        $conditions = [
-            "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
-            "i.asset_item IS NOT NULL",
-            "e.order_status = 'success'",
-            "i.order_status = 'success'",
-        ];
-
         // เพิ่มเงื่อนไขการค้นหาจาดคลัง
         $warehouseId = $searchModel->q_warehouse_id;
         if (!empty($warehouseId)) {
@@ -261,9 +249,6 @@ class ReportController extends \yii\web\Controller
             $conditions[] = "t.code = :asset_type_id";
             $params[':asset_type_id'] = $assetTypeId;
         }
-
-
-
         // ----- Auto GROUP / ORDER -----
         $params = [
             ':date_start' => $dateStart,
@@ -283,9 +268,11 @@ class ReportController extends \yii\web\Controller
             'a.code',
         ];
         $groupBy = implode(', ', $groupFields);
-        $orderBy = 'CAST(SUBSTRING(a.code, 2) AS UNSIGNED) ASC';
+        $orderBy = "CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
+                    CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
+                    CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)";
 
-        list($sql, $params) = StockEvent::buildStockOrderSql(
+        list($sql, $params) = StockEvent::buildStockAssetItemSql(
             $conditions,
             $params,
             $groupBy ?? null,
@@ -1034,99 +1021,99 @@ class ReportController extends \yii\web\Controller
         $sheet2->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
         $sheet2->getStyle('A1:N2')->getFont()->setBold(true)->setItalic(false);
 
-        // $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->setCellValue('N1', '=SUBTOTAL(9,N3:N' . (count($dataItems) + 2) . ')');
-        // $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->setCellValue('N1', '=SUBTOTAL(9,N3:N' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
 
-        // $rowsheet2B = 'B3:B' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2B)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        // $sheet2->getStyle($rowsheet2B)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $rowsheet2B = 'B3:B' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2B)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet2->getStyle($rowsheet2B)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
 
-        // $rowsheet2D = 'D3:D' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2D)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        // $sheet2->getStyle($rowsheet2D)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $rowsheet2D = 'D3:D' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2D)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet2->getStyle($rowsheet2D)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
 
-        // $rowsheet2E = 'E3:E' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2E)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        // $sheet2->getStyle($rowsheet2E)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $rowsheet2E = 'E3:E' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2E)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet2->getStyle($rowsheet2E)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
 
-        // $rowsheet2G = 'G3:G' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2G)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        // $sheet2->getStyle($rowsheet2G)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2G)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2G = 'G3:G' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2G)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet2->getStyle($rowsheet2G)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2G)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2H = 'H3:H' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2H)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        // $sheet2->getStyle($rowsheet2H)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2H)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->getStyle($rowsheet2H)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2H = 'H3:H' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2H)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet2->getStyle($rowsheet2H)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2H)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->getStyle($rowsheet2H)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2I = 'I3:I' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2I)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        // $sheet2->getStyle($rowsheet2I)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2I)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2I = 'I3:I' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2I)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet2->getStyle($rowsheet2I)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2I)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2J = 'J3:J' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2J)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        // $sheet2->getStyle($rowsheet2J)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
-        // $sheet2->getStyle($rowsheet2J)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2J = 'J3:J' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2J)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet2->getStyle($rowsheet2J)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
+        $sheet2->getStyle($rowsheet2J)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2K = 'K3:K' . count($dataItems);
-        // $sheet2->getStyle($rowsheet2K)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        // $sheet2->getStyle($rowsheet2K)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2K)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2K = 'K3:K' . count($querys2);
+        $sheet2->getStyle($rowsheet2K)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet2->getStyle($rowsheet2K)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2K)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2L = 'L3:L' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2L)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        // $sheet2->getStyle($rowsheet2L)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2L)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->getStyle($rowsheet2L)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2L = 'L3:L' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2L)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet2->getStyle($rowsheet2L)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2L)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->getStyle($rowsheet2L)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2M = 'M3:M' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2M)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        // $sheet2->getStyle($rowsheet2M)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2M)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2M = 'M3:M' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2M)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet2->getStyle($rowsheet2M)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2M)->getFont()->setBold(true)->setItalic(false);
 
-        // $rowsheet2N = 'N3:N' . (count($dataItems) + 2);
-        // $sheet2->getStyle($rowsheet2N)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        // $sheet2->getStyle($rowsheet2N)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        // $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        // $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        // $sheet2->getStyle($rowsheet2N)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        // $sheet2->getStyle($rowsheet2N)->getFont()->setBold(true)->setItalic(false);
+        $rowsheet2N = 'N3:N' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2N)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet2->getStyle($rowsheet2N)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle($rowsheet2N)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        $sheet2->getStyle($rowsheet2N)->getFont()->setBold(true)->setItalic(false);
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';

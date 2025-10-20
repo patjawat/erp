@@ -1357,7 +1357,7 @@ class StockEvent extends Yii\db\ActiveRecord
                 new Expression("SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 9  AND i.order_status = 'success'  THEN i.qty * i.unit_price ELSE 0 END) as out9"),
             ])
             ->where($where)
-            ->andWhere(['e.order_status' => 'success','e.name' => 'order','i.name' => 'order_item'])
+            ->andWhere(['e.order_status' => 'success', 'e.name' => 'order', 'i.name' => 'order_item'])
             ->leftJoin(['w' => 'warehouses'], 'w.id = i.warehouse_id')
             ->leftJoin(['e' => 'stock_events'], 'e.id = i.category_id')
             ->asArray()
@@ -1595,4 +1595,74 @@ class StockEvent extends Yii\db\ActiveRecord
 
         return [$sql, $params];
     }
-}
+
+    public static function buildStockAssetItemSql($conditions, $params = [], $groupBy = null, $orderBy = null)
+    {
+
+        $where = implode(' AND ', $conditions);
+        $groupBySql = $groupBy ? "GROUP BY $groupBy" : '';
+        $orderBySql = $orderBy ? "ORDER BY $orderBy" : '';
+        $sql = "
+        SELECT 
+            w.warehouse_name,
+            w.warehouse_type,
+            t.title AS asset_type_name,
+            e.movement_date,
+            e.transaction_type,
+            a.category_id,
+            i.asset_item,
+            a.title,
+            a.code,
+            a.data_json->>'$.unit' AS unit,
+            i.qty AS item_qty,
+            ROUND(i.unit_price, 2) AS item_unit_price,
+            ROUND(SUM(i.qty * i.unit_price), 2) AS item_total_price,
+
+            COALESCE(SUM(CASE 
+        WHEN e.movement_date <:date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty
+        WHEN e.movement_date <:date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty
+        ELSE 0 END),0) AS begin_qty,
+    COALESCE(ROUND(SUM(CASE 
+        WHEN e.movement_date <:date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+        WHEN e.movement_date <:date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty * i.unit_price
+        ELSE 0 END),2),0) AS begin_price,
+    COALESCE(SUM(CASE 
+        WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty
+        ELSE 0 END),0) AS qty_in,
+    COALESCE(ROUND(SUM(CASE 
+        WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+        ELSE 0 END),2),0) AS price_in,
+    COALESCE(SUM(CASE 
+        WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN i.qty
+        ELSE 0 END),0) AS qty_out,
+    COALESCE(ROUND(SUM(CASE 
+        WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN i.qty * i.unit_price
+        ELSE 0 END),2),0) AS price_out,
+    COALESCE(SUM(CASE 
+        WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty
+        WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty
+        ELSE 0 END),0) AS end_qty,
+    COALESCE(ROUND(SUM(CASE 
+        WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' THEN i.qty * i.unit_price
+        WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' THEN -i.qty * i.unit_price
+        ELSE 0 END),2),0) AS end_price
+
+        FROM categorise a
+        LEFT JOIN stock_events i ON i.asset_item = a.code AND i.name = 'order_item'
+        LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order' AND e.order_status = 'success'
+        LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+        LEFT JOIN warehouses w ON w.id = e.warehouse_id AND w.warehouse_type = 'MAIN'
+        WHERE $where
+        $groupBySql
+        $orderBySql
+    ";
+        
+        return [$sql, $params];
+        }
+        }
+        
+        // GROUP BY a.code
+        // ORDER BY 
+        // CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),   -- ส่วนหน้า code
+        // CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),  -- ส่วนหลัง code
+        // CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)        -- ตัวเลขหลัง M";

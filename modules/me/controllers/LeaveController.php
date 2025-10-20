@@ -355,7 +355,8 @@ class LeaveController extends Controller
             'date_start' => $dateStart,
             'date_end' => $dateEnd,
             'on_holidays' => 0,
-            'total_days' => 0
+            'total_days' => 0,
+            'emp_id' => $me->id
         ]);
 
         $model->data_json = [
@@ -378,7 +379,7 @@ class LeaveController extends Controller
                 //ถ้าเป็น ผอ. ให้อนุมัติเลย
                 $model->status = $me->isDirector() ? 'Approve' : 'Pending';
 
-                $model->emp_id = $me->id;
+                
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
                 $model->date_end = $dateEnd;

@@ -74,21 +74,21 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $item['asset_type_name'] ?>
                         </td>
                         <!-- สินค้าคงเหลือ -->
-                        <td class="text-end fw-bolder"><?= $item['begin_price']?></td>
+                        <td class="text-end fw-bolder"><?= number_format(($item['begin_price'] ?? 0),2)?></td>
                         <!-- ซื้อระหว่างเดือน -->
                         <td class="text-end fw-bolder">
-                            <?= $item['price_in']?>
+                            <?= number_format(($item['price_in'] ?? 0),2)?>
                         </td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?= $item['begin_price']+$item['price_in'] ?></td>
+                        <td class="text-end fw-bolder"><?= number_format(($item['begin_price']+$item['price_in'] ?? 0),2) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
                         <td class="text-end fw-bolder">0.00</td>
                         <!-- จ่ายส่วนของโรงพยาบาล -->
-                        <td class="text-end fw-bolder"><?= $item['price_out'] ?></td>
+                        <td class="text-end fw-bolder"><?= number_format(($item['price_out'] ?? 0),2) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?=(($item['begin_price']+$item['price_in'])-$item['begin_price'])?></td>
+                        <td class="text-end fw-bolder"><?=number_format(((($item['begin_price']+$item['price_in'])-$item['begin_price']) ?? 0),2)?></td>
                         <!-- ยอดยกไป -->
-                        <td class="text-end fw-bolder"><?= $item['end_price'] ?></td>
+                        <td class="text-end fw-bolder"><?= number_format(($item['end_price'] ?? 0),2) ?></td>
                     </tr>
                 <?php endforeach; ?>
 

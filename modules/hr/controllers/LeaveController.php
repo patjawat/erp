@@ -773,7 +773,6 @@ class LeaveController extends Controller
             }
 
             $model->date_start_type == '' ? $model->addError('date_start_type', $requiredName) : null;
-            // $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
             $model->data_json['reason'] == '' ? $model->addError('data_json[reason]', $requiredName) : null;
             $model->data_json['phone'] == '' ? $model->addError('data_json[phone]', $requiredName) : null;
             $model->data_json['location'] == '' ? $model->addError('data_json[location]', $requiredName) : null;
@@ -781,7 +780,22 @@ class LeaveController extends Controller
             $model->data_json['leave_work_send_id'] == '' ? $model->addError('data_json[leave_work_send_id]', $requiredName) : null;
             $model->data_json['approve_1'] == '' ? $model->addError('data_json[approve_1]', $requiredName) : null;
             $model->data_json['approve_2'] == '' ? $model->addError('data_json[approve_2]', $requiredName) : null;
-            // $model->unit_price == "" ? $model->addError('unit_price', $requiredName) : null;
+
+                   // --- ✅ ตรวจสอบวันลาซ้ำ ---
+        if ($dateStart && $dateEnd && !$model->hasErrors()) {
+            $exists = Leave::find()
+                ->where(['emp_id' => $model->emp_id])
+                ->andWhere(['<=', 'date_start', $dateEnd])
+                ->andWhere(['>=', 'date_end', $dateStart])
+                ->andWhere(['<>', 'status', 'cancel']) // ข้ามรายการที่ถูกยกเลิก
+                ->exists();
+
+            if ($exists) {
+                $model->addError('date_start', 'คุณลาในวันนี้แล้ว');
+                $model->addError('date_end', 'คุณลาในวันนี้แล้ว');
+            }
+        }
+
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;

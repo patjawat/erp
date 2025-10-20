@@ -312,6 +312,7 @@ $resultsJs = <<<JS
 ?>
 
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>

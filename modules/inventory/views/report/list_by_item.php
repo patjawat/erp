@@ -76,7 +76,6 @@
              <th rowspan="2" style="width: 87px;">รหัสสินค้า</th>
              <th rowspan="2">รายการสินค้า</th>
              <th rowspan="2">ประเภทวัสดุ</th>
-             <th rowspan="2">คลัง</th>
              <th colspan="2">ยอดยกมา</th>
              <th colspan="2">รับเข้า</th>
              <th colspan="2">จ่ายออก</th>
@@ -108,10 +107,9 @@
               $sum_end_price   += $item['end_price'];
               ?>
              <tr>
-               <td><?= $item['asset_item'] ?></td>
+               <td><?= $item['code'] ?></td>
                <td><?= $item['title'] ?></td>
                <td><?= $item['asset_type_name'] ?></td>
-               <td><?= $item['warehouse_name'] ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['begin_qty'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['begin_price'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['qty_in'], 2) ?></td>
@@ -129,7 +127,6 @@
              <td colspan="4" class="text-center fw-semibold">รวมทั้งหมด</td>
              <td class="text-end fw-semibold"><?= number_format($sum_begin_qty, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_begin_price, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_qty_in, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_price_in, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_qty_out, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_price_out, 2) ?></td>
