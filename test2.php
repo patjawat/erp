@@ -1,64 +1,126 @@
+SELECT i.transaction_type,e.transaction_type,e.movement_date,wo.warehouse_type,wi.warehouse_type,COALESCE(wo.warehouse_type, wi.warehouse_type) as w_type FROM `stock_events` i
+LEFT JOIN `stock_events` e ON e.id = i.category_id
+LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+WHERE e.movement_date BETWEEN '2025-09-01' AND '2025-09-30';
+
 SELECT 
+    t.code,
+    t.title,
+    e.id AS e_id,
+    e.order_status AS e_status,
+    i.order_status AS i_status,
+    i.id AS i_id,
     e.thai_year,
+    e.transaction_type,
+    e.movement_date,
+    COALESCE(wo.warehouse_type, wi.warehouse_type) AS warehouse_type,
+    -- 🔹 ยอดยกมา (ก่อน 1 ก.ย. 2025)
+    SUM(
+        CASE 
+            WHEN e.movement_date < '2025-09-01' 
+                 AND i.transaction_type = 'IN' 
+                 AND i.order_status = 'success'
+                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+            THEN i.qty
 
-    -- ตุลาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 10 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in10,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 10 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out10,
+            WHEN e.movement_date < '2025-09-01' 
+                 AND i.transaction_type = 'OUT' 
+                 AND i.order_status = 'success'
+                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+            THEN -i.qty
 
-    -- พฤศจิกายน
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 11 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in11,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 11 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out11,
-
-    -- ธันวาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 12 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in12,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 12 AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out12,
-
-    -- มกราคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 1  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in1,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 1  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out1,
-
-    -- กุมภาพันธ์
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 2  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in2,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 2  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out2,
-
-    -- มีนาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 3  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in3,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 3  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out3,
-
-    -- เมษายน
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 4  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in4,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 4  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out4,
-
-    -- พฤษภาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 5  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in5,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 5  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out5,
-
-    -- มิถุนายน
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 6  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in6,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 6  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out6,
-
-    -- กรกฎาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 7  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in7,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 7  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out7,
-
-    -- สิงหาคม
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 8  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in8,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 8  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out8,
-
-    -- กันยายน
-    SUM(CASE WHEN i.transaction_type = 'IN'  AND MONTH(e.movement_date) = 9  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS in9,
-    SUM(CASE WHEN i.transaction_type = 'OUT' AND MONTH(e.movement_date) = 9  AND i.order_status = 'success' THEN i.qty * i.unit_price ELSE 0 END) AS out9
-
-FROM 
-    stock_events i
-LEFT JOIN 
-    warehouses w ON w.id = i.warehouse_id
-LEFT JOIN 
-    stock_events e ON e.id = i.category_id
-
-WHERE 
-    e.thai_year = '2568'
-    AND w.warehouse_type = 3
-    AND e.order_status = 'success'
-    AND e.name = 'order'
-    AND i.name = 'order_item';
+            ELSE 0 
+        END
+    ) AS begin_qty,
+        -- 🔹 ยอดรับเข้า (1–30 ก.ย. 2025)
+    SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'IN' 
+             AND i.order_status = 'success'
+        	AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+        THEN i.qty ELSE 0 END
+    ) AS qty_in,
+    ROUND(SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'IN' 
+             AND i.order_status = 'success'
+             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+        THEN i.qty * i.unit_price ELSE 0 END
+    ),2) AS price_in,
+    -- 🔹 ยอดเบิกออก รพ. (1–30 ก.ย. 2025)
+    SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+        	AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+        THEN i.qty ELSE 0 END
+    ) AS qty_out,
+    ROUND(SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+              AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+        THEN i.qty * i.unit_price ELSE 0 END
+    ),2) AS price_out,
+        -- 🔹 ยอดเบิกออก รพ.สต. (1–30 ก.ย. 2025)
+    SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+        	AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
+        THEN i.qty ELSE 0 END
+    ) AS branch_qty_out,
+    ROUND(SUM(CASE 
+        WHEN e.movement_date BETWEEN '2025-09-01' AND '2025-09-30'
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+              AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('ฺBRANCH')
+        THEN i.qty * i.unit_price ELSE 0 END
+    ),2) AS branch_price_out,
+        -- 🔹 ยอดคงเหลือสิ้นงวด (ถึง 30 ก.ย. 2025)
+    SUM(CASE 
+        WHEN e.movement_date <= '2025-09-30' 
+             AND i.transaction_type = 'IN'
+             AND i.order_status = 'success'
+        	AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+        THEN i.qty
+        WHEN e.movement_date <= '2025-09-30' 
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+        	AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','ฺBRANCH')
+        THEN -i.qty
+        ELSE 0 END
+    ) AS end_qty,
+    
+    ROUND(SUM(CASE 
+        WHEN e.movement_date <= '2025-09-30' 
+             AND i.transaction_type = 'IN'
+             AND i.order_status = 'success'
+             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+        THEN i.qty * i.unit_price
+        WHEN e.movement_date <= '2025-09-30' 
+             AND i.transaction_type = 'OUT'
+             AND i.order_status = 'success'
+             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','ฺBRANCH')
+        THEN -i.qty * i.unit_price
+        ELSE 0 END
+    ),2) AS end_price
+    
+FROM `stock_events` i
+-- เชื่อมโยงรายการหลัก
+LEFT JOIN `stock_events` e ON e.id = i.category_id
+-- เชื่อมกับคลังต้นทาง
+LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+-- เชื่อมกับคลังปลายทาง
+LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+-- เชื่อมกับหมวดหมู่วัสดุ
+LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+-- เชื่อมกับหมวดหมู่ประเภทสินทรัพย์
+LEFT JOIN categorise t  ON t.code = a.category_id AND t.name = 'asset_type'
+WHERE e.thai_year = 2568
+GROUP BY a.code
+ORDER BY 
+CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
+CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
+CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)

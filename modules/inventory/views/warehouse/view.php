@@ -26,7 +26,6 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' =
         ];
         $conditions = [
             "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
         ];
     $warehouseId = $warehouse->id;

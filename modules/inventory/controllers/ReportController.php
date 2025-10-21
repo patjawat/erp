@@ -42,7 +42,6 @@ class ReportController extends \yii\web\Controller
         ];
         $conditions = [
             "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
 
         ];
@@ -52,7 +51,9 @@ class ReportController extends \yii\web\Controller
             't.code'
         ];
         $groupBy = implode(', ', $groupFields);
-        $orderBy = 'CAST(SUBSTRING(t.code, 2) AS UNSIGNED) ASC';
+        $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), ' .
+                'CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), ' .
+                'CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)';
 
         list($sql, $params) = StockEvent::buildStockOrderSql(
             $conditions,
@@ -164,7 +165,6 @@ class ReportController extends \yii\web\Controller
     ];
     $conditions = [
         "e.name = 'order'",
-        "w.warehouse_type = 'MAIN'",
         "i.asset_item IS NOT NULL",
         "e.order_status = 'success'",
         "i.order_status = 'success'",
@@ -256,7 +256,6 @@ class ReportController extends \yii\web\Controller
         ];
         $conditions = [
             "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
             "e.order_status = 'success'",
             "i.order_status = 'success'",
@@ -308,7 +307,7 @@ class ReportController extends \yii\web\Controller
         $assetTypeId = $searchModel->asset_type_id;
 
         // สร้างเงื่อนไข WHERE แบบ dynamic
-        $where = "e.name = 'order' AND w.warehouse_type = 'MAIN' AND i.asset_item IS NOT NULL";
+        $where = "e.name = 'order'  AND i.asset_item IS NOT NULL";
 
         // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
         if (!empty($q)) {
@@ -587,7 +586,6 @@ class ReportController extends \yii\web\Controller
         ];
         $conditions = [
             "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
 
         ];
@@ -769,12 +767,12 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('I5')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $StartRow = 6;
-        // $a = [];
+        $number=1;
         foreach ($querys as $value) {
             $numRow = $StartRow++;
             // $total =  $value['balance_after'];
             // $a[] = ['B' => 'B'.$StartRow++];
-            $sheet->setCellValue('A' . $numRow, $numRow);
+            $sheet->setCellValue('A' . $numRow, $number++);
             $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('A' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('A' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -824,7 +822,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            // $sheet->setCellValue('H' . $numRow, ($value['balance_after']));
+            $sheet->setCellValue('H' . $numRow, ($value['begin_price']));
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -965,7 +963,6 @@ class ReportController extends \yii\web\Controller
         ];
         $conditions2 = [
             "e.name = 'order'",
-            "w.warehouse_type = 'MAIN'",
             "i.asset_item IS NOT NULL",
 
         ];

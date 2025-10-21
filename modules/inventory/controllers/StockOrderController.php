@@ -599,8 +599,6 @@ class StockOrderController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
-            
-            
             if ($model->order_status == 'cancel') {
                 return [
                     'status' => 'error',
@@ -610,10 +608,12 @@ class StockOrderController extends Controller
             }
             //แปลงค่าวันที่รับเข้า
             $model->movement_date = AppHelper::convertToGregorian($model->movement_date);
+            $model->thai_year = AppHelper::YearBudget($model->movement_date);
             // ตรวจสอบว่า stock พอจ่ายหรือไม่
             $checkBalanced = 0;
             foreach ($model->getItems() as $item) {
                 $item->qty =  (is_numeric($item->SumStockQty()) && $item->SumStockQty() > 0) ? max(0, (float)$item->qty) : 0;
+                $item->thai_year = $model->thai_year;
                 $item->save();
                 if ($item->SumStockQty() <= 0 && $item->qty > 0) {
                     ++$checkBalanced;
@@ -642,7 +642,7 @@ class StockOrderController extends Controller
                 // สร้างรายการคำสั่งเข้าเข้าคลังที่ขอเบิก
                 $newStockModel = new StockEvent();
                 $newStockModel->name = 'order';
-                $newStockModel->thai_year = AppHelper::YearBudget();
+                $newStockModel->thai_year = $model->thai_year;
                 $newStockModel->order_status = 'success';
                 $newStockModel->code = \mdm\autonumber\AutoNumber::generate('IN-' . substr(AppHelper::YearBudget(), 2) . '????');
                 $newStockModel->from_warehouse_id = $model->warehouse_id;
@@ -675,7 +675,7 @@ class StockOrderController extends Controller
 
                         $newStockItem = new StockEvent();
                         $newStockItem->order_status = 'success';
-                        $newStockItem->thai_year = AppHelper::YearBudget();
+                        $newStockItem->thai_year = $model->thai_year;
                         $newStockItem->name = 'order_item';
                         $newStockItem->code = $newStockModel->code;
                         $newStockItem->asset_item = $item->asset_item;
@@ -707,7 +707,7 @@ class StockOrderController extends Controller
                             $toStock = new Stock();
                         }
                         $toStock->asset_item = $item->asset_item;
-                        $toStock->thai_year = AppHelper::YearBudget();
+                        $toStock->thai_year = $model->thai_year;
                         $toStock->lot_number = $item->lot_number;
                         $toStock->warehouse_id = $model->from_warehouse_id;
                         $toStock->unit_price = $item->unit_price;
@@ -737,7 +737,6 @@ class StockOrderController extends Controller
                 }
                 // ถ้าไม่มีข้อผิดพลาด ทำการ commit
                 $transaction->commit();
-
                 return [
                     'status' => 'success',
                     'url' => Url::to(['/inventory/warehouse/order-request'])
@@ -776,7 +775,7 @@ class StockOrderController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             $item = Stock::findOne(['lot_number' => $model->lot_number]);
             $model->category_id = $order->id;
-            $model->thai_year = AppHelper::YearBudget();
+            $model->thai_year = $order->thai_year;
             $model->name = 'order_item';
             $model->asset_item = $item->asset_item;
             $model->unit_price = $item->unit_price;
@@ -831,7 +830,7 @@ class StockOrderController extends Controller
         $inStock = Stock::findOne($id);
         $model = new StockEvent();
         $model->category_id = $order->id;
-        $model->thai_year = AppHelper::YearBudget();
+        $model->thai_year = $order->thai_year;
         $model->name = 'order_item';
         $model->asset_item = $inStock->asset_item;
         $model->unit_price = $inStock->unit_price;

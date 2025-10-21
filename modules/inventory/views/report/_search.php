@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
+use app\components\AppHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductTypeSearch $model */
@@ -16,17 +17,47 @@ use yii\widgets\ActiveForm;
     ],
 ]); ?>
 
-
 <div class="row">
+    <!-- <div class="col-3"> -->
+       <?php
+    //     echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
+    //         'data' => $model->ListThaiYear(),
+    //         'options' => ['placeholder' => 'ปีงบประมาณ'],
+    //         'pluginOptions' => [
+    //             'allowClear' => true,
+    //         ],
+    //         'pluginEvents' => [
+    //     'select2:select' => new \yii\web\JsExpression("
+    //         function(e) {
+    //             var thai_year = $(this).val();
+    //             $.ajax({
+    //                 url: '/depdrop/thai-year',
+    //                 type: 'get',
+    //                 data: {thai_year:thai_year},
+    //                 success: function(res) {
+    //                     console.log(res) 
+    //                 $('#stockeventsearch-date_start').val(res.thai_date_start)
+    //                 $('#stockeventsearch-date_end').val(res.thai_date_end)
 
-    <div class="col-5">
+    //                 },
+    //                 error: function(xhr) {
+    //                     console.error('Error:', xhr.responseText);
+    //                 }
+    //             });
+    //         }
+    //     "),
+    // ],
+    //     ])->label(false);
+        ?>
+    <!-- </div> -->
+        <div class="col-4">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
     </div>
-    <div class="col-5">
+    <div class="col-4">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวันที่'])->label(false); ?>
     </div>
 
-    <div class="col-2">
+    <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
             <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
@@ -43,14 +74,6 @@ use yii\widgets\ActiveForm;
     <div class="row">
         <div class="col-3">
 
-            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                'data' => $model->ListThaiYear(),
-                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    // 'width' => '120px',
-                ],
-            ])->label(false); ?>
 
         </div>
 

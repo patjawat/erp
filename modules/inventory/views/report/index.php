@@ -60,19 +60,29 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php
-               
                 $num = 1;
+                $sumPriceOut = 0; //รวมสินค้าที่ใช้ไป
+                $totalPriceBegin = 0; //สินค้าคงเหลือ
+                $totalPriceIn = 0; //ซื้อระหว่างเดือน
+                $totalPriceBranch = 0; //จ่ายส่วนของ รพ.สต.
+                $totalPriceSub = 0; //จ่ายส่วนของโรงพยาบาล
+                $totalPriceSubBranch = 0; //สินค้าที่ใช้ไป
+                $totalPriceEnd = 0; //ยอดยกไป
                 foreach ($querys as $item):
-                 
+                $sumPriceOut = ($item['branch_price_out']+$item['price_out'] ?? 0);
+                
+                $totalPriceBegin+=$item['begin_price'];
+                $totalPriceIn+=$item['price_in'];
+                $totalPriceBranch+=$item['branch_price_out'];
+                $totalPriceSub+=$item['price_out'];
+                $totalPriceSubBranch+=($item['branch_price_out']+$item['price_out']);
+                $totalPriceEnd+=$item['end_price'];
                 ?>
                     <tr>
                         <!-- ที่ -->
                         <td class="text-center"><?= $num++; ?></td>
                         <!-- รายการ -->
-                        <td>
-                            (<?= $item['category_id'] ?>)
-                            <?= $item['asset_type_name'] ?>
-                        </td>
+                        <td>(<?= $item['asset_type_code'] ?>)<?= $item['asset_type_name'] ?></td>
                         <!-- สินค้าคงเหลือ -->
                         <td class="text-end fw-bolder"><?= number_format(($item['begin_price'] ?? 0),2)?></td>
                         <!-- ซื้อระหว่างเดือน -->
@@ -82,15 +92,26 @@ $this->params['breadcrumbs'][] = $this->title;
                         <!-- รวม -->
                         <td class="text-end fw-bolder"><?= number_format(($item['begin_price']+$item['price_in'] ?? 0),2) ?></td>
                         <!-- จ่ายส่วนของ รพ.สต. -->
-                        <td class="text-end fw-bolder">0.00</td>
+                        <td class="text-end fw-bolder"> <?= number_format(($item['branch_price_out'] ?? 0),2)?></td>
                         <!-- จ่ายส่วนของโรงพยาบาล -->
                         <td class="text-end fw-bolder"><?= number_format(($item['price_out'] ?? 0),2) ?></td>
                         <!-- รวม -->
-                        <td class="text-end fw-bolder"><?=number_format(((($item['begin_price']+$item['price_in'])-$item['begin_price']) ?? 0),2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format($sumPriceOut,2)?></td>
                         <!-- ยอดยกไป -->
                         <td class="text-end fw-bolder"><?= number_format(($item['end_price'] ?? 0),2) ?></td>
                     </tr>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                    <tr class="table-warning">
+                        <td></td>
+                        <td class="text-center">รวม</td>
+                        <td class="text-end fw-bolder"><?=number_format($totalPriceBegin,2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format($totalPriceIn,2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($totalPriceBegin+$totalPriceIn),2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($totalPriceBranch),2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($totalPriceSub),2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($totalPriceSubBranch),2)?></td>
+                        <td class="text-end fw-bolder"><?=number_format(($totalPriceEnd),2)?></td>
+                    </tr>
 
             </tbody>
 

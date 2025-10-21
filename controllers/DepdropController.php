@@ -556,6 +556,19 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
+    public function actionThaiYear()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $thaiYear = $this->request->get('thai_year');
+        $date = AppHelper::BudgetYearRange($thaiYear);
+        return [
+            'date_start' => $date['start'],
+            'date_end' => $date['end'],
+            'thai_date_start' => AppHelper::convertToThai($date['start']),
+            'thai_date_end' => AppHelper::convertToThai($date['end']),
+        ];
+    }
+
     public function actionDateFilter()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -572,4 +585,5 @@ class DepdropController extends \yii\web\Controller
             'date_end' => $dateEnd
         ];
     }
+
 }

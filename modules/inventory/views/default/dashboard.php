@@ -192,15 +192,15 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-xl-8">
         <?php
 
-        try {
-        echo $this->render('list_warehouse', [
-            'dateStart' => $dateStart,
-            'dateEnd' => $dateEnd,
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'searchModelWarehouse' => $searchModelWarehouse,
-            'dataProviderWarehouse' => $dataProviderWarehouse,
-        ]);
+try {
+echo $this->render('list_warehouse', [
+    'dateStart' => $dateStart,
+    'dateEnd' => $dateEnd,
+    'searchModel' => $searchModel,
+    'dataProvider' => $dataProvider,
+    'searchModelWarehouse' => $searchModelWarehouse,
+    'dataProviderWarehouse' => $dataProviderWarehouse,
+]);
         } catch (\Throwable $th) {
             //throw $th;
         }

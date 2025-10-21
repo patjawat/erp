@@ -143,4 +143,6 @@ class ThaiDateHelper extends Component
         
         return strtotime($date);
     }
+
+    
 }

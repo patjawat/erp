@@ -70,7 +70,7 @@ use app\modules\inventory\models\StockEvent;
                             ];
                             $conditions = [
                                 "e.name = 'order'",
-                                "w.warehouse_type = 'MAIN'",
+                                "wi.warehouse_type = 'MAIN'",
                                 "i.asset_item IS NOT NULL",
 
                             ];
