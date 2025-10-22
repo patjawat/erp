@@ -50,10 +50,10 @@ use app\components\AppHelper;
     //     ])->label(false);
         ?>
     <!-- </div> -->
-        <div class="col-4">
+        <div class="col-5">
         <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
     </div>
-    <div class="col-4">
+    <div class="col-5">
         <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวันที่'])->label(false); ?>
     </div>
 
@@ -64,6 +64,7 @@ use app\components\AppHelper;
                 aria-expanded="false" aria-controls="collapseFilter">
                 <i class="fa-solid fa-filter"></i>
             </button>
+              <button id="download-button" class="btn btn-success shadow">Excel</button>
         </div>
     </div>
 

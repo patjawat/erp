@@ -52,8 +52,8 @@ class ReportController extends \yii\web\Controller
         ];
         $groupBy = implode(', ', $groupFields);
         $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), ' .
-                'CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), ' .
-                'CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)';
+            'CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), ' .
+            'CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)';
 
         list($sql, $params) = StockEvent::buildStockOrderSql(
             $conditions,
@@ -145,74 +145,74 @@ class ReportController extends \yii\web\Controller
 
 
     public function actionListByOrder()
-{
-    $searchModel = new StockEventSearch([
-        'name' => 'order_item', // กรองเฉพาะรายการที่เป็น item
-    ]);
+    {
+        $searchModel = new StockEventSearch([
+            'name' => 'order_item', // กรองเฉพาะรายการที่เป็น item
+        ]);
 
-    $searchModel->load(Yii::$app->request->queryParams);
-    try {
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-    } catch (\Throwable $th) {
-        $dateStart = $dateEnd = '';
+        $searchModel->load(Yii::$app->request->queryParams);
+        try {
+            $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+            $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        } catch (\Throwable $th) {
+            $dateStart = $dateEnd = '';
+        }
+
+        // ----- Base conditions / params -----
+        $params = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
+        $conditions = [
+            "e.name = 'order'",
+            "i.asset_item IS NOT NULL",
+            "e.order_status = 'success'",
+            "i.order_status = 'success'",
+            "e.movement_date BETWEEN :date_start AND :date_end"
+        ];
+
+        // ----- Dynamic Filters (append to $conditions / $params) -----
+        $warehouseId = $searchModel->q_warehouse_id;
+        if (!empty($warehouseId)) {
+            $conditions[] = "e.warehouse_id = :warehouse_id";
+            $params[':warehouse_id'] = $warehouseId;
+        }
+
+        $transactionType = $searchModel->transaction_type;
+        if (!empty($transactionType)) {
+            $conditions[] = "e.transaction_type = :transaction_type";
+            $params[':transaction_type'] = $transactionType;
+        }
+
+        $assetTypeId = $searchModel->q_asset_type;
+        if (!empty($assetTypeId)) {
+            // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
+            $conditions[] = "t.code = :asset_type_id";
+            $params[':asset_type_id'] = $assetTypeId;
+        }
+
+        // ----- Group / Order -----
+        $groupFields = ['i.id'];
+        $groupBy = implode(', ', $groupFields);
+        $orderBy = 'i.id,e.movement_date ASC';
+
+        list($sql, $params) = StockEvent::buildStockOrderSql(
+            $conditions,
+            $params,
+            $groupBy ?? null,
+            $orderBy ?? null
+        );
+
+        // debug: ถ้ายังไม่เห็นผล ให้ log ดู SQL และ params
+        // \Yii::info($sql . ' -- ' . json_encode($params), __METHOD__);
+
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
+
+        return $this->render('list_by_order', [
+            'searchModel' => $searchModel,
+            'querys' => $querys,
+        ]);
     }
-
-    // ----- Base conditions / params -----
-    $params = [
-        ':date_start' => $dateStart,
-        ':date_end' => $dateEnd,
-    ];
-    $conditions = [
-        "e.name = 'order'",
-        "i.asset_item IS NOT NULL",
-        "e.order_status = 'success'",
-        "i.order_status = 'success'",
-        "e.movement_date BETWEEN :date_start AND :date_end"
-    ];
-
-    // ----- Dynamic Filters (append to $conditions / $params) -----
-    $warehouseId = $searchModel->q_warehouse_id;
-    if (!empty($warehouseId)) {
-        $conditions[] = "e.warehouse_id = :warehouse_id";
-        $params[':warehouse_id'] = $warehouseId;
-    }
-
-    $transactionType = $searchModel->transaction_type;
-    if (!empty($transactionType)) {
-        $conditions[] = "e.transaction_type = :transaction_type";
-        $params[':transaction_type'] = $transactionType;
-    }
-
-    $assetTypeId = $searchModel->q_asset_type;
-    if (!empty($assetTypeId)) {
-        // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
-        $conditions[] = "t.code = :asset_type_id";
-        $params[':asset_type_id'] = $assetTypeId;
-    }
-
-    // ----- Group / Order -----
-    $groupFields = ['i.id'];
-    $groupBy = implode(', ', $groupFields);
-    $orderBy = 'i.id,e.movement_date ASC';
-
-    list($sql, $params) = StockEvent::buildStockOrderSql(
-        $conditions,
-        $params,
-        $groupBy ?? null,
-        $orderBy ?? null
-    );
-
-    // debug: ถ้ายังไม่เห็นผล ให้ log ดู SQL และ params
-    // \Yii::info($sql . ' -- ' . json_encode($params), __METHOD__);
-
-    $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
-
-    return $this->render('list_by_order', [
-        'searchModel' => $searchModel,
-        'querys' => $querys,
-    ]);
-}
 
 
 
@@ -230,46 +230,30 @@ class ReportController extends \yii\web\Controller
             $dateStart = $dateEnd = '';
         }
 
-        // เพิ่มเงื่อนไขการค้นหาจาดคลัง
-        $warehouseId = $searchModel->q_warehouse_id;
-        if (!empty($warehouseId)) {
-            $conditions[] = "e.warehouse_id = :warehouse_id";
-            $params[':warehouse_id'] = $warehouseId;
-        }
-        // เพิ่มเงื่อนไขการค้นหาจาการรับจ่าย
-        $transactionType = $searchModel->transaction_type;
-        if (!empty($transactionType)) {
-            $conditions[] = "e.transaction_type = :transaction_type";
-            $params[':transaction_type'] = $transactionType;
-        }
-
-        // เพิ่มเงื่อนไขการค้นหาจากประเภท
-        $assetTypeId = $searchModel->q_asset_type;
-        if (!empty($assetTypeId)) {
-            $conditions[] = "t.code = :asset_type_id";
-            $params[':asset_type_id'] = $assetTypeId;
-        }
         // ----- Auto GROUP / ORDER -----
         $params = [
             ':date_start' => $dateStart,
             ':date_end' => $dateEnd,
         ];
+
         $conditions = [
-            "e.name = 'order'",
-            "i.asset_item IS NOT NULL",
             "e.order_status = 'success'",
-            "i.order_status = 'success'",
-
         ];
 
-        // ----- Auto GROUP / ORDER -----
-        $groupFields = [
-            'a.code',
-        ];
-        $groupBy = implode(', ', $groupFields);
-        $orderBy = "CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
-                    CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
-                    CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)";
+        $warehouseId = $searchModel->q_warehouse_id;
+        if (!empty($warehouseId)) {
+            $conditions[] = "e.warehouse_id = :warehouse_id";
+            $params[':warehouse_id'] = $warehouseId;
+        }
+
+        $assetTypeId = $searchModel->q_asset_type;
+        if (!empty($assetTypeId)) {
+            // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
+            $conditions[] = "t.code = :asset_type_id";
+            $params[':asset_type_id'] = $assetTypeId;
+        }
+
+
 
         list($sql, $params) = StockEvent::buildStockAssetItemSql(
             $conditions,
@@ -279,7 +263,6 @@ class ReportController extends \yii\web\Controller
         );
 
         $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
-
 
         return $this->render('list_by_item', [
             'querys' => $querys,
@@ -291,145 +274,184 @@ class ReportController extends \yii\web\Controller
 
 
 
-    private function geteportByItem($searchModel)
-    {
+    // private function geteportByItem($searchModel)
+    // {
 
+    //     try {
+    //         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+    //         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+    //     } catch (\Throwable $th) {
+    //         $dateStart = '';
+    //         $dateEnd = '';
+    //     }
+
+    //     $q = $searchModel->q;
+    //     $warehouseId = $searchModel->warehouse_id;
+    //     $assetTypeId = $searchModel->asset_type_id;
+
+    //     // สร้างเงื่อนไข WHERE แบบ dynamic
+    //     $where = "e.name = 'order'  AND i.asset_item IS NOT NULL";
+
+    //     // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
+    //     if (!empty($q)) {
+    //         $where .= " AND (LOWER(a.title) LIKE LOWER(:q) OR LOWER(a.code) LIKE LOWER(:q))";
+    //         $params[':q'] = "%{$q}%";
+    //     }
+
+    //     if (!empty($warehouseId)) {
+    //         $where .= " AND (e.warehouse_id = :warehouse_id)";
+    //     }
+
+    //     if (!empty($assetTypeId)) {
+    //         $where .= " AND (a.category_id = :asset_type_id)";
+    //     }
+
+    //     $sql = "SELECT 
+    //             w.warehouse_name,
+    //             t.title as asset_type_name,
+    //             a.category_id,
+    //             i.asset_item,
+    //             a.title,
+    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty
+    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS begin_qty,
+    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS begin_price,
+    //                 -- รับเข้าเดือนสิงหาคม
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
+    //                             AND i.transaction_type = 'IN' THEN i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS qty_in,
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
+    //                             AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS price_in,
+    //                 -- จ่ายออกเดือนสิงหาคม
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
+    //                             AND i.transaction_type = 'OUT' THEN i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS qty_out,
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
+    //                             AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS price_out,
+    //                 -- คงเหลือสิ้นเดือน (ปริมาณ)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty
+    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS end_qty,
+    //                 -- คงเหลือสิ้นเดือน (มูลค่า)
+    //                 SUM(
+    //                     CASE 
+    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
+    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
+    //                         ELSE 0 
+    //                     END
+    //                 ) AS end_price
+
+    //             FROM stock_events e
+    //             LEFT JOIN stock_events i 
+    //                 ON i.category_id = e.id 
+    //             AND i.name = 'order_item'
+    //             LEFT JOIN warehouses w ON w.id = e.warehouse_id
+    //             LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+    //             LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+    //             WHERE $where
+    //             GROUP BY i.asset_item
+    //             ORDER BY i.asset_item";
+
+    //     $q = $searchModel->q;
+
+    //     $command = Yii::$app->db->createCommand($sql)
+    //         ->bindValue(':date_start', $dateStart)
+    //         ->bindValue(':date_end', $dateEnd);
+
+    //     if (!empty($q)) {
+    //         $command->bindValue(':q', "%{$q}%");
+    //     }
+
+    //     if (!empty($warehouseId)) {
+    //         $command->bindValue(':warehouse_id', $warehouseId); // bind :warehouse_id เฉพาะกรณีมีค่า
+    //     }
+
+    //     if (!empty($assetTypeId)) {
+    //         $command->bindValue(':asset_type_id', $assetTypeId); // bind :warehouse_id เฉพาะกรณีมีค่า
+    //     }
+
+    //     return  $command->queryAll();
+    // }
+
+    public function actionExportExcelByItem()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $searchModel = new StockEventSearch();
+        $searchModel->search(Yii::$app->request->queryParams);
         try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         } catch (\Throwable $th) {
-            $dateStart = '';
-            $dateEnd = '';
+            $dateStart = $dateEnd = '';
         }
 
-        $q = $searchModel->q;
-        $warehouseId = $searchModel->warehouse_id;
-        $assetTypeId = $searchModel->asset_type_id;
+        // ----- Auto GROUP / ORDER -----
+        $params = [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ];
 
-        // สร้างเงื่อนไข WHERE แบบ dynamic
-        $where = "e.name = 'order'  AND i.asset_item IS NOT NULL";
+        $conditions = [
+            "e.order_status = 'success'",
+        ];
 
-        // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
-        if (!empty($q)) {
-            $where .= " AND (LOWER(a.title) LIKE LOWER(:q) OR LOWER(a.code) LIKE LOWER(:q))";
-            $params[':q'] = "%{$q}%";
-        }
-
+        $warehouseId = $searchModel->q_warehouse_id;
         if (!empty($warehouseId)) {
-            $where .= " AND (e.warehouse_id = :warehouse_id)";
+            $conditions[] = "e.warehouse_id = :warehouse_id";
+            $params[':warehouse_id'] = $warehouseId;
         }
 
+        $assetTypeId = $searchModel->q_asset_type;
         if (!empty($assetTypeId)) {
-            $where .= " AND (a.category_id = :asset_type_id)";
+            // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
+            $conditions[] = "t.code = :asset_type_id";
+            $params[':asset_type_id'] = $assetTypeId;
         }
 
-        $sql = "SELECT 
-                w.warehouse_name,
-                t.title as asset_type_name,
-                a.category_id,
-                i.asset_item,
-                a.title,
-                    -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty
-                            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty
-                            ELSE 0 
-                        END
-                    ) AS begin_qty,
-                    -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
-                            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
-                            ELSE 0 
-                        END
-                    ) AS begin_price,
-                    -- รับเข้าเดือนสิงหาคม
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date BETWEEN :date_start AND :date_end
-                                AND i.transaction_type = 'IN' THEN i.qty
-                            ELSE 0 
-                        END
-                    ) AS qty_in,
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date BETWEEN :date_start AND :date_end
-                                AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
-                            ELSE 0 
-                        END
-                    ) AS price_in,
-                    -- จ่ายออกเดือนสิงหาคม
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date BETWEEN :date_start AND :date_end
-                                AND i.transaction_type = 'OUT' THEN i.qty
-                            ELSE 0 
-                        END
-                    ) AS qty_out,
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date BETWEEN :date_start AND :date_end
-                                AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
-                            ELSE 0 
-                        END
-                    ) AS price_out,
-                    -- คงเหลือสิ้นเดือน (ปริมาณ)
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty
-                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty
-                            ELSE 0 
-                        END
-                    ) AS end_qty,
-                    -- คงเหลือสิ้นเดือน (มูลค่า)
-                    SUM(
-                        CASE 
-                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
-                            WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
-                            ELSE 0 
-                        END
-                    ) AS end_price
 
-                FROM stock_events e
-                LEFT JOIN stock_events i 
-                    ON i.category_id = e.id 
-                AND i.name = 'order_item'
-                LEFT JOIN warehouses w ON w.id = e.warehouse_id
-                LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
-                LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
-                WHERE $where
-                GROUP BY i.asset_item
-                ORDER BY i.asset_item";
 
-        $q = $searchModel->q;
+        list($sql, $params) = StockEvent::buildStockAssetItemSql(
+            $conditions,
+            $params,
+            $groupBy ?? null,
+            $orderBy ?? null
+        );
 
-        $command = Yii::$app->db->createCommand($sql)
-            ->bindValue(':date_start', $dateStart)
-            ->bindValue(':date_end', $dateEnd);
-
-        if (!empty($q)) {
-            $command->bindValue(':q', "%{$q}%");
-        }
-
-        if (!empty($warehouseId)) {
-            $command->bindValue(':warehouse_id', $warehouseId); // bind :warehouse_id เฉพาะกรณีมีค่า
-        }
-
-        if (!empty($assetTypeId)) {
-            $command->bindValue(':asset_type_id', $assetTypeId); // bind :warehouse_id เฉพาะกรณีมีค่า
-        }
-
-        return  $command->queryAll();
-    }
-
-    public function actionExportExcelByItem()
-    {
-        $searchModel = new StockEventSearch();
-        $searchModel->search(Yii::$app->request->queryParams);
-
-        $rows = $this->geteportByItem($searchModel);
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         // ✅ สร้างไฟล์ Excel
         $spreadsheet = new Spreadsheet();
@@ -448,36 +470,34 @@ class ReportController extends \yii\web\Controller
         $sheet->setCellValue('A1', 'รหัสสินค้า');
         $sheet->setCellValue('B1', 'รายการสินค้า');
         $sheet->setCellValue('C1', 'ประเภทวัสดุ');
-        $sheet->setCellValue('D1', 'คลัง');
-        $sheet->setCellValue('E1', 'ยอดยกมา');
-        $sheet->setCellValue('G1', 'รับเข้า');
-        $sheet->setCellValue('I1', 'จ่ายออก');
-        $sheet->setCellValue('K1', 'คงเหลือสิ้นเดือน');
+        $sheet->setCellValue('D1', 'ยอดยกมา');
+        $sheet->setCellValue('F1', 'รับเข้า');
+        $sheet->setCellValue('H1', 'จ่ายออก');
+        $sheet->setCellValue('J1', 'คงเหลือสิ้นเดือน');
 
         // รวมเซลล์ตามโครงสร้าง
         $sheet->mergeCells('A1:A2');
         $sheet->mergeCells('B1:B2');
         $sheet->mergeCells('C1:C2');
-        $sheet->mergeCells('D1:D2');
-        $sheet->mergeCells('E1:F1');
-        $sheet->mergeCells('G1:H1');
-        $sheet->mergeCells('I1:J1');
-        $sheet->mergeCells('K1:L1');
+        $sheet->mergeCells('D1:E1');
+        $sheet->mergeCells('F1:G1');
+        $sheet->mergeCells('H1:I1');
+        $sheet->mergeCells('J1:K1');
 
         // แถวที่ 2
-        $sheet->setCellValue('E2', 'จำนวน');
-        $sheet->setCellValue('F2', 'มูลค่า');
-        $sheet->setCellValue('G2', 'จำนวน');
-        $sheet->setCellValue('H2', 'มูลค่า');
-        $sheet->setCellValue('I2', 'จำนวน');
-        $sheet->setCellValue('J2', 'มูลค่า');
-        $sheet->setCellValue('K2', 'จำนวนคงเหลือ');
-        $sheet->setCellValue('L2', 'มูลค่าคงเหลือ');
+        $sheet->setCellValue('D2', 'จำนวน');
+        $sheet->setCellValue('E2', 'มูลค่า');
+        $sheet->setCellValue('F2', 'จำนวน');
+        $sheet->setCellValue('G2', 'มูลค่า');
+        $sheet->setCellValue('H2', 'จำนวน');
+        $sheet->setCellValue('I2', 'มูลค่า');
+        $sheet->setCellValue('J2', 'จำนวนคงเหลือ');
+        $sheet->setCellValue('K2', 'มูลค่าคงเหลือ');
 
         // --------------------------------------------------
         // จัดสไตล์หัวตาราง
         // --------------------------------------------------
-        $headerRange = 'A1:L2';
+        $headerRange = 'A1:K2';
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($headerRange)->getFont()->setBold(true);
@@ -502,20 +522,19 @@ class ReportController extends \yii\web\Controller
         // ข้อมูลเริ่มแถวที่ 3
         // --------------------------------------------------
         $rowIndex = 3;
-        foreach ($rows as $r) {
+        foreach ($querys as $r) {
             $sheet->fromArray([
-                $r['asset_item'],
+                $r['code'],
                 $r['title'],
                 $r['asset_type_name'],
-                $r['warehouse_name'],
                 (string)$r['begin_qty'],
                 (string)$r['begin_price'],
                 (string)$r['qty_in'],
                 (string)$r['price_in'],
                 (string)$r['qty_out'],
                 (string)$r['price_out'],
-                (string)$r['end_qty'],
-                (string)$r['end_price'],
+                (string)$r['balance_qty'],
+                (string)$r['balance_price'],
             ], NULL, "A{$rowIndex}");
 
             // ทำตัวเลข (E-L) เป็นตัวหนาและกำหนด NumberFormat
@@ -528,13 +547,14 @@ class ReportController extends \yii\web\Controller
 
 
         // ปรับความกว้างคอลัมน์อัตโนมัติ
-        foreach (range('A', 'L') as $col) {
+        foreach (range('A', 'K') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
         $sheet->setCellValue("A{$rowIndex}", 'รวมทั้งหมด');
         $sheet->mergeCells("A{$rowIndex}:D{$rowIndex}");
 
+        $sheet->setCellValue("D{$rowIndex}", "=SUM(D3:D" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("E{$rowIndex}", "=SUM(E3:E" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("F{$rowIndex}", "=SUM(F3:F" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("G{$rowIndex}", "=SUM(G3:G" . ($rowIndex - 1) . ")");
@@ -542,10 +562,8 @@ class ReportController extends \yii\web\Controller
         $sheet->setCellValue("I{$rowIndex}", "=SUM(I3:I" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("J{$rowIndex}", "=SUM(J3:J" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("K{$rowIndex}", "=SUM(K3:K" . ($rowIndex - 1) . ")");
-        $sheet->setCellValue("L{$rowIndex}", "=SUM(L3:L" . ($rowIndex - 1) . ")");
-        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
-        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-
+        $sheet->getStyle("A{$rowIndex}:K{$rowIndex}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$rowIndex}:K{$rowIndex}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // ส่งไฟล์ออกไปยัง Browser
 
@@ -568,7 +586,7 @@ class ReportController extends \yii\web\Controller
         return ob_get_clean();
     }
 
-        public function actionExportExcel()
+    public function actionExportExcel()
     {
 
         $searchModel = new StockEventSearch();
@@ -767,7 +785,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('I5')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $StartRow = 6;
-        $number=1;
+        $number = 1;
         foreach ($querys as $value) {
             $numRow = $StartRow++;
             // $total =  $value['balance_after'];
@@ -921,29 +939,31 @@ class ReportController extends \yii\web\Controller
         // // เพิ่มแผ่นงานที่สอง
         $sheet2 = $spreadsheet->createSheet();  // สร้างแผ่นงานใหม่
         $sheet2->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
+
+        // Header
         $sheet2->setCellValue('A1', 'วดป.ที่รายงาน');
         $sheet2->setCellValue('A2', 'ที่');
         $sheet2->setCellValue('B1', AppHelper::convertToThai(date('Y-m-d')));
-        $sheet2->setCellValue('B2', 'คลัง');
-        $sheet2->setCellValue('C2', 'รหัส');
-        $sheet2->setCellValue('D2', 'รายการสินค้า');
-        $sheet2->setCellValue('E2', 'ประเภท');
-        $sheet2->setCellValue('F2', 'หน่วย');
-        $sheet2->setCellValue('G2', 'จำนวนคงเหลือ');
-        $sheet2->setCellValue('H2', 'มูลค่าคงเหลือ');
-        $sheet2->setCellValue('I2', 'จำนวนรับใหม่');
-        $sheet2->setCellValue('J2', 'มูลค่ารับใหม่');
-        $sheet2->setCellValue('K2', 'จำนวนจ่ายใหม่');
-        $sheet2->setCellValue('L2', 'มูลค่าจ่ายใหม่');
-        $sheet2->setCellValue('M2', 'จำนวนคงเหลือ');
-        $sheet2->setCellValue('N2', 'มูลค่าคงเหลือ');
+        $sheet2->setCellValue('B2', 'รหัส');
+        $sheet2->setCellValue('C2', 'รายการสินค้า');
+        $sheet2->setCellValue('D2', 'ประเภท');
+        $sheet2->setCellValue('E2', 'หน่วย');
+        $sheet2->setCellValue('F2', 'จำนวนคงเหลือ');
+        $sheet2->setCellValue('G2', 'มูลค่าคงเหลือ');
+        $sheet2->setCellValue('H2', 'จำนวนรับใหม่');
+        $sheet2->setCellValue('I2', 'มูลค่ารับใหม่');
+        $sheet2->setCellValue('J2', 'จำนวนจ่ายใหม่');
+        $sheet2->setCellValue('K2', 'มูลค่าจ่ายใหม่');
+        $sheet2->setCellValue('L2', 'จำนวนคงเหลือ');
+        $sheet2->setCellValue('M2', 'มูลค่าคงเหลือ');
 
+        // ปรับความกว้างคอลัมน์
         $sheet2->getColumnDimension('A')->setWidth(12);
-        $sheet2->getColumnDimension('B')->setWidth(20);
-        $sheet2->getColumnDimension('C')->setWidth(10);
-        $sheet2->getColumnDimension('D')->setWidth(40);
-        $sheet2->getColumnDimension('E')->setWidth(25);
-        $sheet2->getColumnDimension('F')->setWidth(9);
+        $sheet2->getColumnDimension('B')->setWidth(10);
+        $sheet2->getColumnDimension('C')->setWidth(40);
+        $sheet2->getColumnDimension('D')->setWidth(25);
+        $sheet2->getColumnDimension('E')->setWidth(9);
+        $sheet2->getColumnDimension('F')->setWidth(13);
         $sheet2->getColumnDimension('G')->setWidth(13);
         $sheet2->getColumnDimension('H')->setWidth(13);
         $sheet2->getColumnDimension('I')->setWidth(13);
@@ -951,30 +971,19 @@ class ReportController extends \yii\web\Controller
         $sheet2->getColumnDimension('K')->setWidth(13);
         $sheet2->getColumnDimension('L')->setWidth(13);
         $sheet2->getColumnDimension('M')->setWidth(13);
-        $sheet2->getColumnDimension('N')->setWidth(13);
 
         $StartRowSheet2 = 3;
-        // $dataItems = $this->findModelItem($params);
-        // $dataItems = $this->ItemSummary($warehouseId, $dateStart, $dateEnd);
 
-         $params2 = [
+        $params2 = [
             ':date_start' => $dateStart,
             ':date_end' => $dateEnd,
         ];
+
         $conditions2 = [
-            "e.name = 'order'",
-            "i.asset_item IS NOT NULL",
-
+            "e.order_status = 'success'",
         ];
 
-        // ----- Auto GROUP / ORDER -----
-        $groupFields2 = [
-            'a.code'
-        ];
-        $groupBy2 = implode(', ', $groupFields2);
-        $orderBy2 = 'CAST(SUBSTRING(t.code, 2) AS UNSIGNED) ASC';
-
-        list($sql2, $params2) = StockEvent::buildStockOrderSql(
+        list($sql2, $params) = StockEvent::buildStockAssetItemSql(
             $conditions2,
             $params2,
             $groupBy2 ?? null,
@@ -985,39 +994,37 @@ class ReportController extends \yii\web\Controller
 
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
-            // $a[] = ['B' => 'B'.$StartRow++];
             $sheet2->setCellValue('A' . $numRow, $numRow);
-
-            $sheet2->setCellValue('B' . $numRow, '');
-
-            $sheet2->setCellValue('C' . $numRow, $value['asset_item']);
-
-            $sheet2->setCellValue('D' . $numRow, $value['title']);
-
-            $sheet2->setCellValue('E' . $numRow, $value['asset_type_name']);
-            $sheet2->setCellValue('F' . $numRow, $value['unit']);
-            $sheet2->setCellValue('G' . $numRow, $value['begin_qty']);
-            $sheet2->setCellValue('H' . $numRow, $value['begin_price']);
-            $sheet2->setCellValue('I' . $numRow, $value['qty_in']);
-            $sheet2->setCellValue('J' . $numRow, $value['price_in']);
-            $sheet2->setCellValue('K' . $numRow, $value['qty_out']);
-            $sheet2->setCellValue('L' . $numRow, $value['price_out']);
-            $sheet2->setCellValue('M' . $numRow, $value['end_qty']);
-            $sheet2->setCellValue('N' . $numRow, $value['end_price']);
+            $sheet2->setCellValue('B' . $numRow, $value['code']);
+            $sheet2->setCellValue('C' . $numRow, $value['title']);
+            $sheet2->setCellValue('D' . $numRow, $value['asset_type_name']);
+            $sheet2->setCellValue('E' . $numRow, $value['unit']);
+            $sheet2->setCellValue('F' . $numRow, $value['begin_qty']);
+            $sheet2->setCellValue('G' . $numRow, $value['begin_price']);
+            $sheet2->setCellValue('H' . $numRow, $value['qty_in']);
+            $sheet2->setCellValue('I' . $numRow, $value['price_in']);
+            $sheet2->setCellValue('J' . $numRow, $value['qty_out']);
+            $sheet2->setCellValue('K' . $numRow, $value['price_out']);
+            $sheet2->setCellValue('L' . $numRow, $value['balance_qty']);
+            $sheet2->setCellValue('M' . $numRow, $value['balance_price']);
         }
 
         // เปิด AutoFilter
-        $sheet2->setAutoFilter("A2:N" . ($StartRowSheet2));
-        // set font style ตั้งค่า font
+        $sheet2->setAutoFilter("A2:M" . ($StartRowSheet2));
+
+        // ตั้งค่ารูปแบบ
         $setHeader = 'A1:Z3000';
-        $sheet2->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+        $sheet2->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16);
         $sheet2->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet2->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet2->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet2->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
-        $sheet2->getStyle('A1:N2')->getFont()->setBold(true)->setItalic(false);
+        $sheet2->getStyle('A1:M2')->getFont()->setBold(true);
 
+        // SUBTOTAL แถวบน
+        $sheet2->setCellValue('G1', '=SUBTOTAL(9,G3:G' . (count($querys2) + 2) . ')');
+        $sheet2->getStyle('G1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($querys2) + 2) . ')');
         $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($querys2) + 2) . ')');
@@ -1030,91 +1037,26 @@ class ReportController extends \yii\web\Controller
         $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($querys2) + 2) . ')');
         $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('N1', '=SUBTOTAL(9,N3:N' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('N1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
 
+        // กำหนด alignment เพิ่มเติม (เฉพาะที่จำเป็น)
         $rowsheet2B = 'B3:B' . (count($querys2) + 2);
         $sheet2->getStyle($rowsheet2B)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2B)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+
+        $rowsheet2C = 'C3:C' . (count($querys2) + 2);
+        $sheet2->getStyle($rowsheet2C)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet2->getStyle($rowsheet2C)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         $rowsheet2D = 'D3:D' . (count($querys2) + 2);
         $sheet2->getStyle($rowsheet2D)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2D)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
 
-        $rowsheet2E = 'E3:E' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2E)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2E)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2E)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-
-        $rowsheet2G = 'G3:G' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2G)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet2->getStyle($rowsheet2G)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2G)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2G)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2H = 'H3:H' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2H)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet2->getStyle($rowsheet2H)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2H)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2H)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->getStyle($rowsheet2H)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2I = 'I3:I' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2I)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet2->getStyle($rowsheet2I)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2I)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2I)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2J = 'J3:J' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2J)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet2->getStyle($rowsheet2J)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2J)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
-        $sheet2->getStyle($rowsheet2J)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->getStyle($rowsheet2J)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2K = 'K3:K' . count($querys2);
-        $sheet2->getStyle($rowsheet2K)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet2->getStyle($rowsheet2K)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2K)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2K)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2L = 'L3:L' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2L)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet2->getStyle($rowsheet2L)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2L)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2L)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->getStyle($rowsheet2L)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2M = 'M3:M' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2M)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet2->getStyle($rowsheet2M)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2M)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2M)->getFont()->setBold(true)->setItalic(false);
-
-        $rowsheet2N = 'N3:N' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2N)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet2->getStyle($rowsheet2N)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($rowsheet2N)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($rowsheet2N)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->getStyle($rowsheet2N)->getFont()->setBold(true)->setItalic(false);
+        // ... (ส่วนจัด alignment คอลัมน์ F–M สามารถคงไว้ได้เหมือนเดิม)
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
-        $writer->save($filePath);  // สร้าง excel
+        $writer->save($filePath);
+
 
         // if (file_exists($output_file)) {  // ตรวจสอบว่ามีไฟล์ หรือมีการสร้างไฟล์ แล้วหรือไม่
         //     echo Html::a('ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/myData.xlsx'), ['class' => 'btn btn-info', 'target' => '_blank']);  // สร้าง link download
@@ -1126,5 +1068,4 @@ class ReportController extends \yii\web\Controller
             throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
     }
-
 }

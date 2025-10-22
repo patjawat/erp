@@ -73,9 +73,9 @@
        <table class="table table-bordered table-striped table-hover align-middle">
          <thead class="table-primary text-center">
            <tr>
-             <th rowspan="2" style="width: 87px;">รหัสสินค้า</th>
-             <th rowspan="2">รายการสินค้า</th>
-             <th rowspan="2">ประเภทวัสดุ</th>
+             <th rowspan="2" style="width: 87px;" class="text-center align-middle">รหัสสินค้า</th>
+             <th rowspan="2" class="text-center align-middle">รายการสินค้า</th>
+             <th rowspan="2" class="text-center align-middle">ประเภทวัสดุ</th>
              <th colspan="2">ยอดยกมา</th>
              <th colspan="2">รับเข้า</th>
              <th colspan="2">จ่ายออก</th>
@@ -103,8 +103,8 @@
               $sum_price_in    += $item['price_in'];
               $sum_qty_out     += $item['qty_out'];
               $sum_price_out   += $item['price_out'];
-              $sum_end_qty     += $item['end_qty'];
-              $sum_end_price   += $item['end_price'];
+              $sum_end_qty     += $item['balance_qty'];
+              $sum_end_price   += $item['balance_price'];
               ?>
              <tr>
                <td><?= $item['code'] ?></td>
@@ -116,8 +116,8 @@
                <td class="text-end fw-semibold"><?= number_format($item['price_in'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['qty_out'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['price_out'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['end_qty'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['end_price'], 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['balance_qty'], 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['balance_price'], 2) ?></td>
              </tr>
            <?php endforeach; ?>
          </tbody>

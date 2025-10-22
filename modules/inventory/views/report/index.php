@@ -120,7 +120,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
     <div class="card-footer d-flex justify-content-end">
-        <button id="download-button" class="btn btn-primary shadow">ดาวน์โหลดรายงาน</button>
+      
     </div>
 </div>
 
