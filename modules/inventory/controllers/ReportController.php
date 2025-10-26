@@ -43,7 +43,6 @@ class ReportController extends \yii\web\Controller
         $conditions = [
             "e.name = 'order'",
             "i.asset_item IS NOT NULL",
-
         ];
 
         // ----- Auto GROUP / ORDER -----
@@ -191,22 +190,36 @@ class ReportController extends \yii\web\Controller
             $params[':asset_type_id'] = $assetTypeId;
         }
 
-        // ----- Group / Order -----
-        $groupFields = ['i.id'];
-        $groupBy = implode(', ', $groupFields);
-        $orderBy = 'i.id,e.movement_date ASC';
+        $where = implode(' AND ', $conditions);
+        $sql = "SELECT
+            wi.warehouse_name,
+            wi.warehouse_type,
+            i.asset_item,
+            i.qty AS item_qty,
+             i.unit_price,
+            a.title as asset_name,
+            a.data_json->>'$.unit' AS unit,
+            t.code as asset_type_code,
+            t.title  as asset_type_name,
+            e.code,
+            e.movement_date,
+            e.transaction_type,
+            e.movement_date,
+            i.qty,
+            i.unit_price,
+            SUM(i.qty*i.unit_price) as end_price
+                FROM `stock_events` i
+                LEFT JOIN `stock_events` e ON e.id = i.category_id
+                LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+                LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+                LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+                LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+                WHERE $where
+                GROUP BY i.id
+                ORDER BY i.id,e.movement_date ASC;";
 
-        list($sql, $params) = StockEvent::buildStockOrderSql(
-            $conditions,
-            $params,
-            $groupBy ?? null,
-            $orderBy ?? null
-        );
 
-        // debug: ถ้ายังไม่เห็นผล ให้ log ดู SQL และ params
-        // \Yii::info($sql . ' -- ' . json_encode($params), __METHOD__);
-
-        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
+        $querys = Yii::$app->db->createCommand($sql,$params)->queryAll();
 
         return $this->render('list_by_order', [
             'searchModel' => $searchModel,
@@ -819,7 +832,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('E' . $numRow, ($value['begin_price']));
+            $sheet->setCellValue('E' . $numRow, ($value['begin_price']+$value['price_in']) ?? 0 );
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -840,14 +853,14 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('H' . $numRow, ($value['begin_price']));
+            $sheet->setCellValue('H' . $numRow, ($value['branch_price_out']+$value['price_out'] ?? 0));
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('H' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('I' . $numRow, $value['begin_price']);
+            $sheet->setCellValue('I' . $numRow, $value['end_price']);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('I' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);

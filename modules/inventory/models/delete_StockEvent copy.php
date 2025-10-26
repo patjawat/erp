@@ -42,7 +42,7 @@ use app\modules\inventory\models\Product;
  * @property int|null    $created_by        ผู้สร้าง
  * @property int|null    $updated_by        ผู้แก้ไข
  */
-class StockEvent extends Yii\db\ActiveRecord
+class DeleteStockEvent extends Yii\db\ActiveRecord
 {
     public static function tableName()
     {

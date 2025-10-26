@@ -1542,8 +1542,7 @@ class StockEvent extends Yii\db\ActiveRecord
             i.id AS i_id,
             a.data_json->>'$.unit' AS unit,
             i.qty AS item_qty,
-            ROUND(i.unit_price, 2) AS item_unit_price,
-            ROUND(SUM(i.qty * i.unit_price), 2) AS item_total_price,
+             i.unit_price,
             e.thai_year,
             e.transaction_type,
             e.movement_date,
@@ -1688,13 +1687,13 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty * i.unit_price
+                        THEN (i.qty * i.unit_price)
 
                         WHEN e.movement_date <= :date_end 
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
-                        THEN - i.qty * i.unit_price
+                        THEN - (i.qty * i.unit_price)
 
                         ELSE 0
                     END

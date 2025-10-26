@@ -65,7 +65,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <td class="text-center fw-semibold"><?=$n++?></td>
                         <td><?= $item['warehouse_name']?></td>
-                        <td><?=$item['warehouse_type'] == 'MAIN' ? 'คลังหลัก' : 'คลังย่อย' ?></td>
+                        <td>
+                            <?php
+                                if ($item['warehouse_type'] == 'MAIN') {
+                                    echo 'คลังหลัก';
+                                } elseif ($item['warehouse_type'] == 'SUB') {
+                                    echo 'คลังย่อย';
+                                } elseif ($item['warehouse_type'] == 'BRANCH') {
+                                    echo 'คลังรพ.สต.';
+                                } else {
+                                    echo '-'; // กรณีไม่ตรงเงื่อนไขใดเลย
+                                }
+                                ?>
+                        </td>
                         <td><?= $item['asset_type_name']?></td>
                         <td><?= AppHelper::convertToThai($item['movement_date']);?></td>
                         <td><?= $item['asset_item']?></td>
@@ -74,10 +86,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item['asset_name']?></td>
                         <td class="text-center"><?= $item['unit']?></td>
                         <td class="text-center fw-bold"><?= $item['item_qty']?></td>
-                        <td class="text-end fw-bold"><?= number_format($item['item_unit_price'] ?? 0,2)?></td>
-                        <td class="text-end fw-bold"><?= number_format($item['item_total_price'] ?? 0,2)?></td>
+                        <td class="text-end fw-bold"><?= number_format($item['unit_price'] ?? 0,2)?></td>
+                        <td class="text-end fw-bold"><?= number_format(($item['item_qty']*$item['unit_price']) ?? 0,2)?></td>
                     </tr>
-                    <?php $totalPrice += $item['item_total_price'];?>
+                    <?php $totalPrice +=($item['item_qty']*$item['unit_price']);?>
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="12" class="text-end fw-bold bg-warning">รวมราคาทั้งหมด</td>
