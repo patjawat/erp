@@ -66,7 +66,7 @@ Dashboard
         <a href="<?=Url::to(['/inventory/stock/in-stock'])?>">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2><?php  echo number_format($querys['begin_price'],2); ?> </h2>
+                    <h2><?php  echo number_format($querys['begin_price'] ?? 0,2); ?> </h2>
                 </div>
                 <div class="card-footer border-0">ยอดยกมา</div>
             </div>
@@ -81,7 +81,6 @@ Dashboard
             <?php endif?>
 
             <?php if($warehouse['warehouse_type'] == 'SUB'):?>
-                <h2><?php // echo number_format($searchModel->ReceiveSubSummary(),2); ?></h2>
             <?php endif?>
 
             </div>
@@ -92,7 +91,7 @@ Dashboard
     <div class="col-3">
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2><?=number_format($querys['price_out'],2)?></h2>
+                    <h2><?=number_format($querys['price_out'] ?? 0,2)?></h2>
 
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
@@ -102,19 +101,13 @@ Dashboard
 
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
-                    <h2> <?php 
-                    // echo number_format(($searchModel->LastTotalStock()+$searchModel->ReceiveSubSummary()) - $searchModel->OutSummary(),2)
-                    echo number_format($querys['end_price'],2);
-                     ?></h2>
+                    <h2> <?php echo number_format($querys['end_price'] ?? 0,2);?></h2>
                 </div>
                 <div class="card-footer border-0">มูลค่าคงเหลือ</div>
             </div>
 
     </div>
 </div>
-
-
-
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
