@@ -1,7 +1,6 @@
 
 <?php 
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Json;
 ?>
 <div class="card">

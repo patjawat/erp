@@ -88,13 +88,13 @@
                         <h6 class="mb-0">สถานะการซ่อม</h6>
                     </div>
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
+                        <!-- <div class="d-flex align-items-center mb-3">
                             <div class="progress flex-grow-1" style="height: 8px;">
                                 <div class="progress-bar bg-primary" role="progressbar" style="width: 65%;"
                                     aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                             <span class="ms-2">65%</span>
-                        </div>
+                        </div> -->
 
                         <dl class="row mb-0">
                     <dt class="col-sm-4">ผู้รับผิดชอบ:</dt>
