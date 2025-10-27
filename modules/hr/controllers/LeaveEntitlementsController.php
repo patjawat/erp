@@ -13,7 +13,6 @@ use app\components\LogHelper;
 use app\models\UploadCsvForm;
 use app\components\UserHelper;
 
-use app\modules\hr\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
@@ -22,10 +21,9 @@ use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 // Microsoft Excel
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use app\modules\inventory\models\Warehouse;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use app\modules\hr\models\LeaveEntitlements;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use app\modules\hr\models\LeaveEntitlementsSearch;
 
 /**
@@ -121,7 +119,6 @@ class LeaveEntitlementsController extends Controller
         $model = new LeaveEntitlements([
             'thai_year' => $this->request->get('thai_year') ?? AppHelper::YearBudget()
         ]);
-        $model->scenario = 'no-thai-year';
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -146,7 +143,7 @@ class LeaveEntitlementsController extends Controller
                         'title' => 'กำหนดสิทธิลาพักผ่อน',
                         'data' => $model
                     ];
-                    LogHelper::log('leaev_entitlements', $data);
+                    LogHelper::log('leave_entitlements', $data);
 
                     return [
                         'status' => 'success',
@@ -248,7 +245,7 @@ class LeaveEntitlementsController extends Controller
                                 WHEN (x4.days - x4.days_use + 10) > x4.max_days AND x4.accumulation = 1 THEN x4.max_days
                                 ELSE (x4.days - x4.days_use + 10)
                             END
-                        ) AS froward_days
+                        ) AS forward_days
                     FROM (
                         SELECT 
                             x3.*,
@@ -325,7 +322,7 @@ class LeaveEntitlementsController extends Controller
                         'position_type_id' => $item['position_type'],
                         'year_of_service' => (int)$item['years_of_service'],
                         'month_of_service' => 0,
-                        'days' => $item['froward_days'],
+                        'days' => $item['forward_days'],
                         'thai_year' => $thaiYear,
                         'data_json' => [
                             'before_days' => $last_day ? ($last_day->getSummary()['leave_total'] ?? 0) : 0,
@@ -370,8 +367,8 @@ class LeaveEntitlementsController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                try {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            try {
 
                 $me = UserHelper::GetEmployee();
                 $data = [
@@ -380,15 +377,13 @@ class LeaveEntitlementsController extends Controller
                     'data' => $model
                 ];
                 LogHelper::log('leaev_entitlements', $data);
-                                    
-                } catch (\Throwable $th) {
-
-                }
-                return [
-                    'status' => 'success',
-                    'message' => 'บันทึกข้อมูลสำเร็จ',
-                    'container' => '#leave'
-                ];
+            } catch (\Throwable $th) {
+            }
+            return [
+                'status' => 'success',
+                'message' => 'บันทึกข้อมูลสำเร็จ',
+                'container' => '#leave'
+            ];
         }
 
         if ($this->request->isAJax) {
@@ -505,52 +500,83 @@ class LeaveEntitlementsController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
-        $sheet->mergeCells('A1:I1');
+        $sheet->setTitle('สรุปรายการ');
+
+        // รวมเซลล์หัวรายงาน
+        $sheet->mergeCells('A1:J1');
         $sheet->setCellValue('A1', 'รายงานกำหนดวันลาประจำปีงบประมาณ ' . $searchModel->thai_year);
-        $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
-        $sheet->setCellValue('A2', 'ชื่อ-นามสกุล');
-        $sheet->setCellValue('B2', 'อายุงาน');
-        $sheet->setCellValue('C2', 'ประเภท');
-        $sheet->setCellValue('D2', 'ยอดยกมา');
-        $sheet->setCellValue('E2', 'สิทธิพักผ่อนประจำปี');
-        $sheet->setCellValue('F2', 'สะสมวันลาสูงสุด');
-        $sheet->setCellValue('G2', 'รวมสิทธิที่ลาได้');
-        $sheet->setCellValue('H2', 'ใช้ไปแล้ว');
-        $sheet->setCellValue('I2', 'วันลาคงเหลือ');
 
-        $sheet->getColumnDimension('A')->setWidth(40);
-        $sheet->getColumnDimension('B')->setWidth(25);
-        $sheet->getColumnDimension('C')->setWidth(25);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(25);
-        $sheet->getColumnDimension('F')->setWidth(20);
-        $sheet->getColumnDimension('G')->setWidth(18);
-        $sheet->getColumnDimension('H')->setWidth(15);
-        $sheet->getColumnDimension('I')->setWidth(15);
+        // ตั้งหัวคอลัมน์แถวที่ 2
+        $sheet->setCellValue('A2', 'เลขบัตรประชาชน');
+        $sheet->setCellValue('B2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('C2', 'อายุงาน');
+        $sheet->setCellValue('D2', 'ประเภท');
+        $sheet->setCellValue('E2', 'ยอดยกมา');
+        $sheet->setCellValue('F2', 'สิทธิพักผ่อนประจำปี');
+        $sheet->setCellValue('G2', 'สะสมวันลาสูงสุด');
+        $sheet->setCellValue('H2', 'รวมสิทธิที่ลาได้');
+        $sheet->setCellValue('I2', 'ใช้ไปแล้ว');
+        $sheet->setCellValue('J2', 'วันลาคงเหลือ');
+        // ✅ ตั้งค่าความกว้างคอลัมน์
+        $sheet->getColumnDimension('A')->setWidth(20); // เลขบัตรประชาชน
+        $sheet->getColumnDimension('B')->setWidth(25); // ชื่อ-นามสกุล
+        $sheet->getColumnDimension('C')->setWidth(12); // อายุงาน
+        $sheet->getColumnDimension('D')->setWidth(20); // ประเภท
+        $sheet->getColumnDimension('E')->setWidth(12); // ยอดยกมา
+        $sheet->getColumnDimension('F')->setWidth(20); // สิทธิพักผ่อนประจำปี
+        $sheet->getColumnDimension('G')->setWidth(18); // สะสมวันลาสูงสุด
+        $sheet->getColumnDimension('H')->setWidth(18); // รวมสิทธิที่ลาได้
+        $sheet->getColumnDimension('I')->setWidth(12); // ใช้ไปแล้ว
+        $sheet->getColumnDimension('J')->setWidth(15); // วันลาคงเหลือ
 
+
+        // เติมข้อมูลแถวที่ 3 เป็นต้นไป
         $StartRowSheet = 3;
         foreach ($dataProvider->getModels() as $item) {
             $numRow = $StartRowSheet++;
-            $sheet->setCellValue('A' . $numRow, $item->employee->fullname);
-            $sheet->setCellValue('B' . $numRow, $item->employee?->workYear()['ym']);
-            $sheet->setCellValue('C' . $numRow, $item->employee?->positionType?->title ?? '-');
-            $sheet->setCellValue('D' . $numRow, $item->data_json['before_leave_balance'] ?? '-');
-            $sheet->setCellValue('E' . $numRow, 10);
-            $sheet->setCellValue('F' . $numRow, isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0);
-            $sheet->setCellValue('G' . $numRow, $item->days);
-            $sheet->setCellValue('H' . $numRow, $item->leaveSummaryDays()['leave_use']);
-            $sheet->setCellValue('I' . $numRow, $item->leaveSummaryDays()['leave_balance']);
+
+            // ✅ เพิ่มคอลัมน์เลขบัตรประชาชนก่อนชื่อ
+            $sheet->setCellValueExplicit(
+                'A' . $numRow,
+                $item->employee?->cid ?? '-',
+                DataType::TYPE_STRING
+            );
+            $sheet->setCellValue('B' . $numRow, $item->employee->fullname);
+            $sheet->setCellValue('C' . $numRow, $item->employee?->workYear()['ym']);
+            $sheet->setCellValue('D' . $numRow, $item->employee?->positionType?->title ?? '-');
+            $sheet->setCellValue('E' . $numRow, $item->data_json['before_leave_balance'] ?? '-');
+            $sheet->setCellValue('F' . $numRow, 10);
+            $sheet->setCellValue('G' . $numRow, isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0);
+            $sheet->setCellValue('H' . $numRow, $item->days);
+            $sheet->setCellValue('I' . $numRow, $item->leaveSummaryDays()['leave_use']);
+            $sheet->setCellValue('J' . $numRow, $item->leaveSummaryDays()['leave_balance']);
         }
+
+        // ✅ ปรับการจัดรูปแบบและขอบเขตให้ตรงกับคอลัมน์ใหม่ (A–J)
         $setHeader = 'A1:Z3000';
-        $sheet->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-        $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet->getStyle($setHeader)->getFont()
+            ->setName('TH Sarabun New')
+            ->setSize(16)
+            ->setBold(false)
+            ->setItalic(false);
+
+        $sheet->getStyle($setHeader)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $sheet->getStyle($setHeader)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN)
+            ->setColor(new Color(Color::COLOR_BLACK));
+
         $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
-        $sheet->getStyle('A1:I1')->getFont()->setBold(true)->setItalic(false);
-        $sheet->setAutoFilter("A2:I2" . ($StartRowSheet));
+
+        // ✅ หัวรายงานและหัวตารางให้หนา
+        $sheet->getStyle('A1:J1')->getFont()->setBold(true)->setItalic(false);
+        $sheet->getStyle('A2:J2')->getFont()->setBold(true);
+
+        // ✅ ตั้ง AutoFilter ครอบแถวหัวตารางจนถึงข้อมูลสุดท้าย
+        $sheet->setAutoFilter("A2:J" . ($StartRowSheet - 1));
+
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
@@ -598,7 +624,7 @@ class LeaveEntitlementsController extends Controller
             if (($handle = fopen($filePath, "r")) !== false) {
                 $row = 0;
                 while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $emp = Employees::findOne(['cid' => $data[0]]);
+                   $emp = Employees::findOne(['cid' => $data[0],'fname' =>$data[1],'lname' => $data[2] ]);
                     // เพิ่มสถานะว่าพบหรือไม่
                     $previewData[] = [
                         'data' => $data,
@@ -646,8 +672,7 @@ class LeaveEntitlementsController extends Controller
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $row++;
                 if ($row == 1) continue; // ข้าม header
-                $emp = Employees::findOne(['cid' => $data[0]]);
-                $checkDuplicate = LeaveEntitlements::find()->where(['emp_id' => $emp->id, 'thai_year' => $thaiYear])->one();
+                $emp = Employees::findOne(['cid' => $data[0],'fname' =>$data[1],'lname' => $data[2] ]);
 
                 if ($emp) {
                     $workYear = $emp->workYear();
@@ -657,7 +682,6 @@ class LeaveEntitlementsController extends Controller
                     $model->leave_type_id = 'LT4';
                     $model->thai_year = $thaiYear;
                     $model->days = $data[9] ?? 0;
-
                     $model->year_of_service = $data[3] === '' ? ($workYear['year'] ?? 0) : $data[3];
                     $model->month_of_service = $data[4] === '' ? ($workYear['month'] ?? 0) : $data[4];
 

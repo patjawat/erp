@@ -7,8 +7,6 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
-use app\components\AppHelper;
-use app\modules\inventory\models\StockEvent;
 
 $this->title = 'Dashboard';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
@@ -165,9 +163,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="flex-grow-1 ms-3">
                                     <h6 class="mb-0 font-size-15">มูลค่าคงเหลือ</h6>
                                 </div>
-
                             </div>
-
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
                                     <?php echo number_format($querys['end_price'], 2); ?>
