@@ -72,10 +72,12 @@ $resultsJs = <<<JS
 <?php $form = ActiveForm::begin([
     'id' => 'form-elave',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/hr/leave/create-validator']
+      'validationUrl' => ['/hr/leave/create-validator', 'id' => $model->id],
 ]); ?>
 
-
+<?php if(!$model->isNewRecord):?>
+ <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
+ <?php endif?>
 <div class="row d-flex justify-content-center">
     <div class="col-lg-12 col-md-12">
         <!-- Row -->

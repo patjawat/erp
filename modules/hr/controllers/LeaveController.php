@@ -713,7 +713,7 @@ class LeaveController extends Controller
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $dateStart =  AppHelper::convertToGregorian($model->date_start);
                 $dateEnd =  AppHelper::convertToGregorian($model->date_end);
-                
+
                 //ถ้าเป็น ผอ. ให้อนุมัติเลย
                 $model->status = $model->employee->isDirector() ? 'Approve' : 'Pending';
 
@@ -723,7 +723,7 @@ class LeaveController extends Controller
 
                 if ($model->save()) {
                     //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
-                    if(!$model->employee->isDirector()){
+                    if (!$model->employee->isDirector()) {
                         $model->createApprove();
                     }
                 }
@@ -755,7 +755,8 @@ class LeaveController extends Controller
     public function actionCreateValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Leave();
+       $id = Yii::$app->request->post('id', Yii::$app->request->get('id'));
+        $model = $id ? Leave::findOne($id) : new Leave();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
             if (isset($model->date_start)) {
@@ -781,21 +782,25 @@ class LeaveController extends Controller
             $model->data_json['approve_1'] == '' ? $model->addError('data_json[approve_1]', $requiredName) : null;
             $model->data_json['approve_2'] == '' ? $model->addError('data_json[approve_2]', $requiredName) : null;
 
-                   // --- ✅ ตรวจสอบวันลาซ้ำ ---
-        if ($dateStart && $dateEnd && !$model->hasErrors()) {
-            $exists = Leave::find()
-                ->where(['emp_id' => $model->emp_id])
-                ->andWhere(['<=', 'date_start', $dateEnd])
-                ->andWhere(['>=', 'date_end', $dateStart])
-                ->andWhere(['<>', 'status', 'cancel']) // ข้ามรายการที่ถูกยกเลิก
-                ->exists();
+            // --- ✅ ตรวจสอบวันลาซ้ำ ---
+            if ($dateStart && $dateEnd && !$model->hasErrors()) {
+                $query = Leave::find()
+                    ->where(['emp_id' => $model->emp_id])
+                    ->andWhere(['<=', 'date_start', $dateEnd])
+                    ->andWhere(['>=', 'date_end', $dateStart])
+                    ->andWhere(['NOT IN', 'status', ['cancel']]); // ไม่ตรวจ record ที่ยกเลิก
 
-            if ($exists) {
-                $model->addError('date_start', 'คุณลาในวันนี้แล้ว');
-                $model->addError('date_end', 'คุณลาในวันนี้แล้ว');
+                if (!$model->isNewRecord && $model->id) {
+                    $query->andWhere(['!=', 'id', $model->id]); // ข้าม record ตัวเองตอนแก้ไข
+                }
+
+                $exists = $query->exists();
+
+                if ($exists) {
+                    $model->addError('date_start', 'คุณลาในวันนี้แล้ว');
+                    $model->addError('date_end', 'คุณลาในวันนี้แล้ว');
+                }
             }
-        }
-
         }
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;
