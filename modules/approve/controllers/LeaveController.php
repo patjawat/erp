@@ -31,6 +31,7 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere(['NOT IN','leave.status',['ReqCancel','cancel']]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],

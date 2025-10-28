@@ -7,9 +7,7 @@ use yii\widgets\Pjax;
 $this->title = 'อนุมัติการลา ';
 $msg = 'ขอ';
 ?>
-<?php // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?php $this->beginBlock('page-title'); ?>
-<!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
@@ -28,9 +26,6 @@ $msg = 'ขอ';
         <?php echo $this->render('@app/modules/hr/views/leave/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
-
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
@@ -38,7 +33,7 @@ $msg = 'ขอ';
         <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-light shadow approve-all']);?>
     </div>
 </div>
-    <div class="card-body">        
+    <div class="card-body">
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -57,7 +52,7 @@ $msg = 'ขอ';
                 <tr class="">
                     <td class="text-center fw-semibold"><?php echo $item->leave->thai_year?></td>
                     <td class="text-truncate" style="max-width: 230px;">
-                        <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
+                        <a href="<?= Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
                             class="open-modal" data-size="modal-xl">
                             <?=$item->leave->getAvatar(false)['avatar']?>
                         </a>
@@ -76,6 +71,7 @@ $msg = 'ขอ';
                     try {
                         $data =  $item->leave->checkerName(1)['employee'];
                     } catch (\Throwable $th) {
+                        $data = '';
                     }
                     ?>
                     </td>
@@ -106,18 +102,12 @@ $msg = 'ขอ';
 
     </div>
 </div>
-
-<?php // Pjax::end(); ?>
 <?=$this->render('calendar')?>
-
-
 <?php
 $calendarUrl = Url::to(['/approve/leave/get-events']);
 $currentDate = $date;
 
 $js = <<< JS
-
-
 
 let currentDate = new Date('$currentDate');
     

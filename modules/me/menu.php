@@ -1,9 +1,6 @@
 <?php
 use yii\helpers\Html;
-use app\models\Categorise;
 use app\components\ApproveHelper;
-use app\components\CategoriseHelper; 
-use app\modules\am\models\AssetItem;
 $notify = ApproveHelper::Info();
 $total = $notify['total'];
 $totalLeave = $notify['leave']['total'];
@@ -15,10 +12,10 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <?php if($layout == 'horizontal'):?>
     <?php if(!Yii::$app->user->can('branch')):?>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-solid fa-gauge me-1"></i> MyDashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')])?>
+    <?=Html::a('<i class="fa-solid fa-gauge me-1"></i> MyDashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me'],['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')])?>
 </li>
 <li class="nav-item mt-1">
-    <?php echo  Html::a('<i class="fa-regular fa-circle-check me-1"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fw-semibold ms-1"> '.$total.' </span>',['/approve'],['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')])?>
+    <?=Html::a('<i class="fa-regular fa-circle-check me-1"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fw-semibold ms-1"> '.$total.' </span>',['/approve'],['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')])?>
 </li>
 <?php endif;?>
 
@@ -54,8 +51,8 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 
 <?php else:?>
 <div class="d-flex gap-2">
-    <?php echo  Html::a('<i class="fa-solid fa-gauge"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me','name' => 'leave'],['class' => 'btn btn-light'])?>
-    <?php echo  Html::a('<i class="fa-regular fa-circle-check"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$total.'</span>',['/approve'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-solid fa-gauge"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me','name' => 'leave'],['class' => 'btn btn-light'])?>
+    <?=Html::a('<i class="fa-regular fa-circle-check"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold">'.$total.'</span>',['/approve'],['class' => 'btn btn-light'])?>
 
 </div>
 <?php endif;?>

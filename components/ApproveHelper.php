@@ -57,7 +57,9 @@ class ApproveHelper extends Component
         try {
             $me = UserHelper::GetEmployee();
             $query = Approve::find()
+                ->joinWith('leave')
                 ->where(['name' => 'leave', 'status' => 'Pending', 'emp_id' => $me->id])
+                ->andWhere(['NOT IN','leave.status',['ReqCancel','cancel']])
                 ->orderBy(['id' => SORT_DESC]);
 
             // Debug SQL ที่ถูกสร้าง
