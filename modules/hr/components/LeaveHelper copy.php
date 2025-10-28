@@ -46,27 +46,27 @@ class LeaveHelper extends Component
         $sqlHoliday = "SELECT count(id) FROM `calendar` WHERE name = 'holiday' AND date_start BETWEEN :date_start AND :date_end";
 
         // นับวัน Off ในเดือนนั้น
-        // $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND MONTH(date_end) = MONTH(:date_end);";
+        $sqlDayOff = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND MONTH(date_end) = MONTH(:date_end);";
         // นับวัน Off ระหว่างช่วงวันที่ลาหยุด
-        // $sqlDayOffBetweenLeave = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND date_start BETWEEN :date_start AND :date_end;";
+        $sqlDayOffBetweenLeave = "SELECT count(id) FROM `calendar` WHERE name = 'off' AND emp_id =  :emp_id AND date_start BETWEEN :date_start AND :date_end;";
 
         //ถ้าเป็นการแก้ไขด้วย admin
-        // $empId = ($emp_id > 0 ? $emp_id :  $me->id);
+        $empId = ($emp_id > 0 ? $emp_id :  $me->id);
 
-        // $countDayOff = Yii::$app
-        //     ->db
-        //     ->createCommand($sqlDayOff)
-        //     ->bindValue(':emp_id', $empId)
-        //     ->bindValue(':date_end', $dateEnd)
-        //     ->queryScalar();
+        $countDayOff = Yii::$app
+            ->db
+            ->createCommand($sqlDayOff)
+            ->bindValue(':emp_id', $empId)
+            ->bindValue(':date_end', $dateEnd)
+            ->queryScalar();
 
-        // $countDayOffBetweenLeave = Yii::$app
-        //     ->db
-        //     ->createCommand($sqlDayOffBetweenLeave)
-        //     ->bindValue(':emp_id', $empId)
-        //     ->bindValue(':date_start', $dateStart)
-        //     ->bindValue(':date_end', $dateEnd)
-        //     ->queryScalar();
+        $countDayOffBetweenLeave = Yii::$app
+            ->db
+            ->createCommand($sqlDayOffBetweenLeave)
+            ->bindValue(':emp_id', $empId)
+            ->bindValue(':date_start', $dateStart)
+            ->bindValue(':date_end', $dateEnd)
+            ->queryScalar();
 
 
         // นับจำนวนวันทั้งหมด
@@ -78,9 +78,8 @@ class LeaveHelper extends Component
         return [
             'allDays' => $countAllDays,
             'satsunDays' => $satsunDays,
-            'shift' => $me->work_shift,
-            // 'dayOff' => $countDayOff,
-            // 'dayOffBetweenLeave' => $countDayOffBetweenLeave,
+            'dayOff' => $countDayOff,
+            'dayOffBetweenLeave' => $countDayOffBetweenLeave,
             // 'sunDay' => $sunDay,
             'holiday' => $holiday,
             //  'holidy_me' =>  $holidayMe

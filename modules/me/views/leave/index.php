@@ -29,10 +29,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'leave-container', 'timeout' => 500000]); ?>
-<?php  // echo $this->render('card_summary', ['searchModel' => $searchModel]); 
-?>
-
-
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -53,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </h6>
             <div class="d-flex justify-content-between gap-3">
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/me/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                <?php echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน', ['/me/holidays', 'title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'], ['id' => 'calendar-me', 'class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?php // echo Html::a('<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน', ['/me/holidays', 'title' => '<i class="bi bi-person-fill-gear"></i> วันหยุดของฉัน'], ['id' => 'calendar-me', 'class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-xl']]) ?>
             </div>
         </div>
     </div>

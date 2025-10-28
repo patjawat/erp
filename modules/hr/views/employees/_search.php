@@ -145,7 +145,7 @@ use app\modules\hr\models\Organization;
     <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-sx-12">
         <?= $form->field($model, 'work_shift')->widget(Select2::classname(), [
             'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
-            'options' => ['placeholder' => 'ประเภทการทำงานทั้งหมด ...'],
+            'options' => ['placeholder' => 'ประเภทของเวรทั้งหมด ...'],
             'pluginOptions' => [
                 'allowClear' => true
             ],

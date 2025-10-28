@@ -27,10 +27,10 @@ use app\modules\hr\models\Organization;
 
 <div class="row">
 
-    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
+    <div class="col-xl-5 col-lg-5 col-md-5 col-sm-12 col-sx-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
     </div>
-    <div class="col-xl-2 col-lg-2 col-md-2 col-sm-12 col-sx-12">
+    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
         <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
             'data' => $model->ListPositionType(),
             'options' => ['placeholder' => 'ประเภททั้งหมด ...'],
@@ -59,16 +59,6 @@ use app\modules\hr\models\Organization;
         ])->label(false); ?>
     </div>
 
-    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
-        <?= $form->field($model, 'status')->widget(Select2::classname(), [
-            'data' => $model->ListStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
-            'pluginOptions' => [
-                'allowClear' => true
-            ],
-        ])->label(false) ?>
-
-    </div>
 
     <div class="col-xl-1 col-lg-1 col-md-1 col-sm-12 col-sx-12">
         <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
@@ -102,65 +92,20 @@ use app\modules\hr\models\Organization;
         ])->label(false); ?>
     </div>
 
-    <div class="col-3">
-
-        <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label(false) ?>
-    </div>
-    <div class="col-3">
-
-        <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label(false) ?>
-    </div>
-    <div class="col-3">
-        <?= $form->field($model, 'gender')->widget(Select2::classname(), [
-            'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
-            'options' => ['placeholder' => 'เพศทั้งหมด...'],
-            'pluginOptions' => [
-                'allowClear' => true
-            ],
-        ])->label(false) ?>
-    </div>
-    <div class="col-2">
-        <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
-            'data' => [1 => 'ลงทะเบียนสำเร็จ', 0 => 'ยังไม่ลงทะเบียน'],
-            'options' => ['placeholder' => 'สถานะการลงทะเบียนทั้งหมด ...'],
-            'pluginOptions' => [
-                'allowClear' => true
-            ],
-        ])->label(false) ?>
-    </div>
-
+    
     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-sx-12">
-        <?= $form->field($model, 'branch')->widget(Select2::classname(), [
-            'data' => [
-                'MAIN' => 'โรงพยาบาล',
-                'BRANCH' => 'รพ.สต.',
-            ],
-            'options' => ['placeholder' => 'สาขาทั้งหมด ...'],
-            'pluginOptions' => [
-                'allowClear' => true
-            ],
-        ])->label(false) ?>
-
-    </div>
-    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-sx-12">
         <?= $form->field($model, 'work_shift')->widget(Select2::classname(), [
             'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
-            'options' => ['placeholder' => 'ประเภทการทำงานทั้งหมด ...'],
+            'options' => ['placeholder' => 'ประเภทของเวรทั้งหมด ...'],
             'pluginOptions' => [
                 'allowClear' => true
             ],
         ])->label(false) ?>
     </div>
 
-    <div class="col-2 d-flex align-items-center align-self-center">
-        <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
-    </div>
 </div>
 
 <div class="collapse mt-3" id="collapseFilter">
-
-    <?= $form->field($model, 'show')->hiddenInput(['placeholder' => 'ค้นหา...', 'id' => 'show'])->label(false) ?>
-
 
 </div>
 

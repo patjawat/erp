@@ -5,8 +5,9 @@ namespace app\modules\hr\controllers;
 use Yii;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\EmployeesSearch;
+use app\modules\hr\models\Employees;
 
-class WorkTypeController extends \yii\web\Controller
+class WorkShiftController extends \yii\web\Controller
 {
     public function actionIndex()
     {
@@ -20,7 +21,7 @@ class WorkTypeController extends \yii\web\Controller
             $dataProvider->query->andWhere(['user_id' => 0]);
         }
         if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
-            $dataProvider->query->andWhere(['!=','user_id',0]);
+            $dataProvider->query->andWhere(['!=', 'user_id', 0]);
         }
 
         $dataProvider->query->andFilterWhere([
@@ -61,33 +62,11 @@ class WorkTypeController extends \yii\web\Controller
         }
         // จบการค้นหา
 
-        if (!$searchModel->status && $searchModel->all_status == 0) {
-            $dataProvider->query->andWhere(['status' => 1]);
-        }
-
-        if (!$searchModel->status && $searchModel->all_status == 0) {
-            if ($notStatusParam) {
-                $dataProvider->query->andWhere(['is', 'status', new \yii\db\Expression('null')]);
-            } else {
-                // $dataProvider->query->andWhere(['NOT', ['status' => [5, 7, 8]]]);
-            }
-        }
+        $dataProvider->query->andWhere(['status' => 1]);
 
         $dataProvider->query->andWhere(new \yii\db\Expression("CONCAT(fname,' ', lname) LIKE :term", [':term' => '%' . $searchModel->fullname . '%']));
 
-        // ค้นหาตามอายุ
-        if ($searchModel->range1 && !$searchModel->range2) {
-            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) = ' . $searchModel->range1));
-        }
-        // ค้นหาระหว่างช่วงอายุ
-        if ($searchModel->range1 && $searchModel->range2) {
-            $dataProvider->query->andWhere(new \yii\db\Expression('TIMESTAMPDIFF(YEAR, birthday, NOW()) BETWEEN ' . $searchModel->range1 . ' AND ' . $searchModel->range2));
-        }
-
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
-        $dataProvider->pagination->pageSize = 16;
-
-  
 
         $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
@@ -100,4 +79,19 @@ class WorkTypeController extends \yii\web\Controller
         ]);
     }
 
+    public function actionUpdateShift()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $id = Yii::$app->request->post('id');
+        $workType = Yii::$app->request->post('work_shift');
+
+        $model = Employees::findOne($id);
+        if ($model) {
+            $model->work_shift = $workType;
+            if ($model->save(false)) {
+                return ['success' => true];
+            }
+        }
+        return ['success' => false];
+    }
 }

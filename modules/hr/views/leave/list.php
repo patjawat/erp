@@ -22,6 +22,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
             <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
             <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
+            <th class="fw-semibold" scope="col" style="width:100px">ประเภทเวร</th>
             <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
             <th class="fw-semibold">ระหว่างวันที่</th>
             <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
@@ -42,6 +43,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                         <?php echo  $item->employee->getAvatar(false) ?>
                     </a>
                 </td>
+                <td><?=$item->work_shift_name?></td>
                 <td>
                     <?= $item->data_json['reason'] ?>
                     <div class="d-flex flex-column justofy-content-start align-items-start">

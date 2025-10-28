@@ -177,10 +177,10 @@ $resultsJs = <<<JS
                                 </tr>
                                 <tr class="">
                                     <td scope="row">
-                                        <span class="fw-bolder">วัน Off</span>
+                                        <span class="fw-bolder">ประเภทของเวร</span>
                                     </td>
                                     <td class="text-center"> <span clas="f-wsemibold"
-                                            id="dayOff"><?php echo $model->data_json['off_days'] ?? 0 ?></span></td>
+                                            id="shift"><?php echo $model->data_json['work_shift'] ?? 0 ?></span></td>
                                 </tr>
                                 <tr class="">
                                     <td scope="row">
@@ -192,7 +192,7 @@ $resultsJs = <<<JS
                             </tbody>
                         </table>
                         <p class="text-danger p-0">
-                            (หากมีวัน Off จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
+                            (หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
                         </p>
 
                         <!-- <ul>
@@ -318,7 +318,7 @@ $resultsJs = <<<JS
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[off_days]')->hiddenInput()->label(false) ?>
+<?php echo $form->field($model, 'data_json[work_shift]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
@@ -459,8 +459,7 @@ $js = <<<JS
                         \$('#satsunDays').html(0)
                         \$('#leave-data_json-sat_sun_days').val(0)
                         
-                        \$('#dayOff').html(0)
-                        \$('#leave-data_json-off_days').val(0)
+    
                         
                         \$('#holiday').html(0)
                        \$('#leave-data_json-holidays').val(0)
@@ -470,14 +469,12 @@ $js = <<<JS
                        return false;
 
                     }
-                    console.log(\$('#leave-date_start_type').val());
-                    console.log(res.satsunDays);
                     
                     \$('#satsunDays').html(res.satsunDays)
                     \$('#leave-data_json-sat_sun_days').val(res.satsunDays)
                     
-                    \$('#dayOff').html(res.isDayOff)
-                    \$('#leave-data_json-off_days').val(res.isDayOff)
+                    \$('#shift').html(res.shift_name)
+                    \$('#leave-data_json-work_shift').val(res.shift)
                     
                     \$('#holiday').html(res.holiday)
                    \$('#leave-data_json-holidays').val(res.holiday)

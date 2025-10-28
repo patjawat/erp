@@ -58,6 +58,7 @@ class Leave extends \yii\db\ActiveRecord
     public $sum_lt2;
     public $sum_lt3;
     public $sum_lt4;
+    public $work_shift_name;
 
     public static function tableName()
     {
@@ -73,7 +74,7 @@ class Leave extends \yii\db\ActiveRecord
 
             [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
-            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export'], 'safe'],
+            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export','work_shift_name'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
             ['date_end', 'default', 'value' => function ($model) {
@@ -179,6 +180,7 @@ class Leave extends \yii\db\ActiveRecord
             $this->reason = isset($this->data_json['reason']) ? $this->data_json['reason'] : '';
         } catch (\Throwable $th) {
         }
+        $this->work_shift_name = isset($this->data_json['work_shift']) ? ($this->data_json['work_shift'] == 'normal' ? 'เวรปกติ' : 'เวร 8') : '';
 
         // $this->asset_name = isset($this->data_json['name']) ? $this->data_json['name'] : '-';
 
