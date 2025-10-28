@@ -4,10 +4,24 @@ UPDATE `migration` SET `version` = 'm251007_051359_add_work_shift_to_employee' W
 
 //  update เวร 8 จากใบลา
 UPDATE employees e
-SET e.work_shift = 'shift'
-WHERE e.id IN (
-    SELECT emp_id
-    FROM `leave` l
-    WHERE DATEDIFF(l.date_end, l.date_start) + 1 = l.total_days
-      AND l.leave_type_id = 'LT4'
+LEFT JOIN (
+    SELECT 
+        emp_id,
+        COUNT(*) AS off_count
+    FROM calendar
+    WHERE name = 'off'
+      AND YEAR(`date_start`) = 2025
+    GROUP BY emp_id
+) c ON c.emp_id = e.id
+SET e.work_shift = CASE
+    WHEN c.off_count > 0 THEN 'shift'
+    ELSE 'normal'
+END;
+
+UPDATE `leave` AS l
+JOIN `employees` AS e ON l.emp_id = e.id
+SET l.data_json = JSON_SET(
+    COALESCE(l.data_json, '{}'),
+    '$.work_shift',
+    e.work_shift
 );
