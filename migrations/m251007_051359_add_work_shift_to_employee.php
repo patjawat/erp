@@ -2,7 +2,7 @@
 
 use yii\db\Migration;
 
-class m251007_051359_add_work_type_to_employee extends Migration
+class m251007_051359_add_work_shift_to_employee extends Migration
 {
     /**
      * {@inheritdoc}
@@ -12,10 +12,10 @@ class m251007_051359_add_work_type_to_employee extends Migration
         $table = '{{%employees}}';
         $schema = Yii::$app->db->getTableSchema($table, true);
 
-        if (!isset($schema->columns['work_type'])) {
+        if (!isset($schema->columns['work_shift'])) {
             $this->addColumn(
                 '{{%employees}}',
-                'work_type',
+                'work_shift',
                 $this->string(20)
                     ->notNull()
                     ->defaultValue('normal')
@@ -43,7 +43,7 @@ class m251007_051359_add_work_type_to_employee extends Migration
 
     public function down()
     {
-        echo "m251007_051359_add_work_type_to_employee cannot be reverted.\n";
+        echo "m251007_051359_add_work_shift_to_employee cannot be reverted.\n";
 
         return false;
     }

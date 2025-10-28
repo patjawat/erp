@@ -51,7 +51,7 @@ class EmployeesSearch extends Employees
                 'user_register',
                 'q',
                 'branch',
-                'work_type'
+                'work_shift'
             ], 'safe'],
         ];
     }
@@ -94,7 +94,7 @@ class EmployeesSearch extends Employees
         $query->andFilterWhere([
             'id' => $this->id,
             'branch' => $this->branch,
-            'work_type' => $this->work_type,
+            'work_shift' => $this->work_shift,
             'user_id' => $this->user_id,
             'birthday' => $this->birthday,
             'join_date' => $this->join_date,

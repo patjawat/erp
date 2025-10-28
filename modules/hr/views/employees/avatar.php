@@ -107,7 +107,7 @@ $avatar = $model->showAvatar();
     <div class="card-footer">
         <div class="row">
             <div class="col-6 text-truncate">
-                 <p class="mb-0"><i class="fa-regular fa-clock"></i> การทำงาน : <?=$model->viewWorkType()?></p>
+                 <p class="mb-0"><i class="fa-regular fa-clock"></i> ประเภทเวร : <?=$model->viewWorkType()?></p>
             </div>
             <!-- End col-6 -->
             <div class="col-6 text-truncate">

@@ -156,7 +156,7 @@ class Employees extends Yii\db\ActiveRecord
                 'user_register',
                 'q',
                 'branch',
-                'work_type'
+                'work_shift'
             ], 'safe'],
             [['ref', 'avatar', 'email', 'address', 'status'], 'string', 'max' => 255],
             [['gender', 'prefix'], 'string', 'max' => 20],
@@ -230,7 +230,7 @@ class Employees extends Yii\db\ActiveRecord
             'status' => 'สถานะ',
             'join_date' => 'วันที่เริ่มงาน',
             'branch' => 'สาขา',
-            'work_type' => 'ประเภทงาน',
+            'work_shift' => 'ประเภทเวร',
             'data_json' => 'Data Json',
             'updated_at' => 'Updated At',
             'created_at' => 'Created At',
@@ -301,7 +301,7 @@ class Employees extends Yii\db\ActiveRecord
     public function viewWorkType()
     {
         $workTypename = '';
-        switch ($this->work_type) {
+        switch ($this->work_shift) {
             case 'normal':
                 $workTypename = 'ปกติ';
                 break;
