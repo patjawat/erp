@@ -57,7 +57,6 @@
    <div class="card-body p-0">
 
      <!-- Table -->
-     <div class="table-responsive">
        <?php
         // เตรียมตัวแปรผลรวมก่อนวน loop
         $sum_begin_qty = 0;
@@ -69,11 +68,11 @@
         $sum_end_qty = 0;
         $sum_end_price = 0;
         ?>
-
-       <table class="table table-bordered table-striped table-hover align-middle">
-         <thead class="table-primary text-center">
+ <div class="table-responsive" style="max-height: 600px;max-height: 600px; overflow: auto;">
+            <table class="table table-striped table-hover table-bordered mb-0">
+          <thead class="table-primary" style="position: sticky; top: 0; z-index: 10;">
            <tr>
-             <th rowspan="2" style="width: 87px;" class="text-center align-middle">รหัสสินค้า</th>
+             <th rowspan="2" style="width: 125px;" class="text-center align-middle">รหัสสินค้า</th>
              <th rowspan="2" class="text-center align-middle">รายการสินค้า</th>
              <th rowspan="2" class="text-center align-middle">ประเภทวัสดุ</th>
              <th colspan="2">ยอดยกมา</th>
@@ -121,8 +120,7 @@
              </tr>
            <?php endforeach; ?>
          </tbody>
-
-         <tfoot class="table-light fw-bold">
+<tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
            <tr>
              <td colspan="4" class="text-center fw-semibold">รวมทั้งหมด</td>
              <td class="text-end fw-semibold"><?= number_format($sum_begin_qty, 2) ?></td>
@@ -135,7 +133,6 @@
            </tr>
          </tfoot>
        </table>
-
      </div>
    </div>
  </div>
