@@ -192,6 +192,9 @@ class ReportController extends \yii\web\Controller
 
         $where = implode(' AND ', $conditions);
         $sql = "SELECT
+            v.code as vendor_id,
+            v.title as vendor_name,
+            wo.warehouse_name as form_warehouse_name,
             wi.warehouse_name,
             wi.warehouse_type,
             i.asset_item,
@@ -214,6 +217,7 @@ class ReportController extends \yii\web\Controller
                 LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
                 LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
                 LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+                 LEFT JOIN categorise v ON v.code = e.vendor_id AND v.name = 'vendor'
                 WHERE $where
                 GROUP BY i.id
                 ORDER BY i.id,e.movement_date ASC;";

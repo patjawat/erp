@@ -314,19 +314,6 @@ class StockEvent extends Yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'checker']);
     }
 
-
-    // หารอนุมัติจากหัวหน้า
-    // public function leaderApprove()
-    // {
-
-    //     $model = Approve::findOne(['from_id' => $this->id, 'name' => 'main_stock']);
-    //     if ($model) {
-    //         return $model;
-    //     } else {
-    //         return 0;
-    //     }
-    // }
-
     public function viewAssetType()
     {
         try {
@@ -496,13 +483,6 @@ class StockEvent extends Yii\db\ActiveRecord
             ->count();
     }
 
-    // public function getTotalSuccessOrder()
-    // {
-    //     $warehouse = Yii::$app->session->get('warehouse');
-    //     return self::find()
-    //         ->where(['name' => 'order_item', 'order_status' => 'success'])
-    //         ->count('qty');
-    // }
 
     // นับจำนวนทีอยู่ใน stock
     public function SumStockQty()
@@ -1530,6 +1510,8 @@ class StockEvent extends Yii\db\ActiveRecord
 
         $sql = "
        SELECT 
+            v.code as vendor_id,
+            v.title as vendor_name,
             wi.warehouse_name,
             wi.warehouse_type,
             i.asset_item,
@@ -1706,6 +1688,7 @@ class StockEvent extends Yii\db\ActiveRecord
         LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
         LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
         LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+        LEFT JOIN categorise v ON v.code = e.vendor_id AND v.name = 'vendor'
         WHERE $where
         $groupBySql
         $orderBySql
