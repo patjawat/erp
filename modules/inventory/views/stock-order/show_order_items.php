@@ -62,7 +62,7 @@ $emp = UserHelper::GetEmployee();
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <?= $item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : $item->SumlotQty(); ?>
                     <?php else: ?>
-                        <?= $item->data_json['balance'] !== null ? $item->data_json['balance'] : '-'; ?>
+                        <?= (isset($item->data_json['balance']) && $item->data_json['balance'] !== null) ? $item->data_json['balance'] : '-'; ?>
                     <?php endif; ?>
                 </td>
                 <td class="text-center">
