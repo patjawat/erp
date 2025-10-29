@@ -73,78 +73,9 @@ class ReportController extends \yii\web\Controller
 
 
 
-    //รายงานแบบแยกรายตัว
-    // public function actionListByOrder()
-    // {
-    //     $searchModel = new StockEventSearch([
-    //         'name' => 'order_item', // กรองเฉพาะรายการที่เป็น item
-    //     ]);
-
-    //     $searchModel->load(Yii::$app->request->queryParams);
-    //     try {
-    //         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-    //         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-    //     } catch (\Throwable $th) {
-    //         $dateStart = $dateEnd = '';
-    //     }
-
-    //     // ----- Dynamic Filters -----
-    //     // เพิ่มเงื่อนไขการค้นหาจาดคลัง
-    //     $warehouseId = $searchModel->q_warehouse_id;
-    //     if (!empty($warehouseId)) {
-    //         $conditions[] = "e.warehouse_id = :warehouse_id";
-    //         $params[':warehouse_id'] = $warehouseId;
-    //     }
-    //     // เพิ่มเงื่อนไขการค้นหาจาการรับจ่าย
-    //     $transactionType = $searchModel->transaction_type;
-    //     if (!empty($transactionType)) {
-    //         $conditions[] = "e.transaction_type = :transaction_type";
-    //         $params[':transaction_type'] = $transactionType;
-    //     }
-
-    //     // เพิ่มเงื่อนไขการค้นหาจากประเภท
-    //     $assetTypeId = $searchModel->q_asset_type;
-    //     if (!empty($assetTypeId)) {
-    //         $conditions[] = "t.code = :asset_type_id";
-    //         $params[':asset_type_id'] = $assetTypeId;
-    //     }
-    //     // ----- Auto GROUP / ORDER -----
-    //     $params = [
-    //         ':date_start' => $dateStart,
-    //         ':date_end' => $dateEnd,
-    //     ];
-    //     $conditions = [
-    //         "e.name = 'order'",
-    //         "w.warehouse_type = 'MAIN'",
-    //         "i.asset_item IS NOT NULL",
-    //         "e.order_status = 'success'",
-    //         "i.order_status = 'success'",
-    //     ];
-    //     // ----- Auto GROUP / ORDER -----
-    //     $groupFields = [
-    //         'i.id'
-    //     ];
-    //     $groupBy = implode(', ', $groupFields);
-    //     $orderBy = 'i.id,e.movement_date ASC';
-
-    //     list($sql, $params) = StockEvent::buildStockOrderSql(
-    //         $conditions,
-    //         $params,
-    //         $groupBy ?? null,
-    //         $orderBy ?? null
-    //     );
-
-    //     $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
-
-    //     return $this->render('list_by_order', [
-    //         'searchModel' => $searchModel,
-    //         'querys' => $querys,
-    //     ]);
-    // }
-
-
     public function actionListByOrder()
     {
+        $export = $this->request->get('export');
         $searchModel = new StockEventSearch([
             'name' => 'order_item', // กรองเฉพาะรายการที่เป็น item
         ]);
@@ -223,13 +154,148 @@ class ReportController extends \yii\web\Controller
                 ORDER BY i.id,e.movement_date ASC;";
 
 
-        $querys = Yii::$app->db->createCommand($sql,$params)->queryAll();
-
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
+        if ($export == 1) {
+            return $this->ListByOrderExport($searchModel, $querys);
+        }
         return $this->render('list_by_order', [
             'searchModel' => $searchModel,
             'querys' => $querys,
         ]);
     }
+
+    private function ListByOrderExport($searchModel, $querys)
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
+
+    // ตั้งค่า default font
+    $spreadsheet->getDefaultStyle()
+        ->getFont()
+        ->setName('TH Sarabun New')
+        ->setSize(16);
+
+    // --------------------------------------------------
+    // หัวตาราง
+    // --------------------------------------------------
+    $sheet->setCellValue('A1', 'ลำดับ');
+    $sheet->setCellValue('B1', 'ชื่อคลัง');
+    $sheet->setCellValue('C1', 'ประเภทคลัง');
+    $sheet->setCellValue('D1', 'ประเภทวัสดุ');
+    $sheet->setCellValue('E1', 'คลังที่ขอเบิก');
+    $sheet->setCellValue('F1', 'วันที่');
+    $sheet->setCellValue('G1', 'เลขที่');
+    $sheet->setCellValue('H1', 'ความเคลื่อนไหว');
+    $sheet->setCellValue('I1', 'รหัสวัสดุ');
+    $sheet->setCellValue('J1', 'ชื่อวัสดุ');
+    $sheet->setCellValue('K1', 'หน่วย');
+    $sheet->setCellValue('L1', 'จำนวน');
+    $sheet->setCellValue('M1', 'ราคาต่อหน่วย');
+    $sheet->setCellValue('N1', 'รวมราคา');
+
+    $headerRange = 'A1:N1';
+    $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    $sheet->getStyle($headerRange)->getFont()->setBold(true);
+    $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
+          ->getStartColor()->setARGB('FFCCE5FF');
+    $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+          ->setBorderStyle(Border::BORDER_THIN);
+
+    // --------------------------------------------------
+    // เนื้อหาตาราง
+    // --------------------------------------------------
+    $StartRow = 2;
+    $row = 1;
+
+    foreach ($querys as $key => $value) {
+        $numRow = $StartRow++;
+
+        if ($value['warehouse_type'] == 'MAIN') {
+            $warehouseTypeText = 'คลังหลัก';
+        } elseif ($value['warehouse_type'] == 'SUB') {
+            $warehouseTypeText = 'คลังย่อย';
+        } elseif ($value['warehouse_type'] == 'BRANCH') {
+            $warehouseTypeText = 'คลังรพ.สต.';
+        } else {
+            $warehouseTypeText = '';
+        }
+
+        if ($value['transaction_type'] == 'IN') {
+            $sourceName = $value['vendor_name'];
+            $transactionName = 'รับ';
+        } else {
+            $sourceName = $value['form_warehouse_name'];
+            $transactionName = 'จ่าย';
+        }
+
+        $sheet->setCellValue('A' . $numRow, $row++);
+        $sheet->setCellValue('B' . $numRow, $value['warehouse_name']);
+        $sheet->setCellValue('C' . $numRow, $warehouseTypeText);
+        $sheet->setCellValue('D' . $numRow, $value['asset_type_name']);
+        $sheet->setCellValue('E' . $numRow, $sourceName);
+        $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
+        $sheet->setCellValue('G' . $numRow, $value['code']);
+        $sheet->setCellValue('H' . $numRow, $transactionName);
+        $sheet->setCellValue('I' . $numRow, $value['asset_item']);
+        $sheet->setCellValue('J' . $numRow, $value['asset_name']);
+        $sheet->setCellValue('K' . $numRow, $value['unit']);
+        $sheet->setCellValue('L' . $numRow, $value['item_qty']);
+        $sheet->setCellValue('M' . $numRow, number_format($value['unit_price'] ?? 0, 2));
+        $sheet->setCellValue('N' . $numRow, number_format(($value['item_qty'] * $value['unit_price']) ?? 0, 2));
+    }
+
+    // --------------------------------------------------
+    // จัดตำแหน่งคอลัมน์
+    // --------------------------------------------------
+    $lastRow = $StartRow - 1;
+
+    // F,G,H = กลาง
+    $sheet->getStyle("F2:H{$lastRow}")
+          ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // L,M,N = ขวา
+    $sheet->getStyle("L2:N{$lastRow}")
+          ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+    // --------------------------------------------------
+    // ความกว้างคอลัมน์
+    // --------------------------------------------------
+    $widths = [
+        'A' => 8, 'B' => 20, 'C' => 20, 'D' => 20, 'E' => 20,
+        'F' => 20, 'G' => 20, 'H' => 15, 'I' => 20, 'J' => 40,
+        'K' => 20, 'L' => 20, 'M' => 20, 'N' => 20
+    ];
+    foreach ($widths as $col => $w) {
+        $sheet->getColumnDimension($col)->setWidth($w);
+    }
+
+    // --------------------------------------------------
+    // สร้างไฟล์ดาวน์โหลด
+    // --------------------------------------------------
+    try {
+        $dateStart = $searchModel->date_start;
+        $dateEnd = $searchModel->date_end;
+    } catch (\Throwable $th) {
+        $dateStart = '';
+        $dateEnd = '';
+    }
+
+
+    $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
+        $writer->save($filePath);
+
+
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
+        } else {
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+        }
+}
+
+
 
 
 
@@ -289,140 +355,6 @@ class ReportController extends \yii\web\Controller
     }
 
 
-
-
-    // private function geteportByItem($searchModel)
-    // {
-
-    //     try {
-    //         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-    //         $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-    //     } catch (\Throwable $th) {
-    //         $dateStart = '';
-    //         $dateEnd = '';
-    //     }
-
-    //     $q = $searchModel->q;
-    //     $warehouseId = $searchModel->warehouse_id;
-    //     $assetTypeId = $searchModel->asset_type_id;
-
-    //     // สร้างเงื่อนไข WHERE แบบ dynamic
-    //     $where = "e.name = 'order'  AND i.asset_item IS NOT NULL";
-
-    //     // ถ้ามีค่า $q ให้กรอง asset_item หรือ code
-    //     if (!empty($q)) {
-    //         $where .= " AND (LOWER(a.title) LIKE LOWER(:q) OR LOWER(a.code) LIKE LOWER(:q))";
-    //         $params[':q'] = "%{$q}%";
-    //     }
-
-    //     if (!empty($warehouseId)) {
-    //         $where .= " AND (e.warehouse_id = :warehouse_id)";
-    //     }
-
-    //     if (!empty($assetTypeId)) {
-    //         $where .= " AND (a.category_id = :asset_type_id)";
-    //     }
-
-    //     $sql = "SELECT 
-    //             w.warehouse_name,
-    //             t.title as asset_type_name,
-    //             a.category_id,
-    //             i.asset_item,
-    //             a.title,
-    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (ปริมาณ)
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty
-    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS begin_qty,
-    //                 -- ยอดยกมาก่อนเดือนสิงหาคม (มูลค่า)
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
-    //                         WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS begin_price,
-    //                 -- รับเข้าเดือนสิงหาคม
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
-    //                             AND i.transaction_type = 'IN' THEN i.qty
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS qty_in,
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
-    //                             AND i.transaction_type = 'IN' THEN i.qty * i.unit_price
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS price_in,
-    //                 -- จ่ายออกเดือนสิงหาคม
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
-    //                             AND i.transaction_type = 'OUT' THEN i.qty
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS qty_out,
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date BETWEEN :date_start AND :date_end
-    //                             AND i.transaction_type = 'OUT' THEN i.qty * i.unit_price
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS price_out,
-    //                 -- คงเหลือสิ้นเดือน (ปริมาณ)
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty
-    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS end_qty,
-    //                 -- คงเหลือสิ้นเดือน (มูลค่า)
-    //                 SUM(
-    //                     CASE 
-    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN'  THEN i.qty * i.unit_price
-    //                         WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' THEN -i.qty * i.unit_price
-    //                         ELSE 0 
-    //                     END
-    //                 ) AS end_price
-
-    //             FROM stock_events e
-    //             LEFT JOIN stock_events i 
-    //                 ON i.category_id = e.id 
-    //             AND i.name = 'order_item'
-    //             LEFT JOIN warehouses w ON w.id = e.warehouse_id
-    //             LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
-    //             LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
-    //             WHERE $where
-    //             GROUP BY i.asset_item
-    //             ORDER BY i.asset_item";
-
-    //     $q = $searchModel->q;
-
-    //     $command = Yii::$app->db->createCommand($sql)
-    //         ->bindValue(':date_start', $dateStart)
-    //         ->bindValue(':date_end', $dateEnd);
-
-    //     if (!empty($q)) {
-    //         $command->bindValue(':q', "%{$q}%");
-    //     }
-
-    //     if (!empty($warehouseId)) {
-    //         $command->bindValue(':warehouse_id', $warehouseId); // bind :warehouse_id เฉพาะกรณีมีค่า
-    //     }
-
-    //     if (!empty($assetTypeId)) {
-    //         $command->bindValue(':asset_type_id', $assetTypeId); // bind :warehouse_id เฉพาะกรณีมีค่า
-    //     }
-
-    //     return  $command->queryAll();
-    // }
 
     public function actionExportExcelByItem()
     {
@@ -521,19 +453,6 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFCCE5FF');
         $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        // ฟังก์ชันช่วยเปลี่ยน NULL หรือว่างเป็น 0
-        $checkNumber = function ($val) {
-            // trim ก่อน
-            $val = trim((string)$val);
-            return 0;
-
-            // ถ้าเป็น '', 'null', NULL, หรือไม่ใช่ตัวเลข ให้เป็น 0
-            if ($val === '' || strtolower($val) === 'null' || !is_numeric($val)) {
-                return 0;
-            }
-
-            return (float)$val;
-        };
 
         // --------------------------------------------------
         // ข้อมูลเริ่มแถวที่ 3
@@ -836,7 +755,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('E' . $numRow, ($value['begin_price']+$value['price_in']) ?? 0 );
+            $sheet->setCellValue('E' . $numRow, ($value['begin_price'] + $value['price_in']) ?? 0);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -857,7 +776,7 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('H' . $numRow, ($value['branch_price_out']+$value['price_out'] ?? 0));
+            $sheet->setCellValue('H' . $numRow, ($value['branch_price_out'] + $value['price_out'] ?? 0));
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
