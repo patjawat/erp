@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\models\Categorise;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -81,19 +82,14 @@ use app\modules\inventory\models\Warehouse;
             </button>
         </div>
     </div>
-
-</div>
-
-
-<div class="collapse mt-3" id="collapseFilter">
-    <div class="row">
-          <div class="col-2">
+    </div>
+    <div class="row mt-2">
+         <div class="col-lg-2 col-md-2 col-sm-12">
                 <?= $form->field($model, 'q_code')->widget(Select2::classname(), [
                 'data' => $model->ListCode(),
                 'options' => ['placeholder' => 'เลขที่'],
                 'pluginOptions' => [
                     'allowClear' => true,
-                    // 'width' => '120px',
                 ],
             ])->label(false); ?>
             </div>
@@ -106,9 +102,11 @@ use app\modules\inventory\models\Warehouse;
                 ],
             ])->label(false); ?>
             </div>
-         <div class="col-3">
+         <div class="col-4">
            <?=$form->field($model, 'asset_item')->widget(Select2::classname(), [
-            'data' => $model->ListAssetItem(),
+            'data' =>  ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code',function($model){
+                 return $model->code.' '.$model->title;
+            }),
             'options' => ['placeholder' => 'เลือกรายการวัสดุ'],
             'pluginOptions' => [
                 'allowClear' => true,
@@ -121,6 +119,12 @@ use app\modules\inventory\models\Warehouse;
 
 
     </div>
+
+</div>
+
+
+<div class="collapse mt-3" id="collapseFilter">
+    
 </div>
 <?php ActiveForm::end(); ?>
 
