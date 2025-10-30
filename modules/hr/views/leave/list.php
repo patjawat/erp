@@ -27,8 +27,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <th class="fw-semibold">ระหว่างวันที่</th>
             <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
             <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-            <th class="fw-semibold text-start">ความคืบหน้า</th>
-            <th class="fw-semibold text-start">สถานะ</th>
+            <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>
             <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>
     </thead>
@@ -64,16 +63,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                 </td>
                 <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?>
                 </td>
-                <td class="fw-center align-middle text-start">
-
-                    <?php
-                    try {
-                        echo $item->viewStatus();
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
-                    ?>
-                </td>
+                
                 <td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"

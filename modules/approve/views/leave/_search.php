@@ -1,11 +1,7 @@
 <?php
-use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
-use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
@@ -28,56 +24,29 @@ use app\modules\hr\models\Organization;
      'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<div class="row">
-    <div class="col-3">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+<div class="row mb-2">
+    <div class="col-2">
+        <?=$this->render('@app/components/ui/_date_filter',['form' => $form,'model' => $model,'label' => false])?>
+    </div>
+    
+    <div class="col-2">
+        <?= $this->render('@app/components/ui/_date_start',['form' => $form,'model' => $model,'label' => false])?>
     </div>
     <div class="col-2">
-        <?php
-            echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-                'data' => DateFilterHelper::getDropdownItems(),
-                'options' => [
-                    'placeholder' => 'ช่วงเวลาทั้งหมด',
-                    'id' => 'dateFilter', // 👈 เพิ่ม id ตรงนี้
-                ],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-                'pluginEvents' => [
-                    "select2:select" => "function(result) { 
-                        $.ajax({
-                            type: 'get',
-                            url: '/depdrop/date-filter',
-                            data: { date_filter: $(this).val() },
-                            dataType: 'json',
-                            success: function (res) {
-                            $('#dateStart').val(res.date_start)
-                            $('#dateEnd').val(res.date_end)
-                            }
-                        });
-                    }",
-                ]
-            ])->label(false);
-            ?>
-
-
-    </div>
-
-    <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'id' => 'dateStart','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
+        <?= $this->render('@app/components/ui/_date_end',['form' => $form,'model' => $model,'label' => false])?>
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'id' => 'dateEnd','placeholder' => 'ถึงวันที่'])->label(false);?>
-    </div>
-    <div class="col-2">
-        <?=$form->field($model, 'status')->widget(Select2::classname(), [
-        'data' => $model->listStatus(),
+        <?=$form->field($model, 'q_status')->widget(Select2::classname(), [
+        'data' =>  $model->listStatus(),
         'options' => ['placeholder' => 'สถานะทั้งหมด'],
         'pluginOptions' => [
             'allowClear' => true,
             // 'width' => '150px',
         ],
         ])->label(false);?>
+    </div>
+    <div class="col-3">
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
     </div>
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
@@ -90,16 +59,14 @@ use app\modules\hr\models\Organization;
     </div>
 
 </div>
-
-<div class="collapse mt-3" id="collapseFilter">
-    <!-- การกรองแบบละเอียด -->
     <div class="row">
-        <div class="col-3">
+        <div class="col-2">
 
             <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
                     'data' => $model->ListThaiYear(),
                     'options' => [
-                        'placeholder' => 'ปีงบประมาณทั้งหมด'
+                        'placeholder' => 'ปีงบประมาณทั้งหมด',
+                        'id' => 'thaiYear',
                     ],
                     'pluginOptions' => [
                         'allowClear' => true,
@@ -108,7 +75,18 @@ use app\modules\hr\models\Organization;
         ])->label(false);?>
 
         </div>
+        
         <div class="col-4">
+
+            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                'data' => $model->listLeaveType(),
+                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false);?>
+        </div>
+        <div class="col-6">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                     'name' => 'department',
                     'id' => 'treeID',
@@ -125,49 +103,14 @@ use app\modules\hr\models\Organization;
                     ],
                 ])->label(false); ?>
         </div>
-        <div class="col-4">
-
-            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                'data' => $model->listLeaveType(),
-                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ])->label(false);?>
-        </div>
     </div>
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+    
 
 
 </div>
 
 <?php ActiveForm::end(); ?>
 
-
-<?php
-
-$js = <<< JS
-
-
-thaiDatepicker('#dateStart,#dateEnd')
-$("#dateStart").on('change', function() {
-    $('#thaiYear').val(null).trigger('change');
-    $('#dateFilter').val(null).trigger('change');
-});
-$("#dateEnd").on('change', function() {
-    $('#thaiYear').val(null).trigger('change');
-    $('#dateFilter').val(null).trigger('change');
-});
-
-//  thaiDatepicker('#dateStart,#dateEnd')
-
-//     $("#approvesearch-date_start").on('change', function() {
-//             $('#dateFilter').val(null).trigger('change');
-//     });
-//     $("#approvesearch-date_end").on('change', function() {
-//             $('#dateFilter').val(null).trigger('change');
-//     });
-
-JS;
-$this->registerJS($js, View::POS_END);
-
-?>

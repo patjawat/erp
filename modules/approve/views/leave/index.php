@@ -17,13 +17,18 @@ $msg = 'ขอ';
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
+<?php
 
+echo "<pre>";
+print_r($statuses);
+echo "</pre>";
+?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?php echo $this->render('@app/modules/hr/views/leave/_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 <div class="card">
@@ -58,11 +63,14 @@ $msg = 'ขอ';
                         </a>
                     </td>
                     <td>
-                        <div class="d-flex flex-column">
-                            <span><?=$item->leave->reason?></span>
-                            <span class="fw-semibold"><?=$item->leave->showLeaveDate()?></span>
-                        </div>
-                    </td>
+                    <?=$item->leave->reason?>
+                    <div class="d-flex flex-column justofy-content-start align-items-start">
+                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
+                                class="bi bi-exclamation-circle-fill"></i>
+                            <?php  echo $item->leave->leaveType?->title ?? '-' ?>
+                            <code><?php echo $item->leave->total_days ?> </code> วัน</span>
+                    </div>
+                </td>
                     <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
                     <td class="text-start text-truncate" style="max-width:150px;"><?=$item->leave->getAvatar(false)['department']?></td>
                     </td>
@@ -75,7 +83,13 @@ $msg = 'ขอ';
                     }
                     ?>
                     </td>
-                    <td><?=$item->viewStatus()['view'];?></td>
+                    <td>  <?php
+                    try {
+                        echo $item->leave->viewStatus();
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }
+                    ?></td>
 
                     <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">

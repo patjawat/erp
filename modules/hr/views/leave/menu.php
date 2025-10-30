@@ -18,7 +18,7 @@ $menus = [
     [
         'title' => 'ทะเบียนประวัติ',
         'active' => 'index',
-        'url' => ['/hr/leave', 'status' => 'Checking'],
+        'url' => ['/hr/leave', 'status' => 'Checking2_pass'],
         'icon' => '<i class="fa-solid fa-list-ul text-primary me-1 fs-5"></i>'
     ],
     [

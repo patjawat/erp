@@ -152,10 +152,17 @@ class Approve extends \yii\db\ActiveRecord
             return ArrayHelper::map($model, 'thai_year', 'thai_year');
         }
 
-        public function listStatus()
-        {
-            return ArrayHelper::map(Categorise::find()->where(['name' => 'leave_status'])->all(), 'code', 'title');
-        }
+     public function listStatus()
+    {
+        return ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'leave_status'])
+                ->orderBy(new \yii\db\Expression('CAST(sort AS UNSIGNED) ASC'))
+                ->all(),
+            'code',
+            'title'
+        );
+    }
 
     public function listDevelopmentStatus()
         {

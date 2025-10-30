@@ -74,7 +74,7 @@ class Leave extends \yii\db\ActiveRecord
 
             [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
-            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export','work_shift_name'], 'safe'],
+            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export', 'work_shift_name'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
             ['date_end', 'default', 'value' => function ($model) {
@@ -356,8 +356,16 @@ class Leave extends \yii\db\ActiveRecord
 
     public function listStatus()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'leave_status'])->all(), 'code', 'title');
+        return ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'leave_status'])
+                ->orderBy(new \yii\db\Expression('CAST(sort AS UNSIGNED) ASC'))
+                ->all(),
+            'code',
+            'title'
+        );
     }
+
 
     // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
@@ -373,7 +381,7 @@ class Leave extends \yii\db\ActiveRecord
         $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         $nextYear = [['thai_year' => ($year + 1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
         // รวมข้อมูล
-        $model = ArrayHelper::merge($nextYear,$isYear, $model);
+        $model = ArrayHelper::merge($nextYear, $isYear, $model);
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
@@ -478,6 +486,14 @@ class Leave extends \yii\db\ActiveRecord
                 case 'Pending':
                     $color = 'warning';
                     $icon = '<i class="bi bi-hourglass-split"></i>';
+                    break;
+                case 'Checking1_pass':
+                    $color = 'info';
+                    $icon = '<i class="fa-solid fa-circle-check"></i>';
+                    break;
+                case 'Checking2_pass':
+                    $color = 'info';
+                    $icon = '<i class="fa-solid fa-circle-check"></i>';
                     break;
                 case 'Approve':
                     $color = 'success';
@@ -632,9 +648,9 @@ class Leave extends \yii\db\ActiveRecord
     {
         try {
 
-        $emp = $this->CreateBy();
-        $department_id = $emp->department;
-        $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
+            $emp = $this->CreateBy();
+            $department_id = $emp->department;
+            $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
                     t1.id,
                     t1.name as t1name,
 
@@ -651,43 +667,43 @@ class Leave extends \yii\db\ActiveRecord
                     JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
                     JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
                     WHERE t1.id  = :id";
-        $query = Yii::$app
-            ->db
-            ->createCommand($sql)
-            ->bindValue('id', $department_id)
-            ->queryOne();
+            $query = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue('id', $department_id)
+                ->queryOne();
 
             if ($query) {
                 $leader = Employees::find()->where(['id' => $query['t1_leader']])->one();
                 $leaderGroup = Employees::find()->where(['id' => $query['t2_leader']])->one();
                 $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
 
-            return [
-                'approve_1' => isset($query['t1_leader']) ? [
-                    'id' => $query['t1_leader'],
-                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                    'title' => 'หัวหน้างาน'
-                ] : [],
-                'approve_2' => [
-                    'id' => $query['t2_leader'],
-                    'avatar' => isset($leaderGroup) && $leaderGroup ? $leaderGroup->getAvatar(false)  : '',
-                    'fullname' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->fullname  : '',
-                    'position' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->positionName() : '',
-                    'title' => 'หัวหน้ากลุ่มงาน'
-                ],
-                'approve_3' => [
-                    'id' => $query['t3_leader'],
-                    'avatar' => isset($director) && $director ? $director->getAvatar(false) : '',
-                    'fullname' => isset($director) && $director ? $director->fullname : '',
-                    'position' => isset($director) && $director ? $director->positionName() : '',
-                    'title' => 'ผู้อำนวยการ'
-                ]
-            ];
-        } else {
+                return [
+                    'approve_1' => isset($query['t1_leader']) ? [
+                        'id' => $query['t1_leader'],
+                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
+                        'title' => 'หัวหน้างาน'
+                    ] : [],
+                    'approve_2' => [
+                        'id' => $query['t2_leader'],
+                        'avatar' => isset($leaderGroup) && $leaderGroup ? $leaderGroup->getAvatar(false)  : '',
+                        'fullname' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->fullname  : '',
+                        'position' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->positionName() : '',
+                        'title' => 'หัวหน้ากลุ่มงาน'
+                    ],
+                    'approve_3' => [
+                        'id' => $query['t3_leader'],
+                        'avatar' => isset($director) && $director ? $director->getAvatar(false) : '',
+                        'fullname' => isset($director) && $director ? $director->fullname : '',
+                        'position' => isset($director) && $director ? $director->positionName() : '',
+                        'title' => 'ผู้อำนวยการ'
+                    ]
+                ];
+            } else {
 
-            $sql2 = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
+                $sql2 = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
                     t1.id,
                     t1.name as t1name,
 
@@ -704,60 +720,57 @@ class Leave extends \yii\db\ActiveRecord
                     JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl
                     JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
                     WHERE t1.id  = :id";
-        $query2 = Yii::$app
-            ->db
-            ->createCommand($sql2)
-            ->bindValue('id', $department_id)
-            ->queryOne();
+                $query2 = Yii::$app
+                    ->db
+                    ->createCommand($sql2)
+                    ->bindValue('id', $department_id)
+                    ->queryOne();
 
-            $leader = Employees::find()->where(['id' => $query2['t2_leader']])->one();
-            $director2 = Employees::find()->where(['id' => $query2['t3_leader']])->one();
+                $leader = Employees::find()->where(['id' => $query2['t2_leader']])->one();
+                $director2 = Employees::find()->where(['id' => $query2['t3_leader']])->one();
 
-            return [
-                'approve_1' => [
-                    'id' =>  $leader->id,
-                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                    'title' => 'หัวหน้างาน'
-                ],
-                'approve_2' => [
-                  'id' =>  $leader->id,
-                    'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                    'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                    'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                    'title' => 'หัวหน้ากลุ่มงาน'
-                ],
-                'approve_3' => [
-                     'id' => $query2['t3_leader'],
-                    'avatar' => isset($director2) && $director2 ? $director2->getAvatar(false) : '',
-                    'fullname' => isset($director2) && $director2 ? $director2->fullname : '',
-                    'position' => isset($director2) && $director2 ? $director2->positionName() : '',
-                    'title' => 'ผู้อำนวยการ'
-                ]
-            ];
-            
-           
-        }
-
+                return [
+                    'approve_1' => [
+                        'id' =>  $leader->id,
+                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
+                        'title' => 'หัวหน้างาน'
+                    ],
+                    'approve_2' => [
+                        'id' =>  $leader->id,
+                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
+                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
+                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
+                        'title' => 'หัวหน้ากลุ่มงาน'
+                    ],
+                    'approve_3' => [
+                        'id' => $query2['t3_leader'],
+                        'avatar' => isset($director2) && $director2 ? $director2->getAvatar(false) : '',
+                        'fullname' => isset($director2) && $director2 ? $director2->fullname : '',
+                        'position' => isset($director2) && $director2 ? $director2->positionName() : '',
+                        'title' => 'ผู้อำนวยการ'
+                    ]
+                ];
+            }
         } catch (\Throwable $th) {
-             return [
+            return [
                 'approve_1' => [
                     'id' =>  '',
                     'avatar' => '',
                     'fullname' => '',
-                    'position' =>'',
+                    'position' => '',
                     'title' => 'หัวหน้างาน'
                 ],
                 'approve_2' => [
-                  'id' =>  '',
+                    'id' =>  '',
                     'avatar' => '',
                     'fullname' => '',
                     'position' => '',
                     'title' => 'หัวหน้ากลุ่มงาน'
                 ],
                 'approve_3' => [
-                     'id' => '',
+                    'id' => '',
                     'avatar' => '',
                     'fullname' => '',
                     'position' => '',
@@ -802,24 +815,11 @@ class Leave extends \yii\db\ActiveRecord
     }
     public function showStatus()
     {
-        $leaveStep = Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->orderBy(['level' => SORT_DESC])->one();
-
         $color = 'primary';
-        $statusName = '';
-        if ($leaveStep) {
-            $status = $leaveStep->status == 'Pass' ? '<i class="bi bi-check-circle fw-semibold text-success"></i> ผ่าน' : '<i class="bi bi-exclamation-circle-fill text-danger"></i> ไม่ผ่าน';
-            // $title = $leaveStep->title . ' ' . $status;
-            $title = $leaveStep->title;
-            $color = '';
-        } else {
-            $status = '';
-            $title = '';
-            $color = '';
-        }
+        $title = $this->viewStatus();
 
         return '<div class="d-flex justify-content-between">
-                            <span class="text-muted mb-2 fs-13">
-                                <span class="badge rounded-pill badge-soft-warning text-primary fs-13 ">' . $title . '</span>
+                            <span class="text-muted mb-2 fs-13">' . $title . '
                                 <span class="text-' . $color . '"></span>
                             </span>
                             <span class="text-muted mb-0 fs-13">' . $this->statusProcess() . '%</span>

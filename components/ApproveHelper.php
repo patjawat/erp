@@ -58,7 +58,7 @@ class ApproveHelper extends Component
             $me = UserHelper::GetEmployee();
             $query = Approve::find()
                 ->joinWith('leave')
-                ->where(['name' => 'leave', 'status' => 'Pending', 'emp_id' => $me->id])
+                ->where(['name' => 'leave', 'approve.status' => 'Pending', 'approve.emp_id' => $me->id])
                 ->andWhere(['NOT IN','leave.status',['ReqCancel','cancel']])
                 ->orderBy(['id' => SORT_DESC]);
 
