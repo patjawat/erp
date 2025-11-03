@@ -42,14 +42,14 @@ class StockController extends Controller
      *
      * @return string
      */
-   
+
 
     public function actionProduct()
     {
-        $assetTypeId = $this->request->get('asset_type_id');
         $orderId = $this->request->get('order_id');
+        $warehouse = Yii::$app->session->get('warehouse');
+
         $searchModel = new StockSearch([
-            'asset_type' => $assetTypeId,
             'order_id' => $orderId
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -59,12 +59,10 @@ class StockController extends Controller
             ['LIKE', 'title', $searchModel->q],
             ['LIKE', 'p.code', $searchModel->q],
         ]);
-        if($assetTypeId){
-            $dataProvider->query->andFilterWhere(['p.category_id'=>$assetTypeId ]);
-        }else{
-            $dataProvider->query->andFilterWhere(['p.category_id'=> $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere(['warehouse_id' => $warehouse->id]);
 
-        }
+
         $dataProvider->query->groupBy('asset_item');
 
         if ($this->request->isAjax) {
@@ -90,7 +88,7 @@ class StockController extends Controller
     {
         // Yii::$app->response->format = Response::FORMAT_JSON;
         $warehouse = Yii::$app->session->get('warehouse');
-        if(!$warehouse){
+        if (!$warehouse) {
             return $this->redirect(['/inventory']);
         }
         $searchModel = new StockSearch([
@@ -164,7 +162,7 @@ class StockController extends Controller
 
         $warehouse = Yii::$app->session->get('warehouse');
         $model = $this->findModel($id);
-        
+
         return $this->render('view', [
             'model' => $model,
         ]);
@@ -174,7 +172,7 @@ class StockController extends Controller
     {
 
         $warehouse = Yii::$app->session->get('warehouse');
-        if(!$warehouse){
+        if (!$warehouse) {
             return $this->redirect(['/inventory']);
         }
         $model = $this->findModel($id);
@@ -201,7 +199,7 @@ class StockController extends Controller
                 't.warehouse_id' => $warehouse->id,
                 't.order_status' => 'success',
                 'o.order_status' => 'success'
-                ])
+            ])
             ->orderBy(['t.movement_date' => SORT_ASC, 't.id' => SORT_ASC]);
 
         return $this->render('view_stock_card', [
@@ -210,7 +208,7 @@ class StockController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    
+
 
     /**
      * Creates a new Stock model.

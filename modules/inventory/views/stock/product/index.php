@@ -17,6 +17,7 @@ use app\components\StockHelper;
             <tr>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                 <th scope="col">รายการ</th>
+                <th scope="col">ประเภทวัสดุ</th>
                 <th scope="col" class="text-center">จำนวนคงเหลือ</th>
                 <th scope="col">ล๊อตปัจจุบัน</th>
                 <th scope="col">ดำเนินการ</th>
@@ -35,6 +36,7 @@ use app\components\StockHelper;
 
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                     <td><?= $item->product?->Avatar(); ?></td>
+                    <td><?= $item->product?->productType->title; ?></td>
                     <td class="text-center"><?= $item->sumStockItem() ?></td>
                     <td><?=$firstOut['lot_number']  ?></td>
                     <td>
@@ -48,6 +50,19 @@ use app\components\StockHelper;
         </tbody>
     </table>
 </div>
+
+<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+    <?= yii\bootstrap5\LinkPager::widget([
+        'pagination' => $dataProvider->pagination,
+        'firstPageLabel' => 'หน้าแรก',
+        'lastPageLabel' => 'หน้าสุดท้าย',
+        'options' => [
+            'listOptions' => 'pagination pagination-sm',
+            'class' => 'pagination-sm',
+        ],
+    ]); ?>
+</div>
+
 <?php Pjax::end(); ?>
 
  <?php
