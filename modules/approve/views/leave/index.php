@@ -1,8 +1,10 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+
 /** @var yii\web\View $this */
 $this->title = 'อนุมัติการลา ';
 $msg = 'ขอ';
@@ -11,11 +13,11 @@ $msg = 'ขอ';
 <i class="fa-solid fa-calendar-day"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
+<?php echo $this->render('@app/modules/me/menu') ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php echo $this->render('@app/modules/me/menu', ['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">
@@ -29,72 +31,62 @@ $msg = 'ขอ';
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-        <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
-        <?php echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-light shadow approve-all']);?>
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= number_format($dataProvider->getTotalCount()) ?> </span> รายการ</h6>
+            <?php echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+        </div>
     </div>
-</div>
     <div class="card-body">
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="fw-semibold" style="width:100px" scope="col">ปีงบประมาณ</th>
+                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
                     <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="fw-semibold" scope="col">เหตุผล/วันที่</th>
-                    <th class="fw-semibold text-center" scope="col">วัน</th>
-                    <th class="text-start fw-semibold" scope="col">หน่วยงาน</th>
-                    <th class="fw-semibold" scope="col">ผู้ตรวจสอบและอนุมัติ</th>
-                    <th class="text-start fw-semibold" scope="col">สถานะ</th>
+                    <th class="fw-semibold" scope="col" style="width:100px">ประเภทเวร</th>
+                    <th class="fw-semibold">ประเภทการลา</th>
+                    <th class="fw-semibold">ระหว่างวันที่</th>
+                    <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
+                    <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
+                    <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>
                     <th class="fw-semibold text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php foreach($dataProvider->getModels() as $item):?>
-                <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->leave->thai_year?></td>
-                    <td class="text-truncate" style="max-width: 230px;">
-                        <a href="<?= Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
-                            class="open-modal" data-size="modal-xl">
-                            <?=$item->leave->getAvatar(false)['avatar']?>
-                        </a>
-                    </td>
-                    <td>
-                    <?=$item->leave->reason?>
-                    <div class="d-flex flex-column justofy-content-start align-items-start">
-                        <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
-                                class="bi bi-exclamation-circle-fill"></i>
-                            <?php  echo $item->leave->leaveType?->title ?? '-' ?>
-                            <code><?php echo $item->leave->total_days ?> </code> วัน</span>
-                    </div>
-                </td>
-                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;"><?=$item->leave->getAvatar(false)['department']?></td>
-                    </td>
-                    <td><?php echo $item->leave->stackChecker()?>
-                    <?php
-                    try {
-                        $data =  $item->leave->checkerName(1)['employee'];
-                    } catch (\Throwable $th) {
-                        $data = '';
-                    }
-                    ?>
-                    </td>
-                    <td>  <?php
-                    try {
-                        echo $item->leave->viewStatus();
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
-                    ?></td>
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr class="">
+                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center fw-semibold "><?php echo $item->leave->thai_year ?></td>
+                        <td class="text-truncate" style="max-width: 230px;">
+                            <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->leave->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
+                                class="open-modal" data-size="modal-xl">
+                                <?php echo  $item->leave->employee->getAvatar(false) ?>
+                            </a>
+                        </td>
+                        <td><?= $item->leave->work_shift_name ?></td>
+                        <td>
+                            <?= $item->leave->data_json['reason'] ?>
+                            <div class="d-flex flex-column justofy-content-start align-items-start">
+                                <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
+                                        class="bi bi-exclamation-circle-fill"></i>
+                                    <?php echo $item->leave->leaveType?->title ?? '-' ?>
+                                    <code><?php echo $item->leave->total_days ?> </code> วัน</span>
+                            </div>
+                        </td>
+                        <td><?php echo $item->leave->showLeaveDate() ?></td>
+                        <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->leave->employee->departmentName() ?></td>
+                        <td><?php echo $item->leave->stackChecker() ?></td>
+                        <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->leave->showStatus(); ?></td>
 
-                    <td class="text-center">
-                        <div class="d-flex gap-2 justify-content-center">
 
-                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/leave/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                        </div>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
 
-                    </td>
-                </tr>
-                <?php endforeach;?>
+                                <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>', ['/approve/leave/update', 'id' => $item->id], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            </div>
+
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
         <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
@@ -111,7 +103,7 @@ $msg = 'ขอ';
 
     </div>
 </div>
-<?=$this->render('calendar')?>
+<?= $this->render('calendar') ?>
 <?php
 $calendarUrl = Url::to(['/approve/leave/get-events']);
 $currentDate = $date;
@@ -411,7 +403,7 @@ $('.approve-all').click(function (e) {
 
 
 JS;
-$this->registerJS($js,View::POS_END);
+$this->registerJS($js, View::POS_END);
 $this->registerCss('
 .calendar-table th, .calendar-table td {
     min-width: 120px;

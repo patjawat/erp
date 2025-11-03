@@ -179,6 +179,11 @@ $moduleId = Yii::$app->controller->module->id;
         font-size: 1.2rem;
         font-weight: 600;
     }
+
+    .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice {
+    padding: 0.15rem 0.4rem 0.2rem 0.55rem !important;
+}
+
 </style>
 
 </style>

@@ -52,17 +52,10 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                             <code><?php echo $item->total_days ?> </code> วัน</span>
                     </div>
                 </td>
-                <td>
-                    <?php echo $item->showLeaveDate() ?>
-                </td>
-                <td class="text-start text-truncate" style="max-width:150px;">
-                    <?php echo $item->employee->departmentName() ?>
-                </td>
-                <td>
-                    <?php echo $item->stackChecker() ?>
-                </td>
-                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?>
-                </td>
+                <td><?php echo $item->showLeaveDate() ?></td>
+                <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee->departmentName() ?></td>
+                <td><?php echo $item->stackChecker() ?></td>
+                <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?></td>
                 
                 <td class="text-end">
                     <div class="dropdown">

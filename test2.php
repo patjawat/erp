@@ -87,3 +87,5 @@ INSERT INTO categorise (code, name, title) VALUES
 ('ReqCancel', 'leave_status', 'ขอยกเลิก'),
 ('Cancel', 'leave_status', 'ยกเลิก'),
 ('Reject', 'leave_status', 'ไม่อนุมัติ');
+
+

@@ -193,7 +193,7 @@ class UserController extends Controller
         if (Yii::$app->user->can('admin')){
             $model = $this->findModel($id);
             Yii::$app->user->login($model);
-            return $this->redirect(['/usermanager']);
+            return $this->redirect(['/me']);
         }else{
             return $this->renderContent('<h2>ไม่ได้รับสิทธิ</h2>');
         }

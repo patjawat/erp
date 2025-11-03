@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
@@ -9,10 +10,10 @@ use app\modules\hr\models\Organization;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-.offcanvas-footer {
-    padding: 1rem 1rem;
-    border-top: 1px solid #dee2e6;
-}
+    .offcanvas-footer {
+        padding: 1rem 1rem;
+        border-top: 1px solid #dee2e6;
+    }
 </style>
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
@@ -21,33 +22,35 @@ use app\modules\hr\models\Organization;
     'options' => [
         'data-pjax' => 1
     ],
-     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
 <div class="row mb-2">
     <div class="col-2">
-        <?=$this->render('@app/components/ui/_date_filter',['form' => $form,'model' => $model,'label' => false])?>
-    </div>
-    
-    <div class="col-2">
-        <?= $this->render('@app/components/ui/_date_start',['form' => $form,'model' => $model,'label' => false])?>
+        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-2">
-        <?= $this->render('@app/components/ui/_date_end',['form' => $form,'model' => $model,'label' => false])?>
+        <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-2">
-        <?=$form->field($model, 'q_status')->widget(Select2::classname(), [
-        'data' =>  $model->listStatus(),
-        'options' => ['placeholder' => 'สถานะทั้งหมด'],
-        'pluginOptions' => [
-            'allowClear' => true,
-            // 'width' => '150px',
-        ],
-        ])->label(false);?>
+        <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-3">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+
+    <div class="col-5">
+        <?= $form->field($model, 'q_status')->widget(Select2::classname(), [
+            'data' => $model->listStatus(),
+            'theme' => Select2::THEME_KRAJEE_BS5,
+            'options' => [
+                'placeholder' => 'สถานะทั้งหมด',
+                'multiple' => true,
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'width' => '100%',
+            ],
+        ])->label(false); ?>
     </div>
+
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
@@ -59,58 +62,57 @@ use app\modules\hr\models\Organization;
     </div>
 
 </div>
-    <div class="row">
-        <div class="col-2">
+<div class="row">
+    <div class="col-2">
+        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+            'data' => $model->ListThaiYear(),
+            'options' => [
+                'placeholder' => 'ปีงบประมาณทั้งหมด',
+                'id' => 'thaiYear',
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+                // 'width' => '120px',
+            ],
+        ])->label(false); ?>
 
-            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
-                    'data' => $model->ListThaiYear(),
-                    'options' => [
-                        'placeholder' => 'ปีงบประมาณทั้งหมด',
-                        'id' => 'thaiYear',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        // 'width' => '120px',
-                    ],
-        ])->label(false);?>
-
-        </div>
-        
-        <div class="col-4">
-
-            <?=$form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                'data' => $model->listLeaveType(),
-                    'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ],
-                ])->label(false);?>
-        </div>
-        <div class="col-6">
-            <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ])->label(false); ?>
-        </div>
     </div>
+    <div class="col-2">
+        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+    </div>
+    <div class="col-2">
+        <?= $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+            'data' => $model->listLeaveType(),
+            'options' => ['placeholder' => 'ประเภทการลาทั้งหมด'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false); ?>
+    </div>
+    <div class="col-6">
+        <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+            'name' => 'department',
+            'id' => 'treeID',
+            'query' => Organization::find()->addOrderBy('root, lft'),
+            'value' => 1,
+            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+            'fontAwesome' => true,
+            'asDropdown' => true,
+            'multiple' => false,
+            'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false); ?>
+    </div>
+</div>
 
 <div class="collapse mt-3" id="collapseFilter">
     <!-- การกรองแบบละเอียด -->
-    
+
 
 
 </div>
 
 <?php ActiveForm::end(); ?>
-

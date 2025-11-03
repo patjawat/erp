@@ -29,11 +29,6 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 }
 </style>
 
-
-
-
-
-
 <div class="row">
     <div class="col-12">
         <div class="row">

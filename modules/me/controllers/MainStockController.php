@@ -25,7 +25,6 @@ class MainStockController extends Controller
 
         $searchModel = new StockEventSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // $dataProvider->query->andwhere(['name' => 'order','transaction_type' => 'IN', 'warehouse_id' => $warehouse['warehouse_id']]);
         $dataProvider->query->andwhere(['name' => 'order', 'transaction_type' => 'OUT', 'from_warehouse_id' => $warehouse->id]);
 
         return $this->render('index', [
@@ -329,7 +328,7 @@ class MainStockController extends Controller
         $cart = \Yii::$app->cartMain;
         //ใช้ id เพื่อหา asset_item เฉยๆ
         $model = Stock::findOne($id);
-        // return $model;
+
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
         

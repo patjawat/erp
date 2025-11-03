@@ -20,7 +20,7 @@ class ApproveHelper extends Component
     public static function Info()
     {
         return [
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total']+ self::Development()['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -56,16 +56,21 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $query = Approve::find()
-                ->joinWith('leave')
-                ->where(['name' => 'leave', 'approve.status' => 'Pending', 'approve.emp_id' => $me->id])
-                ->andWhere(['NOT IN','leave.status',['ReqCancel','cancel']])
-                ->orderBy(['id' => SORT_DESC]);
+            $approveQuery = Approve::find()
+                ->alias('approve') // ตั้ง alias
+                ->leftJoin('leave', 'approve.from_id = leave.id')
+                ->where([
+                    'approve.name' => 'leave',
+                    'approve.emp_id' => $me->id,
+                ])
+                ->andWhere(['IN', 'leave.status', ['Checking1_pass', 'Checking2_pass']])
+                ->andWhere(['NOT IN', 'leave.status', ['ReqCancel', 'cancel']])
+                ->orderBy(['approve.id' => SORT_DESC]);
 
             // Debug SQL ที่ถูกสร้าง
-            $sql = Yii::debug($query->createCommand()->getRawSql(), 'sql');
+            $sql = Yii::debug($approveQuery->createCommand()->getRawSql(), 'sql');
 
-            $datas = $query->all();
+            $datas = $approveQuery->all();
 
             return [
                 'title' => 'ขออนุมัติลา',
@@ -142,11 +147,10 @@ class ApproveHelper extends Component
             ];
         } catch (\Throwable $th) {
             return [
-                'title' =>'อนุมัติอบรม/ประชุม/ดูงาน',
+                'title' => 'อนุมัติอบรม/ประชุม/ดูงาน',
                 'total' => 0,
                 'datas' => [],
             ];
         }
     }
-    
 }

@@ -62,7 +62,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'comment'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at','q','thai_year','date_start','date_end','q_department','leave_type_id','approve_emp_id','q','date_filter','q_status'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'thai_year', 'date_start', 'date_end', 'q_department', 'leave_type_id', 'approve_emp_id', 'q', 'date_filter', 'q_status'], 'safe'],
             [['emp_id', 'level', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['from_id', 'name', 'status'], 'string', 'max' => 255],
         ];
@@ -108,13 +108,13 @@ class Approve extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['name' => 'order']);
     }
-    
+
     public function getVehicle()
     {
         return $this->hasOne(Vehicle::class, ['id' => 'from_id']);
     }
 
-/*************  ✨ Windsurf Command ⭐  *************/
+    /*************  ✨ Windsurf Command ⭐  *************/
     /**
      * Establishes a relationship with the StockEvent model
      * based on the foreign key 'from_id'.
@@ -122,37 +122,37 @@ class Approve extends \yii\db\ActiveRecord
      * @return \yii\db\ActiveQuery
      */
 
-/*******  d89483bd-f223-47e9-9c96-a9679ae1625c  *******/
+    /*******  d89483bd-f223-47e9-9c96-a9679ae1625c  *******/
     public function getStock()
     {
         return $this->hasOne(StockEvent::class, ['id' => 'from_id']);
     }
-    
+
     public function getDevelopment()
     {
         return $this->hasOne(Development::class, ['id' => 'from_id']);
     }
-    
 
-        // แสดงปีงบประมานทั้งหมด
-        public function ListThaiYear()
-        {
-            $model = Leave::find()
-                ->select('thai_year')
-                ->groupBy('thai_year')
-                ->orderBy(['thai_year' => SORT_DESC])
-                ->asArray()
-                ->all();
-    
-            $year = AppHelper::YearBudget();
-            $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
-            $nextYear = [['thai_year' => ($year+1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
-            // รวมข้อมูล
-            $model = ArrayHelper::merge($isYear,$nextYear, $model);
-            return ArrayHelper::map($model, 'thai_year', 'thai_year');
-        }
 
-     public function listStatus()
+    // แสดงปีงบประมานทั้งหมด
+    public function ListThaiYear()
+    {
+        $model = Leave::find()
+            ->select('thai_year')
+            ->groupBy('thai_year')
+            ->orderBy(['thai_year' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $year = AppHelper::YearBudget();
+        $isYear = [['thai_year' => $year]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        $nextYear = [['thai_year' => ($year + 1)]];  // ห่อด้วย array เพื่อให้รูปแบบตรงกัน
+        // รวมข้อมูล
+        $model = ArrayHelper::merge($isYear, $nextYear, $model);
+        return ArrayHelper::map($model, 'thai_year', 'thai_year');
+    }
+
+    public function listStatus()
     {
         return ArrayHelper::map(
             Categorise::find()
@@ -165,8 +165,8 @@ class Approve extends \yii\db\ActiveRecord
     }
 
     public function listDevelopmentStatus()
-        {
-              return [
+    {
+        return [
             'Pending' => 'รอเห็นชอบ',
             'Checking' => 'รอตรวจสอบ',
             'Pass' => 'ตรวจสอบผ่าน',
@@ -174,27 +174,27 @@ class Approve extends \yii\db\ActiveRecord
             'Reject' => 'ไม่อนุมัติ',
             'Cancel' => 'ยกเลิก',
         ];
+    }
+
+
+    public function viewStatus()
+    {
+        return AppHelper::viewStatus($this->status);
+    }
+
+    public function listLeaveType()
+    {
+        $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        if ($me->gender == 'ชาย') {
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT2']])->all();
+        } else {
+            $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT5', 'LT7']])->all();
         }
 
-        
-        public function viewStatus()
-        {
-                return AppHelper::viewStatus($this->status);
-        }
-        
-        public function listLeaveType()
-        {
-            $me = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
-            if ($me->gender == 'ชาย') {
-                $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT2']])->all();
-            } else {
-                $list = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->andWhere(['not in', 'code', ['LT5', 'LT7']])->all();
-            }
-    
-            return ArrayHelper::map($list, 'code', 'title');
-        }
-        
-        
+        return ArrayHelper::map($list, 'code', 'title');
+    }
+
+
     //  หา level สุดท้าย
     public function maxLevel()
     {
@@ -202,39 +202,37 @@ class Approve extends \yii\db\ActiveRecord
             $maxLevel  = Approve::find()
                 ->where(['from_id' => $this->from_id])
                 ->max('level') ?? 0; // คืนค่า 0 ถ้าไม่มีข้อมูล
-            if($maxLevel == $this->level){
+            if ($maxLevel == $this->level) {
                 return true;
             }
-                
         } catch (\Throwable $th) {
             return false;
         }
     }
-    
+
     public function viewApproveDate()
     {
-    try {
-        $time = explode(' ',$this->data_json['approve_date'])[1];
-        return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long').' '.$time;
-    } catch (\Throwable $th) {
-        return null;
-    }    
+        try {
+            $time = explode(' ', $this->data_json['approve_date'])[1];
+            return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') . ' ' . $time;
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 
-    
-    public function getAvatar($msg =null)
+
+    public function getAvatar($msg = null)
     {
         try {
 
-            if($this->level == 3 && $this->status == 'Pending'){
+            if ($this->level == 3 && $this->status == 'Pending') {
                 $employee = UserHelper::GetEmployee();
-                
-            }else{
+            } else {
                 $employee = Employees::find()->where(['id' => $this->emp_id])->one();
             }
-            
+
             return [
-                'avatar' => $employee->getAvatar(false,$msg),
+                'avatar' => $employee->getAvatar(false, $msg),
                 'photo' => $employee->ShowAvatar(),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
@@ -253,28 +251,27 @@ class Approve extends \yii\db\ActiveRecord
         }
     }
 
-        //  ภาพทีมผูตรวจสอบ
-        public function stackChecker()
-        {
-            // try {
-            $data = '';
-            $data .= '<div class="avatar-stack">';
-            foreach (self::find()->where(['from_id' => $this->from_id])->andWhere(['not in', 'status', ['None','Pending']])->all() as $key => $item) {
-                try {
-                    $data .=Html::img('@web/img/placeholder-img.jpg', ['class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
-                            'data' => [
-                                'expand' => '-20',
-                                'sizes' => 'auto',
-                                'src' => $item->employee->showAvatar()
-                            ]]);
-                       
-                } catch (\Throwable $th) {
-                    // throw $th;
-                }
+    //  ภาพทีมผูตรวจสอบ
+    public function stackChecker()
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (self::find()->where(['from_id' => $this->from_id])->andWhere(['not in', 'status', ['None', 'Pending']])->all() as $key => $item) {
+            try {
+                $data .= Html::img('@web/img/placeholder-img.jpg', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up' . ($item->status == 'Reject' ? ' border-danger' : null),
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $item->employee->showAvatar()
+                    ]
+                ]);
+            } catch (\Throwable $th) {
+                // throw $th;
             }
-            $data .= '</div>';
-            return $data;
         }
-        
-
+        $data .= '</div>';
+        return $data;
+    }
 }

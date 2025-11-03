@@ -12,6 +12,7 @@ use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
+use app\modules\hr\models\Organization;
 
 class LeaveController extends \yii\web\Controller
 {
@@ -19,23 +20,38 @@ class LeaveController extends \yii\web\Controller
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
-            $approveMe = Approve::find()
-            ->where(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending'])
-            ->one();
+        $leaderId = $me->id;
+        // 1. ดึง lvl จาก tree โดยใช้ ActiveRecord
+        $lvls = Organization::find()
+            ->select('lvl')
+            ->where(['JSON_UNQUOTE(data_json->"$.leader1")' => (string)$leaderId])
+            ->column(); // คืนค่าเป็น array เช่น [1,2]
 
-        $statuses =  $approveMe->leave->status ?? '';
+        // 2. กำหนด $statusLevel ตาม lvl
+        $statusLevel = [];
+        if (in_array(1, $lvls)) {
+            $statusLevel[] = 'Checking1_pass';
+        }
+        if (in_array(2, $lvls)) {
+            $statusLevel[] = 'Checking2_pass';
+        }
+
+        // 3. ใช้กับ ApproveSearch
         $searchModel = new ApproveSearch([
-            'q_status' => $statuses
+            'q_status' => $statusLevel
         ]);
 
-
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('leave');
+        // เพิ่ม join กับ employees
+        // $dataProvider->query->joinWith(['leave.employee']);
+        $dataProvider->query->joinWith(['leave']);       // join leave
+        $dataProvider->query->joinWith(['leave.employee']); // join employee
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
-        $dataProvider->query->andFilterWhere(['name' => 'leave']);
+        $dataProvider->query->andFilterWhere(['approve.name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
-            $dataProvider->query->andWhere(['leave.status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
         $dataProvider->query->andFilterWhere(['NOT IN', 'leave.status', ['ReqCancel', 'cancel']]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -48,14 +64,14 @@ class LeaveController extends \yii\web\Controller
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
 
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['>=', 'leave.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'leave.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['leave.thai_year' => $searchModel->thai_year]);
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'date' => $date,
-            'statuses' =>  $statuses
+            'date' => $date
         ]);
     }
 

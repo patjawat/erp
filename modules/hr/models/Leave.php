@@ -290,6 +290,12 @@ class Leave extends \yii\db\ActiveRecord
 
 
     // section Relationships
+    public function getApproves()
+    {
+        return $this->hasMany(Approve::class, ['from_id' => 'id'])
+            ->andOnCondition(['approve.name' => 'leave']);
+    }
+
     public function getLeaveType()
     {
         return $this->hasOne(LeaveType::class, ['code' => 'leave_type_id'])->andOnCondition(['name' => 'leave_type']);
@@ -298,7 +304,6 @@ class Leave extends \yii\db\ActiveRecord
     public function getEmployee()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
-        //   ->select(['id', 'fname', 'lname', 'department','position']);
     }
 
     public function getLeaveStatus()

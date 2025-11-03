@@ -12,7 +12,6 @@ use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\LogHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Leave;
 use app\components\ThaiDateHelper;
