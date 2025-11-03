@@ -30,10 +30,10 @@ class LeaveController extends \yii\web\Controller
         // 2. กำหนด $statusLevel ตาม lvl
         $statusLevel = [];
         if (in_array(1, $lvls)) {
-            $statusLevel[] = 'Checking1_pass';
+            $statusLevel[] = 'Pending';
         }
         if (in_array(2, $lvls)) {
-            $statusLevel[] = 'Checking2_pass';
+            $statusLevel[] = 'Checking1_pass';
         }
 
         // 3. ใช้กับ ApproveSearch
