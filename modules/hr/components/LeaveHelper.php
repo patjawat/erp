@@ -4,17 +4,11 @@ namespace app\modules\hr\components;
 
 use Yii;
 use yii\base\Component;
-use yii\bootstrap5\Html;
-use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
-use app\modules\usermanager\models\User;
-
 
 class LeaveHelper extends Component
 {
-
-
     // นับวันหยุด
     public static function CalDay($dateStart, $dateEnd, $emp_id = null)
     {
