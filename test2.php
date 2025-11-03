@@ -67,9 +67,9 @@ LEFT JOIN approve a
           AND a2.status = 'pass'
     )
     WHERE l.status = 'Checking'
-    ** เงื่อไข approve_level 
+    <!-- ** เงื่อไข approve_level 
     = 1 update l.status = 'Checking1_pass'
-    = 2 update l.status = 'Checking2_pass'
+    = 2 update l.status = 'Checking2_pass' -->
 
     -- ลบข้อมูลเดิมทั้งหมดของ leave_status
 DELETE FROM categorise WHERE name = 'leave_status';
