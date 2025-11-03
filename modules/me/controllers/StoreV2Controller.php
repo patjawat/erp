@@ -33,7 +33,7 @@ class StoreV2Controller extends \yii\web\Controller
             $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => ['SUB','BRANCH']])
             ->andWhere(['delete' => null])
             ->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])
-            >one();
+            ->one();
             if (!$checkWarehouse) {
                 return $this->render('not_set_warehouse', [
                     'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
