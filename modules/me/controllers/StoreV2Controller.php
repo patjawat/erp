@@ -30,13 +30,16 @@ class StoreV2Controller extends \yii\web\Controller
         $callbackUrl = Yii::$app->request->get('callback');
         try {
             $emp = UserHelper::GetEmployee();
-            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => ['SUB','BRANCH']])->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])->one();
-            $warehouse = Warehouse::findOne($checkWarehouse->id);
+            $checkWarehouse = Warehouse::find()->andWhere(['warehouse_type' => ['SUB','BRANCH']])
+            ->andWhere(['delete' => null])
+            ->andWhere(['>', new Expression('FIND_IN_SET(' . $emp->department . ', department)'), 0])
+            >one();
             if (!$checkWarehouse) {
                 return $this->render('not_set_warehouse', [
                     'message' => 'ไม่พบการตั้งค่า กำหนดหน่วยงานเบิก ในคลังย่อย',
                 ]);
             }
+            $warehouse = Warehouse::find()->where(['id' => $checkWarehouse->id,'delete' => null])->one();
             Yii::$app->session->set('sub-warehouse', $warehouse);
         } catch (\Throwable $th) {
             return $this->render('not_set_warehouse', [
