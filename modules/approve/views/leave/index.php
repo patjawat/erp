@@ -17,12 +17,7 @@ $msg = 'ขอ';
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
-<?php
 
-echo "<pre>";
-print_r($statuses);
-echo "</pre>";
-?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
