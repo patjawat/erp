@@ -18,7 +18,13 @@ class LeaveHelper extends Component
     // นับวันหยุด
     public static function CalDay($dateStart, $dateEnd, $emp_id = null)
     {
-        $me = UserHelper::GetEmployee();
+        //ถ้ามีการส่ง emp_id จะเป็นการ update
+        if($emp_id){
+            $emp = Employees::findOne($emp_id);
+        }else{
+            //ถ้าไม่ใช่เป็นการสร้างใหม่โดยให้ emp_id จาก user ที่สร้างเลย
+            $emp = UserHelper::GetEmployee();
+        }
         // นับสาร์-อาทิตย์
         $sqlsatsunDays = "WITH RECURSIVE date_range AS (
                         SELECT :date_start AS date
@@ -78,7 +84,7 @@ class LeaveHelper extends Component
         return [
             'allDays' => $countAllDays,
             'satsunDays' => $satsunDays,
-            'shift' => $me->work_shift,
+            'shift' => $emp->work_shift,
             // 'dayOff' => $countDayOff,
             // 'dayOffBetweenLeave' => $countDayOffBetweenLeave,
             // 'sunDay' => $sunDay,

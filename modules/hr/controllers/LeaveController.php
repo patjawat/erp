@@ -866,7 +866,6 @@ class LeaveController extends Controller
 
         $model = LeaveHelper::CalDay($dateStart, $dateEnd, $emp_id);
 
-
         if ($leave_type_id == 'LT2') {
             //ถ้าเป็นลาคลอดบุตร ไม่ต้องนับวันหยุด
             $total = ($model['allDays']);

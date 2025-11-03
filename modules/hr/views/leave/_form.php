@@ -339,7 +339,6 @@ $js = <<<JS
     calDays()
       thaiDatepicker('#leave-date_start,#leave-date_end')
 
-
         function toggleDateEndType() {
             let dateStart = \$('#leave-date_start').val();
             let dateEnd = \$('#leave-date_end').val();
@@ -447,6 +446,8 @@ $js = <<<JS
                 },
                 dataType: "json",
                 success: function (res) {
+                    console.log(res);
+                    
 
                     if(res.status == 'error'){
                         Swal.fire({
