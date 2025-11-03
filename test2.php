@@ -70,3 +70,20 @@ LEFT JOIN approve a
     ** เงื่อไข approve_level 
     = 1 update l.status = 'Checking1_pass'
     = 2 update l.status = 'Checking2_pass'
+
+    -- ลบข้อมูลเดิมทั้งหมดของ leave_status
+DELETE FROM categorise WHERE name = 'leave_status';
+
+-- เพิ่มสถานะใหม่
+INSERT INTO categorise (code, name, title) VALUES
+('Pending', 'leave_status', 'รอ หน.เห็นชอบ'),
+('Checking1_pass', 'leave_status', 'หน.เห็นชอบ'),
+('Checking1_reject', 'leave_status', 'หน.ไม่เห็นชอบ'),
+('Checking2_pass', 'leave_status', 'หน.กลุ่มงานเห็นชอบ'),
+('Checking2_reject', 'leave_status', 'หน.กลุ่มงานไม่เห็นชอบ'),
+('Checkup_pass', 'leave_status', 'ตรวจสอบผ่าน'),
+('Checkup_reject', 'leave_status', 'ตรวจสอบไม่ผ่าน'),
+('Approve', 'leave_status', 'ผอ.อนุมัติ'),
+('ReqCancel', 'leave_status', 'ขอยกเลิก'),
+('Cancel', 'leave_status', 'ยกเลิก'),
+('Reject', 'leave_status', 'ไม่อนุมัติ');
