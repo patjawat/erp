@@ -160,29 +160,6 @@ class StockOrderController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = StockEvent::findOne($id);
-        $btnSave = false;
-        $checkBalanced = 0;
-        //ถ้ายังไม่บันทึกจ่ายและยกเลิกให้ updatelot ที่จะจ่าย
-        // if(!in_array($model->order_status, ['success','cancel'])){
-
-        //ถ้าสถานะยังเป็นรอดำเนินการอยู่
-        // if ($model->order_status == 'pending') {
-        //     foreach ($model->getItems() as $stockItem) {
-        //         $checkStock = Stock::find()->andWhere(['warehouse_id' => $stockItem->warehouse_id, 'asset_item' => $stockItem->asset_item])->andWhere(['>', 'qty', 0])->one();
-        //         if ($checkStock) {
-        //             if (!isset($stockItem->data_json['copy'])) {
-        //                 $stockItem->lot_number = $checkStock->lot_number;
-        //                 $stockItem->unit_price = $checkStock->unit_price;
-        //             }
-
-        //             $stockItem->save();
-        //         } else {
-        //             $stockItem->order_status = 'cancel';
-        //             $stockItem->qty = 0;
-        //             $stockItem->save();
-        //         }
-        //     }
-        // }
 
         return [
             'title' => $this->request->get('title'),
@@ -466,13 +443,12 @@ class StockOrderController extends Controller
     }
 
 
-    public function actionUpdateQty($id)
+    public function actionUpdateQty()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->get('id');
         $qty = $this->request->get('qty');
         $model = StockEvent::findOne($id);
-        $checkStock = Stock::findOne(['lot_number' => $model->lot_number, 'warehouse_id' => $model->warehouse_id]);
         if ($qty <= -1) {
             return [
                 'status' => 'error',

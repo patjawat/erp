@@ -260,21 +260,6 @@ async function handleQuantityChange(button, isIncrement) {
     await showOrderItem();
 }
 
-// ตรวจสอบค่าที่กรอกใน input
-// $("body").on("input", ".qty", function () {
-//     const maxlot = parseFloat($(this).data('maxlot'));
-
-//     // อนุญาตเฉพาะตัวเลข + จุดทศนิยม (1 จุดเท่านั้น)
-//     this.value = this.value
-//         .replace(/[^0-9.]/g, '')      // ลบทุกตัวที่ไม่ใช่เลข/จุด
-//         .replace(/(\..*)\./g, '$1');  // กันไม่ให้มี . เกิน 1 จุด
-
-//     let val = parseFloat(this.value);
-//     if (!isNaN(val) && val > maxlot) {
-//         $(this).val(maxlot);
-//     }
-// });
-
 // จัดการปุ่มลดจำนวน
 $("body").on("click", ".minus", function () {
     handleQuantityChange($(this), false);
@@ -284,15 +269,6 @@ $("body").on("click", ".minus", function () {
 $("body").on("click", ".plus", function () {
     handleQuantityChange($(this), true);
 });
-
-// กด Enter เพื่ออัปเดตจำนวน
-// $("body").on("keypress", ".qty", function (e) {
-//     if (e.which == 13) {
-//         let id = $(this).attr("id"), qty = $(this).val();
-//         updateQuantity(id, qty, $(this)).then(() => location.reload());
-//     }
-// });
-
 
 // เมื่อกด Tab ให้ focus ที่ช่องถัดไป และ select ข้อความ
 $("body").on("keydown", ".qty", function (e) {

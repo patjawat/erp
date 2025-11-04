@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use app\components\UserHelper;
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
-// $office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
+
 $office = 1;
 $emp = UserHelper::GetEmployee();
 
@@ -33,7 +33,11 @@ $emp = UserHelper::GetEmployee();
 
             <?php
             $trColor = '';
-            if (($item->SumlotQty() == 0 || $item->qty > $item->SumlotQty())) {
+            $sumLot = (float)$item->SumlotQty();
+            $qty = (float)$item->qty;
+            $epsilon = 0.000001; // ยอมให้คลาดเคลื่อนเล็กน้อย
+
+            if ($sumLot == 0 || ($qty - $sumLot) > $epsilon) {
                 $trColor = 'table-danger';
             }
             if ($item->order_status == 'cancel') {
@@ -73,10 +77,17 @@ $emp = UserHelper::GetEmployee();
                                 data-total="<?php echo $item->SumStockQty(); ?>">
                                 <i class="fa-solid fa-minus"></i>
                             </span>
-                            <input name="qty" id="<?= $item->id ?>" type="number" min="0" max="2" step="0.01"
-                                value="<?= $item->qty ?>" class="form-control qty" data-maxlot="<?= $item->SumLotQty() ?>"
-                                style="width:100px;font-weight: 500;">
 
+                            <input
+                                name="qty"
+                                id="<?= $item->id ?>"
+                                type="number"
+                                min="0"
+                                step="any"
+                                value="<?= floatval($item->qty) ?>"
+                                class="form-control form-control-sm qty w-100"
+                                data-maxlot="<?= $item->SumLotQty() ?>"
+                                style="font-weight: 500;">
 
                             <span type="button" class="plus btn btn-sm btn-light" id="plus"
                                 data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"
@@ -85,7 +96,7 @@ $emp = UserHelper::GetEmployee();
                             </span>
                         </div>
                     <?php else: ?>
-                        <?= $item->qty; ?>
+                        <?= floatval($item->qty); ?>
                     <?php endif; ?>
                 </td>
 
@@ -100,7 +111,7 @@ $emp = UserHelper::GetEmployee();
                                     'lot_number' => $item->lot_number,
                                     'category_id' => $item->category_id,
                                     'qty' => $item->qty,
-                                   'new_lotnumber' => ((int)$item->qty >= (int)$item->SumLotQty() ? 'Y' : 'N')
+                                    'new_lotnumber' => ((int)$item->qty >= (int)$item->SumLotQty() ? 'Y' : 'N')
                                 ],
 
                                 ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-lg']]
@@ -114,7 +125,8 @@ $emp = UserHelper::GetEmployee();
 
                             <ul class="dropdown-menu">
                                 <!-- เงื่อนไขเดิม ถ้า ไม่ใช่เจ้าของไมาสารมารถลบรายการได้ -->
-                                <?php // if (!in_array($model->order_status, ['success', 'cancel']) && $userid == $item->created_by): ?>
+                                <?php // if (!in_array($model->order_status, ['success', 'cancel']) && $userid == $item->created_by): 
+                                ?>
                                 <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                                     <li>
                                         <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash me-1"></i> ลบรายการ', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']); ?>
