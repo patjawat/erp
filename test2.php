@@ -66,3 +66,12 @@ INSERT INTO categorise (code, name, title) VALUES
 
 
 
+// update stock ถ้า from_warehouse_id เป็นค่าว่าง
+UPDATE stock_events e
+JOIN warehouses w
+  ON JSON_CONTAINS(w.data_json, CONCAT('"', e.created_by, '"'), '$.officer')
+SET e.from_warehouse_id = w.id
+WHERE e.from_warehouse_id IS NULL
+  AND e.transaction_type = 'OUT'
+  AND e.name = 'order'
+  AND e.code LIKE 'REQ-%';

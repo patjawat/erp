@@ -87,7 +87,6 @@ $emp = UserHelper::GetEmployee();
                                 class="form-control form-control-sm qty w-100"
                                 data-maxlot="<?= $item->SumLotQty() ?>"
                                 style="font-weight: 500;">
-                                <?=$item->qty?>
 
                             <span type="button" class="plus btn btn-sm btn-light" id="plus"
                                 data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"
