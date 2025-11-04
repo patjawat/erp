@@ -235,11 +235,12 @@ $("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.g
 
 // ฟังก์ชันอัปเดตค่าจำนวนสินค้า
 async function updateQuantity(id, qty, quantityField) {
+    
     let res = await $.getJSON("/inventory/stock-order/update-qty", { id, qty });
     if (res.status === "error") {
         Swal.fire({ icon: "warning", title: "เกินจำนวน", showConfirmButton: false, timer: 1500 });
     } else {
-        quantityField.val(qty);
+        // quantityField.val(qty);
     }
 }
 

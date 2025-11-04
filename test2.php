@@ -46,31 +46,6 @@ SET
         ELSE l.status
     END
 WHERE l.status = 'Checking';
-
-
-
-SELECT 
-    l.status,
-    a.id AS approve_id,
-    a.level AS approve_level,
-    a.status
-FROM `leave` l
-LEFT JOIN approve a 
-    ON a.from_id = l.id 
-    AND a.name = 'leave'
-    AND a.status = 'pass'
-    AND a.level = (
-        SELECT MAX(a2.level)
-        FROM approve a2
-        WHERE a2.from_id = l.id
-          AND a2.name = 'leave'
-          AND a2.status = 'pass'
-    )
-    WHERE l.status = 'Checking'
-    <!-- ** เงื่อไข approve_level 
-    = 1 update l.status = 'Checking1_pass'
-    = 2 update l.status = 'Checking2_pass' -->
-
     -- ลบข้อมูลเดิมทั้งหมดของ leave_status
 DELETE FROM categorise WHERE name = 'leave_status';
 
@@ -87,5 +62,7 @@ INSERT INTO categorise (code, name, title) VALUES
 ('ReqCancel', 'leave_status', 'ขอยกเลิก'),
 ('Cancel', 'leave_status', 'ยกเลิก'),
 ('Reject', 'leave_status', 'ไม่อนุมัติ');
+
+
 
 

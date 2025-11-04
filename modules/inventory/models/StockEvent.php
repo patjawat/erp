@@ -491,23 +491,24 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     // นับจำนวนทีอยู่ใน lot_number stock
-    public function SumLotQty()
-    {
-        try {
-            $sum = Stock::find()
-                ->where([
-                    'asset_item' => $this->asset_item,
-                    'lot_number' => $this->lot_number,
-                    'warehouse_id' => $this->warehouse_id
-                ])
-                ->sum('qty');
+  public function SumLotQty()
+{
+    try {
+        $sum = (new \yii\db\Query())
+            ->from('stock')
+            ->where([
+                'asset_item' => $this->asset_item,
+                'lot_number' => $this->lot_number,
+                'warehouse_id' => $this->warehouse_id,
+            ])
+            ->select(['sum_qty' => new \yii\db\Expression('CAST(SUM(qty) AS DECIMAL(20,10))')])
+            ->scalar();
 
-            return $sum ?? 0; // ถ้า $sum เป็น null จะคืนค่า 0
-
-        } catch (\Throwable $th) {
-            return 0;
-        }
+        return round((float)$sum, 10); // ปัดให้เท่ากับ precision DB
+    } catch (\Throwable $th) {
+        return 0;
     }
+}
 
     public function CountItem($category_id)
     {

@@ -20,7 +20,6 @@ $emp = UserHelper::GetEmployee();
             <th class="text-center">ขอเบิก</th>
             <th class="text-center">หน่วย</th>
             <th class="text-center">คงเหลือ</th>
-
             <th class="text-center">อนุมัติจ่าย</th>
             <th class="text-center" scope="col" style="width:180px;">ดำเนินการ</th>
         </tr>
@@ -64,7 +63,7 @@ $emp = UserHelper::GetEmployee();
                 <td class="text-center fw-semibold">
                     <!-- ตรวตสอบจำนวนคงเหลือใน stock ที่จะเบิก ถ้าสถานะไม่เป็น เสร็จสิ้นหรือยกเลิก -->
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
-                        <?= $item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : $item->SumlotQty(); ?>
+                        <?= $item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : floatval($item->SumlotQty()); ?>
                     <?php else: ?>
                         <?= (isset($item->data_json['balance']) && $item->data_json['balance'] !== null) ? $item->data_json['balance'] : '-'; ?>
                     <?php endif; ?>
@@ -88,6 +87,7 @@ $emp = UserHelper::GetEmployee();
                                 class="form-control form-control-sm qty w-100"
                                 data-maxlot="<?= $item->SumLotQty() ?>"
                                 style="font-weight: 500;">
+                                <?=$item->qty?>
 
                             <span type="button" class="plus btn btn-sm btn-light" id="plus"
                                 data-lot_qty="<?php echo $item->SumLotQty(); ?>" data-id="<?php echo $item->id; ?>"

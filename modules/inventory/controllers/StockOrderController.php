@@ -456,7 +456,7 @@ class StockOrderController extends Controller
                 'code' => '$qty <= -1',
             ];
         }
-
+        
         $model->qty = $qty;
         $model->save(false);
         \Yii::$app->response->format = Response::FORMAT_JSON;
