@@ -10,7 +10,6 @@ use yii\widgets\ActiveForm;
 ?>
 
     <?php $form = ActiveForm::begin([
-        'action' => ['/inventory/warehouse/index'],
         'method' => 'get',
         'options' => [
             'data-pjax' => 1

@@ -1166,26 +1166,26 @@ class StockEvent extends Yii\db\ActiveRecord
     // }
 
     // จำนวนรับเข้าของคลังย่อยปีงบประมานนี้
-    // public function ReceiveSubSummary()
-    // {
-    //     $year = $this->thai_year;
-    //     $total = StockEvent::find()
-    //         ->alias('se')
-    //         ->select([
-    //             new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2) as total')
-    //         ])
-    //         ->joinWith('warehouse w')
-    //         ->where([
-    //             'se.thai_year' => $year,
-    //             'se.transaction_type' => 'IN',
-    //             'se.order_status' => 'success'
-    //             // 'w.warehouse_type' => 'SUB'
-    //         ])
-    //         ->andFilterWhere(['!=', 'w.warehouse_type', 'MAIN'])
-    //         ->andFilterWhere(['se.warehouse_id' => $this->warehouse_id])
-    //         ->scalar();
-    //     return $total;
-    // }
+    public function ReceiveSubSummary()
+    {
+        $year = $this->thai_year;
+        $total = StockEvent::find()
+            ->alias('se')
+            ->select([
+                new Expression('ROUND(COALESCE(SUM(se.qty * se.unit_price), 0), 2) as total')
+            ])
+            ->joinWith('warehouse w')
+            ->where([
+                'se.thai_year' => $year,
+                'se.transaction_type' => 'IN',
+                'se.order_status' => 'success'
+                // 'w.warehouse_type' => 'SUB'
+            ])
+            ->andFilterWhere(['!=', 'w.warehouse_type', 'MAIN'])
+            ->andFilterWhere(['se.warehouse_id' => $this->warehouse_id])
+            ->scalar();
+        return $total;
+    }
 
     // จำนวนที่ใช้ของการตัดออกจากคัลงย่อย
     // public function OutSummary($type =null)

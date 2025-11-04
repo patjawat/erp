@@ -92,7 +92,6 @@ Dashboard
             <div class="card border border-primary border-4 border-top-0 border-end-0 border-start-0">
                 <div class="card-body">
                     <h2><?=number_format($querys['price_out'] ?? 0,2)?></h2>
-
                 </div>
                 <div class="card-footer border-0">มูลค่าใช้ไป</div>
             </div>
