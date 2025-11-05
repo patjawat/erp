@@ -2,51 +2,51 @@ ALTER TABLE `employees` CHANGE `work_type` `work_shift` VARCHAR(20) CHARACTER SE
 UPDATE `migration` SET `version` = 'm251007_051359_add_work_shift_to_employee' WHERE `migration`.`version` = 'm251007_051359_add_work_type_to_employee';
 
 
-//  update เวร 8 จากใบลา
+// update เวร 8 จากใบลา
 UPDATE employees e
 LEFT JOIN (
-    SELECT 
-        emp_id,
-        COUNT(*) AS off_count
-    FROM calendar
-    WHERE name = 'off'
-      AND YEAR(`date_start`) = 2025
-    GROUP BY emp_id
+SELECT
+emp_id,
+COUNT(*) AS off_count
+FROM calendar
+WHERE name = 'off'
+AND YEAR(`date_start`) = 2025
+GROUP BY emp_id
 ) c ON c.emp_id = e.id
 SET e.work_shift = CASE
-    WHEN c.off_count > 0 THEN 'shift'
-    ELSE 'normal'
+WHEN c.off_count > 0 THEN 'shift'
+ELSE 'normal'
 END;
 
 UPDATE `leave` AS l
 JOIN `employees` AS e ON l.emp_id = e.id
 SET l.data_json = JSON_SET(
-    COALESCE(l.data_json, '{}'),
-    '$.work_shift',
-    e.work_shift
+COALESCE(l.data_json, '{}'),
+'$.work_shift',
+e.work_shift
 );
 
 
 
-//  update leave status
+// update leave status
 UPDATE `leave` l
 LEFT JOIN (
-    SELECT 
-        a.from_id,
-        MAX(a.level) AS approve_level
-    FROM approve a
-    WHERE a.name = 'leave'
-      AND a.status = 'pass'
-    GROUP BY a.from_id
+SELECT
+a.from_id,
+MAX(a.level) AS approve_level
+FROM approve a
+WHERE a.name = 'leave'
+AND a.status = 'pass'
+GROUP BY a.from_id
 ) a ON a.from_id = l.id
-SET 
-    l.status = CASE 
-        WHEN a.approve_level = 1 THEN 'Checking1_pass'
-        WHEN a.approve_level = 2 THEN 'Checking2_pass'
-        ELSE l.status
-    END
+SET
+l.status = CASE
+WHEN a.approve_level = 1 THEN 'Checking1_pass'
+WHEN a.approve_level = 2 THEN 'Checking2_pass'
+ELSE l.status
+END
 WHERE l.status = 'Checking';
-    -- ลบข้อมูลเดิมทั้งหมดของ leave_status
+-- ลบข้อมูลเดิมทั้งหมดของ leave_status
 DELETE FROM categorise WHERE name = 'leave_status';
 
 -- เพิ่มสถานะใหม่
@@ -69,9 +69,19 @@ INSERT INTO categorise (code, name, title) VALUES
 // update stock ถ้า from_warehouse_id เป็นค่าว่าง
 UPDATE stock_events e
 JOIN warehouses w
-  ON JSON_CONTAINS(w.data_json, CONCAT('"', e.created_by, '"'), '$.officer')
+ON JSON_CONTAINS(w.data_json, CONCAT('"', e.created_by, '"'), '$.officer')
 SET e.from_warehouse_id = w.id
 WHERE e.from_warehouse_id IS NULL
-  AND e.transaction_type = 'OUT'
-  AND e.name = 'order'
-  AND e.code LIKE 'REQ-%';
+AND e.transaction_type = 'OUT'
+AND e.name = 'order'
+AND e.code LIKE 'REQ-%';
+
+
+
+
+// update หมวดวัสดุครุภัณฑ์ใหม่
+
+UPDATE `categorise`
+SET category_id = 7
+WHERE `name` LIKE 'asset_type'
+AND category_id = 4;

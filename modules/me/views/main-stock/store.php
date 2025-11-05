@@ -65,7 +65,7 @@ $products = $cart->getItems();
                 <?php else:?>
                 <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
                     <i class="fa-solid fa-cart-plus"></i> ตะกร้า <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
-                    </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังกลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                    </button>',['/me/main-stock/create','title' => 'เบิกวัสดุคลังหลัก'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
                 <?php endif;?>
 
             </div>
