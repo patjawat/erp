@@ -97,9 +97,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="text-center"><?= $item['unit'] ?></td>
                             <td class="text-center fw-bold"><?= $item['item_qty'] ?></td>
                             <td class="text-end fw-bold"><?= number_format($item['unit_price'] ?? 0, 2) ?></td>
-                            <td class="text-end fw-bold"><?= number_format(($item['item_qty'] * $item['unit_price']) ?? 0, 2) ?></td>
+                            <td class="text-end fw-bold"><?= number_format(($item['end_price']) ?? 0, 2) ?></td>
                         </tr>
-                        <?php $totalPrice += ($item['item_qty'] * $item['unit_price']); ?>
+                        <?php $totalPrice += ($item['end_price']); ?>
                     <?php endforeach; ?>
                 </tbody>
                 <!-- ✅ ย้ายรวมราคามาใส่ใน <tfoot> เพื่อ fix footer -->

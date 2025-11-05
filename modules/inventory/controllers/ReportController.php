@@ -98,6 +98,7 @@ class ReportController extends \yii\web\Controller
             "i.asset_item IS NOT NULL",
             "e.order_status = 'success'",
             "i.order_status = 'success'",
+            "wi.warehouse_type = 'MAIN'",
             "e.movement_date BETWEEN :date_start AND :date_end"
         ];
 
@@ -110,7 +111,7 @@ class ReportController extends \yii\web\Controller
 
         $transactionType = $searchModel->transaction_type;
         if (!empty($transactionType)) {
-            $conditions[] = "e.transaction_type = :transaction_type";
+            $conditions[] = "i.transaction_type = :transaction_type";
             $params[':transaction_type'] = $transactionType;
         }
 
@@ -165,7 +166,7 @@ class ReportController extends \yii\web\Controller
                 LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
                 LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
                 LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
-                 LEFT JOIN categorise v ON v.code = e.vendor_id AND v.name = 'vendor'
+                LEFT JOIN categorise v ON v.code = e.vendor_id AND v.name = 'vendor'
                 WHERE $where
                 GROUP BY i.id
                 ORDER BY i.id,e.movement_date ASC;";
@@ -260,7 +261,7 @@ class ReportController extends \yii\web\Controller
             $sheet->setCellValue('K' . $numRow, $value['unit']);
             $sheet->setCellValue('L' . $numRow, $value['item_qty']);
             $sheet->setCellValue('M' . $numRow, number_format($value['unit_price'] ?? 0, 2));
-            $sheet->setCellValue('N' . $numRow, number_format(($value['item_qty'] * $value['unit_price']) ?? 0, 2));
+            $sheet->setCellValue('N' . $numRow, number_format(($value['end_price']) ?? 0, 2));
         }
 
         // --------------------------------------------------
