@@ -513,8 +513,8 @@ class ReportController extends \yii\web\Controller
                 (string)$r['begin_price'],
                 (string)$r['qty_in'],
                 (string)$r['price_in'],
-                (string)$r['qty_out'],
-                (string)$r['price_out'],
+                (string)$r['total_qty_out'],
+                (string)$r['total_price_out'],
                 (string)$r['end_qty'],
                 (string)$r['end_price'],
             ], NULL, "A{$rowIndex}");
