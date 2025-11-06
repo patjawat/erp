@@ -125,13 +125,13 @@
 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
            <tr>
              <td colspan="5" class="text-center fw-semibold">รวมทั้งหมด</td>
-             <td class="text-end fw-semibold"><?= number_format($sum_begin_qty, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_begin_price, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_price_in, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_qty_out, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_price_out, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_end_qty, 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($sum_end_price, 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['begin_qty'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['begin_price'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['price_in'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['qty_out'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['price_out'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['end_qty'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['end_price'], 2) ?></td>
            </tr>
          </tfoot>
        </table>

@@ -353,7 +353,7 @@ class ReportController extends \yii\web\Controller
             "a.group_id = 4",
         ];
 
-           // ----- Auto GROUP / ORDER -----
+        // ----- Auto GROUP / ORDER -----
         $groupFields = [
             'a.code'
         ];
@@ -361,7 +361,7 @@ class ReportController extends \yii\web\Controller
         $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
         CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
         CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
-            
+
 
 
         $assetTypeId = $searchModel->asset_type_id;
@@ -380,8 +380,17 @@ class ReportController extends \yii\web\Controller
 
         $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
+        // ----- Query 2: ไม่มี group/order -----
+        list($sqlSummary, $paramsForSummary) = StockEvent::buildStockAssetItemSql(
+            $conditions,
+            $params
+            // ไม่มี groupBy / orderBy
+        );
+        $groupSummary = Yii::$app->db->createCommand($sqlSummary, $paramsForSummary)->queryOne();
+
         return $this->render('list_by_item', [
             'querys' => $querys,
+            'groupSummary' => $groupSummary,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -394,7 +403,7 @@ class ReportController extends \yii\web\Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $searchModel = new StockEventSearch();
         $searchModel->search(Yii::$app->request->queryParams);
-       try {
+        try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         } catch (\Throwable $th) {
@@ -412,7 +421,7 @@ class ReportController extends \yii\web\Controller
             "a.group_id = 4",
         ];
 
-           // ----- Auto GROUP / ORDER -----
+        // ----- Auto GROUP / ORDER -----
         $groupFields = [
             'a.code'
         ];
@@ -420,7 +429,7 @@ class ReportController extends \yii\web\Controller
         $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
         CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
         CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
-            
+
 
 
         $assetTypeId = $searchModel->asset_type_id;
@@ -952,12 +961,12 @@ class ReportController extends \yii\web\Controller
             ':date_end' => $dateEnd,
         ];
 
-         $conditions2 = [
+        $conditions2 = [
             "a.name = 'asset_item'",
             "a.group_id = 4",
         ];
 
-           // ----- Auto GROUP / ORDER -----
+        // ----- Auto GROUP / ORDER -----
         $groupFields2 = [
             'a.code'
         ];
@@ -965,7 +974,7 @@ class ReportController extends \yii\web\Controller
         $orderBy2 = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
         CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
         CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
-            
+
 
         list($sql2, $params) = StockEvent::buildStockAssetItemSql(
             $conditions2,
