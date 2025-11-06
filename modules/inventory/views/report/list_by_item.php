@@ -115,8 +115,8 @@
                <td class="text-end fw-semibold"><?= number_format($item['begin_price'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['qty_in'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['price_in'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_qty_out'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_price_out'], 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['qty_out'], 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['price_out'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['end_qty'] ?? 0, 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['end_price'] ?? 0, 2) ?></td>
              </tr>
@@ -129,8 +129,8 @@
              <td class="text-end fw-semibold"><?= number_format($groupSummary['begin_price'], 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($groupSummary['qty_in'], 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($groupSummary['price_in'], 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($groupSummary['balance_qty_out'], 2) ?></td>
-             <td class="text-end fw-semibold"><?= number_format($groupSummary['balance_price_out'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['total_qty_out'], 2) ?></td>
+             <td class="text-end fw-semibold"><?= number_format($groupSummary['total_price_out'], 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($groupSummary['end_qty'], 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($groupSummary['end_price'], 2) ?></td>
            </tr>
