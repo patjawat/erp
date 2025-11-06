@@ -349,8 +349,16 @@ class ReportController extends \yii\web\Controller
         ];
 
         $conditions = [
-            "e.order_status = 'success'",
+            "e.name = 'order'",
+            "i.asset_item IS NOT NULL",
         ];
+
+           // ----- Auto GROUP / ORDER -----
+        $groupFields = [
+            'a.code'
+        ];
+        $groupBy = implode(', ', $groupFields);
+        $orderBy = 'a.code';
 
         $warehouseId = $searchModel->q_warehouse_id;
         if (!empty($warehouseId)) {
@@ -364,8 +372,6 @@ class ReportController extends \yii\web\Controller
             $conditions[] = "t.code = :asset_type_id";
             $params[':asset_type_id'] = $assetTypeId;
         }
-
-
 
 
         list($sql, $params) = StockEvent::buildStockAssetItemSql(

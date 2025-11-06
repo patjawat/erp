@@ -72,6 +72,7 @@
             <table class="table table-striped table-hover table-bordered mb-0">
           <thead class="table-primary" style="position: sticky; top: 0; z-index: 10;">
            <tr>
+             <th rowspan="2" style="width:40px;" class="text-center align-middle">ลำดับ</th>
              <th rowspan="2" style="width: 125px;" class="text-center align-middle">รหัสสินค้า</th>
              <th rowspan="2" class="text-center align-middle">รายการสินค้า</th>
              <th rowspan="2" class="text-center align-middle">ประเภทวัสดุ</th>
@@ -93,7 +94,7 @@
          </thead>
 
          <tbody>
-           <?php foreach ($querys as $item): ?>
+           <?php $num = 1;foreach ($querys as $item): ?>
              <?php
               // รวมค่าระหว่าง loop
               $sum_begin_qty   += $item['begin_qty'];
@@ -102,12 +103,13 @@
               $sum_price_in    += $item['price_in'];
               $sum_qty_out     += $item['qty_out'];
               $sum_price_out   += $item['price_out'];
-              $sum_end_qty     += $item['balance_qty'];
-              $sum_end_price   += $item['balance_price'];
+              // $sum_end_qty     += $item['balance_qty'];
+              // $sum_end_price   += $item['balance_price'];
               ?>
              <tr>
-               <td><?= $item['code'] ?></td>
-               <td><?= $item['title'] ?></td>
+               <td><?= $num++; ?></td>
+               <td><?= $item['asset_item'] ?></td>
+               <td><?= $item['asset_name'] ?></td>
                <td><?= $item['asset_type_name'] ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['begin_qty'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['begin_price'], 2) ?></td>
@@ -115,8 +117,8 @@
                <td class="text-end fw-semibold"><?= number_format($item['price_in'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['qty_out'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['price_out'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_qty'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_price'], 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['balance_qty'] ?? 0, 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['balance_price'] ?? 0, 2) ?></td>
              </tr>
            <?php endforeach; ?>
          </tbody>

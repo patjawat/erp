@@ -491,24 +491,24 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     // นับจำนวนทีอยู่ใน lot_number stock
-  public function SumLotQty()
-{
-    try {
-        $sum = (new \yii\db\Query())
-            ->from('stock')
-            ->where([
-                'asset_item' => $this->asset_item,
-                'lot_number' => $this->lot_number,
-                'warehouse_id' => $this->warehouse_id,
-            ])
-            ->select(['sum_qty' => new \yii\db\Expression('CAST(SUM(qty) AS DECIMAL(20,10))')])
-            ->scalar();
+    public function SumLotQty()
+    {
+        try {
+            $sum = (new \yii\db\Query())
+                ->from('stock')
+                ->where([
+                    'asset_item' => $this->asset_item,
+                    'lot_number' => $this->lot_number,
+                    'warehouse_id' => $this->warehouse_id,
+                ])
+                ->select(['sum_qty' => new \yii\db\Expression('CAST(SUM(qty) AS DECIMAL(20,10))')])
+                ->scalar();
 
-        return round((float)$sum, 10); // ปัดให้เท่ากับ precision DB
-    } catch (\Throwable $th) {
-        return 0;
+            return round((float)$sum, 10); // ปัดให้เท่ากับ precision DB
+        } catch (\Throwable $th) {
+            return 0;
+        }
     }
-}
 
     public function CountItem($category_id)
     {
@@ -1706,192 +1706,375 @@ class StockEvent extends Yii\db\ActiveRecord
     public static function buildStockAssetItemSql($conditions, $params = [], $groupBy = null, $orderBy = null)
     {
         $where = implode(' AND ', $conditions);
+        $groupBySql = $groupBy ? "GROUP BY $groupBy" : '';
+        $orderBySql = $orderBy ? "ORDER BY $orderBy" : '';
 
-        $sql = "WITH x AS (
-                        SELECT 
-                            a.code,
-                            a.title,
-                            a.category_id,
-                            a.data_json->>'$.unit' as unit,
-                            t.title AS asset_type_name
-                        FROM categorise a
-                        LEFT JOIN categorise t 
-                            ON t.code = a.category_id 
-                            AND t.name = 'asset_type'
-                        WHERE a.group_id = 4 
-                        AND a.name = 'asset_item'
-                    ),
-                    summary AS (
-                        SELECT 
-                            i.asset_item,
+        $sql = "SELECT 
+                    v.code as vendor_id,
+                    v.title as vendor_name,
+                    wi.warehouse_name,
+                    wi.warehouse_type,
+                    i.asset_item,
+                    a.title as asset_name,
+                    t.code as asset_type_code,
+                    t.title as asset_type_name,
+                    e.id AS e_id,
+                    e.order_status AS e_status,
+                    i.order_status AS i_status,
+                    i.id AS i_id,
+                    a.data_json->>'$.unit' AS unit,
+                    i.qty AS item_qty,
+                    i.unit_price,
+                    e.thai_year,
+                    e.transaction_type,
+                    e.movement_date,
+                    COALESCE(wo.warehouse_type, wi.warehouse_type) AS warehouse_type,
 
-                            -- ✅ ยอดยกมา (ก่อน :date_start)
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'IN'  
-                                        AND i.order_status = 'success'  
-                                        AND e.movement_date < :date_start 
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS begin_qty_in,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'IN'  
-                                        AND i.order_status = 'success'  
-                                        AND e.movement_date < :date_start 
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS begin_price_in,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success'  
-                                        AND e.movement_date < :date_start 
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS begin_qty_out,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success'  
-                                        AND e.movement_date < :date_start 
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS begin_price_out,
+                    -- 🔹 ยอดยกมา (ก่อน 1 ต.ค. 2025)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date < :date_start 
+                                AND i.transaction_type = 'IN' 
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN i.qty
+                            WHEN e.movement_date < :date_start 
+                                AND i.transaction_type = 'OUT' 
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                            THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS begin_qty,
 
-                            -- ✅ ยอดเดือนนั้น (:date_start ถึง :date_end)
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'IN'  
-                                        AND i.order_status = 'success' 
-                                        AND e.movement_date BETWEEN :date_start AND :date_end 
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS month_qty_in,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'IN'  
-                                        AND i.order_status = 'success' 
-                                        AND e.movement_date BETWEEN :date_start AND :date_end  
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS month_price_in,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND e.movement_date BETWEEN :date_start AND :date_end  
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS month_qty_out,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND e.movement_date BETWEEN :date_start AND :date_end  
-                                        AND wi.warehouse_type = 'MAIN' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS month_price_out,
+                    SUM(
+                        CASE
+                            WHEN e.movement_date < :date_start
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN i.qty * i.unit_price
+                            WHEN e.movement_date < :date_start
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                            THEN - (i.qty * i.unit_price)
+                            ELSE 0
+                        END
+                    ) AS begin_price,
 
-                            -- 🔹 ยอดจ่ายแยกตามประเภทคลังต้นทาง
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND wo.warehouse_type = 'SUB' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS qty_out_main,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND wo.warehouse_type = 'SUB' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS price_out_main,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND wo.warehouse_type = 'BRANCH' 
-                                    THEN i.qty 
-                                    ELSE 0 
-                                END
-                            ) AS qty_out_branch,
-                            SUM(
-                                CASE 
-                                    WHEN i.transaction_type = 'OUT' 
-                                        AND i.order_status = 'success' 
-                                        AND wo.warehouse_type = 'BRANCH' 
-                                    THEN i.qty * i.unit_price 
-                                    ELSE 0 
-                                END
-                            ) AS price_out_branch
+                    -- 🔹 ยอดรับเข้า (1–31 ต.ค. 2025)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'IN' 
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN i.qty 
+                            ELSE 0 
+                        END
+                    ) AS qty_in,
 
-                        FROM stock_events i
-                        LEFT JOIN stock_events e 
-                            ON e.id = i.category_id
-                        LEFT JOIN warehouses wo 
-                            ON wo.id = e.from_warehouse_id
-                        LEFT JOIN warehouses wi 
-                            ON wi.id = e.warehouse_id
-                        WHERE $where
-                        GROUP BY i.asset_item
-                    )
+                    ROUND(
+                        SUM(
+                            CASE 
+                                WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                    AND i.transaction_type = 'IN' 
+                                    AND i.order_status = 'success'
+                                    AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                                THEN i.qty * i.unit_price 
+                                ELSE 0 
+                            END
+                        ), 2
+                    ) AS price_in,
 
-                    SELECT 
-                        x.code,
-                        x.title,
-                        x.asset_type_name,
-                        x.unit,
+                    -- 🔹 ยอดเบิกออก รพ. (1–31 ต.ค. 2025)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+                            THEN i.qty 
+                            ELSE 0 
+                        END
+                    ) AS qty_out,
 
-                        -- 🔹 ยอดยกมา
-                        COALESCE(s.begin_qty_in - s.begin_qty_out, 0) AS begin_qty,
-                        COALESCE(s.begin_price_in - s.begin_price_out, 0) AS begin_price,
+                    ROUND(
+                        SUM(
+                            CASE 
+                                WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                    AND i.transaction_type = 'OUT'
+                                    AND i.order_status = 'success'
+                                    AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+                                THEN i.qty * i.unit_price 
+                                ELSE 0 
+                            END
+                        ), 2
+                    ) AS price_out,
 
-                        -- 🔹 ยอดเดือนนั้น
-                        COALESCE(s.month_qty_in, 0) AS qty_in,
-                        COALESCE(s.month_price_in, 0) AS price_in,
-                        COALESCE(s.month_qty_out, 0) AS qty_out,
-                        COALESCE(s.month_price_out, 0) AS price_out,
-                        
-                        -- 🔹 ยอดจ่ายตามประเภทคลังต้นทาง
-                        COALESCE(s.qty_out_main, 0) AS qty_out_main,
-                        COALESCE(s.price_out_main, 0) AS price_out_main,
-                        COALESCE(s.qty_out_branch, 0) AS qty_out_branch,
-                        COALESCE(s.price_out_branch, 0) AS price_out_branch,
-                        
-                        -- 🔹 คงเหลือ
-                        (COALESCE(s.begin_qty_in, 0) - COALESCE(s.begin_qty_out, 0)) +
-                        (COALESCE(s.month_qty_in, 0) - COALESCE(s.month_qty_out, 0)) AS balance_qty,
-                        
-                        (COALESCE(s.begin_price_in, 0) - COALESCE(s.begin_price_out, 0)) +
-                        (COALESCE(s.month_price_in, 0) - COALESCE(s.month_price_out, 0)) AS balance_price
+                    -- 🔹 ยอดเบิกออก รพ.สต. (1–31 ต.ค. 2025)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
+                            THEN i.qty 
+                            ELSE 0 
+                        END
+                    ) AS branch_qty_out,
 
-                    FROM x
-                    LEFT JOIN summary s 
-                        ON s.asset_item = x.code
-                    ORDER BY x.code;
-                    ";
+                    ROUND(
+                        SUM(
+                            CASE 
+                                WHEN e.movement_date BETWEEN :date_start AND :date_end
+                                    AND i.transaction_type = 'OUT'
+                                    AND i.order_status = 'success'
+                                    AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
+                                THEN i.qty * i.unit_price 
+                                ELSE 0 
+                            END
+                        ), 2
+                    ) AS branch_price_out,
+
+                    -- 🔹 ยอดคงเหลือสิ้นงวด (ถึง 31 ต.ค. 2025)
+                    SUM(
+                        CASE 
+                            WHEN e.movement_date <= :date_end 
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN i.qty
+                            WHEN e.movement_date <= :date_end 
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                            THEN -i.qty
+                            ELSE 0 
+                        END
+                    ) AS end_qty,
+
+                    ROUND(
+                        SUM(
+                            CASE 
+                                WHEN e.movement_date <= :date_end 
+                                    AND i.transaction_type = 'IN'
+                                    AND i.order_status = 'success'
+                                    AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                                THEN (i.qty * i.unit_price)
+                                WHEN e.movement_date <= :date_end 
+                                    AND i.transaction_type = 'OUT'
+                                    AND i.order_status = 'success'
+                                    AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                                THEN - (i.qty * i.unit_price)
+                                ELSE 0
+                            END
+                        ), 2
+                    ) AS end_price
+
+                FROM stock_events i
+                LEFT JOIN stock_events e ON e.id = i.category_id
+                LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+                LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+                LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+                LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+                LEFT JOIN categorise v ON v.code = e.vendor_id AND v.name = 'vendor'
+                WHERE $where
+                $groupBySql
+                $orderBySql";
         return [$sql, $params];
     }
+
+    // public static function buildStockAssetItemSql($conditions, $params = [], $groupBy = null, $orderBy = null)
+    // {
+    //     $where = implode(' AND ', $conditions);
+
+    //     $sql = "WITH x AS (
+    //                     SELECT 
+    //                         a.code,
+    //                         a.title,
+    //                         a.category_id,
+    //                         a.data_json->>'$.unit' as unit,
+    //                         t.title AS asset_type_name
+    //                     FROM categorise a
+    //                     LEFT JOIN categorise t 
+    //                         ON t.code = a.category_id 
+    //                         AND t.name = 'asset_type'
+    //                     WHERE a.group_id = 4 
+    //                     AND a.name = 'asset_item'
+    //                 ),
+    //                 summary AS (
+    //                     SELECT 
+    //                         i.asset_item,
+
+    //                         -- ✅ ยอดยกมา (ก่อน :date_start)
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'IN'  
+    //                                     AND i.order_status = 'success'  
+    //                                     AND e.movement_date < :date_start 
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS begin_qty_in,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'IN'  
+    //                                     AND i.order_status = 'success'  
+    //                                     AND e.movement_date < :date_start 
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS begin_price_in,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success'  
+    //                                     AND e.movement_date < :date_start 
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS begin_qty_out,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success'  
+    //                                     AND e.movement_date < :date_start 
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS begin_price_out,
+
+    //                         -- ✅ ยอดเดือนนั้น (:date_start ถึง :date_end)
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'IN'  
+    //                                     AND i.order_status = 'success' 
+    //                                     AND e.movement_date BETWEEN :date_start AND :date_end 
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS month_qty_in,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'IN'  
+    //                                     AND i.order_status = 'success' 
+    //                                     AND e.movement_date BETWEEN :date_start AND :date_end  
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS month_price_in,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND e.movement_date BETWEEN :date_start AND :date_end  
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS month_qty_out,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND e.movement_date BETWEEN :date_start AND :date_end  
+    //                                     AND wi.warehouse_type = 'MAIN' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS month_price_out,
+
+    //                         -- 🔹 ยอดจ่ายแยกตามประเภทคลังต้นทาง
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND wo.warehouse_type = 'SUB' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS qty_out_main,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND wo.warehouse_type = 'SUB' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS price_out_main,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND wo.warehouse_type = 'BRANCH' 
+    //                                 THEN i.qty 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS qty_out_branch,
+    //                         SUM(
+    //                             CASE 
+    //                                 WHEN i.transaction_type = 'OUT' 
+    //                                     AND i.order_status = 'success' 
+    //                                     AND wo.warehouse_type = 'BRANCH' 
+    //                                 THEN i.qty * i.unit_price 
+    //                                 ELSE 0 
+    //                             END
+    //                         ) AS price_out_branch
+
+    //                     FROM stock_events i
+    //                     LEFT JOIN stock_events e 
+    //                         ON e.id = i.category_id
+    //                     LEFT JOIN warehouses wo 
+    //                         ON wo.id = e.from_warehouse_id
+    //                     LEFT JOIN warehouses wi 
+    //                         ON wi.id = e.warehouse_id
+    //                     WHERE $where
+    //                     GROUP BY i.asset_item
+    //                 )
+
+    //                 SELECT 
+    //                     x.code,
+    //                     x.title,
+    //                     x.asset_type_name,
+    //                     x.unit,
+
+    //                     -- 🔹 ยอดยกมา
+    //                     COALESCE(s.begin_qty_in - s.begin_qty_out, 0) AS begin_qty,
+    //                     COALESCE(s.begin_price_in - s.begin_price_out, 0) AS begin_price,
+
+    //                     -- 🔹 ยอดเดือนนั้น
+    //                     COALESCE(s.month_qty_in, 0) AS qty_in,
+    //                     COALESCE(s.month_price_in, 0) AS price_in,
+    //                     COALESCE(s.month_qty_out, 0) AS qty_out,
+    //                     COALESCE(s.month_price_out, 0) AS price_out,
+
+    //                     -- 🔹 ยอดจ่ายตามประเภทคลังต้นทาง
+    //                     COALESCE(s.qty_out_main, 0) AS qty_out_main,
+    //                     COALESCE(s.price_out_main, 0) AS price_out_main,
+    //                     COALESCE(s.qty_out_branch, 0) AS qty_out_branch,
+    //                     COALESCE(s.price_out_branch, 0) AS price_out_branch,
+
+    //                     -- 🔹 คงเหลือ
+    //                     (COALESCE(s.begin_qty_in, 0) - COALESCE(s.begin_qty_out, 0)) +
+    //                     (COALESCE(s.month_qty_in, 0) - COALESCE(s.month_qty_out, 0)) AS balance_qty,
+
+    //                     (COALESCE(s.begin_price_in, 0) - COALESCE(s.begin_price_out, 0)) +
+    //                     (COALESCE(s.month_price_in, 0) - COALESCE(s.month_price_out, 0)) AS balance_price
+
+    //                 FROM x
+    //                 LEFT JOIN summary s 
+    //                     ON s.asset_item = x.code
+    //                 ORDER BY x.code;
+    //                 ";
+    //     return [$sql, $params];
+    // }
 }
