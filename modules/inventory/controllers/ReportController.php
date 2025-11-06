@@ -996,8 +996,8 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('G' . $numRow, $value['begin_price']);
             $sheet2->setCellValue('H' . $numRow, $value['qty_in']);
             $sheet2->setCellValue('I' . $numRow, $value['price_in']);
-            $sheet2->setCellValue('J' . $numRow, $value['qty_out']);
-            $sheet2->setCellValue('K' . $numRow, $value['price_out']);
+            $sheet2->setCellValue('J' . $numRow, $value['total_qty_out']);
+            $sheet2->setCellValue('K' . $numRow, $value['total_price_out']);
             $sheet2->setCellValue('L' . $numRow, $value['end_qty']);
             $sheet2->setCellValue('M' . $numRow, $value['end_price']);
         }
