@@ -103,8 +103,8 @@
               $sum_price_in    += $item['price_in'];
               $sum_qty_out     += $item['qty_out'];
               $sum_price_out   += $item['price_out'];
-              // $sum_end_qty     += $item['balance_qty'];
-              // $sum_end_price   += $item['balance_price'];
+              $sum_end_qty     += $item['end_qty'];
+              $sum_end_price   += $item['end_price'];
               ?>
              <tr>
                <td><?= $num++; ?></td>
@@ -117,14 +117,14 @@
                <td class="text-end fw-semibold"><?= number_format($item['price_in'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['qty_out'], 2) ?></td>
                <td class="text-end fw-semibold"><?= number_format($item['price_out'], 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_qty'] ?? 0, 2) ?></td>
-               <td class="text-end fw-semibold"><?= number_format($item['balance_price'] ?? 0, 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['end_qty'] ?? 0, 2) ?></td>
+               <td class="text-end fw-semibold"><?= number_format($item['end_price'] ?? 0, 2) ?></td>
              </tr>
            <?php endforeach; ?>
          </tbody>
 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
            <tr>
-             <td colspan="4" class="text-center fw-semibold">รวมทั้งหมด</td>
+             <td colspan="5" class="text-center fw-semibold">รวมทั้งหมด</td>
              <td class="text-end fw-semibold"><?= number_format($sum_begin_qty, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_begin_price, 2) ?></td>
              <td class="text-end fw-semibold"><?= number_format($sum_price_in, 2) ?></td>

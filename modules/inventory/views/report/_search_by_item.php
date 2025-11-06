@@ -20,19 +20,24 @@ use yii\widgets\ActiveForm;
 
 <div class="row">
 
-    <div class="col-4">
-        <?= $this->render('@app/components/ui/_date_filter', [
-            'form' => $form,
-            'model' => $model,
-        ])
-        ?>
 
-    </div>
     <div class="col-3">
         <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model]) ?>
     </div>
     <div class="col-3">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model]) ?>
+    </div>
+        <div class="col-4">
+          <?php
+                    echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                        'data' => $model->ListAssetType(),
+                        'options' => ['placeholder' => 'กรุณาเลือก'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                ])->label(false);
+                                ?>
+
     </div>
     <div class="col-2">
        <div class="d-flex flex-row align-items-center gap-2">
@@ -68,6 +73,8 @@ $js = <<< JS
  $('#btn-export-excel').on('click', function(e){
     e.preventDefault(); // ป้องกัน default action ของ <a>
     var url = $(this).attr('href');
+    console.log(url);
+    
 
     Swal.fire({
         title: 'ยืนยันการส่งออก Excel?',

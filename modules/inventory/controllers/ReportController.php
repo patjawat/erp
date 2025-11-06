@@ -349,8 +349,8 @@ class ReportController extends \yii\web\Controller
         ];
 
         $conditions = [
-            "e.name = 'order'",
-            "i.asset_item IS NOT NULL",
+            "a.name = 'asset_item'",
+            "a.group_id = 4",
         ];
 
            // ----- Auto GROUP / ORDER -----
@@ -358,18 +358,15 @@ class ReportController extends \yii\web\Controller
             'a.code'
         ];
         $groupBy = implode(', ', $groupFields);
-        $orderBy = 'a.code';
+        $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
+        CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
+        CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
+            
 
-        $warehouseId = $searchModel->q_warehouse_id;
-        if (!empty($warehouseId)) {
-            $conditions[] = "e.warehouse_id = :warehouse_id";
-            $params[':warehouse_id'] = $warehouseId;
-        }
 
-        $assetTypeId = $searchModel->q_asset_type;
+        $assetTypeId = $searchModel->asset_type_id;
         if (!empty($assetTypeId)) {
-            // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
-            $conditions[] = "t.code = :asset_type_id";
+            $conditions[] = "a.category_id = :asset_type_id";
             $params[':asset_type_id'] = $assetTypeId;
         }
 
@@ -397,7 +394,7 @@ class ReportController extends \yii\web\Controller
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $searchModel = new StockEventSearch();
         $searchModel->search(Yii::$app->request->queryParams);
-        try {
+       try {
             $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
             $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
         } catch (\Throwable $th) {
@@ -411,22 +408,26 @@ class ReportController extends \yii\web\Controller
         ];
 
         $conditions = [
-            "e.order_status = 'success'",
+            "a.name = 'asset_item'",
+            "a.group_id = 4",
         ];
 
-        $warehouseId = $searchModel->q_warehouse_id;
-        if (!empty($warehouseId)) {
-            $conditions[] = "e.warehouse_id = :warehouse_id";
-            $params[':warehouse_id'] = $warehouseId;
-        }
+           // ----- Auto GROUP / ORDER -----
+        $groupFields = [
+            'a.code'
+        ];
+        $groupBy = implode(', ', $groupFields);
+        $orderBy = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
+        CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
+        CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
+            
 
-        $assetTypeId = $searchModel->q_asset_type;
+
+        $assetTypeId = $searchModel->asset_type_id;
         if (!empty($assetTypeId)) {
-            // ตรวจเช็คว่าคุณจะกรองด้วย t.code หรือ t.id ให้ตรงกับฐานข้อมูลของคุณ
-            $conditions[] = "t.code = :asset_type_id";
+            $conditions[] = "a.category_id = :asset_type_id";
             $params[':asset_type_id'] = $assetTypeId;
         }
-
 
 
         list($sql, $params) = StockEvent::buildStockAssetItemSql(
@@ -496,8 +497,8 @@ class ReportController extends \yii\web\Controller
         $rowIndex = 3;
         foreach ($querys as $r) {
             $sheet->fromArray([
-                $r['code'],
-                $r['title'],
+                $r['asset_item'],
+                $r['asset_name'],
                 $r['asset_type_name'],
                 (string)$r['begin_qty'],
                 (string)$r['begin_price'],
@@ -505,8 +506,8 @@ class ReportController extends \yii\web\Controller
                 (string)$r['price_in'],
                 (string)$r['qty_out'],
                 (string)$r['price_out'],
-                (string)$r['balance_qty'],
-                (string)$r['balance_price'],
+                (string)$r['end_qty'],
+                (string)$r['end_price'],
             ], NULL, "A{$rowIndex}");
 
             // ทำตัวเลข (E-L) เป็นตัวหนาและกำหนด NumberFormat
@@ -951,9 +952,20 @@ class ReportController extends \yii\web\Controller
             ':date_end' => $dateEnd,
         ];
 
-        $conditions2 = [
-            "e.order_status = 'success'",
+         $conditions2 = [
+            "a.name = 'asset_item'",
+            "a.group_id = 4",
         ];
+
+           // ----- Auto GROUP / ORDER -----
+        $groupFields2 = [
+            'a.code'
+        ];
+        $groupBy2 = implode(', ', $groupFields2);
+        $orderBy2 = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
+        CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
+        CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
+            
 
         list($sql2, $params) = StockEvent::buildStockAssetItemSql(
             $conditions2,
@@ -967,8 +979,8 @@ class ReportController extends \yii\web\Controller
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
             $sheet2->setCellValue('A' . $numRow, $numRow);
-            $sheet2->setCellValue('B' . $numRow, $value['code']);
-            $sheet2->setCellValue('C' . $numRow, $value['title']);
+            $sheet2->setCellValue('B' . $numRow, $value['asset_item']);
+            $sheet2->setCellValue('C' . $numRow, $value['asset_name']);
             $sheet2->setCellValue('D' . $numRow, $value['asset_type_name']);
             $sheet2->setCellValue('E' . $numRow, $value['unit']);
             $sheet2->setCellValue('F' . $numRow, $value['begin_qty']);
@@ -977,8 +989,8 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('I' . $numRow, $value['price_in']);
             $sheet2->setCellValue('J' . $numRow, $value['qty_out']);
             $sheet2->setCellValue('K' . $numRow, $value['price_out']);
-            $sheet2->setCellValue('L' . $numRow, $value['balance_qty']);
-            $sheet2->setCellValue('M' . $numRow, $value['balance_price']);
+            $sheet2->setCellValue('L' . $numRow, $value['end_qty']);
+            $sheet2->setCellValue('M' . $numRow, $value['end_price']);
         }
 
         // เปิด AutoFilter
