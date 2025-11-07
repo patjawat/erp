@@ -1,12 +1,7 @@
 <?php
-
-use yii\web\View;
 use yii\helpers\Html;
 use kartik\select2\Select2;
 use yii\widgets\ActiveForm;
-use yii\helpers\ArrayHelper;
-use app\components\DateFilterHelper;
-use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\StockEventSearch $model */
@@ -67,8 +62,11 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 
 <div class="row mt-2">
-    <div class="col-6">
+    <div class="col-4">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา'])->label(false) ?>
+    </div>
+    <div class="col-2">
+        <?= $form->field($model, 'po_number')->textInput(['placeholder' => 'เลขที่สั่งซื้อ'])->label(false) ?>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-12">
         <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [

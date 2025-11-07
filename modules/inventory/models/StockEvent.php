@@ -1030,6 +1030,7 @@ class StockEvent extends Yii\db\ActiveRecord
             ->andFilterWhere(['e.order_status' => $this->order_status])
             ->andFilterWhere(['e.vendor_id' => $this->vendor_id])
             ->andFilterWhere(['e.asset_type_id' => $this->asset_type_id])
+            ->andFilterWhere(['e.po_number' => $this->po_number])
             ->andFilterWhere([
                 '>=',
                 'e.movement_date',

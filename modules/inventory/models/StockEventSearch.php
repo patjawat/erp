@@ -47,7 +47,8 @@ class StockEventSearch extends StockEvent
                 'q_asset_type',
                 'q_warehouse_id',
                 'q_code',
-                'q_vendor'
+                'q_vendor',
+                'po_number'
             ], 'safe'],
             [['total_price', 'unit_price'], 'number'],
         ];
@@ -120,6 +121,7 @@ class StockEventSearch extends StockEvent
             ->andFilterWhere(['like', 'category_id', $this->category_id])
             ->andFilterWhere(['like', 'order_status', $this->order_status])
             ->andFilterWhere(['like', 'ref', $this->ref])
+            ->andFilterWhere(['like', 'po_number', $this->po_number])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
