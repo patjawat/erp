@@ -1940,12 +1940,21 @@ WHERE $where
                     ON wo.id = e.from_warehouse_id
                 LEFT JOIN warehouses wi 
                     ON wi.id = e.warehouse_id
-                LEFT JOIN categorise v 
-                    ON v.code = e.vendor_id AND v.name = 'vendor'
+                -- เพื่อเลือกแถวเดียวจาก vendor ไม่อย่างนั้นจะซ้ำกัน 2 แถว
+                LEFT JOIN (
+                    SELECT code, title
+                    FROM (
+                        SELECT *,
+                            ROW_NUMBER() OVER(PARTITION BY code ORDER BY code) AS rn
+                        FROM categorise
+                        WHERE name = 'vendor'
+                    ) t
+                    WHERE rn = 1
+                ) v ON v.code = e.vendor_id
                 WHERE  $where
                     $groupBySql
                     $orderBySql";
-                    return [$sql, $params];
+        return [$sql, $params];
     }
 
 
