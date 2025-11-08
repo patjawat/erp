@@ -6,7 +6,6 @@ use Yii;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
-use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -310,6 +309,7 @@ class OrderController extends Controller
             'category_id' =>  $order_id,
             'name' => 'order_item',
             'asset_item' => $product->code,
+            'asset_type' => $product->category_id,
             'pr_number' => $order->pr_number,
             'pq_number' => $order->pq_number,
             'po_number' => $order->po_number,

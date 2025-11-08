@@ -14,6 +14,7 @@ use app\modules\sm\models\Order;
 $this->title = 'ทะเบียนประวัติ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', 'url' => ['/sm']];
 $this->params['breadcrumbs'][] = $this->title;
+$totalPrice = 0;
 $betwenTitle = '';
 if($searchModel->date_between == 'pr_create_date'){
     $betwenTitle = 'วันที่ขอซื้อ';
@@ -98,6 +99,9 @@ if($searchModel->date_between == 'pr_create_date'){
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
+                    <?php
+                        $totalPrice += $item->calculateVAT()['priceAfterVAT'];
+                        ?>
                 <tr>
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
@@ -117,6 +121,7 @@ if($searchModel->date_between == 'pr_create_date'){
                     </td>
                     <td class="fw-light align-middle text-end">
                         <div class="d-felx flex-column">
+                            <?=$item->calculateVAT()['priceAfterVAT']?>
                             <div class="fw-semibold ">
                                 <?= number_format($item->calculateVAT()['priceAfterVAT'],2)?>
                             </div>
