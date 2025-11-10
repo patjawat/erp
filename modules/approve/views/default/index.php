@@ -25,13 +25,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
-
-<?php
-echo "<pre>";
-print_r($notify['leave']);
-echo "</pre>";
-?>
-
 <?php
 $items = [
     [
