@@ -30,31 +30,20 @@ $msg = 'ขอ';
 </div>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between align-items-center">
             <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= number_format($dataProvider->getTotalCount()) ?> </span> รายการ</h6>
-            <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+            <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); 
+            ?>
 
             <div>
                 <!-- ปุ่มดำเนินการ -->
-    <div class="mt-3 d-flex justify-content-start gap-2">
-        <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
-            'class' => 'btn btn-success',
-            'id' => 'btn-approve-selected',
-            'type' => 'button'
-        ]) ?>
-
-        <?= Html::button('<i class="fa-solid fa-ban"></i> ยกเลิกที่เลือก', [
-            'class' => 'btn btn-warning',
-            'id' => 'btn-cancel-selected',
-            'type' => 'button'
-        ]) ?>
-
-        <?= Html::button('<i class="fa-solid fa-trash"></i> ลบที่เลือก', [
-            'class' => 'btn btn-danger',
-            'id' => 'btn-delete-selected',
-            'type' => 'button'
-        ]) ?>
-    </div>
+                <div class="mt-3 d-flex justify-content-center gap-2">
+                    <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
+                        'class' => 'btn btn-success',
+                        'id' => 'btn-approve-selected',
+                        'type' => 'button'
+                    ]) ?>
+                </div>
             </div>
         </div>
     </div>
@@ -62,7 +51,10 @@ $msg = 'ขอ';
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">#</th>
+                    <!-- Checkbox เลือกทั้งหมด -->
+                    <th class="text-center fw-semibold" style="width:30px">
+                        <input type="checkbox" id="check-all">
+                    </th>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
                     <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
@@ -428,6 +420,53 @@ $('.approve-all').click(function (e) {
 });
 
 
+
+// ปุ่มเลือกทั้งหมด
+  // เลือก checkbox ทั้งหมด
+    $('#check-all').on('change', function() {
+        $('.check-item').prop('checked', this.checked);
+    });
+
+    // อัปเดต checkbox ส่วนหัวตาม checkbox รายตัว
+    $('.check-item').on('change', function() {
+        $('#check-all').prop('checked', $('.check-item').length === $('.check-item:checked').length);
+    });
+
+
+      // ฟังก์ชันอนุมัติที่เลือก
+    $('#btn-approve-selected').on('click', function() {
+        // เก็บ id ของรายการที่ถูกเลือก
+        var selectedIds = $('.check-item:checked').map(function() {
+            return $(this).val();
+        }).get();
+
+        if(selectedIds.length === 0) {
+            alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+            return;
+        }
+
+        if(!confirm('ยืนยันการอนุมัติรายการที่เลือก?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '/approve/leave/bulk-action', // เปลี่ยน URL ตาม Controller ของคุณ
+            type: 'POST',
+            data: {
+                selected: selectedIds,
+                action: 'approve',
+                _csrf: yii.getCsrfToken() // สำหรับ Yii2
+            },
+            success: function(response) {
+                // ตัวอย่าง: รีเฟรชตาราง หรือโชว์ข้อความ
+                alert('อนุมัติเรียบร้อย!');
+                location.reload(); // หรือทำการอัปเดตตารางด้วย Ajax
+            },
+            error: function(xhr) {
+                alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+            }
+        });
+    });
 
 
 JS;
