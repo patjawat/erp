@@ -5,13 +5,10 @@ namespace app\modules\hr\controllers;
 use yii;
 use yii\web\Response;
 use yii\web\Controller;
-use app\models\Categorise;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use yii\bootstrap5\ActiveForm;
 use yii\web\NotFoundHttpException;
-use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\EmployeeDetail;
@@ -168,7 +165,6 @@ class EmployeeDetailController extends Controller
      */
     public function actionUpdate($id)
     {
-        $name = $this->request->get('name');
         $model = $this->findModel($id);
 
         $arrayUpdate = [

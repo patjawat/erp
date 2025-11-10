@@ -68,7 +68,7 @@ class EmployeesController extends Controller
             $dataProvider->query->andWhere(['user_id' => 0]);
         }
         if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
-            $dataProvider->query->andWhere(['!=','user_id',0]);
+            $dataProvider->query->andWhere(['!=', 'user_id', 0]);
         }
 
         $dataProvider->query->andFilterWhere([
@@ -135,7 +135,7 @@ class EmployeesController extends Controller
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
         $dataProvider->pagination->pageSize = 16;
 
-  
+
 
         $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
@@ -161,7 +161,7 @@ class EmployeesController extends Controller
             $dataProvider->query->andWhere(['user_id' => 0]);
         }
         if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
-            $dataProvider->query->andWhere(['!=','user_id',0]);
+            $dataProvider->query->andWhere(['!=', 'user_id', 0]);
         }
 
         $dataProvider->query->andFilterWhere([
@@ -231,7 +231,7 @@ class EmployeesController extends Controller
 
         $dataProvider->pagination->pageSize = 16;
 
-  
+
 
         $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
@@ -253,9 +253,9 @@ class EmployeesController extends Controller
         $approveId = 11396;
         // LineMsg::sendLeave($approveId,$line_id);
         $docModel = DocumentsDetail::findOne(2);
-        LineMsg::sendDocument($docModel,$line_id);
-        
-        
+        LineMsg::sendDocument($docModel, $line_id);
+
+
         // $result = Yii::$app->LineMsg->sendLeave($userId);
         // return $result;
     }
@@ -297,15 +297,15 @@ class EmployeesController extends Controller
             $requiredName = 'ต้องระบุ';
 
             $model->validateIdCard();
-             $model->email == '' ? $model->addError('email', $requiredName) : null;
-            
+            $model->email == '' ? $model->addError('email', $requiredName) : null;
+
             $cid = str_replace('-', '', $model->cid);
-            $checkCid = Employees::find()->andWhere(['cid' => $cid])->andWhere(['<>','ref',$model->ref])->one();
-            $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ '.$checkCid->fullname) : null;
-            
-            $checkPhone = Employees::find()->andWhere(['phone' => $model->phone])->andWhere(['<>','ref',$model->ref])->one();
-            $checkPhone  ? $model->addError('phone', 'ซ้ำกับ '.$checkPhone->fullname) : null;
-           
+            $checkCid = Employees::find()->andWhere(['cid' => $cid])->andWhere(['<>', 'ref', $model->ref])->one();
+            $checkCid  ? $model->addError('cid', 'เลขบัตรประชาขนซ้ำ ' . $checkCid->fullname) : null;
+
+            $checkPhone = Employees::find()->andWhere(['phone' => $model->phone])->andWhere(['<>', 'ref', $model->ref])->one();
+            $checkPhone  ? $model->addError('phone', 'ซ้ำกับ ' . $checkPhone->fullname) : null;
+
 
 
             foreach ($model->getErrors() as $attribute => $errors) {
@@ -319,7 +319,7 @@ class EmployeesController extends Controller
 
 
 
-    
+
     /**
      * Creates a new Employees model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -386,20 +386,19 @@ class EmployeesController extends Controller
         $model->join_date = AppHelper::DateFormDb($model->join_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
             if ($model->join_date) {
                 $model->join_date = AppHelper::DateToDb($model->join_date);
             }
+          // ป้องกันข้อมูลใน JSON เดิมถูกลบ
+            $newData = array_filter($model->data_json ?? [], fn($v) => $v !== null && $v !== '');
+            $model->data_json = array_replace_recursive($model_old_data_json ?? [], $newData);
 
-            $model->data_json = ArrayHelper::merge($model_old_data_json, $model->data_json);
-            if($model->save()){
+            if ($model->save()) {
                 return [
                     'status' => 'success',
                     'container' => ''
                 ];
             }
-            
-            // return $this->redirect(['view', 'id' => $model->id]);
         }
 
         if ($this->request->isAjax) {
@@ -433,8 +432,7 @@ class EmployeesController extends Controller
     }
 
     public function actionGetPositionName()
-    {
-          {
+    { {
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
             $out = [];
@@ -447,21 +445,21 @@ class EmployeesController extends Controller
                     //     ->select(['code as id', 'title as name'])
                     //     ->asArray()
                     //     ->all();
-                   $out = (new \yii\db\ActiveQuery(\app\models\Categorise::class))
-                   ->alias('n')
-                   ->leftJoin(['g' => 'categorise'], 'g.code = n.category_id AND g.name = :groupName', [':groupName' => 'position_group'])
-                   ->where(['n.name' => 'position_name', 'g.category_id' => $type_id])
-                   ->select(['n.code AS id', 'n.title AS name'])
-                //    ->select([
-                //                 'g.category_id AS g_category_id',
-                //                 'g.code AS g_code',
-                //                 'g.title AS g_title',
-                //                 'n.code AS n_code',
-                //                 'n.category_id AS n_category_id',
-                //                 'n.title AS n_title',
-                //             ])
-                            ->asArray()
-                            ->all();
+                    $out = (new \yii\db\ActiveQuery(\app\models\Categorise::class))
+                        ->alias('n')
+                        ->leftJoin(['g' => 'categorise'], 'g.code = n.category_id AND g.name = :groupName', [':groupName' => 'position_group'])
+                        ->where(['n.name' => 'position_name', 'g.category_id' => $type_id])
+                        ->select(['n.code AS id', 'n.title AS name'])
+                        //    ->select([
+                        //                 'g.category_id AS g_category_id',
+                        //                 'g.code AS g_code',
+                        //                 'g.title AS g_title',
+                        //                 'n.code AS n_code',
+                        //                 'n.category_id AS n_category_id',
+                        //                 'n.title AS n_title',
+                        //             ])
+                        ->asArray()
+                        ->all();
 
                     return ['output' => $out, 'selected' => ''];
                 }
@@ -645,9 +643,8 @@ class EmployeesController extends Controller
                                     $data = explode(',', $data[0]);
                                     return (int) $data[9];
                                 } catch (\Throwable $th) {
-                                  return 0;
+                                    return 0;
                                 }
-                                
                             },
                         ],
                         [
@@ -681,10 +678,14 @@ class EmployeesController extends Controller
 
             // return var_dump($importer->getData());
         } else {
-            return $this->render('import_csv',
-                ['model' => $model,
+            return $this->render(
+                'import_csv',
+                [
+                    'model' => $model,
                     'error' => $error,
-                    'success' => false]);
+                    'success' => false
+                ]
+            );
         }
     }
 
@@ -713,7 +714,7 @@ class EmployeesController extends Controller
             $dataProvider->query->andWhere(['user_id' => 0]);
         }
         if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
-            $dataProvider->query->andWhere(['!=','user_id',0]);
+            $dataProvider->query->andWhere(['!=', 'user_id', 0]);
         }
 
         $dataProvider->query->andFilterWhere([
@@ -783,7 +784,7 @@ class EmployeesController extends Controller
 
         $dataProvider->pagination->pageSize = 30000;
 
-  
+
 
         $sql = 'SELECT count(id) as total  FROM `employees` WHERE `status` IS NULL';
         $notStatus = Yii::$app->db->createCommand($sql)->queryScalar();
@@ -816,7 +817,7 @@ class EmployeesController extends Controller
         $sheet->getColumnDimension('X')->setWidth(18);
         $sheet->getColumnDimension('Y')->setWidth(18);
         $sheet->getColumnDimension('Z')->setWidth(13);
-        
+
         $setHeader = 'A1:Z1';
         $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -883,7 +884,7 @@ class EmployeesController extends Controller
             try {
                 $sheet->setCellValue('N' . $numRow, Yii::$app->thaiFormatter->asDate($value->year60(), 'php:d/m/Y'));
             } catch (\Throwable $th) {
-                $sheet->setCellValue('N' . $numRow,$value->year60());
+                $sheet->setCellValue('N' . $numRow, $value->year60());
             }
             $sheet->setCellValue('O' . $numRow, $value->leftYear60());
             $sheet->setCellValue('P' . $numRow, $value->phone);

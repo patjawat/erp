@@ -25,14 +25,6 @@ use yii\web\View;
     ]); 
 ?>
 
-    <?php
-    //  $form = ActiveForm::begin([
-    //     'id' => 'form-emp-detail',
-    //     'enableAjaxValidation'      => true,//เปิดการใช้งาน AjaxValidation
-    //     'validationUrl' =>['/hr/employee-detail/validator']
-    //     ]);
-         ?>
-
 <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput()->label(false)?>
 <?= $form->field($model, 'ref')->hiddenInput()->label(false)?>
@@ -50,7 +42,6 @@ use yii\web\View;
 
 
 <?php
-// $urlUpload = Url::to('/patient/upload');
 $js = <<<JS
 
 

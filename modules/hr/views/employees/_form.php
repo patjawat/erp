@@ -8,11 +8,9 @@ use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
 use yii\widgets\MaskedInput;
 use app\components\AppHelper;
-use kartik\widgets\Typeahead;
-use app\components\SiteHelper;
 use iamsaint\datetimepicker\Datetimepicker;
-use app\modules\filemanager\components\FileManagerHelper;
 ?>
+
 
 <div class="employees-form p-3">
     <?php $form = ActiveForm::begin([
@@ -24,6 +22,17 @@ use app\modules\filemanager\components\FileManagerHelper;
 
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
+
+
+
+    <p>
+<?php
+
+echo "<pre>";
+print_r($model->department);
+echo "</pre>";
+?>
+</p>
 
     <div class="row">
         <div class="col-12">
@@ -250,7 +259,6 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 
 
-
     <div class="form-group d-flex justify-content-center">
         <?= AppHelper::BtnSave() ?>
     </div>
@@ -303,15 +311,17 @@ use app\modules\filemanager\components\FileManagerHelper;
             </div>
 
             <div class="col-12">
-                <?= $form->field($model, 'department')->widget(Select2::classname(), [
-                    'data' => $model->ListDepartment(),
-                    'options' => ['placeholder' => 'เลือก ...'],
-                    'pluginOptions' => [
-                        'dropdownParent' => '#main-modal',
-                        'tags' => true,
-                        'maximumInputLength' => 10,
-                    ],
-                ])->label('แผนก') ?>
+                <?php
+                //  $form->field($model, 'department')->widget(Select2::classname(), [
+                //     'data' => $model->ListDepartment(),
+                //     'options' => ['placeholder' => 'เลือก ...'],
+                //     'pluginOptions' => [
+                //         'dropdownParent' => '#main-modal',
+                //         'tags' => true,
+                //         'maximumInputLength' => 10,
+                //     ],
+                // ])->label('แผนก')
+                 ?>
 
             </div>
 

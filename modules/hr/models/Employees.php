@@ -242,7 +242,6 @@ class Employees extends Yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         $this->birthday = AppHelper::DateToDb($this->birthday);
-        // $this->join_date = $this->join_date;
         try {
             $this->cid = AppHelper::SaveCid($this->cid);
         } catch (\Throwable $th) {
@@ -260,20 +259,14 @@ class Employees extends Yii\db\ActiveRecord
     public function afterFind()
     {
         try {
-            // $this->cid = AppHelper::cidFormat($this->cid);
-
-
             if ($this->UpdateFormDetail()['new_fullname']) {  // ถ้ามีการเปลี่ยนชื่อ
                 $this->fullname = $this->UpdateFormDetail()['new_fullname'];
             } else {
                 $this->fullname = $this->prefix . $this->fname . ' ' . $this->lname;
             }
             $this->date_end = AppHelper::DateFormDb($this->UpdateFormDetail()['date_end']);
-
             $this->fullname_en = ($this->prefix == 'นาย' ? 'Mr.' : 'Miss.') . $this->fname_en . ' ' . $this->lname_en;
             $this->birthday = AppHelper::DateFormDb($this->birthday);
-            // $this->join_date = AppHelper::DateFormDb($this->join_date);
-            // $this->age_join_date = AppHelper::Age(AppHelper::DateFormDb($this->join_date));
             $this->age_join_date = AppHelper::Age(AppHelper::DateFormDb($this->joinDate()));
             $this->age = AppHelper::Age($this->birthday)['year'];
             $this->blood_group = isset($this->data_json['blood_group']) ? $this->data_json['blood_group'] : null;
@@ -283,11 +276,9 @@ class Employees extends Yii\db\ActiveRecord
             $this->religion = isset($this->data_json['religion']) ? $this->data_json['religion'] : null;
             $this->marry = isset($this->data_json['marry']) ? $this->data_json['marry'] : null;
             $this->fulladdress = $this->address . ' ' . (isset($this->data_json['address2']) ? $this->data_json['address2'] : null);
-            // $this->status = $this->UpdateFormDetail()['status'] ? $this->UpdateFormDetail()['status'] : '-';
         } catch (\Throwable $th) {
         }
         $this->age_y = AppHelper::Age($this->birthday, true)['year'];
-
         parent::afterFind();
     }
 
