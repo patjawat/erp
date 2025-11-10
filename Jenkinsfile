@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     environment {
         DOCKER_IMAGE = "erp"
         DOCKER_TAG = "1.1"
@@ -9,9 +10,9 @@ pipeline {
 
     stages {
 
-         stage('Cleanup') {
+        stage('Cleanup') {
             steps {
-                deleteDir() // ลบ workspace เก่า ก่อน checkout
+                deleteDir() // ลบ workspace เก่าก่อน checkout
             }
         }
 
@@ -20,7 +21,7 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/patjawat/erp.git'
             }
         }
-        
+
         stage('Build Image') {
             steps {
                 script {
@@ -40,6 +41,13 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "🧹 Cleaning up Docker build cache..."
+            sh 'docker builder prune -af || true'
         }
     }
 }
