@@ -23,17 +23,6 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 
-
-
-    <p>
-<?php
-
-echo "<pre>";
-print_r($model->department);
-echo "</pre>";
-?>
-</p>
-
     <div class="row">
         <div class="col-12">
             <div class="row">
