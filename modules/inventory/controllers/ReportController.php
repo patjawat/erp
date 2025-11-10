@@ -1071,4 +1071,11 @@ class ReportController extends \yii\web\Controller
             throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
     }
+
+
+    //รายงานจัดซื้อรับสินค้า
+    public function actionPurchaseReceive()
+    {
+        return $this->render('purchase_receive');
+    }
 }

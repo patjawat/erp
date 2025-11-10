@@ -25,6 +25,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <?=Html::a('<i class="fa-solid fa-gauge me-2"></i> สรุปรายงานวัสดุคงคลัง ',['/inventory/report'],['class' => 'dropdown-item'])?>
         <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุรับ-จ่าย ',['/inventory/report/list-by-order'],['class' => 'dropdown-item'])?>
         <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุคงคลังหลักรายตัว ',['/inventory/report/list-by-item'],['class' => 'dropdown-item'])?>
+        <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานจัดซื้อ+รับเข้าคลัง ',['/inventory/report/purchase-receive'],['class' => 'dropdown-item'])?>
     </div>
 </li>
 
