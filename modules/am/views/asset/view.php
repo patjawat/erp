@@ -173,7 +173,7 @@ $group = Yii::$app->request->get('group');
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">วิธีการได้มา:</div>
-                    <div class="col-md-8"><?= $model->purchaseName->title ?></div>
+                    <div class="col-md-8"><?= $model->purchaseName?->title ?? '-' ?></div>
                 </div>
                 <div class="row mb-3">
                     <!-- <div class="col-md-4 fw-bold">แหล่งงบประมาณ:</div> -->
