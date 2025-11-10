@@ -58,6 +58,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                     'theme' => 'bootstrap-5',
+                                    'dropdownParent' => '#main-modal',
                                 ],
                                 'pluginEvents' => [
                                     "select2:unselect" => "function() { $(this).submit(); }",
@@ -309,9 +310,9 @@ $(document).ready(function() {
                         }, 1500);
                         
                         // Reload page after success message
-                        setTimeout(() => {
-                            window.location.reload(true);
-                        }, 2500);
+                        // setTimeout(() => {
+                        //     window.location.reload(true);
+                        // }, 2500);
                         
                     } else {
                         showErrorToast(res.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
