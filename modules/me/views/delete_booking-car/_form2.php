@@ -105,7 +105,7 @@ $resultsJs = <<<JS
                                             }',
             ],
         ])->label('ประเภทรถที่ต้องการใช้') ?>
-                <?= $form->field($model, 'data_json[go_type]')->radioList(['ไปกลับ' => 'ไปกลับ', 'ค้างคืน' => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
+                <?= $form->field($model, 'data_json[go_type]')->radioList(['ไปกลับ' => 'ไปกลับ', 'ค้างคืน' => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการไป') ?>
     
 </div>
 

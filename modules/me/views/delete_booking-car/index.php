@@ -59,7 +59,7 @@ if($searchModel->car_type == 'ambulance'){
                                     <th>วันที่ขอใช้</th>
                                     <th>จุดหมาย</th>
                                     <th>ประเภทรถ</th>
-                                    <th>ลักษณะการใช้</th>
+                                    <th>ลักษณะการไป</th>
                                     <th>สถานะ</th>
                                     <th>จัดการ</th>
                                 </tr>
@@ -173,7 +173,7 @@ if($searchModel->car_type == 'ambulance'){
                                     <th>วันที่ขอใช้</th>
                                     <th>จุดหมาย</th>
                                     <th>ประเภทรถ</th>
-                                    <th>ลักษณะการใช้</th>
+                                    <th>ลักษณะการไป</th>
                                     <th>จัดการ</th>
                                 </tr>
                             </thead>
@@ -258,7 +258,7 @@ if($searchModel->car_type == 'ambulance'){
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">ลักษณะการใช้</label>
+                                <label class="form-label">ลักษณะการไป</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="tripType" id="tripType1" value="dayTrip" checked>
                                     <label class="form-check-label" for="tripType1">

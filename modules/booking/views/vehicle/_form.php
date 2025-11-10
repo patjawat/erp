@@ -110,7 +110,7 @@ $resultsJs = <<<JS
                 }'),
             ],
         ])->label('ประเภทรถที่ต้องการใช้') ?>
-        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการใช้') ?>
+        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการไป') ?>
         
 
         <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [

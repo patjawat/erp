@@ -584,11 +584,8 @@ class VehicleController extends Controller
                 }
             }
 
-
             $transaction->commit();
             $this->sendApprove($model);
-
-
             return [
                 'status' => 'success'
             ];
@@ -597,6 +594,7 @@ class VehicleController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => 'เลขที่#' . $model->code,
+                // 'title' => 'เลขที่#' . $model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
                 ]),

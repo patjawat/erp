@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="fw-semibold text-primary"><?=$item->code?></td>
                     <td class="fw-semibold"><?=$item->title?></td>
-                    <td ><?=$item->assetType->title?></td>
+                    <td><?=$item->assetType?->title ?? '-'?></td>
                     <td class="text-center">
                         <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูล'.$this->title],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-md']])?>
                         <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
