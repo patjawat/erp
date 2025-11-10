@@ -76,7 +76,7 @@ switch ($node->lvl) {
     <div class="col-6">
         <?php
 
-        $leader2Data = $node->data_json['leader1'] ?? null;
+        $leader2Data = $node->data_json['leader2'] ?? null;
         $leader2Text = $leader1Data ? Employees::find()
             ->select(["CONCAT(fname, ' ', lname) AS fullname"])
             ->where(['id' => $leader2Data])
