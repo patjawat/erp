@@ -58,7 +58,13 @@ class ApproveHelper extends Component
             $me = UserHelper::GetEmployee();
             $approveQuery = Approve::find()
                 ->alias('approve') // ตั้ง alias
-                ->leftJoin('leave', 'approve.from_id = leave.id')
+                // ->leftJoin('leave', 'approve.from_id = leave.id')
+                 ->leftJoin(
+        'leave',
+        'approve.from_id = leave.id 
+         AND leave.status IN ("Checking1_pass", "Checking2_pass")
+         AND leave.status NOT IN ("ReqCancel", "cancel")'
+    )
                 ->where([
                     'approve.name' => 'leave',
                     'approve.emp_id' => $me->id,
@@ -68,7 +74,7 @@ class ApproveHelper extends Component
                 ->orderBy(['approve.id' => SORT_DESC]);
 
             // Debug SQL ที่ถูกสร้าง
-            $sql = Yii::debug($approveQuery->createCommand()->getRawSql(), 'sql');
+            $sql = $approveQuery->createCommand()->getRawSql();
 
             $datas = $approveQuery->all();
 

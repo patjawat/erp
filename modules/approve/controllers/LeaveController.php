@@ -38,7 +38,7 @@ class LeaveController extends \yii\web\Controller
 
         // 3. ใช้กับ ApproveSearch
         $searchModel = new ApproveSearch([
-            'q_status' => $statusLevel
+            // 'q_status' => $statusLevel
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);

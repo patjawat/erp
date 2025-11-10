@@ -13,7 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
@@ -27,6 +26,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?php
+echo "<pre>";
+print_r($notify['leave']);
+echo "</pre>";
+?>
 
 <?php
 $items = [
