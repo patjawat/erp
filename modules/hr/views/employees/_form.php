@@ -19,7 +19,6 @@ use iamsaint\datetimepicker\Datetimepicker;
         'validationUrl' => ['/hr/employees/create-validator'],
     ]); ?>
 
-
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 
@@ -310,7 +309,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                 //         'maximumInputLength' => 10,
                 //     ],
                 // ])->label('แผนก')
-                 ?>
+                ?>
 
             </div>
 
