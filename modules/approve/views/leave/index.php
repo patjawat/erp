@@ -128,6 +128,8 @@ $currentDate = $date;
 
 $js = <<< JS
 
+$('#btn-approve-selected').hide(); // ซ่อนปุ่มเริ่มต้น
+
 let currentDate = new Date('$currentDate');
     
     // ฟังก์ชันแสดงปฏิทิน
@@ -425,17 +427,20 @@ $('.approve-all').click(function (e) {
   // เลือก checkbox ทั้งหมด
     $('#check-all').on('change', function() {
         $('.check-item').prop('checked', this.checked);
+         $('#btn-approve-selected').show();
     });
 
     // อัปเดต checkbox ส่วนหัวตาม checkbox รายตัว
     $('.check-item').on('change', function() {
         $('#check-all').prop('checked', $('.check-item').length === $('.check-item:checked').length);
+         $('#btn-approve-selected').show();
     });
 
 
       // ฟังก์ชันอนุมัติที่เลือก
     $('#btn-approve-selected').on('click', function() {
         // เก็บ id ของรายการที่ถูกเลือก
+       
         var selectedIds = $('.check-item:checked').map(function() {
             return $(this).val();
         }).get();

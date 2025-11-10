@@ -41,7 +41,7 @@ use app\modules\hr\models\Organization;
             'data' => $model->listStatus(),
             'theme' => Select2::THEME_KRAJEE_BS5,
             'options' => [
-                'placeholder' => 'สถานะทั้งหมด',
+                'placeholder' => 'สถานะใบลาทั้งหมด',
                 'multiple' => true,
             ],
             'pluginOptions' => [
