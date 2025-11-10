@@ -44,10 +44,15 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            echo "🧹 Cleaning up Docker build cache..."
-            sh 'docker builder prune -af || true'
+        post {
+            always {
+                echo "🧹 Cleaning up Docker build cache..."
+                script {
+                    // ใช้ timeout เพื่อป้องกันขั้นตอนค้าง
+                    timeout(time: 1, unit: 'MINUTES') {
+                        sh 'docker system prune -af || true'
+                    }
+                }
+            }
         }
-    }
 }
