@@ -4,10 +4,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\widgets\DetailView;
-use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\approve\models\Approve;
 
 $me = UserHelper::GetEmployee();
 /** @var yii\web\View $this */
@@ -59,12 +56,12 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo Html::button('<i class="fa-regular fa-circle-xmark"></i> ปิด', ['class' => ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>me-2','onclick' => 'window.history.back()',]); ?>
 </div>
 
+
 <?php Pjax::end(); ?>
 
 <?php
 $urlHistory = Url::to(['/hr/leave/view-history', 'emp_id' => $model->emp_id, 'title' => 'ประวัติการลา']);
 $urlApprove = Url::to(['/me/approve/leave-approve']);
-// $urlApprove = Url::to(['/approve/leave/approve']);
 $js = <<<JS
 
             // ขอยกเลิกวันลา
