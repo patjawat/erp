@@ -37,7 +37,7 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
         </tr>
         <tr>
             <td>ผู้ร่วมเดินทาง : </td>
-            <td colspan="3"><?= $model->reason ?></td>
+            <td colspan="3"><?= $model->data_json['note'] ?? '-' ?></td>
         </tr>
         <tr>
             <td>หมายเหตุ : </td>
