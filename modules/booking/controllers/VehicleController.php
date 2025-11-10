@@ -593,7 +593,7 @@ class VehicleController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'เลขที่#' . $model->code,
+                'title' =>$model->userRequest()['avatar'],
                 // 'title' => 'เลขที่#' . $model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
