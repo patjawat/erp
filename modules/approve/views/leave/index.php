@@ -32,13 +32,37 @@ $msg = 'ขอ';
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= number_format($dataProvider->getTotalCount()) ?> </span> รายการ</h6>
-            <?php echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+            <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/leave/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+
+            <div>
+                <!-- ปุ่มดำเนินการ -->
+    <div class="mt-3 d-flex justify-content-start gap-2">
+        <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
+            'class' => 'btn btn-success',
+            'id' => 'btn-approve-selected',
+            'type' => 'button'
+        ]) ?>
+
+        <?= Html::button('<i class="fa-solid fa-ban"></i> ยกเลิกที่เลือก', [
+            'class' => 'btn btn-warning',
+            'id' => 'btn-cancel-selected',
+            'type' => 'button'
+        ]) ?>
+
+        <?= Html::button('<i class="fa-solid fa-trash"></i> ลบที่เลือก', [
+            'class' => 'btn btn-danger',
+            'id' => 'btn-delete-selected',
+            'type' => 'button'
+        ]) ?>
+    </div>
+            </div>
         </div>
     </div>
     <div class="card-body">
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
+                    <th class="text-center fw-semibold" style="width:30px">#</th>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
                     <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
@@ -54,6 +78,9 @@ $msg = 'ขอ';
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="">
+                        <td class="text-center">
+                            <input type="checkbox" class="check-item" name="selected[]" value="<?= $item->id ?>">
+                        </td>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="text-center fw-semibold "><?php echo $item->leave->thai_year ?></td>
                         <td class="text-truncate" style="max-width: 230px;">
@@ -76,7 +103,6 @@ $msg = 'ขอ';
                         <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->leave->employee->departmentName() ?></td>
                         <td><?php echo $item->leave->stackChecker() ?></td>
                         <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->leave->showStatus(); ?></td>
-
 
                         <td class="text-center">
                             <div class="d-flex gap-2 justify-content-center">
@@ -400,6 +426,8 @@ $('.approve-all').click(function (e) {
         }
     });
 });
+
+
 
 
 JS;
