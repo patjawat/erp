@@ -21,7 +21,6 @@ use app\components\DateFilterHelper;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
-use app\modules\hr\models\DevelopmentDetailSearch;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -54,14 +53,10 @@ class DevelopmentController extends Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new DevelopmentSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_filter' => 'this_month',
-            'status' => ['Pending']
+            // 'status' => ['Pending']
         ]);
 
-        // $searchModel = new DevelopmentDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $me->id]);
@@ -69,21 +64,6 @@ class DevelopmentController extends Controller
             'or',
             ['like', 'topic', $searchModel->q],
         ]);
-        // if ($searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        // }
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
@@ -198,6 +178,7 @@ class DevelopmentController extends Controller
         } catch (\Throwable $th) {
         }
 
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -229,10 +210,10 @@ class DevelopmentController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/development/_form', ['model' => $model]),
+                'content' => $this->renderAjax('@app/modules/hr/views/development/update', ['model' => $model]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/development/_form', [
+            return $this->render('@app/modules/hr/views/development/update', [
                 'model' => $model,
             ]);
         }

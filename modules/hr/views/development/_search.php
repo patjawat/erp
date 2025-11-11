@@ -18,13 +18,13 @@ use app\components\DateFilterHelper;
           'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
     ]); ?>
 
-<?= $this->render('@app/components/ui/_filter', [
-    'form' => $form,
-    'model' => $model,
-    'label' => false,
-    'status' => $model->listStatus()
-])
-?>
+        <?= $this->render('@app/components/ui/_filter', [
+            'form' => $form,
+            'model' => $model,
+            'label' => false,
+            'status' => $model->listStatus()
+        ])
+        ?>
 
     <div class="collapse mt-3" id="collapseFilter">
         <div class="row">

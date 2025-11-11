@@ -25,6 +25,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
+
+
 <?php
 $items = [
     [
@@ -61,6 +63,7 @@ $items = [
 ];
 ?>
 <div class="container">
+
 
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <?php foreach($items as $item):?>

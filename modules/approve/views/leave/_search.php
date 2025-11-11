@@ -48,6 +48,18 @@ use app\modules\hr\models\Organization;
                 'allowClear' => true,
                 'width' => '100%',
             ],
+            'pluginEvents' => [
+                 "change" => "function() { 
+                   $.ajax({
+                     url: '/approve/leave/update-filter-status',
+                     type: 'POST',
+                     data: {status: $(this).val()},
+                     success: function(data) {
+                      
+                     }
+                   });
+                 }",
+            ]
         ])->label(false); ?>
     </div>
 

@@ -58,17 +58,13 @@ class ApproveHelper extends Component
             $me = UserHelper::GetEmployee();
             $approveQuery = Approve::find()
                 ->alias('approve')
-                ->leftJoin(
-                    '`leave`', // ต้องใส่ backtick ถ้าตารางชื่อ leave เพราะเป็น reserved word
-                    "approve.from_id = `leave`.id
-                    AND `leave`.status IN ('Checking1_pass', 'Checking2_pass')
-                    AND `leave`.status NOT IN ('ReqCancel', 'cancel')"
-                )
+                ->leftJoin('`leave`',"approve.from_id = `leave`.id")
                 ->where([
                     'approve.name' => 'leave',
                     'approve.emp_id' => $me->id,
                     'approve.status' => 'Pending'
                 ])
+                ->andWhere(['NOT IN', 'leave.status', ['ReqCancel', 'cancel']])
                 ->orderBy(['approve.id' => SORT_DESC]);
 
             // Debug SQL ที่ถูกสร้าง

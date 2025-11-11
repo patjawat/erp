@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -13,10 +14,10 @@ use app\modules\hr\models\Organization;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-.offcanvas-footer {
-    padding: 1rem 1rem;
-    border-top: 1px solid #dee2e6;
-}
+    .offcanvas-footer {
+        padding: 1rem 1rem;
+        border-top: 1px solid #dee2e6;
+    }
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -26,41 +27,52 @@ use app\modules\hr\models\Organization;
     'options' => [
         'data-pjax' => 1
     ],
-     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
 <div class="row">
-    <div class="col-3">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+
+    <div class="col-2">
+        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-2">
-        <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
+        <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+    </div>
+    <div class="col-2">
+        <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+    </div>
+
+    <div class="col-5">
+        <?= $form->field($model, 'q_status')->widget(Select2::classname(), [
+            'data' => $model->listStatus(),
+            'theme' => Select2::THEME_KRAJEE_BS5,
+            'options' => [
+                'placeholder' => 'สถานะทั้งหมด',
+                'multiple' => true,
+            ],
             'pluginOptions' => [
                 'allowClear' => true,
-                // 'width' => '130px',
+                'width' => '100%',
             ],
-            ])->label(false);
-            ?>
+            'pluginEvents' => [
+                 "change" => "function() { 
+                   $.ajax({
+                     url: '/approve/default/update-filter-status',
+                     type: 'POST',
+                     data: {
+                     status: $(this).val(),
+                     name:'development_filter_status'
+                     },
+                     success: function(data) {
+                      
+                     }
+                   });
+                 }",
+            ]
+        ])->label(false); ?>
     </div>
-    <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'เริ่มจากวันที่'])->label(false);?>
-    </div>
-    <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวันที่'])->label(false);?>
-    </div>
-    <div class="col-2">
-        <?=$form->field($model, 'q_status')->widget(Select2::classname(), [
-        'data' => $model->listDevelopmentStatus(),
-        'options' => ['placeholder' => 'สถานะทั้งหมด'],
-        'pluginOptions' => [
-            'allowClear' => true,
-            // 'width' => '150px',
-        ],
-        ])->label(false);?>
-    </div>
+
+
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
@@ -73,37 +85,43 @@ use app\modules\hr\models\Organization;
 
 </div>
 
+<div class="row mt-2">
+    <div class="col-3">
+        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false,'placeholder' => 'ผู้ขอ']) ?>
+    </div>
+</div>
+
 <div class="collapse mt-3" id="collapseFilter">
     <!-- การกรองแบบละเอียด -->
     <div class="row">
         <div class="col-3">
 
-            <?=$form->field($model, 'thai_year')->widget(Select2::classname(), [
-                    'data' => $model->ListThaiYear(),
-                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        // 'width' => '120px',
-                    ],
-        ])->label(false);?>
+            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                'data' => $model->ListThaiYear(),
+                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    // 'width' => '120px',
+                ],
+            ])->label(false); ?>
 
         </div>
         <div class="col-4">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                    'name' => 'department',
-                    'id' => 'treeID',
-                    'query' => Organization::find()->addOrderBy('root, lft'),
-                    'value' => 1,
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
-                    'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ])->label(false); ?>
+                'name' => 'department',
+                'id' => 'treeID',
+                'query' => Organization::find()->addOrderBy('root, lft'),
+                'value' => 1,
+                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                'fontAwesome' => true,
+                'asDropdown' => true,
+                'multiple' => false,
+                'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+                'pluginOptions' => [
+                    'allowClear' => true
+                ],
+            ])->label(false); ?>
         </div>
         <div class="col-4">
 
@@ -112,21 +130,3 @@ use app\modules\hr\models\Organization;
 </div>
 
 <?php ActiveForm::end(); ?>
-
-<?php
-$js = <<< JS
-
-thaiDatepicker('#approvesearch-date_start,#approvesearch-date_end')
-
-    $("#approvesearch-date_start").on('change', function() {
-            $('#approvesearch-thai_year').val(null).trigger('change');
-            $('#approvesearch-date_filter').val(null).trigger('change');
-        });
-        $("#approvesearch-date_end").on('change', function() {
-            $('#approvesearch-thai_year').val(null).trigger('change');
-            $('#approvesearch-date_filter').val(null).trigger('change');
-    });
-
-JS;
-$this->registerJS($js, View::POS_END);
-?>
