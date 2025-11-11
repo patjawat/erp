@@ -105,7 +105,9 @@ $msg = 'ขอ';
                                 } catch (\Throwable $th) {
                                 } ?>
                             </td>
-                            <td><?php echo $item->development->stackChecker() ?></td>
+                            <td>
+                                <?php echo $item->development->stackChecker() ?>
+                            </td>
                             <td>
                                 <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>
                             </td>

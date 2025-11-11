@@ -636,7 +636,7 @@ class Development extends \yii\db\ActiveRecord
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'development'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
             try {
                 $data .= Html::img('@web/img/loading.gif', [
                     'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
@@ -653,6 +653,32 @@ class Development extends \yii\db\ActiveRecord
         $data .= '</div>';
         return $data;
     }
+
+ public function stackCheckerDev()
+{
+    $data = '<ul class="list-unstyled">';
+
+    $approves = Approve::find()
+        ->where(['from_id' => $this->id, 'name' => 'development'])
+        ->andWhere(['not in', 'status', ['None', 'Pending']])
+        ->orderBy(['level' => SORT_DESC])
+        ->all();
+
+    foreach ($approves as $key => $item) {
+        try {
+            $fullname = $item->employee->fullname ?? 'ไม่พบชื่อพนักงาน';
+            $status = $item->status ?? '-';
+            $level = $item->level ?? '-';
+            $data .= "<li> {$level}: {$fullname} ({$status})</li>";
+        } catch (\Throwable $th) {
+            $data .= "<li class='text-danger'>เกิดข้อผิดพลาดในรายการที่ {$key}</li>";
+        }
+    }
+
+    $data .= '</ul>';
+    return $data;
+}
+
 
     
 
