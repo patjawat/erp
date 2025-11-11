@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "erp"
-        DOCKER_TAG = "1.1"
+        DOCKER_TAG = "latest"
         DOCKER_HUB_USER = "patjawat"
         DOCKER_HUB_CREDENTIALS = "erp-docker-hub"
     }
