@@ -78,6 +78,7 @@ $listApprove = Approve::find()
                 <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?>
             </div>
             <div class="year">
+                <?=$item->level?>
                 <?php
                 try {
 

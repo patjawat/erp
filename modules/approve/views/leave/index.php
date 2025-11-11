@@ -39,11 +39,20 @@ $msg = 'ขอ';
                 <!-- ปุ่มดำเนินการ -->
                 <div class="mt-3 d-flex justify-content-center gap-2">
                     <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
-                        'class' => 'btn btn-success',
-                        'id' => 'btn-approve-selected',
-                        'type' => 'button'
+                        'class' => 'btn btn-success btn-approve-reject',
+                        'type' => 'button',
+                        'data-status' => 'Pass' // สำหรับส่งไป controller
                     ]) ?>
+
+                    <?php
+                    //  Html::button('<i class="fa-solid fa-xmark"></i> ไม่อนุมัติที่เลือก', [
+                    //     'class' => 'btn btn-danger btn-approve-reject',
+                    //     'type' => 'button',
+                    //     'data-status' => 'Reject' // สำหรับส่งไป controller
+                    // ]) 
+                    ?>
                 </div>
+
             </div>
         </div>
     </div>
@@ -71,7 +80,12 @@ $msg = 'ขอ';
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="">
                         <td class="text-center">
-                            <input type="checkbox" class="check-item" name="selected[]" value="<?= $item->id ?>">
+                            <input
+                                type="checkbox"
+                                class="check-item"
+                                name="selected[]"
+                                value="<?= $item->id ?>"
+                                <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
                         </td>
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="text-center fw-semibold "><?php echo $item->leave->thai_year ?></td>
@@ -128,7 +142,7 @@ $currentDate = $date;
 
 $js = <<< JS
 
-$('#btn-approve-selected').hide(); // ซ่อนปุ่มเริ่มต้น
+
 
 let currentDate = new Date('$currentDate');
     
@@ -425,53 +439,136 @@ $('.approve-all').click(function (e) {
 
 // ปุ่มเลือกทั้งหมด
   // เลือก checkbox ทั้งหมด
-    $('#check-all').on('change', function() {
-        $('.check-item').prop('checked', this.checked);
-         $('#btn-approve-selected').show();
-    });
+$('#check-all').on('change', function() {
+    // ติ๊กเฉพาะ checkbox ที่ไม่ได้ disabled
+    $('.check-item:not(:disabled)').prop('checked', this.checked);
+    
+    // แสดงปุ่ม approve
+    $('#btn-approve-selected').show();
+});
 
     // อัปเดต checkbox ส่วนหัวตาม checkbox รายตัว
     $('.check-item').on('change', function() {
-        $('#check-all').prop('checked', $('.check-item').length === $('.check-item:checked').length);
-         $('#btn-approve-selected').show();
+    $('#check-all').prop('checked', $('.check-item').length === $('.check-item:checked').length);
+    $('#btn-approve-selected').show();
+});
+
+
+$('.btn-approve-reject').on('click', function() {
+    // เก็บ id ของรายการที่ถูกเลือก (ข้าม disabled)
+    var selectedIds = $('.check-item:checked:not(:disabled)').map(function() {
+        return $(this).val();
+    }).get();
+
+    if(selectedIds.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาเลือกอย่างน้อย 1 รายการ',
+        });
+        return;
+    }
+
+    // ดึง status จากปุ่ม
+    var status = $(this).data('status');
+    var actionText = status === 'Pass' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+
+    Swal.fire({
+        title: 'ยืนยันการ ' + actionText + ' รายการที่เลือก?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            // แสดง loading ระหว่างรอ Ajax
+            Swal.fire({
+                title: 'กำลังดำเนินการ...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/approve/leave/approve-all', // URL ของ controller updateAll
+                type: 'POST',
+                data: {
+                    ids: selectedIds,
+                    status: status,
+                    _csrf: yii.getCsrfToken() // สำหรับ Yii2
+                },
+                success: function(response) {
+                    Swal.close(); // ปิด loading
+                    if(response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: actionText + ' เรียบร้อย!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // หรืออัปเดตตารางด้วย Ajax
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: response.message || 'กรุณาลองใหม่'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.close(); // ปิด loading
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'กรุณาลองใหม่'
+                    });
+                }
+            });
+        }
     });
+});
+
+
+
 
 
       // ฟังก์ชันอนุมัติที่เลือก
-    $('#btn-approve-selected').on('click', function() {
-        // เก็บ id ของรายการที่ถูกเลือก
-       
-        var selectedIds = $('.check-item:checked').map(function() {
-            return $(this).val();
-        }).get();
+    // $('#btn-approve-selected').on('click', function() {
+    //     // เก็บ id ของรายการที่ถูกเลือก
+    //     var selectedIds = $('.check-item:checked').map(function() {
+    //         return $(this).val();
+    //     }).get();
 
-        if(selectedIds.length === 0) {
-            alert('กรุณาเลือกอย่างน้อย 1 รายการ');
-            return;
-        }
+    //     if(selectedIds.length === 0) {
+    //         alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+    //         return;
+    //     }
 
-        if(!confirm('ยืนยันการอนุมัติรายการที่เลือก?')) {
-            return;
-        }
+    //     if(!confirm('ยืนยันการอนุมัติรายการที่เลือก?')) {
+    //         return;
+    //     }
 
-        $.ajax({
-            url: '/approve/leave/bulk-action', // เปลี่ยน URL ตาม Controller ของคุณ
-            type: 'POST',
-            data: {
-                selected: selectedIds,
-                action: 'approve',
-                _csrf: yii.getCsrfToken() // สำหรับ Yii2
-            },
-            success: function(response) {
-                // ตัวอย่าง: รีเฟรชตาราง หรือโชว์ข้อความ
-                alert('อนุมัติเรียบร้อย!');
-                location.reload(); // หรือทำการอัปเดตตารางด้วย Ajax
-            },
-            error: function(xhr) {
-                alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-            }
-        });
-    });
+    //     $.ajax({
+    //         url: '/approve/leave/bulk-action', // เปลี่ยน URL ตาม Controller ของคุณ
+    //         type: 'POST',
+    //         data: {
+    //             selected: selectedIds,
+    //             action: 'approve',
+    //             _csrf: yii.getCsrfToken() // สำหรับ Yii2
+    //         },
+    //         success: function(response) {
+    //             // ตัวอย่าง: รีเฟรชตาราง หรือโชว์ข้อความ
+    //             alert('อนุมัติเรียบร้อย!');
+    //             location.reload(); // หรือทำการอัปเดตตารางด้วย Ajax
+    //         },
+    //         error: function(xhr) {
+    //             alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    //         }
+    //     });
+    // });
 
 
 JS;

@@ -3,10 +3,6 @@
 use yii\web\View;
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
-use kartik\select2\Select2;
-use yii\widgets\DetailView;
-use kartik\form\ActiveField;
-use yii\helpers\ArrayHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Inventory $model */
@@ -34,30 +30,22 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
 
-
-
         <?php ActiveForm::end(); ?>
     </div>
     <div class="col-4">
         <?php echo $this->render('@app/modules/hr/views/leave/view_summary',['model' => $model->leave])?>
         <div class="d-flex justify-content-center">
-
             <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
                 <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
             </button>
         </div>
-
-
-
     </div>
-
 </div>
 <div class="collapse" id="collapseExample">
     <div id="viewHistory"></div>
     <?php echo $this->render('@app/modules/hr/views/leave/history',['model' => $model->leave])?>
 </div>
-
 
 <?php
 $js = <<< JS
@@ -87,8 +75,6 @@ $js = <<< JS
                 });
                 return false;
             });
-
-
     JS;
 $this->registerJS($js,View::POS_END)
 ?>

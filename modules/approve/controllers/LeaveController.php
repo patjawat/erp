@@ -5,6 +5,7 @@ namespace app\modules\approve\controllers;
 use Yii;
 use yii\web\Response;
 use yii\db\Expression;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
@@ -12,7 +13,6 @@ use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
-use app\modules\hr\models\Organization;
 
 class LeaveController extends \yii\web\Controller
 {
@@ -20,30 +20,15 @@ class LeaveController extends \yii\web\Controller
     {
         $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
-        $leaderId = $me->id;
-        // 1. ดึง lvl จาก tree โดยใช้ ActiveRecord
-        $lvls = Organization::find()
-            ->select('lvl')
-            ->where(['JSON_UNQUOTE(data_json->"$.leader1")' => (string)$leaderId])
-            ->column(); // คืนค่าเป็น array เช่น [1,2]
 
-        // 2. กำหนด $statusLevel ตาม lvl
-        $statusLevel = [];
-        if (in_array(1, $lvls)) {
-            $statusLevel[] = 'Pending';
-        }
-        if (in_array(2, $lvls)) {
-            $statusLevel[] = 'Checking1_pass';
-        }
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'leave_filter_status', 'emp_id' => $me->id]);
 
-        // 3. ใช้กับ ApproveSearch
         $searchModel = new ApproveSearch([
-            // 'q_status' => $statusLevel
+            'q_status' => $leaveFilterStatusModel->data_json ?? [],
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         // เพิ่ม join กับ employees
-        // $dataProvider->query->joinWith(['leave.employee']);
         $dataProvider->query->joinWith(['leave']);       // join leave
         $dataProvider->query->joinWith(['leave.employee']); // join employee
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
@@ -52,7 +37,6 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'leave.status', ['ReqCancel', 'cancel']]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
@@ -165,7 +149,90 @@ class LeaveController extends \yii\web\Controller
         }
     }
 
+
     public function actionApproveAll()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            $me = UserHelper::GetEmployee();
+            $status = $this->request->post('status'); // เช่น 'Pass' หรือ 'Reject'
+            $ids = $this->request->post('ids', []);   // array ของ id ที่ต้องการ update
+
+            if (empty($ids) || !is_array($ids)) {
+                return ['status' => 'error', 'message' => 'No items selected'];
+            }
+
+            $statusMap = [
+                1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
+                2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
+                3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
+                4 => ['Pass' => 'Approve', 'Reject' => 'Reject']
+            ];
+
+            foreach ($ids as $id) {
+                $model = Approve::findOne($id);
+                if (!$model) continue;
+
+                // Merge ข้อมูล JSON
+                $model->data_json = ArrayHelper::merge(
+                    (array)$model->data_json,
+                    ['approve_date' => date('Y-m-d H:i:s')]
+                );
+
+                $model->status = $status;
+
+                if (empty($model->emp_id)) {
+                    $model->emp_id = $me->id;
+                }
+
+                if ($model->save()) {
+
+                    // ถ้าไม่อนุมัติ
+                    if ($status === 'Reject') {
+                        $model->leave->status = 'Reject';
+                        $model->leave->save(false);
+                        $model->leave->MsgReject();
+                        continue; // ไปตัวถัดไป
+                    }
+
+                    // ถ้าเป็น level สุดท้าย และอนุมัติผ่าน
+                    if ($model->maxLevel() && $status === 'Pass') {
+                        $model->leave->status = 'Approve';
+                        $model->leave->save(false);
+                        $model->leave->MsgApprove();
+                        continue;
+                    }
+
+                    // หา nextApprove
+                    $nextApprove = Approve::findOne([
+                        'from_id' => $model->from_id,
+                        'name' => 'leave',
+                        'level' => $model->level + 1
+                    ]);
+
+                    // Mapping สถานะตาม level
+                    if (isset($statusMap[$model->level][$status])) {
+                        $model->leave->status = $statusMap[$model->level][$status];
+                        $model->leave->save(false);
+                    }
+
+                    // ถ้ามีคนอนุมัติถัดไป และ status ผ่าน
+                    if ($nextApprove && $status === 'Pass') {
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save(false);
+                    }
+                }
+            }
+
+            return ['status' => 'success'];
+        }
+
+        return ['status' => 'error', 'message' => 'Invalid request'];
+    }
+
+
+
+    public function actionApproveAllOld()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
@@ -240,8 +307,23 @@ class LeaveController extends \yii\web\Controller
         return $result;
     }
 
-    public function actionCalendar()
+    public function actionUpdateFilterStatus()
     {
-        return $this->render();
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $data = Yii::$app->request->post('status', []);
+        $checkedStatuses = is_array($data) ? $data : [];
+        $model = Categorise::findOne(['name' => 'leave_filter_status', 'emp_id' => UserHelper::GetEmployee()->id]);
+        if (!$model) {
+            $model = new Categorise();
+            $model->name = 'leave_filter_status';
+            $model->emp_id = UserHelper::GetEmployee()->id;
+        }
+        $model->data_json = $checkedStatuses;
+        if ($model->save(false)) {
+            return ['status' => 'success'];
+        } else {
+            return ['status' => 'error'];
+        }
     }
 }

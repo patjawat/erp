@@ -69,7 +69,7 @@ class Development extends \yii\db\ActiveRecord
             [['document_id', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['document_id', 'assigned_to', 'created_by', 'updated_by', 'deleted_by', 'thai_year'], 'integer'],
             [['topic', 'status', 'date_start', 'date_end', 'vehicle_date_end', 'leader_id', 'assigned_to', 'emp_id', 'thai_year', 'leader_group_id'], 'required'],
-            [['development_type_id', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'response_status','date_filter'], 'safe'],
+            [['development_type_id', 'date_start', 'date_end', 'vehicle_date_start', 'vehicle_date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'response_status', 'date_filter'], 'safe'],
             [['topic', 'status', 'time_start', 'time_end', 'vehicle_type_id', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
         ];
     }
@@ -161,19 +161,19 @@ class Development extends \yii\db\ActiveRecord
     }
 
 
-        public function groupYear()
+    public function groupYear()
     {
         $year = self::find()
             ->andWhere(['IS NOT', 'thai_year', null])
             ->groupBy(['thai_year'])
             ->orderBy(['thai_year' => SORT_DESC])
             ->all();
-        return ArrayHelper::map($year, 'thai_year',function ($model) {
-            return 'ปีงบประมาณ '.$model->thai_year;
+        return ArrayHelper::map($year, 'thai_year', function ($model) {
+            return 'ปีงบประมาณ ' . $model->thai_year;
         });
     }
 
-// สรุปข้อมูลการอบรม/ประชุม/ดูงาน
+    // สรุปข้อมูลการอบรม/ประชุม/ดูงาน
     public function getSummary()
     {
         return [
@@ -182,7 +182,7 @@ class Development extends \yii\db\ActiveRecord
             'monthlyTrend' => $this->monthlyTrend(),
         ];
     }
-    
+
     // แนวโน้มการอบรม/ประชุม/ดูงานรายเดือน
     public function monthlyTrend()
     {
@@ -244,9 +244,9 @@ class Development extends \yii\db\ActiveRecord
             $series[] = (int)$item['total'];
         }
 
-        return ['series' => $series,'labels' => array_column($data, 'title')];
+        return ['series' => $series, 'labels' => array_column($data, 'title')];
     }
-    
+
     public function listSummaryMonth()
     {
 
@@ -281,16 +281,16 @@ class Development extends \yii\db\ActiveRecord
         return $data;
     }
 
-// เปรียบเทียบข้อมูลการพัฒนารายปี
+    // เปรียบเทียบข้อมูลการพัฒนารายปี
     public  function getYearlyDevelopmentSummary()
-{
+    {
 
-      // ดึงจำนวนบุคลากรทั้งหมด
-    $totalEmployees = Employees::find()
-        ->where(['status' => 1])
-        ->count();
-        
-    $sql = "
+        // ดึงจำนวนบุคลากรทั้งหมด
+        $totalEmployees = Employees::find()
+            ->where(['status' => 1])
+            ->count();
+
+        $sql = "
         SELECT 
             thai_year,
             total_price,
@@ -334,32 +334,32 @@ class Development extends \yii\db\ActiveRecord
             GROUP BY d.thai_year
         ) AS yearly;
             ";
-              
 
-    $lastYear = $this->thai_year - 1;
-    $currentYear = $this->thai_year;
-    $data =  Yii::$app->db->createCommand($sql)
-    ->bindValue(':last_year', $lastYear)
-    ->bindValue(':current_year', $currentYear)
-    ->bindValue(':totalEmployees', $totalEmployees)
-    ->queryAll();
-    return [
-        'total_count' => $data[1]['total_count'] ?? 0,
-        'total_price' => $data[1]['total_price'] ?? 0,
-        'emp_count' => $data[1]['unique_emp_count'] ?? 0,
-        'emp_percent' => $data[1]['emp_percent'] ?? 0,
-        'price_percent_change' => $data[1]['price_percent_change'] ?? 0,
-        'count_percent_change' => $data[1]['count_percent_change'] ?? 0,
-        'year' => $data[1]['thai_year'] ?? 0,
-        'price_status' => (isset($data[1]['count_status']) 
-            ? ($data[1]['count_status'] == 'เพิ่มขึ้น' 
-                ? '<span class="text-success"><i class="fa-solid fa-caret-up"></i> เพิ่มขึ้น</span>' 
-                : '<span class="text-danger"><i class="fa-solid fa-caret-down"></i> ลดลง</span>') 
-            : '-'),
-    
-        
-    ];
-}
+
+        $lastYear = $this->thai_year - 1;
+        $currentYear = $this->thai_year;
+        $data =  Yii::$app->db->createCommand($sql)
+            ->bindValue(':last_year', $lastYear)
+            ->bindValue(':current_year', $currentYear)
+            ->bindValue(':totalEmployees', $totalEmployees)
+            ->queryAll();
+        return [
+            'total_count' => $data[1]['total_count'] ?? 0,
+            'total_price' => $data[1]['total_price'] ?? 0,
+            'emp_count' => $data[1]['unique_emp_count'] ?? 0,
+            'emp_percent' => $data[1]['emp_percent'] ?? 0,
+            'price_percent_change' => $data[1]['price_percent_change'] ?? 0,
+            'count_percent_change' => $data[1]['count_percent_change'] ?? 0,
+            'year' => $data[1]['thai_year'] ?? 0,
+            'price_status' => (isset($data[1]['count_status'])
+                ? ($data[1]['count_status'] == 'เพิ่มขึ้น'
+                    ? '<span class="text-success"><i class="fa-solid fa-caret-up"></i> เพิ่มขึ้น</span>'
+                    : '<span class="text-danger"><i class="fa-solid fa-caret-down"></i> ลดลง</span>')
+                : '-'),
+
+
+        ];
+    }
 
 
 
@@ -367,10 +367,7 @@ class Development extends \yii\db\ActiveRecord
     {
         return Approve::find()->where(['name' => 'development', 'from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
     }
-    public function viewCreateBy()
-    {
-
-    }
+    public function viewCreateBy() {}
 
     // แสดงวันที่สร้าง
     // public function viewCreated()
@@ -498,7 +495,7 @@ class Development extends \yii\db\ActiveRecord
         // }
     }
 
-        // ผู้ขอบริการ
+    // ผู้ขอบริการ
     public function userRequest()
     {
         // try {
@@ -523,7 +520,7 @@ class Development extends \yii\db\ActiveRecord
 
     }
 
-        //แสดงวันเวลาที่แสดง
+    //แสดงวันเวลาที่แสดง
     public function viewCreated()
     {
         try {
@@ -624,17 +621,31 @@ class Development extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
+    // public function listStatus()
+    // {
+    //     return [
+    //         'Pending' => 'รอเห็นชอบ',
+    //         'Checking' => 'รอตรวจสอบ',
+    //         'Pass' => 'ตรวจสอบผ่าน',
+    //         'Approve' => 'ผอ.อนุมัติ',
+    //         'Reject' => 'ไม่อนุมัติ',
+    //         'Cancel' => 'ยกเลิก',
+    //     ];
+    // }
+
+    //ใช้สำหรับ filter status (ใช้ร่วมกันกับ leave)
     public function listStatus()
     {
-        return [
-            'Pending' => 'รอเห็นชอบ',
-            'Checking' => 'รอตรวจสอบ',
-            'Pass' => 'ตรวจสอบผ่าน',
-            'Approve' => 'ผอ.อนุมัติ',
-            'Reject' => 'ไม่อนุมัติ',
-            'Cancel' => 'ยกเลิก',
-        ];
+        return ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'leave_status'])
+                ->orderBy(new \yii\db\Expression('CAST(sort AS UNSIGNED) ASC'))
+                ->all(),
+            'code',
+            'title'
+        );
     }
+
 
     // รายชื่อคณะเดินทาง
     public function listMember()
