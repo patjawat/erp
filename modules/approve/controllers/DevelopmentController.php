@@ -19,7 +19,7 @@ class DevelopmentController extends \yii\web\Controller
     {
         $me = UserHelper::GetEmployee();
     
-        $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
+         $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
 
         $searchModel = new ApproveSearch([
             'q_status' => $leaveFilterStatusModel->data_json ?? [],
@@ -29,6 +29,7 @@ class DevelopmentController extends \yii\web\Controller
         $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
+         $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
         // $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
         // if ($me->isDirector()) {
         //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);

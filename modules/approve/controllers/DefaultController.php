@@ -30,7 +30,8 @@ class DefaultController extends Controller
         $data = Yii::$app->request->post('status', []);
         $name = Yii::$app->request->post('name');
         $checkedStatuses = is_array($data) ? $data : [];
-        $model = Categorise::findOne(['name' => 'leave_filter_status', 'emp_id' => UserHelper::GetEmployee()->id]);
+        $model = Categorise::findOne(['name' => $name, 'emp_id' => UserHelper::GetEmployee()->id]);
+
         if (!$model) {
             $model = new Categorise();
             $model->name = $name;
