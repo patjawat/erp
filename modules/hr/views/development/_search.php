@@ -62,7 +62,7 @@ use app\modules\hr\models\Organization;
                      type: 'POST',
                      data: {
                      status: $(this).val(),
-                     name:'development_filter_status'
+                     name:'hr_development_filter_status'
                      },
                      success: function(data) {
                       

@@ -225,7 +225,7 @@ class UpdateTableController extends Controller
             ['child' => 'technician_ma', 'parent' => 'admin'],
             ['child' => 'user', 'parent' => 'admin'],
             ['child' => 'warehouse', 'parent'  => 'admin'],
-            ['child' => 'branch', 'parent'  => 'admin'],
+            // ['child' => 'branch', 'parent'  => 'admin'],
             ['child' => 'inventory', 'parent'  => 'admin'],
             ['child' => 'sm', 'parent'  => 'admin'],
             ['child' => 'leave', 'parent'  => 'admin'],

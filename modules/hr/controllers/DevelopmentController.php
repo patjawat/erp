@@ -47,7 +47,7 @@ class DevelopmentController extends Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'hr_development_filter_status', 'emp_id' => $me->id]);
         $searchModel = new DevelopmentSearch([
             'status' => $leaveFilterStatusModel->data_json ?? [],
         ]);

@@ -18,7 +18,6 @@ $listApprove = Approve::find()
     ->all();
 ?>
 
-
 <style>
 .timeline {
     display: flex;
