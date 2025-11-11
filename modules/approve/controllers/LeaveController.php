@@ -41,6 +41,7 @@ class LeaveController extends \yii\web\Controller
             'or',
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
+        $dataProvider->query->groupBy(['approve.from_id']);
 
         if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
