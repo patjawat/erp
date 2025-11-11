@@ -9,7 +9,6 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
 
@@ -26,29 +25,20 @@ class DevelopmentController extends \yii\web\Controller
         ]);
         
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
+        $dataProvider->query->joinWith(['development']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
          $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
 
-        // $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        // if ($me->isDirector()) {
-        //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
-        // } else {
-        //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pending']);
-        // }
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'title', $searchModel->q],
+            ['like', 'topic', $searchModel->q],
         ]);
-
-
-
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        $dataProvider->query->orderBy(['approve.from_id' => SORT_DESC]);
-        $dataProvider->pagination = ['pageSize' => false];
+        $dataProvider->query->orderBy(['development.id' => SORT_DESC]);
+        // $dataProvider->pagination = ['pageSize' => false];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -106,24 +96,24 @@ class DevelopmentController extends \yii\web\Controller
 
                 // ถ้าไม่อนุมัติ
                 if ($model->status === 'Reject') {
-                    $model->leave->status = 'Reject';
-                    $model->leave->save(false);
-                    $model->leave->MsgReject();
+                    $model->development->status = 'Reject';
+                    $model->development->save(false);
+                    $model->development->MsgReject();
                     return ['status' => 'success'];
                 }
 
                 // ถ้าเป็น level สุดท้าย
                 if ($model->maxLevel() && $model->status === 'Pass') {
-                    $model->leave->status = 'Approve';
-                    $model->leave->save(false);
-                    $model->leave->MsgApprove();
+                    $model->development->status = 'Approve';
+                    $model->development->save(false);
+                    $model->development->MsgApprove();
                     return ['status' => 'success'];
                 }
 
                 // หา nextApprove
                 $nextApprove = Approve::findOne([
                     'from_id' => $model->from_id,
-                    'name' => 'leave',
+                    'name' => 'development',
                     'level' => $model->level + 1
                 ]);
 
@@ -137,8 +127,8 @@ class DevelopmentController extends \yii\web\Controller
 
                 // ตั้งค่าตาม map
                 if (isset($statusMap[$model->level][$model->status])) {
-                    $model->leave->status = $statusMap[$model->level][$model->status];
-                    $model->leave->save(false);
+                    $model->development->status = $statusMap[$model->level][$model->status];
+                    $model->development->save(false);
                 }
 
                 // ถ้ามีคนอนุมัติถัดไป และสถานะผ่าน
@@ -154,7 +144,7 @@ class DevelopmentController extends \yii\web\Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'ขออนุมัติวันลา',
+                'title' => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
@@ -170,102 +160,85 @@ class DevelopmentController extends \yii\web\Controller
     public function actionApproveAll()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        if ($this->request->isPost) {
+            $me = UserHelper::GetEmployee();
+            $status = $this->request->post('status'); // เช่น 'Pass' หรือ 'Reject'
+            $ids = $this->request->post('ids', []);   // array ของ id ที่ต้องการ update
 
-        $ids = Yii::$app->request->post('ids', []);
+            if (empty($ids) || !is_array($ids)) {
+                return ['status' => 'error', 'message' => 'No items selected'];
+            }
 
-        foreach ($ids as $id) {
-            $model = $this->findModel($id);
-            $model->status == 'Pass';
-            $this->Approve($model);
+            $statusMap = [
+                1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
+                2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
+                3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
+                4 => ['Pass' => 'Approve', 'Reject' => 'Reject']
+            ];
+
+            foreach ($ids as $id) {
+                $model = Approve::findOne($id);
+                if (!$model) continue;
+
+                // Merge ข้อมูล JSON
+                $model->data_json = ArrayHelper::merge(
+                    (array)$model->data_json,
+                    ['approve_date' => date('Y-m-d H:i:s')]
+                );
+
+                $model->status = $status;
+
+                if (empty($model->emp_id)) {
+                    $model->emp_id = $me->id;
+                }
+
+                if ($model->save()) {
+
+                    // ถ้าไม่อนุมัติ
+                    if ($status === 'Reject') {
+                        $model->development->status = 'Reject';
+                        $model->development->save(false);
+                        $model->development->MsgReject();
+                        continue; // ไปตัวถัดไป
+                    }
+
+                    // ถ้าเป็น level สุดท้าย และอนุมัติผ่าน
+                    if ($model->maxLevel() && $status === 'Pass') {
+                        $model->development->status = 'Approve';
+                        $model->development->save(false);
+                        $model->development->MsgApprove();
+                        continue;
+                    }
+
+                    // หา nextApprove
+                    $nextApprove = Approve::findOne([
+                        'from_id' => $model->from_id,
+                        'name' => 'leave',
+                        'level' => $model->level + 1
+                    ]);
+
+                    // Mapping สถานะตาม level
+                    if (isset($statusMap[$model->level][$status])) {
+                        $model->development->status = $statusMap[$model->level][$status];
+                        $model->development->save(false);
+                    }
+
+                    // ถ้ามีคนอนุมัติถัดไป และ status ผ่าน
+                    if ($nextApprove && $status === 'Pass') {
+                        $nextApprove->status = 'Pending';
+                        $nextApprove->save(false);
+                    }
+                }
+            }
+
+            return ['status' => 'success'];
         }
 
-        return ['status' => 'success', 'ids' => $ids];
+        return ['status' => 'error', 'message' => 'Invalid request'];
     }
 
 
-    protected function Approve($model)
-    {
-        $me = UserHelper::GetEmployee();
-        $status = $this->request->post('status');
-        $old = $model->data_json;
 
-        $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-        $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
-        $model->status = $status;
-
-        if ($model->emp_id == '') {
-            $model->emp_id = $me->id;
-        }
-
-        if ($model->save()) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            // ถ้าไม่อนุมัติให้ return ออกเลย
-            if ($model->status == 'Reject') {
-                $model->development->status = 'Reject';
-                $model->development->save();
-                $model->development->MsgReject();
-
-                // return [
-                //     'status' => 'success'
-                // ];
-            }
-            //ถ้าเป็น level สุดท้ายให้ Approve
-            if ($model->maxLevel() && $model->status == 'Pass') {
-                $model->development->status = 'Approve';
-                $model->development->save();
-                $model->development->MsgApprove();
-                // return [
-                //     'status' => 'success'
-                // ];
-            }
-
-
-            $nextApprove = Approve::findOne(['from_id' => $model->from_id, 'name' => 'development', 'level' => ($model->level + 1)]);
-            // เงื่อนไขระบบลา
-            if ($nextApprove) {
-
-                if ($model->level == 1 && $model->status == 'Pass') {
-                    $model->development->status = 'Pending';
-                    $model->development->save();
-                    $nextApprove->status = 'Pending';
-                    $nextApprove->save();
-                } elseif ($model->level == 1 && $model->status == 'Reject') {
-                    $model->development->status = 'Reject';
-                    $model->development->save();
-                }
-
-
-                if ($model->level == 2 && $model->status == 'Pass') {
-                    $model->development->status = 'Checking';
-                    $model->development->save();
-
-                    $nextApprove->status = 'Pending';
-                    $nextApprove->save();
-                } elseif ($model->level == 2 && $model->status == 'Reject') {
-                    $model->development->status = 'Reject';
-                    $model->development->save();
-                }
-
-                if ($model->level == 3 && $model->status == 'Pass') {
-                    $model->development->status = 'Pass';
-                    $model->development->save();
-                    $nextApprove->status = 'Pending';
-                    $nextApprove->save();
-                } elseif ($model->level == 3 && $model->status == 'Reject') {
-                    $model->development->status = 'Reject';
-                    $model->development->save();
-                }
-
-                if ($model->level == 4 && $model->status == 'Pass') {
-                    $model->development->status = 'Approve';
-                    $model->development->save();
-                } elseif ($model->level == 4 && $model->status == 'Reject') {
-                    $model->development->status = 'Reject';
-                    $model->development->save();
-                }
-            }
-        }
-    }
 
     protected function findModel($id)
     {

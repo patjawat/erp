@@ -367,7 +367,6 @@ class Development extends \yii\db\ActiveRecord
     {
         return Approve::find()->where(['name' => 'development', 'from_id' => $this->id])->orderBy(['level' => SORT_ASC])->all();
     }
-    public function viewCreateBy() {}
 
     // แสดงวันที่สร้าง
     // public function viewCreated()
@@ -496,29 +495,6 @@ class Development extends \yii\db\ActiveRecord
     }
 
     // ผู้ขอบริการ
-    public function userRequest()
-    {
-        // try {
-        $emp = $this->createdByEmp;
-        $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
-        return [
-            // 'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
-            'avatar' => $emp->getAvatar(false, $emp->departmentName()),
-            'fullname' => $emp->fullname,
-            'department' => $emp->departmentName(),
-            'signature' => $emp->getInfo()['signature'],
-
-        ];
-        // } catch (\Throwable $th) {
-
-        //     return [
-        //         'avatar' => '',
-        //         'fullname' => '',
-        //         'department' => '',
-        //     ];
-        // }
-
-    }
 
     //แสดงวันเวลาที่แสดง
     public function viewCreated()

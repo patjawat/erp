@@ -697,7 +697,7 @@ class m230720_072431_create_categorise_table extends Migration
 
         // ศาสนา
         $this->insert('categorise', ['code' => 1, 'name' => 'religion', 'title' => 'พุทธ']);
-        $this->insert('categorise', ['code' => 2, 'name' => 'religion', 'title' => 'คริศต์']);
+        $this->insert('categorise', ['code' => 2, 'name' => 'religion', 'title' => 'คริสต์']);
         $this->insert('categorise', ['code' => 3, 'name' => 'religion', 'title' => 'อิสลาม']);
         $this->insert('categorise', ['code' => 4, 'name' => 'religion', 'title' => 'ฮินดู']);
 

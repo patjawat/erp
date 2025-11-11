@@ -28,21 +28,20 @@ $msg = 'ขอ';
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/development/approve-all'], ['class' => 'btn btn-light shadow approve-all']); ?>
+            <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/development/approve-all'], ['class' => 'btn btn-light shadow approve-all']); 
+            ?>
 
-                    <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
-                        'class' => 'btn btn-success btn-approve-reject',
-                        'type' => 'button',
-                        'data-status' => 'Pass' // สำหรับส่งไป controller
-                    ]) ?>
+            <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
+                'class' => 'btn btn-success btn-approve-reject',
+                'type' => 'button',
+                'data-status' => 'Pass' // สำหรับส่งไป controller
+            ]) ?>
         </div>
-        
+
     </div>
     <div class="card-body">
         <div class="d-flex justify-content-between">
@@ -76,14 +75,14 @@ $msg = 'ขอ';
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <tr data-id="<?= $item->id ?>">
                             <td class="text-center">
-                            <input
-                                type="checkbox"
-                                class="check-item"
-                                name="selected[]"
-                                value="<?= $item->id ?>"
-                                <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
-                        </td>
-                            
+                                <input
+                                    type="checkbox"
+                                    class="check-item"
+                                    name="selected[]"
+                                    value="<?= $item->id ?>"
+                                    <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
+                            </td>
+
                             <td class="text-center fw-semibold">
                                 <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                             </td>
@@ -97,18 +96,16 @@ $msg = 'ขอ';
                             </td>
                             <td>
                                 <?php
-
                                 try {
-                                     // echo $item->development->userRequest()['avatar'] ?? '';
+                                    echo $item->development->createdByEmp->getAvatar(false) ?? '';
                                 } catch (\Throwable $th) {
-                                    //throw $th;
                                 } ?>
                             </td>
 
-                            <!-- <td> <?php //  $item->development->StackMember() ?></td> -->
-                              <td><?php //echo $item->development->stackChecker() ?></td>
+                            <!-- <td> <?php //  $item->development->StackMember() 
+                                        ?></td> -->
+                            <td><?php echo $item->development->stackChecker() ?></td>
                             <td>
-                                <?= $item->development->status; ?>
                                 <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>
                             </td>
 

@@ -86,6 +86,9 @@ use app\modules\hr\models\Organization;
 </div>
 
 <div class="row mt-2">
+    <div class="col-6">
+       <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
+    </div>
     <div class="col-3">
         <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false,'placeholder' => 'ผู้ขอ']) ?>
     </div>
