@@ -300,6 +300,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 
             <div class="col-12">
                 <?php
+                
                 //  $form->field($model, 'department')->widget(Select2::classname(), [
                 //     'data' => $model->ListDepartment(),
                 //     'options' => ['placeholder' => 'เลือก ...'],
