@@ -12,8 +12,8 @@ use yii\helpers\Html;
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
             <th class="fw-semibold" scope="col">ผู้ขอ</th>
-            <th class="fw-semibold text-center" scope="col">สถานะ</th>
             <th class="fw-semibold" scope="col" style="width: 200px;">ผู้อนุมัติ</th>
+            <th class="fw-semibold text-center" scope="col">สถานะ</th>
             <th class="fw-semibold text-end" style="width:100px">ดำเนินการ</th>
         </tr>
     </thead>
@@ -44,7 +44,7 @@ use yii\helpers\Html;
                                 } catch (\Throwable $th) {
                                 } ?>
                 </td>
-                 <td><?php echo $item->development->stackChecker() ?></td>
+                 <td><?php echo $item->stackChecker() ?></td>
                 <td class="text-center"><?= $item->getStatus($item->status)['view'] ?? '-' ?></td>
                 <td class="text-end">
 
