@@ -17,23 +17,28 @@ class DevelopmentController extends \yii\web\Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-    
-         $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
+
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
 
         $searchModel = new ApproveSearch([
             'q_status' => $leaveFilterStatusModel->data_json ?? [],
         ]);
-        
+
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith(['development']);
+       $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-         $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere(['development.development_type_id' => $searchModel->q_development_type_id]);
 
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(development.data_json, '$.location'))"), $searchModel->q],
+
         ]);
+
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 

@@ -39,7 +39,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.
 
 <div class="card" id="fullscreen-container">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span>ปฏิทินการขอใช้รถยนต์</span>
+        <span>ปฏิทินการจองห้องประชุม</span>
         <div class="d-flex align-items-center gap-2">
             <div class="">
                 <label for="eventLimitSelector" class="form-label">การแสดงผล:</label>

@@ -45,11 +45,7 @@ class DevelopmentController extends Controller
      */
     public function actionIndex()
     {
-        $me = UserHelper::GetEmployee();
-        $status = $this->request->get('status');
-        $searchModel = new DevelopmentSearch([
-            'status' =>   $status ? [$status] : ['Pending']
-        ]);
+        $searchModel = new DevelopmentSearch();
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
@@ -57,10 +53,12 @@ class DevelopmentController extends Controller
             'or',
             ['like', 'topic', $searchModel->q],
             ['like', 'development.emp_id', $searchModel->emp_id],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(development.data_json, '$.location'))"), $searchModel->q],
         ]);
+        
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-
-
+        
+        
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');

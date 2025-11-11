@@ -30,6 +30,8 @@ class LineMsg extends Component
     public static function PushMsg($data)
     {
 
+        try {
+ 
        $getData = Categorise::find()->where(['name' => 'site'])->one();
        $channelAccessToken = $getData->data_json['line_channel_token'];
        $url = 'https://api.line.me/v2/bot/message/push';
@@ -52,6 +54,9 @@ class LineMsg extends Component
         }
 
         return true;
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
     
 //ส่งข้อความ

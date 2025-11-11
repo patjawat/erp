@@ -12,8 +12,8 @@ use yii\helpers\Html;
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
             <th class="fw-semibold" scope="col">ผู้ขอ</th>
+            <th class="fw-semibold" style="width:150px"  scope="col">คณะเดินทาง</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
-            <th class="fw-semibold" scope="col" style="width: 200px;">ผู้อนุมัติ</th>
             <th class="fw-semibold text-end" style="width:100px">ดำเนินการ</th>
         </tr>
     </thead>
@@ -25,10 +25,7 @@ use yii\helpers\Html;
                 </td>
                 <td>
                     <p class="mb-0"><?= $item->topic ?></p>
-                    <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span>
-
-                     <?= $item->StackMember() ?>
-                    </p>
+                    <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
                 </td>
                 <td>
                     <?= $item->developmentType?->title ?? '-' ?>
@@ -38,13 +35,16 @@ use yii\helpers\Html;
 
                 </td>
                 <td>
-                   <?php
-                                try {
-                                    echo $item->createdByEmp->getAvatar(false) ?? '';
-                                } catch (\Throwable $th) {
-                                } ?>
+                    <?php 
+                    
+                    try {
+                        echo $item->userRequest()['avatar'] ?? '';
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                    }?>
                 </td>
-                 <td><?php echo $item->development->stackChecker() ?></td>
+                <td>
+                    <?= $item->StackMember() ?></td>
                 <td class="text-center"><?= $item->getStatus($item->status)['view'] ?? '-' ?></td>
                 <td class="text-end">
 

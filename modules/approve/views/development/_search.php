@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
+use app\components\CategoriseHelper;
 use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
 
@@ -55,7 +56,7 @@ use app\modules\hr\models\Organization;
                 'width' => '100%',
             ],
             'pluginEvents' => [
-                 "change" => "function() { 
+                "change" => "function() { 
                    $.ajax({
                      url: '/approve/default/update-filter-status',
                      type: 'POST',
@@ -86,11 +87,23 @@ use app\modules\hr\models\Organization;
 </div>
 
 <div class="row mt-2">
-    <div class="col-6">
-       <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
+    <div class="col-4">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
     </div>
-    <div class="col-3">
-        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false,'placeholder' => 'ผู้ขอ']) ?>
+    <div class="col-2">
+        <?php
+        echo $form->field($model, 'q_development_type_id')->widget(Select2::classname(), [
+            'data' => CategoriseHelper::DevelopmentType(),
+            'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
+            'pluginOptions' => [
+                // 'dropdownParent' => '#main-modal',
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+    </div>
+    <div class="col-6">
+        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false, 'placeholder' => 'ผู้ขอ']) ?>
     </div>
 </div>
 

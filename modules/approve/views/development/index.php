@@ -88,9 +88,13 @@ $msg = 'ขอ';
                             </td>
                             <td>
                                 <p class="mb-0"><?= $item->development->topic ?></p>
-                                <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->development->data_json['location'] ?? 'ไม่ระบุ' ?><span></p>
+                                <p class="mb-0">
+                                    
+                                    สถานที่ <span class="fw-semibold"><?= $item->development->data_json['location'] ?? 'ไม่ระบุ' ?><span>
+                                        <?=$item->development->StackMember() ?>
+                                    </p>
                             </td>
-                            <td><?= $item->developmentType?->title ?? '-' ?></td>
+                            <td><?= $item->development->developmentType?->title ?? '-' ?></td>
                             <td>
                                 <p class="mb-0 fw-semibold"> <?php echo  $item->development->showDateRange() ?></p>
                             </td>
@@ -101,9 +105,6 @@ $msg = 'ขอ';
                                 } catch (\Throwable $th) {
                                 } ?>
                             </td>
-
-                            <!-- <td> <?php //  $item->development->StackMember() 
-                                        ?></td> -->
                             <td><?php echo $item->development->stackChecker() ?></td>
                             <td>
                                 <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>
