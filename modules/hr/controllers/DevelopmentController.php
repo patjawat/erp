@@ -8,6 +8,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
+use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\components\UserHelper;
@@ -45,7 +46,11 @@ class DevelopmentController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new DevelopmentSearch();
+        $me = UserHelper::GetEmployee();
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
+        $searchModel = new DevelopmentSearch([
+            'status' => $leaveFilterStatusModel->data_json ?? [],
+        ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
@@ -55,10 +60,10 @@ class DevelopmentController extends Controller
             ['like', 'development.emp_id', $searchModel->emp_id],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(development.data_json, '$.location'))"), $searchModel->q],
         ]);
-        
+
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        
-        
+
+
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
@@ -148,15 +153,15 @@ class DevelopmentController extends Controller
         $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToThai($model->vehicle_date_end) : null;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
-                try {
-                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
-                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
-                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
-                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
-                } catch (\Throwable $th) {
-                }
+            try {
+                $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+            } catch (\Throwable $th) {
+            }
 
-                $model->save();
+            $model->save();
 
             return $this->redirect('index');
         }
@@ -203,9 +208,9 @@ class DevelopmentController extends Controller
         return $this->redirect(['index']);
     }
 
-        public function actionCancel($id)
+    public function actionCancel($id)
     {
-         Yii::$app->response->format = Response::FORMAT_JSON;
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
         $model->status = 'Cancel';
         $model->save();
@@ -213,7 +218,6 @@ class DevelopmentController extends Controller
             'status' => 'success',
             'message' => 'ยกเลิกการขอไปราชการเรียบร้อยแล้ว',
         ];
-
     }
 
 

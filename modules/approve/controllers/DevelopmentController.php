@@ -42,6 +42,7 @@ class DevelopmentController extends \yii\web\Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
+        $dataProvider->query->groupBy(['development.id']);
         $dataProvider->query->orderBy(['development.id' => SORT_DESC]);
         // $dataProvider->pagination = ['pageSize' => false];
 
