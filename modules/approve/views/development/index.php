@@ -93,13 +93,13 @@ $msg = 'ขอ';
                             </td>
                             <td><?= $item->developmentType?->title ?? '-' ?></td>
                             <td>
-                                <p class="mb-0 fw-semibold"> <?php //  $item->development->showDateRange() ?></p>
+                                <p class="mb-0 fw-semibold"> <?php echo  $item->development->showDateRange() ?></p>
                             </td>
                             <td>
                                 <?php
 
                                 try {
-                                     echo $item->development->userRequest()['avatar'] ?? '';
+                                     // echo $item->development->userRequest()['avatar'] ?? '';
                                 } catch (\Throwable $th) {
                                     //throw $th;
                                 } ?>

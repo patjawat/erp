@@ -30,6 +30,7 @@ class DevelopmentController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
          $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
+
         // $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
         // if ($me->isDirector()) {
         //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
@@ -46,7 +47,7 @@ class DevelopmentController extends \yii\web\Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
+        $dataProvider->query->orderBy(['approve.from_id' => SORT_DESC]);
         $dataProvider->pagination = ['pageSize' => false];
 
         return $this->render('index', [
