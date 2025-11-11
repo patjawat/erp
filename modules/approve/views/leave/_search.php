@@ -51,9 +51,12 @@ use app\modules\hr\models\Organization;
             'pluginEvents' => [
                  "change" => "function() { 
                    $.ajax({
-                     url: '/approve/leave/update-filter-status',
+                     url: '/approve/default/update-filter-status',
                      type: 'POST',
-                     data: {status: $(this).val()},
+                     data: {
+                     status: $(this).val(),
+                     name:'leave_filter_status'
+                     },
                      success: function(data) {
                       
                      }
