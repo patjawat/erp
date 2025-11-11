@@ -253,8 +253,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 
                 <div class="form-group mt-2 avatar-form">
 
-
-                    <?php
+            <?php
             $url = Url::to(['/depdrop/employee-by-id']);
             $employeeAssignedTo = Employees::find()->where(['id' => $model->assigned_to])->one();
             $initEmployeeAssignedTo = empty($model->assigned_to) ? '' : Employees::findOne($model->assigned_to)->getAvatar(false);//กำหนดค่าเริ่มต้น
