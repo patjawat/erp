@@ -66,7 +66,6 @@ class VehicleController extends Controller
     {
         $type = 'official';
         $searchModel = new VehicleSearch([
-            'date_filter' => 'this_month',
             'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -77,16 +76,6 @@ class VehicleController extends Controller
             ['like', 'reason', $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->orderBy([
@@ -145,9 +134,7 @@ class VehicleController extends Controller
     //ทะเบียนจัดสรรรถทั่วไป
     public function actionWorkOfficial()
     {
-        $searchModel = new VehicleDetailSearch([
-            'date_filter' => 'this_month'
-        ]);
+        $searchModel = new VehicleDetailSearch();
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('vehicle');
@@ -160,16 +147,6 @@ class VehicleController extends Controller
             ['like', 'reason', $searchModel->q],
         ]);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
@@ -185,7 +162,6 @@ class VehicleController extends Controller
     public function actionWorkAmbulance()
     {
         $searchModel = new VehicleDetailSearch([
-            'date_filter' => 'this_month'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -198,17 +174,6 @@ class VehicleController extends Controller
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
-
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [

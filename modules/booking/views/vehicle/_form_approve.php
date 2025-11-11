@@ -93,19 +93,27 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
         </tbody>
     </table>
 </div>
-<?php if(Yii::$app->user->can('driver')):?>
-<div class="form-group">
-    <?php echo $form->field($model, 'data_json[remarks]')->textarea(['rows' => 2])->label('หมายเหตุ') ?>
-</div>
-    <div class="d-flex justify-content-center gap-3">
-        <?= Html::submitButton('<i class="bi bi-check-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
-        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+<?php if (Yii::$app->user->can('driver')): ?>
+    <div class="form-group mb-3">
+        <?= $form->field($model, 'data_json[remarks]')
+            ->textarea(['rows' => 2])
+            ->label('หมายเหตุ') ?>
     </div>
-    <?php else:?>
-        <?php endif?>
-        <div class="d-flex justify-content-center gap-3">
-            <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
-        </div>
+<?php endif; ?>
+
+<div class="d-flex justify-content-center gap-3">
+    <?php if (Yii::$app->user->can('driver')): ?>
+        <?= Html::submitButton(
+            '<i class="bi bi-check-circle"></i> บันทึก',
+            ['class' => 'btn btn-primary rounded-pill shadow']
+        ) ?>
+    <?php endif; ?>
+
+    <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal">
+        <i class="fa-regular fa-circle-xmark"></i> ปิด
+    </button>
+</div>
+
 <?php ActiveForm::end(); ?>
 
 

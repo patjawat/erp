@@ -6,7 +6,6 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-use app\components\SiteHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\components\CategoriseHelper;
@@ -197,7 +196,6 @@ $listDocumentMe  = $emp->listDocumentMe();
                             ?>
                 </div>
 
-                <div class="form-group mt-2 avatar-form d-flex justify-content-between">
 
                     <?php
             $url = Url::to(['/depdrop/employee-by-id']);
@@ -210,7 +208,6 @@ $listDocumentMe  = $emp->listDocumentMe();
                 'options' => ['placeholder' => 'เลือกบุคลากร ...'],
                 'pluginOptions'=>[
                     // 'dropdownParent' => '#main-modal',
-                    'width' => '350px',
                     'allowClear'=>true,
                     'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
                     'ajax'=>[
@@ -238,7 +235,6 @@ $listDocumentMe  = $emp->listDocumentMe();
                 'options' => ['placeholder' => 'เลือกบุคลากร ...'],
                 'pluginOptions'=>[
                     // 'dropdownParent' => '#main-modal',
-                    'width' => '350px',
                     'allowClear'=>true,
                     'minimumInputLength'=>1,//ต้องพิมพ์อย่างน้อย 3 อักษร ajax จึงจะทำงาน
                     'ajax'=>[
@@ -254,7 +250,6 @@ $listDocumentMe  = $emp->listDocumentMe();
                     ])->label('หัวหน้ากลุ่มงาน');
                     ?>
 
-                </div>
 
                 <div class="form-group mt-2 avatar-form">
 
