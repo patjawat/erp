@@ -44,13 +44,6 @@ $msg = 'ขอ';
                         'data-status' => 'Pass' // สำหรับส่งไป controller
                     ]) ?>
 
-                    <?php
-                    //  Html::button('<i class="fa-solid fa-xmark"></i> ไม่อนุมัติที่เลือก', [
-                    //     'class' => 'btn btn-danger btn-approve-reject',
-                    //     'type' => 'button',
-                    //     'data-status' => 'Reject' // สำหรับส่งไป controller
-                    // ]) 
-                    ?>
                 </div>
 
             </div>

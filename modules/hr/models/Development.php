@@ -653,6 +653,33 @@ class Development extends \yii\db\ActiveRecord
         return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])->all();
     }
 
+
+    //  ภาพทีมผูตรวจสอบ
+    public function stackChecker()
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+            try {
+                $data .= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $item->employee->showAvatar()
+                    ]
+                ]);
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+        }
+        $data .= '</div>';
+        return $data;
+    }
+
+    
+
     // การตอบรับเป็นวิทยากร
     public function viewResponseStatus()
     {

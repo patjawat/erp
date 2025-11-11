@@ -164,17 +164,17 @@ class Approve extends \yii\db\ActiveRecord
         );
     }
 
-    public function listDevelopmentStatus()
-    {
-        return [
-            'Pending' => 'รอเห็นชอบ',
-            'Checking' => 'รอตรวจสอบ',
-            'Pass' => 'ตรวจสอบผ่าน',
-            'Approve' => 'ผอ.อนุมัติ',
-            'Reject' => 'ไม่อนุมัติ',
-            'Cancel' => 'ยกเลิก',
-        ];
-    }
+    // public function listDevelopmentStatus()
+    // {
+    //     return [
+    //         'Pending' => 'รอเห็นชอบ',
+    //         'Checking' => 'รอตรวจสอบ',
+    //         'Pass' => 'ตรวจสอบผ่าน',
+    //         'Approve' => 'ผอ.อนุมัติ',
+    //         'Reject' => 'ไม่อนุมัติ',
+    //         'Cancel' => 'ยกเลิก',
+    //     ];
+    // }
 
 
     public function viewStatus()

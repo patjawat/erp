@@ -33,33 +33,46 @@ use app\modules\hr\models\Organization;
 <div class="row">
 
     <div class="col-2">
-        <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ช่วงเวลาทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '130px',
-            ],
-        ])->label(false);
-        ?>
+        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control', 'placeholder' => 'เริ่มจากวันที่'])->label(false); ?>
+        <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-2">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ถึงวันที่'])->label(false); ?>
+        <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-2">
+
+    <div class="col-5">
         <?= $form->field($model, 'q_status')->widget(Select2::classname(), [
-            'data' => $model->listDevelopmentStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด'],
+            'data' => $model->listStatus(),
+            'theme' => Select2::THEME_KRAJEE_BS5,
+            'options' => [
+                'placeholder' => 'สถานะทั้งหมด',
+                'multiple' => true,
+            ],
             'pluginOptions' => [
                 'allowClear' => true,
-                // 'width' => '150px',
+                'width' => '100%',
             ],
+            'pluginEvents' => [
+                 "change" => "function() { 
+                   $.ajax({
+                     url: '/approve/default/update-filter-status',
+                     type: 'POST',
+                     data: {
+                     status: $(this).val(),
+                     name:'development_filter_status'
+                     },
+                     success: function(data) {
+                      
+                     }
+                   });
+                 }",
+            ]
         ])->label(false); ?>
     </div>
+
+
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">
             <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
@@ -74,7 +87,7 @@ use app\modules\hr\models\Organization;
 
 <div class="row mt-2">
     <div class="col-3">
-        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+        <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false,'placeholder' => 'ผู้ขอ']) ?>
     </div>
 </div>
 

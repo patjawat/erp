@@ -307,23 +307,4 @@ class LeaveController extends \yii\web\Controller
         return $result;
     }
 
-    public function actionUpdateFilterStatus()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $data = Yii::$app->request->post('status', []);
-        $checkedStatuses = is_array($data) ? $data : [];
-        $model = Categorise::findOne(['name' => 'leave_filter_status', 'emp_id' => UserHelper::GetEmployee()->id]);
-        if (!$model) {
-            $model = new Categorise();
-            $model->name = 'leave_filter_status';
-            $model->emp_id = UserHelper::GetEmployee()->id;
-        }
-        $model->data_json = $checkedStatuses;
-        if ($model->save(false)) {
-            return ['status' => 'success'];
-        } else {
-            return ['status' => 'error'];
-        }
-    }
 }

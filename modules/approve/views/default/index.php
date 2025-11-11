@@ -65,13 +65,6 @@ $items = [
 <div class="container">
 
 
-<?php
-echo "<pre>";
-print_r($totalLeave = $notify['leave']['sql']);
-echo "</pre>";
-
-?>
-
     <div class="row row-cols-1 row-cols-sm-6 row-cols-md-6 g-3">
         <?php foreach($items as $item):?>
         <div class="col">

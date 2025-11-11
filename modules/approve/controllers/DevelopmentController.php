@@ -4,6 +4,7 @@ namespace app\modules\approve\controllers;
 
 use Yii;
 use yii\web\Response;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
@@ -17,19 +18,23 @@ class DevelopmentController extends \yii\web\Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        $searchModel = new ApproveSearch([
+    
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'development_filter_status', 'emp_id' => $me->id]);
 
+        $searchModel = new ApproveSearch([
+            'q_status' => $leaveFilterStatusModel->data_json ?? [],
         ]);
+        
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        if ($me->isDirector()) {
-            $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
-        } else {
-            $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pending']);
-        }
+        // $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
+        // if ($me->isDirector()) {
+        //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pass']);
+        // } else {
+        //     $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status ?? 'Pending']);
+        // }
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'title', $searchModel->q],
