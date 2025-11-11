@@ -18,8 +18,8 @@ RUN docker-php-ext-install opcache
 RUN docker-php-ext-install calendar
 
 # ติดตั้ง Redis extension
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+# RUN pecl install redis \
+#     && docker-php-ext-enable redis
 
 # ตั้งค่า OPcache ใน php.ini
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
