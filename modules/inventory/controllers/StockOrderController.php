@@ -122,8 +122,6 @@ class StockOrderController extends Controller
      */
     public function actionView($id)
     {
-        // \Yii::$app->response->format = Response::FORMAT_JSON;
-        // return $model;
         $warehouse = Yii::$app->session->get('warehouse');
         $model = StockEvent::findOne($id);
         if (!$warehouse) {
@@ -151,6 +149,21 @@ class StockOrderController extends Controller
             if ($item->qty > $item->SumlotQty()) {
                 $item->qty = $item->SumlotQty();
                 $item->save(false);
+            }
+        }
+
+
+        foreach ($model->getItems() as $item2) {
+            $qty = (float) $item2->qty;
+            $sumLot = (float) $item2->SumlotQty();
+            $diff = $qty - $sumLot;
+
+            $epsilon = 0.000001; // ค่าความคลาดเคลื่อน
+            $notEnough = ($sumLot == 0 || $diff > $epsilon  && ($item->status !== 'success'));
+
+            if ($notEnough) {
+                    $item2->order_status = 'cancel';
+                    $item2->save(false);
             }
         }
     }
@@ -456,7 +469,7 @@ class StockOrderController extends Controller
                 'code' => '$qty <= -1',
             ];
         }
-        
+
         $model->qty = $qty;
         $model->save(false);
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -566,11 +579,11 @@ class StockOrderController extends Controller
     public function actionCheckOut($id)
     {
 
-            $model = $this->findModel($id);
+        $model = $this->findModel($id);
         if ($model->movement_date) {
             $model->movement_date = AppHelper::convertToThai($model->movement_date);
         }
-    
+
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -667,7 +680,7 @@ class StockOrderController extends Controller
                             throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');
                         }
                     }
-        
+
                     // ถ้าหากผิดพลาด
                     if (!$item->save(false)) {
                         throw new \Exception('ไม่สามารถบันทึกข้อมูล OrderItem ได้');

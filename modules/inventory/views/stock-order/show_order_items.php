@@ -11,6 +11,29 @@ $emp = UserHelper::GetEmployee();
 
 ?>
 
+
+<?php 
+ $balanced = 0;
+$epsilon = 0.000001; // ค่าความคลาดเคลื่อน
+
+foreach ($model->getItems() as $item) {
+    $qty = (float) $item->qty;
+    $sumLot = (float) $item->SumlotQty();
+    $diff = $qty - $sumLot;
+
+        $notEnough = ($sumLot == 0 || $diff > $epsilon) && ($item->status == 'Pending');
+
+    if ($notEnough) {
+        $balanced++;
+        echo "<p>{$item->lot_number}. ({$sumLot} | diff={$diff}) ❌ ไม่พอ ต้องการ {$item->qty}</p>";
+    } else {
+        echo "<p>{$item->lot_number}. ({$sumLot} | diff={$diff}) ✅ พอ</p>";
+    }
+}
+
+
+
+?>
 <table class="table table-striped mt-3">
     <thead class="table-primary">
         <tr>
@@ -100,6 +123,7 @@ $emp = UserHelper::GetEmployee();
                 </td>
 
                 <td class="text-center">
+                    <?= $item->checkBalance()?>
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <div class="btn-group">
                             <?= Html::a(

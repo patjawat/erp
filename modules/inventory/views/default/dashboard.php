@@ -11,7 +11,6 @@ use yii\helpers\Json;
 $this->title = 'Dashboard';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
-// $priceSummary = StockEvent::priceSummaryOfYear($searchModel->thai_year);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -66,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo number_format($querys['begin_price'], 2); ?>
+                                    <?php echo number_format($querys['begin_price'] ?? 0, 2); ?>
                                     </h4>
                                     <div class="d-flex mt-1 align-items-end overflow-hidden">
                                         <div class="flex-grow-1">
@@ -100,7 +99,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo number_format($querys['price_out'], 2); ?>
+                                    <?php echo number_format($querys['price_out'] ?? 0, 2); ?>
                                 </h3>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -132,7 +131,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div>
 
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo number_format($querys['price_in'], 2); ?>
+                                    <?php echo number_format($querys['price_in'] ?? 0, 2); ?>
                                 </h3>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
@@ -166,7 +165,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <div>
                                 <h3 class="mt-4 pt-1 mb-0 font-size-22">
-                                    <?php echo number_format($querys['end_price'], 2); ?>
+                                    <?php echo number_format($querys['end_price'] ?? 0, 2); ?>
                                 </h3>
                                 <div class="d-flex mt-1 align-items-end overflow-hidden">
                                     <div class="flex-grow-1">
