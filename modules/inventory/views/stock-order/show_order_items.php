@@ -8,7 +8,9 @@ $userid = \Yii::$app->user->id;
 $office = 1;
 $emp = UserHelper::GetEmployee();
 
+
 ?>
+
 
 <table class="table table-striped mt-3">
     <thead class="table-primary">
@@ -99,7 +101,6 @@ $emp = UserHelper::GetEmployee();
                 </td>
 
                 <td class="text-center">
-                    <?= $item->checkBalance()?>
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <div class="btn-group">
                             <?= Html::a(

@@ -547,17 +547,10 @@ class StockEvent extends Yii\db\ActiveRecord
     }
 
     // ตรวจสอบการอนุมติให้เบิก
-    public function OrderApprove()
+    public function orderApprove(): bool
     {
-        try {
-            if ($this->data_json['checker_confirm'] == 'Y') {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Throwable $th) {
-            return false;
-        }
+        // return ($this->data_json['checker_confirm'] ?? null) === 'Y';
+        return ($this->leaderApprove && $this->leaderApprove->status == 'Pass');
     }
 
     // ตรวจสอบรายการว่ากรอบขอ้มูลตรบหรือไม่

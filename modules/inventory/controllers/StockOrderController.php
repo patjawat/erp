@@ -826,6 +826,7 @@ class StockOrderController extends Controller
         $model->lot_number = $inStock->lot_number;
         $model->qty = 1;
         $model->transaction_type = 'OUT';
+        $model->order_status = 'pending';
         $model->category_id = $order->id;
         $model->warehouse_id = $order->warehouse_id;
         $model->from_warehouse_id = $order->from_warehouse_id;

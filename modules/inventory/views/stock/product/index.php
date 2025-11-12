@@ -74,7 +74,7 @@ $('body').on('click','.add-new-item',function(e){
         url: $(this).attr('href'),
         dataType: "json",
         success: function (response) {
-            console.log(response);
+            success();
             showOrderItem();
             
         }

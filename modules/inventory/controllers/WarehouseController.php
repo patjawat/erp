@@ -106,8 +106,6 @@ class WarehouseController extends Controller
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         if ($warehouse) {
             $searchModel = new StockEventSearch([
-                'thai_year' => AppHelper::YearBudget(),
-                'date_filter' => 'this_month',
                 'order_status' =>   ['pending'],
                 'warehouse_id' => $warehouse->id,
                 'transaction_type' => 'OUT'
