@@ -137,13 +137,28 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $datas = Approve::find()->where(['name' => 'development', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+     
+             $approveQuery = Approve::find()
+                ->alias('approve')
+                ->leftJoin('`development`',"approve.from_id = `development`.id")
+                ->where([
+                    'approve.name' => 'leave',
+                    'approve.emp_id' => $me->id,
+                    'approve.status' => 'Pending'
+                ])
+                ->andWhere(['NOT IN', 'development.status', ['ReqCancel', 'Cancel']])
+                ->orderBy(['approve.id' => SORT_DESC]);
 
+            // Debug SQL ที่ถูกสร้าง
+            $sql = $approveQuery->createCommand()->getRawSql();
+
+             $datas = $approveQuery->all();
             return [
                 'title' => 'อนุมัติอบรม/ประชุม/ดูงาน',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
-                'emp_id' => $me->id
+                'emp_id' => $me->id,
+                 'sql' => $sql
             ];
         } catch (\Throwable $th) {
             return [

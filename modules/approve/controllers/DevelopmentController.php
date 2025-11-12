@@ -28,7 +28,7 @@ class DevelopmentController extends \yii\web\Controller
         $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
         $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['approve.status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
         $dataProvider->query->andFilterWhere(['development.development_type_id' => $searchModel->q_development_type_id]);
 

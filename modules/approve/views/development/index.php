@@ -31,7 +31,8 @@ $msg = 'ขอ';
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+            <h6 class="text-white"><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span
+                    class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
             <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/development/approve-all'], ['class' => 'btn btn-light shadow approve-all']); 
             ?>
 
@@ -73,51 +74,48 @@ $msg = 'ขอ';
                 </thead>
                 <tbody class="table-group-divider align-middle" id="list-data">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                        <tr data-id="<?= $item->id ?>">
-                            <td class="text-center">
-                                <input
-                                    type="checkbox"
-                                    class="check-item"
-                                    name="selected[]"
-                                    value="<?= $item->id ?>"
-                                    <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
-                            </td>
+                    <tr data-id="<?= $item->id ?>">
+                        <td class="text-center">
+                            <input type="checkbox" class="check-item" name="selected[]" value="<?= $item->id ?>"
+                                <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
+                        </td>
 
-                            <td class="text-center fw-semibold">
-                                <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-                            </td>
-                            <td>
-                                <p class="mb-0"><?= $item->development->topic ?></p>
-                                <p class="mb-0">
-                                    
-                                    สถานที่ <span class="fw-semibold"><?= $item->development->data_json['location'] ?? 'ไม่ระบุ' ?><span>
-                                        <?=$item->development->StackMember() ?>
-                                    </p>
-                            </td>
-                            <td><?= $item->development->developmentType?->title ?? '-' ?></td>
-                            <td>
-                                <p class="mb-0 fw-semibold"> <?php echo  $item->development->showDateRange() ?></p>
-                            </td>
-                            <td>
-                                <?php
+                        <td class="text-center fw-semibold">
+                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                        </td>
+                        <td>
+                            <p class="mb-0"><?= $item->development->topic ?></p>
+                            <p class="mb-0">
+
+                                สถานที่ <span
+                                    class="fw-semibold"><?= $item->development->data_json['location'] ?? 'ไม่ระบุ' ?><span>
+                                        <?= $item->development->StackMember() ?>
+                            </p>
+                        </td>
+                        <td><?= $item->development->developmentType?->title ?? '-' ?></td>
+                        <td>
+                            <p class="mb-0 fw-semibold"> <?php echo  $item->development->showDateRange() ?></p>
+                        </td>
+                        <td>
+                            <?php
                                 try {
                                     echo $item->development->createdByEmp->getAvatar(false) ?? '';
                                 } catch (\Throwable $th) {
                                 } ?>
-                            </td>
-                            <td>
-                                <?php echo $item->development->stackChecker() ?>
-                            </td>
-                            <td>
-                                <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>
-                            </td>
+                        </td>
+                        <td>
+                            <?php echo $item->development->stackChecker() ?>
+                        </td>
+                        <td>
+                            <?= $item->development->getStatus($item->development->status)['view'] ?? '-' ?>
+                        </td>
 
-                            <td class="text-center" style="width:120px">
-                                <div class="btn-group">
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                </div>
-                            </td>
-                        </tr>
+                        <td class="text-center" style="width:120px">
+                            <div class="btn-group">
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-light w-100 open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            </div>
+                        </td>
+                    </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>

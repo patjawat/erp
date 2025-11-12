@@ -44,7 +44,7 @@ use app\modules\hr\models\Organization;
     </div>
 
     <div class="col-5">
-        <?= $form->field($model, 'status')->widget(Select2::classname(), [
+        <?= $form->field($model, 'q_status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'theme' => Select2::THEME_KRAJEE_BS5,
             'options' => [

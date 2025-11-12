@@ -49,11 +49,12 @@ class DevelopmentController extends Controller
         $me = UserHelper::GetEmployee();
         $leaveFilterStatusModel = Categorise::findOne(['name' => 'hr_development_filter_status', 'emp_id' => $me->id]);
         $searchModel = new DevelopmentSearch([
-            'status' => $leaveFilterStatusModel->data_json ?? [],
+            'q_status' => $leaveFilterStatusModel->data_json ?? [],
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('developmentDetail');
+          $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
