@@ -153,19 +153,19 @@ class StockOrderController extends Controller
         }
 
 
-        foreach ($model->getItems() as $item2) {
-            $qty = (float) $item2->qty;
-            $sumLot = (float) $item2->SumlotQty();
-            $diff = $qty - $sumLot;
+        // foreach ($model->getItems() as $item2) {
+        //     $qty = (float) $item2->qty;
+        //     $sumLot = (float) $item2->SumlotQty();
+        //     $diff = $qty - $sumLot;
 
-            $epsilon = 0.000001; // ค่าความคลาดเคลื่อน
-            $notEnough = ($sumLot == 0 || $diff > $epsilon  && ($item->status !== 'success'));
+        //     $epsilon = 0.000001; // ค่าความคลาดเคลื่อน
+        //     $notEnough = ($sumLot == 0 || $diff > $epsilon  && ($item->status !== 'success'));
 
-            if ($notEnough) {
-                    $item2->order_status = 'cancel';
-                    $item2->save(false);
-            }
-        }
+        //     if ($notEnough) {
+        //             $item2->order_status = 'cancel';
+        //             $item2->save(false);
+        //     }
+        // }
     }
 
 

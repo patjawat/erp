@@ -4,10 +4,12 @@ use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\db\Expression;
+use yii\widgets\DetailView;
 use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
 $warehouse = Yii::$app->session->get('warehouse');
+// $this->registerJsFile($this->render('stock-order.js'), ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
@@ -39,9 +41,8 @@ yii\web\YiiAsset::register($this);
 <?php
 //ตรวจสอบว่าเป็นผู้ดูแลคลัง
 $userid = \Yii::$app->user->id;
-$office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->count();
+$office = Warehouse::find()->andWhere(['id' => $model->warehouse_id])->andWhere(new Expression("JSON_CONTAINS(data_json->'$.officer','\"$userid\"')"))->one();
 $emp = UserHelper::GetEmployee();
-
 
 ?>
 <?php $balanced = 0;
@@ -143,10 +144,14 @@ foreach ($model->getItems() as $item): ?>
                                         </div>
                                     <?php endif ?>
                         <?php endif ?>
+
+
                     </td>
                 </tr>
             </tbody>
         </table>
+
+
 
         <div class="d-flex justify-content-between  align-items-center">
             <h6><i class="bi bi-ui-checks"></i> จำนวนขอ <span
@@ -177,12 +182,17 @@ foreach ($model->getItems() as $item): ?>
 </div>
 </div>
 
+
+
 <div class="d-flex justify-content-center">
-    <?php if ($model->OrderApprove() && ($office !==0) && ($model->order_status == 'pending') && ($model->warehouse_id == $warehouse->id)): ?>
+    <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouse->id)): ?>
         <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout-xxx open-modal', 'id' => 'btnSave', 'data' => ['size' => 'modal-md']]); ?>
     <?php endif; ?>
 
 </div>
+
+
+
 
 <?php
 $id = isset($model->id) ? $model->id : null;
@@ -205,12 +215,12 @@ $("#showOrderItem").html('<div class="text-center my-5"><img src="/img/loading.g
         $("#showOrderItem").html(res.content);
         $("#sumPrice").html(res.sumPrice);
         
-        console.log('check',res.balance);
         if(res.balance == 0){
             $('#btnSave').show();
+            console.log('show');
             
         }else{
-            // $('#btnSave').hide();
+            $('#btnSave').hide();
             console.log('hide');
         }
         $("#checkout").html(res.sumPrice);

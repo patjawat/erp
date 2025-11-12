@@ -995,28 +995,28 @@ class StockEvent extends Yii\db\ActiveRecord
         $balanced = 0;
         $epsilon = 0.000001; // ค่าความคลาดเคลื่อนที่ยอมได้
 
-        // foreach ($this->getItems() as $item) {
-        //     $qty = (float)$item->qty;
-        //     $sumLot = (float)$item->SumlotQty();
-
-        //     // ถ้า sumLot เป็น 0 หรือ qty มากกว่า sumLot อย่างมีนัยสำคัญ
-        //     if ($sumLot == 0 || ($qty - $sumLot) > $epsilon) {
-        //         $balanced += 1;
-        //     }
-        // }
-
         foreach ($this->getItems() as $item) {
-            $qty = (float) $item->qty;
-            $sumLot = (float) $item->SumlotQty();
-            $diff = $qty - $sumLot;
+            $qty = (float)$item->qty;
+            $sumLot = (float)$item->SumlotQty();
 
-            $notEnough = ($sumLot == 0 || $diff > $epsilon) && ($item->status == 'Pending');
-
-
-            if ($notEnough) {
-                $balanced++;
+            // ถ้า sumLot เป็น 0 หรือ qty มากกว่า sumLot อย่างมีนัยสำคัญ
+            if ($sumLot == 0 || ($qty - $sumLot) > $epsilon) {
+                $balanced += 1;
             }
         }
+
+        // foreach ($this->getItems() as $item) {
+        //     $qty = (float) $item->qty;
+        //     $sumLot = (float) $item->SumlotQty();
+        //     $diff = $qty - $sumLot;
+
+        //     $notEnough = ($sumLot == 0 || $diff > $epsilon) && ($item->status == 'Pending');
+
+
+        //     if ($notEnough) {
+        //         $balanced++;
+        //     }
+        // }
 
 
         return $balanced;
