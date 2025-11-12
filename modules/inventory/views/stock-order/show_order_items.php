@@ -8,32 +8,8 @@ $userid = \Yii::$app->user->id;
 $office = 1;
 $emp = UserHelper::GetEmployee();
 
-
 ?>
 
-
-<?php 
- $balanced = 0;
-$epsilon = 0.000001; // ค่าความคลาดเคลื่อน
-
-foreach ($model->getItems() as $item) {
-    $qty = (float) $item->qty;
-    $sumLot = (float) $item->SumlotQty();
-    $diff = $qty - $sumLot;
-
-        $notEnough = ($sumLot == 0 || $diff > $epsilon) && ($item->status == 'Pending');
-
-    if ($notEnough) {
-        $balanced++;
-        echo "<p>{$item->lot_number}. ({$sumLot} | diff={$diff}) ❌ ไม่พอ ต้องการ {$item->qty}</p>";
-    } else {
-        echo "<p>{$item->lot_number}. ({$sumLot} | diff={$diff}) ✅ พอ</p>";
-    }
-}
-
-
-
-?>
 <table class="table table-striped mt-3">
     <thead class="table-primary">
         <tr>
