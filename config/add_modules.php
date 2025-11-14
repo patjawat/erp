@@ -82,4 +82,5 @@ $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // modul
 $modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
 $modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
+$modules['line2'] = ['class' => 'app\modules\line2\Module'];  // line officail 2 By PCH
 return $modules;
