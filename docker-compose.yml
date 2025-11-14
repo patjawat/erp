@@ -21,25 +21,6 @@ services:
      # ใช้ custom command เพื่อเปิดใช้งาน calendar extension
     command: >
       bash -c "docker-php-ext-install calendar && apache2-foreground"
-
-  demo:
-    image: erp:1.1
-    # image: erp:1.1
-    container_name: demo
-    platform: linux/amd64
-    env_file:
-      - ./.env
-    ports:
-      - "81:80"
-    labels:
-    - "com.centurylinklabs.watchtower.enable=true"
-  watchtower:
-    container_name: watchtower
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300  # เช็คทุก 5 นาที
-
   mysqlDB:
     image: mysql:8.0
     container_name: ${CONTAINER_NAME}_db
