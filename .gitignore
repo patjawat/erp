@@ -8,6 +8,8 @@ nbproject
 .buildpath
 .project
 .settings
+package-lock.json
+composer.lock
 
 # windows thumbnail cache
 Thumbs.db
