@@ -4,7 +4,6 @@ use yii\web\View;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\db\Expression;
-use yii\widgets\DetailView;
 use app\components\UserHelper;
 use app\modules\inventory\models\Warehouse;
 
