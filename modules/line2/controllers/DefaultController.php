@@ -1,11 +1,11 @@
 <?php
 
-namespace app\modules\liine2\controllers;
+namespace app\modules\line2\controllers;
 
 use yii\web\Controller;
 
 /**
- * Default controller for the `liine2` module
+ * Default controller for the `line2` module
  */
 class DefaultController extends Controller
 {
