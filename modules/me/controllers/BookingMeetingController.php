@@ -393,6 +393,7 @@ public function actionValidator($id = null)
                     'room_id' => $model->room_id,
                     'date_start' => AppHelper::convertToGregorian($model->date_start),
                 ])
+                ->andWhere(['<>', 'status', 'Cancel'])   // newStart < existEnd
                 ->andWhere(['<', 'time_start', $model->time_end])   // newStart < existEnd
                 ->andWhere(['>', 'time_end', $model->time_start]); // newEnd > existStart
             
