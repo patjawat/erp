@@ -24,24 +24,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('../default/menu') ?>
 <?php $this->endBlock(); ?>
 
-<?php
-// $stockEvents = StockEvent::find()
-// ->select([
-//     'stock_events.*',
-//     new Expression('SUM(qty * unit_price) AS total')
-// ])
-// ->where([
-//     'asset_item' => $model->asset_item,
-//     'warehouse_id' => $warehouse->id,
-//     'order_status' => 'success'
-// ])
-// ->groupBy('id')
-// ->orderBy(['movement_date' => SORT_ASC])
-// ->all();
-
-// $balance = 0;
-// $balanceQty = 0;
-?>
 
 
 <div class="row">

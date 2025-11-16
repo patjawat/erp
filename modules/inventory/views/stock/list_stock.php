@@ -1,9 +1,11 @@
 
 
 <?php
+
+use app\components\AppHelper;
 $warehouse = Yii::$app->session->get('warehouse');
 
-$sql = "SELECT e.movement_date,i.qty,i.unit_price,e.thai_year,i.lot_number,e.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
+$sql = "SELECT e.movement_date,i.data_json->>'$.exp_date' as exp_date,i.qty,i.unit_price,e.thai_year,i.lot_number,e.transaction_type,sum(i.qty*i.unit_price) as total FROM stock_events i 
 LEFT JOIN stock_events e ON e.id = i.category_id
 WHERE i.asset_item = :asset_item
 AND e.warehouse_id = :warehouse_id
@@ -26,7 +28,7 @@ $balanceQty = 0;
                     <th class="fw-semibold" scope="col" style="width:120px">ปีงบประมาณ</th>
                     <th class="fw-semibold" scope="col" style="width:180px">วันที่รับ/จ่าย</th>
                     <th class="fw-semibold" scope="col" style="width:130px">หมายเลขล็อต</th>
-                    <!-- <th class="fw-semibold" scope="col">เลขที่เอกสาร</th> -->
+                    <th class="fw-semibold" scope="col">วันหมดอายุ</th>
                     <th class="text-end fw-semibold" scope="col">ราคาต่อหน่วย</th>
                     <th class="fw-semibold" scope="col" class="text-center">จำนวนเข้า</th>
                     <th class="fw-semibold" scope="col" class="text-center">จำนวนออก</th>
@@ -58,6 +60,9 @@ $balanceQty = 0;
                     <td><?=$item2['thai_year']?></td>
                     <td><?=Yii::$app->thaiDate->toThaiDate($item2['movement_date'], false, 'short');?></td>
                     <td><?=$item2['lot_number']?></td>
+                    <td>
+                        <?=(isset($this->data_json['exp_date']) && $item2['exp_date'] !== '') ? AppHelper::convertToThai($item2['exp_date']) : '-'?>
+                    </td>
 
 
                     </td>

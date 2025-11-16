@@ -1110,7 +1110,8 @@ class Employees extends Yii\db\ActiveRecord
     public function positionTypeName()
     {
         try {
-            return isset($this->data_json['position_type']) ? $this->data_json['position_type'] : '-';
+            return $this->positionType ? $this->positionType->title : $this->position_type;
+            // return isset($this->data_json['position_type']) ? $this->data_json['position_type'] : '-';
             // return $this->positionName->positionGroup->positionType->title;
         } catch (\Throwable $th) {
             return false;

@@ -58,6 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="fw-semibold">ตำแหน่ง</th>
                     <th class="fw-semibold text-center">เลขบัตรประชาชน</th>
                     <th class="fw-semibold">ฝ่าย/แผนก</th>
+                    <th class="fw-semibold text-center">ประเภท</th>
                     <th class="fw-semibold text-center">ลาป่วย</th>
                     <th class="fw-semibold text-center">ลากิจ</th>
                     <th class="fw-semibold text-center">ลาคลอดบุตร</th>
@@ -78,6 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td><?php echo $item->employee->positionName()?></td>
                     <td class="text-center"><?php echo $item->employee->cid?></td>
                     <td><?php echo $item->employee->departmentName()?></td>
+                    <td><?php echo $item->employee->positionTypeName()?></td>
                     <td class="text-center fw-bolder">
                         <?= Html::a($item->sum_lt1, ['/hr/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'date_start' => $dateStart,'date_end' => $dateEnd,'status' => $searchModel->status,'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>    
                 </td>

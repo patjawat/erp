@@ -161,6 +161,8 @@ class LeaveController extends Controller
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
         ]);
         $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
+        $dataProvider->query->andFilterWhere(['NOT', ['e.id' => 1]]);
+        $dataProvider->query->andFilterWhere(['e.status' => 1]);
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
@@ -203,14 +205,11 @@ class LeaveController extends Controller
 
 
         $dataProvider->query->groupBy('emp_id');
-        // $dataProvider->sort->defaultOrder = ['leave.emp_id' => SORT_DESC];
 
         if (isset($searchModel->export) && $searchModel->export == 'true') {
             // ไม่ต้องใส่ pagination
             $dataProvider->pagination = false;
             $this->ExportReport($dataProvider, $searchModel);
-            // \Yii::$app->response->format = Response::FORMAT_JSON;
-            // return 'xx';
 
         } else {
             return $this->render('report/index', [
