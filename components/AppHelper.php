@@ -801,6 +801,13 @@ public static function BudgetYearRange($thaiYear = null)
                 $title =  $statusName ? $statusName : 'ตรวจสอบผ่าน';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
+                
+            case 'Checkup_pass':
+                $color = 'primary';
+                $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'ตรวจสอบผ่าน';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
+                break;
             case 'Approve':
                 $color = 'success';
                 $icon = '<i class="fa-regular fa-star  me-1 text-' . $color . '"></i>';
