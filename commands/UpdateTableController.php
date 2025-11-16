@@ -112,7 +112,7 @@ class UpdateTableController extends Controller
             ['name' => '/am/asset/update', 'type' => 2, 'description' => ''],
             ['name' => '/am/default/index', 'type' => 2, 'description' => ''],
             ['name' => '/depdrop/*', 'type' => 2, 'description' => ''],
-            ['name' => '/employees/*', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/employees/*', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/computer/*', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/default/repair-select', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/general/*', 'type' => 2, 'description' => ''],
@@ -316,6 +316,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/repair/*', 'parent' => 'medical'],
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],
+            ['child' => '/hr/employees/*', 'parent' => 'hr'],
 
             //ระบบลา
             ['child' => '/hr/leave/create', 'parent' => 'user'],
