@@ -75,20 +75,22 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped custom-table">
             <thead>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                <th class="fw-semibold text-center"style="width:200px" >ประเภท</th>
                 <th class="fw-semibold" style="width:500px">รายการ</th>
-                <th class="fw-semibold text-center" style="width:100px">ประเภท</th>
-                <th class="fw-semibold text-center" style="width:20px">สถานะ</th>
-                <th class="fw-semibold text-center" scope="col" style="width: 80px;">จัดการ</th>
+                <th class="fw-semibold">หน่วยนับ</th>
+                <th class="fw-semibold text-center" style="width:50px">สถานะ</th>
+                <th class="fw-semibold text-center" scope="col" style="width: 150px;">จัดการ</th>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $model): ?>
                     <tr class="rounded">
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
+                        <td class="text-center"><?= $model->ViewTypeName()['title'] ?></td>
                         <td scope="row">
                             <?= $model->Avatar() ?>
                         </td>
-                        <td class="text-center"><?= $model->ViewTypeName()['title'] ?></td>
+                        <td><?=$model->data_json['unit'] ?? '-' ?></td>
                         <!-- <td class="text-center"><?= (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-') ?></td> -->
                         <td class="text-center">
                             <div class="form-check form-switch d-flex justify-content-center">

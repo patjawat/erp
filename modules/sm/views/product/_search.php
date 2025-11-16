@@ -19,9 +19,6 @@ use kartik\widgets\ActiveForm;
     ]); ?>
 
 <div class="row">
-    <div class="col-ุlg-6 col-lg-6 col-sm-12">
-        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
-    </div>
     <div class="col-lg-5 col-lg-5 col-sm-12">
         <?php
                     echo $form->field($model, 'category_id')->widget(Select2::classname(), [
@@ -40,6 +37,9 @@ use kartik\widgets\ActiveForm;
                                 ]
                                 ])->label(false);
                                 ?>
+    </div>
+        <div class="col-ุlg-6 col-lg-6 col-sm-12">
+        <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
     </div>
     <div class="col-lg-1 col-md-1 col-sm-12">
         <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

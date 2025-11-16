@@ -96,7 +96,6 @@ class UpdateTableController extends Controller
             ['name' => '/booking/meeting/*', 'type' => 2, 'description' => ''],
             ['name' => '/booking/meeting/events', 'type' => 2, 'description' => ''],
 
-
             ['name' => '/dms/*', 'type' => 2, 'description' => ''],
             ['name' => '/dms/dashboard', 'type' => 2, 'description' => 'Dashboard'],
             ['name' => '/dms/documents', 'type' => 2, 'description' => 'หนังสือรับ'],
@@ -104,6 +103,7 @@ class UpdateTableController extends Controller
             ['name' => '/dms/documents/update', 'type' => 2, 'description' => 'แก้ไขหนังสือ'],
             ['name' => '/dms/documents/view', 'type' => 2, 'description' => 'แสดงหนังสือ'],
             ['name' => '/dms/documents/delete', 'type' => 2, 'description' => 'ลบหนังสือ'],
+
             ['name' => '/am/asset/*', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/depreciation', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/index', 'type' => 2, 'description' => ''],
@@ -111,6 +111,7 @@ class UpdateTableController extends Controller
             ['name' => '/am/asset/view', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/update', 'type' => 2, 'description' => ''],
             ['name' => '/am/default/index', 'type' => 2, 'description' => ''],
+
             ['name' => '/depdrop/*', 'type' => 2, 'description' => ''],
             ['name' => '/hr/employees/*', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/computer/*', 'type' => 2, 'description' => ''],
@@ -138,6 +139,9 @@ class UpdateTableController extends Controller
             ['name' => '/helpdesk/repair-parts/*', 'type' => 2, 'description' => ''],
             ['name' => '/hr/default/index', 'type' => 2, 'description' => ''],
             ['name' => '/hr/employees/view', 'type' => 2, 'description' => ''],
+
+            ['name' => '/plan/*', 'type' => 2, 'description' => ''],
+
             //Router
             ['name' => '/hr/leave/*', 'type' => 2, 'description' => ''],
             ['name' => '/hr/leave/create', 'type' => 2, 'description' => ''],
@@ -382,7 +386,9 @@ class UpdateTableController extends Controller
             ['child' => '/sm/default/pq-order', 'parent' => 'user'],
             ['child' => '/sm/default/pr-order', 'parent' => 'user'],
             ['child' => '/warehouse/*', 'parent' => 'warehouse'],
-            ['child' => 'purchase/po-order/index', 'parent' => 'purchase'],
+            ['child' => '/purchase/po-order/index', 'parent' => 'purchase'],
+
+            ['child' => '/plan/*', 'parent' => 'user'],
         ];
     }
 
