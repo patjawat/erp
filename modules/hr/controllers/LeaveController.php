@@ -160,17 +160,8 @@ class LeaveController extends Controller
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
         ]);
-        // $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
+        $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
 
-        // if ($searchModel->date_filter) {
-        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
-        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
-        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        // }
-        // if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-        //     $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-        //     $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        // }
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
         if (!empty($searchModel->leave_type_id)) {
