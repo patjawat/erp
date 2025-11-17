@@ -56,6 +56,7 @@ class Order extends \yii\db\ActiveRecord
     public $date_between;  // ประเภทวันที่ค้นหา
     public $date_start;
     public $date_end;
+    public $q_budget_type;
 
     /**
      * {@inheritdoc}
@@ -103,7 +104,8 @@ class Order extends \yii\db\ActiveRecord
                 'plan_type_id',
                 'plan_category_id',
                 'plan_item_id',
-                'plan_order_id'
+                'plan_order_id',
+                'q_budget_type'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -226,6 +228,18 @@ class Order extends \yii\db\ActiveRecord
     {
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
+
+// แสดงชื่อประเภทเงิน
+    public function budgetTypeName()
+    {
+        try {
+            return Categorise::findOne(['name' => 'budget_type', 'code' => $this->data_json['pq_budget_type']])->title;
+        } catch (\Throwable $th) {
+            return '-';
+        }
+    }   
+
+    
 
     // กำหนดคนอนุมัติ
     public function createApprove()
@@ -461,10 +475,9 @@ class Order extends \yii\db\ActiveRecord
     {
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-            $a = $this->data_json['product_type_name'];
-            // $text = $msg ? $msg : ($this->viewCreatedAt() . ' | ' . $employee->departmentName());
-            // $text = $msg ? $msg : ($this->viewCreatedAt());
-            $text = $msg ? $msg : ($this->pr_number);
+
+            $createDate = AppHelper::convertToThai($this->data_json['pr_create_date']);
+            $text = $msg ? $msg : ($this->pr_number . ' | ' . $createDate);
             return [
                 'employee' => $employee,
                 'avatar' => $employee->getAvatar(false, $text),
@@ -547,46 +560,69 @@ class Order extends \yii\db\ActiveRecord
 
 
 
-    //list avatar การตรวจสอบ
-    public function StackApprove()
+     public function StackApprove()
     {
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['name' => 'purchase', 'from_id' => $this->id])->andWhere(['IN', 'status', ['Pass', 'Reject']])->all() as $key => $item) {
-            $emp = Employees::findOne(['id' => $item->emp_id]);
-            $status = ($item->status == 'Approve') ? $item->data_json['label'] : 'ไม่' . $item->data_json['label'];
-
-            $data .= Html::a(
-                Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload',
+        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'purchase'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+            try {
+                $data .= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
-                        'src' => $emp ? $emp->showAvatar() : null
+                        'src' => $item->employee->showAvatar()
                     ]
-                ]),
-                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
-                [
-                    'class' => 'open-modal popover-hover',
-                    'data' => [
-                        'size' => 'modal-md',
-                        'bs-trigger' => 'hover focus',
-                        'bs-toggle' => 'popover',
-                        'bs-custom-class' => "custom-popover",
-                        'bs-placement' => 'top',
-                        'bs-title' => $status,
-                        'bs-html' => 'true',
-                        'bs-content' => $emp ? ($emp->fullname . '<br>' . $emp->positionName() . $item->status) : ''
-                    ]
-                ]
-            );
+                ]);
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
         }
         $data .= '</div>';
         return $data;
-        // } catch (\Throwable $th) {
-        // }
     }
+
+    //list avatar การตรวจสอบ
+    // public function StackApprove()
+    // {
+    //     // try {
+    //     $data = '';
+    //     $data .= '<div class="avatar-stack">';
+    //     foreach (Approve::find()->where(['name' => 'purchase', 'from_id' => $this->id])->andWhere(['IN', 'status', ['Pass', 'Reject']])->all() as $key => $item) {
+    //         $emp = Employees::findOne(['id' => $item->emp_id]);
+    //         $status = ($item->status == 'Approve') ? $item->data_json['label'] : 'ไม่' . $item->data_json['label'];
+
+    //         $data .= Html::a(
+    //             Html::img('@web/img/placeholder-img.jpg', [
+    //                 'class' => 'avatar-sm rounded-circle shadow lazyload',
+    //                 'data' => [
+    //                     'expand' => '-20',
+    //                     'sizes' => 'auto',
+    //                     'src' => $emp ? $emp->showAvatar() : null
+    //                 ]
+    //             ]),
+    //             ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+    //             [
+    //                 'class' => 'open-modal popover-hover',
+    //                 'data' => [
+    //                     'size' => 'modal-md',
+    //                     'bs-trigger' => 'hover focus',
+    //                     'bs-toggle' => 'popover',
+    //                     'bs-custom-class' => "custom-popover",
+    //                     'bs-placement' => 'top',
+    //                     'bs-title' => $status,
+    //                     'bs-html' => 'true',
+    //                     'bs-content' => $emp ? ($emp->fullname . '<br>' . $emp->positionName() . $item->status) : ''
+    //                 ]
+    //             ]
+    //         );
+    //     }
+    //     $data .= '</div>';
+    //     return $data;
+    //     // } catch (\Throwable $th) {
+    //     // }
+    // }
 
 
     //  ภาพทีมคณะกรรมการ
@@ -938,21 +974,6 @@ class Order extends \yii\db\ActiveRecord
     public function ListVendor()
     {
         return CategoriseHelper::Vendor();
-    }
-
-    public function ListItemTypeOrder()
-    {
-        $arr = [];
-        try {
-            $variable = self::find()->where(['name' => 'order'])->all();
-            foreach ($variable as $model) {
-                $arr[] = ['id' => $model->data_json['order_type_name'], 'name' => $model->data_json['order_type_name']];
-            }
-            return $arr;
-            // code...
-        } catch (\Throwable $th) {
-            return $arr;
-        }
     }
 
     // ร้อยละดำเนินการ

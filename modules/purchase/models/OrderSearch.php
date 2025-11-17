@@ -38,7 +38,8 @@ class OrderSearch extends Order
                 'plan_type_id',
                 'plan_category_id',
                 'plan_item_id',
-                'plan_order_id'
+                'plan_order_id',
+                'q_budget_type'
             ], 'safe'],
             [['price'], 'number'],
         ];
@@ -84,6 +85,7 @@ class OrderSearch extends Order
             'vendor_id' => $this->vendor_id,
             'status' => $this->status,
             'thai_year' => $this->thai_year,
+            'category_id' => $this->category_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
@@ -93,7 +95,6 @@ class OrderSearch extends Order
         $query
             ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'pr_number', $this->pr_number])
             ->andFilterWhere(['like', 'po_number', $this->po_number])

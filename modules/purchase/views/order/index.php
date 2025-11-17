@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
+use app\components\AppHelper;
 use app\modules\sm\models\Order;
 
 /** @var yii\web\View $this */
@@ -58,8 +59,8 @@ if($searchModel->date_between == 'pr_create_date'){
     </div>
 </div>
 
-<div class="card">
 
+<div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
@@ -74,10 +75,12 @@ if($searchModel->date_between == 'pr_create_date'){
     </div>
 
     <div class="card-body">
+
+
         <div class="d-flex justify-content-between">
             <div>
                 มูลค่า <span
-                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=$searchModel->SummaryTotal()?></span>บาท
+                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=number_format($sumTotal ?? 0,2) ?></span>บาท
             </div>
 
         </div>
@@ -87,13 +90,14 @@ if($searchModel->date_between == 'pr_create_date'){
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" style="width:110px">เลขทะเบียนคุม</th>
-                    <th class="fw-semibold" style="width:300px">ผู้ขอ/วันเวลา</th>
-                    <th class="fw-semibold" style="width:180px">ประเภท</th>
-                    <th class="fw-semibold">เลขที่สั่งซื้อ/ผู้ขาย</th>
-                    <th class="fw-semibold" style="width: 180px;">การตรวจสอบ</th>
-                    <th class="fw-semibold text-end" style="width:150px">มูลค่า/ประเภทเงิน</th>
-                    <th class="fw-semibold" style="width: 230px;">ความคืบหน้า</th>
+                    <th class="fw-semibold">ผู้ขอ/วันเวลา</th>
+                    <th class="fw-semibold">ประเภท</th>
+                    <th class="fw-semibold">ผู้ขาย/เลขที่สั่งซื้อ</th>
+                    <th class="fw-semibold">เลขทะเบียนคุม</th>
+                    <th class="fw-semibold text-end">ประเภทเงิน</th>
+                    <th class="fw-semibold">การตรวจสอบ</th>
+                    <th class="fw-semibold">ความคืบหน้า</th>
+                    <th class="fw-semibold text-end">มูลค่า</th>
                     <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
@@ -104,32 +108,24 @@ if($searchModel->date_between == 'pr_create_date'){
                         ?>
                 <tr>
                     <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
                     <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
-                    <td><?=isset($item->data_json['order_type_name']) ? $item->data_json['order_type_name'] : ''?>
-                    </td>
-
-                    <td class="fw-light align-middle">
-                        <div class=" d-flex flex-column">
-                            <span class="fw-semibold "><?=$item->po_number?></span>
-                            <?= isset($item->data_json['vendor_name']) ? $item->data_json['vendor_name'] : '' ?>
-                        </div>
-                    </td>
-                    <td class="fw-light align-middle">
-                        <?php // $item->showChecker()['leader']?>
+                    <td><?=$item->assetType->title ?? '-'?>
+                </td>
+                
+                <td class="fw-light align-middle">
+                    <div class=" d-flex flex-column">
+                        <?= $item->vendor?->title ?? '-' ?>
+                        <span class="fw-semibold "><?=$item->po_number?>  <?=isset($item->data_json['po_date']) ? ' | '.AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?></span>
+                    </div>
+                </td>
+                <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
+                
+                    <td><?=$item->budgetTypeName()?></td>
+                   
+                      <td class="fw-light align-middle">
                         <?php echo $item->StackApprove()?>
                     </td>
-                    <td class="fw-light align-middle text-end">
-                        <div class="d-felx flex-column">
-                            <?=$item->calculateVAT()['priceAfterVAT']?>
-                            <div class="fw-semibold ">
-                                <?= number_format($item->calculateVAT()['priceAfterVAT'],2)?>
-                            </div>
-                            <div class="text-primary mb-0 fs-15">
-                                <?=isset($item->data_json['pq_budget_type_name']) ? $item->data_json['pq_budget_type_name'] : ''?>
-                            </div>
-                        </div>
-                    </td>
+                    
                     <td class="fw-light align-middle">
                         <?php if($item->deleted_at == null):?>
                         <div class="d-flex justify-content-between">
@@ -158,6 +154,13 @@ if($searchModel->date_between == 'pr_create_date'){
                             <div class="progress-bar bg-<?=$item->viewStatus()['color']?>" role="progressbar"
                                 aria-label="Progress" aria-valuenow="<?=$item->viewStatus()['progress']?>"
                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </td>
+                     <td class="fw-light align-middle text-end">
+                        <div class="d-felx flex-column">
+                            <div class="fw-semibold ">
+                                <?= number_format($item->calculateVAT()['priceAfterVAT'],2)?>
                             </div>
                         </div>
                     </td>

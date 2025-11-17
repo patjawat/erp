@@ -61,9 +61,11 @@ class OrderController extends Controller
             ['like', 'pr_number', $searchModel->q],
             ['like', 'pq_number', $searchModel->q],
             ['like', 'po_number', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.total_price')"), $searchModel->q],
             ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
+        $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pq_budget_type')"), $searchModel->q_budget_type]);
        //ค้นหาช่วบงวันที่
        if($searchModel->date_between){
         try {
@@ -82,12 +84,26 @@ class OrderController extends Controller
         }
             
         $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
-        // $dataProvider->pagination->pageSize = 10;
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+            /**
+     * -------------------------
+     * คำนวณผลรวมทั้งหมดด้วย clone query
+     * -------------------------f
+     */
+  $sumTotal = 0;
+
+$sumQuery = clone $dataProvider->query;
+$sumQuery->orderBy(null); // ลบ order by ออก, สำคัญมาก
+
+foreach ($sumQuery->all() as $order) {
+    $sumTotal += $order->calculateVAT()['priceAfterVAT'];
+}
+
+return $this->render('index', [
+    'searchModel' => $searchModel,
+    'dataProvider' => $dataProvider,
+    'sumTotal' => $sumTotal,
+]);
     }
 
     /**

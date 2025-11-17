@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="">
                         <td class="fw-light"> <?= $model->getUserReq()['avatar'] ?></td>
                         <td class="fw-light align-middle">
-   <div class="fw-semibold"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?></div>
+                        <div class="fw-semibold"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?></div>
                         </td>
                         <td class="fw-light align-middle"><?= $model->data_json['vendor_name'] ?></td>
                         <td class="fw-light align-bottom">

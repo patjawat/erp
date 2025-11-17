@@ -25,7 +25,7 @@ return [
         'vAlign' => 'middle',
         'header' => '<span class="fw-semibold">รายการทรัพย์สิน</span>',
         'value' => function($model){
-            return Html::a($model['title'],['/am/asset/depreciation','id'=> $model['id']],['class' => 'text-truncate open-modal text-primary','data' => ['size' => 'modal-lg']]);
+            return Html::a($model['asset_name'] ?? '-',['/am/asset/depreciation','id'=> $model['id']],['class' => 'text-truncate open-modal text-primary','data' => ['size' => 'modal-lg']]);
         } 
     ],
     [

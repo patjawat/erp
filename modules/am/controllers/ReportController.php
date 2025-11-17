@@ -50,6 +50,7 @@ class ReportController extends \yii\web\Controller
                                                                           FROM (
                                                                           SELECT
                                                                           a.id,
+                                                                          a.asset_name,
                                                                           i.title,
                                                                           a.code,
                                                                           asset_type.title as type_name,
@@ -60,7 +61,7 @@ class ReportController extends \yii\web\Controller
                                                                           receive_date,
                                                                           ('" . $searchModel->q_lastDay . "') as date,
                                                                           price,
-                                                  asset_status,
+                                                                            asset_status,
                                                                           (DATEDIFF(DATE_FORMAT(receive_date + INTERVAL JSON_EXTRACT(a.data_json, '$.service_life') YEAR,'%Y-%m-%d'),receive_date)) as all_days,
                                                                           (price/CAST(a.data_json->'$.service_life' as UNSIGNED)) as price_year,
                                                                           ROUND((price/CAST(a.data_json->'$.service_life' as UNSIGNED) / 12),2) as month_price
