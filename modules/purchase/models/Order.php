@@ -105,7 +105,8 @@ class Order extends \yii\db\ActiveRecord
                 'plan_category_id',
                 'plan_item_id',
                 'plan_order_id',
-                'q_budget_type'
+                'q_budget_type',
+                'request_type'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
@@ -135,6 +136,7 @@ class Order extends \yii\db\ActiveRecord
             'plan_group_id' => 'การจัดซื้อจากแผน',
             'plan_category_id' => 'หมวดของแผน',
             'plan_order_id' => 'เชื่อมกับแผน',
+            'request_type' => 'ประเภทจัดซื้อ',
         ];
     }
 
@@ -229,7 +231,7 @@ class Order extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $name);
     }
 
-// แสดงชื่อประเภทเงิน
+    // แสดงชื่อประเภทเงิน
     public function budgetTypeName()
     {
         try {
@@ -237,72 +239,125 @@ class Order extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return '-';
         }
-    }   
+    }
 
-    
+
 
     // กำหนดคนอนุมัติ
     public function createApprove()
     {
         $emp = Employees::find()->where(['user_id' => $this->created_by])->one();
         $Approve1 = ($emp->id == $this->data_json['leader1']);
-
-        $listApprove = [
-            [
-                'level' => 1,
-                'name' => 'purchase',
-                'emp_id' => $this->data_json['leader1'],
-                'title' => 'หัวหน้าลงความเห็นชอบ',
-                'status' => ($Approve1 ? 'Pass' : 'Pending'),
-                'label' => 'เห็นชอบ'
-            ],
-            [
-                'level' => 2,
-                'name' => 'purchase',
-                'emp_id' => '',
-                'title' => 'จนท.พัสดุตรวจสอบ',
-                'status' => ($Approve1 ? 'Pass' : 'None'),
-                'label' => 'ตรวจสอบ'
-            ],
-            [
-                'level' => 3,
-                'name' => 'purchase',
-                'emp_id' => SiteHelper::getInfo()['director_name'],
-                'title' => 'ผู้อำนวยการอนุมัติ',
-                'status' => 'None',
-                'label' => 'อนุมัติ'
-            ]
-        ];
+        $me = UserHelper::GetEmployee();
 
 
-        foreach ($listApprove as $item) {
-
-
-            //ถ้าหากผู้ขอซื้อกับผู้เห็นชอบ เป็น คนเดียวกันให้สถานะเป็น เห็นชอบได้เลย
-            if ($item['level'] == 1) {
-                $status =  'Pending';
-            } else {
-                $status =  $item['status'];
-            }
-
-            $newItem = new Approve([
-                'from_id' => $this->id,
-                'level' => $item['level'],
-                'name' => 'purchase',
-                'emp_id' => $item['emp_id'],
-                'title' => $item['title'],
-                'status' => $status,
-                'data_json' => [
-                    'label' => $item['label'],
+        if ($this->request_type == 'planned') {
+            $listAllow = [
+                [
+                    'level' => 1,
+                    'name' => 'purchase',
+                    'emp_id' => $this->data_json['leader1'],
+                    'title' => 'หัวหน้าลงความเห็นชอบ',
+                    'data_json' => [
+                         'label' => 'เห็นชอบ',
+                        "approve_date" =>  date('Y-m-d H:i:s')
+                    ]
+                ],
+                [
+                    'level' => 2,
+                    'name' => 'purchase',
+                    'emp_id' => $me->id,
+                    'title' => 'จนท.พัสดุตรวจสอบ',
+                    'data_json' => [
+                          'label' => 'ตรวจสอบ',
+                        "approve_date" =>  date('Y-m-d H:i:s')
+                    ]
+                ],
+                [
+                    'level' => 3,
+                    'name' => 'purchase',
+                    'emp_id' => SiteHelper::getInfo()['director_name'],
+                    'title' => 'ผู้อำนวยการอนุมัติ',
+                    'data_json' => [
+                         'label' => 'อนุมัติ',
+                        "approve_date" =>  date('Y-m-d H:i:s')
+                    ]
                 ]
-            ]);
-            $newItem->save(false);
-            //ส่งข้อความและผุ้อนุมัติไม่ใช่ตัวเอง
-            if ($item['level'] == 1) {
-                $employeeLeader = Employees::find()->where(['user_id' => $item['emp_id']])->one();
-                try {
-                    LineMsg::sendPurchase($newItem->id, $employeeLeader->user->line_id);
-                } catch (\Throwable $th) {
+            ];
+
+            foreach ($listAllow as $allowItem) {
+                $newItem = new Approve([
+                    'from_id' => $this->id,
+                    'level' => $allowItem['level'],
+                    'name' => 'purchase',
+                    'emp_id' => $allowItem['emp_id'],
+                    'title' => $allowItem['title'],
+                    'status' => 'Pass',
+                    'data_json' => $allowItem['data_json']
+                ]);
+                $newItem->save(false);
+            }
+        } else {
+
+            $listApprove = [
+                [
+                    'level' => 1,
+                    'name' => 'purchase',
+                    'emp_id' => $this->data_json['leader1'],
+                    'title' => 'หัวหน้าลงความเห็นชอบ',
+                    'status' => ($Approve1 ? 'Pass' : 'Pending'),
+                    'label' => 'เห็นชอบ'
+                ],
+                [
+                    'level' => 2,
+                    'name' => 'purchase',
+                    'emp_id' => '',
+                    'title' => 'จนท.พัสดุตรวจสอบ',
+                    'status' => ($Approve1 ? 'Pass' : 'None'),
+                    'label' => 'ตรวจสอบ'
+                ],
+                [
+                    'level' => 3,
+                    'name' => 'purchase',
+                    'emp_id' => SiteHelper::getInfo()['director_name'],
+                    'title' => 'ผู้อำนวยการอนุมัติ',
+                    'status' => 'None',
+                    'label' => 'อนุมัติ'
+                ]
+            ];
+
+
+
+
+            foreach ($listApprove as $item) {
+
+
+                //ถ้าหากผู้ขอซื้อกับผู้เห็นชอบ เป็น คนเดียวกันให้สถานะเป็น เห็นชอบได้เลย
+                if ($item['level'] == 1) {
+                    $status =  'Pending';
+                } else {
+                    $status =  $item['status'];
+                }
+
+                $newItem = new Approve([
+                    'from_id' => $this->id,
+                    'level' => $item['level'],
+                    'name' => 'purchase',
+                    'emp_id' => $item['emp_id'],
+                    'title' => $item['title'],
+                    'status' => $status,
+                    'data_json' => [
+                        'label' => $item['label'],
+                    ]
+                ]);
+                $newItem->save(false);
+                //ส่งข้อความและผุ้อนุมัติไม่ใช่ตัวเอง
+                if ($item['level'] == 1) {
+                    $employeeLeader = Employees::find()->where(['user_id' => $item['emp_id']])->one();
+                    try {
+                        LineMsg::sendPurchase($newItem->id, $employeeLeader->user->line_id);
+                    } catch (\Throwable $th) {
+                    }
                 }
             }
         }
@@ -560,7 +615,7 @@ class Order extends \yii\db\ActiveRecord
 
 
 
-     public function StackApprove()
+    public function StackApprove()
     {
         // try {
         $data = '';

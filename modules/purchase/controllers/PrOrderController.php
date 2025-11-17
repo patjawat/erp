@@ -504,7 +504,12 @@ class PrOrderController extends Controller
                 $model->data_json
             );
             $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
-            $model->status = 1;
+            if ($model->request_type == 'planned') {
+                //ถ้าอยู่ในแผนเป็น รออนุมัติ   
+                $model->status = 2;
+            }else{
+                $model->status = 1;
+            }
             $model->approve = 'Y';
              $model->createApprove();
             if ($model->save()) {

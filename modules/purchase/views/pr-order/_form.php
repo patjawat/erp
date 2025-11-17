@@ -6,7 +6,6 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
-use kartik\datecontrol\DateControl;
 use app\modules\hr\models\Employees;
 use app\widgets\datepicker\DatepickerThai;
 /** @var yii\web\View $this */
@@ -180,6 +179,16 @@ try {
             ],
         ])->label('ผู้เห็นชอบ')
     ?>
+
+<?php 
+echo $form->field($model, 'request_type')->radioList(
+    [
+    'planned' => 'ในแผน',
+    'unplanned' => 'นอกแผน'
+], 
+    ['custom' => true,'inline' => true]
+)->label('ประเภทจัดซื้อ');
+?>
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
 
