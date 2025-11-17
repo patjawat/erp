@@ -475,7 +475,7 @@ WHERE supplies.SUP_TYPE_KIND_ID IN('1','2','4')";
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
         if (BaseConsole::confirm('วัสดุ '.count($querys).' รายการ ยืนยัน ??')) {
             foreach ($querys as $item) {
-                $checker =  Categorise::findOne(['name' => 'asset_item','group_id' => 4,'title' => $item['SUP_TYPE_NAME']]);
+                $checker =  Categorise::findOne(['name' => 'asset_item','group_id' => 'EQUIP','title' => $item['SUP_TYPE_NAME']]);
                 $category = Categorise::findOne(['name' => 'asset_type','category_id' => 4,'title' => $item['SUP_TYPE_NAME']]);
                 $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
                 if ($checker) {

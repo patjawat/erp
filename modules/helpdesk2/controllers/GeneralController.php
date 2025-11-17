@@ -91,7 +91,7 @@ class GeneralController extends \yii\web\Controller
     public function actionAsset()
     {
         $assetTypeItem = ['MED', 'SCI', 'COM'];
-        $listsData = Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 4])->andWhere(['NOT IN', 'code', $assetTypeItem])->all();
+        $listsData = Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 'EQUIP'])->andWhere(['NOT IN', 'code', $assetTypeItem])->all();
         $listAssetType = ArrayHelper::map($listsData, 'code', 'title');
         $assetTypeColumn = ArrayHelper::getColumn($listsData, 'code');
 

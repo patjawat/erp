@@ -104,7 +104,7 @@ use app\modules\inventory\models\Warehouse;
             </div>
          <div class="col-4">
            <?=$form->field($model, 'asset_item')->widget(Select2::classname(), [
-            'data' =>  ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code',function($model){
+            'data' =>  ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 'EQUIP'])->all(), 'code',function($model){
                  return $model->code.' '.$model->title;
             }),
             'options' => ['placeholder' => 'เลือกรายการวัสดุ'],

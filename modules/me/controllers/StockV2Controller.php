@@ -46,7 +46,7 @@ class StockV2Controller extends \yii\web\Controller
 
         $query = Categorise::find()
             ->select(['id', 'code', 'title'])
-            ->andWhere(['name' => 'asset_item', 'group_id' => 4])
+            ->andWhere(['name' => 'asset_item', 'group_id' => 'EQUIP'])
             ->andWhere(['like', 'title', $q])
             ->orWhere(['like', 'code', $q])
             ->limit(20)

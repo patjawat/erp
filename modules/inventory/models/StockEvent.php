@@ -572,7 +572,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // รายการวัสดุ
     public function ListAssetItem()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
     }
 
     // ประเภทของวัสดุ
@@ -638,7 +638,7 @@ class StockEvent extends Yii\db\ActiveRecord
 
     public static function getSelect2Data()
     {
-        $materials = Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all();
+        $materials = Categorise::find()->where(['name' => 'asset_item', 'group_id' => 'EQUIP'])->all();
         $data = [];
         foreach ($materials as $material) {
             $data[] = [

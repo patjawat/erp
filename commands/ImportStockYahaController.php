@@ -275,7 +275,7 @@ class ImportStockYahaController extends Controller
             // clear
             $oldItems = Categorise::find()->where([
                 'name' => 'asset_item',
-                'group_id' => 4,
+                'group_id' => 'EQUIP',
                 'category_id' => $data['assettype']
             ])->all();
 
@@ -314,7 +314,7 @@ class ImportStockYahaController extends Controller
                     $newItem = new Categorise([
                         'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
                         'name' => 'asset_item',
-                        'group_id' => 4,
+                        'group_id' => 'EQUIP',
                         'category_id' => $data['assettype'],
                         'code' => $itemCode,
                         'title' => $value['title'],
@@ -413,7 +413,7 @@ class ImportStockYahaController extends Controller
                 if (!$asetItem) {
                     $newItem = new Categorise([
                         'name' => 'asset_item',
-                        'group_id' => 4,
+                        'group_id' => 'EQUIP',
                         'category_id' => $assettype,
                         'code' => $itemCode,
                         'title' => $value['title'],
@@ -559,7 +559,7 @@ class ImportStockYahaController extends Controller
                 if (!$asetItem) {
                     $newItem = new Categorise([
                         'name' => 'asset_item',
-                        'group_id' => 4,
+                        'group_id' => 'EQUIP',
                         'category_id' => $assettype,
                         'code' => $value['code'],
                         'title' => $value['title'],

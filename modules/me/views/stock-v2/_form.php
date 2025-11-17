@@ -7,7 +7,7 @@ use yii\bootstrap5\ActiveForm;
 use unclead\multipleinput\MultipleInput;
 $warehouse = Yii::$app->session->get('sub-warehouse');
 
-$assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 4])->all(), 'code', 'title');
+$assetItems = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
 ?>
 
 

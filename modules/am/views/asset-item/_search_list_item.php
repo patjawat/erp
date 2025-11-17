@@ -20,27 +20,27 @@ use yii\widgets\ActiveForm;
     
 <div class="d-flex justify-content-between align-items-center gap-2">
 
- <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
     
-  <?php
+    <?php
 
-  echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
     'data' => $model->listAssetType(),
-        'options' => [
+    'options' => [
         'placeholder' => 'เลือกประเภท...',
     ],
-        'pluginOptions' => [
+    'pluginOptions' => [
         'dropdownParent' => '#main-modal',
         'allowClear' => true,
-         'width' => '300px',
+        'width' => '300px',
     ],
-                  'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            // $(this).submit(); 
-                        }",
-                    ],
-])->label(false);
-?>
+    'pluginEvents' => [
+        "select2:select" => "function() { 
+            // $(this).submit(); 
+            }",
+        ],
+        ])->label(false);
+        ?>
+        <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
 <div style="width:300px">
 
     <?php

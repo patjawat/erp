@@ -132,7 +132,7 @@ class Asset extends \yii\db\ActiveRecord
 
     public function listAssetType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 4])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
     }
 
     public function listAssetCategory()

@@ -241,7 +241,7 @@ class DepdropController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Product::find()
-            ->where(['name' => 'asset_item', 'group_id' => 4])
+            ->where(['name' => 'asset_item', 'group_id' => 'EQUIP'])
             ->andWhere(['or', ['LIKE', 'title', $q]])
             ->limit(10)
             ->all();

@@ -83,7 +83,7 @@ class StockEventController extends \yii\web\Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $models = Product::find()
-        ->where(['name' => 'asset_item','group_id' => 4])
+        ->where(['name' => 'asset_item','group_id' => 'EQUIP'])
         ->andWhere(['!=', 'category_id', 'M25'])
             ->andWhere(['or', ['LIKE', 'title',$q]])
             ->limit(10)

@@ -1,11 +1,5 @@
 <?php
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use yii\grid\ActionColumn;
-use app\components\AppHelper;
-use app\modules\am\models\Asset;
 
 ?>
 <div class="card">

@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use app\components\SiteHelper;
 ?>
@@ -8,10 +9,15 @@ use app\components\SiteHelper;
             <td class="text-end" style="width:150px;">เลขที่ขอซื้อ</td>
             <td class="fw-semibold"><?= $model->pr_number ?></td>
             <td class="text-end">วันที่ขอซื้อ</td>
-            <td> <?php echo Yii::$app->thaiFormatter->asDateTime($model->data_json['pr_create_date'], 'medium') ?></td>
+            <td>
+                <?php
+                $data = $model->data_json ?? [];
+                echo Yii::$app->thaiFormatter->asDateTime($data['pr_create_date'] ?? null, 'medium') ?: '-';
+                ?>
+            </td>
         </tr>
         <tr class="">
-           
+
             <td class="text-end">วันที่ต้องการ</td>
             <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'medium') : '' ?>
             </td>
@@ -26,5 +32,5 @@ use app\components\SiteHelper;
 </table>
 
 <div class="d-flex justify-content-center mt-3">
-    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไข',['/purchase/pr-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำขอซื้อ'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-md']])?>
+    <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำขอซื้อ'], ['class' => 'btn btn-warning rounded-pill shadow text-center open-modal', 'data' => ['size' => 'modal-md']]) ?>
 </div>
