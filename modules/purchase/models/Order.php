@@ -222,7 +222,8 @@ class Order extends \yii\db\ActiveRecord
 
     public function getProduct()
     {
-        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item', 'group_id' => $this->group_id]);
+        // return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item', 'group_id' => $this->group_id]);
+        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
     }
 
     //  uploadFile
@@ -1004,7 +1005,10 @@ class Order extends \yii\db\ActiveRecord
 
     public function ListProductType()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()
+        ->andWhere(['name' => 'asset_type'])
+        ->andWhere(['!=', 'group_id', ''])
+        ->all(), 'code', 'title');
         // return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type', 'food_type', 'service_type']])->all(), 'code', 'title');
         // return ArrayHelper::map(Categorise::find()->andWhere(['name' =>'asst_item'])->all(), 'code',function($model){
         //     return $model->category_id.' - '.$model->title;

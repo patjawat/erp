@@ -52,7 +52,7 @@ class OrderController extends Controller
     {
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        if(!Yii::$app->user->can('purchase')){
+        if (!Yii::$app->user->can('purchase')) {
             $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
         }
         $dataProvider->query->andFilterWhere(['name' => 'order']);
@@ -66,44 +66,44 @@ class OrderController extends Controller
         ]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pq_budget_type')"), $searchModel->q_budget_type]);
-       //ค้นหาช่วบงวันที่
-       if($searchModel->date_between){
-        try {
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-           $dataProvider->query->andFilterWhere([
-               'between', 
-               new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),  
-               $dateStart, 
-               $dateEnd, 
-            ]);
-                        //code...
-        } catch (\Throwable $th) {
-            //throw $th;
+        //ค้นหาช่วบงวันที่
+        if ($searchModel->date_between) {
+            try {
+                $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+                $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+                $dataProvider->query->andFilterWhere([
+                    'between',
+                    new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),
+                    $dateStart,
+                    $dateEnd,
+                ]);
+                //code...
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
-        }
-            
+
         $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
 
-            /**
-     * -------------------------
-     * คำนวณผลรวมทั้งหมดด้วย clone query
-     * -------------------------f
-     */
-  $sumTotal = 0;
+        /**
+         * -------------------------
+         * คำนวณผลรวมทั้งหมดด้วย clone query
+         * -------------------------f
+         */
+        $sumTotal = 0;
 
-$sumQuery = clone $dataProvider->query;
-$sumQuery->orderBy(null); // ลบ order by ออก, สำคัญมาก
+        $sumQuery = clone $dataProvider->query;
+        $sumQuery->orderBy(null); // ลบ order by ออก, สำคัญมาก
 
-foreach ($sumQuery->all() as $order) {
-    $sumTotal += $order->calculateVAT()['priceAfterVAT'];
-}
+        foreach ($sumQuery->all() as $order) {
+            $sumTotal += $order->calculateVAT()['priceAfterVAT'];
+        }
 
-return $this->render('index', [
-    'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider,
-    'sumTotal' => $sumTotal,
-]);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'sumTotal' => $sumTotal,
+        ]);
     }
 
     /**
@@ -114,26 +114,24 @@ return $this->render('index', [
      */
     public function actionView($id)
     {
-        
+
         $me = UserHelper::GetEmployee();
         $model =  $this->findModel($id);
         \Yii::$app->session->set('order', $model);
 
         //ถ้าเป็นเจ้าหน้าที่จัดซื้อ
-        if(Yii::$app->user->can('purchase')){
-        return $this->render('view', [
-            'model' => $model,
-        ]);
-        }else{
+        if (Yii::$app->user->can('purchase')) {
+            return $this->render('view', [
+                'model' => $model,
+            ]);
+        } else {
             // ถ้าเป็น user ทั่วไป
-            if(($model->created_by == Yii::$app->user->id)){
+            if (($model->created_by == Yii::$app->user->id)) {
                 return $this->render('view', [
                     'model' => $model,
                 ]);
             }
         }
-       
-
     }
 
     /**
@@ -280,14 +278,13 @@ return $this->render('index', [
         $model = Order::findOne($order_id);
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        $dataProvider->query->andfilterWhere(['!=', 'group_id', '0']);
+        $dataProvider->query->andfilterWhere(['name' => 'asset_item']);
+
         if ($model->category_id == "") {
             $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
         } else {
             $dataProvider->query->andFilterWhere(['category_id' => $model->category_id]);
-            // $dataProvider->query->andFilterWhere(['name' => 'asset_item','category_id' => $order->category_id]);
-            // $dataProvider->query->andFilterWhere(['NOT IN' , 'code',$checkOrderItem]);
-
         }
 
         $dataProvider->pagination->pageSize = 10;
@@ -318,7 +315,11 @@ return $this->render('index', [
         $order_id = $this->request->get('order_id');
         $order = $this->findModel($order_id);
         $asset_item = $this->request->get('asset_item');
-        $product = Product::findOne($asset_item);
+        $product = Product::find()
+            ->andWhere(['name' => 'asset_item'])
+            ->andWhere(['not in', 'group_id', ['0', null]])
+            ->andWhere(['code' => $asset_item])
+            ->one();
 
         $model = new Order([
             'group_id' => $product->group_id,
@@ -608,7 +609,7 @@ return $this->render('index', [
             }
         }
         $model->status = 5;
-        if($model->save(false)){
+        if ($model->save(false)) {
             return $this->redirect(['view', 'id' => $model->id]);
         }
     }
@@ -616,7 +617,7 @@ return $this->render('index', [
 
     public function actionViewAsset($po_number)
     {
-   
+
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise at', 'at.code=asset.asset_item');
@@ -625,10 +626,10 @@ return $this->render('index', [
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'รายการจากใบสั่งซื้อเลขที่ : '.$po_number,
+                'title' => 'รายการจากใบสั่งซื้อเลขที่ : ' . $po_number,
                 'content' => $this->renderAjax('@app/modules/am/views/asset/show/grid', [
                     'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+                    'dataProvider' => $dataProvider,
                 ]),
             ];
         } else {
@@ -637,7 +638,6 @@ return $this->render('index', [
                 'dataProvider' => $dataProvider,
             ]);
         }
-        
     }
 
     public function actionDelete($id)

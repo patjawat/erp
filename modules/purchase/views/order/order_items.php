@@ -43,7 +43,7 @@ use app\modules\purchase\models\Order;
                             try {
                                 echo $item->product->Avatar();
                             } catch (\Throwable $th) {
-                                // throw $th;
+
                             }
                             ?>
                 </td>
