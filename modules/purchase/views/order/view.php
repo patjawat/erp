@@ -1,5 +1,4 @@
 <?php
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 
@@ -10,9 +9,6 @@ $this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-
-
-
 
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-box-seam"></i> <?= $this->title; ?>
@@ -150,7 +146,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php endif;?>
 
                                 <div id="accounting_detail" class="container tab-pane <?=$model->status == 6 ? 'active' : null;?>">
-                                    
                                     <?= $this->render('accounting_detail', ['model' => $model]) ?>
                                 </div>
                             </div>

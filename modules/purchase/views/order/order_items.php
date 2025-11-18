@@ -126,7 +126,7 @@ use app\modules\purchase\models\Order;
                         <tr class="">
                             <td>จำนวนเงินทั้งสิ้น</td>
                             <!-- <td class="text-end"><span class="fw-semibold"><?php //  number_format($model->calculateVAT()['priceAfterVAT'],2) ?></span> -->
-                            <td class="text-end"><span class="fw-semibold"><?=$model->calculateVAT()['priceAfterVAT'] ?></span>
+                            <td class="text-end"><span class="fw-semibold"><?=number_format($model->calculateVAT()['priceAfterVAT'] ?? 0,2) ?></span>
                             </td>
                         </tr>
                     </tbody>
