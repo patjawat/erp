@@ -9,7 +9,6 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveSearch;
-use app\modules\helpdesk\models\Helpdesk;
 use app\modules\helpdesk\models\HelpdeskSearch;
 
 /**
@@ -31,8 +30,8 @@ class DefaultController extends Controller
             'emp_id' => $model->id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-
-        if (Yii::$app->user->can('branch')) {
+        //เช็คจากการตั้งค่าใน Employees ถ้าเป็น รพ.สต.
+        if ($model->branch == 'BRANCH') {
             return $this->redirect(['/me/store-v2/dashboard']);
         }
 
