@@ -22,23 +22,24 @@ use yii\helpers\ArrayHelper;
 <div class="d-flex justify-content-between gap-3 align-items-center align-middle">
     <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
 
-    <?=$form->field($model, 'order_type_name')->widget(Select2::classname(), [
-                                    'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
-                                    'options' => ['placeholder' => 'เลือกประเภท'],
-                                    'pluginOptions' => [
-                                        'width' => '200px',
-                                    'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        'select2:select' => "function(result) { 
-                                                  $(this).submit()
-                                                }",
-                                                'select2:unselecting' => "function(result) { 
-                                                    $(this).submit()
-                                                  }",
+    <?php
+    // $form->field($model, 'order_type_name')->widget(Select2::classname(), [
+    //                                 'data' => ArrayHelper::map($model->ListItemTypeOrder(),'id','name'),
+    //                                 'options' => ['placeholder' => 'เลือกประเภท'],
+    //                                 'pluginOptions' => [
+    //                                     'width' => '200px',
+    //                                 'allowClear' => true,
+    //                                 ],
+    //                                 'pluginEvents' => [
+    //                                     'select2:select' => "function(result) { 
+    //                                               $(this).submit()
+    //                                             }",
+    //                                             'select2:unselecting' => "function(result) { 
+    //                                                 $(this).submit()
+    //                                               }",
                                                 
-                                    ]
-                                ])->label(false);
+    //                                 ]
+    //                             ])->label(false);
                         ?>
 
 

@@ -83,12 +83,13 @@ class StockInController extends Controller
         $warehouseModel = Warehouse::findOne($warehouse->id);
 
         if (isset($warehouseModel->data_json['item_type'])) {
-
+            $item = $warehouseModel->data_json['item_type'];
+            $item = array_diff($item, ['M25']);
             $searchModel = new OrderSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andWhere(['name' => 'order']);
             $dataProvider->query->andWhere(['status' => 5]);
-            $dataProvider->query->andWhere(['!=', 'category_id', 'M25']);
+            $dataProvider->query->andWhere(['IN', 'category_id',$item]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'pr_number', $searchModel->q],
