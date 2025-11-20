@@ -53,87 +53,95 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> <?= number_format($dataProvider->getTotalCount()) ?> </span> รายการ</h6>
-            
-        </div>
+        <h6 class="text-white mt-2">
+            <i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> 
+            <?= number_format($dataProvider->getTotalCount()) ?> รายการ
+        </h6>
     </div>
+
     <div class="card-body">
 
-        <table class="table table-striped custom-table">
-            <thead>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                <th class="fw-semibold text-center"style="width:200px" >หมวดหมู่</th>
-                <th class="fw-semibold text-center"style="width:200px" >ประเภทวัสดุ</th>
-                <th class="fw-semibold" style="width:500px">รายการวัสดุ</th>
-                <th class="fw-semibold">หน่วยนับ</th>
-                <th class="fw-semibold">บัญชีนวัตกรรม</th>
-                <th class="fw-semibold text-center">จำนวนสูงสุด</th>
-                <th class="fw-semibold  text-center">จำนวนต่ำสุด</th>
-                <th class="fw-semibold text-center" style="width:50px">สถานะ</th>
-                <th class="fw-semibold text-center" scope="col" style="width: 150px;">จัดการ</th>
-            </thead>
-            <tbody class="align-middle table-group-divider">
-                <?php foreach ($dataProvider->getModels() as $key => $model): ?>
-                    <tr class="rounded">
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-                        </td>
-                        <td class="text-center"><?= $model->ViewTypeName()['title'] ?></td>
-                        <td class="text-center"><?= $model->data_json['metter_type'] ?? '-' ?></td>
-                        <td>
-                            <?= $model->Avatar() ?>
-                        </td>
-                        <td><?=$model->data_json['unit'] ?? '-' ?></td>
-                        <td>
-                         <div class="form-check form-switch d-flex justify-content-center">
-                                <input class="form-check-input" type="checkbox" role="switch" id="<?= $model->id ?>"
-                                <?= (isset($model->data_json['innovation_account']) &&  $model->data_json['innovation_account'] == "1" )? 'checked' : '' ?>>
-                            </div>
-                        </td>
-                        <td class="fw-semibold text-center"><?=$model->qty_max?></td>
-                        <td class="fw-semibold text-center"><?=$model->qty_min?></td>
-                        <td class="text-center">
-                            <div class="form-check form-switch d-flex justify-content-center">
-                                <input class="form-check-input" type="checkbox" role="switch" id="<?= $model->id ?>"
-                                <?= $model->active == 1 ? 'checked' : '' ?>>
-                            </div>
-                        </td>
+        <!-- เพิ่ม table-responsive -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle custom-table">
+                <thead>
+                    <tr>
+                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                        <th class="fw-semibold text-center" style="min-width: 150px;">หมวดหมู่</th>
+                        <th class="fw-semibold text-center" style="min-width: 150px;">ประเภทวัสดุ</th>
+                        <th class="fw-semibold" style="min-width: 350px;">รายการวัสดุ</th>
+                        <th class="fw-semibold" style="min-width: 100px;">หน่วยนับ</th>
+                        <th class="fw-semibold" style="min-width: 120px;">บัญชีนวัตกรรม</th>
+                        <th class="fw-semibold text-center" style="min-width: 100px;">จำนวนสูงสุด</th>
+                        <th class="fw-semibold text-center" style="min-width: 100px;">จำนวนต่ำสุด</th>
+                        <th class="fw-semibold text-center" style="min-width: 100px;">สถานะ</th>
 
-                        <td class="text-center">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    จัดการ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item',]) ?></li>
-                                </ul>
-                            </div>
-                        </td>
+                        <!--ใช้ min-width ป้องกันการบีบ -->
+                        <th class="fw-semibold text-center" style="min-width: 130px;">จัดการ</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
 
-        <div class="d-flex justify-content-center">
-            <div class="text-muted">
-                <?= LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'firstPageLabel' => 'หน้าแรก',
-                    'lastPageLabel' => 'หน้าสุดท้าย',
-                    'options' => [
-                        'listOptions' => 'pagination pagination-sm',
-                        'class' => 'pagination-sm',
-                    ],
-                ]); ?>
-            </div>
+                <tbody class="table-group-divider">
+                    <?php foreach ($dataProvider->getModels() as $key => $model): ?>
+                        <tr>
+                            <td class="text-center fw-semibold">
+                                <?= (($dataProvider->pagination->offset + 1) + $key) ?>
+                            </td>
+
+                            <td class="text-center"><?= $model->ViewTypeName()['title'] ?></td>
+                            <td class="text-center"><?= $model->data_json['metter_type'] ?? '-' ?></td>
+                            <td><?= $model->Avatar() ?></td>
+                            <td><?= $model->data_json['unit'] ?? '-' ?></td>
+
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center">
+                                    <input class="form-check-input" type="checkbox"
+                                           <?= ($model->data_json['innovation_account'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                </div>
+                            </td>
+
+                            <td class="text-center fw-semibold"><?= $model->qty_max ?></td>
+                            <td class="text-center fw-semibold"><?= $model->qty_min ?></td>
+
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center">
+                                    <input class="form-check-input" type="checkbox"
+                                           <?= $model->active == 1 ? 'checked' : '' ?>>
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            type="button" data-bs-toggle="dropdown">
+                                        จัดการ
+                                    </button>
+
+                                    <ul class="dropdown-menu">
+                                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                        <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
 
+        <div class="d-flex justify-content-center mt-3">
+            <?= LinkPager::widget([
+                'pagination' => $dataProvider->pagination,
+                'firstPageLabel' => 'หน้าแรก',
+                'lastPageLabel' => 'หน้าสุดท้าย',
+                'options' => ['class' => 'pagination pagination-sm'],
+            ]) ?>
+        </div>
 
     </div>
 </div>
+
 <?php Pjax::end(); ?>
 
 <?php
