@@ -181,9 +181,8 @@ $moduleId = Yii::$app->controller->module->id;
     }
 
     .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice {
-    padding: 0.15rem 0.4rem 0.2rem 0.55rem !important;
-}
-
+        padding: 0.15rem 0.4rem 0.2rem 0.55rem !important;
+    }
 </style>
 
 </style>
@@ -216,7 +215,7 @@ $moduleId = Yii::$app->controller->module->id;
                             <div class="table-container">
                                 <?= $content; ?>
 
-                                
+
                             </div>
                         </div>
 
@@ -237,7 +236,7 @@ $moduleId = Yii::$app->controller->module->id;
                     <div class="row align-items-center">
                         <div class="col-md-5 mb-1 mb-md-0">
                             <span><span id="date">2025</span> &copy; ERP Hospital.</span>
-                            <h6><?=\Yii::$app->version?></h6>
+                            <h6><?= \Yii::$app->version ?></h6>
                         </div>
 
                         <div class="col-md-5 text-md-end">
@@ -249,22 +248,8 @@ $moduleId = Yii::$app->controller->module->id;
             </footer>
         </div>
 
-
-                <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
-        <div id="scroll-buttons" class="d-flex flex-column  position-fixed bottom-50 end-0 p-3" style="z-index: 1030;">
-        <!-- ปุ่มขึ้นบนสุด -->
-        <button type="button" id="btnScrollTop" class="btn btn-primary rounded-circle mb-2 shadow">
-            <i class="fa-solid fa-arrow-up"></i>
-        </button>
-        <!-- ปุ่มลงล่างสุด -->
-        <button type="button" id="btnScrollBottom" class="btn btn-secondary rounded-circle shadow">
-            <i class="fa-solid fa-arrow-down"></i>
-        </button>
-        </div>
-
-
-
-
+        <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
+        <?= $this->render('scroll_buttons') ?>
         <?php
         $js = <<< JS
     //ส่วนการ load overlay
