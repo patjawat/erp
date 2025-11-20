@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\UserHelper;
@@ -11,7 +12,7 @@ $items = [
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('hr') ? true : false,
         // 'show' => true
-        
+
     ],
     [
         'title' => 'ระบบลา',
@@ -37,7 +38,7 @@ $items = [
         'show' => Yii::$app->user->can('purchase') ? true : false,
         // 'show' => true
     ],
-    
+
     [
         'title' => 'คลัง',
         'icon' => 'fa-solid fa-cubes-stacked fs-1',
@@ -45,7 +46,7 @@ $items = [
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('warehouse') ? true : false,
         // 'show' => true
-        
+
     ],
     [
         'title' => 'ทรัพย์สิน',
@@ -113,7 +114,7 @@ $items = [
         'show' => Yii::$app->user->can('hr') ? true : false,
         // 'show' => true
     ],
-        [
+    [
         'title' => 'แผนงาน',
         'icon' => 'fa-solid fa-ranking-star fs-1',
         'url' => ['/plan/dashboard'],
@@ -121,44 +122,53 @@ $items = [
         // 'show' => Yii::$app->user->can('hr') ? true : false,
         'show' => true
     ],
-    
 
-    
+
+
 ];
 ?>
+
+
+
+
+
 <div class="d-none d-md-inline-flex ms-2 dropdown">
-    <button data-bs-toggle="dropdown" aria-haspopup="true" type="button" id="page-header-app-dropdown"
-        aria-expanded="false" class="btn header-item notify-icon">
+    <button data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" class="btn header-item notify-icon">
         <i class="fa-solid fa-bars-progress"></i>
     </button>
-    <div aria-labelledby="page-header-app-dropdown" class="dropdown-menu-lg dropdown-menu-right dropdown-menu" style="min-width:650px">
-        <div class="px-lg-2">
-            <h5 class="text-center mt-3"><i class="fa-solid fa-bars-progress"></i> ระบบงาน</h5>
-            <div class="container">
-                <div class="row row-cols-1 row-cols-sm-4 row-cols-md-4 g-3 mt-2">
-                    <?php foreach ($items as $item): ?>
-                    <?php if($item['show']):?>
-                    <div class="col mt-1">
-                        <a href="<?php echo Url::to($item['url']) ?>">
-                            <div class="card border-0 shadow-sm hover-card bg-light">
-                                <div
-                                    class="d-flex justify-content-center align-items-center  bg-primary opacity-75 <?php echo $item['padding'] ?> rounded-top">
-                                    <i class="<?php echo $item['icon'] ?> text-white"></i>
-                                </div>
-                                <div class="card-body">
 
-                                    <h6 class="text-center mb-0 text-dark"><?php echo $item['title'] ?></p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <?php  endif;?>
-                    <?php endforeach; ?>
+</div>
 
-                </div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">Admin Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-3 mt-2">
+                <?php foreach ($items as $item): ?>
+                    <?php if ($item['show']): ?>
+                        <div class="col mt-1">
+                            <a href="<?php echo Url::to($item['url']) ?>">
+                                <div class="card border-0 shadow-sm hover-card bg-light">
+                                    <div
+                                        class="d-flex justify-content-center align-items-center  bg-primary <?php echo $item['padding'] ?> rounded-top">
+                                        <i class="<?php echo $item['icon'] ?> text-white"></i>
+                                    </div>
+                                    <div class="card-body">
+
+                                        <h6 class="text-center mb-0 text-dark"><?php echo $item['title'] ?></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
             </div>
-
-
         </div>
+
     </div>
 </div>
