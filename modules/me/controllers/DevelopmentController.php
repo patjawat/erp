@@ -116,12 +116,14 @@ class DevelopmentController extends Controller
                 $me = UserHelper::GetEmployee();
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->emp_id = $me->id;
+                $model->status = 'Pending';
                 try {
                     $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
                     $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
                     $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
                     $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
+                    
                 }
                 if ($model->save(false)) {
                     AppHelper::checkLocation($model->data_json['location']);

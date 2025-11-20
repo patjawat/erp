@@ -126,8 +126,11 @@ class DevelopmentController extends Controller
         $model = new Development();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post()) ) {
+                $model->status = 'Pending';
+                if( $model->save()){
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -163,6 +166,7 @@ class DevelopmentController extends Controller
             }
 
             $model->save();
+            return $model->status;
 
             return $this->redirect('index');
         }
