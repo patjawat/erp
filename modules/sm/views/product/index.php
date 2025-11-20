@@ -119,7 +119,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                     <ul class="dropdown-menu">
                                         <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id,'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                         <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                     </ul>
                                 </div>
