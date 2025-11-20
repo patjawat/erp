@@ -43,35 +43,43 @@ $this->params['breadcrumbs'][] = $this->title;
                         },
                     ],
                     [
-                        'label' => 'หมวดหมู่',
-                        'value' => function ($model) {
-                            return isset($model->productType->title) ? $model->productType->title : '-';
-                        },
-                    ],
-                    [
                         'label' => 'รหัส',
                         'value' => function ($model) {
                             return $model->code;
                         },
                     ],
-                    [
+                      [
                         'label' => 'หน่วยนับ',
                         'value' => function ($model) {
                             return isset($model->data_json['unit']) ? $model->data_json['unit'] : '-';
                         },
                     ],
-                    // [
-                    //     'label' => 'จำนวนสูงสุด',
-                    //     'value' => function ($model) {
-                    //         return isset($model->data_json['unit']) ? $model->data_json['unit'] : '-';
-                    //     },
-                    // ],
-                    // [
-                    //     'label' => 'จำนวนต่ำสุด',
-                    //     'value' => function ($model) {
-                    //         return isset($model->data_json['unit']) ? $model->data_json['unit'] : '-';
-                    //     },
-                    // ],
+                    [
+                        'label' => 'หมวดหมู่',
+                        'value' => function ($model) {
+                            return isset($model->productType->title) ? $model->productType->title : '-';
+                        },
+                    ],
+                     [
+                        'label' => 'ประเภทวัสดุ',
+                        'value' => function ($model) {
+                            return $model->data_json['metter_type'] ?? '-';
+                        },
+                    ],
+                    
+                  
+                    [
+                        'label' => 'จำนวนสูงสุด',
+                        'value' => function ($model) {
+                            return $model->qty_max;
+                        },
+                    ],
+                    [
+                        'label' => 'จำนวนต่ำสุด',
+                        'value' => function ($model) {
+                            return $model->qty_min;
+                        },
+                    ],
                 ],
             ])?>
             </div>
