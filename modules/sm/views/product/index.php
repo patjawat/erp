@@ -54,20 +54,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> <?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <div class="d-flex justify-content-between gap-2">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                <div class="dropdown">
-                    <button class="btn btn-success shadow dropdown-toggle" type="button"
-                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa-solid fa-file-excel"></i> Excel
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1Z6I-Y7rTwiy_qF68xIgyZEKPthmTnkkezqMfomLfpyQ/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
-                    </ul>
-                </div>
-            </div>
+            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> <?= number_format($dataProvider->getTotalCount()) ?> </span> รายการ</h6>
+            
         </div>
     </div>
     <div class="card-body">
@@ -75,9 +63,13 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped custom-table">
             <thead>
                 <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                <th class="fw-semibold text-center"style="width:200px" >ประเภท</th>
-                <th class="fw-semibold" style="width:500px">รายการ</th>
+                <th class="fw-semibold text-center"style="width:200px" >หมวดหมู่</th>
+                <th class="fw-semibold text-center"style="width:200px" >ประเภทวัสดุ</th>
+                <th class="fw-semibold" style="width:500px">รายการวัสดุ</th>
                 <th class="fw-semibold">หน่วยนับ</th>
+                <th class="fw-semibold">บัญชีนวัตกรรม</th>
+                <th class="fw-semibold text-center">จำนวนสูงสุด</th>
+                <th class="fw-semibold  text-center">จำนวนต่ำสุด</th>
                 <th class="fw-semibold text-center" style="width:50px">สถานะ</th>
                 <th class="fw-semibold text-center" scope="col" style="width: 150px;">จัดการ</th>
             </thead>
@@ -87,15 +79,23 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td class="text-center"><?= $model->ViewTypeName()['title'] ?></td>
-                        <td scope="row">
+                        <td class="text-center"><?= $model->data_json['metter_type'] ?? '-' ?></td>
+                        <td>
                             <?= $model->Avatar() ?>
                         </td>
                         <td><?=$model->data_json['unit'] ?? '-' ?></td>
-                        <!-- <td class="text-center"><?= (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-') ?></td> -->
+                        <td>
+                         <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input" type="checkbox" role="switch" id="<?= $model->id ?>"
+                                <?= (isset($model->data_json['innovation_account']) &&  $model->data_json['innovation_account'] == "1" )? 'checked' : '' ?>>
+                            </div>
+                        </td>
+                        <td class="fw-semibold text-center"><?=$model->qty_max?></td>
+                        <td class="fw-semibold text-center"><?=$model->qty_min?></td>
                         <td class="text-center">
                             <div class="form-check form-switch d-flex justify-content-center">
                                 <input class="form-check-input" type="checkbox" role="switch" id="<?= $model->id ?>"
-                                    <?= $model->active == 1 ? 'checked' : '' ?>>
+                                <?= $model->active == 1 ? 'checked' : '' ?>>
                             </div>
                         </td>
 

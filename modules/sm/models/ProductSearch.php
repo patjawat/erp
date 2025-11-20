@@ -2,9 +2,10 @@
 
 namespace app\modules\sm\models;
 
-use app\modules\sm\models\Product;
 use yii\base\Model;
+use yii\db\Expression;
 use yii\data\ActiveDataProvider;
+use app\modules\sm\models\Product;
 
 /**
  * ProductSearch represents the model behind the search form of `app\modules\sm\models\Product`.
@@ -15,7 +16,7 @@ class ProductSearch extends Product
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category','q'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category', 'q', 'metter_type', 'unit','innovation_account'], 'safe'],
         ];
     }
 
@@ -58,7 +59,6 @@ class ProductSearch extends Product
             'id' => $this->id,
             'active' => $this->active,
         ]);
-
         $query
             ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'category_id', $this->category_id])
@@ -67,7 +67,10 @@ class ProductSearch extends Product
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
             ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+            ->andFilterWhere(['like', 'data_json', $this->data_json])
+            ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.metter_type')"), $this->metter_type])
+            // ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.innovation_account')"), $this->innovation_account])
+            ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.unit')"), $this->unit]);
 
         return $dataProvider;
     }

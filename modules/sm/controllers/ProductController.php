@@ -4,6 +4,7 @@ namespace app\modules\sm\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
@@ -45,6 +46,9 @@ class ProductController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
         $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+        if($searchModel->innovation_account == 1){
+            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.innovation_account')"), "1"]);
+        }
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],

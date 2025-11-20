@@ -3,10 +3,7 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
-use unclead\multipleinput\MultipleInput;
-use unclead\multipleinput\MultipleInputColumn;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\AssetType $model */
@@ -15,11 +12,7 @@ $id = isset($model->id) ? intval($model->id) : 0;
 $ref = isset($ref) ? Html::encode($ref) : '';
 ?>
 
-<style>
-.modal-body {
-    background-color: #f1f5f9;
-}
-</style>
+
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-product',
@@ -31,86 +24,137 @@ $ref = isset($ref) ? Html::encode($ref) : '';
 <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 <div class="row">
-    <div class="col-4">
-        <input type="file" id="product_file" style="display: none;" />
-        <div class="d-flex justify-content-center">
-            <a href="#" class="select-photo">
-                <?= Html::img($model->ShowImg(), ['class' => 'product-img object-fit-cover rounded', 'style' => 'max-width:100%;height: 219px;']) ?>
-            </a>
-        </div>
+    <div class="col-6">
+        <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อวัสดุ') ?>
     </div>
-    <div class="col-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="fa-solid fa-circle-exclamation"></i> ข้อมูลรายการ</h6>
-                    <?= $form->field($model, 'auto')->checkbox(['custom' => true, 'switch' => true, 'checked' => true])->label('รหัสอัตโนมัติ'); ?>
-                </div>
-                <div class="row">
-                   
-
-                    
-                    <div class="col-8">
-                    <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
-                                'data' => $model->listAssetType(),
-                                'options' => ['placeholder' => 'ประเภทของวัสดุ'],
-                                'pluginOptions' => [
-                                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                                    'allowClear' => true,
-                                    'dropdownParent' => '#main-modal',
-                                ],
-                                'pluginEvents' => [
-                                    'select2:select' => 'function(result) {}',
-                                    'select2:unselecting' => 'function() {}',
-                                ],
-                        
-                            ])->label('ประเภท') ?>
-                        <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อรายการ') ?>
-                    </div>
-                    <div class="col-4">
-                    <?php if ($model->isNewRecord): ?>
-                    <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสสินค้า/barcode'])->label('รหัสสินค้า') ?>
-                    <?php else: ?>
-                        <div class="mb-3 highlight-addon field-product-code">
-                            <label class="form-label has-star" for="product-code">รหัสสินค้า</label>
-                            <input type="text" class="form-control" name="Product[code]" value="<?= Html::encode($model->code) ?>" disabled>
-                        </div>
-                    <?php endif ?>
-                    
-                        <?php
-                                echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-                                    'data' => $model->listUnit(),
-                                    'options' => ['placeholder' => 'ระบุหน่วยนับหลัก...'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'tags' => true,
-                                        'dropdownParent' => '#main-modal',
-                                    ],
-                                    'pluginEvents' => [
-                                        'select2:select' => "function(result) { 
+    <div class="col-6">
+        <?php
+                        echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                            'data' => $model->listUnit(),
+                            'options' => ['placeholder' => 'เช่น ชิ้น, กล่อง, แพ็ค'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => "function(result) { 
                                             var data = \$(this).select2('data')[0].text;
                                             console.log(data)
                                         }",
-                                    ]
-                                        ])->label('หน่วย')
-                                    ?>
-
-                    </div>
-                    
-                    
-                </div>
-            </div>
+                            ]
+                        ])->label('หน่วย')
+                        ?>
+    </div>
+    <div class="col-6">
+        <?php if ($model->isNewRecord): ?>
+        <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสวัสดุ / Barcode'])->label('รหัสวัสดุ') ?>
+        <?php else: ?>
+        <div class="mb-3 highlight-addon field-product-code">
+            <label class="form-label has-star" for="product-code">รหัสวัสดุ</label>
+            <input type="text" class="form-control" name="Product[code]" value="<?= Html::encode($model->code) ?>"
+                disabled>
         </div>
+        <?php endif ?>
+
+    </div>
+
+    <div class="col-6">
+        <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                            'data' => $model->listAssetType(),
+                            'options' => ['placeholder' => 'ประเภทของวัสดุ'],
+                            'pluginOptions' => [
+                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => 'function(result) {}',
+                                'select2:unselecting' => 'function() {}',
+                            ],
+
+                        ])->label('หมวดหมู่') ?>
+
+    </div>
+
+    <div class="col-6">
+        <?php
+                        echo $form->field($model, 'data_json[metter_type]')->widget(Select2::classname(), [
+                            'data' => $model->listMatterType(),
+                            'options' => ['placeholder' => 'ระบุประเภทวัสดุ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                        ])->label('ประเภทวัสดุ')
+                        ?>
+    </div>
+    <div class="col-3">
+    <?= $form->field($model, 'qty_max')->textInput([
+        'type' => 'number',
+        'maxlength' => true,
+        'placeholder' => 'ระบุจำนวนสูงสุด',
+        'min' => 0
+    ])->label('จำนวนสูงสุด') ?>
+</div>
+
+<div class="col-3">
+    <?= $form->field($model, 'qty_min')->textInput([
+        'type' => 'number',
+        'maxlength' => true,
+        'placeholder' => 'ระบุจำนวนต่ำสุด',
+        'min' => 0
+    ])->label('จำนวนต่ำสุด') ?>
+</div>
+
+    <div class="col-6">
+        <?php
+                        echo $form->field($model, 'data_json[purchase_type]')->widget(Select2::classname(), [
+                            'data' => $model->listPurchaseType(),
+                            'options' => ['placeholder' => 'ระบุการจัดซื้อ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                        ])->label('การจัดซื้อ')
+                        ?>
+    </div>
+
+    <div class="col-3">
+        <div class="mt-4">
+            <?= $form->field($model, 'auto')->checkbox(['custom' => true, 'switch' => true, 'checked' => false])->label('รหัสวัสดุอัตโนมัติ'); ?>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="mt-4">
+            <?=$form->field($model, 'data_json[innovation_account]')->checkbox(['custom' => true,'switch' => true, 'checked' => (isset($model->data_json['innovation_account']) && $model->data_json['innovation_account'] == "1" ? true : false )])->label('บัญชีนวัตกรรม');?>
+        </div>
+    </div>
+
+
+    <div class="col-12">
+        <label for="productImage" class="form-label">รูปภาพวัสดุ</label>
+        <input type="file" class="form-control" id="product_file" />
     </div>
 </div>
 
-<div class="form-group mt-3 d-flex justify-content-center">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'submit']) ?>
-</div>
+<div class="row">
 
-<?php ActiveForm::end(); ?>
+    <div class="col-6">
+        <a href="#" class="select-photo">
+            <?= Html::img($model->ShowImg(), ['class' => 'product-img object-fit-cover rounded mt-3', 'style' => 'max-width:100%;height: 219px;']) ?>
+        </a>
+    </div>
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
+        <?= Html::button('ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
+    </div>
 
-<?php
+    <?php ActiveForm::end(); ?>
+
+    <?php
 $urlUpload = Url::to('/filemanager/uploads/single');
 $ref = $model->ref;
 $js = <<< JS

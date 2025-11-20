@@ -49,9 +49,12 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public $q_category;
+    public $unit;
     public $unit_name;
     public $auto;
     public $q;
+    public $metter_type;
+    public $innovation_account;
 
     /**
      * {@inheritdoc}
@@ -60,10 +63,10 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name'], 'safe'],
+            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
-             [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
+            [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
         ];
     }
 
@@ -116,10 +119,29 @@ class Product extends \yii\db\ActiveRecord
     }
 
 
+    public function listMatterType()
+    {
+        $items = [
+            'วัสดุสิ้นเปลือง' => 'วัสดุสิ้นเปลือง',
+            'วัสดคงทน' => 'วัสดคงทน',
+        ];
+        return $items;
+    }
+
+    public function listPurchaseType()
+    {
+        $items = [
+            'ราคาสืบเขต' => 'ราคาสืบเขต',
+            'ราคาสืบจังหวัด' => 'ราคาสืบจังหวัด',
+            'ราคาจัดซื้อ รพ.' => 'ราคาจัดซื้อ รพ.',
+        ];
+        return $items;
+    }
+    
     //สร้างรหัสวัสดุ
-public static function nextCode($categoryId)
-{
-    return Yii::$app->db->createCommand("
+    public static function nextCode($categoryId)
+    {
+        return Yii::$app->db->createCommand("
         SELECT  CONCAT(
         'M1-', 
         IFNULL(
@@ -133,12 +155,12 @@ public static function nextCode($categoryId)
           AND name = :name
           AND code LIKE :code_like
     ")->bindValues([
-        ':group_id' => 4,
-        ':category_id' => $categoryId,
-        ':name' => 'asset_item',
-        ':code_like' => $categoryId . '-%',
-    ])->queryScalar();
-}
+            ':group_id' => 4,
+            ':category_id' => $categoryId,
+            ':name' => 'asset_item',
+            ':code_like' => $categoryId . '-%',
+        ])->queryScalar();
+    }
 
 
 
@@ -220,7 +242,7 @@ public static function nextCode($categoryId)
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => [4]])->all(), 'code', 'title');
     }
 
-    public function ListUnit()
+    public function listUnit()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
     }
