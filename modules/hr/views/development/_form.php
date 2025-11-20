@@ -362,7 +362,6 @@ $listDocumentMe  = $emp->listDocumentMe();
         </div>
     </div>
 </div>
-
 <!-- ข้อมูลการเดินทาง -->
 <div class="card mb-3">
     <div class="card-header p-2">
@@ -404,15 +403,11 @@ $listDocumentMe  = $emp->listDocumentMe();
                             ?>
                     </div>
                     <div class="col-6">
-
                         <?= $form->field($model, 'data_json[license_plate]')->textInput(['placeholder' => 'ระบุทะเบียนพาหนะเดินทาง'])->label('ทะเบียนพาหนะเดินทาง') ?>
-
                     </div>
                 </div>
                 <?= $form->field($model, 'data_json[distance]')->textInput(['placeholder' => 'ระบุระยะทาง'])->label('ระยะทาง/กิโลเมตร') ?>
-
             </div>
-
         </div>
     </div>
 </div>

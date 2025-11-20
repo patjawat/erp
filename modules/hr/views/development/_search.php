@@ -1,13 +1,9 @@
 <?php
 
-use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
 use app\components\CategoriseHelper;
-use app\components\DateFilterHelper;
 use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
@@ -28,11 +24,22 @@ use app\modules\hr\models\Organization;
     'options' => [
         'data-pjax' => 1
     ],
-    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+    // 'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
 <div class="row">
-
+    <div class="col-3">
+        <?php
+        echo $form->field($model, 'development_type_id')->widget(Select2::classname(), [
+            'data' => CategoriseHelper::DevelopmentType(),
+            'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
+            'pluginOptions' => [
+                // 'dropdownParent' => '#main-modal',
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+    </div>
     <div class="col-2">
         <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
@@ -42,8 +49,8 @@ use app\modules\hr\models\Organization;
     <div class="col-2">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-
-    <div class="col-5">
+    
+    <div class="col-3">
         <?= $form->field($model, 'q_status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'theme' => Select2::THEME_KRAJEE_BS5,
@@ -73,56 +80,14 @@ use app\modules\hr\models\Organization;
         ])->label(false); ?>
     </div>
 
-
-    <div class="col-1">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
-            </button>
-        </div>
-    </div>
-
-</div>
-
-<div class="row mt-2">
-    <div class="col-4">
+    <div class="col-3">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
     </div>
-    <div class="col-2">
-        <?php
-        echo $form->field($model, 'development_type_id')->widget(Select2::classname(), [
-            'data' => CategoriseHelper::DevelopmentType(),
-            'options' => ['placeholder' => 'เลือกประเภทการพัฒนา'],
-            'pluginOptions' => [
-                // 'dropdownParent' => '#main-modal',
-                'allowClear' => true,
-            ],
-        ])->label(false);
-        ?>
-    </div>
-    <div class="col-6">
+
+    <div class="col-4">
         <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false, 'placeholder' => 'ผู้ขอ']) ?>
     </div>
-</div>
-
-<div class="collapse mt-3" id="collapseFilter">
-    <!-- การกรองแบบละเอียด -->
-    <div class="row">
-        <div class="col-3">
-
-            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                'data' => $model->ListThaiYear(),
-                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    // 'width' => '120px',
-                ],
-            ])->label(false); ?>
-
-        </div>
-        <div class="col-4">
+     <div class="col-4">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                 'name' => 'department',
                 'id' => 'treeID',
@@ -139,10 +104,22 @@ use app\modules\hr\models\Organization;
                 ],
             ])->label(false); ?>
         </div>
-        <div class="col-4">
-
+    <div class="col-1">
+        <div class="d-flex flex-row align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="false" aria-controls="collapseFilter">
+                <i class="fa-solid fa-filter"></i>
+            </button>
         </div>
     </div>
+
+</div>
+
+
+<div class="collapse mt-3" id="collapseFilter">
+    <!-- การกรองแบบละเอียด -->
+   
 </div>
 
 <?php ActiveForm::end(); ?>
