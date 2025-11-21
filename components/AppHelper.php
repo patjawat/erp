@@ -89,31 +89,31 @@ class AppHelper extends Component
     }
 
     /**
- * แปลงปีงบประมาณไทยเป็นช่วงวันที่เริ่มต้น-สิ้นสุด
- * 
- * @param int|null $thaiYear ปีงบประมาณไทย เช่น 2568
- * @return array ['start' => 'YYYY-MM-DD', 'end' => 'YYYY-MM-DD']
- */
-public static function BudgetYearRange($thaiYear = null)
-{
-    if (!$thaiYear) {
-        // ใช้ปีงบประมาณปัจจุบัน
-        $thaiYear = self::YearBudget();
+     * แปลงปีงบประมาณไทยเป็นช่วงวันที่เริ่มต้น-สิ้นสุด
+     * 
+     * @param int|null $thaiYear ปีงบประมาณไทย เช่น 2568
+     * @return array ['start' => 'YYYY-MM-DD', 'end' => 'YYYY-MM-DD']
+     */
+    public static function BudgetYearRange($thaiYear = null)
+    {
+        if (!$thaiYear) {
+            // ใช้ปีงบประมาณปัจจุบัน
+            $thaiYear = self::YearBudget();
+        }
+
+        // แปลงเป็นปีคริสต์ศักราช
+        $yearAD = $thaiYear - 543;
+
+        // ปีงบประมาณเริ่ม 1 ต.ค. ของปีก่อนหน้า
+        $startDate = date('Y-m-d', strtotime(($yearAD - 1) . '-10-01'));
+        // สิ้นสุด 30 ก.ย. ของปีนั้น
+        $endDate = date('Y-m-d', strtotime($yearAD . '-09-30'));
+
+        return [
+            'start' => $startDate,
+            'end' => $endDate,
+        ];
     }
-
-    // แปลงเป็นปีคริสต์ศักราช
-    $yearAD = $thaiYear - 543;
-
-    // ปีงบประมาณเริ่ม 1 ต.ค. ของปีก่อนหน้า
-    $startDate = date('Y-m-d', strtotime(($yearAD - 1) . '-10-01'));
-    // สิ้นสุด 30 ก.ย. ของปีนั้น
-    $endDate = date('Y-m-d', strtotime($yearAD . '-09-30'));
-
-    return [
-        'start' => $startDate,
-        'end' => $endDate,
-    ];
-}
 
 
     // แปลงปีงบประมาณไทยเป็น แบบ ค.ศ. ปกติ
@@ -458,7 +458,7 @@ public static function BudgetYearRange($thaiYear = null)
             'year' => $query['years'],
             'month' => $query['months'],
             'day' => $query['days'],
-            'ym' => ($query['years'] > 0 ? ($query['years'].' ปี ') : null).($query['months'] > 0 ? ($query['months'].' เดือน') : null)
+            'ym' => ($query['years'] > 0 ? ($query['years'] . ' ปี ') : null) . ($query['months'] > 0 ? ($query['months'] . ' เดือน') : null)
         ];
         // if ($year) {
         //     return $query['years'];
@@ -801,7 +801,21 @@ public static function BudgetYearRange($thaiYear = null)
                 $title =  $statusName ? $statusName : 'ตรวจสอบผ่าน';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
+
+            case 'Checking1_pass':
+                $color = 'primary';
+                $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'หน.เห็นชอบ';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
+                break;
                 
+            case 'Checking2_pass':
+                $color = 'primary';
+                $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';
+                $title =  $statusName ? $statusName : 'หน.กลุ่มงานเห็นชอบ';
+                $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
+                break;
+
             case 'Checkup_pass':
                 $color = 'primary';
                 $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';
