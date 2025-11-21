@@ -176,7 +176,7 @@ if($searchModel->date_between == 'pr_create_date'){
                             <ul class="dropdown-menu">
                                 <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php if ($item->status >= 2): ?>
-                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบีนยคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบีนยคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php endif;?>
 
                                     <?php if ($item->status >= 3): ?>
