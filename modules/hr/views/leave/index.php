@@ -29,8 +29,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php  Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
-
-
 <style>
 .hover-card-under {
 
@@ -80,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<?php  Pjax::end(); ?>
+
 <?php
 $js = <<< JS
 
@@ -160,3 +158,5 @@ $js = <<< JS
     JS;
 $this->registerJs($js);
 ?>
+
+<?php  Pjax::end(); ?>

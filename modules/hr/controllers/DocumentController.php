@@ -45,7 +45,7 @@ class DocumentController extends \yii\web\Controller
             $dateEnd = '';
         }
         
-        $lastDays = $model->LastDays();
+        $leaveSummary = $model->getLeaveSummary();
         $lastDateStart = is_object($lastDays['data']) ? Yii::$app->thaiFormatter->asDate($lastDays['data']->date_start, 'long') : '-';
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
@@ -61,11 +61,11 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('lastDateStart', $lastDateStart);
         $templateProcessor->setValue('lastDateEnd', $lastDateStart);
-        $templateProcessor->setValue('lastDays', $model->LastDays()['data']->total_days ?? 0);
+        $templateProcessor->setValue('last_days', $leaveSummary['last_leave_days']);  // ลามาแล้ว
+        $templateProcessor->setValue('days', $model->total_days);
+        $templateProcessor->setValue('total_days', $leaveSummary['total_leave_days']);  // รวมเป็น
         $templateProcessor->setValue('reason', $model->reason);
         $templateProcessor->setValue('leaveType', $model->leaveType->title);
-        $templateProcessor->setValue('days', $model->total_days);
-        $templateProcessor->setValue('total', ($model->total_days + ($model->LastDays()['data']->total_days ?? 0)));
         $templateProcessor->setValue('address', (isset($model->data_json['address']) ? strip_tags($model->data_json['address']) : ''));
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 
@@ -142,6 +142,7 @@ class DocumentController extends \yii\web\Controller
         // return $model->checkerName(1)['employee']->signature();
         $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
         $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
+        $leaveSummary = $model->getLeaveSummary();
 
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
@@ -151,10 +152,10 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->setValue('dateStart', $dateStart);
         $templateProcessor->setValue('dateEnd', $dateEnd);
         $templateProcessor->setValue('days', $model->total_days);  // จำนวนวันที่ลา
-        $templateProcessor->setValue('last_days', $model->LastDays()['sum_all']);  // ลามาแล้ว
+        $templateProcessor->setValue('last_days', $leaveSummary['last_leave_days']);  // ลามาแล้ว
+        $templateProcessor->setValue('total_days', $leaveSummary['total_leave_days']);  // รวมเป็น
         $templateProcessor->setValue('ld', $model->entitlements()->days ?? 0);  // วันละพักผ่อนสะสมประจำปี
         $templateProcessor->setValue('sum', $model->entitlements()->days ?? 0);  // รวมวันลาพักผ่อนที่ใช้ได้
-        $templateProcessor->setValue('total', $model->total_days);  // รวมเป็น
         $templateProcessor->setValue('address', (isset($model->data_json['address']) ? strip_tags($model->data_json['address']) : ''));
         $templateProcessor->setValue('status', $model->status == 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต');
 

@@ -79,9 +79,6 @@ use app\modules\hr\models\Organization;
 
 <div class="collapse mt-3" id="collapseFilter">
     <!-- การกรองแบบละเอียด -->
-    
-
-
 </div>
 
 <?php ActiveForm::end(); ?>

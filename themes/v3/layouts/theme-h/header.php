@@ -20,12 +20,7 @@ use app\components\UserHelper;
                     <span class="logo-lg"><?= Html::img('@web/images/logo_new.png', ['alt' => 'ERP logo']) ?></span>
                 </a>
             </div>
-            <a class="navbar-toggle collapsed" href="javascript:void(0)" data-bs-toggle="collapse"
-                data-bs-target="#topnav-menu-content" aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
-            </a>
+            
         </div>
         <div class="right-bar d-flex gap-3">
             <div class="d-inline-flex ms-0 ms-sm-2 d-lg-none dropdown">

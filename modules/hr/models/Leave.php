@@ -390,36 +390,6 @@ class Leave extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'thai_year', 'thai_year');
     }
 
-    // แสดงข้อมูลวันลาที่มี่ผ่านมา
-    public function LastDays()
-    {
-        // return $this->leave_type_id;
-        // ลามาแล้ว
-        $sumAll = self::find()
-            ->where([
-                'emp_id' => $this->emp_id,
-                'thai_year' => $this->thai_year,
-                'leave_type_id' => $this->leave_type_id,
-                'status' => 'Approve'
-            ])
-            ->andwhere(['<', 'date_start', $this->date_start])
-            ->sum('total_days');
-
-        $data = self::find()
-            ->where([
-                'emp_id' => $this->emp_id,
-                'thai_year' => $this->thai_year,
-                'leave_type_id' => $this->leave_type_id,
-                'status' => 'Approve'
-            ])
-            ->andwhere(['<', 'date_start', $this->date_start])
-            ->one();
-
-        return [
-            'data' => $data ?? null,
-            'sum_all' => $sumAll ?? 0
-        ];
-    }
 
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
@@ -976,6 +946,57 @@ class Leave extends \yii\db\ActiveRecord
             ];
         }
     }
+
+//แสรุปการลาในใบลาแต่ละครั้ง
+    public function getLeaveSummary()
+{
+    $sql = "
+        SELECT 
+            l.date_start,
+            l.date_end,
+            l.status,
+            l.leave_type_id,
+            l.emp_id,
+            l.thai_year,
+
+            -- วันลาครั้งนี้
+            l.total_days AS current_leave_days,
+
+            -- รวมวันลาที่ลามาก่อนหน้า (ก่อนเริ่มลาครั้งนี้)
+            (
+                SELECT IFNULL(SUM(l2.total_days), 0)
+                FROM `leave` l2
+                WHERE l2.emp_id = l.emp_id
+                AND l2.thai_year = l.thai_year
+                AND l2.date_start < l.date_start
+                AND l2.status = 'Approve'
+            ) AS last_leave_days,
+
+            -- รวมวันลาทั้งหมดจนถึงครั้งนี้
+            (
+                SELECT IFNULL(SUM(l3.total_days), 0)
+                FROM `leave` l3
+                WHERE l3.emp_id = l.emp_id
+                AND l3.thai_year = l.thai_year
+                AND l3.date_start <= l.date_start
+                AND l3.status = 'Approve'
+            ) AS total_leave_days
+
+        FROM `leave` l
+        WHERE l.id = :id
+        AND l.emp_id = :emp_id
+        AND l.thai_year = :thai_year
+        AND l.status = :status
+        LIMIT 1
+    ";
+
+    return Yii::$app->db->createCommand($sql, [
+        ':id' => $this->id,
+        ':emp_id' => $this->emp_id,
+        ':thai_year' => $this->thai_year,
+        ':status' => 'Approve',
+    ])->queryOne();
+}
 
     public function listEmployees()
     {
