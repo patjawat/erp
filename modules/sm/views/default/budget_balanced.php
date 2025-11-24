@@ -32,7 +32,7 @@ use yii\helpers\Json;
                     <i class="fa-solid fa-wallet fs-1 text-secondary"></i>
                 </div>
                 <div class="">
-                    <span class="h5 fw-semibold"><?=$model->SummaryTotal()?> บาท</span>
+                    <span class="h5"><?=$model->SummaryTotal()?> บาท</span>
                     <!-- <p class="fw-lighter">ใช้จ่ายไปแล้วประมาณ 25% ของงบประมาณประจำปี</p> -->
                 </div>
                 <div id="orderBudget"></div>

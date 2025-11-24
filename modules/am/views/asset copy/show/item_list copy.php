@@ -37,7 +37,7 @@ use yii\helpers\Html;
                                 <li>
                                     <i class="bi bi-check2-circle text-primary fs-5"></i> 
                                     <span class="fw-semibold">มูลค่า</span> :
-                                    <span class="text-white bg-primary badge rounded-pill fs-6 shadow fw-semibold"><?=isset($model->price) ? number_format($model->price,2) : ''?></span> บาท
+                                    <span class="text-white bg-primary badge rounded-pill fs-6 shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span> บาท
                             </li>
                 <!-- <li> <i class="bi bi-check2-circle text-primary me-1 fs-5"></i><?php // $model->AssetTypeName();?></li> -->
                

@@ -14,21 +14,21 @@ use app\modules\am\models\Asset;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
-                        <th class="fw-semibold" scope="col" style="width:70px;">รูปภาพ</th>
-                        <th class="fw-semibold" scope="col" style="width:200px;">หมายเลขครุภัณฑ์</th>
-                        <th class="fw-semibold" scope="col">รายการทรัพย์สิน</th>
-                        <th class="fw-semibold" scope="col" style="width: 350px;">ยี่ห้อ</th>
-                        <th class="fw-semibold" scope="col">ราคา</th>
-                        <th class="fw-semibold" scope="col">วันที่รับเข้า</th>
-                        <th class="fw-semibold" scope="col">สถานะ</th>
+                        <th scope="col" style="text-align: center;">ลำดับ</th>
+                        <th scope="col" style="width:70px;">รูปภาพ</th>
+                        <th scope="col" style="width:200px;">หมายเลขครุภัณฑ์</th>
+                        <th scope="col">รายการทรัพย์สิน</th>
+                        <th scope="col" style="width: 350px;">ยี่ห้อ</th>
+                        <th scope="col">ราคา</th>
+                        <th scope="col">วันที่รับเข้า</th>
+                        <th scope="col">สถานะ</th>
                         <th class="fw-semibold text-center" scope="col" style="width: 100px;">ดำเนินการ</th>
                     </tr>
                 </thead>
               <tbody class="table-group-divider align-middle">
                     <?php foreach($dataProvider->getModels() as $key => $item):?>
                     <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                      <td>  <?= Html::a(Html::img($item->showImg(),['class' => 'avatar avatar-sm bg-primary text-white lazyautosizes ls-is-cached lazyloaded']), ['view','id' => $item->id],['class' => '', ]) ?></td>
                      <td class="fw-semibold text-primary"><?=$item->code?></td>
                         <td class="align-middle">

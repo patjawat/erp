@@ -9,8 +9,8 @@ use yii\helpers\Html;
     >
         <thead>
             <tr>
-                <th class="fw-semibold" scope="col">ลำดับ</th>
-                <th class="fw-semibold" scope="col">ชื่อ-นามสกุล</th>
+                <th scope="col">ลำดับ</th>
+                <th scope="col">ชื่อ-นามสกุล</th>
                 <th class="fw-semibold text-center" scope="col">ดำเนินการ</th>
             </tr>
         </thead>

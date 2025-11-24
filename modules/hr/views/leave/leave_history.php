@@ -21,11 +21,11 @@ use app\modules\hr\models\Leave;
     <tbody class="align-middle table-group-divider">
         <?php foreach($model as $item):?>
             <tr class="">
-            <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
+            <td class="text-center"><?php echo $item->thai_year?></td>
             <td class="text-truncate" style="max-width: 230px;"><?=$item->getAvatar(false)['avatar']?></td>
             <td><?=$item->leaveType?->title ?? '-'?></td>
             <td><?=$item->showLeaveDate()?></td>
-            <td class="text-center fw-semibold"><?php echo $item->total_days?></td>
+            <td class="text-center"><?php echo $item->total_days?></td>
             <td class="text-start"><?php echo $item->data_json['reason']?></td>
             
         </tr>

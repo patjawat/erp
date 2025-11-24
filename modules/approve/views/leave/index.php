@@ -54,17 +54,17 @@ $msg = 'ขอ';
             <thead>
                 <tr>
                     <!-- Checkbox เลือกทั้งหมด -->
-                    <th class="text-center fw-semibold" style="width:30px">
+                    <th class="text-center" style="width:30px">
                         <input type="checkbox" id="check-all">
                     </th>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
-                    <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
-                    <th class="fw-semibold" scope="col" style="width:100px">ประเภทเวร</th>
+                    <th scope="col">ผู้ขออนุมัติการลา</th>
+                    <th scope="col" style="width:100px">ประเภทเวร</th>
                     <th>ประเภทการลา</th>
                     <th>ระหว่างวันที่</th>
                     <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
-                    <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
+                    <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
                     <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>
                     <th class="fw-semibold text-center">ดำเนินการ</th>
                 </tr>
@@ -80,8 +80,8 @@ $msg = 'ขอ';
                                 value="<?= $item->id ?>"
                                 <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
                         </td>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td class="text-center fw-semibold "><?php echo $item->leave->thai_year ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center "><?php echo $item->leave->thai_year ?></td>
                         <td class="text-truncate" style="max-width: 230px;">
                             <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->leave->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                                 class="open-modal" data-size="modal-xl">

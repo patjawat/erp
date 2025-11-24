@@ -57,7 +57,7 @@ use app\modules\purchase\models\Order;
                         }
                         ?>
                 </td>
-                <td class="align-middle text-end fw-semibold">
+                <td class="align-middle text-end">
                     <?php
                             try {
                                 echo number_format($item->price, 2);
@@ -70,7 +70,7 @@ use app\modules\purchase\models\Order;
                     <?= $item->qty ?>
                 </td>
                 <td class="align-middle text-end">
-                    <div class="d-flex justify-content-end fw-semibold">
+                    <div class="d-flex justify-content-end">
                         <?php
                                 try {
                                     echo number_format(($item->qty * $item->price), 2);

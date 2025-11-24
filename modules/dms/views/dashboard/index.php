@@ -22,7 +22,7 @@ $this->title = 'Dashboard DMS'
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo number_format($searchModel->CountType('receive'))?>
+                    <span class="h5"><?php echo number_format($searchModel->CountType('receive'))?>
                         ทะเบียนรับ</span>
                     <div class="relative">
                         <i class="fa-solid fa-download text-black-50 fs-1 mt-1"></i>
@@ -39,7 +39,7 @@ $this->title = 'Dashboard DMS'
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo number_format($searchModel->CountType('send'))?>
+                    <span class="h5"><?php echo number_format($searchModel->CountType('send'))?>
                         ทะเบียนรับส่ง</span>
                     <div class="relative">
                         <i class="fa-solid fa-paper-plane text-black-50 fs-1 mt-1"></i>
@@ -57,7 +57,7 @@ $this->title = 'Dashboard DMS'
         <div class="card">
             <div class="card-body">
                     <div class="d-flex justify-content-between gap-1 mb-0">
-                        <span class="h5 fw-semibold">0 คำสั่ง</span>
+                        <span class="h5">0 คำสั่ง</span>
                         <div class="relative">
                             <i class="fa-solid fa-bullhorn text-black-50 fs-1"></i>
                         </div>
@@ -74,7 +74,7 @@ $this->title = 'Dashboard DMS'
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold">0 ทะเบียนประกาศ/นโยบาย</span>
+                    <span class="h5">0 ทะเบียนประกาศ/นโยบาย</span>
                     <div class="relative">
                         <i class="bi bi-eraser text-black-50 fs-2"></i>
                     </div>

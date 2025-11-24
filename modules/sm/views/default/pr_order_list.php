@@ -37,7 +37,7 @@ use yii\web\View;
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">$26,000 บาท</h6>
+                                    <h6 class="mb-2 fs-15">$26,000 บาท</h6>
                                     <p class="mb-0 fs-11 text-muted">12 ม.ค. 2567</p>
                                 </div>
                             </td>
@@ -58,7 +58,7 @@ use yii\web\View;
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">$2,000.00 บาท</h6>
+                                    <h6 class="mb-2 fs-15">$2,000.00 บาท</h6>
                                     <p class="mb-0 fs-11 text-muted">23 Jan 2020</p>
                                 </div>
                             </td>
@@ -79,7 +79,7 @@ use yii\web\View;
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">$7,000 บาท</h6>
+                                    <h6 class="mb-2 fs-15">$7,000 บาท</h6>
                                     <p class="mb-0 fs-11 text-muted">4 Apr 2020</p>
                                 </div>
                             </td>
@@ -100,7 +100,7 @@ use yii\web\View;
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold">$37.285</h6>
+                                    <h6 class="mb-2 fs-15">$37.285</h6>
                                     <p class="mb-0 fs-11 text-muted">4 Apr 2020</p>
                                 </div>
                             </td>

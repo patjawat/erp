@@ -24,9 +24,9 @@ use app\modules\hr\models\Leave;
                 <?=$item->getAvatar(false)['avatar']?>
             </td>
             <td class="text-start"><?php echo $item->data_json['reason']?></td>
-            <td class="text-center fw-semibold"><?php echo $item->total_days?></td>
+            <td class="text-center"><?php echo $item->total_days?></td>
             <td><?=$item->showLeaveDate()?></td>
-            <td class="text-center fw-semibold"><?php echo $item->thai_year?></td>
+            <td class="text-center"><?php echo $item->thai_year?></td>
             
         </tr>
         <?php endforeach;?>

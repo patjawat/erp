@@ -66,7 +66,7 @@ use yii\helpers\Html;
                                     <i class="bi bi-check2-circle text-primary fs-5"></i>
                                 <span class="fw-semibold">มูลค่า</span> :
                                 <span
-                                class="text-white bg-primary badge rounded-pill fs-6 fw-semibold shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span>
+                                class="text-white bg-primary badge rounded-pill fs-6 shadow"><?=isset($model->price) ? number_format($model->price,2) : ''?></span>
                                 บาท
                             </div>
                             <div>

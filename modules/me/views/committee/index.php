@@ -19,23 +19,23 @@ use yii\helpers\Html;
             <table class="table">
                 <thead>
                     <tr>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold" scope="col">รายการ</th>
-                        <th class="fw-semibold" scope="col">ตำแหน่ง</th>
-                        <th class="fw-semibold" scope="col">ลงความเห็น</th>
+                        <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th scope="col">รายการ</th>
+                        <th scope="col">ตำแหน่ง</th>
+                        <th scope="col">ลงความเห็น</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach($dataProvider->getModels() as $key => $item):?>
                     <tr>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo (($dataProvider->pagination->offset + 1)+$key)?>
                         </td>
                         <td class="fw-light align-middle">
                         <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->id]) ?>"
                             class="text-dark open-modal-fullscreen-x">
                             <div>
-                            <p class="text-primary fw-semibold fs-13 mb-0">
+                            <p class="text-primary fs-13 mb-0">
                                         <?php if (isset($item->document) && $item->document->doc_speed === 'ด่วนที่สุด'): ?>
                                             <span class="badge text-bg-danger fs-13">
                                                 <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
@@ -53,7 +53,7 @@ use yii\helpers\Html;
                                         <?= isset($item->document) ? Html::encode($item->document->doc_number) : 'ไม่พบเลขที่เอกสาร'; ?>
             
                                     </p>
-                                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
+                                        <p style="width:600px" class="text-truncate fs-6 mb-0"><?php echo isset($item->document) ? $item->document->topic : '' ?> <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?></p>
                                         </div>
                                         <span class="text-primary fw-normal fs-13">
                                         <i class="fa-solid fa-inbox"></i>

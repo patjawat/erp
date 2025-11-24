@@ -14,10 +14,10 @@ use yii\helpers\Html;
         <table class="table">
             <thead>
                 <tr>
-                    <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>
+                    <th style="width:280px">ผู้ขอซื้อ</th>
                     <th>ประเภท/มูลค่า</th>
-                    <th class="fw-semibold" style="width: 200px;">สถานะ</th>
-                    <th class="fw-semibold" style="width: 100px;">ดำเนินการ</th>
+                    <th style="width: 200px;">สถานะ</th>
+                    <th style="width: 100px;">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody>

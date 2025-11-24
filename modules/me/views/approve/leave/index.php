@@ -38,14 +38,14 @@ $msg = 'ขอ';
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->leave->thai_year?></td>
+                    <td class="text-center"><?php echo $item->leave->thai_year?></td>
                     <td class="text-truncate" style="max-width: 230px;">
                         <a href="<?php echo Url::to(['/hr/leave/view','id' => $item->leave->id,'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
                             class="open-modal" data-size="modal-xl">
                             <?=$item->leave->getAvatar(false)['avatar']?>
                         </a>
                     </td>
-                    <td class="text-center fw-semibold"><?php echo $item->leave->total_days?></td>
+                    <td class="text-center"><?php echo $item->leave->total_days?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_start, 'medium')?></td>
                     <td><?=Yii::$app->thaiFormatter->asDate($item->leave->date_end, 'medium')?></td>
                     <td class="text-start text-truncate" style="max-width:150px;">

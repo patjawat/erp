@@ -38,7 +38,7 @@ use yii\helpers\ArrayHelper;
                             ?>
                         </td>
                         <td class="align-middle text-end">
-                            <div class="d-flex justify-content-end fw-semibold">
+                            <div class="d-flex justify-content-end">
                                 <?php
                                 try {
                                     echo number_format(($item->qty * $item->price), 2);

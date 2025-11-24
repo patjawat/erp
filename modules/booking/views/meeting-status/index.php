@@ -60,18 +60,18 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:5%">ลำดับ</th>
-                    <th class="text-center fw-semibold" style="width:20%px">สีพื้นหลัง</th>
-                    <th class="text-center fw-semibold" style="width:20%px">สีตัวหนังสือ</th>
-                    <th class="fw-semibold" style="width:10%">รหัส</th>
-                    <th class="fw-semibold" style="width:40%">สถานะ</th>
+                    <th class="text-center" style="width:5%">ลำดับ</th>
+                    <th class="text-center" style="width:20%px">สีพื้นหลัง</th>
+                    <th class="text-center" style="width:20%px">สีตัวหนังสือ</th>
+                    <th style="width:10%">รหัส</th>
+                    <th style="width:40%">สถานะ</th>
                     <th class="fw-semibold text-end" style="width:10%">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td>
                             <?php

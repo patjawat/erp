@@ -21,8 +21,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card mb-3">
     <div class="card-body">
         <div class="row mb-2">
-            <div class="col-md-4 fw-semibold">รหัส FSN:</div>
-            <div class="col-md-8 fw-semibold" id="viewAssetFSN"><?=$model->code?></div>
+            <div class="col-md-4">รหัส FSN:</div>
+            <div class="col-md-8" id="viewAssetFSN"><?=$model->code?></div>
         </div>
         <div class="row">
             <div class="col-md-4 fw-bold">ประเภททรัพย์สิน:</div>

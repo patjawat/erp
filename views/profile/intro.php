@@ -6,7 +6,7 @@
                                 class="d-block fs-12 text-fixed-white"><span class="op-7">You have completed</span>
                                 <span class="fw-semibold text-warning">48%</span> <span class="op-7">of the given
                                     target, you can also check your status</span>.</span> <span
-                                class="d-block fw-semibold mt-1"><a class="text-fixed-white"
+                                class="d-block mt-1"><a class="text-fixed-white"
                                     href="javascript:void(0);"><u>Click here</u></a></span>
                         </div>
                         <div>

@@ -17,10 +17,10 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
             <tbody>
                 <tr>
                     <td>ชื่อ-สกุล : </td>
-                    <td><span class="text-pink fw-semibold"><?=$model->fullname?></span></td>
+                    <td><span class="text-pink"><?=$model->fullname?></span></td>
 
                     <td>เลขบัตรประชาชน : </td>
-                    <td><span class="text-pink fw-semibold"><?=$model->cid?></span></td>
+                    <td><span class="text-pink"><?=$model->cid?></span></td>
                 </tr>
                 <tr>
                     <td>วันเกิด : </td>
@@ -52,24 +52,24 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
 
                 <tr>
                     <td scope="row">ตำแหน่ง</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->positionName()?></span></td>
+                    <td><span class="text-pink"><?=$model->positionName()?></span></td>
                     <td>ประเภท</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->positionTypeName()?></span></td>
+                    <td><span class="text-pink"><?=$model->positionTypeName()?></span></td>
                    
 
                 </tr>
                 <tr>
                
                     <td scope="row">ตำแหน่งเลขที่</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->position_number?></span></td>
+                    <td><span class="text-pink"><?=$model->position_number?></span></td>
                     <td>ระดับตำแหน่ง</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->positionLevelName()?></span></td>
+                    <td><span class="text-pink"><?=$model->positionLevelName()?></span></td>
                 </tr>
                 <tr>
                     <td>ตำแหน่งบริหาร</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->positionManageName();?></span></td>
+                    <td><span class="text-pink"><?=$model->positionManageName();?></span></td>
                     <td>ความเชี่ยวชาญ</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->expertiseName();?></span></td>
+                    <td><span class="text-pink"><?=$model->expertiseName();?></span></td>
                 </tr>
                 <tr>
                     <td>ระดับการศึกษา</td>
@@ -80,7 +80,7 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
                     </td>
 
                     <td>ประเภท/กลุ่มงาน</td>
-                    <td><span class="text-pink fw-semibold"><?=$model->positionGroupName();?></span></td>
+                    <td><span class="text-pink"><?=$model->positionGroupName();?></span></td>
                 </tr>
             </tbody>
         </table>

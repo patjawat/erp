@@ -5,7 +5,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo $searchModel->sumLeaveType('ReqCancel') ?> ขออนุมัติวันลา</span>
+                    <span class="h5"><?php echo $searchModel->sumLeaveType('ReqCancel') ?> ขออนุมัติวันลา</span>
                     <div class="relative">
                     <i class="bi bi-hourglass-split text-black-50 fs-2"></i>
                     </div>
@@ -22,7 +22,7 @@
     <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo $searchModel->sumLeaveType('LT3') ?>
+                    <span class="h5"><?php echo $searchModel->sumLeaveType('LT3') ?>
                     ลากิจ</span>
                     <div class="relative">
                     <i class="bi bi-person-fill-exclamation text-black-50 fs-2"></i>
@@ -39,7 +39,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo $searchModel->sumLeaveType('LT1') ?> ลาป่วย</span>
+                    <span class="h5"><?php echo $searchModel->sumLeaveType('LT1') ?> ลาป่วย</span>
                     <div class="relative">
                         <i class="bi bi-clipboard2-pulse text-black-50 fs-2"></i>
                     </div>
@@ -54,7 +54,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5 fw-semibold"><?php echo $searchModel->sumLeaveType('LT4') ?>
+                    <span class="h5"><?php echo $searchModel->sumLeaveType('LT4') ?>
                     ลาพักผ่อน</span>
                     <div class="relative">
                         <i class="bi bi-person-walking  text-black-50 fs-2"></i>

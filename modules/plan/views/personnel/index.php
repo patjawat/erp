@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th scope="col">ประเภท</th>
                     <th scope="col">หมวดหมู</th>
                     <th scope="col">วัตถุประสงค์</th>
@@ -65,11 +65,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="">
                     <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?= $item->planItem?->title ?? '-' ?></td>
                         <td> <?= $item->planItem?->planCategory?->title ?? '-' ?></td>
                         <td><?= $item->description ?></td>
-                        <td class="text-end fw-semibold"><?= number_format($item->order_price ?? 0, 2) ?></td>
+                        <td class="text-end"><?= number_format($item->order_price ?? 0, 2) ?></td>
                         <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
                         <td><?= $item->departmentName() ?></td>
                         <td><?= $item->viewStatus()['view'] ?></td>

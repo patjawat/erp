@@ -74,7 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ?>
                 <?php  foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><?php echo $item->employee->fullname ?? '-'?></td>
                     <td><?php echo $item->employee->positionName()?></td>
                     <td class="text-center"><?php echo $item->employee->cid?></td>

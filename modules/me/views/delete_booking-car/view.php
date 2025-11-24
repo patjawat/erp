@@ -21,30 +21,30 @@ $this->params['breadcrumbs'][] = $this->title;
     <table class="table border-0 table-striped-columns mt-3">
             <tbody>
                 <tr>
-                    <td class="text-dark fw-semibold">เรื่อง </td>
+                    <td class="text-dark">เรื่อง </td>
                     <td colspan="3"><?php echo $model->reason?></td>
                 </tr>
                 <tr>
-                    <td class="text-dark fw-semibold">วันออกเดินทาง : </td>
+                    <td class="text-dark">วันออกเดินทาง : </td>
                     <td><?php echo Yii::$app->thaiFormatter->asDate($model->date_start, 'medium');?> เวลา
                         <?php echo $model->time_start?></td>
 
-                    <td class="text-dark fw-semibold">วันกลับ : </td>
+                    <td class="text-dark">วันกลับ : </td>
                     <td><?php echo Yii::$app->thaiFormatter->asDate($model->date_end, 'medium');?> เวลา
                         <?php echo $model->time_end?></td>
                 </tr>
                 <tr>
-                    <td class="text-dark fw-semibold">สถานที่ไป : </td>
+                    <td class="text-dark">สถานที่ไป : </td>
                     <td><?php echo $model->location?></span></td>
-                    <td class="text-dark fw-semibold">ผู้ร่วมเดินทาง : </td>
+                    <td class="text-dark">ผู้ร่วมเดินทาง : </td>
                     <td><?php echo $model->data_json['total_person_count'] ?? '-'?></td>
                 </tr>
                 <!-- <tr>
-                    <td class="text-dark fw-semibold">รถที่ร้องขอ : </td>
+                    <td class="text-dark">รถที่ร้องขอ : </td>
                     <td colspan="3"><?php echo $model->data_json['req_license_plate'] ?? '-'?></td>
                 </tr>
                 <tr>
-                    <td class="text-dark fw-semibold">พนักงานขับที่ร้องขอ : </td>
+                    <td class="text-dark">พนักงานขับที่ร้องขอ : </td>
                     <td colspan="3">
                         <?php 
                                 try {
@@ -55,7 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ?>
                 </tr> -->
                 <tr>
-                    <td class="text-dark fw-semibold">หนังสืออ้างอืง : </td>
+                    <td class="text-dark">หนังสืออ้างอืง : </td>
                     <td colspan="4"></td>
                 </tr>
 

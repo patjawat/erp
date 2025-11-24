@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                 <thead>
                     <tr>
                         <th class="text-center" scope="col" style="width: 5%">#ลำดับ</th>
-                        <th scope="col" class="text-start fw-semibold" style="width: 161px;">รหัสงานซ่อม</th>
+                        <th scope="col" class="text-start" style="width: 161px;">รหัสงานซ่อม</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
@@ -68,8 +68,8 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                 <tbody class="align-middle table-group-divider">
                      <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                          <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                       <td class="text-start fw-semibold"><?php echo $item->repair_number?></td>
+                          <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                       <td class="text-start"><?php echo $item->repair_number?></td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
                         <td><?=$item->data_json['location']?></td>

@@ -71,7 +71,7 @@ use app\components\ThaiDateHelper;
             <tbody>
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                       <td class="text-center fw-semibold"><?= ($dataProvider->pagination ? $dataProvider->pagination->offset : 0) + $key + 1 ?></td>
+                       <td class="text-center"><?= ($dataProvider->pagination ? $dataProvider->pagination->offset : 0) + $key + 1 ?></td>
                        <td><?=$item->stockOrder->warehouse->warehouse_name ?></td>
                        <td><?=$item->stockOrder->warehouse->warehouse_type == 'MAIN' ? 'คลังหลัก' : 'คลังย่อย' ?></td>
                        <td><?=$item->stockOrder->assetType?->title ?? $item->stockOrder->asset_type_id; ?></td>

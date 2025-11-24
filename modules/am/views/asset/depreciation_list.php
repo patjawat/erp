@@ -193,22 +193,22 @@ order by m1) as x1) as x2) as x3";
                 <tr class="<?= $data['active'] == 'Y' ? 'bg-primary-subtle' : '' ?>">
                     <td class="text-center"><?= $data['date_number'] ?></td>
                     <td scope="row" class="text-center">
-                        <span class="<?= $data['active'] == 'Y' ? 'fs-6  fw-semibold' : '' ?>">
+                        <span class="<?= $data['active'] == 'Y' ? 'fs-6 ' : '' ?>">
                             <?php echo Yii::$app->thaiFormatter->asDate($data['end_date'], 'medium') ?>
                         </span>
                     </td>
                     <td class="text-center">
-                        <span class="<?= $data['active'] == 'Y' ? 'fs-6  fw-semibold' : '' ?>">
+                        <span class="<?= $data['active'] == 'Y' ? 'fs-6 ' : '' ?>">
                             <?php echo $data['count_days'] ?>
                         </span>
                     </td>
                     <td class="text-end">
-                        <span class="<?= $data['active'] == 'Y' ? 'fs-6  fw-semibold' : '' ?>">
+                        <span class="<?= $data['active'] == 'Y' ? 'fs-6 ' : '' ?>">
                             <?php echo number_format($data['total_price'], 2) ?>
                         </span>
                     </td>
                     <td class="text-end">
-                        <span class="<?= $data['active'] == 'Y' ? 'text-white bg-primary badge rounded-pill fs-6 shadow fw-semibold border border-white' : 'fw-semibold' ?>">
+                        <span class="<?= $data['active'] == 'Y' ? 'text-white bg-primary badge rounded-pill fs-6 shadow border border-white' : 'fw-semibold' ?>">
                             <?= number_format(($data['total']), 2); ?>
 
                         </span>

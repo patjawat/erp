@@ -18,7 +18,7 @@ $listCars = Asset::find()
                 </div>
                 <div class="card-body p-1">
 
-                    <p class="text-center fw-semibold mb-0">แจ้งซ่อม</p>
+                    <p class="text-center mb-0">แจ้งซ่อม</p>
                 </div>
             </div>
         </a>

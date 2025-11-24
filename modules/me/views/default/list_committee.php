@@ -28,16 +28,16 @@ $me = UserHelper::GetEmployee();
             <table class="table">
                 <thead>
                     <tr>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="text-center fw-semibold" style="width:80px">พ.ศ.</th>
-                        <th class="fw-semibold" scope="col">รายการกลุ่ม/ทีมประสาน</th>
-                        <th class="fw-semibold" scope="col">ตำแหน่งที่ได้รับ</th>
+                        <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th class="text-center" style="width:80px">พ.ศ.</th>
+                        <th scope="col">รายการกลุ่ม/ทีมประสาน</th>
+                        <th scope="col">ตำแหน่งที่ได้รับ</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach($me->teamGroup() as $key => $item):?>
                     <tr>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo $key +1?>
                         </td>
                         <td class="text-center"><?=$item->thai_year?></td>

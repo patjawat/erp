@@ -12,15 +12,15 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold" scope="col" style="width:100px">ชื่อ-นามสกุล</th>
-                        <th class="fw-semibold" scope="col">ประเภท</th>
-                        <th class="fw-semibold" scope="col">แผนก/ฝ่าย</th>
-                        <th class="fw-semibold" scope="col" class="text-center">เริ่มงาน</th>
-                        <th class="fw-semibold" scope="col" class="text-center">ประเภทงาน</th>
-                        <th class="fw-semibold" scope="col">อายุราชการ</th>
-                        <th class="fw-semibold" scope="col">สถานะ</th>
-                        <th class="fw-semibold" scope="col" style="width:250px">เหลืออีก | สิ้นสุดสัญญาจ้าง</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th scope="col" style="width:100px">ชื่อ-นามสกุล</th>
+                        <th scope="col">ประเภท</th>
+                        <th scope="col">แผนก/ฝ่าย</th>
+                        <th scope="col" class="text-center">เริ่มงาน</th>
+                        <th scope="col" class="text-center">ประเภทงาน</th>
+                        <th scope="col">อายุราชการ</th>
+                        <th scope="col">สถานะ</th>
+                        <th scope="col" style="width:250px">เหลืออีก | สิ้นสุดสัญญาจ้าง</th>
                         <th class="fw-semibold text-center" scope="col" style="width:100px">ดำเนินการ</th>
 
                     </tr>
@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
         <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                         <td class="text-truncate">
                             <?= Html::a($item->getAvatar(false),['/hr/employees/view','id' => $item->id]) ?></td>
                         <td><?=$item->positionType?->title ?? 'ไม่ระบุ'?></td>

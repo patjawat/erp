@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody class="table-group-divider align-middle">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="fw-semibold text-primary"><?=$item->fsn?></td>
                     <td><?=$item->title?></td>
                       <td><?=$item->assetType->title ?? '-'?></td>
@@ -115,7 +115,7 @@ $("body").on("click", ".select-item", function (e) {
                     <td><input type="text" name="items[\${rowIndex}][item_name]" value="\${title}" class="form-control"></td>
                     <td><input type="number" name="items[\${rowIndex}][qty]" value="1" class="form-control qty"></td>
                     <td><input type="number" step="0.01" name="items[\${rowIndex}][unit_price]" value="\${price}" class="form-control price"></td>
-                    <td class="total text-end fw-semibold">\${totalPrice}</td>
+                    <td class="total text-end">\${totalPrice}</td>
                     <td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>
                 </tr>`;
                 $("#item-table tbody").append(row);

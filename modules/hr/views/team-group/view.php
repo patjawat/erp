@@ -49,18 +49,18 @@ use yii\widgets\DetailView;
     >
         <thead>
             <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="text-center" style="width:30px">ลำดับ</th>
                 <th scope="col">พ.ศ.</th>
                 <th scope="col">รายการ</th>
                 <th scope="col">ทีมประสาน</th>
-                <th class=" fw-semibold text-center" scope="col" style="width:130px">ดำเนินการ</th>
+                <th class=" text-center" scope="col" style="width:130px">ดำเนินการ</th>
             </tr>
         </thead>
         <tbody>
         <tbody class="align-middle table-group-divider">
             <?php foreach(array_reverse($model->teamGroupDetail) as $key => $item):?>
             <tr>
-                <td class="text-center fw-semibold"><?php echo ($key+1)?>
+                <td class="text-center"><?php echo ($key+1)?>
             </td>
             <td><?=$item->thai_year?></td>
                 <td><?=$item->title?></td>

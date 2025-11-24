@@ -22,7 +22,7 @@ $me = UserHelper::GetEmployee();
     <div class="d-flex justify-content-between mb-6">
         <h1 class="h6 font-bold">วันที่</h1>
         <div class="text-muted">
-            <div><span class="text-pink fw-semibold"><?php echo AppHelper::convertToThai($model->date_start ?? '') ?></span> ถึง <span class="text-pink fw-semibold"><?php echo AppHelper::convertToThai($model->date_end ?? '') ?></span></div>
+            <div><span class="text-pink"><?php echo AppHelper::convertToThai($model->date_start ?? '') ?></span> ถึง <span class="text-pink"><?php echo AppHelper::convertToThai($model->date_end ?? '') ?></span></div>
             <div>รวม <span class="badge rounded-pill badge-soft-danger text-primary fs-13 "><?php echo $model->total_days?></span> วัน</div>
         </div>
     </div>

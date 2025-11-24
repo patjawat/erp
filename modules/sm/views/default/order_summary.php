@@ -15,7 +15,7 @@ use yii\helpers\Html;
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=$model->prSummery()['price'];?> บาท</span>
+                <span class="h5"><?=$model->prSummery()['price'];?> บาท</span>
                 <i class="bi bi-plus-circle-fill text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
@@ -27,7 +27,7 @@ use yii\helpers\Html;
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($model->pqSummery()['price'],2)?> บาท</span>
+                <span class="h5"><?=number_format($model->pqSummery()['price'],2)?> บาท</span>
                 <i class="fa-solid fa-user-check text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
@@ -39,7 +39,7 @@ use yii\helpers\Html;
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($model->poSummery()['price'],2)?> บาท</span>
+                <span class="h5"><?=number_format($model->poSummery()['price'],2)?> บาท</span>
                 <i class="bi bi-rocket text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
@@ -51,7 +51,7 @@ use yii\helpers\Html;
     <div class="col-3">
         <div class="text-bg-light p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
-                <span class="h5 fw-semibold"><?=number_format($model->orderAccep()['price'],2)?></span>
+                <span class="h5"><?=number_format($model->orderAccep()['price'],2)?></span>
                 <i class="bi bi-bag-check-fill text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">

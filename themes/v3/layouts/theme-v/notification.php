@@ -27,7 +27,7 @@ $purchase = $notify['purchase'];
     <div aria-labelledby="page-header-notification-dropdown"
         class="dropdown-menu-lg dropdown-menu-right p-0 dropdown-menu" style="width: 350px;"> 
         <div class="notify-title p-3"> 
-            <h5 class="fs-14 fw-semibold mb-0"> 
+            <h5 class="fs-14 mb-0"> 
                 <span class="h5"><i class="fa-solid fa-bell noti-animate me-1"></i> Notification</span> 
             </h5> 
         </div> 

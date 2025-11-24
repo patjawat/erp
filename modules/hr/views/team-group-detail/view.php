@@ -39,10 +39,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table mb-5">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class=" fw-semibold" scope="col">รายกชื่อ-นามสกุลาร</th>
-                    <th class=" fw-semibold" scope="col">ตำแหน่ง</th>
-                    <th class=" fw-semibold" scope="col" style="width:130px">ดำเนินการ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
+                    <th class="" scope="col">รายกชื่อ-นามสกุลาร</th>
+                    <th class="" scope="col">ตำแหน่ง</th>
+                    <th class="" scope="col" style="width:130px">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody>

@@ -6,7 +6,7 @@ use yii\helpers\Html;
 <table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="text-center" style="width:30px">ลำดับ</th>
             <th>วันที่ต้องการใช้</th>
             <th>ห้องประชุม</th>
             <th>หัวข้อการประชุม</th>
@@ -20,7 +20,7 @@ use yii\helpers\Html;
         <!-- Row 1 -->
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
-                <td class="text-center fw-semibold">
+                <td class="text-center">
                     <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                 <td>
                     <?= $item->viewMeetingDate() ?>

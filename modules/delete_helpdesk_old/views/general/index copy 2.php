@@ -53,10 +53,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" scope="col" style="width:500px">รายละเอียด</th>
-                    <th class="fw-semibold" scope="col" style="width:300px">ผู้แจ้ง</th>
-                    <!-- <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th> -->
+                    <th class="text-center" style="width:30px">ลำดับ</th>
+                    <th scope="col" style="width:500px">รายละเอียด</th>
+                    <th scope="col" style="width:300px">ผู้แจ้ง</th>
+                    <!-- <th style="width:300px">ผู้ร่วมงานซ่อม </th> -->
                     <th style="width:150px">ความสำคัญ</th>
                     <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
                     <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody>
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr class="align-middle">
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td>
                         <div class="d-flex">
                             <?php // echo $item->RepairType()['image']?>

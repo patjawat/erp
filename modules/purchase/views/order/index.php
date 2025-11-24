@@ -90,7 +90,7 @@ if($searchModel->date_between == 'pr_create_date'){
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th>ผู้ขอ/วันเวลา</th>
                     <th>ประเภท</th>
                     <th>ผู้ขาย/เลขที่สั่งซื้อ</th>
@@ -108,7 +108,7 @@ if($searchModel->date_between == 'pr_create_date'){
                         $totalPrice += $item->calculateVAT()['priceAfterVAT'];
                         ?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
                     <td><?=$item->assetType->title ?? '-'?>
                 </td>

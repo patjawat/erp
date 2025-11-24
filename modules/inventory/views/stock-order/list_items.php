@@ -40,11 +40,11 @@ $emp = UserHelper::GetEmployee();
 
             <td class="align-middle text-end"><?php echo number_format($item->unit_price,2); ?></td>
             <td class="align-middle text-start"><?php echo $item->lot_number; ?></td>
-            <td class="text-center fw-semibold"><?=$item->SumlotQty();?></td>
+            <td class="text-center"><?=$item->SumlotQty();?></td>
             <td class="align-middle text-center">
                 <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?>
             </td>
-            <td class="align-middle text-center fw-semibold">
+            <td class="align-middle text-center">
                 <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
             <td class="text-center">
                 <?php // if ($model->OrderApprove() && Yii::$app->user->can('warehouse') && $item->SumLotQty() > 0 && $office ?? false && !in_array($model->order_status, ['cancel'])): ?>

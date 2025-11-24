@@ -39,7 +39,7 @@ use yii\widgets\Pjax;
                         }
                         ?>
                         </td>
-                        <td class="align-middle text-end fw-semibold">
+                        <td class="align-middle text-end">
                             <?php
                             try {
                                 echo number_format($item->price, 2);
@@ -52,7 +52,7 @@ use yii\widgets\Pjax;
                             <?= $item->qty ?>
                         </td>
                         <td class="align-middle text-end">
-                            <div class="d-flex justify-content-end fw-semibold">
+                            <div class="d-flex justify-content-end">
                                 <?php
                                 try {
                                     echo number_format(($item->qty * $item->price), 2);

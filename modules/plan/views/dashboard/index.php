@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">แบบร่าง</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('draft')?></span>
+                        <span class="h4"><?=$searchModel->countStatus('draft')?></span>
                     </div>
                     <div class="relative">
                         <i class="bi bi-file-earmark-text text-black-50 fs-1 mt-1"></i>
@@ -52,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">รออนุมัติ</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('submit')?></span>
+                        <span class="h4"><?=$searchModel->countStatus('submit')?></span>
                     </div>
                     <div class="relative">
                         <i class="bi bi-hourglass-split text-info text-opacity-75 fs-1 mt-1"></i>
@@ -67,7 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ปรับแผน</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('renew')?></span>
+                        <span class="h4"><?=$searchModel->countStatus('renew')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-repeat text-black-50 fs-1 mt-1"></i>
@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">อนุมัติ</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('approve')?></span>
+                        <span class="h4"><?=$searchModel->countStatus('approve')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-regular fa-circle-check text-success text-opacity-75 fs-1 mt-1"></i>
@@ -97,7 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ไม่อนุมัติ</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus('reject')?></span>
+                        <span class="h4"><?=$searchModel->countStatus('reject')?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-hand text-danger text-opacity-75 fs-1 mt-1"></i>
@@ -112,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="d-flex justify-content-between gap-1 mb-0">
                     <div class="d-flex flex-column">
                         <span class="h6">ทั้งหมด</span>
-                        <span class="h4 fw-semibold"><?=$searchModel->countStatus()?></span>
+                        <span class="h4"><?=$searchModel->countStatus()?></span>
                     </div>
                     <div class="relative">
                         <i class="fa-solid fa-ranking-star text-primary text-opacity-75 fs-1 mt-1"></i>

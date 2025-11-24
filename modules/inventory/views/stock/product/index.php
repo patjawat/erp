@@ -15,7 +15,7 @@ use app\components\StockHelper;
     <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                <th class="text-center" style="width:30px">ลำดับ</th>
                 <th scope="col">รายการ</th>
                 <th scope="col">ประเภทวัสดุ</th>
                 <th scope="col" class="text-center">จำนวนคงเหลือ</th>
@@ -34,7 +34,7 @@ use app\components\StockHelper;
                         <tr>
                     <?php endif?>
 
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                     <td><?= $item->product?->Avatar(); ?></td>
                     <td><?= $item->product?->productType->title; ?></td>
                     <td class="text-center"><?= $item->sumStockItem() ?></td>

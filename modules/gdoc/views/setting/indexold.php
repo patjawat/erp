@@ -22,7 +22,7 @@ $this->title = "Google API Configuration";
                         <p class="lead text-muted">จัดการการตั้งค่า Google Drive และ Docs API</p>
                         <div class="mt-3">
                             <span class="status-indicator status-connected"></span>
-                            <span class="text-success fw-semibold">ระบบพร้อมใช้งาน</span>
+                            <span class="text-success">ระบบพร้อมใช้งาน</span>
                         </div>
                     </div>
    
@@ -90,7 +90,7 @@ $this->title = "Google API Configuration";
                         <div class="p-4">
                             <form id="idForm">
                                 <div class="mb-4">
-                                    <label class="form-label fw-semibold">
+                                    <label class="form-label">
                                         <i class="fas fa-tag me-2"></i>ชื่อโครงการ
                                     </label>
                                     <input type="text" class="form-control form-control-lg" id="projectName"
@@ -98,7 +98,7 @@ $this->title = "Google API Configuration";
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label fw-semibold">
+                                    <label class="form-label">
                                         <i class="fas fa-link me-2"></i>Google Drive Folder ID
                                     </label>
                                     <input type="text" class="form-control form-control-lg" id="driveId"

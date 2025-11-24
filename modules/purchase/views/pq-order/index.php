@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table">
                 <thead>
                     <tr>
-                        <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
+                        <th style="width:350px">ผู้ขอซื้อ</th>
                         <th>เลขทะเบียนคุม(PQ)</th>
                         <th>ความคืบหน้า</th>
                         <th>หมายเหตุ</th>

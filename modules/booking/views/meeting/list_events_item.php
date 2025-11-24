@@ -32,7 +32,7 @@ use yii\widgets\Pjax;
                     </td>
                         <td>
                             <a href="<?=Url::to(['view','id' => $item->id])?>" class="open-modal" data-size="modal-lg">
-                                <p class="mb-0 fw-semibold"><?= $item->room->title ?></p>
+                                <p class="mb-0"><?= $item->room->title ?></p>
                                 <p class="mb-0 fs-12"><?= $item->title ?></p>
                             </a>
                         </td>

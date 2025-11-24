@@ -47,23 +47,23 @@ $this->title = 'ทะเบียนหนังสือ';
         <table class="table table-striped table-fixed">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:50px;">ลำดับ</th>
-                    <th class="text-center fw-semibold" style="min-width:100px; width:100px;">เลขที่รับ</th>
-                    <th class="fw-semibold" style="min-width:320px;">เรื่อง</th>
-                    <th class="fw-semibold" style="min-width:250px;">ผู้บันทึก</th>
-                    <th class="fw-semibold" style="min-width:130px;">สถานะ</th>
-                    <th class="fw-semibold" style="width:120px;">ลงความเห็น</th>
+                    <th class="text-center" style="width:50px;">ลำดับ</th>
+                    <th class="text-center" style="min-width:100px; width:100px;">เลขที่รับ</th>
+                    <th style="min-width:320px;">เรื่อง</th>
+                    <th style="min-width:250px;">ผู้บันทึก</th>
+                    <th style="min-width:130px;">สถานะ</th>
+                    <th style="width:120px;">ลงความเห็น</th>
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                <td class="text-center fw-semibold">
+                <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                <td class="text-center">
                     <?php echo $item->doc_regis_number ?>
                 </td>
                 <td class="fw-light align-middle">
                     <div>
-                        <h6 style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                        <h6 style="width:600px" class="text-truncate fs-6 mb-0">
                             <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
                             <span class="badge text-bg-danger fs-13">
                                 <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด

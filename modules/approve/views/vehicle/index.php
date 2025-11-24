@@ -53,13 +53,13 @@ $msg = 'ขอ';
                         <?php foreach($dataProvider->getModels() as $item):?>
                         <tr>
                             <td>
-                                <p class="mb-0 fw-semibold"><?=$item->vehicle->code?></p>
+                                <p class="mb-0"><?=$item->vehicle->code?></p>
                                 <p class="fs-13 mb-0">
                                     <?php echo Yii::$app->thaiDate->toThaiDate($item->vehicle->created_at, true, true)?></p>
                             </td>
                             <td>
                                 <p class="mb-0"><?php echo $item->vehicle->viewGoType()?></p>
-                                <p class="mb-0 fw-semibold"><?php echo $item->vehicle->showDateRange()?></p>
+                                <p class="mb-0"><?php echo $item->vehicle->showDateRange()?></p>
                             </td>
                             <td><?php echo $item->vehicle->locationOrg?->title ?? '-'?></td>
                             <td><?php echo $item->vehicle->carType?->title ?? '-'?></td>

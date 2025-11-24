@@ -43,7 +43,7 @@ try {
 <div class="row mt-4">
     <div class="col-12">
         <fieldset class="border p-3 rounded">
-            <legend class="float-none w-auto px-2 fs-6 fw-semibold">คำสั่ง</legend>
+            <legend class="float-none w-auto px-2 fs-6">คำสั่ง</legend>
             <div class="row">
                 <div class="col-12">
                     <?= $form->field($model, 'data_json[order]')->textInput()->label('ตามคำสั่ง') ?>
@@ -60,7 +60,7 @@ try {
     </div>
     <div class="row mt-4">
         <fieldset class="border p-3 rounded">
-            <legend class="float-none w-auto px-2 fs-6 fw-semibold">แผนงานโครงการ</legend>
+            <legend class="float-none w-auto px-2 fs-6">แผนงานโครงการ</legend>
             <div class="row">
 
                 <div class="col-6">
@@ -191,7 +191,7 @@ try {
 
 <div class="row mt-4">
     <fieldset class="border rounded">
-        <legend class="float-none w-auto px-2 fs-6 fw-semibold">วิธีการซื้อ/จ้าง</legend>
+        <legend class="float-none w-auto px-2 fs-6">วิธีการซื้อ/จ้าง</legend>
 
         <div class="row">
             <div class="col-6">

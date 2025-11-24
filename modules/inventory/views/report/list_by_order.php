@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     $n = 1; ?>
                     <?php foreach ($querys as $item): ?>
                         <tr>
-                            <td class="text-center fw-semibold"><?= $n++ ?></td>
+                            <td class="text-center"><?= $n++ ?></td>
                             <td><?= $item['warehouse_name'] ?></td>
                             <td>
                                 <?php

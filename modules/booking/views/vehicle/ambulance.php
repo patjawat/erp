@@ -56,10 +56,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-hover pb-5">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
+                    <th style="width: 180px;">เลขที่/ความเร่งด่วน</th>
                     <th>เหตุผล/จุดหมาย</th>
-                    <th class="fw-semibold" style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
+                    <th style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
                     <th>ผู้ขอ</th>
                     <th>สถานะ</th>
                     <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
@@ -68,10 +68,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?=(($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?=(($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td>
                         <p class="text-muted mb-0 fs-13"><?php echo $item->viewUrgent()?></p>
-                        <p class="mb-0 fw-semibold fs-13"><?=$item->code?></p>
+                        <p class="mb-0 fs-13"><?=$item->code?></p>
                     </td>
                     <td>
                         <div class="avatar-detail text-truncate">
@@ -84,9 +84,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     </td>
                     <td>
                         <div class="avatar-detail">
-                            <p class="mb-0 fw-semibold fs-13"><i class="fa-solid fa-calendar-day"></i>
+                            <p class="mb-0 fs-13"><i class="fa-solid fa-calendar-day"></i>
                                 <?php echo $item->showDateRange()?></p>
-                            <p class="mb-0 fw-semibold fs-13"> เวลา <?php echo $item->viewTime()['full']?></p>
+                            <p class="mb-0 fs-13"> เวลา <?php echo $item->viewTime()['full']?></p>
                         </div>
                     </td>
                     <td> <?=$item->userRequest()['avatar']?></td>

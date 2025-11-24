@@ -84,11 +84,11 @@ $listApprove = Approve::find()
                                                 if ($item->status == 'None') {
                                                     echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
                                                 }else if ($item->status == 'Pending') {
-                                                    echo '<i class="bi bi-hourglass-bottom  fw-semibold text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
+                                                    echo '<i class="bi bi-hourglass-bottom  text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
                                                 } else if ($item->status == 'Pass') {
-                                                    echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . ($item->data_json['label'] ?? '');
+                                                    echo '<i class="bi bi-check-circle text-success"></i> ' . ($item->data_json['label'] ?? '');
                                                 } else if ($item->status == 'Reject') {
-                                                    echo '<i class="bi bi-stop-circle  fw-semibold text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
+                                                    echo '<i class="bi bi-stop-circle  text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
                                                 } else if ($item->status == 'Cancel') {
                                                 }
 

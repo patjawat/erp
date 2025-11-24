@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-hover table-striped mb-0">
             <thead class="">
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th>เลขที่</th>
                     <th>ผู้ขอ</th>
                     <th>วัน/เวลา/สถานที่</th>
@@ -59,17 +59,17 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
 
                         <td>
-                            <p class="mb-0 fw-semibold fs-13"><?= $item->vehicle->code ?></p>
+                            <p class="mb-0 fs-13"><?= $item->vehicle->code ?></p>
                         </td>
                         <td> <?= $item->vehicle->userRequest()['avatar'] ?></td>
                         <td>
                             <div style="width:300px" class="avatar-detail text-truncate">
                                 <p class="mb-0"><?= $item->vehicle->showDateRange() ?> เวลา <?= $item->vehicle->viewTime()['full'] ?></p>
-                                <p class="fs-13 mb-0 fw-semibold"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
+                                <p class="fs-13 mb-0"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
                                 <p class="text-muted mb-0 fs-12"> <?= $item->vehicle->reason; ?></p>
 
                             </div>

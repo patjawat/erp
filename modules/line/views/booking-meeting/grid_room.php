@@ -16,7 +16,7 @@ use app\modules\booking\models\Room;
         
     </div>
     <div class="card-body bg-white text-dark">
-        <h1 class="d-inline-flex align-items-center fs-5 fw-semibold">
+        <h1 class="d-inline-flex align-items-center fs-5">
             <?php echo $item->title?> &nbsp;
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -28,9 +28,9 @@ use app\modules\booking\models\Room;
             Lorem ipsum 
         </p>
         <!-- <div class="mt-4">
-            <span class="badge bg-light text-dark fw-semibold me-2">#Macbook</span>
-            <span class="badge bg-light text-dark fw-semibold me-2">#Apple</span>
-            <span class="badge bg-light text-dark fw-semibold">#Laptop</span>
+            <span class="badge bg-light text-dark me-2">#Macbook</span>
+            <span class="badge bg-light text-dark me-2">#Apple</span>
+            <span class="badge bg-light text-dark">#Laptop</span>
         </div> -->
         <button
         type="button"

@@ -59,16 +59,16 @@ $msg = 'ขอ';
                 <thead>
                     <tr>
                         <!-- Checkbox เลือกทั้งหมด -->
-                        <th class="text-center fw-semibold" style="width:30px">
+                        <th class="text-center" style="width:30px">
                             <input type="checkbox" id="check-all">
                         </th>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                        <th class="text-center" style="width:30px">ลำดับ</th>
                         <th>เรื่อง</th>
                         <th>ประเภท</th>
                         <th>วันที่</th>
-                        <th class="fw-semibold" scope="col">ผู้ขอ</th>
-                        <th class="fw-semibold" scope="col" style="width: 200px;">ผู้อนุมัติ</th>
-                        <th class="fw-semibold" scope="col">สถานะ</th>
+                        <th scope="col">ผู้ขอ</th>
+                        <th scope="col" style="width: 200px;">ผู้อนุมัติ</th>
+                        <th scope="col">สถานะ</th>
                         <th class="fw-semibold text-center">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -80,7 +80,7 @@ $msg = 'ขอ';
                                 <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
                         </td>
 
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td>
@@ -94,7 +94,7 @@ $msg = 'ขอ';
                         </td>
                         <td><?= $item->development->developmentType?->title ?? '-' ?></td>
                         <td>
-                            <p class="mb-0 fw-semibold"> <?php echo  $item->development->showDateRange() ?></p>
+                            <p class="mb-0"> <?php echo  $item->development->showDateRange() ?></p>
                         </td>
                         <td>
                             <?php

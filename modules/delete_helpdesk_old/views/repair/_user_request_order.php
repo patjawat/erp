@@ -19,7 +19,7 @@ use yii\helpers\Html;
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold"><?php echo $model->viewUrgency()?></h6>
+                                    <h6 class="mb-2 fs-15"><?php echo $model->viewUrgency()?></h6>
                                     <p class="mb-0 fs-11 text-muted"><?=$model->viewCreateDate()?></p>
                                 </div>
                             </td>

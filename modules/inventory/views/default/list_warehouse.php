@@ -22,17 +22,17 @@ use app\modules\inventory\models\StockEvent;
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-end fw-semibold" scope="col">#</th>
+                    <th class="text-end" scope="col">#</th>
                     <th>รายการ</th>
                     <th>ผู้ดูแล</th>
-                    <th class="text-center fw-semibold">รอดำเนินการ</th>
-                    <th class="text-end fw-semibold">มูลค่าวัสดุคงคลัง</th>
+                    <th class="text-center">รอดำเนินการ</th>
+                    <th class="text-end">มูลค่าวัสดุคงคลัง</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php $i = 1; foreach($dataProviderWarehouse->getModels() as $model):?>
                 <tr>
-                    <th class="text-end fw-semibold" scope="row"><?=$i++;?></th>
+                    <th class="text-end" scope="row"><?=$i++;?></th>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="avatar">

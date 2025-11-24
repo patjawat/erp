@@ -25,7 +25,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                     <!-- File Upload Section -->
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label for="csvFile" class="form-label fw-semibold">
+                            <label for="csvFile" class="form-label">
                                 เลือกไฟล์ CSV
                             </label>
                             <div class="position-relative">
@@ -45,7 +45,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">
+                            <label class="form-label">
                                 ประเภทวัสดุ
                             </label>
                             <?= $form->field($model, 'category_id')->widget(Select2::class, [
@@ -206,7 +206,7 @@ $(document).ready(function() {
                     html += '<thead>';
                     html += '<tr>';
                     res.preview[0].forEach(function(h){ 
-                        html += '<th class="text-center fw-semibold">' + h + '</th>'; 
+                        html += '<th class="text-center">' + h + '</th>'; 
                     });
                     html += '</tr></thead>';
                     html += '<tbody class="table-group-divider">';

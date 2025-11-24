@@ -202,7 +202,7 @@ public static function nextCode($categoryId)
         return '<div class="d-flex">
         '.Html::img($this->ShowImg(),['class' => 'avatar object-fit-cover']).'
                                 <div class="avatar-detail">
-                                    <h6 class="mb-1 fs-13 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
+                                    <h6 class="mb-1 fs-13" data-bs-toggle="tooltip" data-bs-placement="top">
                                         '.$this->title.'
                                     </h6>
                                     <p class="text-primary mb-0 fs-13">'. $this->code.' '.$this->ViewTypeName()['title'].'</p>

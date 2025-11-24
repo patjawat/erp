@@ -75,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php echo $model->RepairType()['image']?>
                             <div class="avatar-detail">
 
-                                <p class="text-primary fw-semibold fs-13 mb-0">
+                                <p class="text-primary fs-13 mb-0">
                                     <span class="badge text-bg-primary fs-13"><i
                                             class="fa-solid fa-circle-exclamation"></i>
                                         <?php echo $model->RepairType()['title']?>
@@ -83,7 +83,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?= $model->viewUrgent()['view'] ?>
                                     <?php echo $model->viewCreateDateTime()?>
                                 </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                <p style="width:600px" class="text-truncate fs-6 mb-0">
                                     <?php echo $model->title?></p>
                             </div>
                         </div>

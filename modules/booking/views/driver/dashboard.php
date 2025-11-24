@@ -23,7 +23,7 @@ Dashboard
         <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h2 fw-semibold"><?php echo number_format($searchModel->SummaryCarType()['general'],0)?></span>
+                    <span class="h2"><?php echo number_format($searchModel->SummaryCarType()['general'],0)?></span>
                     <div class="relative">
                         <i class="fa-solid fa-car fs-1"></i>
                     </div>
@@ -38,7 +38,7 @@ Dashboard
         <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h2 fw-semibold"><?php echo number_format($searchModel->SummaryCarType()['refer'],0)?></span>
+                    <span class="h2"><?php echo number_format($searchModel->SummaryCarType()['refer'],0)?></span>
                     <div class="relative">
                         <i class="fa-solid fa-truck-medical fs-1"></i>
                     </div>
@@ -53,7 +53,7 @@ Dashboard
         <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h2 fw-semibold"><?php echo number_format($searchModel->SummaryCarType()['ems'],0)?></span>
+                    <span class="h2"><?php echo number_format($searchModel->SummaryCarType()['ems'],0)?></span>
                     <div class="relative">
                         <i class="fa-solid fa-truck fs-1"></i>
                     </div>
@@ -68,7 +68,7 @@ Dashboard
         <div class="card hover-card-under border-4 border-start-0 border-end-0 border-top-0 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h2 fw-semibold"><?php echo number_format($searchModel->SummaryCarType()['normal'],0)?></span>
+                    <span class="h2"><?php echo number_format($searchModel->SummaryCarType()['normal'],0)?></span>
                     <div class="relative">
                         <i class="fa-solid fa-car-side fs-1"></i>
                     </div>

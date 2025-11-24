@@ -29,10 +29,10 @@ use yii\bootstrap5\Html;
                 <?=$model->getAvatar(false)['avatar']?>
                 </a>
             </td>
-            <td class="text-center fw-semibold"><?php echo $model->total_days?></td>
+            <td class="text-center"><?php echo $model->total_days?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_start, 'medium')?></td>
             <td><?=Yii::$app->thaiFormatter->asDate($model->date_end, 'medium')?></td>
-            <td class="text-center fw-semibold"><?php echo $model->thai_year?></td>
+            <td class="text-center"><?php echo $model->thai_year?></td>
             <td class="text-start text-truncate" style="max-width:150px;"><?=$model->getAvatar(false)['department']?>
             </td>
             <td><?php echo $model->leaveWorkSend()?->getAvatar(false) ?? '-' ?></td>

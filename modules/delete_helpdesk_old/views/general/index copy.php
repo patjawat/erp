@@ -39,10 +39,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped">
             <thead>
                 <tr>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold" scope="col">รายละเอียด</th>
-                    <th class="fw-semibold" scope="col">ผู้แจ้งซ่อม</th>
-                    <!-- <th class="fw-semibold" style="width:300px">ผู้ร่วมงานซ่อม </th> -->
+                <th class="text-center" style="width:30px">ลำดับ</th>
+                    <th scope="col">รายละเอียด</th>
+                    <th scope="col">ผู้แจ้งซ่อม</th>
+                    <!-- <th style="width:300px">ผู้ร่วมงานซ่อม </th> -->
                     <th class="fw-semibold text-center" style="width:150px">สถานะ</th>
                     <th class="fw-semibold text-center" style="width:150px">ดำเนินการ</th>
                 </tr>
@@ -50,18 +50,18 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody>
             <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr class="align-middle">
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
             <td>
                         <div class="d-flex">
                             <?php // echo $item->RepairType()['image']?>
                             <div class="avatar-detail">
-                                <p class="text-primary fw-semibold fs-13 mb-0">
+                                <p class="text-primary fs-13 mb-0">
                                     <span class="badge text-bg-primary fs-13">
                                         <!-- <i class="fa-solid fa-circle-exclamation"></i> -->
                                         <?php // echo $item->RepairType()['title']?>
                                     </span>
                                 </p>
-                                <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                                <p style="width:600px" class="text-truncate fs-6 mb-0">
                                     <?php echo $item->title?></p>
                                 <p class="text-primary fs-13 mb-0">
                                     <?php echo $item->viewCreateDateTime()?>

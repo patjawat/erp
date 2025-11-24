@@ -43,7 +43,7 @@ $this->title = $model->document->topic;
 
     <div class=" d-flex flex-column" style="max-width:1000px">
         <div class="mt--45">
-            <p class="text-truncate fw-semibold fs-5 mb-0">
+            <p class="text-truncate fs-5 mb-0">
                 <?php if ($model->document->doc_speed == 'ด่วนที่สุด'): ?>
                 <span class="badge text-bg-danger fs-13">
                     <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด

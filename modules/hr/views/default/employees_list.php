@@ -29,7 +29,7 @@ use yii\helpers\Html;
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/2.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">นายปัจวัฒน์ ศรีบุญเรือง</span> <span
+                                                <div> <span class="d-block mb-1">นายปัจวัฒน์ ศรีบุญเรือง</span> <span
                                                         class="d-block text-muted fs-12">นักวิชาการคอมพิวเตอร์</span> </div>
                                             </div>
                                         </th>
@@ -69,7 +69,7 @@ use yii\helpers\Html;
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/8.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">นายเดชา สายบุญตั้ง</span> <span
+                                                <div> <span class="d-block mb-1">นายเดชา สายบุญตั้ง</span> <span
                                                         class="d-block text-muted fs-12">นักจัดการงานทั่วไป</span> </div>
                                             </div>
                                         </th>
@@ -108,7 +108,7 @@ use yii\helpers\Html;
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/13.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">นายจิตสง่า เพชรสุวรรณ</span> <span
+                                                <div> <span class="d-block mb-1">นายจิตสง่า เพชรสุวรรณ</span> <span
                                                         class="d-block text-muted fs-12">นักวิชาการคอมพิวเตอร์</span> </div>
                                             </div>
                                         </th>

@@ -21,7 +21,7 @@ $listCars = Asset::find()
                 </span>
                 <div class="card-body p-1">
 
-                    <p class="text-center fw-semibold mb-0"><?php  echo $item->license_plate?></p>
+                    <p class="text-center mb-0"><?php  echo $item->license_plate?></p>
                 </div>
             </div>
         </a>

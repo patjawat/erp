@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="avatar-detail">
                             <div class="d-flex flex-column">
                                 <p class="mb-0"><?=$detail->car?->data_json['brand'];?></p>
-                                <p class="mb-0 fw-semibold text-primary"><?=$detail->license_plate?></p>
+                                <p class="mb-0 text-primary"><?=$detail->license_plate?></p>
                             </div>
                         </div>
                     </div>

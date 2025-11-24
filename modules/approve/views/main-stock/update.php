@@ -41,7 +41,7 @@ use app\modules\purchase\models\Order;
                         }
                         ?>
                 </td>
-                <td class="align-middle text-end fw-semibold">
+                <td class="align-middle text-end">
                     <?php
                             try {
                                 echo number_format($item->unit_price, 2);
@@ -54,7 +54,7 @@ use app\modules\purchase\models\Order;
                     <?= $item->qty ?>
                 </td>
                 <td class="align-middle text-end">
-                    <div class="d-flex justify-content-end fw-semibold">
+                    <div class="d-flex justify-content-end">
                         <?php
                                     $sumPrice = ($item->qty * $item->unit_price);
                                     echo number_format($sumPrice);
@@ -71,7 +71,7 @@ use app\modules\purchase\models\Order;
             <?php endforeach; ?>
 <tr>
     <td colspan="4" class="text-center">รวม</td>
-    <td class="text-end fw-semibold"><?=number_format($totalPrice)?></td>
+    <td class="text-end"><?=number_format($totalPrice)?></td>
 </tr>
         </tbody>
     </table>

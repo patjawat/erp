@@ -12,18 +12,18 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-striped">
                 <thead>
                     <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold" scope="col" style="width:100px">ชื่อ-นามสกุล</th>
-                        <th class="fw-semibold" scope="col">ประเภท</th>
-                        <th class="fw-semibold" scope="col" class="text-center" style="width: 280px;">สถานะ | เริ่มงาน</th>
-                        <th class="fw-semibold" scope="col">อายุราชการ</th>
-                        <th class="fw-semibold" scope="col">เหลืออีก | สิ้นสุดสัญญาจ้าง | เกษียรอายุ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th scope="col" style="width:100px">ชื่อ-นามสกุล</th>
+                        <th scope="col">ประเภท</th>
+                        <th scope="col" class="text-center" style="width: 280px;">สถานะ | เริ่มงาน</th>
+                        <th scope="col">อายุราชการ</th>
+                        <th scope="col">เหลืออีก | สิ้นสุดสัญญาจ้าง | เกษียรอายุ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
         <tr>
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                         <td class="text-truncate"><?= $item->getAvatar(false) ?></td>
                         <td><?=$item->positionType->title?></td>
                         <td class="align-middle">

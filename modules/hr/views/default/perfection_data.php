@@ -16,7 +16,7 @@ $queryPositionName = Yii::$app->db->createCommand($sqlPositionName)->queryScalar
             </div>
             <div class="p-2 flex-grow-1">
                 <div class="d-flex align-items-center justify-content-between mb-2"> <span
-                        class="d-block fw-semibold">ความสมบรูณ์ของตำแหน่ง</span> <span class="d-block text-secondary"><?=$queryPositionName;?>%</span>
+                        class="d-block">ความสมบรูณ์ของตำแหน่ง</span> <span class="d-block text-secondary"><?=$queryPositionName;?>%</span>
                 </div>
                 <div class="progress progress-animate progress-sm" role="progressbar" aria-valuenow="<?=$queryPositionName;?>" aria-valuemin="0" aria-valuemax="100">
                     <div class="progress-bar progress-bar-striped bg-secondary" style="width: <?=$queryPositionName;?>%"></div>

@@ -10,7 +10,7 @@ $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
             </div>
             <div class="flex-grow-1 w-50">
                 <div class="row">
-                    <div class="col-lg-8 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
+                    <div class="col-lg-8 col-md-12 col-sm-12 mb-1 d-inline-block text-truncate">
                         <h6>สวัสดี! </h6>
                         <h5>
                             <a href="<?php // Url::to(['/hr/employees/view','id' => $model->id])?>"

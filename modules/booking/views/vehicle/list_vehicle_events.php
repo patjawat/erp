@@ -29,7 +29,7 @@ use yii\widgets\Pjax;
                 <tr>
                     <td>
                         <a href="<?= Url::to(['approve', 'id' => $item->vehicle->id,'title' => 'เลขที่#'.$item->vehicle->code]) ?>" class="open-modal" data-size="modal-lg">
-                        <p class="mb-0 fw-semibold"> <span class="text-danger"><?= ($item->vehicle->viewTime()['full'] ?? '-'); ?></span> <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
+                        <p class="mb-0"> <span class="text-danger"><?= ($item->vehicle->viewTime()['full'] ?? '-'); ?></span> <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
                         <p class="mb-0 fs-11"><?php echo $item->vehicle->reason ?? '-' ?></p>
                     </a>
                     </td>
@@ -54,7 +54,7 @@ use yii\widgets\Pjax;
                             <div class="avatar-detail">
                                 <div class="d-flex flex-column">
                                     <p class="mb-0"><?= $item->car?->data_json['brand']; ?></p>
-                                    <p class="mb-0 fw-semibold text-primary"><?= $item->license_plate ?></p>
+                                    <p class="mb-0 text-primary"><?= $item->license_plate ?></p>
                                 </div>
                             </div>
                         </div>

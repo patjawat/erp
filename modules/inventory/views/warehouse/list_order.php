@@ -7,21 +7,21 @@ use yii\bootstrap5\LinkPager;
 <table class="table table-striped table-sm">
     <thead>
         <tr>
-            <th class="fw-semibold text-center fw-semibold" style="width:30px">ลำดับ</th>
-            <th class="fw-semibold" style="width:210px">รหัส/วันที่ขอ</th>
-            <th class="fw-semibold" scope="col">ประเถท</th>
-            <th class="fw-semibold" scope="col">ผู้เบิก</th>
+            <th class="fw-semibold text-center" style="width:30px">ลำดับ</th>
+            <th style="width:210px">รหัส/วันที่ขอ</th>
+            <th scope="col">ประเถท</th>
+            <th scope="col">ผู้เบิก</th>
             <th>หัวหน้าตรวจสอบ</th>
             <th class="fw-semibold text-end">มูลค่า</th>
             <th class="fw-semibold text-center" style="width:160px">วันที่จ่าย</th>
             <th class="fw-semibold text-center" style="width:160px">สถานะ</th>
-            <th class="fw-semibold" style="width:100px">ดำเนินการ</th>
+            <th style="width:100px">ดำเนินการ</th>
         </tr>
     </thead>
     <tbody class="align-middle table-group-divider">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
-                <td class="text-center fw-semibold">
+                <td class="text-center">
                     <?php
                     if ($dataProvider->pagination !== false) {
                         echo (($dataProvider->pagination->offset + 1) + $key);

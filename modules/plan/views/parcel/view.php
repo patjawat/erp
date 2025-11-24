@@ -123,8 +123,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center"><?= $num++ ?></td>
                         <td><?= $item->item_name ?></td>
                         <td><?= $item->qty ?></td>
-                        <td class="text-end fw-semibold"><?= $item->unit_price ?></td>
-                        <td class="text-end fw-semibold"><?= number_format($item->qty * $item->unit_price, 2) ?>
+                        <td class="text-end"><?= $item->unit_price ?></td>
+                        <td class="text-end"><?= number_format($item->qty * $item->unit_price, 2) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -161,18 +161,18 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody>
                 <tr>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_10, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_11, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_12, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_1, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_2, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_3, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_4, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_5, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_6, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_7, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_8, 2) ?></td>
-                    <td class="text-end fw-semibold"><?= number_format((float)$model->month_9, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_10, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_11, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_12, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_1, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_2, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_3, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_4, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_5, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_6, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_7, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_8, 2) ?></td>
+                    <td class="text-end"><?= number_format((float)$model->month_9, 2) ?></td>
 
                 </tr>
             </tbody>

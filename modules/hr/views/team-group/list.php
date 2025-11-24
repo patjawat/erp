@@ -5,18 +5,18 @@ use yii\helpers\Html;
     <table class="table table-striped table-hover mb-5">
         <thead>
             <tr>
-                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                <th class=" fw-semibold" scope="col" style="width:80px">พ.ศ.</th>
-                <th class=" fw-semibold" scope="col">รายการ</th>
-                <th class=" fw-semibold" scope="col">กรรมการ</th>
-                <th class=" fw-semibold" scope="col" style="width:130px">ดำเนินการ</th>
+                <th class="text-center" style="width:30px">ลำดับ</th>
+                <th class="" scope="col" style="width:80px">พ.ศ.</th>
+                <th class="" scope="col">รายการ</th>
+                <th class="" scope="col">กรรมการ</th>
+                <th class="" scope="col" style="width:130px">ดำเนินการ</th>
             </tr>
         </thead>
         <tbody>
         <tbody class="align-middle table-group-divider">
             <?php foreach($dataProvider->getModels() as $key => $item):?>
             <tr>
-                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                 <td>
                     <?= $item->teamGroupDetail()?->thai_year?>
                 </td>

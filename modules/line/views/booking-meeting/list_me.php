@@ -40,7 +40,7 @@ use yii\widgets\Pjax;
                             </div>
                         </div>
                     </td>
-                    <td> <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"> <?=$item->data_json['employee_total'] ?? 0?></span></td>
+                    <td> <span class="badge rounded-pill badge-soft-primary text-primary fs-13"> <?=$item->data_json['employee_total'] ?? 0?></span></td>
                     <td> <?php echo $item->data_json['period_time'] ?? '-';?></td>
                     <td>
                     <?=Yii::$app->thaiFormatter->asDate($item->date_start, 'medium')?> เวลา

@@ -53,9 +53,9 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
         <table class="table table-hover">
             <thead>
                 <tr>
-                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                     <th class="text-center fw-semibold" style="width:200px">สีพื้นหลัง</th>
-                     <th class="text-center fw-semibold" style="width:200px">สีตัวหนังสือ</th>
+                     <th class="text-center" style="width:30px">ลำดับ</th>
+                     <th class="text-center" style="width:200px">สีพื้นหลัง</th>
+                     <th class="text-center" style="width:200px">สีตัวหนังสือ</th>
                     <th>ชื่อห้องประชุม</th>
                     <th>ความจุ/คน</th>
                     <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
@@ -66,7 +66,7 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
             <tbody class="table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                             <td>
                             <?php 
                             echo kartik\color\ColorInput::widget([

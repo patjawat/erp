@@ -42,22 +42,22 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead>
                 <tr >
                     <th scope="col" class="fw-semibold">ประเภทตำแหน่ง</th>
-                    <th scope="col" class="text-center fw-semibold">อายุงาน</th>
-                    <th scope="col" class="text-center fw-semibold">สิทธลา</th>
-                    <th scope="col" class="text-center fw-semibold">สะสมวันลา</th>
-                    <th scope="col" class="text-center fw-semibold">สะสมวันลาสูงสุด</th>
-                    <th scope="col" class="text-start fw-semibold">เพิ่มเติม</th>
-                    <th scope="col" class="text-center fw-semibold">ดำเนินการ</th>
+                    <th scope="col" class="text-center">อายุงาน</th>
+                    <th scope="col" class="text-center">สิทธลา</th>
+                    <th scope="col" class="text-center">สะสมวันลา</th>
+                    <th scope="col" class="text-center">สะสมวันลาสูงสุด</th>
+                    <th scope="col" class="text-start">เพิ่มเติม</th>
+                    <th scope="col" class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
                     <td scope="row"><?php echo $item->positionType->title?></td>
-                    <td class="text-center fw-semibold"><?php echo $item->year_of_service;?></td>
-                    <td class="text-center fw-semibold"><?php echo $item->days;?></td>
-                    <td class="text-center fw-semibold"><?php echo $item->accumulation == 1 ? '<i class="bi bi-check-circle text-primary"></i>' : '<i class="bi bi-dash-circle text-danger"></i>';?></td>
-                    <td class="text-center fw-semibold"><?php echo $item->max_days;?></td>
+                    <td class="text-center"><?php echo $item->year_of_service;?></td>
+                    <td class="text-center"><?php echo $item->days;?></td>
+                    <td class="text-center"><?php echo $item->accumulation == 1 ? '<i class="bi bi-check-circle text-primary"></i>' : '<i class="bi bi-dash-circle text-danger"></i>';?></td>
+                    <td class="text-center"><?php echo $item->max_days;?></td>
                     <td class="text-start"><?php echo $item->additional_rules;?></td>
                     <td class="text-center"><?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/hr/leave-policies/update','id' => $item->id,'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?></td>
                 </tr>

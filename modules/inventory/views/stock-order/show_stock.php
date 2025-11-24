@@ -36,8 +36,8 @@ $balanceQty = 0;
     <table class="table">
         <thead>
             <tr>
-                <th class="fw-semibold" scope="col" style="width:130px">วันที่รับเข้า</th>
-                <th class="fw-semibold" scope="col" style="width:130px">หมายเลขล็อต</th>
+                <th scope="col" style="width:130px">วันที่รับเข้า</th>
+                <th scope="col" style="width:130px">หมายเลขล็อต</th>
                 <th class="fw-semibold text-center">คงเหลือ</th>
                 <th class="fw-semibold text-center">ราคาต่อหน่วย</th>
                 <th class="fw-semibold text-center">จัดการ</th>

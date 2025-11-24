@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table class="table table-striped table-hover">
                 <thead class="table-light">
                         <tr>
-                            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                            <th class="text-center" style="width:30px">ลำดับ</th>
                             <th>หัวข้อการประชุม</th>
                             <th>ผู้ขอ</th>
                             <th>ห้องประชุม</th>
@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <!-- Row 1 -->
                         <?php foreach($dataProvider->getModels() as $key => $item):?>
                         <tr>
-                            <td class="text-center fw-semibold">
+                            <td class="text-center">
                                 <?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                             <td>
                                 <div class="avatar-detail">

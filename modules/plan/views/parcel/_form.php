@@ -344,7 +344,7 @@ $("#add-row").on("click", function(){
         <td><input type="text" name="items[\${rowIndex}][item_name]" class="form-control"></td>
         <td><input type="number" name="items[\${rowIndex}][qty]" class="form-control qty"></td>
         <td><input type="number" step="0.01" name="items[\${rowIndex}][unit_price]" class="form-control price"></td>
-        <td class="total text-end fw-semibold">0.00</td>
+        <td class="total text-end">0.00</td>
         <td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>
     </tr>`;
     $("#item-table tbody").append(row);

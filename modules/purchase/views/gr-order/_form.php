@@ -58,7 +58,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                 <div class="d-flex justify-conent-between">
                     <?= $model->getMe()['avatar'] ?>
                     <div class="d-flex ms-auto p-2">
-                        เลขที่ : <span class="ms-2 fw-semibold"><?=$model->gr_number?></span>
+                        เลขที่ : <span class="ms-2"><?=$model->gr_number?></span>
                     </div>
                 </div>
                 <div class="row mt-4">

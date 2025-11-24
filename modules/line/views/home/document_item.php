@@ -6,7 +6,7 @@ use app\components\UserHelper;
 <a href="<?php echo Url::to(['/me/documents/view','id' => $item->id])?>"
             class="text-dark open-modal-fullscreen-x">
             <div>
-                <p class="text-primary fw-semibold fs-13 mb-0">
+                <p class="text-primary fs-13 mb-0">
                     <?php if($item->document->doc_speed == 'ด่วนที่สุด'):?>
                     <span class="badge text-bg-danger fs-13">
                         <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
@@ -21,7 +21,7 @@ use app\components\UserHelper;
                     <?php echo Html::img('@web/img/krut.png',['style' => 'width:20px']);?>
                     <?php echo $item->document->doc_number?>
                 </p>
-                <p style="width:320px" class="text-truncate fw-semibold fs-6 mb-0">
+                <p style="width:320px" class="text-truncate fs-6 mb-0">
                     <?php echo $item->document->topic?>
                     <?php echo $item->document->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?></p>
             </div>

@@ -30,7 +30,7 @@ $avatar = $model->showAvatar();
             </div>
             <div class="flex-grow-1 w-50">
                 <div class="row">
-                    <div class="col-lg-9 col-md-12 col-sm-12 fw-semibold mb-1 d-inline-block text-truncate">
+                    <div class="col-lg-9 col-md-12 col-sm-12 mb-1 d-inline-block text-truncate">
                         <h6>
                             <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id]) ?>"
                                 class="text-dark"><?= $model->fullname ?> (<code><?= $model->age_y ?></code> ปี)</a>

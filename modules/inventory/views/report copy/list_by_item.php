@@ -98,29 +98,29 @@ $this->params['breadcrumbs'][] = $this->title;
            <td><?= $item['title'] ?></td>
            <td><?= $item['asset_type_name'] ?></td>
            <td><?= $item['warehouse_name'] ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['begin_qty'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['begin_price'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['qty_in'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['price_in'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['qty_out'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['price_out'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['end_qty'], 2) ?></td>
-           <td class="text-end fw-semibold"><?= number_format($item['end_price'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['begin_qty'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['begin_price'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['qty_in'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['price_in'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['qty_out'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['price_out'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['end_qty'], 2) ?></td>
+           <td class="text-end"><?= number_format($item['end_price'], 2) ?></td>
          </tr>
        <?php endforeach; ?>
      </tbody>
 
      <tfoot class="table-light fw-bold">
        <tr>
-         <td colspan="4" class="text-center fw-semibold">รวมทั้งหมด</td>
-         <td class="text-end fw-semibold"><?= number_format($sum_begin_qty, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_begin_price, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_qty_in, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_price_in, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_qty_out, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_price_out, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_end_qty, 2) ?></td>
-         <td class="text-end fw-semibold"><?= number_format($sum_end_price, 2) ?></td>
+         <td colspan="4" class="text-center">รวมทั้งหมด</td>
+         <td class="text-end"><?= number_format($sum_begin_qty, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_begin_price, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_qty_in, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_price_in, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_qty_out, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_price_out, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_end_qty, 2) ?></td>
+         <td class="text-end"><?= number_format($sum_end_price, 2) ?></td>
        </tr>
      </tfoot>
    </table>

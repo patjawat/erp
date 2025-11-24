@@ -22,7 +22,7 @@ $this->title = 'นำเข้าไฟล์ CSV';
                 <!-- File Upload Section -->
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <label for="csvFile" class="form-label fw-semibold mb-0">
+                        <label for="csvFile" class="form-label mb-0">
                             เลือกไฟล์ CSV
                         </label>
                         <div class="position-relative">
@@ -183,7 +183,7 @@ $(document).ready(function() {
 
                 // สร้างหัวตารางจากแถวแรก
                 res.preview[0].data.forEach(function(h){ 
-                    html += '<th class="text-center fw-semibold">' + h + '</th>'; 
+                    html += '<th class="text-center">' + h + '</th>'; 
                 });
                 html += '</tr></thead>';
 

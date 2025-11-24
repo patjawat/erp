@@ -103,7 +103,7 @@ use yii\helpers\Html;
                     </rect>
                 </div>
                 <div class="card-body pb-0 mb-0 position-relative">
-                    <p class="text-center mt-4 fw-semibold"><?= $model->asset_name ?></p>
+                    <p class="text-center mt-4"><?= $model->asset_name ?></p>
                     <div>
                         <ul class="list-inline fs-13 pb-0 mb-0r">
                             <li>

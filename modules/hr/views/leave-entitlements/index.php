@@ -86,28 +86,28 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" class="fw-semibold text-center">วันลาคงเหลือ</th>
                     <!-- <th scope="col" class="fw-semibold text-center">วันลาคงเหลือ+ปีถัดไป</th> -->
                     <!-- <th scope="col" class="fw-semibold text-center">ยอดยกไป</th> -->
-                    <th scope="col" class="text-center fw-semibold" style="width: 100px;">ดำเนินการ</th>
+                    <th scope="col" class="text-center" style="width: 100px;">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="<?=$item->leaveSummaryDays()['leave_balance'] < 0 ? 'table-danger' : null?>">
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?php echo $item->thai_year ?></td>
                         <td scope="row">
                         <?php echo $item->employee->getAvatar(false) ?></td>
                         <td scope="row" class="fw-semibold text-end"><?php echo $item->employee?->workYear()['ym']?></td>
                         <td scope="row"><?php echo $item->employee?->positionType?->title ?? '-'?></td>
                             
-                        <td class="text-center fw-semibold"><?= $item->data_json['before_leave_balance'] ?? '-'?></td>
-                        <td class="text-center fw-semibold">10</td>
-                        <td class="text-center fw-semibold"><?=isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0?></td>
-                        <td class="text-center fw-semibold bg-success text-dark bg-opacity-25">
+                        <td class="text-center"><?= $item->data_json['before_leave_balance'] ?? '-'?></td>
+                        <td class="text-center">10</td>
+                        <td class="text-center"><?=isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0?></td>
+                        <td class="text-center bg-success text-dark bg-opacity-25">
                         <p class="text-success mb-0">
                             <?=$item->days ?></td>
                         </p>    
-                        <td class="text-center fw-semibold"><?=$item->leaveSummaryDays()['leave_use'] ?></td>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center"><?=$item->leaveSummaryDays()['leave_use'] ?></td>
+                        <td class="text-center">
                             <?php if($item->leaveSummaryDays()['leave_balance'] < 0):?>
                     <p class="text-danger mb-0">
                         <?=$item->leaveSummaryDays()['leave_balance'] ?>                    </p>

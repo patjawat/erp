@@ -24,15 +24,15 @@ $balanceQty = 0;
 <table class="table">
             <thead>
                 <tr>
-                    <th class="fw-semibold" scope="col" style="width:130px">ความเคลื่อนไหว</th>
-                    <th class="fw-semibold" scope="col" style="width:120px">ปีงบประมาณ</th>
-                    <th class="fw-semibold" scope="col" style="width:180px">วันที่รับ/จ่าย</th>
-                    <th class="fw-semibold" scope="col" style="width:130px">หมายเลขล็อต</th>
-                    <th class="fw-semibold" scope="col">วันหมดอายุ</th>
-                    <th class="text-end fw-semibold" scope="col">ราคาต่อหน่วย</th>
-                    <th class="fw-semibold" scope="col" class="text-center">จำนวนเข้า</th>
-                    <th class="fw-semibold" scope="col" class="text-center">จำนวนออก</th>
-                    <th class="fw-semibold" scope="col" class="text-center">คงเหลือ</th>
+                    <th scope="col" style="width:130px">ความเคลื่อนไหว</th>
+                    <th scope="col" style="width:120px">ปีงบประมาณ</th>
+                    <th scope="col" style="width:180px">วันที่รับ/จ่าย</th>
+                    <th scope="col" style="width:130px">หมายเลขล็อต</th>
+                    <th scope="col">วันหมดอายุ</th>
+                    <th class="text-end" scope="col">ราคาต่อหน่วย</th>
+                    <th scope="col" class="text-center">จำนวนเข้า</th>
+                    <th scope="col" class="text-center">จำนวนออก</th>
+                    <th scope="col" class="text-center">คงเหลือ</th>
                     <th class="fw-semibold text-end" scope="col">มูลค่าวัสดุคงเหลือ</th>
                 </tr>
             </thead>

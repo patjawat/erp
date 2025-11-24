@@ -28,7 +28,7 @@
                    <li>
                        <div class="d-flex align-items-top flex-wrap">
                            <div class="me-2"> <span
-                                   class="avatar avatar-sm avatar-rounded bg-warning-transparent fw-semibold"> EK
+                                   class="avatar avatar-sm avatar-rounded bg-warning-transparent"> EK
                                </span> </div>
                            <div class="flex-fill">
                                <p class="fw-semibold mb-0">Emigo Kiaren</p><span
@@ -51,7 +51,7 @@
                    <li>
                        <div class="d-flex align-items-top flex-wrap">
                            <div class="me-2"> <span
-                                   class="avatar avatar-sm avatar-rounded bg-success-transparent fw-semibold"> GP
+                                   class="avatar avatar-sm avatar-rounded bg-success-transparent"> GP
                                </span> </div>
                            <div class="flex-fill">
                                <p class="fw-semibold mb-0">George Pieterson</p><span
@@ -63,7 +63,7 @@
                    <li>
                        <div class="d-flex align-items-top flex-wrap">
                            <div class="me-2"> <span
-                                   class="avatar avatar-sm avatar-rounded bg-primary-transparent fw-semibold"> KA
+                                   class="avatar avatar-sm avatar-rounded bg-primary-transparent"> KA
                                </span> </div>
                            <div class="flex-fill">
                                <p class="fw-semibold mb-0">Kiara Advain</p><span

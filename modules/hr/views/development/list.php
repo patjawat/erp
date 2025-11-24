@@ -7,12 +7,12 @@ use yii\helpers\Html;
 <table class="table">
     <thead>
         <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="text-center" style="width:30px">ลำดับ</th>
             <th>เรื่อง</th>
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
-            <th class="fw-semibold" scope="col">ผู้ขอ</th>
-            <th class="fw-semibold" scope="col" style="width: 200px;">ผู้อนุมัติ</th>
+            <th scope="col">ผู้ขอ</th>
+            <th scope="col" style="width: 200px;">ผู้อนุมัติ</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
             <th class="fw-semibold text-end" style="width:100px">ดำเนินการ</th>
         </tr>
@@ -20,7 +20,7 @@ use yii\helpers\Html;
     <tbody class="align-middle table-group-divider">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
-                <td class="text-center fw-semibold">
+                <td class="text-center">
                     <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                 </td>
                 <td>
@@ -34,7 +34,7 @@ use yii\helpers\Html;
                     <?= $item->developmentType?->title ?? '-' ?>
                 </td>
                 <td>
-                    <p class="mb-0 fw-semibold"> <?= $item->showDateRange() ?></p>
+                    <p class="mb-0"> <?= $item->showDateRange() ?></p>
 
                 </td>
                 <td>

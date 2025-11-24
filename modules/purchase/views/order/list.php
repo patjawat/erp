@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
+                        <th style="width:350px">ผู้ขอซื้อ</th>
                         <th>มูลค่า</th>
                         <th>ผู้ขาย</th>
                         <th>ความคืบหน้า</th>

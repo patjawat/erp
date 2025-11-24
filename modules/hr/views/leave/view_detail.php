@@ -18,10 +18,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody>
                 <tr>
                     <td>เรื่อง : </td>
-                    <td><span class="text-pink fw-semibold">ขอ<?php echo ($model->leaveType->title ?? '-') ?></span></td>
+                    <td><span class="text-pink">ขอ<?php echo ($model->leaveType->title ?? '-') ?></span></td>
 
                     <td>เขียนเมื่อ : </td>
-                    <td><span class="text-pink fw-semibold"><?php echo $model->viewCreated() ?></span></td>
+                    <td><span class="text-pink"><?php echo $model->viewCreated() ?></span></td>
                 </tr>
                 <tr>
                     <td>ระหว่างวันที่ : </td>

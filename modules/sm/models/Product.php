@@ -187,7 +187,7 @@ class Product extends \yii\db\ActiveRecord
                                     <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         ' . $this->title . '
                                     </h6>
-                                    <span class="text-primary fw-semibold">' . $this->code . '</span>
+                                    <span class="text-primary">' . $this->code . '</span>
                                 </div>
                             </div>';
     }
@@ -198,10 +198,10 @@ class Product extends \yii\db\ActiveRecord
         return '<div class="d-flex">
         ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
                                 <div class="avatar-detail">
-                                    <h6 class="mb-1 fs-15 fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
                                         ' . $this->title . '
                                     </h6>
-                                    <span class="text-primary fw-semibold">' . $msg . '</span>
+                                    <span class="text-primary">' . $msg . '</span>
                                 </div>
                             </div>';
     }

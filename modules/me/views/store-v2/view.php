@@ -134,7 +134,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <div>
                         <p class="text-muted mb-0 fs-13"><?php echo $model->viewCreatedAt()?></p>
-                        <p class="text-primary mb-0 fs-13 text-end fw-semibold"><?php echo $model->code?></p>
+                        <p class="text-primary mb-0 fs-13 text-end"><?php echo $model->code?></p>
                     </div>
                 
                 </div>

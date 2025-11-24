@@ -25,7 +25,7 @@
             </div>
             <div class="p-2 flex-grow-1">
                 <div class="d-flex align-items-center justify-content-between mb-2"> <span
-                        class="d-block fw-semibold">ลาพักผ่อน</span> <span class="d-block text-secondary">80%</span>
+                        class="d-block">ลาพักผ่อน</span> <span class="d-block text-secondary">80%</span>
                 </div>
                 <div class="progress progress-animate progress-xs" role="progressbar" aria-valuenow="80"
                     aria-valuemin="0" aria-valuemax="100">
@@ -40,7 +40,7 @@
             </div>
             <div class="p-2 w-100">
                 <div class="d-flex align-items-center justify-content-between mb-2"> <span
-                        class="d-block fw-semibold">ลากิจธุระ</span> <span class="d-block text-secondary">20%</span>
+                        class="d-block">ลากิจธุระ</span> <span class="d-block text-secondary">20%</span>
                 </div>
                 <div class="progress progress-animate progress-xs" role="progressbar" aria-valuenow="20"
                     aria-valuemin="0" aria-valuemax="100">
@@ -56,7 +56,7 @@
             </div>
             <div class="p-2 w-100">
                 <div class="d-flex align-items-center justify-content-between mb-2"> <span
-                        class="d-block fw-semibold">ลาป่วย</span> <span class="d-block text-secondary">10%</span>
+                        class="d-block">ลาป่วย</span> <span class="d-block text-secondary">10%</span>
                 </div>
                 <div class="progress progress-animate progress-xs" role="progressbar" aria-valuenow="10"
                     aria-valuemin="0" aria-valuemax="100">

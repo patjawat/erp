@@ -51,19 +51,19 @@ $this->params['breadcrumbs'][] = 'สต๊อก/เบิกใช้งาน
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                                <th class="text-center" style="width:30px">ลำดับ</th>
                                 <th scope="col" class="fw-semibold">ชื่อรายการ</th>
-                                <th class="text-start fw-semibold">ประเภท</th>
-                                <th scope="col" class="text-center fw-semibold">คงเหลือ</th>
-                                <th scope="col" class="text-center fw-semibold">หน่วย</th>
-                                <th scope="col" class="text-end fw-semibold">มูลค่า</th>
-                                <th scope="col" class="text-end fw-semibold">ดำเนินการ</th>
+                                <th class="text-start">ประเภท</th>
+                                <th scope="col" class="text-center">คงเหลือ</th>
+                                <th scope="col" class="text-center">หน่วย</th>
+                                <th scope="col" class="text-end">มูลค่า</th>
+                                <th scope="col" class="text-end">ดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody class="align-middle table-group-divider">
                             <?php foreach($dataProvider->getModels() as $key => $item):?>
                             <tr class="align-middle">
-                                <td class="text-center fw-semibold">
+                                <td class="text-center">
                                     <?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                                 <td>
                                     <?php // echo Html::a($item->product->Avatar(),['/inventory/stock/view-stock-card','id' => $item->id])?>
@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = 'สต๊อก/เบิกใช้งาน
                                         <div class="avatar-detail">
                                             <h6 class="mb-1 fs-15"><?php echo $item->product->title?></h6>
                                             <span
-                                                class="text-primary fw-semibold"><?php echo $item->product->code?></span>
+                                                class="text-primary"><?php echo $item->product->code?></span>
                                             |
                                             <?php echo Html::a('<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="fa-solid fa-clock"></i> Stock card</span>',['/me/stock-event/view-stock-card','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
 

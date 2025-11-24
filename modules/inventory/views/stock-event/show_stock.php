@@ -50,11 +50,11 @@ $this->params['breadcrumbs'][] = $this->title;
             echo $item['title'];
             ?> </td>
             <td class="text-center"><?= $item['qty_in'] ?></td>
-            <td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($item['total_price_in'], 2) ?></td>
+            <td class="text-end"><?= Yii::$app->formatter->asDecimal($item['total_price_in'], 2) ?></td>
             <td class="text-center"><?= $item['qty_out'] ?></td>
-            <td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($item['total_price_out'], 2) ?></td>
+            <td class="text-end"><?= Yii::$app->formatter->asDecimal($item['total_price_out'], 2) ?></td>
             <td class="text-center"><?= $item['result_qty'] ?></td>
-            <td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($item['result_price'], 2) ?></td>
+            <td class="text-end"><?= Yii::$app->formatter->asDecimal($item['result_price'], 2) ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>

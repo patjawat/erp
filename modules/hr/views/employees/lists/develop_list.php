@@ -19,8 +19,8 @@ $title = '<i class="fa-solid fa-person-walking-luggage"></i> ทะเบีย�
             <table class="table">
                 <thead>
                     <tr>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="text-center fw-semibold" style="width:30px">ปีงบประมาณ</th>
+                        <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th class="text-center" style="width:30px">ปีงบประมาณ</th>
 
                         <th scope="col">เรื่อง/วัน/สถานที่</th>
                         <th scope="col">คณะเดินทาง</th>
@@ -30,7 +30,7 @@ $title = '<i class="fa-solid fa-person-walking-luggage"></i> ทะเบีย�
                 <tbody>
                 <?php foreach ($model->developmentMenber as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?php echo $key+1 ?>
                         </td>
                         <td><?=$item->development->thai_year;?></td>

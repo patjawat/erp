@@ -21,7 +21,7 @@ use yii\helpers\Html;
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th>รหัสการจอง</th>
                     <th>ผู้จอง</th>
                     <th>วันที่</th>
@@ -36,16 +36,16 @@ use yii\helpers\Html;
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr data-date_start="<?= $item->date_start ?>" data-location="<?= $item->locationOrg?->title ?? '-' ?>">
-                        <td class="text-center fw-semibold">
+                        <td class="text-center">
                             <?= (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td><?= $item->code ?></td>
                         <td><?= $item->userRequest()['avatar'] ?></td>
                         <td>
-                            <p class="mb-0 fw-semibold"><?= $item->showDateRange() ?> </p>
+                            <p class="mb-0"><?= $item->showDateRange() ?> </p>
                         </td>
                         <td>
-                            <p class="mb-0 fw-semibold"><?= $item->viewTime()['full'] ?></p>
+                            <p class="mb-0"><?= $item->viewTime()['full'] ?></p>
                         </td>
                         <td>
                             <p class="mb-0 fs-11"><?= $item->locationOrg?->title ?? '-' ?></p>

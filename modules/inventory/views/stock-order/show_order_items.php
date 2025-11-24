@@ -57,11 +57,11 @@ $emp = UserHelper::GetEmployee();
                 <td class="align-middle text-end">
                     <?php echo $item->unit_price !== null ? number_format($item->unit_price, 2) : '-'; ?></td>
                 <td class="align-middle text-start"><?= $item->lot_number; ?></td>
-                <td class="align-middle text-center fw-semibold">
+                <td class="align-middle text-center">
                     <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
                 <td class="align-middle text-center">
                     <?php echo isset($item->product->data_json['unit']) ? $item->product->data_json['unit'] : '-'; ?></td>
-                <td class="text-center fw-semibold">
+                <td class="text-center">
                     <!-- ตรวตสอบจำนวนคงเหลือใน stock ที่จะเบิก ถ้าสถานะไม่เป็น เสร็จสิ้นหรือยกเลิก -->
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <?= $item->SumlotQty() == 0 ? '<span class="text-danger">หมด</span>' : floatval($item->SumlotQty()); ?>

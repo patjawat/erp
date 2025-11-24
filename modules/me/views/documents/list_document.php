@@ -10,17 +10,17 @@ use app\modules\dms\models\Documents;
 <table class="table table-striped table-fixed">
     <thead>
         <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+            <th class="text-center" style="width:30px">ลำดับ</th>
             <th style="width:80px;" class="fw-semibold">เลขรับ</th>
-            <th class="fw-semibold" style="width:900px;">เรื่อง</th>
+            <th style="width:900px;">เรื่อง</th>
             <th style="width:80px;" class="fw-semibold">วันที่ส่ง</th>
-            <th class="fw-semibold" style="width:150px;">ลงความเห็น</th>
+            <th style="width:150px;">ลงความเห็น</th>
         </tr>
     </thead>
     <tbody class="align-middle  table-group-divider table-hover">
         <?php foreach ($dataProvider->getModels() as $key => $item):?>
         <tr class="" style="max-width:200px">
-            <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
             <td class="fw-semibold">
                 <?php echo $item->document?->doc_regis_number ?? '-' ?>
             </td>
@@ -28,7 +28,7 @@ use app\modules\dms\models\Documents;
                 <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->id]) ?>"
                     class="text-dark open-modal-fullscreen-x">
                     <div>
-                        <p class="text-primary fw-semibold fs-13 mb-0">
+                        <p class="text-primary fs-13 mb-0">
                             <?php if (isset($item->document) && $item->document->doc_speed === 'ด่วนที่สุด'): ?>
                             <span class="badge text-bg-danger fs-13">
                                 <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
@@ -46,7 +46,7 @@ use app\modules\dms\models\Documents;
                             <?= isset($item->document) ? Html::encode($item->document->doc_number) : 'ไม่พบเลขที่เอกสาร'; ?>
 
                         </p>
-                        <p style="width:600px" class="text-truncate fw-semibold fs-6 mb-0">
+                        <p style="width:600px" class="text-truncate fs-6 mb-0">
                             <?php echo isset($item->document) ? $item->document->topic : '' ?>
                             <?php echo (isset($item->document) && $item->document->isFile()) ? '<i class="fas fa-paperclip"></i>' : '' ?>
                         </p>

@@ -35,7 +35,7 @@
                         <div class="d-flex justify-content-center">
                             <a href="javascript:void(0);" class="category-link primary text-center">
                                 <i class="fa-regular fa-calendar-days fs-1"></i>
-                                <p class="fs-14 mb-1 text-default fw-semibold">Booking Plan</p>
+                                <p class="fs-14 mb-1 text-default">Booking Plan</p>
                             </a>
                         </div>
                         </div>
@@ -47,14 +47,14 @@
                     <div class="d-flex justify-content-center border border-primary rounded-4 p-4"> 
                              <a href="javascript:void(0);" class="category-link secondary text-center"> <i
                                     class="fa-regular fa-calendar-days fs-1"></i>
-                                <p class="fs-14 mb-1 text-default fw-semibold">App1</p>
+                                <p class="fs-14 mb-1 text-default">App1</p>
                             </a> </div>
                     </div>
                     <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-6 col-12">
                     <div class="d-flex justify-content-center border border-primary rounded-4 p-4">  
                         <a href="javascript:void(0);" class="category-link warning text-center"> 
                             <i class="fa-regular fa-calendar-days fs-1"></i>
-                                <p class="fs-14 mb-1 text-default fw-semibold">App2</p>
+                                <p class="fs-14 mb-1 text-default">App2</p>
                             </a> </div>
                     </div>
                     <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-6 col-12">
@@ -62,7 +62,7 @@
                         <a href="javascript:void(0);" class="category-link success"> 
                             <i
                                     class="fa-regular fa-calendar-days fs-1"></i>
-                                <p class="fs-14 mb-1 text-default fw-semibold">App3</p>
+                                <p class="fs-14 mb-1 text-default">App3</p>
                             </a> </div>
                     </div>
                 </div>

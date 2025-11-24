@@ -7,7 +7,7 @@ $repairHistorys = Helpdesk::find()->where(['asset_number' => $model->code])->all
 <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col" class="text-start fw-semibold">รหัสงานซ่อม</th>
+                        <th scope="col" class="text-start">รหัสงานซ่อม</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
@@ -20,7 +20,7 @@ $repairHistorys = Helpdesk::find()->where(['asset_number' => $model->code])->all
                 <tbody>
                      <?php foreach ($repairHistorys as $key => $item): ?>
                     <tr>
-                       <td class="text-start fw-semibold"><?php echo $item->repair_number?></td>
+                       <td class="text-start"><?php echo $item->repair_number?></td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
                         <td><?=$item->data_json['location']?></td>

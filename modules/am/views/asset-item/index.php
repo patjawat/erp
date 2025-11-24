@@ -61,7 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody class="table-group-divider align-middle">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
                     <td><?= $item->id?></td>
                     <td class="fw-semibold text-primary"><?=$item->fsn?></td>
                     <td><?=$item->title?></td>

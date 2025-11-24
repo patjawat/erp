@@ -63,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
+                    <th class="text-center" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold text-start">รายการ</th>
                     <th class="fw-semibold text-start">โทรศัพท์</th>
                     <th class="fw-semibold text-center">ดำเนินการ</th>
@@ -72,7 +72,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr>
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?>
                     </td>
                     <td>
                         <p class="fw-semibold mb-0"><?php echo $item->title?></p>

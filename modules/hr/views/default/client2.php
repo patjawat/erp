@@ -22,7 +22,7 @@
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/2.jpg" class="avatar rounded-circle"  alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">Diana Aise</span> <span
+                                                <div> <span class="d-block mb-1">Diana Aise</span> <span
                                                         class="d-block text-muted fs-12">C.E.O</span> </div>
                                             </div>
                                         </th>
@@ -54,7 +54,7 @@
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/8.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">Rose Mary</span> <span
+                                                <div> <span class="d-block mb-1">Rose Mary</span> <span
                                                         class="d-block text-muted fs-12">C.E.O</span> </div>
                                             </div>
                                         </th>
@@ -86,7 +86,7 @@
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/13.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">Gretchen Iox</span> <span
+                                                <div> <span class="d-block mb-1">Gretchen Iox</span> <span
                                                         class="d-block text-muted fs-12">Manager</span> </div>
                                             </div>
                                         </th>
@@ -118,7 +118,7 @@
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/11.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">Gray Noal</span> <span
+                                                <div> <span class="d-block mb-1">Gray Noal</span> <span
                                                         class="d-block text-muted fs-12">Manager</span> </div>
                                             </div>
                                         </th>
@@ -150,7 +150,7 @@
                                             <div class="d-flex align-items-center lh-1">
                                                 <div class="me-3"> <span class="avatar avatar-rounded"> <img
                                                             src="https://spruko.com/demo/ynex/dist/assets/images/faces/5.jpg" class="avatar rounded-circle" alt=""> </span> </div>
-                                                <div> <span class="d-block fw-semibold mb-1">Isa Bella</span> <span
+                                                <div> <span class="d-block mb-1">Isa Bella</span> <span
                                                         class="d-block text-muted fs-12">C.E.O</span> </div>
                                             </div>
                                         </th>

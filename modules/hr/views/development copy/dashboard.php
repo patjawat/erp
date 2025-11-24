@@ -49,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">จำนวนการอบรม/ประชุม/ดูงานทั้งหมด</p>
-                                <h3 class="fs-2 fw-semibold mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['total_count']?></h3>
+                                <h3 class="fs-2 mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['total_count']?></h3>
                                 <p class="mt-2 mb-0">
                                     
                                     <?=$searchModel->getYearlyDevelopmentSummary()['price_status']?>
@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">งบประมาณที่ใช้</p>
-                                <h3 class="fs-2 fw-semibold mt-2"><?=number_format($searchModel->getYearlyDevelopmentSummary()['total_price'],2)?></h3>
+                                <h3 class="fs-2 mt-2"><?=number_format($searchModel->getYearlyDevelopmentSummary()['total_price'],2)?></h3>
                                 <p class="mt-2 ">คิดเป็น <?=$searchModel->getYearlyDevelopmentSummary()['price_percent_change']?>% ของงบประมาณปีที่แล้ว</p>
                             </div>
                             <div class="icon-box align-self-start">
@@ -84,7 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="card-body d-flex justify-content-between border-start border-4 border-primary rounded-start pb-0">
                             <div>
                                 <p class="mb-0">บุคลากรที่ได้รับการพัฒนา</p>
-                                <h3 class="fs-2 fw-semibold mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['emp_count']?></h3>
+                                <h3 class="fs-2 mt-2"><?=$searchModel->getYearlyDevelopmentSummary()['emp_count']?></h3>
                                 <p class="mt-2 ">คิดเป็น <?=$searchModel->getYearlyDevelopmentSummary()['emp_percent']?>% ของบุคลากรทั้งหมด</p>
                             </div>
                             <div class="icon-box align-self-start">
@@ -257,37 +257,37 @@ $this->params['breadcrumbs'][] = $this->title;
             >
                 <thead>
                     <tr>
-                        <th class="text-start fw-semibold" scope="col">ประเภทการอบรม</th>
-                        <th class="text-center fw-semibold" scope="col">ต.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">พ.ย.</th>
-                        <th class="text-center fw-semibold" scope="col">ธ.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">ม.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">ก.พ.</th>
-                        <th class="text-center fw-semibold" scope="col">มี.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">เม.ย.</th>
-                        <th class="text-center fw-semibold" scope="col">พ.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">มิ.ย.</th>
-                        <th class="text-center fw-semibold" scope="col">ก.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">ส.ค.</th>
-                        <th class="text-center fw-semibold" scope="col">ก.ย.</th>
+                        <th class="text-start" scope="col">ประเภทการอบรม</th>
+                        <th class="text-center" scope="col">ต.ค.</th>
+                        <th class="text-center" scope="col">พ.ย.</th>
+                        <th class="text-center" scope="col">ธ.ค.</th>
+                        <th class="text-center" scope="col">ม.ค.</th>
+                        <th class="text-center" scope="col">ก.พ.</th>
+                        <th class="text-center" scope="col">มี.ค.</th>
+                        <th class="text-center" scope="col">เม.ย.</th>
+                        <th class="text-center" scope="col">พ.ค.</th>
+                        <th class="text-center" scope="col">มิ.ย.</th>
+                        <th class="text-center" scope="col">ก.ค.</th>
+                        <th class="text-center" scope="col">ส.ค.</th>
+                        <th class="text-center" scope="col">ก.ย.</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($searchModel->listSummaryMonth() as $item): ?>
                     <tr class="">
                         <td scope="row"><?= $item['title'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m10'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m11'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m12'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m1'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m2'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m3'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m4'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m5'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m6'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m7'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m8'] ?></td>
-                        <td class="text-center fw-semibold"><?= $item['m9'] ?></td>
+                        <td class="text-center"><?= $item['m10'] ?></td>
+                        <td class="text-center"><?= $item['m11'] ?></td>
+                        <td class="text-center"><?= $item['m12'] ?></td>
+                        <td class="text-center"><?= $item['m1'] ?></td>
+                        <td class="text-center"><?= $item['m2'] ?></td>
+                        <td class="text-center"><?= $item['m3'] ?></td>
+                        <td class="text-center"><?= $item['m4'] ?></td>
+                        <td class="text-center"><?= $item['m5'] ?></td>
+                        <td class="text-center"><?= $item['m6'] ?></td>
+                        <td class="text-center"><?= $item['m7'] ?></td>
+                        <td class="text-center"><?= $item['m8'] ?></td>
+                        <td class="text-center"><?= $item['m9'] ?></td>
                     
                     </tr>
                     <?php endforeach; ?>

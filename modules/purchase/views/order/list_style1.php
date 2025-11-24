@@ -29,7 +29,7 @@ $this->title = $title;
 
                             <td class="text-end">
                                 <div class="d-inline-block">
-                                    <h6 class="mb-2 fs-15 fw-semibold"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?> บาท</h6>
+                                    <h6 class="mb-2 fs-15"><?= number_format($model->calculateVAT()['priceAfterVAT'],2) ?> บาท</h6>
                                     <p class="mb-0 fs-11 text-muted"><?=$model->viewCreated()?>ที่แล้ว</p>
                                 </div>
                             </td>

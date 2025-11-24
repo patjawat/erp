@@ -14,16 +14,16 @@ use app\modules\am\models\Asset;
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="fw-semibold" scope="col" style="text-align: center;">ลำดับ</th>
-                    <th class="fw-semibold" scope="col" style="width:70px;">รูปภาพ</th>
-                    <th class="fw-semibold" scope="col" tyle="width:280px;">ชื่อครุภัณฑ์</th>
-                    <th class="fw-semibold" scope="col">หมายเลขทะเบียน(รถยนต์)</th>
-                    <th class="fw-semibold" scope="col">ครุภัณฑ์</th>
-                    <th class="fw-semibold" scope="col">ประเภทครุภัณฑ์</th>
-                    <th class="fw-semibold" scope="col">หมวดหมู่</th>
-                    <th class="fw-semibold" scope="col">วันที่รับเข้า</th>
-                    <th class="fw-semibold" scope="col" style="width:115px;">วิธีได้มา</th>
-                    <th class="fw-semibold" scope="col" style="width:115px;">ประเภทเงิน</th>
+                    <th scope="col" style="text-align: center;">ลำดับ</th>
+                    <th scope="col" style="width:70px;">รูปภาพ</th>
+                    <th scope="col" tyle="width:280px;">ชื่อครุภัณฑ์</th>
+                    <th scope="col">หมายเลขทะเบียน(รถยนต์)</th>
+                    <th scope="col">ครุภัณฑ์</th>
+                    <th scope="col">ประเภทครุภัณฑ์</th>
+                    <th scope="col">หมวดหมู่</th>
+                    <th scope="col">วันที่รับเข้า</th>
+                    <th scope="col" style="width:115px;">วิธีได้มา</th>
+                    <th scope="col" style="width:115px;">ประเภทเงิน</th>
                     <th class="fw-semibold text-end" scope="col" style="width:115px;">ราคาแรกรับ</th>
                     <th class="fw-semibold text-center" scope="col" style="width:115px;">สถานะ</th>
                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
@@ -32,7 +32,7 @@ use app\modules\am\models\Asset;
             <tbody class="table-group-divider align-middle">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td style="width:70px;">
                             <?= Html::a(
                                 Html::img(
@@ -74,7 +74,7 @@ use app\modules\am\models\Asset;
                         <td class="align-middle"><?= $item->purchaseName?->title ?? '' ?></td>
                         <td class="align-middle"><?= $item->budgetTypeName() ?></td>
 
-                        <td class="align-middle text-end fw-semibold"><?= number_format($item->price, 0) ?></td>
+                        <td class="align-middle text-end"><?= number_format($item->price, 0) ?></td>
                         <td class="text-center"><?= $item->statusName() ?></td>
 
                         <td>

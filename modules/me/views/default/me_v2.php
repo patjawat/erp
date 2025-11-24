@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                     <div class="card shadow-sm rounded-4">
                         <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                             <div>
-                                <h2 class="h6 fw-semibold text-dark mb-1">สวัสดี, <?=$me->fname?></h2>
+                                <h2 class="h6 text-dark mb-1">สวัสดี, <?=$me->fname?></h2>
                                 <p class="text-muted mb-0">ยินดีต้อนรับกลับมา! นี่คือข้อมูลสรุปของคุณสำหรับวันนี้</p>
                             </div>
                             <div class="mt-3 mt-md-0">
@@ -156,7 +156,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">สถิติการเข้าทำงาน</h3>
+                                    <h3 class="h5 text-dark mb-0">สถิติการเข้าทำงาน</h3>
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-primary active">รายวัน</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary">รายสัปดาห์</button>
@@ -219,7 +219,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">รายการที่ต้องทำ</h3>
+                                    <h3 class="h5 text-dark mb-0">รายการที่ต้องทำ</h3>
                                     <button id="add-task-btn" type="button" class="btn btn-sm btn-primary d-flex align-items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="me-1" style="width:16px;height:16px" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -338,7 +338,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                          <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">หนังสือราชการล่าสุด</h3>
+                                    <h3 class="h5 text-dark mb-0">หนังสือราชการล่าสุด</h3>
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-primary active">ทั้งหมด</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary">ยังไม่อ่าน</button>
@@ -361,7 +361,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">ข้อมูลส่วนตัว</h3>
+                                    <h3 class="h5 text-dark mb-0">ข้อมูลส่วนตัว</h3>
                                     <button class="btn btn-link p-0 text-primary">แก้ไข</button>
                                 </div>
                                 <div class="d-flex flex-column align-items-center mb-3">
@@ -403,7 +403,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">สถิติการลา</h3>
+                                    <h3 class="h5 text-dark mb-0">สถิติการลา</h3>
                                     <button class="btn btn-link p-0 text-primary">ขอลา</button>
                                 </div>
                                 <div class="vstack gap-3">
@@ -458,7 +458,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">รายการรออนุมัติ</h3>
+                                    <h3 class="h5 text-dark mb-0">รายการรออนุมัติ</h3>
                                     <span class="badge bg-soft-danger">3 รายการ</span>
                                 </div>
                                 <div class="vstack gap-2">
@@ -505,7 +505,7 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
                         <div class="card shadow-sm rounded-4">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h3 class="h5 fw-semibold text-dark mb-0">ข้อความล่าสุด</h3>
+                                    <h3 class="h5 text-dark mb-0">ข้อความล่าสุด</h3>
                                     <span class="badge bg-danger">5 ข้อความใหม่</span>
                                 </div>
                                 <div class="vstack gap-2">

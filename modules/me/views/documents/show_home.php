@@ -27,19 +27,19 @@ $me = UserHelper::GetEmployee();
         <table class="table table-striped table-fixed">
             <thead>
                 <tr>
-                    <th class="text-center fw-semibold" style="width:50px;">ลำดับ</th>
-                    <th class="text-center fw-semibold" style="min-width:100px; width:100px;">เลขที่รับ</th>
-                    <th class="fw-semibold" style="min-width:320px;">เรื่อง</th>
-                    <th class="fw-semibold" style="min-width:250px;">ผู้บันทึก</th>
-                    <th class="fw-semibold" style="min-width:100px;">สถานะ</th>
-                    <th class="fw-semibold" style="width:70px;">ดำเนินการ</th>
+                    <th class="text-center" style="width:50px;">ลำดับ</th>
+                    <th class="text-center" style="min-width:100px; width:100px;">เลขที่รับ</th>
+                    <th style="min-width:320px;">เรื่อง</th>
+                    <th style="min-width:250px;">ผู้บันทึก</th>
+                    <th style="min-width:100px;">สถานะ</th>
+                    <th style="width:70px;">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle  table-group-divider table-hover">
                 <?php foreach($dataProvider->getModels() as $key => $item):?>
                 <tr id="<?=$item->id?>">
-                    <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td class="text-center fw-semibold">
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
+                    <td class="text-center">
                         <?= isset($item->document) ? $item->document->doc_regis_number : ''?></td>
                     <td class="fw-light align-middle">
                         <div>

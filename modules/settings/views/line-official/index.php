@@ -36,7 +36,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/home'?></span>
+                    <span class="text-danger"><?php echo $domain.'/line/home'?></span>
                     <p>หน้าหลัก</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_home]')->textInput()->label(false) ?>
@@ -49,7 +49,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/profile'?></span>
+                    <span class="text-danger"><?php echo $domain.'/line/profile'?></span>
                     <p>โปรไฟล์</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_profile]')->textInput()->label(false) ?>
@@ -59,7 +59,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/auth/login'?></span>
+                    <span class="text-danger"><?php echo $domain.'/line/auth/login'?></span>
                     <p>เข้าสู่ระบบ</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_login]')->textInput()->label(false) ?>
@@ -69,7 +69,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/line/auth/register'?></span>
+                    <span class="text-danger"><?php echo $domain.'/line/auth/register'?></span>
                     <p>ลงทะเบียน</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_register]')->textInput()->label(false) ?>
@@ -79,7 +79,7 @@ $this->title = 'ตั้งค่าองค์กร';
         <div class="card">
             <div class="card-body">
             <div class="d-flex justify-content-between">
-                    <span class="text-danger fw-semibold"><?php echo $domain.'/profile/line-connect'?></span>
+                    <span class="text-danger"><?php echo $domain.'/profile/line-connect'?></span>
                     <p>เชื่อม Line-Connect</p>
                 </div>
                 <?= $form->field($model, 'data_json[line_liff_user_connect]')->textInput()->label(false) ?>

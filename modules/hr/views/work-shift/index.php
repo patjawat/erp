@@ -54,16 +54,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" class="fw-semibold">ชื่อ-นามสกุล</th>
                     <th scope="col" class="fw-semibold">ประเภท</th>
                     <th scope="col" class="fw-semibold text-center">แผนก/ฝ่าย</th>
-                    <th scope="col" class="text-start fw-semibold" style="width: 100px;">ใช้เวร 8</th>
+                    <th scope="col" class="text-start" style="width: 100px;">ใช้เวร 8</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?php echo $item->getAvatar(false) ?></td>
                         <td><?= $item->positionType->title ?></td>
-                        <td class="text-center fw-semibold"><?= $item->departmentName() ?></td>
+                        <td class="text-center"><?= $item->departmentName() ?></td>
                         </td>
                         <td class="text-center">
                             <div class="form-check form-switch">

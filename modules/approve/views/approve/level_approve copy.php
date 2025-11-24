@@ -85,16 +85,16 @@ $listApprove = Approve::find()
                             $label = $item->data_json['label'] ?? '';
                             $text = $item->level == 3 ? $item->title : $label;
 
-                            echo '<i class="bi bi-hourglass-bottom fw-semibold text-warning"></i> รอ' . $text;
+                            echo '<i class="bi bi-hourglass-bottom text-warning"></i> รอ' . $text;
 
                             // ถ้า level 3 และ user มีสิทธิ์ can('leave') ให้แสดง checkbox อนุมัติ
                             if ($item->level == 3 && Yii::$app->user->can('leave') && $item->status == 'Pending' ) {
                                 echo ' <input type="checkbox" class="check-item" name="selected[]" value="' . $item->id . '">';
                             }
                         } else if ($item->status == 'Pass') {
-                            echo '<i class="bi bi-check-circle fw-semibold text-success"></i> ' . ($item->data_json['label'] ?? '');
+                            echo '<i class="bi bi-check-circle text-success"></i> ' . ($item->data_json['label'] ?? '');
                         } else if ($item->status == 'Reject') {
-                            echo '<i class="bi bi-stop-circle fw-semibold text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
+                            echo '<i class="bi bi-stop-circle text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
                         } else if ($item->status == 'Cancel') {
                             // กรณี cancel
                         }

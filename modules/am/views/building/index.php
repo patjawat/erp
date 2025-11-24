@@ -32,18 +32,18 @@ $this->params['breadcrumbs'][] = $this->title;
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="fw-semibold" scope="col" style="text-align: center;width:100px">ลำดับ</th>
-                    <th class="fw-semibold" scope="col" style="width:70px;">รหัส</th>
-                    <th class="fw-semibold" scope="col" style="width:200px;">เลขที่โฉนด</th>
-                    <th class="fw-semibold" scope="col">ที่ตั้ง</th>
-                    <th class="fw-semibold" scope="col">เนื้อที่</th>
+                    <th scope="col" style="text-align: center;width:100px">ลำดับ</th>
+                    <th scope="col" style="width:70px;">รหัส</th>
+                    <th scope="col" style="width:200px;">เลขที่โฉนด</th>
+                    <th scope="col">ที่ตั้ง</th>
+                    <th scope="col">เนื้อที่</th>
                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="fw-semibold text-primary"><?= $item->code ?></td>
                         <td class="align-middle"><?= $item->data_json['lan_number'] ?? '-' ?></td>
                         <td class="align-middle"><?=$item->landSize()?></td>

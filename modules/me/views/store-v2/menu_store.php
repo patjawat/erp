@@ -13,7 +13,7 @@ $totalPurchase = $notify['purchase']['total'];
 
 ?>
 <div class="d-flex gap-2">
-        <?php echo  Html::a('<i class="fa-solid fa-gauge"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>',['/me','name' => 'leave'],['class' => 'btn btn-light'])?>
+        <?php echo  Html::a('<i class="fa-solid fa-gauge"></i> Dashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13"></span>',['/me','name' => 'leave'],['class' => 'btn btn-light'])?>
         <?php echo  Html::a('<i class="fa-regular fa-circle-check"></i> เบิกวัสดุคลังหลัก',['/me/store-v2/order-in'],['class' => 'btn btn-light'])?>
 
 </div>

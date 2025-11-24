@@ -20,10 +20,10 @@ $menus = [
 
 <?php if (!Yii::$app->user->can('branch')): ?>
     <li class="nav-item mt-1">
-        <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> MyDashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13 fw-semibold"></span>', ['/me'], ['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')]) ?>
+        <?= Html::a('<i class="fa-solid fa-gauge me-1"></i> MyDashboard <span class="badge rounded-pill badge-soft-primary text-primary fs-13"></span>', ['/me'], ['class' => 'nav-link ' . (isset($active) && $active == 'dashboard' ? 'active' : '')]) ?>
     </li>
     <li class="nav-item mt-1">
-        <?= Html::a('<i class="fa-regular fa-circle-check me-1"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary fw-semibold ms-1"> ' . $total . ' </span>', ['/approve'], ['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')]) ?>
+        <?= Html::a('<i class="fa-regular fa-circle-check me-1"></i> รายการที่ต้องอนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary ms-1"> ' . $total . ' </span>', ['/approve'], ['class' => 'nav-link ' . (isset($active) && $active == 'approve' ? 'active' : '')]) ?>
     </li>
 <?php endif; ?>
 

@@ -84,7 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody class="table-group-divider">
                     <?php foreach ($dataProvider->getModels() as $key => $model): ?>
                         <tr>
-                            <td class="text-center fw-semibold">
+                            <td class="text-center">
                                 <?= (($dataProvider->pagination->offset + 1) + $key) ?>
                             </td>
 
@@ -100,8 +100,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </td>
 
-                            <td class="text-center fw-semibold"><?= $model->qty_max ?></td>
-                            <td class="text-center fw-semibold"><?= $model->qty_min ?></td>
+                            <td class="text-center"><?= $model->qty_max ?></td>
+                            <td class="text-center"><?= $model->qty_min ?></td>
 
                             <td class="text-center">
                                 <div class="form-check form-switch d-flex justify-content-center">

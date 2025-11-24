@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-hover table-striped">
                 <thead>
                     <tr>
-                          <th scope="col" class="text-start fw-semibold">รหัสงานซ่อม</th>
+                          <th scope="col" class="text-start">รหัสงานซ่อม</th>
                         <th scope="col">อุปกรณ์</th>
                         <th scope="col">ปัญหา</th>
                         <th scope="col">สถานที่</th>
@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody>
                      <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
-                        <td class="text-start fw-semibold"><?php echo $item->repair_number?>
+                        <td class="text-start"><?php echo $item->repair_number?>
             </td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>

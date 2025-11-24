@@ -40,7 +40,7 @@ $msg = 'ขอ';
             <tbody class="align-middle table-group-divider">
                 <?php foreach($dataProvider->getModels() as $item):?>
                 <tr class="">
-                    <td class="text-center fw-semibold"><?php echo $item->stock->thai_year ?? '-'?></td>
+                    <td class="text-center"><?php echo $item->stock->thai_year ?? '-'?></td>
                     <td class="text-truncate" style="max-width: 230px;">
                         <a href="<?php echo Url::to(['/hr/leave/view','id' => '','title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'])?>"
                             class="open-modal" data-size="modal-xl">

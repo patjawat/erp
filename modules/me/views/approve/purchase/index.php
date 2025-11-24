@@ -20,11 +20,11 @@ $this->title = "อนุมัติจัดซื้อจัดจ้าง"
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="fw-semibold" style="width:110px">เลขที่ขอ</th>
-                    <th class="fw-semibold" style="width:300px">ผู้ขอ/วันเวลา</th>
-                    <th class="fw-semibold" style="width:180px">ประเภท</th>
+                    <th style="width:110px">เลขที่ขอ</th>
+                    <th style="width:300px">ผู้ขอ/วันเวลา</th>
+                    <th style="width:180px">ประเภท</th>
                     <th>เลขที่สั่งซื้อ/ผู้ขาย</th>
-                    <th class="fw-semibold" style="width: 200px;">กรรมการตรวจรับ</th>
+                    <th style="width: 200px;">กรรมการตรวจรับ</th>
                     <th class="fw-semibold text-end" style="width:150px">มูลค่า/ประเภทเงิน</th>
                     <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
                 </tr>

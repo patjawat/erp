@@ -45,7 +45,7 @@ $this->title = 'ยานพาหนะ ';
                     </a>    
                 </td>
                     <td class="text-truncate"></td>
-                    <td class="text-center fw-semibold"></td>
+                    <td class="text-center"></td>
                     <td></td>
                     <td class="text-start text-truncate" style="max-width:150px;"></td>
                     <td></td>
