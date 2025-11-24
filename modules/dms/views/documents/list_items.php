@@ -22,7 +22,7 @@ use yii\helpers\Html;
             <td class="text-center fw-semibold"><?php echo $item->doc_regis_number ?></td>
             <td class="fw-light align-middle">
                 <div>
-                    <h6 style="width:600px" class="text-truncate fw-semibold mb-0">
+                    <h6 style="width:600px" class="text-truncate mb-0">
                         <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
                             <span class="badge text-bg-danger fs-13">
                                 <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด

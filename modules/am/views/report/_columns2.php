@@ -8,13 +8,13 @@ return [
         'attribute' => 'code',
         'vAlign' => 'middle',
         'width' => '200px',
-        'header' => '<span class="fw-semibold">รหัสทรัพย์สิน</span>',
+        'header' => '<span>รหัสทรัพย์สิน</span>',
     ],
     [
         'attribute' => 'date',
         'vAlign' => 'middle',
         'width' => '150px',
-        'header' => '<span class="fw-semibold">วันที่ส่งมอบ</span>',
+        'header' => '<span>วันที่ส่งมอบ</span>',
         'value' => function($model){
             return Yii::$app->thaiFormatter->asDate($model['date'], 'medium');
         }
@@ -23,7 +23,7 @@ return [
         'attribute' => 'title',
         'format' => 'raw',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">รายการทรัพย์สิน</span>',
+        'header' => '<span>รายการทรัพย์สิน</span>',
         'value' => function($model){
             return Html::a($model['asset_name'] ?? '-',['/am/asset/depreciation','id'=> $model['id']],['class' => 'text-truncate open-modal text-primary','data' => ['size' => 'modal-lg']]);
         } 
@@ -31,7 +31,7 @@ return [
     [
         'attribute' => 'price',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">ราคาทุนทรัพย์สิน</span>',
+        'header' => '<span>ราคาทุนทรัพย์สิน</span>',
         'width' => '150px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
@@ -45,7 +45,7 @@ return [
     [
         'attribute' => 'price_last_month',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">ค่าเสื่อมยกมา</span>',
+        'header' => '<span>ค่าเสื่อมยกมา</span>',
         'width' => '150px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
@@ -59,7 +59,7 @@ return [
     [
         'attribute' => 'total',
         'class' => 'kartik\grid\FormulaColumn',
-        'header' => '<span class="fw-semibold">ราคาทุนสุทธิทรัพย์สิน<span> <br>(ราคาทุนทรัพย์สิน - ค่าเสื่อมยกมา)',
+        'header' => '<span>ราคาทุนสุทธิทรัพย์สิน<span> <br>(ราคาทุนทรัพย์สิน - ค่าเสื่อมยกมา)',
         'width' => '250px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
@@ -72,7 +72,7 @@ return [
     ],
     [
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">อัตรา</span>',
+        'header' => '<span>อัตรา</span>',
         'width' => '80px',
         'vAlign' => 'middle',
         'hAlign' => 'center',
@@ -89,7 +89,7 @@ return [
     [
         // 'attribute' => 'total',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">จำนวน</span>',
+        'header' => '<span>จำนวน</span>',
         'width' => '80px',
         'vAlign' => 'middle',
         'hAlign' => 'center',
@@ -105,7 +105,7 @@ return [
     [
         'attribute' => 'total_price',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">ค่าเสื่อราคาเดือนนี้</span>',
+        'header' => '<span>ค่าเสื่อราคาเดือนนี้</span>',
         'width' => '150px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
@@ -119,7 +119,7 @@ return [
     [
         'attribute' => 'total',
         'vAlign' => 'middle',
-        'header' => '<span class="fw-semibold">ค่าเสื่อมทรัพย์สินยกไป</span>',
+        'header' => '<span>ค่าเสื่อมทรัพย์สินยกไป</span>',
         'width' => '200px',
         'vAlign' => 'middle',
         'hAlign' => 'right',
@@ -133,7 +133,7 @@ return [
     [
         'attribute' => 'total',
         'class' => 'kartik\grid\FormulaColumn',
-        'header' => '<span class="fw-semibold">ราคาทุนสุทธิทรัพย์สิน<span> <br>(ราคาทุนทรัพย์สิน - ค่าเสื่อมยกไป)',
+        'header' => '<span>ราคาทุนสุทธิทรัพย์สิน<span> <br>(ราคาทุนทรัพย์สิน - ค่าเสื่อมยกไป)',
         'width' => '250px',
         'vAlign' => 'middle',
         'hAlign' => 'right',

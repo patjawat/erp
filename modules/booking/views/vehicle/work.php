@@ -45,11 +45,11 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead class="">
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold">เลขที่</th>
-                    <th class="fw-semibold">ผู้ขอ</th>
-                    <th class="fw-semibold">วัน/เวลา/สถานที่</th>
-                    <th class="fw-semibold">พขร</th>
-                    <th class="fw-semibold">ทะเบียนรถ</th>
+                    <th>เลขที่</th>
+                    <th>ผู้ขอ</th>
+                    <th>วัน/เวลา/สถานที่</th>
+                    <th>พขร</th>
+                    <th>ทะเบียนรถ</th>
                     <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
                     <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
                     <th class="fw-semibold text-center">สถานะ</th>

@@ -39,8 +39,9 @@ if($searchModel->date_between == 'pr_create_date'){
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?php // echo $this->render('@app/modules/sm/views/default/menu') ?>
+  <?= Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่ ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
@@ -69,7 +70,7 @@ if($searchModel->date_between == 'pr_create_date'){
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between">
-                <?= Html::a('<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่ ', ['/purchase/pr-order/create', 'name' => 'order', 'title' => '<i class="bi bi-plus-circle"></i> สร้างคำขอซื้อ-ขอจ้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+              
             </div>
         </div>
     </div>
@@ -80,7 +81,7 @@ if($searchModel->date_between == 'pr_create_date'){
         <div class="d-flex justify-content-between">
             <div>
                 มูลค่า <span
-                    class="fw-semibold badge rounded-pill text-bg-light fs-6"><?=number_format($sumTotal ?? 0,2) ?></span>บาท
+                    class="badge rounded-pill text-bg-light fs-6"><?=number_format($sumTotal ?? 0,2) ?></span>บาท
             </div>
 
         </div>
@@ -90,15 +91,15 @@ if($searchModel->date_between == 'pr_create_date'){
             <thead>
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold">ผู้ขอ/วันเวลา</th>
-                    <th class="fw-semibold">ประเภท</th>
-                    <th class="fw-semibold">ผู้ขาย/เลขที่สั่งซื้อ</th>
-                    <th class="fw-semibold">เลขทะเบียนคุม</th>
-                    <th class="fw-semibold text-end">ประเภทเงิน</th>
-                    <th class="fw-semibold">การตรวจสอบ</th>
-                    <th class="fw-semibold">ความคืบหน้า</th>
-                    <th class="fw-semibold text-end">มูลค่า</th>
-                    <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
+                    <th>ผู้ขอ/วันเวลา</th>
+                    <th>ประเภท</th>
+                    <th>ผู้ขาย/เลขที่สั่งซื้อ</th>
+                    <th>เลขทะเบียนคุม</th>
+                    <th class="text-end">ประเภทเงิน</th>
+                    <th>การตรวจสอบ</th>
+                    <th>ความคืบหน้า</th>
+                    <th class="text-end">มูลค่า</th>
+                    <th class="text-cener" style="width:100px">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -115,10 +116,10 @@ if($searchModel->date_between == 'pr_create_date'){
                 <td class="fw-light align-middle">
                     <div class=" d-flex flex-column">
                         <?= $item->vendor?->title ?? '-' ?>
-                        <span class="fw-semibold "><?=$item->po_number?>  <?=isset($item->data_json['po_date']) ? ' | '.AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?></span>
+                        <span class=""><?=$item->po_number?>  <?=isset($item->data_json['po_date']) ? ' | '.AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?></span>
                     </div>
                 </td>
-                <td><span class="fw-semibold "><?=$item->pq_number?></span></td>
+                <td><span class=""><?=$item->pq_number?></span></td>
                 
                     <td><?=$item->budgetTypeName()?></td>
                    
@@ -159,7 +160,7 @@ if($searchModel->date_between == 'pr_create_date'){
                     </td>
                      <td class="fw-light align-middle text-end">
                         <div class="d-felx flex-column">
-                            <div class="fw-semibold ">
+                            <div class="">
                                 <?= number_format($item->calculateVAT()['priceAfterVAT'],2)?>
                             </div>
                         </div>

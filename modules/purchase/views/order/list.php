@@ -24,9 +24,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead>
                     <tr>
                         <th class="fw-semibold" style="width:350px">ผู้ขอซื้อ</th>
-                        <th class="fw-semibold">มูลค่า</th>
-                        <th class="fw-semibold">ผู้ขาย</th>
-                        <th class="fw-semibold">ความคืบหน้า</th>
+                        <th>มูลค่า</th>
+                        <th>ผู้ขาย</th>
+                        <th>ความคืบหน้า</th>
                         <th class="fw-semibold text-center" style="width:176px">ดำเนินการ</th>
                     </tr>
                 </thead>

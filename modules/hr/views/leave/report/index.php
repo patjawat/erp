@@ -54,10 +54,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <thead class="">
                 <tr>
                     <th class="fw-semibold text-center">ลำดับ</th>
-                    <th class="fw-semibold">ชื่อ นามสกุล</th>
-                    <th class="fw-semibold">ตำแหน่ง</th>
+                    <th>ชื่อ นามสกุล</th>
+                    <th>ตำแหน่ง</th>
                     <th class="fw-semibold text-center">เลขบัตรประชาชน</th>
-                    <th class="fw-semibold">ฝ่าย/แผนก</th>
+                    <th>ฝ่าย/แผนก</th>
                     <th class="fw-semibold text-center">ประเภท</th>
                     <th class="fw-semibold text-center">ลาป่วย</th>
                     <th class="fw-semibold text-center">ลากิจ</th>

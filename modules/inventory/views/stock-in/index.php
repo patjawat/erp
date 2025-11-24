@@ -89,9 +89,9 @@ if (isset($warehouseModel->data_json['item_type'])) {
                 <tr>
                     <th class="text-center">#</th>
                     <th class="fw-semibold" scope="col">รหัส/วันที่รับเข้าคลัง</th>
-                    <th class="fw-semibold">เลขทะเบียนคุม/ประเภทวัสดุ</th>
-                    <th class="fw-semibold">รับจาก</th>
-                    <th class="fw-semibold">เจ้าหน้าที่</th>
+                    <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
+                    <th>รับจาก</th>
+                    <th>เจ้าหน้าที่</th>
                     <th style="width:130px" class="text-end fw-semibold">มูลค่า</th>
                     <th style="width:100px" class="text-center fw-semibold">สถานะ</th>
                     <th class="text-center fw-semibold" style="width:100px">ดำเนินการ</th>

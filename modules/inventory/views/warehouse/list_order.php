@@ -11,7 +11,7 @@ use yii\bootstrap5\LinkPager;
             <th class="fw-semibold" style="width:210px">รหัส/วันที่ขอ</th>
             <th class="fw-semibold" scope="col">ประเถท</th>
             <th class="fw-semibold" scope="col">ผู้เบิก</th>
-            <th class="fw-semibold">หัวหน้าตรวจสอบ</th>
+            <th>หัวหน้าตรวจสอบ</th>
             <th class="fw-semibold text-end">มูลค่า</th>
             <th class="fw-semibold text-center" style="width:160px">วันที่จ่าย</th>
             <th class="fw-semibold text-center" style="width:160px">สถานะ</th>

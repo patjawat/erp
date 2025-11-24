@@ -136,7 +136,9 @@ const metisMenu = $('.employee-welcome');
 			// });
 
 			AOS.init({});
-			\$("#full-screen").on("click", function () {
+
+		$("body").on("click", "#full-screen", function (e) {
+			alert();
 					\$(this).children().toggleClass("bx-fullscreen bx-exit-fullscreen");
 					if (!isfullscreen) {
 						isfullscreen = fullScreen(isfullscreen);

@@ -8,33 +8,23 @@ $orange:#fd7e14;
 $yellow:#ffc107;
 
 
+$font-size-root: .85rem; // ปรับ <html> เป็น 0.8rem
+// $font-size-base: 1rem;   // body จะเท่ากับ 0.8rem
+// $font-weight-normal: 300;
+// $font-weight-semibold:500;
+// $form-label-font-weight: 600;
 
-// $theme-colors: (
-//   primary: $primary,
-//   dark: $dark,
-//   purple:$purple
-// );
-// $primary:#068DA9;
-// $blue:$primary;
-
-// $primary:#7859f4;
-// $body-color:#f0f6ff;
 $body-color:#000000;
 $headings-color:#4b4b5a;;
-$font-size-root: 1rem;
-$headings-font-weight:400;
+// $headings-font-weight:400;
 $black:#303030;
 $menu-item:$black;
 $menu-item-bg-hove:#eee;
 $light:#eee;
 $list-group-color:#303030;
 $badge-color: #303030;
-// $input-font-size: 1rem;
 $white:#fff;
 
-$font-weight-normal: 300;
-$font-weight-semibold:500;
-$form-label-font-weight: 600;
 // Btn Config
 $btn-font-weight:400;
 $badge-font-weight:300;

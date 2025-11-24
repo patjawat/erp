@@ -61,8 +61,8 @@ $msg = 'ขอ';
                     <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
                     <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
                     <th class="fw-semibold" scope="col" style="width:100px">ประเภทเวร</th>
-                    <th class="fw-semibold">ประเภทการลา</th>
-                    <th class="fw-semibold">ระหว่างวันที่</th>
+                    <th>ประเภทการลา</th>
+                    <th>ระหว่างวันที่</th>
                     <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
                     <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
                     <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>

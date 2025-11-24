@@ -63,9 +63,9 @@ $msg = 'ขอ';
                             <input type="checkbox" id="check-all">
                         </th>
                         <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold">เรื่อง</th>
-                        <th class="fw-semibold">ประเภท</th>
-                        <th class="fw-semibold">วันที่</th>
+                        <th>เรื่อง</th>
+                        <th>ประเภท</th>
+                        <th>วันที่</th>
                         <th class="fw-semibold" scope="col">ผู้ขอ</th>
                         <th class="fw-semibold" scope="col" style="width: 200px;">ผู้อนุมัติ</th>
                         <th class="fw-semibold" scope="col">สถานะ</th>

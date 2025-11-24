@@ -7,11 +7,11 @@ use yii\helpers\Html;
     <thead>
         <tr>
             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-            <th class="fw-semibold">วันที่ต้องการใช้</th>
-            <th class="fw-semibold">ห้องประชุม</th>
-            <th class="fw-semibold">หัวข้อการประชุม</th>
-            <th class="fw-semibold">ผู้ขอ</th>
-            <th class="fw-semibold">หน่วยงาน</th>
+            <th>วันที่ต้องการใช้</th>
+            <th>ห้องประชุม</th>
+            <th>หัวข้อการประชุม</th>
+            <th>ผู้ขอ</th>
+            <th>หน่วยงาน</th>
             <th class="fw-semibold text-center">สถานะ</th>
             <th class="fw-semibold text-center">ดำเนินการ</th>
         </tr>

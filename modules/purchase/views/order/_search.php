@@ -31,6 +31,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title'),
             'options' => ['placeholder' => 'ประเภททั้งหมด'],
+             'theme' => Select2::THEME_KRAJEE_BS5, 
             'pluginOptions' => [
                 'allowClear' => true,
             ],

@@ -56,10 +56,10 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                      <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                      <th class="text-center fw-semibold" style="width:200px">สีพื้นหลัง</th>
                      <th class="text-center fw-semibold" style="width:200px">สีตัวหนังสือ</th>
-                    <th class="fw-semibold">ชื่อห้องประชุม</th>
-                    <th class="fw-semibold">ความจุ/คน</th>
+                    <th>ชื่อห้องประชุม</th>
+                    <th>ความจุ/คน</th>
                     <th class="fw-semibold d-none d-md-table-cell">สถานที่</th>
-                    <th class="fw-semibold">สถานะ</th>
+                    <th>สถานะ</th>
                     <th class="fw-semibold text-end">จัดการ</th>
                 </tr>
             </thead>

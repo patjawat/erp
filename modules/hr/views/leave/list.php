@@ -19,23 +19,23 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
 <table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-            <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
-            <th class="fw-semibold" scope="col">ผู้ขออนุมัติการลา</th>
-            <th class="fw-semibold" scope="col" style="width:100px">ประเภทเวร</th>
-            <th class="fw-semibold"><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
-            <th class="fw-semibold">ระหว่างวันที่</th>
-            <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
-            <th class="fw-semibold" scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-            <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>
-            <th class="fw-semibold text-center">ดำเนินการ</th>
+            <th class="text-center" style="width:30px">ลำดับ</th>
+            <th class="text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
+            <th  scope="col">ผู้ขออนุมัติการลา</th>
+            <th  scope="col" style="width:100px">ประเภทเวร</th>
+            <th><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
+            <th>ระหว่างวันที่</th>
+            <th class="text-start" scope="col">หน่วยงาน</th>
+            <th  scope="col" style="width: 127px;">ผู้อนุมัติ</th>
+            <th class="text-start">สถานะ/ความคืบหน้า</th>
+            <th class="text-center">ดำเนินการ</th>
         </tr>
     </thead>
     <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
             <tr>
-                <td class="text-center fw-semibold"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                <td class="text-center fw-semibold "><?php echo $item->thai_year ?></td>
+                <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                <td class="text-center "><?php echo $item->thai_year ?></td>
                 <td class="text-truncate" style="max-width: 230px;">
                     <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                         class="open-modal" data-size="modal-xl">

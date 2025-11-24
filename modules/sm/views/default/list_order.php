@@ -15,7 +15,7 @@ use yii\helpers\Html;
             <thead>
                 <tr>
                     <th class="fw-semibold" style="width:280px">ผู้ขอซื้อ</th>
-                    <th class="fw-semibold">ประเภท/มูลค่า</th>
+                    <th>ประเภท/มูลค่า</th>
                     <th class="fw-semibold" style="width: 200px;">สถานะ</th>
                     <th class="fw-semibold" style="width: 100px;">ดำเนินการ</th>
                 </tr>

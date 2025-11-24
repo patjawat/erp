@@ -37,9 +37,9 @@ $moduleId = Yii::$app->controller->module->id;
     <?php $this->head() ?>
 </head>
 <style>
-    body {
-        font-size: 0.9rem !important;
-    }
+    /* body {
+        font-size: 0.8rem !important;
+    } */
 
     #nprogress .bar {
         background: linear-gradient(90deg, #fce9af 0%, #f7c873 100%) !important;
@@ -180,9 +180,9 @@ $moduleId = Yii::$app->controller->module->id;
         font-weight: 600;
     }
 
-    .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice {
+    /* .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice {
         padding: 0.15rem 0.4rem 0.2rem 0.55rem !important;
-    }
+    } */
 </style>
 
 </style>

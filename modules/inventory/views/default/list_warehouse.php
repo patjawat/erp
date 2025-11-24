@@ -23,8 +23,8 @@ use app\modules\inventory\models\StockEvent;
             <thead>
                 <tr>
                     <th class="text-end fw-semibold" scope="col">#</th>
-                    <th class="fw-semibold">รายการ</th>
-                    <th class="fw-semibold">ผู้ดูแล</th>
+                    <th>รายการ</th>
+                    <th>ผู้ดูแล</th>
                     <th class="text-center fw-semibold">รอดำเนินการ</th>
                     <th class="text-end fw-semibold">มูลค่าวัสดุคงคลัง</th>
                 </tr>

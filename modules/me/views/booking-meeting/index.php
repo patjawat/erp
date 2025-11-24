@@ -48,10 +48,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead class="table-light">
                         <tr>
                             <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                            <th class="fw-semibold">หัวข้อการประชุม</th>
-                            <th class="fw-semibold">ผู้ขอ</th>
-                            <th class="fw-semibold">ห้องประชุม</th>
-                            <th class="fw-semibold">สถานะ</th>
+                            <th>หัวข้อการประชุม</th>
+                            <th>ผู้ขอ</th>
+                            <th>ห้องประชุม</th>
+                            <th>สถานะ</th>
                             <th class="fw-semibold text-end">ดำเนินการ</th>
                         </tr>
                     </thead>

@@ -58,10 +58,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
                     <th class="fw-semibold" style="width: 180px;">เลขที่/ความเร่งด่วน</th>
-                    <th class="fw-semibold">เหตุผล/จุดหมาย</th>
+                    <th>เหตุผล/จุดหมาย</th>
                     <th class="fw-semibold" style="width: 400px;">เหตุผล/วันที่ขอใช้</th>
-                    <th class="fw-semibold">ผู้ขอ</th>
-                    <th class="fw-semibold">สถานะ</th>
+                    <th>ผู้ขอ</th>
+                    <th>สถานะ</th>
                     <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
                 </tr>
             </thead>
