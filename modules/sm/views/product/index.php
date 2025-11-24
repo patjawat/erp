@@ -66,18 +66,18 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-striped table-hover align-middle custom-table">
                 <thead>
                     <tr>
-                        <th class="text-center fw-semibold" style="width:30px">ลำดับ</th>
-                        <th class="fw-semibold text-center" style="min-width: 150px;">หมวดหมู่</th>
-                        <th class="fw-semibold text-center" style="min-width: 150px;">ประเภทวัสดุ</th>
-                        <th class="fw-semibold" style="min-width: 350px;">รายการวัสดุ</th>
-                        <th class="fw-semibold" style="min-width: 100px;">หน่วยนับ</th>
-                        <th class="fw-semibold" style="min-width: 120px;">บัญชีนวัตกรรม</th>
-                        <th class="fw-semibold text-center" style="min-width: 100px;">จำนวนสูงสุด</th>
-                        <th class="fw-semibold text-center" style="min-width: 100px;">จำนวนต่ำสุด</th>
-                        <th class="fw-semibold text-center" style="min-width: 100px;">สถานะ</th>
+                        <th class="text-center" style="width:30px">ลำดับ</th>
+                        <th class="text-center" style="min-width: 150px;">หมวดหมู่</th>
+                        <th class="text-center" style="min-width: 150px;">ประเภทวัสดุ</th>
+                        <th style="min-width: 350px;">รายการวัสดุ</th>
+                        <th style="min-width: 100px;">หน่วยนับ</th>
+                        <th style="min-width: 120px;">บัญชีนวัตกรรม</th>
+                        <th class="text-center" style="min-width: 100px;">จำนวนสูงสุด</th>
+                        <th class="text-center" style="min-width: 100px;">จำนวนต่ำสุด</th>
+                        <th class="text-center" style="min-width: 100px;">สถานะ</th>
 
                         <!--ใช้ min-width ป้องกันการบีบ -->
-                        <th class="fw-semibold text-center" style="min-width: 130px;">จัดการ</th>
+                        <th class="text-center" style="min-width: 130px;">จัดการ</th>
                     </tr>
                 </thead>
 
