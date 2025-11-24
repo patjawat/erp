@@ -391,6 +391,37 @@ class Leave extends \yii\db\ActiveRecord
     }
 
 
+     // แสดงข้อมูลวันลาที่มี่ผ่านมา
+    public function LastDays()
+    {
+        // return $this->leave_type_id;
+        // ลามาแล้ว
+        $sumAll = self::find()
+            ->where([
+                'emp_id' => $this->emp_id,
+                'thai_year' => $this->thai_year,
+                'leave_type_id' => $this->leave_type_id,
+                'status' => 'Approve'
+            ])
+            ->andwhere(['<', 'date_start', $this->date_start])
+            ->sum('total_days');
+
+        $data = self::find()
+            ->where([
+                'emp_id' => $this->emp_id,
+                'thai_year' => $this->thai_year,
+                'leave_type_id' => $this->leave_type_id,
+                'status' => 'Approve'
+            ])
+            ->andwhere(['<', 'date_start', $this->date_start])
+            ->one();
+
+            return [
+                'data' => $data ?? null,
+                'sum_all' => $sumAll ?? 0
+            ];
+    }
+    
     // สรุปการลารายบุคคล
     public function leaveEmpSummary()
     {
