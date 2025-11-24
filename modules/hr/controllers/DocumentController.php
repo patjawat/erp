@@ -46,6 +46,7 @@ class DocumentController extends \yii\web\Controller
         }
         
         $leaveSummary = $model->getLeaveSummary();
+        $lastDays = $model->LastDays();
         $lastDateStart = is_object($lastDays['data']) ? Yii::$app->thaiFormatter->asDate($lastDays['data']->date_start, 'long') : '-';
         $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
         $templateProcessor->setValue('org_position', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);
