@@ -28,9 +28,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?=$this->render('menu',['active' => 'dashboard'])?>
 <?php $this->endBlock(); ?>
 
-
-
-<?php // Pjax::begin(['id' => 'purchase-container']); ?>
 <div class="row">
     <div class="col-9">
         <div class="card">
@@ -50,18 +47,13 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $this->render('budget_balanced',['model' => $searchModel]) ?>
     </div>
 </div>
-<?php // yii\widgets\Pjax::begin(['id' => 'order','timeout' => 50000 ]); ?>
-<?php //yii\widgets\Pjax::begin(['id' => 'order-list','timeout' => 50000,'enablePushState' => true ]); ?>
 <div class="row">
     <div class="col-6">
-        <?php  // yii\widgets\Pjax::begin(['enablePushState' => false ]); ?>
         <div id="showPrOrderList"></div>
-        <?php  // yii\widgets\Pjax::end(); ?>
         <div id="showPrAcceptOrderList"></div>
     </div>
     <div class="col-6">
         <div id="showPqOrder"></div>
-        <?php //  $this->render('pr_order_list') ?>
     </div>
 </div>
 

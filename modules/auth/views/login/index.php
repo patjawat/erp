@@ -17,11 +17,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- Left Column - Image and Text -->
     <div class="d-none d-md-flex col-md-6 bg-primary text-white align-items-center justify-content-center">
         <div class="px-4 py-5 text-center">
-            <!-- <h1 class="display-5 fw-bold mb-4">ยินดีต้อนรับกลับ</h1> -->
             <?= Html::img('@web/images/logo_new.png', ['class' => 'img-fluid', 'style' => 'max-width:400px; height:auto;']) ?>
 
             <div class="mb-4 mt-3">
-                <!-- <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" alt="Developer workspace" class="img-fluid rounded shadow"> -->
             </div>
             <div class="bg-primary-dark p-3 rounded">
                 <p class="lead mb-4"> <?= SiteHelper::getInfo()['company_name'] != '' ?  (SiteHelper::getInfo()['company_name']) : '' ?></p>
@@ -47,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="w-100 px-4 py-5" style="max-width: 420px;">
             <div class="text-center mb-4">
-                <h2 class="fw-bold mb-2">เข้าสู่ระบบ</h2>
+                <h2 class="mb-2 text-primary">เข้าสู่ระบบ</h2>
                 <p class="text-muted">กรอกข้อมูลเพื่อเข้าสู่บัญชีของคุณ</p>
             </div>
             <?php $form = ActiveForm::begin(['id' => 'blank-form', 'enableAjaxValidation' => false,]); ?>

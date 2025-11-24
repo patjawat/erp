@@ -21,7 +21,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
     'method' => 'get',
-    'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
     'options' => [
         'data-pjax' => 0
     ],
@@ -31,7 +30,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
             'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title'),
             'options' => ['placeholder' => 'ประเภททั้งหมด'],
-             'theme' => Select2::THEME_KRAJEE_BS5, 
+            'theme' => Select2::THEME_KRAJEE_BS5,
             'pluginOptions' => [
                 'allowClear' => true,
             ],
@@ -71,14 +70,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         ?>
     </div>
 
-</div>
 
-
-
-<div class="row mt-2">
-    <div class="col-3">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
-    </div>
     <div class="col-4">
         <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
@@ -89,7 +81,7 @@ use iamsaint\datetimepicker\Datetimepicker;
         ])->label(false);
         ?>
     </div>
-     <div class="col-4">
+    <div class="col-4">
         <?= $form->field($model, 'q_budget_type')->widget(Select2::classname(), [
             'data' => $model->ListBudgetdetail(),
             'options' => ['placeholder' => 'ประเภทเงินทั้งหมด'],
@@ -99,18 +91,49 @@ use iamsaint\datetimepicker\Datetimepicker;
         ])->label(false);
         ?>
     </div>
-     
-
-
-    <div class="col-1">
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary']); ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-filter"></i>
-        </button>
+    <div class="col-6">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
     </div>
 
+    <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+        <div class="d-flex flex-column flex-md-row gap-2">
 
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
+                'class' => 'btn btn-primary w-100 w-md-auto',
+                'id' => 'summit'
+            ]) ?>
+
+            <?= Html::a(
+                '<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
+                ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'],
+                ['class' => 'btn btn-light open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-lg']]
+            ) ?>
+
+            <div class="dropdown w-100 w-md-auto">
+                <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"
+                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span class="d-none d-sm-inline">Excel</span>
+                </button>
+
+                <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
+                    <li><?= Html::a(
+                            '<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',
+                            ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'],
+                            ['class' => 'dropdown-item open-modal']
+                        ) ?>
+                    </li>
+                    <li><?= Html::a(
+                            '<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า',
+                            'https://docs.google.com/spreadsheets/d/.../edit?usp=sharing',
+                            ['class' => 'dropdown-item', 'target' => '_blank']
+                        ) ?>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
