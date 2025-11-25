@@ -61,7 +61,7 @@ use kartik\widgets\ActiveForm;
         ])->label(false);
         ?>
     </div>
-    <div class="col-lg-4 col-md-6 col-sm-12">
+    <div class="col-lg-2 col-md-6 col-sm-12">
         <?= $form->field($model, 'q_budget_type')->widget(Select2::classname(), [
             'data' => $model->ListBudgetdetail(),
             'options' => ['placeholder' => 'ประเภทเงินทั้งหมด'],
@@ -71,7 +71,7 @@ use kartik\widgets\ActiveForm;
         ])->label(false);
         ?>
     </div>
-   <div class="col-lg-4 col-md-6 col-sm-12">
+   <div class="col-lg-2 col-md-6 col-sm-12">
         <?= $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => ArrayHelper::map($model->ListStatus(), 'code', 'title'),
             'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -80,6 +80,18 @@ use kartik\widgets\ActiveForm;
             ],
         ])->label(false);
         ?>
+    </div>
+    <div class="col-lg-4 col-md-6 col-sm-12">
+<?php 
+echo $form->field($model, 'request_type')->radioList(
+    [
+    '' => 'ทั้งหมด',
+    'planned' => 'ในแผน',
+    'unplanned' => 'นอกแผน'
+], 
+    ['custom' => true,'inline' => true]
+)->label(false);
+?>
     </div>
     <div class="col-lg-4 col-md-6 col-sm-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>

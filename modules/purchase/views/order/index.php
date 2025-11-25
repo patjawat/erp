@@ -72,11 +72,12 @@ if ($searchModel->date_between == 'pr_create_date') {
                         <th style="min-width:180px">ประเภท</th>
                         <th style="min-width:280px">ผู้ขาย/เลขที่สั่งซื้อ</th>
                         <th style="min-width:100px">เลขทะเบียนคุม</th>
-                        <th style="min-width:120px" class="text-center">ประเภทเงิน</th>
+                        <th style="min-width:110px" class="text-center">ประเภทจัดซื้อ</th>
+                        <th style="min-width:110px" class="text-center">ประเภทเงิน</th>
                         <th style="min-width:100px" class="text-center">วิธีการจัดซื้อ</th>
-                        <th style="min-width:120px">การตรวจสอบ</th>
+                        <th style="min-width:95px">การตรวจสอบ</th>
                         <th style="min-width:180px">สถานะ</th>
-                        <th style="min-width:150px"class="text-end">มูลค่า</th>
+                        <th style="min-width:120px"class="text-end">มูลค่า</th>
                         <th class="text-cener" style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -96,7 +97,8 @@ if ($searchModel->date_between == 'pr_create_date') {
                             </td>
                             <td><span class=""><?= $item->pq_number ?></span></td>
 
-                            <td><?= $item->budgetTypeName() ?></td>
+                            <td class="text-center"><?= $item->viewRequestType() ?></td>
+                            <td class="text-center"><?= $item->budgetTypeName() ?></td>
                             <td><?= $item->data_json['pq_purchase_type_name'] ?? '-' ?></td>
 
                             <td class="fw-light align-middle">

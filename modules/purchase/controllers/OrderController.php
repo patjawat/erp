@@ -175,7 +175,7 @@ class OrderController extends Controller
             $sheet->setCellValue('D' . $numRow, $value->pr_number);
             $sheet->setCellValue('E' . $numRow, '');
             // $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
-            $sheet->setCellValue('G' . $numRow, $value->id);
+            $sheet->setCellValue('G' . $numRow, '');
             $sheet->setCellValue('H' . $numRow, $value->assetType->title ?? '-');
             $sheet->setCellValue('I' . $numRow, $value->vendor?->title ?? '-');
             $sheet->setCellValue('J' . $numRow, $value->calculateVAT()['priceAfterVAT']);

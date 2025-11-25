@@ -243,7 +243,16 @@ class Order extends \yii\db\ActiveRecord
             return '-';
         }
     }
+    //  ประเภทการจัดซื้อ
+    public function viewRequestType()
+    {
 
+        if ($this->request_type == 'planned') {
+            return 'ในแผน';
+        } else {
+            return 'นอกแผน';
+        }
+    }
 
 
     // กำหนดคนอนุมัติ
@@ -262,7 +271,7 @@ class Order extends \yii\db\ActiveRecord
                     'emp_id' => $this->data_json['leader1'],
                     'title' => 'หัวหน้าลงความเห็นชอบ',
                     'data_json' => [
-                         'label' => 'เห็นชอบ',
+                        'label' => 'เห็นชอบ',
                         "approve_date" =>  date('Y-m-d H:i:s')
                     ]
                 ],
@@ -272,7 +281,7 @@ class Order extends \yii\db\ActiveRecord
                     'emp_id' => $me->id,
                     'title' => 'จนท.พัสดุตรวจสอบ',
                     'data_json' => [
-                          'label' => 'ตรวจสอบ',
+                        'label' => 'ตรวจสอบ',
                         "approve_date" =>  date('Y-m-d H:i:s')
                     ]
                 ],
@@ -282,7 +291,7 @@ class Order extends \yii\db\ActiveRecord
                     'emp_id' => SiteHelper::getInfo()['director_name'],
                     'title' => 'ผู้อำนวยการอนุมัติ',
                     'data_json' => [
-                         'label' => 'อนุมัติ',
+                        'label' => 'อนุมัติ',
                         "approve_date" =>  date('Y-m-d H:i:s')
                     ]
                 ]
@@ -1008,9 +1017,9 @@ class Order extends \yii\db\ActiveRecord
     public function ListProductType()
     {
         return ArrayHelper::map(Categorise::find()
-        ->andWhere(['name' => 'asset_type'])
-        ->andWhere(['!=', 'group_id', ''])
-        ->all(), 'code', 'title');
+            ->andWhere(['name' => 'asset_type'])
+            ->andWhere(['!=', 'group_id', ''])
+            ->all(), 'code', 'title');
         // return ArrayHelper::map(Categorise::find()->andWhere(['in', 'name', ['product_type', 'asset_type', 'food_type', 'service_type']])->all(), 'code', 'title');
         // return ArrayHelper::map(Categorise::find()->andWhere(['name' =>'asst_item'])->all(), 'code',function($model){
         //     return $model->category_id.' - '.$model->title;
