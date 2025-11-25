@@ -81,6 +81,7 @@ class UpdateTableController extends Controller
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
+            ['name' => 'checker', 'type' => 1, 'description' => 'ผู้ตรวจสอบ เช่น วันลา หรืออื่นๆ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
 
