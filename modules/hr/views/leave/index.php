@@ -1,11 +1,7 @@
 <?php
 
-use yii\helpers\Url;
-use yii\helpers\Html;
+use yii\web\View;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use app\modules\hr\models\Leave;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $searchModel */
@@ -63,11 +59,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-center gap-2">
-                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
+              
             </div>
         </div>
     </div>
-    <div class="card-body">
+  <div class="card-body p-0">
         <?php
         echo $this->render('list', [
             'searchModel' => $searchModel,
@@ -75,6 +71,17 @@ $this->params['breadcrumbs'][] = $this->title;
         ]);
         ?>
 
+    </div>
+    <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+        <?= yii\bootstrap5\LinkPager::widget([
+            'pagination' => $dataProvider->pagination,
+            'firstPageLabel' => 'หน้าแรก',
+            'lastPageLabel' => 'หน้าสุดท้าย',
+            'options' => [
+                'listOptions' => 'pagination pagination-sm',
+                'class' => 'pagination-sm',
+            ],
+        ]); ?>
     </div>
 </div>
 
@@ -156,7 +163,7 @@ $js = <<< JS
             });
         });
     JS;
-$this->registerJs($js);
+$this->registerJs($js,View::POS_END);
 ?>
 
 <?php  Pjax::end(); ?>

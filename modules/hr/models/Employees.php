@@ -380,26 +380,26 @@ class Employees extends Yii\db\ActiveRecord
         <div class="d-flex align-items-center">
             {$img}
             <div class="avatar-detail">
-                <h6 class="mb-0 fs-13">{$fullname}</h6>
+                <h6 class="mb-0">{$fullname}</h6>
                 <p class="text-muted mb-0 fs-12">{$msg}</p>
             </div>
         </div>
         HTML;
         }
 
-        $age = $showAge ? '<p class="text-muted mb-0 fs-13">อายุ ' . Html::encode($this->age) . '</p>' : '';
+        $age = $showAge ? '<p class="text-muted">อายุ ' . Html::encode($this->age) . '</p>' : '';
 
         return <<<HTML
     <div class="d-flex align-items-center" style="margin-top: -5px;">
         {$img}
         <div class="avatar-detail">
-            <p class="mb-0 fs-13"  
+            <h6 class="mb-0 fs-14"  
                data-bs-toggle="tooltip" 
                data-bs-placement="top"
                data-bs-custom-class="custom-tooltip"
                data-bs-title="ดูเพิ่มเติม...">
                 {$fullname}
-            </p>
+            </h6>
             <p class="text-muted mb-0 fs-12">{$position}</p>
             {$age}
         </div>
