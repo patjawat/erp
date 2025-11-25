@@ -48,11 +48,11 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-primary" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
-                        <th scope="col" class="text-center fw-bold">ลำดับ</th>
-                        <th scope="col" class="text-start fw-bold">ชื่อคลัง</th>
-                        <th scope="col" class="text-start fw-bold">ประเภทคลัง</th>
-                        <th scope="col" class="text-start fw-bold">ประเภทวัสดุ</th>
-                        <th scope="col" class="text-start fw-bold">
+                        <th scope="col" class="text-center">ลำดับ</th>
+                        <th scope="col" class="text-start">ชื่อคลัง</th>
+                        <th scope="col" class="text-start">ประเภทคลัง</th>
+                        <th scope="col" class="text-start">ประเภทวัสดุ</th>
+                        <th scope="col" class="text-start">
                             <?php if ($searchModel->transaction_type == 'IN'): ?>
                                 ผู้ขาย
                             <?php elseif ($searchModel->transaction_type == 'OUT'): ?>
@@ -61,15 +61,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ผู้ขาย/คลังที่ขอเบิก
                             <?php endif; ?>
                         </th>
-                        <th scope="col" class="text-center fw-bold">วันที่</th>
-                        <th scope="col" class="text-start fw-bold">เลขที่</th>
-                        <th scope="col" class="text-center fw-bold">ความเคลื่อนไหว</th>
-                        <th scope="col" class="text-start fw-bold">รหัสวัสดุ</th>
-                        <th scope="col" class="text-start fw-bold">ชื่อวัสดุ</th>
-                        <th scope="col" class="text-center fw-bold">หน่วย</th>
-                        <th scope="col" class="text-center fw-bold">จำนวน</th>
-                        <th scope="col" class="text-end fw-bold">ราคาต่อหน่วย</th>
-                        <th scope="col" class="text-end fw-bold">รวมราคา</th>
+                        <th scope="col" class="text-center">วันที่</th>
+                        <th scope="col" class="text-start">เลขที่</th>
+                        <th scope="col" class="text-center">ความเคลื่อนไหว</th>
+                        <th scope="col" class="text-start">รหัสวัสดุ</th>
+                        <th scope="col" class="text-start">ชื่อวัสดุ</th>
+                        <th scope="col" class="text-center">หน่วย</th>
+                        <th scope="col" class="text-center">จำนวน</th>
+                        <th scope="col" class="text-end">ราคาต่อหน่วย</th>
+                        <th scope="col" class="text-end">รวมราคา</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,9 +95,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?= $item['asset_item'] ?></td>
                             <td><?= $item['asset_name'] ?></td>
                             <td class="text-center"><?= $item['unit'] ?></td>
-                            <td class="text-center fw-bold"><?= $item['item_qty'] ?></td>
-                            <td class="text-end fw-bold"><?= number_format($item['unit_price'] ?? 0, 2) ?></td>
-                            <td class="text-end fw-bold"><?= number_format(($item['end_price']) ?? 0, 2) ?></td>
+                            <td class="text-center"><?= $item['item_qty'] ?></td>
+                            <td class="text-end"><?= number_format($item['unit_price'] ?? 0, 2) ?></td>
+                            <td class="text-end"><?= number_format(($item['end_price']) ?? 0, 2) ?></td>
                         </tr>
                         <?php $totalPrice += ($item['end_price']); ?>
                     <?php endforeach; ?>
@@ -106,7 +106,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
                     <tr class="fw-bold">
                         <td colspan="13" class="fw-bold text-end">รวมราคาทั้งหมด</td>
-                        <td class="text-end fw-bold"><?= number_format($totalPrice, 2) ?></td>
+                        <td class="text-end"><?= number_format($totalPrice, 2) ?></td>
                     </tr>
                 </tfoot>
             </table>

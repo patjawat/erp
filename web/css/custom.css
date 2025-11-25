@@ -76,7 +76,7 @@
   --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
-  --bs-root-font-size: 0.85rem;
+  --bs-root-font-size: 0.875rem;
   --bs-body-font-family: var(--bs-font-sans-serif);
   --bs-body-font-size: 1rem;
   --bs-body-font-weight: 400;
@@ -12376,7 +12376,7 @@ textarea:focus {
 
 .modal-title {
   color: #fff !important;
-  font-weight: 500 !important;
+  font-weight: 300 !important;
 }
 
 .modal-title .avatar-detail h6, .modal-title .avatar-detail .h6 {

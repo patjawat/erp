@@ -60,7 +60,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="card-body">
-
         <!-- เพิ่ม table-responsive -->
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle custom-table">

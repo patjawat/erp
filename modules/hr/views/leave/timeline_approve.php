@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -11,33 +12,33 @@ $me = UserHelper::GetEmployee();
 
 
 <style>
-.timeline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    margin: 10px 0;
-}
+    .timeline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin: 10px 0;
+    }
 
-.timeline::before {
-    content: '';
-    position: absolute;
-    top: 20%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #d3d3d3;
-    z-index: 1;
-}
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 20%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #d3d3d3;
+        z-index: 1;
+    }
 
-.timeline-item {
-    text-align: center;
-    position: relative;
-    z-index: 2;
-}
+    .timeline-item {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
 
-.timeline-item .circle {
-    /* width: 48px;
+    .timeline-item .circle {
+        /* width: 48px;
     height: 48px;
     background: #a0c4ff;
     border-radius: 50%;
@@ -46,98 +47,142 @@ $me = UserHelper::GetEmployee();
     justify-content: center;
     margin: 0 auto 10px;
     position: relative; */
-}
+    }
 
-.timeline-item .circle::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    background: #3b82f6;
-    border-radius: 50%;
-}
+    .timeline-item .circle::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
 
-.timeline-item .year {
-    font-weight: bold;
-    margin-bottom: 5px;
-    margin-top: 10px;
-}
+    .timeline-item .year {
+        font-weight: bold;
+        margin-bottom: 5px;
+        margin-top: 10px;
+    }
 
-.timeline-item .description {
-    color: #6b7280;
-}
+    .timeline-item .description {
+        color: #6b7280;
+    }
 </style>
 
 
-            <div class="alert alert-primary" role="alert">
-                <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
-            </div>
+<div class="alert alert-primary" role="alert">
+    <h5 class="font-weight-bold text-center">การอนุมัติเห็นชอบ</h5>
+</div>
+
+
+
 <div class="container mb-5">
     <div class="timeline">
 
-        <?php foreach ($model->listApprove() as $item): ?>
-        <div class="timeline-item">
-            <div class="circle">
-                <?php echo Html::img($item->getAvatar()['photo'],['class' => 'avatar avatar-sm','style' =>'margin-right: 6px;'])?></div>
-            <div class="year">
+       <?php foreach ($model->listApprove() as $item): ?>
+            <div class="timeline-item">
                 <?php
-                                                if ($item->status == 'None') {
-                                                    echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
-                                                }else if ($item->status == 'Pending') {
-                                                    echo '<i class="bi bi-hourglass-bottom  text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
-                                                } else if ($item->status == 'Pass') {
-                                                    echo '<i class="bi bi-check-circle text-success"></i> ' . ($item->data_json['label'] ?? '');
-                                                } else if ($item->status == 'Reject') {
-                                                    echo '<i class="bi bi-stop-circle  text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
-                                                } else if ($item->status == 'Cancel') {
-                                                }
-                                                ?>
+                // --- 1. ส่วนกำหนด Logic (ตั้งค่าเงื่อนไข) ---
+                $isLevel3 = ($item->level == 3);
+                $isPending = ($item->status == 'Pending');
+                $userIsChecker = Yii::$app->user->can('checker'); // สิทธิ์ Checker
+                $userIsOwner = ($item->emp_id == $me->id); // เจ้าของรายการ
+
+                // A. เงื่อนไขการแสดงตัวตน (รูป + ชื่อ)
+                // ถ้าไม่ใช่ Level 3 แสดงหมด || ถ้าเป็น Level 3 ต้องเป็น Checker ถึงจะเห็น
+                $showIdentity = !$isLevel3 || ($isLevel3 && $userIsChecker);
+
+                // B. เงื่อนไขการแสดงปุ่ม Approve
+                $showButtons = false;
+                if ($isPending) {
+                    if ($isLevel3) {
+                        $showButtons = $userIsChecker; // Level 3 เช็คสิทธิ์ Checker
+                    } else {
+                        $showButtons = $userIsOwner;   // Level อื่น เช็คว่าเป็นเจ้าของไหม
+                    }
+                }
+                ?>
+
+                <div class="circle">
+                    <?php
+                    if ($showIdentity) {
+                        echo Html::img($item->getAvatar()['photo'], ['class' => 'avatar avatar-sm', 'style' => 'margin-right: 6px;']);
+                    } else {
+                        // เว้นว่างไว้ หรือใส่ icon default
+                        echo '<div style="width:32px; height:32px;"></div>';
+                    }
+                    ?>
+                </div>
+
+                <div>
+                    <?= $item->level ?>
+                    <?php
+                    try {
+                        if ($item->status == 'None') {
+                            echo '<i class="fa-solid fa-clock-rotate-left"></i> รอดำเนินการ';
+                        } else if ($item->status == 'Pending') {
+                            echo '<i class="bi bi-hourglass-bottom text-warning"></i> รอ' . ($item->level == 3 ? $item->title : ($item->data_json['label'] ?? ''));
+                        } else if ($item->status == 'Pass') {
+                            echo '<i class="bi bi-check-circle text-success"></i> ' . ($item->data_json['label'] ?? '');
+                        } else if ($item->status == 'Reject') {
+                            echo '<i class="bi bi-stop-circle text-danger"></i> ไม่' . ($item->data_json['label'] ?? '') . ' <i class="bi bi-clock-history"></i> ';
+                        }
+                    } catch (\Throwable $th) {
+                        // handle error
+                    }
+                    ?>
+                </div>
+
+                <div class="description">
+                    <?php
+                    // ใช้ตัวแปร $showIdentity ตัวเดิม ถ้า false ก็จะไม่ echo ชื่อออกมา
+                    echo $showIdentity ? $item->getAvatar()['fullname'] : '';
+                    ?>
+                </div>
+
+                <?php
+                try {
+                    echo $item->status == 'Pass' ? $item->viewApproveDate() : '';
+                } catch (\Throwable $th) {
+                }
+                ?>
+
+                <?php if ($item->status == 'Approve'): ?>
+                    <i class="bi bi-clock-history"></i> <?php echo $approveDate ?? '-' ?>
+                <?php endif; ?>
+
+                <?php if ($model->status == 'ReqCancel' || $model->status == 'Cancel'): ?>
+                    -
+                <?php else: ?>
+                    <?php if ($showButtons): ?>
+                        <?php
+                        echo Html::a(
+                            '<i class="fa-solid fa-circle-check"></i> ' . ($item->data_json['label'] ?? ''),
+                            ['update', 'id' => $item->id],
+                            [
+                                'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
+                                'data' => ['id' => $item->id, 'status' => 'Pass', 'label' => ($item->data_json['label'] ?? '')]
+                            ]
+                        );
+                        ?>
+                        <?php
+                        echo Html::a(
+                            '<i class="fa-solid fa-circle-check"></i> ไม่' . ($item->data_json['label'] ?? ''),
+                            ['update', 'id' => $item->id],
+                            [
+                                'class' => 'btn btn-sm btn-danger rounded-pill shadow btn-approve',
+                                'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => "ไม่" . ($item->data_json['label'] ?? '')]
+                            ]
+                        );
+                        ?>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
-            <div class="description"><?php echo $item->getAvatar()['fullname']?></div>
-            <?php if($item->status == 'Pass'):?>
-            <i class="bi bi-clock-history"></i>  <?php
-            try {
-                echo $item->status == 'Pass' ? $item->viewApproveDate() : '';
-            } catch (\Throwable $th) {
-                //throw $th;
-            }
-            ?>
-            <?php endif;?>
 
-            <?php if($model->status == 'ReqCancel' || $model->status == 'Cancel'):?>
-            -
-            <?php else:?>
-
-            <?php if($item->level == 3 && $item->status == 'Pending'):?>
-
-                <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> '.($item->data_json['label'] ?? ''),
-                    ['/approve/leave/update','id' => $item->id],
-                    [
-                        'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
-                        'data' => [
-                            'id' => $item->id ,
-                            'status' => 'Pass'
-                            ]
-                    
-                    ])?>
-                    <?php  echo Html::a('<i class="fa-solid fa-circle-check"></i> ไม่'.($item->data_json['label'] ?? ''),
-                    ['/approve/leave/update','id' => $item->id],
-                    [
-                        'class' => 'btn btn-sm btn-danger rounded-pill shadow btn-approve',
-                        'data' => [
-                            'id' => $item->id ,
-                            'status' => 'Reject'
-                            ]
-                    
-                    ])?>
-
-            <?php endif?>
-            <?php endif?>
-        </div>
-        
         <?php endforeach ?>
 
     </div>
 </div>
+
 <?php
 $js = <<< JS
 

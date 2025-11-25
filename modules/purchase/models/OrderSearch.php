@@ -39,7 +39,8 @@ class OrderSearch extends Order
                 'plan_category_id',
                 'plan_item_id',
                 'plan_order_id',
-                'q_budget_type'
+                'q_budget_type',
+                'pq_purchase_type'
             ], 'safe'],
             [['price'], 'number'],
         ];

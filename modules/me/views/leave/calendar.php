@@ -326,7 +326,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h5 class="mb-0 text-white"><i class="fa-solid fa-book"></i> คู่มือการใช้งาน</h5>
             </div>
             <div class="card-body">
-                <h6 class="fw-bold">วิธีการใช้งานปฏิทินการลา</h6>
+                <h6>วิธีการใช้งานปฏิทินการลา</h6>
                 <ol class="ps-3">
                     <li class="mb-2">คลิกเลือกวันที่ที่ต้องการลา เพื่อสร้างคำขอลาใหม่</li>
                     <li class="mb-2">กรอกรายละเอียดการลาให้ครบถ้วน</li>

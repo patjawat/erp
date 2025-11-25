@@ -57,6 +57,7 @@ class Order extends \yii\db\ActiveRecord
     public $date_start;
     public $date_end;
     public $q_budget_type;
+    public $pq_purchase_type;
 
     /**
      * {@inheritdoc}
@@ -106,7 +107,8 @@ class Order extends \yii\db\ActiveRecord
                 'plan_item_id',
                 'plan_order_id',
                 'q_budget_type',
-                'request_type'
+                'request_type',
+                'pq_purchase_type'
             ], 'safe'],
             [['ref', 'name', 'category_id', 'code'], 'string', 'max' => 255],
         ];
