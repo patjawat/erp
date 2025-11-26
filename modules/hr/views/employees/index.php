@@ -4,13 +4,9 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use yii\grid\ActionColumn;
 use app\components\AppHelper;
 use yii\bootstrap5\LinkPager;
 use app\components\SiteHelper;
-use app\components\EmployeeHelper;
-use app\modules\hr\models\Employees;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $searchModel */
@@ -24,9 +20,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
 
 <style>
-#w1-cols-list {
-    padding: 10px;
-}
+    #w1-cols-list {
+        padding: 10px;
+    }
 </style>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-people-fill"></i> <?= $this->title; ?>
@@ -43,17 +39,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
+<?= $this->render('@app/modules/hr/views/employees/menu', ['active' => 'employees']) ?>
 <?php $this->endBlock(); ?>
 
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-  <div>
-                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-                </div>
     </div>
     <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -63,47 +55,44 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php if (SiteHelper::getDisplay() == 'list'): ?>
 
-<div class="card">
+    <div class="card">
 
-    <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="text-white mt-2">
-                <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
-                <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
-            </h6>
-            <div class="d-flex justify-content-between gap-3">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                <button id="download-button" class="btn btn-success shadow"><i
-                        class="fa-solid fa-file-export me-1"></i>Excel</button>
-              
+        <div class="card-header bg-primary-gradient text-white">
+            <div class="d-flex justify-content-between">
+                <h6 class="text-white mt-2">
+                    <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
+                    <span class="badge text-bg-light">
+                        <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+                </h6>
+                <div>
+                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
+                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
+                </div>
             </div>
         </div>
+        <div class="card-body">
+            <?= $this->render('display/list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]); ?>
+        </div>
     </div>
-    <div class="card-body">
-        <?= $this->render('display/list', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]); ?>
-    </div>
-</div>
 
 
 <?php else: ?>
 
-<div class="d-flex justify-content-between mb-3">
-    <h6>
-        <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
-        <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ
-    </h6>
-    <div>
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่ ', ['/hr/employees/create'], ['class' => 'btn btn-primary shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-        <button id="download-button" class="btn btn-success shadow"><i
-                class="fa-solid fa-file-export me-1"></i>Excel</button>
+    <div class="d-flex justify-content-between mb-3">
+        <h6>
+            <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
+            <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
+        </h6>
+        <div>
+            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
+            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
+        </div>
     </div>
-</div>
 
-<?= $this->render('display/grid', [
+    <?= $this->render('display/grid', [
         'searchModel' => $searchModel,
         'dataProvider' => $dataProvider,
     ]); ?>
@@ -136,7 +125,7 @@ $js = <<< JS
         });
 
         $("body").on("click", "#download-button", function (e) {
-            var btn = $(this); 
+            var btn = $('#dropdownMenuButton1');
             var originalHtml = btn.html(); // เก็บเนื้อหาปุ่มไว้คืนตอนหลัง
 
             var form = $('#employees-filter');
@@ -149,7 +138,7 @@ $js = <<< JS
                 },
                 beforeSend: function(){
                     // เปลี่ยนปุ่มเป็นสถานะโหลด
-                    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> กำลังดาวน์โหลด...');
+                    btn.html('<i class="fa fa-spinner fa-spin me-1"></i> กำลังดาวน์โหลด...');
                 },
                 success: function(data) {
                     const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -168,7 +157,7 @@ $js = <<< JS
             });
         });
 JS;
-$this->registerJS($js,View::POS_END)
+$this->registerJS($js, View::POS_END)
 
 ?>
 <?php Pjax::end(); ?>

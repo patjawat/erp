@@ -9,6 +9,7 @@ use yii\web\UploadedFile;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\models\UploadCsvForm;
 use ruskid\csvimporter\CSVReader;
 use yii\validators\DateValidator;
 use yii\web\NotFoundHttpException;
@@ -518,6 +519,139 @@ class EmployeesController extends Controller
 
     public function actionImportCsv()
     {
+
+        if($this->request->isPost){
+             Yii::$app->response->format = Response::FORMAT_JSON;
+        $filePath = Yii::$app->request->post('filePath');
+
+        if (!$filePath || !file_exists($filePath)) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+
+        $imported = 0;
+        $demo = [];
+        if (($handle = fopen($filePath, "r")) !== false) {
+            $row = 0;
+            $error = 0;
+
+            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                $row++;
+                if ($row == 1) continue; // ข้าม header
+                $demo[] = $data[1];
+                $result = $this->importEmployee($data);
+                if ($result['status'] == 'success') {
+                    $imported++;
+                } else {
+                    $error++;
+                    // คุณอาจเก็บ log ของ error แถวนี้ได้
+                }
+            }
+            fclose($handle);
+            if ($error >= 1) {
+                return [
+                    'status' => 'error',
+                    'message' => "xx",
+                    'demo' => $demo
+                ];
+            }
+            return [
+                'status' => 'success',
+                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
+                'demo' => $demo
+            ];
+        }
+        }
+
+        if ($this->request->isAjax) {
+             $model = new Employees;
+
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'การศึกษา',
+                'content' => $this->renderAjax('_form_import_employee', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('_form_import_employee', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+     protected function importEmployee($data)
+    {
+        $employee = Employees::find()->where(['cid' => $data[0]])->one();
+        if ($employee) {
+            return [
+                'status' => 'success',
+                'msg' => 'ตรวจพบที่มี'.$data[0].'อยู่แล้ว',
+                'data' => $employee
+            ];
+        } else {
+            // ถ้าไม่มีทำการสร้างใหม่
+                //ถ้าไม่ซ้ำให้สาร้างใหม่
+                $newEmployee = new Employees;
+                $newEmployee->user_id = 0;
+                $newEmployee->cid = $data[0];
+                $newEmployee->gender = $data[1];
+                $newEmployee->prefix = $data[2];
+                $newEmployee->fname = $data[3];
+                $newEmployee->lname = $data[4];
+                $newEmployee->birthday = $data[5];
+                $newEmployee->phone = $data[6];
+                $newEmployee->address = $data[7];
+                $newEmployee->zipcode = $data[8];
+                $newEmployee->save(false);
+                return [
+                    'status' => 'success',
+                    'msg' => 'Yes',
+                    'data' => $newEmployee
+                ];
+
+        }
+    }
+
+     public function actionImportPreview()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = new UploadCsvForm();
+        $model->csvFile = UploadedFile::getInstanceByName('csvFile');
+
+        if ($model && $model->validate()) {
+            // บันทึกไฟล์ชั่วคราว
+            $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
+            $model->csvFile->saveAs($filePath);
+
+            // อ่าน CSV แถวแรก 10 แถว
+            $previewData = [];
+            if (($handle = fopen($filePath, "r")) !== false) {
+                $row = 0;
+                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                    $previewData[] = $data;
+                    $row++;
+                    // if ($row >= 10) break;
+                }
+                fclose($handle);
+            }
+
+            return [
+                'status' => 'success',
+                'preview' => $previewData,
+                'filePath' => $filePath,
+            ];
+        }
+
+        return [
+            'status' => 'error',
+            'errors' => $model->getErrors(),
+        ];
+    }
+    
+
+    public function actionImportCsvOld()
+    {
         $model = new UploadCsv();
         $basePath = Yii::getAlias('@app/web/import-csv/');
         AppHelper::CreateDir($basePath);
@@ -575,63 +709,63 @@ class EmployeesController extends Controller
                             'attribute' => 'cid',
                             'allowEmptyValues' => false,
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[0];
                             },
                         ],
                         [
                             'attribute' => 'gender',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[1];
                             },
                         ],
                         [
                             'attribute' => 'prefix',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[2];
                             },
                         ],
                         [
                             'attribute' => 'fname',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[3];
                             },
                         ],
                         [
                             'attribute' => 'lname',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[4];
                             },
                         ],
                         [
                             'attribute' => 'birthday',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[5];
                             },
                         ],
                         [
                             'attribute' => 'phone',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[6];
                             },
                         ],
                         [
                             'attribute' => 'email',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[7];
                             },
                         ],
                         [
                             'attribute' => 'address',
                             'value' => function ($data) {
-                                $data = explode(',', $data[0]);
+                                
                                 return $data[8];
                             },
                         ],
@@ -639,7 +773,7 @@ class EmployeesController extends Controller
                             'attribute' => 'zipcode',
                             'value' => function ($data) {
                                 try {
-                                    $data = explode(',', $data[0]);
+                                    
                                     return (int) $data[9];
                                 } catch (\Throwable $th) {
                                     return 0;
