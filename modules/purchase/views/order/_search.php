@@ -34,7 +34,6 @@ use kartik\widgets\ActiveForm;
         <?php
         echo $form->field($model, 'date_between')->widget(Select2::classname(), [
             'data' => [
-                'pr_create_date' => 'วันที่ขอซื้อ',
                 'po_date' => 'วันที่สั่งซื้อ',
                 'gr_date' => 'วันที่ตรวจรับ'
             ],

@@ -13198,6 +13198,7 @@ tbody,
 tr,
 td {
   font-weight: 300;
+  font-size: 0.95rem;
 }
 
 thead,
@@ -13235,7 +13236,7 @@ input::placeholder {
 }
 
 .select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
-  font-weight: 300;
+  font-weight: 200;
   color: var(--bs-gray-600) !important;
   font-family: var(--bs-mitr-font-family);
 }

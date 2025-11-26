@@ -69,12 +69,13 @@ if ($searchModel->date_between == 'pr_create_date') {
                     <tr>
                         <th class="text-center" style="width:30px">ลำดับ</th>
                         <th style="min-width:200px">ผู้ขอ/วันเวลา</th>
-                        <th style="min-width:180px">ประเภท</th>
-                        <th style="min-width:280px">ผู้ขาย/เลขที่สั่งซื้อ</th>
                         <th style="min-width:100px">เลขทะเบียนคุม</th>
-                        <th style="min-width:110px" class="text-center">ประเภทจัดซื้อ</th>
+                        <th style="min-width:180px">ประเภทจัดซื้อ</th>
+                        <th class="text-center" style="min-width:95px">วันที่สั่งซื้อ</th>
+                        <th style="min-width:280px">ผู้ขาย/เลขที่สั่งซื้อ</th>
                         <th style="min-width:110px" class="text-center">ประเภทเงิน</th>
                         <th style="min-width:100px" class="text-center">วิธีการจัดซื้อ</th>
+                        <th style="min-width:95px">วันที่ตรวจรับ</th>
                         <th style="min-width:95px">การตรวจสอบ</th>
                         <th style="min-width:180px">สถานะ</th>
                         <th style="min-width:120px"class="text-end">มูลค่า</th>
@@ -89,18 +90,30 @@ if ($searchModel->date_between == 'pr_create_date') {
                         <tr>
                             <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                             <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
-                            <td><?= $item->assetType->title ?? '-' ?></td>
-
-                            <td class="fw-light align-middle">
-                                    <h6 class="text-dark"><?= $item->vendor?->title ?? '-' ?></h6>
-                                    <span class=""><?= $item->po_number ?> <?= isset($item->data_json['po_date']) ? ' | ' . AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?></span>
+                            <td class="text-center">
+                                <?php if($item->pq_number == ''):?>
+                                <i class="fa-regular fa-circle-question text-warning"></i>
+                            <?php else:?>
+                              <p class="fw-medium text-dark mb-0"><i class="fa-regular fa-circle-check text-primary"></i> <?= $item->pq_number ?></p>
+                              <?php endif?>
                             </td>
-                            <td><span class=""><?= $item->pq_number ?></span></td>
-
-                            <td class="text-center"><?= $item->viewRequestType() ?></td>
+                            <td>
+                                
+                              <p class="mb-0 text-truncate">
+                                  <span class="badge text-bg-primary fs-12 p-1"><?= $item->viewRequestType() ?></span> <?= $item->assetType->title ?? '-' ?>
+                              </p> 
+                            </td class="text-center">
+     <td>
+                                <?= isset($item->data_json['po_date']) ?  AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?>
+                            </td>
+                            <td class="fw-light align-middle text-truncate">
+                                    <h6 class="text-dark"><?= $item->vendor?->title ?? '-' ?></h6>
+                                    <span class=""><?= $item->po_number ?> </span>
+                            </td>
+                       
                             <td class="text-center"><?= $item->budgetTypeName() ?></td>
                             <td><?= $item->data_json['pq_purchase_type_name'] ?? '-' ?></td>
-
+                            <td><?= isset($item->data_json['gr_date']) ? AppHelper::convertToThai($item->data_json['gr_date'] ?? null) : ''; ?></td>
                             <td class="fw-light align-middle">
                                 <?php echo $item->StackApprove() ?>
                             </td>

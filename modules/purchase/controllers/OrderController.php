@@ -78,17 +78,20 @@ class OrderController extends Controller
             try {
                 $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
                 $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+
+                $jsonDateField = "DATE(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.\"{$searchModel->date_between}\"')))";
+
                 $dataProvider->query->andFilterWhere([
                     'between',
-                    new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json,'$.\"{$searchModel->date_between}\"'))"),
+                    new Expression($jsonDateField),
                     $dateStart,
                     $dateEnd,
                 ]);
-                //code...
             } catch (\Throwable $th) {
-                //throw $th;
+                // handle error
             }
         }
+
 
         $dataProvider->query->orderBy(['created_at' => SORT_DESC]);
 
@@ -107,7 +110,7 @@ class OrderController extends Controller
         }
         // การส่งออก
         $export = $this->request->get('export');
-        
+
         if ($export == 1) {
             $dataProvider->pagination = false;
             return $this->ExportExcel($searchModel, $dataProvider);
@@ -247,7 +250,7 @@ class OrderController extends Controller
         }
     }
 
-    
+
 
     /**
      * Displays a single Order model.
