@@ -43,5 +43,7 @@ $font-weight-bold: 600; // เปลี่ยนจาก 700 เป็น 800 �
 
 // Add a custom color to $theme-colors
 
-
-
+// ตั้งค่า focus bootstrap input
+$success: #198754;
+$success-rgb: 25, 135, 84;
+$input-focus-box-shadow: 0 0 0 .25rem rgba($success, .25);

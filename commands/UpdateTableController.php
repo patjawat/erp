@@ -81,7 +81,7 @@ class UpdateTableController extends Controller
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
-            ['name' => 'checker', 'type' => 1, 'description' => 'ผู้ตรวจสอบ เช่น วันลา หรืออื่นๆ'],
+            ['name' => 'plan', 'type' => 1, 'description' => 'แผนงานและโครงการ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
 
@@ -238,6 +238,7 @@ class UpdateTableController extends Controller
             ['child' => 'asset', 'parent'  => 'admin'],
             ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
+            ['child' => 'plan', 'parent'  => 'admin'],
 
             // ยานพาหนะ
             ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
@@ -251,6 +252,8 @@ class UpdateTableController extends Controller
 
             // ระบบสารบรรณ
             ['child' => '/dms/*', 'parent' => 'document'],
+            //แผนงานและโครงดาร
+            ['child' => '/plan/*', 'parent' => 'plan'],
 
             ['child' => '/am/asset/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],

@@ -112,15 +112,13 @@ $items = [
         'url' => ['/hr/development/dashboard'],
         'padding' => 'p-3',
         'show' => Yii::$app->user->can('hr') ? true : false,
-        // 'show' => true
     ],
     [
         'title' => 'แผนงาน',
         'icon' => 'fa-solid fa-ranking-star fs-1',
         'url' => ['/plan/dashboard'],
         'padding' => 'p-3',
-        // 'show' => Yii::$app->user->can('hr') ? true : false,
-        'show' => true
+        'show' => Yii::$app->user->can('plan') ? true : false,
     ],
 
 
@@ -146,6 +144,7 @@ $items = [
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
+        <?=Yii::$app->user->can('plan')?>
         <div class="container">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-3 mt-2">
                 <?php foreach ($items as $item): ?>
