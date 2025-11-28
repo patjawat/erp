@@ -1,9 +1,7 @@
 <?php
 
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use kartik\form\ActiveForm;
 use app\components\UserHelper;
 use app\modules\approve\models\Approve;
 
@@ -78,7 +76,8 @@ $listApprove = Approve::find()
                 // --- 1. ส่วนกำหนด Logic (ตั้งค่าเงื่อนไข) ---
                 $isLevel3 = ($item->level == 3);
                 $isPending = ($item->status == 'Pending');
-                $userIsChecker = Yii::$app->user->can('checker'); // สิทธิ์ Checker
+                // $userIsChecker = Yii::$app->user->can($name); // สิทธิ์ Checker
+                $userIsChecker = 1; // สิทธิ์ Checker
                 $userIsOwner = ($item->emp_id == $me->id); // เจ้าของรายการ
 
                 // A. เงื่อนไขการแสดงตัวตน (รูป + ชื่อ)

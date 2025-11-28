@@ -580,8 +580,7 @@ class StockInController extends Controller
             'category_id' => $model->asset_type_id
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'asset_item', 'group_id' => 'EQUIP']);
-        $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
 
         $dataProvider->query->andFilterWhere([
             'or',

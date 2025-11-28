@@ -58,15 +58,15 @@ $msg = 'ขอ';
                         <input type="checkbox" id="check-all">
                     </th>
                     <th class="text-center" style="width:30px">ลำดับ</th>
-                    <th class="fw-semibold text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
+                    <th class="text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
                     <th scope="col">ผู้ขออนุมัติการลา</th>
                     <th scope="col" style="width:100px">ประเภทเวร</th>
                     <th>ประเภทการลา</th>
                     <th>ระหว่างวันที่</th>
-                    <th class="fw-semibold text-start" scope="col">หน่วยงาน</th>
+                    <th class="text-start" scope="col">หน่วยงาน</th>
                     <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-                    <th class="fw-semibold text-start">สถานะ/ความคืบหน้า</th>
-                    <th class="fw-semibold text-center">ดำเนินการ</th>
+                    <th class="text-start">สถานะ/ความคืบหน้า</th>
+                    <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">

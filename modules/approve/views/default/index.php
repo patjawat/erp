@@ -83,3 +83,10 @@ $items = [
 <?php endforeach;?>
     </div>
 </div>
+
+<?php
+echo "<pre>";
+print_r($notify['leave']['sql']);
+echo "</pre>";
+
+?>
