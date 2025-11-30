@@ -16,6 +16,7 @@ use app\modules\purchase\models\Order;
 use app\modules\booking\models\Vehicle;
 use app\modules\inventory\models\StockEvent;
 
+use function PHPUnit\Framework\isEmpty;
 
 /**
  * This is the model class for table "approve".
@@ -309,7 +310,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         try {
 
-            if ($this->level == 3 && $this->status == 'Pending') {
+            if (empty($this->emp_id) && $this->status == 'Pending') {
                 $employee = UserHelper::GetEmployee();
             } else {
                 $employee = Employees::find()->where(['id' => $this->emp_id])->one();

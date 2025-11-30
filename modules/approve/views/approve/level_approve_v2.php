@@ -35,10 +35,9 @@ $listApprove = Approve::find()
                     <div>
                         <?php if ($item->status == 'Pass'): ?>
                             <?= $item->getAvatar($item->viewApproveDate())['avatar']; ?>
-                        <?php else: ?>
+                            <?php else: ?>
                             <!-- แสดงชื่อ/หัวข้อ  -->
-                            <?php if ($item->level == 3): ?>
-
+                            <?php if (empty($item->emp_id)): ?>
                                 <div class="d-flex gap-3 align-items-start bg-white z-1">
                                     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 border border-2
                                                                     bg-light border-light text-muted
@@ -54,7 +53,6 @@ $listApprove = Approve::find()
                                     </div>
                                 </div>
                             <?php else: ?>
-
                                 <?= $item->getAvatar($item->title)['avatar']; ?>
                             <?php endif; ?>
 
@@ -71,7 +69,7 @@ $listApprove = Approve::find()
                     $userIsChecker = Yii::$app->user->can($name); // สิทธิ์ตรวจสอบ
                     $userIsOwner = ($item->emp_id == $me->id); // เจ้าของรายการ
                     ?>
-                    <?php if ($item->status == 'Pending' && ($userIsOwner || ($item->emp_id == null && $userIsChecker))): ?>
+                    <?php if ($item->status == 'Pending' && ($userIsOwner || (empty($item->emp_id) && $userIsChecker))): ?>
 
                         <?php
                         echo Html::a(

@@ -63,7 +63,7 @@ $msg = 'ขอ';
                     <th scope="col">ผู้ขออนุมัติการลา</th>
                     <th scope="col" style="width:100px">ประเภทเวร</th>
                     <th>ประเภทการลา</th>
-                    <th>ระหว่างวันที่</th>
+                    <th style="width: 150px;">ระหว่างวันที่</th>
                     <th class="text-start" scope="col">หน่วยงาน</th>
                     <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
                     <th class="text-start" style="width: 165px;">สถานะ/ความคืบหน้า</th>
@@ -74,7 +74,6 @@ $msg = 'ขอ';
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="">
                         <td class="text-center">
-                            <?= $item->status ?>
                             <input
                                 type="checkbox"
                                 class="check-item"

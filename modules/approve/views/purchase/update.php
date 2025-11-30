@@ -18,9 +18,11 @@ use yii\helpers\Html;
                     <div>
                         <h5 class="fw-bold text-dark mb-1"><?= $model->purchase->assetType->title ?? '-' ?></h5>
                         <div class="d-flex align-items-center gap-2 text-muted small">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-light-subtle rounded-pill fw-medium px-2 py-1"><?= $model->purchase->getEmployee()->departmentName() ?></span>
-                        <span class="vr opacity-25"></span><span>ผู้ขอ: <?= $model->purchase->getEmployee()->fullname ?></span>
-                        <span class="vr opacity-25"></span><span>วันที่: <?= $model->purchase->viewCreatedAt() ?></span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-light-subtle rounded-pill fw-medium px-2 py-1">
+                            <?= $model?->purchase?->getEmployee()?->departmentName() ?? '-' ?>
+                        </span>
+                        <span class="vr opacity-25"></span><span>ผู้ขอ: <?= $model?->purchase?->getEmployee()->fullname ?? '-' ?></span>
+                        <span class="vr opacity-25"></span><span>วันที่: <?= $model?->purchase?->viewCreatedAt()  ?? '-' ?></span>
                     </div>
                     </div>
                 </div>
@@ -122,7 +124,7 @@ use yii\helpers\Html;
                         </tr>
                         <tr class="">
                             <td colspan="3" class="text-end py-3 text-dark">ส่วนลดสินค้า(เป็นเงิน)</td>
-                            <td class="pe-3 py-3 text-end text-dark fs-6"><?= Html::a(($model->purchase->discount_price == '' ?  '0.00' : number_format($model->purchase->discount_price, 2)), ['/purchase/order/discount', 'id' => $model->id, 'title' => '<i class="bi bi-currency-exchange"></i> กำหนดราคาส่วนลด'], ['class' => 'open-modal', 'data' => ['size' => 'modal-sm']]); ?>
+                            <td class="pe-3 py-3 text-end text-dark fs-6"><?= ($model->purchase->discount_price == '' ?  '0.00' : number_format($model->purchase->discount_price, 2)); ?>
                             </td>
                         </tr>
                         <tr class="">
@@ -132,7 +134,7 @@ use yii\helpers\Html;
                         </tr>
                         <tr class="">
                             <td colspan="3" class="text-end py-3 text-dark">ภาษีมูลค่าเพิ่ม 7% (<code><?= $model->purchase->vatName() ?></code>)</td>
-                            <td class="pe-3 py-3 text-end text-dark fs-6"><?= Html::a(number_format($model->purchase->calculateVAT()['vatAmount'], 2), ['/purchase/order/form-vat', 'id' => $model->purchase->id, 'title' => '<i class="bi bi-currency-exchange"></i> กำหนดภาษี'], ['class' => 'open-modal', 'data' => ['size' => 'modal-sm']]); ?>
+                            <td class="pe-3 py-3 text-end text-dark fs-6"><?=number_format($model->purchase->calculateVAT()['vatAmount'], 2); ?>
                             </td>
                         </tr>
                     </tbody>
