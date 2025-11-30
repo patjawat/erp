@@ -24,25 +24,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
-<div class="row">
-<div class="col-8">
-    <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' => $model]) ?>
-</div>
-<div class="col-4">
-    <?= $this->render('view_summary', ['model' => $model]) ?>
-    <div class="d-flex justify-content-center">
+<?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' => $model]) ?>
 
-        <button class="btn btn-primary rounded-pill shadow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-            <i class="bi bi-clock-history"></i> ดูประวัติเพิ่มเติม
-        </button>  
-    </div>
-</div>
-</div>
-<div class="collapse" id="collapseExample">
-        <!-- <div id="viewHistory"></div> -->
-        <?php echo $this->render('history', ['model' => $model]) ?>
-</div>
-<?php  echo $this->render('timeline_approve', ['model' => $model]) ?>
 
 <div class="d-flex justify-content-center gap-3">
     <?php echo ($model->status == 'ReqCancel' && ($me->id != $model->emp_id)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/hr/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>

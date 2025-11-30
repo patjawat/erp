@@ -117,7 +117,7 @@ class LeaveController extends Controller
 
 
         $dataProvider->setSort(['defaultOrder' => [
-            'date_start' => SORT_ASC,
+            'date_start' => SORT_DESC,
         ]]);
 
         return $this->render('index', [

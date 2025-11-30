@@ -30,6 +30,48 @@ class ApproveHelper extends Component
         ];
     }
 
+
+    public static function viewStep($name, $formId)
+{
+    // ดึงรายการ Approve ทั้งหมดของ form นั้น
+    $steps = Approve::find()
+        ->where(['name' => $name, 'from_id' => $formId])
+        ->orderBy(['id' => SORT_ASC])
+        ->all();
+
+    $count = count($steps);
+
+    // นับ step ที่ pass
+    $pass = 0;
+
+    // สร้าง progress bar แบบ dynamic
+    $bars = '';
+
+    foreach ($steps as $step) {
+
+        if ($step->status == 'Pass') {
+            $color = "bg-primary";
+            $pass++;
+        } else {
+            $color = "bg-secondary bg-opacity-25";
+        }
+
+        $bars .= '<div class="rounded-pill '.$color.'" style="width: 20px; height: 6px;"></div>';
+    }
+
+    return '
+    <div class="mt-2 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-1">
+            <div class="d-flex gap-1">
+                '.$bars.'
+            </div>
+            <small class="text-muted ms-2" style="font-size: 0.75rem;">Step '.$pass.'/'.$count.'</small>
+        </div>
+    </div>';
+}
+
+
+
     // ระบบการแจ้งเตือนการอนุมัติใช้รถยนต์
     public static function DriverService()
     {
@@ -58,7 +100,7 @@ class ApproveHelper extends Component
             $me = UserHelper::GetEmployee();
             $approveQuery = Approve::find()
                 ->alias('approve')
-                ->leftJoin('`leave`',"approve.from_id = `leave`.id")
+                ->leftJoin('`leave`', "approve.from_id = `leave`.id")
                 ->where([
                     'approve.name' => 'leave',
                     'approve.emp_id' => $me->id,
@@ -137,10 +179,10 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-     
-             $approveQuery = Approve::find()
+
+            $approveQuery = Approve::find()
                 ->alias('approve')
-                ->leftJoin('`development`',"approve.from_id = `development`.id")
+                ->leftJoin('`development`', "approve.from_id = `development`.id")
                 ->where([
                     'approve.name' => 'leave',
                     'approve.emp_id' => $me->id,
@@ -152,13 +194,13 @@ class ApproveHelper extends Component
             // Debug SQL ที่ถูกสร้าง
             $sql = $approveQuery->createCommand()->getRawSql();
 
-             $datas = $approveQuery->all();
+            $datas = $approveQuery->all();
             return [
                 'title' => 'อนุมัติอบรม/ประชุม/ดูงาน',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
                 'emp_id' => $me->id,
-                 'sql' => $sql
+                'sql' => $sql
             ];
         } catch (\Throwable $th) {
             return [

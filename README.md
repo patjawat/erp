@@ -397,3 +397,16 @@ WHERE po.plan_item_id IS NOT NULL;
 
 UPDATE `leave`
 SET thai_year =  IF(MONTH(date_start) > 9, YEAR(date_start) + 1, YEAR(date_start)) + 543;
+
+
+
+ปรับแต่ง leave approve title
+update `approve` SET title = 'หน.เห็นชอบ' WHERE `name` = 'leave' AND level = 1;
+update `approve` SET title = 'หน.กลุ่มงาน' WHERE `name` = 'leave' AND level = 2;
+update `approve` SET title = 'จนท.ตรวจสอบ' WHERE `name` = 'leave' AND level = 3;
+update `approve` SET title = 'ผอ.อนุมัติ' WHERE `name` = 'leave' AND level = 4;
+
+
+UPDATE approve
+SET data_json = JSON_SET(data_json, '$.label', 'ผ่าน')
+WHERE `name` = 'leave' AND `level` = 3

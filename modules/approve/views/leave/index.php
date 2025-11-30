@@ -73,12 +73,13 @@ $msg = 'ขอ';
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr class="">
                         <td class="text-center">
+                            <?= $item->status?>
                             <input
                                 type="checkbox"
                                 class="check-item"
                                 name="selected[]"
                                 value="<?= $item->id ?>"
-                                <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
+                                <?= ($item->status == 'Pass' || $item->status == 'Reject' || $item->leave->status == 'Cancel') ? 'disabled' : '' ?>>
                         </td>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="text-center "><?php echo $item->leave->thai_year ?></td>

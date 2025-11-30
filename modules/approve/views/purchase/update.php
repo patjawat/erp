@@ -122,4 +122,4 @@ use app\modules\purchase\models\Order;
 </div>
 
 <?php // echo $this->render('timeline_approve', ['model' => $model]) ?>
-<?php echo $this->render('../approve/level_approve',['model' => $model->purchase,'name' => 'purchase'])?>
+<?php echo $this->render('../approve/level_approve_v2',['model' => $model->purchase,'name' => 'purchase'])?>

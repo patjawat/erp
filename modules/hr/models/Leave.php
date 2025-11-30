@@ -213,7 +213,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep1->from_id = $this->id;
                 $leaveStep1->name = 'leave';
                 $leaveStep1->emp_id = $this->data_json['approve_1'];
-                $leaveStep1->title = 'เห็นชอบ';
+                $leaveStep1->title = 'หน.เห็นชอบ';
                 $leaveStep1->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
@@ -236,7 +236,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep2->from_id = $this->id;
                 $leaveStep2->name = 'leave';
                 $leaveStep2->emp_id = $this->data_json['approve_2'] ?? 0;
-                $leaveStep2->title = 'เห็นชอบ';
+                $leaveStep2->title = 'หน.กลุ่มเห็นชอบ';
                 $leaveStep2->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep2->level = 2;
                 $leaveStep2->status = 'None';
@@ -252,7 +252,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep3 = $leaveStep3Check ? $leaveStep3Check : new Approve();
                 $leaveStep3->from_id = $this->id;
                 $leaveStep3->name = 'leave';
-                $leaveStep3->title = 'ตรวจสอบ';
+                $leaveStep3->title = 'จท.ตรวจสอบ';
                 // $leaveStep3->emp_id = $this->data_json['approve_3'];
                 $leaveStep3->data_json = ['label' => 'ผ่าน'];
                 $leaveStep3->level = 3;
@@ -272,7 +272,7 @@ class Leave extends \yii\db\ActiveRecord
                 $leaveStep4->from_id = $this->id;
                 $leaveStep4->name = 'leave';
                 $leaveStep4->emp_id = $director['id'];
-                $leaveStep4->title = 'อนุมัติ';
+                $leaveStep4->title = 'ผอ.อนุมัติ';
                 $leaveStep4->data_json = ['label' => 'อนุมัติ'];
                 $leaveStep4->level = 4;
                 $leaveStep4->status = 'None';
@@ -343,6 +343,7 @@ class Leave extends \yii\db\ActiveRecord
         return self::find()
             ->andWhere(['emp_id' => $this->emp_id, 'thai_year' => $this->thai_year, 'status' => 'Approve'])
             ->andWhere(['<', 'date_start', $this->date_start])
+            ->orderBy(['date_start' => SORT_DESC])
             ->all();
     }
 
@@ -527,7 +528,7 @@ class Leave extends \yii\db\ActiveRecord
                     $icon = '';
             }
 
-            return '<span class="badge rounded-pill badge-soft-' . $color . ' text-primary fs-13 ">' . $icon . ' ' . $this->leaveStatus->title . '</span>';
+            return '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.'-subtle rounded-pill fw-medium px-2 py-1">' . $icon . ' ' . $this->leaveStatus->title . '</span>';
         } catch (\Throwable $th) {
             return null;
         }

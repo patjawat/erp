@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('navbar_menu'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
 <?php $this->endBlock(); ?>
-<?php  Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
+<?php  // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
 <style>
 .hover-card-under {
@@ -166,4 +166,4 @@ $js = <<< JS
 $this->registerJs($js,View::POS_END);
 ?>
 
-<?php  Pjax::end(); ?>
+<?php //  Pjax::end(); ?>
