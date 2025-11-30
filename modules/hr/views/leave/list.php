@@ -4,6 +4,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
 use app\components\UserHelper;
+use app\components\ApproveHelper;
 
 $me = UserHelper::GetEmployee();
 
@@ -17,7 +18,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
 ?>
 
 
-<div class="table-responsive" style="max-height: 600px;max-height: 600px; overflow: auto;">
+<div class="table-responsive" style="max-height: 600px;max-height: 600px;min-height:300px; overflow: auto;">
     <table class="table table-striped table-hover mb-0">
         <thead style="position: sticky; top: 0; z-index: 10;">
             <tr>
@@ -29,7 +30,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                 <th>ระหว่างวันที่</th>
                 <th class="text-start" scope="col">หน่วยงาน</th>
                 <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-                <th class="text-start">สถานะ/ความคืบหน้า</th>
+                <th class="text-start" style="width: 165px;">สถานะ/ความคืบหน้า</th>
                 <th class="text-center">ดำเนินการ</th>
             </tr>
         </thead>
@@ -57,7 +58,10 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
                     <td><?php echo $item->showLeaveDate() ?></td>
                     <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee->departmentName() ?></td>
                     <td><?php echo $item->stackChecker() ?></td>
-                    <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->showStatus(); ?></td>
+                    <td class="fw-light align-middle text-start" style="width:150px;">
+                        <?php echo $item->viewStatus(); ?>
+                        <?php echo ApproveHelper::viewStep('leave',$item->id); ?>
+                    </td>
 
                     <td class="text-end">
                         <div class="dropdown">
@@ -99,7 +103,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
     </table>
 
 
-    
+
 </div>
 <?php
 $js = <<< JS
@@ -149,3 +153,5 @@ $js = <<< JS
 JS;
 $this->registerJs($js, View::POS_END);
 ?>
+
+

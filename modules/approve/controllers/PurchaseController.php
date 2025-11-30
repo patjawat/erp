@@ -35,16 +35,17 @@ class PurchaseController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();
-        $model = Approve::findOne(['id' => $id,'name' => 'purchase', 'emp_id' => $me->id]);
+        $model = Approve::findOne(['id' => $id,'name' => 'purchase']);
         if ($this->request->isPost) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             $status = $this->request->post('status');
+            $model->emp_id = $me->id;
 
              // ระบบอนุมัติเบิกคลัง
-             $old = $model->data_json;
+             $oldData = $model->data_json;
              $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+             $model->data_json = ArrayHelper::merge($oldData, $model->data_json, $approveDate);
              $model->status = $status;
-             \Yii::$app->response->format = Response::FORMAT_JSON;
              //ถ้าบันทุกเรียบร้อย
              if($model->save(false))
              {
@@ -66,7 +67,7 @@ class PurchaseController extends \yii\web\Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => isset($model->stock) ? $model->stock->CreateBy('ขอเบิกวัสดุ')['avatar'] : '',
+                'title' => isset($model->stock) ? $model->stock->CreateBy('ขออนุมัติขอซื้อ/ขอจ้าง')['avatar'] : '',
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),

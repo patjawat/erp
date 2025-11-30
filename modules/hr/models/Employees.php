@@ -380,7 +380,7 @@ class Employees extends Yii\db\ActiveRecord
         <div class="d-flex align-items-center">
             {$img}
             <div class="avatar-detail">
-                <h6 class="mb-0">{$fullname}</h6>
+                <p class="mb-0 small fw-bold text-muted">{$fullname}</p>
                 <p class="text-muted mb-0 fs-12">{$msg}</p>
             </div>
         </div>

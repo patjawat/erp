@@ -16,6 +16,7 @@ use app\modules\purchase\models\Order;
 use app\modules\booking\models\Vehicle;
 use app\modules\inventory\models\StockEvent;
 
+use function PHPUnit\Framework\isEmpty;
 
 /**
  * This is the model class for table "approve".
@@ -63,7 +64,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'comment'], 'string'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'thai_year', 'date_start', 'date_end', 'q_department', 'leave_type_id', 'approve_emp_id', 'q', 'date_filter', 'q_status','q_development_type_id'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'thai_year', 'date_start', 'date_end', 'q_department', 'leave_type_id', 'approve_emp_id', 'q', 'date_filter', 'q_status', 'q_development_type_id'], 'safe'],
             [['emp_id', 'level', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['from_id', 'name', 'status'], 'string', 'max' => 255],
         ];
@@ -177,10 +178,93 @@ class Approve extends \yii\db\ActiveRecord
     //     ];
     // }
 
+    //แสดงรายบการ Approve
+    public function viewApproveMsg()
+    {
+        try {
+            // ตรวจสอบว่า $item มีคุณสมบัติ status และ data_json หรือไม่
+            if (!isset($this->status)) {
+                return '';
+            }
+
+            // กำหนดค่า default สำหรับ label โดยใช้ Null Coalescing Operator (??)
+            // เพื่อป้องกันข้อผิดพลาดหาก data_json หรือ 'label' ไม่มี
+            if ($this->level == 3) {
+                $label = 'ตรวจสอบ';
+            } else {
+                $label = $this->data_json['label'] ?? '';
+            }
+            $message = '';
+
+            switch ($this->status) {
+                case 'None':
+                    $message = 'รอ' . $label;
+                    break;
+                case 'Pending':
+                    // เลือกระหว่าง $item->title หรือ $label ขึ้นอยู่กับ $item->level
+                    $suffix = ($this->level == 3 && isset($this->title)) ? $this->title : $label;
+                    $message = 'รอ' . $suffix;
+                    break;
+                case 'Pass':
+                    $message = $label;
+                    break;
+                case 'Reject':
+                    $message = 'ไม่' . $label;
+                    break;
+                default:
+                    // สถานะอื่น ๆ ที่ไม่ได้กำหนดไว้
+                    return '';
+            }
+
+            // คืนค่าเป็นข้อความ HTML ที่ถูกจัดรูปแบบ
+            if (!empty($message)) {
+                return '<small class="text-muted d-block" style="font-size: 0.75rem;">' . $message . '</small>';
+            }
+        } catch (\Throwable $th) {
+            // ควรมีการ Log ข้อผิดพลาดจริงที่นี่ ($th->getMessage())
+            return ''; // คืนค่าว่าง หากเกิดข้อผิดพลาดในการเข้าถึง properties
+        }
+
+        return '';
+    }
 
     public function viewStatus()
     {
         return AppHelper::viewStatus($this->status);
+    }
+
+
+    public function viewApproveStatus()
+    {
+        switch ($this->status) {
+            case 'None':
+                $status = 'รอ';
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-hourglass-end me-1"></i>';
+                break;
+            case 'Pending':
+                $status = 'รอ';
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-hourglass-end me-1"></i>';
+                break;
+            case 'Reject':
+                $status = 'ไม่';
+                $color = 'danger';
+                $icon = '<i class="fa-regular fa-circle-xmark me-1"></i>';
+                break;
+            default:
+                $color = 'success';
+                $status = '';
+                $icon = '<i class="fa-regular fa-circle-check me-1"></i>';
+                break;
+        }
+        if ($this->level == 3) {
+            $label = 'ตรวจสอบ';
+        } else {
+            $label = $this->data_json['label'] ?? null;
+        }
+
+        return '  <span class="badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1">' . $icon . $status . $label . '</span>';
     }
 
     public function listLeaveType()
@@ -215,7 +299,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         try {
             $time = explode(' ', $this->data_json['approve_date'])[1];
-            return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'long') . ' ' . $time;
+            return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'medium') . ' ' . $time;
         } catch (\Throwable $th) {
             return null;
         }
@@ -226,7 +310,7 @@ class Approve extends \yii\db\ActiveRecord
     {
         try {
 
-            if ($this->level == 3 && $this->status == 'Pending') {
+            if (empty($this->emp_id) && $this->status == 'Pending') {
                 $employee = UserHelper::GetEmployee();
             } else {
                 $employee = Employees::find()->where(['id' => $this->emp_id])->one();
@@ -275,4 +359,5 @@ class Approve extends \yii\db\ActiveRecord
         $data .= '</div>';
         return $data;
     }
+
 }

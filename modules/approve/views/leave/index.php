@@ -4,6 +4,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\components\ApproveHelper;
 
 /** @var yii\web\View $this */
 $this->title = 'อนุมัติการลา ';
@@ -62,10 +63,10 @@ $msg = 'ขอ';
                     <th scope="col">ผู้ขออนุมัติการลา</th>
                     <th scope="col" style="width:100px">ประเภทเวร</th>
                     <th>ประเภทการลา</th>
-                    <th>ระหว่างวันที่</th>
+                    <th style="width: 150px;">ระหว่างวันที่</th>
                     <th class="text-start" scope="col">หน่วยงาน</th>
                     <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-                    <th class="text-start">สถานะ/ความคืบหน้า</th>
+                    <th class="text-start" style="width: 165px;">สถานะ/ความคืบหน้า</th>
                     <th class="text-center">ดำเนินการ</th>
                 </tr>
             </thead>
@@ -78,7 +79,7 @@ $msg = 'ขอ';
                                 class="check-item"
                                 name="selected[]"
                                 value="<?= $item->id ?>"
-                                <?= $item->status == 'Pass' ? 'disabled' : '' ?>>
+                                <?= ($item->status == 'Pending'  ? '' : 'disabled') ?>>
                         </td>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="text-center "><?php echo $item->leave->thai_year ?></td>
@@ -101,7 +102,10 @@ $msg = 'ขอ';
                         <td><?php echo $item->leave->showLeaveDate() ?></td>
                         <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->leave->employee->departmentName() ?></td>
                         <td><?php echo $item->leave->stackChecker() ?></td>
-                        <td class="fw-light align-middle text-start" style="width:150px;"><?php echo $item->leave->showStatus(); ?></td>
+                        <td class="fw-light align-middle text-start" style="width:150px;">
+                            <?php echo $item->leave->viewStatus(); ?>
+                            <?php echo ApproveHelper::viewStep('leave', $item->leave->id); ?>
+                        </td>
 
                         <td class="text-center">
                             <div class="d-flex gap-2 justify-content-center">

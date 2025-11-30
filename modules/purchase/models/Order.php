@@ -498,10 +498,10 @@ class Order extends \yii\db\ActiveRecord
         // }
     }
 
-    public function orderAvatar()
+    public function getEmployee()
     {
         $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
-        return $employee->getAvatar(false, $this->data_json['order_type_name']);
+        return $employee;
     }
 
     //ปรับปรุงใหม่
