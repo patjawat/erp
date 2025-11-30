@@ -67,7 +67,7 @@ class PurchaseController extends \yii\web\Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => isset($model->stock) ? $model->stock->CreateBy('ขออนุมัติขอซื้อ/ขอจ้าง')['avatar'] : '',
+                'title' => 'ขออนุมัติขอซื้อ/ขอจ้าง',
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
