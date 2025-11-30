@@ -240,7 +240,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $js = <<< JS
 
-
     \$("body").on("click", ".confirm-order", async function (e) {
       e.preventDefault();
       var url = \$(this).attr("href");
