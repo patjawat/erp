@@ -73,16 +73,6 @@ $listApprove = Approve::find()
 
                         <?php
                         echo Html::a(
-                            '<i class="fa-solid fa-circle-check"></i> ไม่' . ($item->data_json['label'] ?? ''),
-                            ['/approve/'.$name.'/update', 'id' => $item->id],
-                            [
-                                'class' => 'btn btn-sm btn-outline-danger rounded-pill border-1 shadow btn-approve',
-                                'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => "ไม่" . ($item->data_json['label'] ?? '')]
-                            ]
-                        );
-                        ?>
-                        <?php
-                        echo Html::a(
                             '<i class="fa-solid fa-circle-check"></i> ' . ($item->data_json['label'] ?? ''),
                             ['/approve/'.$name.'/update', 'id' => $item->id],
                             [
@@ -91,8 +81,17 @@ $listApprove = Approve::find()
                             ]
                         );
                         ?>
-
-
+                        <?php
+                        echo Html::a(
+                            '<i class="fa-solid fa-circle-check"></i> ไม่' . ($item->data_json['label'] ?? ''),
+                            ['/approve/'.$name.'/update', 'id' => $item->id],
+                            [
+                                'class' => 'btn btn-sm btn-outline-danger rounded-pill border-1 shadow btn-approve',
+                                'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => "ไม่" . ($item->data_json['label'] ?? '')]
+                            ]
+                        );
+                        ?>
+                        
                     <?php else: ?>
                         <?= $item->viewApproveStatus() ?>
                     <?php endif; ?>
