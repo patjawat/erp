@@ -60,7 +60,7 @@ class ApproveHelper extends Component
     }
 
     return '
-    <div class="mt-2 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-1">
             <div class="d-flex gap-1">
                 '.$bars.'

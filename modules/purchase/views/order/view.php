@@ -199,8 +199,12 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="col-4">
         <!-- ผู้ตรวจสอบและอนุมัต -->
-       <?=$this->render('checker',['model' => $model])?>
-
+       <?php // $this->render('checker',['model' => $model])?>
+       <div class="card">
+        <div class="card-body">
+         <?=$this->render('@app/modules/approve/views/approve/level_approve_v2', ['model' => $model, 'name' => 'purchase']) ?>
+        </div>
+       </div>
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">

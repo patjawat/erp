@@ -5,6 +5,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\AppHelper;
+use app\components\ApproveHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -63,7 +64,7 @@ if ($searchModel->date_between == 'pr_create_date') {
     </div>
 
     <div class="card-body p-0">
-        <div class="table-responsive" style="max-height: 600px;max-height: 600px; overflow: auto;">
+        <div class="table-responsive" style="max-height: 600px;max-height: 600px;min-height: 300px; overflow: auto;">
             <table class="table table-striped table-hover mb-0">
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
@@ -123,11 +124,9 @@ if ($searchModel->date_between == 'pr_create_date') {
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted mb-0 fs-13">
                                             <span
-                                                class="badge rounded-pill text-bg-<?= $item->viewStatus()['color'] ?> mb-2 fs-13"><?= $item->viewStatus()['status_name'] ?></span>
-                                            <span class="text-primary">
-                                                <?= $item->viewStatus()['progress'] ?>%</span>
-                                        </span>
-                                        <span class="text-muted mb-0 fs-13"><?= $item->viewUpdated() ?>ที่แล้ว</span>
+                                                class="badge rounded-pill text-bg-<?= $item->viewStatus()['color'] ?> fs-13"><?= $item->viewStatus()['status_name'] ?> </span>
+                                                <span class="text-muted ms-2" style="font-size: 0.75rem;"><?= $item->viewUpdated() ?>ที่แล้ว</span>
+                                        <?php echo ApproveHelper::viewStep('purchase',$item->id); ?>
                                     </div>
 
                                 <?php else: ?>

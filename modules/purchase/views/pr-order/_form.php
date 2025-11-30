@@ -190,7 +190,7 @@ echo $form->field($model, 'request_type')->radioList(
 )->label('ประเภทจัดซื้อ');
 ?>
 
-<?= $form->field($model, 'data_json[comment]')->textArea()->label('หมายเหตุ') ?>
+<?= $form->field($model, 'data_json[comment]')->textArea()->label('รายละเอียดและความจำเป็น') ?>
 
 <?= $form->field($model, 'data_json[vendor_address]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[vendor_phone]')->hiddenInput()->label(false) ?>
