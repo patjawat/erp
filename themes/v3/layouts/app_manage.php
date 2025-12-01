@@ -144,7 +144,6 @@ $items = [
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <?=Yii::$app->user->can('plan')?>
         <div class="container">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-3 mt-2">
                 <?php foreach ($items as $item): ?>

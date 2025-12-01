@@ -244,14 +244,28 @@ class Order extends \yii\db\ActiveRecord
         }
     }
     //  ประเภทการจัดซื้อ
-    public function viewRequestType()
+    public function requestType()
     {
 
-        if ($this->request_type == 'planned') {
-            return 'ในแผน';
-        } else {
-            return 'นอกแผน';
+        switch ($this->request_type) {
+            case 'planned':
+                $label = 'ในแผน';
+                $color = 'primary';
+                $icon = '<i class="fa-regular fa-circle-check me-1"></i>';
+                break;
+                default:
+                $label = 'นอกแผน';
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-circle-exclamation me-1"></i>';
+                break;
         }
+
+        return 
+        [
+            'label' => $label,
+            'view' => '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.'-subtle rounded-pill fw-medium px-2 py-1">'.$label.'</span>'
+        ];
+        
     }
 
 
@@ -544,7 +558,7 @@ class Order extends \yii\db\ActiveRecord
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
 
             $createDate = AppHelper::convertToThai($this->data_json['pr_create_date']);
-            $text = $msg ? $msg : ($this->pr_number . ' | ' . $createDate);
+            $text = $msg ? $msg : ($this->pr_number);
             return [
                 'employee' => $employee,
                 'avatar' => $employee->getAvatar(false, $text),

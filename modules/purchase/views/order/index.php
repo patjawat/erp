@@ -38,7 +38,7 @@ if ($searchModel->date_between == 'pr_create_date') {
 <?= $this->render('@app/modules/sm/views/default/menu', ['active' => 'order']) ?>
 <?php $this->endBlock(); ?>
 
-<?php Pjax::begin(['id' => 'purchase-container','timeout' => 88888888]); ?>
+<?php Pjax::begin(['id' => 'purchase-container', 'timeout' => 88888888]); ?>
 
 
 <div class="card">
@@ -69,17 +69,16 @@ if ($searchModel->date_between == 'pr_create_date') {
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th class="text-center" style="width:30px">ลำดับ</th>
-                        <th style="min-width:200px">ผู้ขอ/วันเวลา</th>
-                        <th style="min-width:100px">เลขทะเบียนคุม</th>
+                        <th style="min-width:160px">ผู้ขอ/เลขที่</th>
+                        <th style="min-width:144px">เลขทะเบียนคุม</th>
                         <th style="min-width:180px">ประเภทจัดซื้อ</th>
-                        <th class="text-center" style="min-width:95px">วันที่สั่งซื้อ</th>
-                        <th style="min-width:280px">ผู้ขาย/เลขที่สั่งซื้อ</th>
-                        <th style="min-width:110px" class="text-center">ประเภทเงิน</th>
+                        <th style="max-width:220px">วันที่สั่งซื้อ/เลขที่สั่งซื้อ/ผู้ขาย</th>
+                        <th style="min-width:100px" class="text-center">ประเภทเงิน</th>
                         <th style="min-width:100px" class="text-center">วิธีการจัดซื้อ</th>
-                        <th style="min-width:95px">วันที่ตรวจรับ</th>
+                        <th style="min-width:90px">วันที่ตรวจรับ</th>
                         <th style="min-width:95px">การตรวจสอบ</th>
-                        <th style="min-width:180px">สถานะ</th>
-                        <th style="min-width:120px"class="text-end">มูลค่า</th>
+                        <th style="min-width:135px">สถานะ</th>
+                        <th style="min-width:120px" class="text-end">มูลค่า</th>
                         <th class="text-cener" style="width:100px">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -91,27 +90,33 @@ if ($searchModel->date_between == 'pr_create_date') {
                         <tr>
                             <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                             <td class="fw-light"> <?= $item->getUserReq()['avatar'] ?></td>
-                            <td class="text-center">
-                                <?php if($item->pq_number == ''):?>
-                                <i class="fa-regular fa-circle-question text-warning"></i>
-                            <?php else:?>
-                              <p class="fw-medium text-dark mb-0"><i class="fa-regular fa-circle-check text-primary"></i> <?= $item->pq_number ?></p>
-                              <?php endif?>
+                            <td>
+                                <div class="d-flex justify-content-between">
+                                    <?php if ($item->pq_number == ''): ?>
+                                        <i class="fa-regular fa-circle-question text-warning"></i>
+                                    <?php else: ?>
+                                        <p class="fw-medium text-dark mb-0"><i class="fa-regular fa-circle-check text-primary"></i> <?= $item->pq_number ?></p>
+                                    <?php endif ?>
+                                   <?= $item->requestType()['view'] ?>
+                                </div>
                             </td>
                             <td>
-                                
-                              <p class="mb-0 text-truncate">
-                                  <span class="badge text-bg-primary fs-12 p-1"><?= $item->viewRequestType() ?></span> <?= $item->assetType->title ?? '-' ?>
-                              </p> 
-                            </td class="text-center">
-     <td>
-                                <?= isset($item->data_json['po_date']) ?  AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?>
+                                <p class="mb-0 text-truncate">
+                                    <?= $item->assetType->title ?? '-' ?>
+                                </p>
+
+
                             </td>
-                            <td class="fw-light align-middle text-truncate">
-                                    <h6 class="text-dark"><?= $item->vendor?->title ?? '-' ?></h6>
-                                    <span class=""><?= $item->po_number ?> </span>
+
+                            <td class="align-middle text-truncate" style="max-width:200px">
+                                 <span class="h6 text-primary"><?= $item->po_number ?> </span> <?= isset($item->data_json['po_date']) ?  AppHelper::convertToThai($item->data_json['po_date'] ?? null) : ''; ?>
+                                <div class="overflow-x-auto">
+                                    <span class="fw-medium text-dark"><?= $item->vendor?->title ?? '-' ?></span>
+                                </div>
+
+
                             </td>
-                       
+
                             <td class="text-center"><?= $item->budgetTypeName() ?></td>
                             <td><?= $item->data_json['pq_purchase_type_name'] ?? '-' ?></td>
                             <td><?= isset($item->data_json['gr_date']) ? AppHelper::convertToThai($item->data_json['gr_date'] ?? null) : ''; ?></td>
@@ -125,8 +130,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                                         <span class="text-muted mb-0 fs-13">
                                             <span
                                                 class="badge rounded-pill text-bg-<?= $item->viewStatus()['color'] ?> fs-13"><?= $item->viewStatus()['status_name'] ?> </span>
-                                                <span class="text-muted ms-2" style="font-size: 0.75rem;"><?= $item->viewUpdated() ?>ที่แล้ว</span>
-                                        <?php echo ApproveHelper::viewStep('purchase',$item->id); ?>
+                                            <?php echo ApproveHelper::viewStep('purchase', $item->id); ?>
                                     </div>
 
                                 <?php else: ?>
@@ -137,16 +141,15 @@ if ($searchModel->date_between == 'pr_create_date') {
                                                 class="text-primary">
                                                 <?= $item->viewStatus()['progress'] ?>%</span>
                                         </span>
-                                        <span class="text-muted mb-0 fs-13"><?= $item->viewUpdated() ?>ที่แล้ว</span>
                                     </div>
 
                                 <?php endif; ?>
-                                <div class="progress" style="height: 5px;">
+                                <!-- <div class="progress" style="height: 5px;">
                                     <div class="progress-bar bg-<?= $item->viewStatus()['color'] ?>" role="progressbar"
                                         aria-label="Progress" aria-valuenow="<?= $item->viewStatus()['progress'] ?>"
                                         aria-valuemin="0" aria-valuemax="100">
                                     </div>
-                                </div>
+                                </div> -->
                             </td>
                             <td class="fw-light align-middle text-end">
                                 <div class="d-felx flex-column">
