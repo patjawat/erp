@@ -125,130 +125,347 @@ class OrderController extends Controller
     }
 
 
-    private function ExportExcel($searchModel, $dataProvider)
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
+   private function ExportExcel($searchModel, $dataProvider)
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('รายงานจัดซื้อจัดจ้าง');
 
-        // ตั้งค่า default font
-        $spreadsheet->getDefaultStyle()
-            ->getFont()
-            ->setName('TH Sarabun New')
-            ->setSize(16);
+    // ตั้งค่า default font
+    $spreadsheet->getDefaultStyle()
+        ->getFont()
+        ->setName('TH Sarabun New')
+        ->setSize(16);
 
-        // --------------------------------------------------
-        // หัวตาราง
-        // --------------------------------------------------
-        $sheet->setCellValue('A1', 'ลำดับ');
-        $sheet->setCellValue('B1', 'ปีงบประมาณ');
-        $sheet->setCellValue('C1', 'ทะเบียนคุม');
-        $sheet->setCellValue('D1', 'เลขที่ขอซื้อ');
-        $sheet->setCellValue('E1', 'ส่งข้อมูล');
-        $sheet->setCellValue('F1', 'วันที่');
-        $sheet->setCellValue('G1', 'แผนงานโครงการ');
-        $sheet->setCellValue('H1', 'ประเภท');
-        $sheet->setCellValue('I1', 'บริษัท');
-        $sheet->setCellValue('J1', 'งบประมาณ');
-        $sheet->setCellValue('K1', 'ประเภทงบประมาณ');
-        $sheet->setCellValue('L1', 'วิธรการจัดซื้อ');
-        $sheet->setCellValue('M1', 'วันที่ตรวจรับ');
+    // --------------------------------------------------
+    // 1. หัวข้อรายงานหลัก (รวม A1:L2)
+    // --------------------------------------------------
+    $sheet->mergeCells('A1:L2');
+    $sheet->setCellValue('A1', 'รายงานสรุปผลการดำเนินการจัดซื้อจัดจ้างตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560');
 
-        $headerRange = 'A1:M1';
-        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($headerRange)->getFont()->setBold(true);
-        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFCCE5FF');
-        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
-            ->setBorderStyle(Border::BORDER_THIN);
-
-        // --------------------------------------------------
-        // เนื้อหาตาราง
-        // --------------------------------------------------
-        $StartRow = 2;
-        $row = 1;
-
-        foreach ($dataProvider->getModels() as $key => $value) {
-            $numRow = $StartRow++;
-
-            $sheet->setCellValue('A' . $numRow, $row++);
-            $sheet->setCellValue('B' . $numRow, $value->thai_year);
-            $sheet->setCellValue('C' . $numRow, $value->pq_number);
-            $sheet->setCellValue('D' . $numRow, $value->pr_number);
-            $sheet->setCellValue('E' . $numRow, '');
-            // $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
-            $sheet->setCellValue('G' . $numRow, '');
-            $sheet->setCellValue('H' . $numRow, $value->assetType->title ?? '-');
-            $sheet->setCellValue('I' . $numRow, $value->vendor?->title ?? '-');
-            $sheet->setCellValue('J' . $numRow, $value->calculateVAT()['priceAfterVAT']);
-            $sheet->setCellValue('K' . $numRow, $value->budgetTypeName());
-            $sheet->setCellValue('L' . $numRow, $value->data_json['pq_purchase_type_name'] ?? '-');
-            $sheet->setCellValue('M' . $numRow, isset($value->data_json['gr_date']) ? AppHelper::convertToThai($value->data_json['gr_date']) : '-');
-        }
-
-        // --------------------------------------------------
-        // จัดตำแหน่งคอลัมน์
-        // --------------------------------------------------
-        $lastRow = $StartRow - 1;
-
-        // F,G,H = กลาง
-        $sheet->getStyle("A2:H{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        $sheet->getStyle("K2:M{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // L,M,N = ขวา
-        $sheet->getStyle("J2:J{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // --------------------------------------------------
-        // ความกว้างคอลัมน์
-        // --------------------------------------------------
-        $widths = [
-            'A' => 8,
-            'B' => 13,
-            'C' => 20,
-            'D' => 20,
-            'E' => 20,
-            'F' => 20,
-            'G' => 20,
-            'H' => 30,
-            'I' => 50,
-            'J' => 20,
-            'K' => 22,
-            'L' => 20,
-            'M' => 20,
-            'N' => 20
-        ];
-        foreach ($widths as $col => $w) {
-            $sheet->getColumnDimension($col)->setWidth($w);
-        }
-
-        // --------------------------------------------------
-        // สร้างไฟล์ดาวน์โหลด
-        // --------------------------------------------------
-        try {
-            $dateStart = $searchModel->date_start;
-            $dateEnd = $searchModel->date_end;
-        } catch (\Throwable $th) {
-            $dateStart = '';
-            $dateEnd = '';
-        }
+    $titleRange = 'A1:L2';
+    $sheet->getStyle($titleRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle($titleRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    $sheet->getStyle($titleRange)->getFont()->setBold(true)->setSize(18);
+    $sheet->getStyle($titleRange)->getFill()->setFillType(Fill::FILL_SOLID)
+        ->getStartColor()->setARGB('FFFFD966'); // สีเหลืองอ่อน
+    $sheet->getStyle($titleRange)->getBorders()->getAllBorders()
+        ->setBorderStyle(Border::BORDER_THIN);
 
 
-        $writer = new Xlsx($spreadsheet);
-        $filePath = Yii::getAlias('@webroot') . '/downloads/purchas.xlsx';
-        $writer->save($filePath);
+    // --------------------------------------------------
+    // 2. หัวตาราง (เริ่มต้นที่แถวที่ 3)
+    // --------------------------------------------------
+    $startHeaderRow = 3; 
+
+    // A3: วันที่ / เดือน / ปี
+    $sheet->setCellValue('A' . $startHeaderRow, 'วันที่ / เดือน / ปี');
+
+    // B3: งานที่จัดซื้อจัดจ้าง
+    $sheet->setCellValue('B' . $startHeaderRow, 'งานที่จัดซื้อจัดจ้าง');
+
+    // C3: วงเงินที่จะซื้อหรือจ้าง
+    $sheet->setCellValue('C' . $startHeaderRow, 'วงเงินที่จะซื้อหรือจ้าง');
+
+    // D3: ราคากลาง
+    $sheet->setCellValue('D' . $startHeaderRow, 'ราคากลาง'); 
+
+    // E3: วิธีซื้อหรือจ้าง
+    $sheet->setCellValue('E' . $startHeaderRow, 'วิธีซื้อหรือจ้าง');
+
+    // F3: รายชื่อผู้เสนอราคาและราคาที่เสนอ
+    $sheet->setCellValue('F' . $startHeaderRow, 'รายชื่อผู้เสนอราคาและราคาที่เสนอ');
+
+    // G3: ผู้ได้รับการคัดเลือกและราคาที่ตกลงซื้อหรือจ้าง
+    $sheet->setCellValue('G' . $startHeaderRow, 'ผู้ได้รับการคัดเลือกและราคาที่ตกลงซื้อหรือจ้าง');
+
+    // H3: เหตุผลที่คัดเลือกโดยสรุป
+    $sheet->setCellValue('H' . $startHeaderRow, 'เหตุผลที่คัดเลือกโดยสรุป');
+
+    // I3: เลขที่และวันที่ของหลักฐานที่ก่อให้เกิดภาระในการซื้อหรือจัดจ้าง
+    // ทำการ Merge I3:L3
+    $sheet->mergeCells('I3:L3'); 
+    $sheet->setCellValue('I' . $startHeaderRow, 'เลขที่และวันที่ของหลักฐานที่ก่อให้เกิดภาระในการซื้อหรือจัดจ้าง');
+    
+    // ตั้งค่ารูปแบบหัวตาราง
+    $headerRange = 'A3:L3'; 
+    $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    $sheet->getStyle($headerRange)->getFont()->setBold(true);
+    $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
+        ->getStartColor()->setARGB('FFCCE5FF');
+    $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+        ->setBorderStyle(Border::BORDER_THIN);
+
+    // การจัดรูปแบบพิเศษสำหรับข้อความที่ยาวมาก (Wrap Text)
+    $sheet->getStyle('F3')->getAlignment()->setWrapText(true);
+    $sheet->getStyle('G3')->getAlignment()->setWrapText(true);
+    $sheet->getStyle('I3')->getAlignment()->setWrapText(true);
 
 
-        if (file_exists($filePath)) {
-            return Yii::$app->response->sendFile($filePath);
-        } else {
-            throw new \yii\web\NotFoundHttpException('The file does not exist.');
-        }
+    // --------------------------------------------------
+    // 3. เนื้อหาตาราง (เริ่มต้นที่แถวที่ 4)
+    // --------------------------------------------------
+    $StartRow = 4; // เริ่มต้นแถวข้อมูลจริงที่แถว 4
+    $row = 1;
+
+    foreach ($dataProvider->getModels() as $key => $value) {
+        $numRow = $StartRow++;
+
+        // A: วันที่ / เดือน / ปี
+        $sheet->setCellValue('A' . $numRow, isset($value->data_json['gr_date']) ? AppHelper::convertToThai($value->data_json['gr_date']) : '-');
+
+        // B: งานที่จัดซื้อจัดจ้าง 
+        $sheet->setCellValue('B' . $numRow, $value->getEmployee()->departmentName() ?? '-'); // ต้องหาข้อมูลที่เหมาะสมมาใส่ (เช่น $value->project_name)
+
+        // C: วงเงินที่จะซื้อหรือจ้าง (ราคารวม VAT)
+        $sheet->setCellValue('C' . $numRow, $value->calculateVAT()['priceAfterVAT']);
+
+        // D: ราคากลาง
+        $sheet->setCellValue('D' . $numRow, ''); // ต้องหาข้อมูลที่เหมาะสมมาใส่ (เช่น $value->price_middle)
+
+        // E: วิธีซื้อหรือจ้าง
+        $sheet->setCellValue('E' . $numRow, $value->data_json['pq_purchase_type_name'] ?? '-');
+
+        // F: รายชื่อผู้เสนอราคาและราคาที่เสนอ
+        // ใช้ \n เพื่อขึ้นบรรทัดใหม่
+        $sheet->setCellValue('F' . $numRow, ($value->vendor?->title ?? '-') . "\n" . "เสนอราคาเป็นเงิน " . number_format($value->calculateVAT()['priceAfterVAT'], 2) . ' บาท');
+        
+        // G: ผู้ได้รับการคัดเลือกและราคาที่ตกลงซื้อหรือจ้าง
+        // ใช้ \n เพื่อขึ้นบรรทัดใหม่
+        $sheet->setCellValue('G' . $numRow, ($value->vendor?->title ?? '-') . "\n" . "เสนอราคาเป็นเงิน " . number_format($value->calculateVAT()['priceAfterVAT'], 2) . ' บาท');
+
+        // H: เหตุผลที่คัดเลือกโดยสรุป
+        $sheet->setCellValue('H' . $numRow, ''); // ต้องหาข้อมูลที่เหมาะสมมาใส่
+
+        // I: เลขที่หลักฐาน (กำหนดเองสำหรับคอลัมน์ I, J, K, L ที่อยู่ใต้หัวตารางเดียว)
+        // I: เว้นว่าง (เพื่อจัดรูปแบบ)
+        // J: เลขที่ทะเบียนคุม (pq_number)
+        $sheet->setCellValue('J' . $numRow, $value->pq_number); 
+        // K: เว้นว่าง (เพื่อจัดรูปแบบ)
+        // L: วันที่ (po_date)
+        $sheet->setCellValue('L' . $numRow, isset($value->data_json['po_date']) ? AppHelper::convertToThai($value->data_json['po_date'] ?? null) : ''); 
+        
+        // คอลัมน์ I จะถูกใช้สำหรับจัดตำแหน่งและเส้นขอบร่วมกับ J, K, L
     }
+
+    // --------------------------------------------------
+    // จัดตำแหน่งคอลัมน์
+    // --------------------------------------------------
+    $lastRow = $StartRow - 1;
+
+    // A (วันที่) - กึ่งกลางแนวนอน/แนวตั้ง
+    $sheet->getStyle("A4:A{$lastRow}")
+        ->getAlignment()
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // D, E (ราคากลาง, วิธีซื้อ) - กึ่งกลางแนวนอน/แนวตั้ง
+    $sheet->getStyle("D4:E{$lastRow}")
+        ->getAlignment()
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // H, I, J, K, L (เหตุผล, หลักฐาน) - กึ่งกลางแนวนอน/แนวตั้ง
+    // รวมช่วง H ถึง L เพื่อให้แน่ใจว่าทั้ง J และ L ที่มีข้อมูลถูกจัดตำแหน่ง
+    $sheet->getStyle("H4:L{$lastRow}")
+        ->getAlignment()
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // B (งานที่จัดซื้อ) - ซ้ายแนวนอน / กึ่งกลางแนวตั้ง
+    $sheet->getStyle("B4:B{$lastRow}")
+        ->getAlignment()
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+    // C (วงเงิน) - ขวาแนวนอน / กึ่งกลางแนวตั้ง
+    $styleC = $sheet->getStyle("C4:C{$lastRow}");
+    $styleC->getAlignment()
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+    $styleC->getFont()->setBold(true); // C: กำหนดให้เป็นตัวหนา
+
+    // F, G = ซ้าย (ชื่อบริษัท/ราคา) และเปิด Wrap Text
+    $sheet->getStyle("F4:G{$lastRow}")
+        ->getAlignment()
+        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+        ->setVertical(Alignment::VERTICAL_CENTER)
+        ->setWrapText(true);
+
+    // J (เลขที่ทะเบียนคุม) - กำหนดให้เป็นตัวหนาเพิ่มเติม
+    $sheet->getStyle("J4:J{$lastRow}")->getFont()->setBold(true);
+
+
+    // --------------------------------------------------
+    // ความกว้างคอลัมน์ (ปรับตามจำนวนและเนื้อหา)
+    // --------------------------------------------------
+    $widths = [
+        'A' => 15, // วันที่ / เดือน / ปี
+        'B' => 30, // งานที่จัดซื้อจัดจ้าง
+        'C' => 15, // วงเงินที่จะซื้อหรือจ้าง
+        'D' => 15, // ราคากลาง
+        'E' => 15, // วิธีซื้อหรือจ้าง
+        'F' => 35, // รายชื่อผู้เสนอราคาและราคาที่เสนอ
+        'G' => 35, // ผู้ได้รับการคัดเลือกและราคาที่ตกลงซื้อหรือจ้าง
+        'H' => 30, // เหตุผลที่คัดเลือกโดยสรุป
+        'I' => 10, // ส่วนที่ถูกรวม (อาจใช้เป็นคอลัมน์ว่างสำหรับเลขที่/วันที่)
+        'J' => 15, // เลขที่ทะเบียนคุม
+        'K' => 5,  // คอลัมน์ว่างสำหรับเส้นแบ่ง
+        'L' => 15, // วันที่หลักฐาน
+    ];
+    foreach ($widths as $col => $w) {
+        $sheet->getColumnDimension($col)->setWidth($w);
+    }
+
+    // --------------------------------------------------
+    // สร้างไฟล์ดาวน์โหลด
+    // --------------------------------------------------
+    try {
+        $dateStart = $searchModel->date_start;
+        $dateEnd = $searchModel->date_end;
+    } catch (\Throwable $th) {
+        $dateStart = '';
+        $dateEnd = '';
+    }
+
+
+    $writer = new Xlsx($spreadsheet);
+    $filePath = Yii::getAlias('@webroot') . '/downloads/purchas.xlsx';
+    $writer->save($filePath);
+
+
+    if (file_exists($filePath)) {
+        return Yii::$app->response->sendFile($filePath);
+    } else {
+        throw new \yii\web\NotFoundHttpException('The file does not exist.');
+    }
+}
+
+    // private function ExportExcel($searchModel, $dataProvider)
+    // {
+    //     $spreadsheet = new Spreadsheet();
+    //     $sheet = $spreadsheet->getActiveSheet();
+    //     $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
+
+    //     // ตั้งค่า default font
+    //     $spreadsheet->getDefaultStyle()
+    //         ->getFont()
+    //         ->setName('TH Sarabun New')
+    //         ->setSize(16);
+
+    //     // --------------------------------------------------
+    //     // หัวตาราง
+    //     // --------------------------------------------------
+    //     $sheet->setCellValue('A1', 'ลำดับ');
+    //     $sheet->setCellValue('B1', 'ปีงบประมาณ');
+    //     $sheet->setCellValue('C1', 'ทะเบียนคุม');
+    //     $sheet->setCellValue('D1', 'เลขที่ขอซื้อ');
+    //     $sheet->setCellValue('E1', 'ส่งข้อมูล');
+    //     $sheet->setCellValue('F1', 'วันที่');
+    //     $sheet->setCellValue('G1', 'แผนงานโครงการ');
+    //     $sheet->setCellValue('H1', 'ประเภท');
+    //     $sheet->setCellValue('I1', 'บริษัท');
+    //     $sheet->setCellValue('J1', 'งบประมาณ');
+    //     $sheet->setCellValue('K1', 'ประเภทงบประมาณ');
+    //     $sheet->setCellValue('L1', 'วิธรการจัดซื้อ');
+    //     $sheet->setCellValue('M1', 'วันที่ตรวจรับ');
+
+    //     $headerRange = 'A1:M1';
+    //     $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    //     $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    //     $sheet->getStyle($headerRange)->getFont()->setBold(true);
+    //     $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
+    //         ->getStartColor()->setARGB('FFCCE5FF');
+    //     $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+    //         ->setBorderStyle(Border::BORDER_THIN);
+
+    //     // --------------------------------------------------
+    //     // เนื้อหาตาราง
+    //     // --------------------------------------------------
+    //     $StartRow = 2;
+    //     $row = 1;
+
+    //     foreach ($dataProvider->getModels() as $key => $value) {
+    //         $numRow = $StartRow++;
+
+    //         $sheet->setCellValue('A' . $numRow, $row++);
+    //         $sheet->setCellValue('B' . $numRow, $value->thai_year);
+    //         $sheet->setCellValue('C' . $numRow, $value->pq_number);
+    //         $sheet->setCellValue('D' . $numRow, $value->pr_number);
+    //         $sheet->setCellValue('E' . $numRow, '');
+    //         // $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
+    //         $sheet->setCellValue('G' . $numRow, '');
+    //         $sheet->setCellValue('H' . $numRow, $value->assetType->title ?? '-');
+    //         $sheet->setCellValue('I' . $numRow, $value->vendor?->title ?? '-');
+    //         $sheet->setCellValue('J' . $numRow, $value->calculateVAT()['priceAfterVAT']);
+    //         $sheet->setCellValue('K' . $numRow, $value->budgetTypeName());
+    //         $sheet->setCellValue('L' . $numRow, $value->data_json['pq_purchase_type_name'] ?? '-');
+    //         $sheet->setCellValue('M' . $numRow, isset($value->data_json['gr_date']) ? AppHelper::convertToThai($value->data_json['gr_date']) : '-');
+    //     }
+
+    //     // --------------------------------------------------
+    //     // จัดตำแหน่งคอลัมน์
+    //     // --------------------------------------------------
+    //     $lastRow = $StartRow - 1;
+
+    //     // F,G,H = กลาง
+    //     $sheet->getStyle("A2:H{$lastRow}")
+    //         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    //     $sheet->getStyle("K2:M{$lastRow}")
+    //         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    //     // L,M,N = ขวา
+    //     $sheet->getStyle("J2:J{$lastRow}")
+    //         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+    //     // --------------------------------------------------
+    //     // ความกว้างคอลัมน์
+    //     // --------------------------------------------------
+    //     $widths = [
+    //         'A' => 8,
+    //         'B' => 13,
+    //         'C' => 20,
+    //         'D' => 20,
+    //         'E' => 20,
+    //         'F' => 20,
+    //         'G' => 20,
+    //         'H' => 30,
+    //         'I' => 50,
+    //         'J' => 20,
+    //         'K' => 22,
+    //         'L' => 20,
+    //         'M' => 20,
+    //         'N' => 20
+    //     ];
+    //     foreach ($widths as $col => $w) {
+    //         $sheet->getColumnDimension($col)->setWidth($w);
+    //     }
+
+    //     // --------------------------------------------------
+    //     // สร้างไฟล์ดาวน์โหลด
+    //     // --------------------------------------------------
+    //     try {
+    //         $dateStart = $searchModel->date_start;
+    //         $dateEnd = $searchModel->date_end;
+    //     } catch (\Throwable $th) {
+    //         $dateStart = '';
+    //         $dateEnd = '';
+    //     }
+
+
+    //     $writer = new Xlsx($spreadsheet);
+    //     $filePath = Yii::getAlias('@webroot') . '/downloads/purchas.xlsx';
+    //     $writer->save($filePath);
+
+
+    //     if (file_exists($filePath)) {
+    //         return Yii::$app->response->sendFile($filePath);
+    //     } else {
+    //         throw new \yii\web\NotFoundHttpException('The file does not exist.');
+    //     }
+    // }
 
 
 
