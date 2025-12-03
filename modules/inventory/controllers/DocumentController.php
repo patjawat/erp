@@ -73,7 +73,6 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor->cloneRow('detail', count($model->getItems()));
         $i = 1;
         $num = 1;
-        $data = [];
         foreach ($model->getItems() as $item) {
 
             $templateProcessor->setValue('no#' . $i, $num++);
