@@ -561,9 +561,9 @@ class EmployeesController extends Controller
             ];
         }
         }
-
+        
+        $model = new Employees;
         if ($this->request->isAjax) {
-             $model = new Employees;
 
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
