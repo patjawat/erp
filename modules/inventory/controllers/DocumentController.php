@@ -1,33 +1,31 @@
 <?php
+
 namespace app\modules\inventory\controllers;
 
 use yii;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
-use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
 use app\components\Processor;
 use app\components\SiteHelper;
-use PhpOffice\PhpWord\Settings;
 use yii\helpers\BaseFileHelper;
-use app\modules\am\models\Asset;
-use yii\web\NotFoundHttpException;
-use app\modules\purchase\models\Order;
-use app\modules\inventory\models\Stock;
-use app\modules\am\components\AssetHelper;
 use app\modules\inventory\models\StockEvent;
 
 class DocumentController extends \yii\web\Controller
 {
 
-    
+    private function safeValue($text)
+    {
+        if ($text === null) return '-';
+        return htmlspecialchars($text, ENT_QUOTES | ENT_XML1, 'UTF-8');
+    }
     // ใบเบิกวัสดุ
     public function actionStockOrder($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = StockEvent::findOne($id);
+
         $this->CreateDir($model->id);
         $title = 'ใบเบิกวัสดุ';
         $result_name = $title . '.docx';
@@ -37,61 +35,89 @@ class DocumentController extends \yii\web\Controller
         $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
 
         $templateProcessor->setValue('title', 'ใบเบิกวัสดุ');
-        // $templateProcessor->setValue('date', Yii::$app->thaiFormatter->asDateTime(date('Y-m-y'), 'php:d/m/Y'));
         $templateProcessor->setValue('date',  Yii::$app->thaiDate->toThaiDate($model->created_at, false, false));
         $templateProcessor->setValue('org_name_full', $this->getInfo()['company_full']);
-        $templateProcessor->setValue('department',$model->CreateBy()['department']);
+        $templateProcessor->setValue('department', $model->CreateBy()['department']);
         $templateProcessor->setValue('number', $model->code);
         $templateProcessor->setValue('total', number_format($model->getTotalOrderPriceSuccess(), 2));
-        // $templateProcessor->setValue('date', isset($model->data_json['order_date']) ? (AppHelper::thainumDigit(Yii::$app->thaiFormatter->asDate($model->data_json['order_date'], 'medium'))) : '-');
-        // $templateProcessor->setValue('date', isset($model->data_json['committee_detail_date']) ? (Yii::$app->thaiFormatter->asDate($model->data_json['committee_detail_date'], 'long')) : '-');
         $templateProcessor->setValue('doc_title', 'ขออนุมัติแต่งตั้งคณะกรรมการกำหนดรายละเอียดคุณลักษณะเฉพาะ');
 
         $templateProcessor->setValue('drawer_name', $model->CreateBy()['fullname']);
-        $templateProcessor->setValue('drawer_position', 'ตำแหน่ง'.$model->CreateBy()['position_name']);
+        $templateProcessor->setValue('drawer_position', 'ตำแหน่ง' . $model->CreateBy()['position_name']);
         $templateProcessor->setValue('date_drawer', $model->viewCreatedAt());
 
-        $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname'] !='' ? $model->viewChecker()['fullname'] : '.................................................') ;
-        $templateProcessor->setValue('a_position',  'ตำแหน่ง'.$model->viewChecker()['position']);
-        $templateProcessor->setValue('approve_date',  $model->viewChecker()['approve_date'] !='' ? $model->viewChecker()['approve_date'] : '.................................................') ;
+        $templateProcessor->setValue('approve_name', $model->viewChecker()['fullname'] != '' ? $model->viewChecker()['fullname'] : '.................................................');
+        $templateProcessor->setValue('a_position',  'ตำแหน่ง' . $model->viewChecker()['position']);
+        $templateProcessor->setValue('approve_date',  $model->viewChecker()['approve_date'] != '' ? $model->viewChecker()['approve_date'] : '.................................................');
         $templateProcessor->setValue('recipientname', isset($model->data_json['recipient_fullname']) ? $model->data_json['recipient_fullname'] : '.................................................');
-        $templateProcessor->setValue('r_position', isset($model->data_json['recipient_position']) ? 'ตำแหน่ง'.$model->data_json['recipient_position'] : 'ตำแหน่ง'.'.................................................');
+        $templateProcessor->setValue('r_position', isset($model->data_json['recipient_position']) ? 'ตำแหน่ง' . $model->data_json['recipient_position'] : 'ตำแหน่ง' . '.................................................');
         $templateProcessor->setValue('recipientdate',  isset($model->data_json['recipient_date']) ? Yii::$app->thaiDate->toThaiDate($model->data_json['recipient_date'], true, false) : '........................................');
 
         $templateProcessor->setValue('leader_fullname', $this->getInfo()['leader_fullname']);
-        $templateProcessor->setValue('leader_position', 'ตำแหน่ง'.$this->getInfo()['leader_position']);
+        $templateProcessor->setValue('leader_position', 'ตำแหน่ง' . $this->getInfo()['leader_position']);
 
         $templateProcessor->setValue('director_name', $this->GetInfo()['director_fullname']);  // ผู้อำนวยการโรงพยาบาล
         $templateProcessor->setValue('org_name', 'ผู้อำนวยการ' . $this->GetInfo()['company_name']);  // ชื่อโรงพยาบาล
 
         // วันที่สั่งจ่าย
         try {
-             $datetime = \Yii::$app->thaiDate->toThaiDate($model->data_json['player_date'], true, false);
+            $datetime = \Yii::$app->thaiDate->toThaiDate($model->data_json['player_date'], true, false);
             $templateProcessor->setValue('pay_date', $datetime);  // วันที่
         } catch (\Throwable $th) {
             $templateProcessor->setValue('pay_date', '-');  // วันที่
         }
 
         $templateProcessor->setValue('pay_name', $model->ShowPlayer()['fullname']);  // ผู้จ่าย
-        $templateProcessor->setValue('pay_position', 'ตำแหน่ง'.$model->ShowPlayer()['position_name']);  // ผู้จ่าย
+        $templateProcessor->setValue('pay_position', 'ตำแหน่ง' . $model->ShowPlayer()['position_name']);  // ผู้จ่าย
 
         $templateProcessor->cloneRow('detail', count($model->getItems()));
         $i = 1;
         $num = 1;
+        $data = [];
         foreach ($model->getItems() as $item) {
+
             $templateProcessor->setValue('no#' . $i, $num++);
-            $templateProcessor->setValue('detail#' . $i, $item->product->title);
-            $templateProcessor->setValue('unit#' . $i, $item->product->data_json['unit']);
-            // $templateProcessor->setValue('qty#' . $i, $item->qty);
-            $templateProcessor->setValue('rqty#' . $i, $item->data_json['req_qty']);
-            $templateProcessor->setValue('qty#' . $i, ($model->order_status == 'success' ? $item->qty : ''));
-            $templateProcessor->setValue('unitprice#' . $i, isset($item->unit_price) && is_numeric($item->unit_price) ? number_format($item->unit_price, 2) : '0.00');
-            $templateProcessor->setValue('sumprice#' . $i, $model->order_status == 'success' && isset($item->qty, $item->unit_price) && is_numeric($item->qty) && is_numeric($item->unit_price) ? number_format(($item->qty * $item->unit_price), 2) : '0.00');
+
+            // detail
+            // detail (ใช้ safeValue ป้องกัน error Word)
+            $detail = $item->product?->title ?? '-';
+            $templateProcessor->setValue('detail#' . $i, $this->safeValue($detail));
+
+
+            // unit
+            $unit = $item->product?->data_json['unit'] ?? '-';
+            $templateProcessor->setValue('unit#' . $i, $unit);
+
+            // rqty
+            $rqty = $item->data_json['req_qty'] ?? '';
+            $templateProcessor->setValue('rqty#' . $i, $rqty);
+
+            // qty เฉพาะ success
+            $qty = ($model->order_status == 'success') ? ($item->qty ?? '') : '';
+            $templateProcessor->setValue('qty#' . $i, $qty);
+
+            // unit price
+            $unitPrice = (isset($item->unit_price) && is_numeric($item->unit_price))
+                ? number_format($item->unit_price, 2)
+                : '0.00';
+            $templateProcessor->setValue('unitprice#' . $i, $unitPrice);
+
+            // sum price เฉพาะ success + qty, unit_price numeric
+            if (
+                $model->order_status == 'success' &&
+                isset($item->qty, $item->unit_price) &&
+                is_numeric($item->qty) && is_numeric($item->unit_price)
+            ) {
+                $sum = number_format($item->qty * $item->unit_price, 2);
+            } else {
+                $sum = '0.00';
+            }
+            $templateProcessor->setValue('sumprice#' . $i, $sum);
+
             $i++;
         }
 
         $templateProcessor->saveAs(Yii::getAlias('@webroot') . '/msword/results/' . $result_name);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        // return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/' . $result_name);
         return $this->Show($result_name);
     }
 
