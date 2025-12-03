@@ -1,20 +1,6 @@
 <?php
-
 use yii\helpers\Url;
-use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
-use Yiisoft\Arrays\ArrayHelper;
-use app\modules\helpdesk2\models\Helpdesk;
-
-$helpdesk = Helpdesk::find()
-    ->where(['IS NOT', 'title', null])
-    ->andWhere(['id' => 125])
-    ->orderBy(['id' => SORT_DESC]) // id จากมาก → น้อย
-    ->one();
-
-    // echo "<pre>";
-    // print_r($helpdesk->viewTechRevice());
-    // echo "</pre>";
 
 ?>
 
@@ -26,8 +12,6 @@ $helpdesk = Helpdesk::find()
         </iframe>
     </div>
     <div class="col-6">
-
-
         <div class="position-relative">
             <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
                 <i class="fa-solid fa-upload"></i>
@@ -100,6 +84,10 @@ $helpdesk = Helpdesk::find()
                 <div class="d-flex gap-2">
                     <?= $form->field($model, 'data_json[tech_receive_x]')->textInput()->label('ช่างผู้รับงาน-แนวนอน') ?>
                     <?= $form->field($model, 'data_json[tech_receive_y]')->textInput()->label('ช่างผู้รับงาน-แนวตั้ง') ?>
+                </div>
+                <div class="d-flex gap-2">
+                    <?= $form->field($model, 'data_json[note_x]')->textInput()->label('หมายเหตุ-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[note_y]')->textInput()->label('หมายเหตุ-แนวตั้ง') ?>
                 </div>
 
             </div>

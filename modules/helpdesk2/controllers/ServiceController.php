@@ -328,6 +328,12 @@ class ServiceController extends \yii\web\Controller
             $pdf->SetXY($urgencyX, $urgencyY);
             $pdf->Write(10,  $this->t('ด่วน'));
 
+            // $noteX = isset($layout->data_json['note_x']) ? (float)$layout->data_json['note_x'] : 0;
+            // $noteY = isset($layout->data_json['note_y']) ? (float)$layout->data_json['note_y'] : 0;
+            // $pdf->SetXY($noteX, $noteY);
+            // $pdf->Write(10,  $this->t('ตัวอย่างระบุหมายเหตุในการแจ้งซ่อมเพิ่มเติม'));
+
+
             // 5️⃣ Output PDF
             $pdf->Output('I', 'filled.pdf');
         }
@@ -438,10 +444,11 @@ class ServiceController extends \yii\web\Controller
             $pdf->Write(10,  $this->t($repairNumber));
 
             // รายละเอียดปัญหา
-            $title = $model->title;
+            $title = $model->title.(isset($model->data_json['note']) ? ' (**'.$model->data_json['note'].')' : '');
             $titleX = isset($layout->data_json['title_x']) ? (float)$layout->data_json['title_x'] : 0;
             $titleY = isset($layout->data_json['title_y']) ? (float)$layout->data_json['title_y'] : 0;
             $pdf->SetXY($titleX, $titleY);
+            
             $pdf->Write(10,  $this->t($title));
 
             //สถานที่
@@ -490,9 +497,9 @@ class ServiceController extends \yii\web\Controller
             $urgencyY = isset($layout->data_json['urgency_y']) ? (float)$layout->data_json['urgency_y'] : 0;
             $pdf->SetXY($urgencyX, $urgencyY);
             $pdf->Write(10,  $this->t($model->viewUrgent()['title']));
-
-            $pdf->SetXY(59, 40);
-            $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
+            // หมายเหตุ
+            // $pdf->SetXY(59, 40);
+            // $pdf->MultiCell(100, 8, $this->t($model->data_json['note']));
 
             // 5️⃣ Output PDF
             $pdf->Output('I', 'filled.pdf');

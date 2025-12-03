@@ -62,6 +62,16 @@ services:
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  demo:
+    image: patjawat/erp:latest
+    container_name: demo
+    platform: linux/amd64
+    volumes:
+      - ./modules/filemanager/fileupload:/app/modules/filemanager/fileupload
+    env_file:
+       - ./.env
+    ports:
+      - "81:80"
 
   phpmyadmin_mysql:
     image: phpmyadmin
