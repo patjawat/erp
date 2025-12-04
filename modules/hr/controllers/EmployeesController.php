@@ -600,8 +600,9 @@ class EmployeesController extends Controller
                 $newEmployee->lname = $data[4];
                 $newEmployee->birthday = $data[5];
                 $newEmployee->phone = $data[6];
-                $newEmployee->address = $data[7];
-                $newEmployee->zipcode = $data[8];
+                $newEmployee->email = $data[7];
+                $newEmployee->address = $data[8];
+                $newEmployee->zipcode = $data[9];
                 $newEmployee->save(false);
                 return [
                     'status' => 'success',
