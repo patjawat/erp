@@ -96,7 +96,7 @@ class ImportProductController extends Controller
         }
 
         $imported = 0;
-        $demo = [];
+        $msg = [];
         if (($handle = fopen($filePath, "r")) !== false) {
             $row = 0;
             $error = 0;
@@ -104,12 +104,13 @@ class ImportProductController extends Controller
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $row++;
                 if ($row == 1) continue; // ข้าม header
-                $demo[] = $data[1];
+               
                 $result = $this->findProduct($data[0], $data[1], $categoryId, $data[2]);
                 if ($result['status'] == 'success') {
                     $imported++;
                 } else {
                     $error++;
+                     $msg[] = $data[1];
                     // คุณอาจเก็บ log ของ error แถวนี้ได้
                 }
             }
@@ -118,13 +119,13 @@ class ImportProductController extends Controller
                 return [
                     'status' => 'error',
                     'message' => "xx",
-                    'demo' => $demo
+                    'msg' => $msg
                 ];
             }
             return [
                 'status' => 'success',
                 'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
-                'demo' => $demo
+                'msg' => $msg
             ];
         }
 
