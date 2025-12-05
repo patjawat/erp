@@ -22,7 +22,14 @@ use yii\widgets\ActiveForm;
 ]); ?>
 <div class="row">
     <div class="col-2">
-        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
+         <?= $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+            'data' => $model->ListAssetOnWarehouse(),
+            'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
     </div>
     <div class="col-2">
         <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
@@ -30,7 +37,7 @@ use yii\widgets\ActiveForm;
     <div class="col-2">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
+    <div class="col-lg-5 col-md-5 col-sm-12">
         <?= $form->field($model, 'order_status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -39,16 +46,6 @@ use yii\widgets\ActiveForm;
                 // 'width' => '150px',
             ],
         ])->label(false); ?>
-    </div>
-    <div class="col-lg-3 col-md-3 col-sm-12">
-        <?= $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-            'data' => $model->ListAssetOnWarehouse(),
-            'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label(false);
-        ?>
     </div>
 
     <div class="col-lg-1 col-md-1 col-sm-12">

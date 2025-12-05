@@ -25,29 +25,15 @@ use app\components\DateFilterHelper;
             <legend class="float-none w-auto px-2 fs-6">ค้นหาจากคำขอ</legend>
             <div class="row">
                 <div class="col-4">
-                    <?php
-                    echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-                        'data' =>  DateFilterHelper::getDropdownItems(),
-                        'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
+                   <?php
+                    echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                        'data' => $model->ListAssetType(),
+                        'options' => ['placeholder' => 'กรุณาเลือก'],
                         'pluginOptions' => [
                             'allowClear' => true,
                         ],
-                        'pluginEvents' => [
-                            "select2:select" => "function(result) { 
-                                    $.ajax({
-                                        type: 'get',
-                                        url: '/depdrop/date-filter',
-                                        data:{date_filter:$(this).val()},
-                                        dataType: 'json',
-                                        success: function (res) {
-                                           $('#stockeventsearch-req_date_start').val(res.date_start)
-                                           $('#stockeventsearch-req_date_end').val(res.date_end)
-                                        }
-                                    });
-                            }",
-                        ]
-                    ])->label(false);
-                    ?>
+                ])->label(false);
+                                ?>
                 </div>
                 <div class="col-4">
                     <?= $form->field($model, 'req_date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label(false); ?>
