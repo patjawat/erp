@@ -193,146 +193,135 @@ class ReportController extends \yii\web\Controller
     }
 
     private function ListByOrderExport($searchModel, $querys)
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
 
-        // ตั้งค่า default font
-        $spreadsheet->getDefaultStyle()
-            ->getFont()
-            ->setName('TH Sarabun New')
-            ->setSize(16);
+    // ฟังก์ชันสำหรับตัดทศนิยม 2 ตำแหน่งแบบไม่ปัดเศษ
+    $trunc2 = function($v) {
+        return floor(($v ?? 0) * 100) / 100;
+    };
 
-        // --------------------------------------------------
-        // หัวตาราง
-        // --------------------------------------------------
-        $sheet->setCellValue('A1', 'ลำดับ');
-        $sheet->setCellValue('B1', 'ชื่อคลัง');
-        $sheet->setCellValue('C1', 'ประเภทคลัง');
-        $sheet->setCellValue('D1', 'ประเภทวัสดุ');
-        $sheet->setCellValue('E1', 'คลังที่ขอเบิก');
-        $sheet->setCellValue('F1', 'วันที่');
-        $sheet->setCellValue('G1', 'เลขที่');
-        $sheet->setCellValue('H1', 'ความเคลื่อนไหว');
-        $sheet->setCellValue('I1', 'รหัสวัสดุ');
-        $sheet->setCellValue('J1', 'ชื่อวัสดุ');
-        $sheet->setCellValue('K1', 'หน่วย');
-        $sheet->setCellValue('L1', 'จำนวน');
-        $sheet->setCellValue('M1', 'ราคาต่อหน่วย');
-        $sheet->setCellValue('N1', 'รวมราคา');
+    // Default font
+    $spreadsheet->getDefaultStyle()
+        ->getFont()
+        ->setName('TH Sarabun New')
+        ->setSize(16);
 
-        $headerRange = 'A1:N1';
-        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($headerRange)->getFont()->setBold(true);
-        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFCCE5FF');
-        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
-            ->setBorderStyle(Border::BORDER_THIN);
+    // --------------------------------------------------
+    // หัวตาราง
+    // --------------------------------------------------
+    $sheet->setCellValue('A1', 'ลำดับ');
+    $sheet->setCellValue('B1', 'ชื่อคลัง');
+    $sheet->setCellValue('C1', 'ประเภทคลัง');
+    $sheet->setCellValue('D1', 'ประเภทวัสดุ');
+    $sheet->setCellValue('E1', 'คลังที่ขอเบิก');
+    $sheet->setCellValue('F1', 'วันที่');
+    $sheet->setCellValue('G1', 'เลขที่');
+    $sheet->setCellValue('H1', 'ความเคลื่อนไหว');
+    $sheet->setCellValue('I1', 'รหัสวัสดุ');
+    $sheet->setCellValue('J1', 'ชื่อวัสดุ');
+    $sheet->setCellValue('K1', 'หน่วย');
+    $sheet->setCellValue('L1', 'จำนวน');
+    $sheet->setCellValue('M1', 'ราคาต่อหน่วย');
+    $sheet->setCellValue('N1', 'รวมราคา');
 
-        // --------------------------------------------------
-        // เนื้อหาตาราง
-        // --------------------------------------------------
-        $StartRow = 2;
-        $row = 1;
+    $headerRange = 'A1:N1';
+    $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+    $sheet->getStyle($headerRange)->getFont()->setBold(true);
+    $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
+        ->getStartColor()->setARGB('FFCCE5FF');
+    $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+        ->setBorderStyle(Border::BORDER_THIN);
 
-        foreach ($querys as $key => $value) {
-            $numRow = $StartRow++;
+    // --------------------------------------------------
+    // เนื้อหาตาราง
+    // --------------------------------------------------
+    $StartRow = 2;
+    $row = 1;
 
-            if ($value['warehouse_type'] == 'MAIN') {
-                $warehouseTypeText = 'คลังหลัก';
-            } elseif ($value['warehouse_type'] == 'SUB') {
-                $warehouseTypeText = 'คลังย่อย';
-            } elseif ($value['warehouse_type'] == 'BRANCH') {
-                $warehouseTypeText = 'คลังรพ.สต.';
-            } else {
-                $warehouseTypeText = '';
-            }
+    foreach ($querys as $value) {
+        $numRow = $StartRow++;
 
-            if ($value['transaction_type'] == 'IN') {
-                $sourceName = $value['vendor_name'];
-                $transactionName = 'รับ';
-            } else {
-                $sourceName = $value['form_warehouse_name'];
-                $transactionName = 'จ่าย';
-            }
-
-            $sheet->setCellValue('A' . $numRow, $row++);
-            $sheet->setCellValue('B' . $numRow, $value['warehouse_name']);
-            $sheet->setCellValue('C' . $numRow, $warehouseTypeText);
-            $sheet->setCellValue('D' . $numRow, $value['asset_type_name']);
-            $sheet->setCellValue('E' . $numRow, $sourceName);
-            $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
-            $sheet->setCellValue('G' . $numRow, $value['code']);
-            $sheet->setCellValue('H' . $numRow, $transactionName);
-            $sheet->setCellValue('I' . $numRow, $value['asset_item']);
-            $sheet->setCellValue('J' . $numRow, $value['asset_name']);
-            $sheet->setCellValue('K' . $numRow, $value['unit']);
-            $sheet->setCellValue('L' . $numRow, $value['item_qty']);
-            $sheet->setCellValue('M' . $numRow, number_format($value['unit_price'] ?? 0, 2));
-            $sheet->setCellValue('N' . $numRow, number_format(($value['end_price']) ?? 0, 2));
+        // แปลงประเภทคลัง
+        switch ($value['warehouse_type']) {
+            case 'MAIN':   $warehouseTypeText = 'คลังหลัก'; break;
+            case 'SUB':    $warehouseTypeText = 'คลังย่อย'; break;
+            case 'BRANCH': $warehouseTypeText = 'คลังรพ.สต.'; break;
+            default:       $warehouseTypeText = ''; 
         }
 
-        // --------------------------------------------------
-        // จัดตำแหน่งคอลัมน์
-        // --------------------------------------------------
-        $lastRow = $StartRow - 1;
-
-        // F,G,H = กลาง
-        $sheet->getStyle("F2:H{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // L,M,N = ขวา
-        $sheet->getStyle("L2:N{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // --------------------------------------------------
-        // ความกว้างคอลัมน์
-        // --------------------------------------------------
-        $widths = [
-            'A' => 8,
-            'B' => 20,
-            'C' => 20,
-            'D' => 20,
-            'E' => 20,
-            'F' => 20,
-            'G' => 20,
-            'H' => 15,
-            'I' => 20,
-            'J' => 40,
-            'K' => 20,
-            'L' => 20,
-            'M' => 20,
-            'N' => 20
-        ];
-        foreach ($widths as $col => $w) {
-            $sheet->getColumnDimension($col)->setWidth($w);
-        }
-
-        // --------------------------------------------------
-        // สร้างไฟล์ดาวน์โหลด
-        // --------------------------------------------------
-        try {
-            $dateStart = $searchModel->date_start;
-            $dateEnd = $searchModel->date_end;
-        } catch (\Throwable $th) {
-            $dateStart = '';
-            $dateEnd = '';
-        }
-
-
-        $writer = new Xlsx($spreadsheet);
-        $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
-        $writer->save($filePath);
-
-
-        if (file_exists($filePath)) {
-            return Yii::$app->response->sendFile($filePath);
+        // แปลงประเภทความเคลื่อนไหว
+        if ($value['transaction_type'] == 'IN') {
+            $sourceName = $value['vendor_name'];
+            $transactionName = 'รับ';
         } else {
-            throw new \yii\web\NotFoundHttpException('The file does not exist.');
+            $sourceName = $value['form_warehouse_name'];
+            $transactionName = 'จ่าย';
         }
+
+        // ✔ ตัดทศนิยมราคา
+        $unitPrice = $trunc2($value['unit_price'] ?? 0);
+        $totalPrice = $trunc2($value['end_price'] ?? 0);
+
+        // ✔ ใส่ข้อมูลเป็น Number (ไม่ใช่ตัวหนังสือ)
+        $sheet->setCellValue('A' . $numRow, $row++);
+        $sheet->setCellValue('B' . $numRow, $value['warehouse_name']);
+        $sheet->setCellValue('C' . $numRow, $warehouseTypeText);
+        $sheet->setCellValue('D' . $numRow, $value['asset_type_name']);
+        $sheet->setCellValue('E' . $numRow, $sourceName);
+        $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
+        $sheet->setCellValue('G' . $numRow, $value['code']);
+        $sheet->setCellValue('H' . $numRow, $transactionName);
+        $sheet->setCellValue('I' . $numRow, $value['asset_item']);
+        $sheet->setCellValue('J' . $numRow, $value['asset_name']);
+        $sheet->setCellValue('K' . $numRow, $value['unit']);
+        $sheet->setCellValue('L' . $numRow, $value['item_qty']);
+
+        // ✔ คอลัมน์ราคาเป็นตัวเลขจริง พร้อม format 2 ตำแหน่ง
+        $sheet->setCellValue('M' . $numRow, $unitPrice);
+        $sheet->getStyle('M' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $sheet->setCellValue('N' . $numRow, $totalPrice);
+        $sheet->getStyle('N' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
     }
+
+    // จัดตำแหน่งคอลัมน์
+    $lastRow = $StartRow - 1;
+
+    $sheet->getStyle("F2:H{$lastRow}")
+        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    $sheet->getStyle("L2:N{$lastRow}")
+        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+    // ความกว้าง
+    $widths = [
+        'A' => 8, 'B' => 20, 'C' => 20, 'D' => 20,
+        'E' => 20, 'F' => 20, 'G' => 20, 'H' => 15,
+        'I' => 20, 'J' => 40, 'K' => 20, 'L' => 20,
+        'M' => 20, 'N' => 20
+    ];
+    foreach ($widths as $col => $w) {
+        $sheet->getColumnDimension($col)->setWidth($w);
+    }
+
+    // --------------------------------------------------
+    // Export File
+    // --------------------------------------------------
+    $writer = new Xlsx($spreadsheet);
+    $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
+    $writer->save($filePath);
+
+    if (file_exists($filePath)) {
+        return Yii::$app->response->sendFile($filePath);
+    } else {
+        throw new \yii\web\NotFoundHttpException('The file does not exist.');
+    }
+}
+
 
 
 
