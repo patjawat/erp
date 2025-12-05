@@ -303,9 +303,9 @@ class StockInController extends Controller
                         'category_id' => $model->id,
                         'po_number' => $model->po_number,
                         'name' => 'order_item',
-                        'qty' => (int)($item->qty ?? 0),
+                        'qty' => (float)($item->qty ?? 0),
                         'unit_price' => (float)($item->price ?? 0),
-                        'total_price' => ((int)($item->qty ?? 0) * (float)($item->price ?? 0)),
+                        'total_price' => ((float)($item->qty ?? 0) * (float)($item->price ?? 0)),
                         'order_status' => 'pending',
                         'data_json' => [
                             'item_type' => 'จัดซื้อ',
