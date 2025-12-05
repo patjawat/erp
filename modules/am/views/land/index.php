@@ -1,25 +1,24 @@
 <?php
-
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use kartik\grid\GridView;
-use yii\grid\ActionColumn;
-use app\components\AppHelper;
-use app\components\SiteHelper;
-use app\modules\am\models\Asset;
 
-$this->title = 'ทะเบียนที่ดิน';
-$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
+$this->title = 'ที่ดิน';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-map fs-3"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package text-primary">
+            <path d="m7.5 4.27 9 5.15"></path>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+            <path d="m3.3 7 8.7 5 8.7-5"></path>
+            <path d="M12 22V12"></path>
+        </svg> ระบบบริหารทรัพย์สิน</h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/land/create'], ['class' => 'btn btn-primary rounded-pill shadow']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
@@ -35,9 +34,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
-
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
@@ -45,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
                 <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
             </h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/land/create'], ['class' => 'btn btn-light shadow']) ?>
+
         </div>
     </div>
     <div class="card-body p-0">
@@ -66,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="fw-semibold text-primary"><?= $item->code ?></td>
                         <td class="align-middle"><?= $item->data_json['lan_number'] ?? '-' ?></td>
-                        <td class="align-middle"><?=$item->landSize()?></td>
+                        <td class="align-middle"><?= $item->landSize() ?></td>
                         <td class="align-middle"></td>
 
                         <td>
