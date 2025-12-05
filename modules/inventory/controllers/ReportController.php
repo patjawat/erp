@@ -360,7 +360,7 @@ class ReportController extends \yii\web\Controller
 
         $conditions = [
             "a.name = 'asset_item'",
-            "a.group_id = 4",
+            "a.group_id = 'MATER'",
         ];
 
         // ----- Auto GROUP / ORDER -----
