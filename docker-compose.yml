@@ -38,6 +38,7 @@ services:
     command:
       [
         "mysqld",
+        # "--lower_case_table_names=2",
         "--max_allowed_packet=1G",
         "--innodb-buffer-pool-size=1G",
         "--innodb-log-file-size=256M",

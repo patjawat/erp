@@ -56,6 +56,15 @@ class Product extends \yii\db\ActiveRecord
     public $metter_type;
     public $innovation_account;
 
+
+    public function init()
+{
+    parent::init();
+    if ($this->isNewRecord) {
+        $this->active = 1;
+    }
+}
+
     /**
      * {@inheritdoc}
      */
@@ -67,6 +76,8 @@ class Product extends \yii\db\ActiveRecord
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
             [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
+            ['active', 'default', 'value' => 1],
+
         ];
     }
 

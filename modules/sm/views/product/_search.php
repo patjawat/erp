@@ -65,7 +65,7 @@ use kartik\widgets\ActiveForm;
     </div>
     <div class="col-lg-2 col-md-6 col-sm-6">
         <div class="mt-1">
-            <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->active == "1" ? true : false])->label('สถานะเปิดใช้งาน'); ?>
+            <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->active == 1 ? true : false])->label('สถานะเปิดใช้งาน'); ?>
         </div>
     </div>
 

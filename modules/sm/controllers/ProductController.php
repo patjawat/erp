@@ -118,7 +118,7 @@ class ProductController extends Controller
     {
         $model = new Product([
             'name' => 'asset_item',
-            'group_id' => 'EQUIP',
+            'group_id' => 'MATER',
             'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 
