@@ -193,134 +193,151 @@ class ReportController extends \yii\web\Controller
     }
 
     private function ListByOrderExport($searchModel, $querys)
-{
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
-    $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('รายงานวัสดุรับ-จ่าย');
 
-    // ฟังก์ชันสำหรับตัดทศนิยม 2 ตำแหน่งแบบไม่ปัดเศษ
-    $trunc2 = function($v) {
-        return floor(($v ?? 0) * 100) / 100;
-    };
+        // ฟังก์ชันสำหรับตัดทศนิยม 2 ตำแหน่งแบบไม่ปัดเศษ
+        $trunc2 = function ($v) {
+            return floor(($v ?? 0) * 100) / 100;
+        };
 
-    // Default font
-    $spreadsheet->getDefaultStyle()
-        ->getFont()
-        ->setName('TH Sarabun New')
-        ->setSize(16);
+        // Default font
+        $spreadsheet->getDefaultStyle()
+            ->getFont()
+            ->setName('TH Sarabun New')
+            ->setSize(16);
 
-    // --------------------------------------------------
-    // หัวตาราง
-    // --------------------------------------------------
-    $sheet->setCellValue('A1', 'ลำดับ');
-    $sheet->setCellValue('B1', 'ชื่อคลัง');
-    $sheet->setCellValue('C1', 'ประเภทคลัง');
-    $sheet->setCellValue('D1', 'ประเภทวัสดุ');
-    $sheet->setCellValue('E1', 'คลังที่ขอเบิก');
-    $sheet->setCellValue('F1', 'วันที่');
-    $sheet->setCellValue('G1', 'เลขที่');
-    $sheet->setCellValue('H1', 'ความเคลื่อนไหว');
-    $sheet->setCellValue('I1', 'รหัสวัสดุ');
-    $sheet->setCellValue('J1', 'ชื่อวัสดุ');
-    $sheet->setCellValue('K1', 'หน่วย');
-    $sheet->setCellValue('L1', 'จำนวน');
-    $sheet->setCellValue('M1', 'ราคาต่อหน่วย');
-    $sheet->setCellValue('N1', 'รวมราคา');
+        // --------------------------------------------------
+        // หัวตาราง
+        // --------------------------------------------------
+        $sheet->setCellValue('A1', 'ลำดับ');
+        $sheet->setCellValue('B1', 'ชื่อคลัง');
+        $sheet->setCellValue('C1', 'ประเภทคลัง');
+        $sheet->setCellValue('D1', 'ประเภทวัสดุ');
+        $sheet->setCellValue('E1', 'คลังที่ขอเบิก');
+        $sheet->setCellValue('F1', 'วันที่');
+        $sheet->setCellValue('G1', 'เลขที่');
+        $sheet->setCellValue('H1', 'ความเคลื่อนไหว');
+        $sheet->setCellValue('I1', 'รหัสวัสดุ');
+        $sheet->setCellValue('J1', 'ชื่อวัสดุ');
+        $sheet->setCellValue('K1', 'หน่วย');
+        $sheet->setCellValue('L1', 'จำนวน');
+        $sheet->setCellValue('M1', 'ราคาต่อหน่วย');
+        $sheet->setCellValue('N1', 'รวมราคา');
 
-    $headerRange = 'A1:N1';
-    $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-    $sheet->getStyle($headerRange)->getFont()->setBold(true);
-    $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
-        ->getStartColor()->setARGB('FFCCE5FF');
-    $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
-        ->setBorderStyle(Border::BORDER_THIN);
+        $headerRange = 'A1:N1';
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFCCE5FF');
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
 
-    // --------------------------------------------------
-    // เนื้อหาตาราง
-    // --------------------------------------------------
-    $StartRow = 2;
-    $row = 1;
+        // --------------------------------------------------
+        // เนื้อหาตาราง
+        // --------------------------------------------------
+        $StartRow = 2;
+        $row = 1;
 
-    foreach ($querys as $value) {
-        $numRow = $StartRow++;
+        foreach ($querys as $value) {
+            $numRow = $StartRow++;
 
-        // แปลงประเภทคลัง
-        switch ($value['warehouse_type']) {
-            case 'MAIN':   $warehouseTypeText = 'คลังหลัก'; break;
-            case 'SUB':    $warehouseTypeText = 'คลังย่อย'; break;
-            case 'BRANCH': $warehouseTypeText = 'คลังรพ.สต.'; break;
-            default:       $warehouseTypeText = ''; 
+            // แปลงประเภทคลัง
+            switch ($value['warehouse_type']) {
+                case 'MAIN':
+                    $warehouseTypeText = 'คลังหลัก';
+                    break;
+                case 'SUB':
+                    $warehouseTypeText = 'คลังย่อย';
+                    break;
+                case 'BRANCH':
+                    $warehouseTypeText = 'คลังรพ.สต.';
+                    break;
+                default:
+                    $warehouseTypeText = '';
+            }
+
+            // แปลงประเภทความเคลื่อนไหว
+            if ($value['transaction_type'] == 'IN') {
+                $sourceName = $value['vendor_name'];
+                $transactionName = 'รับ';
+            } else {
+                $sourceName = $value['form_warehouse_name'];
+                $transactionName = 'จ่าย';
+            }
+
+            // ✔ ตัดทศนิยมราคา
+            $unitPrice = $trunc2($value['unit_price'] ?? 0);
+            $totalPrice = $trunc2($value['end_price'] ?? 0);
+
+            // ✔ ใส่ข้อมูลเป็น Number (ไม่ใช่ตัวหนังสือ)
+            $sheet->setCellValue('A' . $numRow, $row++);
+            $sheet->setCellValue('B' . $numRow, $value['warehouse_name']);
+            $sheet->setCellValue('C' . $numRow, $warehouseTypeText);
+            $sheet->setCellValue('D' . $numRow, $value['asset_type_name']);
+            $sheet->setCellValue('E' . $numRow, $sourceName);
+            $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
+            $sheet->setCellValue('G' . $numRow, $value['code']);
+            $sheet->setCellValue('H' . $numRow, $transactionName);
+            $sheet->setCellValue('I' . $numRow, $value['asset_item']);
+            $sheet->setCellValue('J' . $numRow, $value['asset_name']);
+            $sheet->setCellValue('K' . $numRow, $value['unit']);
+            $sheet->setCellValue('L' . $numRow, $value['item_qty']);
+
+            // ✔ คอลัมน์ราคาเป็นตัวเลขจริง พร้อม format 2 ตำแหน่ง
+            $sheet->setCellValue('M' . $numRow, $unitPrice);
+            $sheet->getStyle('M' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+            $sheet->setCellValue('N' . $numRow, $totalPrice);
+            $sheet->getStyle('N' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
-        // แปลงประเภทความเคลื่อนไหว
-        if ($value['transaction_type'] == 'IN') {
-            $sourceName = $value['vendor_name'];
-            $transactionName = 'รับ';
+        // จัดตำแหน่งคอลัมน์
+        $lastRow = $StartRow - 1;
+
+        $sheet->getStyle("F2:H{$lastRow}")
+            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getStyle("L2:N{$lastRow}")
+            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        // ความกว้าง
+        $widths = [
+            'A' => 8,
+            'B' => 20,
+            'C' => 20,
+            'D' => 20,
+            'E' => 20,
+            'F' => 20,
+            'G' => 20,
+            'H' => 15,
+            'I' => 20,
+            'J' => 40,
+            'K' => 20,
+            'L' => 20,
+            'M' => 20,
+            'N' => 20
+        ];
+        foreach ($widths as $col => $w) {
+            $sheet->getColumnDimension($col)->setWidth($w);
+        }
+
+        // --------------------------------------------------
+        // Export File
+        // --------------------------------------------------
+        $writer = new Xlsx($spreadsheet);
+        $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
+        $writer->save($filePath);
+
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath);
         } else {
-            $sourceName = $value['form_warehouse_name'];
-            $transactionName = 'จ่าย';
+            throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }
-
-        // ✔ ตัดทศนิยมราคา
-        $unitPrice = $trunc2($value['unit_price'] ?? 0);
-        $totalPrice = $trunc2($value['end_price'] ?? 0);
-
-        // ✔ ใส่ข้อมูลเป็น Number (ไม่ใช่ตัวหนังสือ)
-        $sheet->setCellValue('A' . $numRow, $row++);
-        $sheet->setCellValue('B' . $numRow, $value['warehouse_name']);
-        $sheet->setCellValue('C' . $numRow, $warehouseTypeText);
-        $sheet->setCellValue('D' . $numRow, $value['asset_type_name']);
-        $sheet->setCellValue('E' . $numRow, $sourceName);
-        $sheet->setCellValue('F' . $numRow, AppHelper::convertToThai($value['movement_date']));
-        $sheet->setCellValue('G' . $numRow, $value['code']);
-        $sheet->setCellValue('H' . $numRow, $transactionName);
-        $sheet->setCellValue('I' . $numRow, $value['asset_item']);
-        $sheet->setCellValue('J' . $numRow, $value['asset_name']);
-        $sheet->setCellValue('K' . $numRow, $value['unit']);
-        $sheet->setCellValue('L' . $numRow, $value['item_qty']);
-
-        // ✔ คอลัมน์ราคาเป็นตัวเลขจริง พร้อม format 2 ตำแหน่ง
-        $sheet->setCellValue('M' . $numRow, $unitPrice);
-        $sheet->getStyle('M' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
-
-        $sheet->setCellValue('N' . $numRow, $totalPrice);
-        $sheet->getStyle('N' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
     }
-
-    // จัดตำแหน่งคอลัมน์
-    $lastRow = $StartRow - 1;
-
-    $sheet->getStyle("F2:H{$lastRow}")
-        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-    $sheet->getStyle("L2:N{$lastRow}")
-        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-    // ความกว้าง
-    $widths = [
-        'A' => 8, 'B' => 20, 'C' => 20, 'D' => 20,
-        'E' => 20, 'F' => 20, 'G' => 20, 'H' => 15,
-        'I' => 20, 'J' => 40, 'K' => 20, 'L' => 20,
-        'M' => 20, 'N' => 20
-    ];
-    foreach ($widths as $col => $w) {
-        $sheet->getColumnDimension($col)->setWidth($w);
-    }
-
-    // --------------------------------------------------
-    // Export File
-    // --------------------------------------------------
-    $writer = new Xlsx($spreadsheet);
-    $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
-    $writer->save($filePath);
-
-    if (file_exists($filePath)) {
-        return Yii::$app->response->sendFile($filePath);
-    } else {
-        throw new \yii\web\NotFoundHttpException('The file does not exist.');
-    }
-}
 
 
 
@@ -955,36 +972,14 @@ class ReportController extends \yii\web\Controller
 
         $StartRowSheet2 = 3;
 
-        $params2 = [
-            ':date_start' => $dateStart,
-            ':date_end' => $dateEnd,
-        ];
+        // $params2 = [
+        //     ':date_start' => $dateStart,
+        //     ':date_end' => $dateEnd,
+        // ];
 
-        $conditions2 = [
-            "a.name = 'asset_item'",
-            "a.group_id = 4",
-        ];
+        //         return $querys2;
 
-        // ----- Auto GROUP / ORDER -----
-        $groupFields2 = [
-            'a.code'
-        ];
-        $groupBy2 = implode(', ', $groupFields2);
-        $orderBy2 = 'CAST(SUBSTRING_INDEX(a.code, \'-\', 1) AS UNSIGNED), 
-        CAST(SUBSTRING_INDEX(a.code, \'-\', -1) AS UNSIGNED), 
-        CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED) limit 99999999';
-
-
-        list($sql2, $params) = StockEvent::buildStockAssetItemSql(
-            $conditions2,
-            $params2,
-            $groupBy2 ?? null,
-            $orderBy2 ?? null
-        );
-
-        $querys2 = Yii::$app->db->createCommand($sql2, $params2)->queryAll();
-\Yii::$app->response->format = Response::FORMAT_JSON;
-        return $querys2;
+        $querys2 = $this->listQueryByItem($dateStart,$dateEnd);
 
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
@@ -1068,5 +1063,94 @@ class ReportController extends \yii\web\Controller
     public function actionPurchaseReceive()
     {
         return $this->render('purchase_receive');
+    }
+
+
+    private function listQueryByItem($dateStart, $dateEnd)
+    {
+        // querys by item ที่ตรงแล้ว
+        $sql = "SELECT
+    -- 🔹 Fields for Grouping (Item & Type Info)
+    t.code AS asset_type_code,
+    t.title AS asset_type_name,
+    a.code AS asset_item,          -- รหัสรายการทรัพย์สิน
+    a.title AS asset_name,
+    a.data_json->>'$.unit' AS unit,
+
+    -- 🔹 Aggregated Summary Fields (ยอดรวมที่ต้องการให้คงเดิม)
+    -- ยอดยกมา (ก่อน 2025-11-01)
+    SUM(
+        CASE
+            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty
+            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN -i.qty
+            ELSE 0
+        END
+    ) AS begin_qty,
+
+    -- ยอดยกมาราคา
+    SUM(
+        CAST(
+            CASE
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN (i.qty * i.unit_price)
+                WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN - (i.qty * i.unit_price)
+                ELSE 0
+            END AS DECIMAL(18,10)
+        )
+    ) AS begin_price,
+
+    -- ยอดรับเข้า
+    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty ELSE 0 END) AS qty_in,
+    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS price_in,
+
+    -- ยอดเบิกออก รพ. (SUB)
+    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN i.qty ELSE 0 END) AS qty_out,
+    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS price_out,
+
+    -- ยอดเบิกออก รพ.สต. (BRANCH)
+    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN i.qty ELSE 0 END) AS branch_qty_out,
+    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS branch_price_out,
+
+    -- ยอดเบิกออก รวม
+    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN i.qty ELSE 0 END) AS total_qty_out,
+    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS total_price_out,
+
+    -- ยอดคงเหลือสิ้นงวด
+    SUM(CASE WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty
+             WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN -i.qty ELSE 0 END) AS end_qty,
+
+    SUM(CAST(CASE WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN (i.qty * i.unit_price)
+                  WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN - (i.qty * i.unit_price) ELSE 0 END AS DECIMAL(18,10))) AS end_price
+
+FROM categorise a  -- 🚀 ตารางหลักคือรายการทรัพย์สินทั้งหมด
+LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+LEFT JOIN stock_events i ON i.asset_item = a.code AND i.name = 'order_item'
+LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order'
+LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+LEFT JOIN (
+    SELECT code, title, ROW_NUMBER() OVER(PARTITION BY code ORDER BY code) AS rn
+    FROM categorise
+    WHERE name = 'vendor'
+) v ON v.code = e.vendor_id AND v.rn = 1
+WHERE a.name = 'asset_item'
+-- AND a.group_id = 'MATER' -- เปิดใช้งานหากต้องการกรองกลุ่มสินค้า
+GROUP BY
+    a.code,
+    a.title,
+    t.code,
+    t.title,
+    a.data_json->>'$.unit'
+ORDER BY
+    CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
+    CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
+    CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED);";
+
+
+$query = Yii::$app->db->createCommand($sql, [
+        ':date_start' => $dateStart,
+        ':date_end' => $dateEnd,
+    ])->queryAll();
+
+        return $query;  
     }
 }
