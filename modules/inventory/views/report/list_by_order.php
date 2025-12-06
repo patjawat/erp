@@ -2,14 +2,22 @@
 
 use yii\web\View;
 use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\helpers\Json;
-use yii\widgets\Pjax;
 use app\components\AppHelper;
 
 $this->title = 'สรุปรายงานวัสดุคงคลังหลัก';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
+
+function format_no_round($number, $decimals = 2)
+{
+    $factor = pow(10, $decimals);
+    if ($number >= 0) {
+        $value = floor($number * $factor);
+    } else {
+        $value = ceil($number * $factor); // รับเลขติดลบ
+    }
+    return number_format($value / $factor, $decimals);
+}
 ?>
 
 
@@ -38,7 +46,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= number_format(count($querys)) ?></span> รายการ
             </h6>
             <button id="download-button" class="btn btn-success shadow">Excel</button>
-<?php //  Html::a('Excel', ['/inventory/report/list-by-order', 'export' => 1] + Yii::$app->request->queryParams, ['class' => 'btn btn-success']) ?>
+            <?php //  Html::a('Excel', ['/inventory/report/list-by-order', 'export' => 1] + Yii::$app->request->queryParams, ['class' => 'btn btn-success']) 
+            ?>
         </div>
     </div>
 
@@ -96,8 +105,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?= $item['asset_name'] ?></td>
                             <td class="text-center"><?= $item['unit'] ?></td>
                             <td class="text-center"><?= $item['item_qty'] ?></td>
-                            <td class="text-end"><?= number_format($item['unit_price'] ?? 0, 2) ?></td>
-                            <td class="text-end"><?= number_format(($item['end_price']) ?? 0, 2) ?></td>
+                            <td class="text-end"><?= format_no_round($item['unit_price'] ?? 0) ?></td>
+                            <td class="text-end"><?= format_no_round($item['end_price'] ?? 0) ?></td>
                         </tr>
                         <?php $totalPrice += ($item['end_price']); ?>
                     <?php endforeach; ?>
@@ -106,7 +115,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
                     <tr class="fw-bold">
                         <td colspan="13" class="fw-bold text-end">รวมราคาทั้งหมด</td>
-                        <td class="text-end"><?= number_format($totalPrice, 2) ?></td>
+                        <td class="text-end"><?= format_no_round($totalPrice) ?></td>
                     </tr>
                 </tfoot>
             </table>

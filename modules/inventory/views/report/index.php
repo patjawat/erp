@@ -155,7 +155,7 @@ $url = Url::to(array_merge(
 ));
 $js = <<< JS
     \$("body").on("click", "#download-button", function (e) {
-        // e.preventDefault();
+         e.preventDefault();
             var monthName = \$('#stockeventsearch-receive_month').find(':selected').text();
             var year = \$('#stockeventsearch-thai_year').find(':selected').text();
             

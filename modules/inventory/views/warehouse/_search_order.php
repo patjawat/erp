@@ -24,29 +24,19 @@ use app\components\DateFilterHelper;
         <fieldset class="border p-3 rounded">
             <legend class="float-none w-auto px-2 fs-6">ค้นหาจากคำขอ</legend>
             <div class="row">
-                <div class="col-4">
-                   <?php
-                    echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-                        'data' => $model->ListAssetType(),
-                        'options' => ['placeholder' => 'กรุณาเลือก'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                        ],
-                ])->label(false);
-                                ?>
-                </div>
-                <div class="col-4">
+                
+                <div class="col-6">
                     <?= $form->field($model, 'req_date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label(false); ?>
                 </div>
-                <div class="col-4">
+                <div class="col-6">
                     <?= $form->field($model, 'req_date_end')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label(false); ?>
                 </div>
             </div>
             <div class="row mt-2">
-                <div class="col-4">
+                <div class="col-6">
                     <?= $form->field($model, 'code')->textInput(['placeholder' => 'รหัสคำขอ..'])->label(false) ?>
                 </div>
-                <div class="col-lg-8 col-md-6 col-sm-12">
+                <div class="col-lg-6 col-md-6 col-sm-12">
                     <?php
                     echo $form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
                         'data' => $model->listFormWarehouse(),

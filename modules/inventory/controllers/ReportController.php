@@ -983,6 +983,8 @@ class ReportController extends \yii\web\Controller
         );
 
         $querys2 = Yii::$app->db->createCommand($sql2, $params2)->queryAll();
+\Yii::$app->response->format = Response::FORMAT_JSON;
+        return $querys2;
 
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
