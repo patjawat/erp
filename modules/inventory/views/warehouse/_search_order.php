@@ -34,7 +34,7 @@ use app\components\DateFilterHelper;
             </div>
             <div class="row mt-2">
                 <div class="col-6">
-                    <?= $form->field($model, 'code')->textInput(['placeholder' => 'รหัสคำขอ..'])->label(false) ?>
+                    <?= $form->field($model, 'q')->textInput(['placeholder' => 'รหัสคำขอ..'])->label(false) ?>
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <?php

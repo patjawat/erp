@@ -62,12 +62,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $num = 1;
 $sumPriceOut = 0; //รวมสินค้าที่ใช้ไป
-$totalPriceBegin = 0; //สินค้าคงเหลือ
-$totalPriceIn = 0; //ซื้อระหว่างเดือน
-$totalPriceBranch = 0; //จ่ายส่วนของ รพ.สต.
-$totalPriceSub = 0; //จ่ายส่วนของโรงพยาบาล
-$totalPriceSubBranch = 0; //สินค้าที่ใช้ไป
-$totalPriceEnd = 0; //ยอดยกไป
+$sumPriceBegin = 0; //สินค้าคงเหลือ
+$sumPriceIn = 0; //ซื้อระหว่างเดือน
+$sumPriceBranch = 0; //จ่ายส่วนของ รพ.สต.
+$sumPriceSub = 0; //จ่ายส่วนของโรงพยาบาล
+$sumPriceSubBranch = 0; //สินค้าที่ใช้ไป
+$sumPriceEnd = 0; //ยอดยกไป
 
 // ฟังก์ชันตัดทศนิยม 2 ตำแหน่ง
 function trunc2($v) {
@@ -76,22 +76,16 @@ function trunc2($v) {
 
 foreach ($querys as $item):
 
-    $branch  = $item['branch_price_out'] ?? 0;
-    $sub     = $item['price_out'] ?? 0;
     $begin   = $item['begin_price'] ?? 0;
     $in      = $item['price_in'] ?? 0;
+    $totalPriceBegin = $item['total_price_begin'];
+    $branch  = $item['branch_price_out'] ?? 0;
+    $sub     = $item['price_out'] ?? 0;
+    $totalPriceOut = $item['total_price_out'];
     $end     = $item['end_price'] ?? 0;
 
     // รวม OUT (แก้ลำดับเครื่องหมาย)
-    $sumPriceOut = $branch + $sub;
 
-    // รวมยอดรวม
-    $totalPriceBegin      += $begin;
-    $totalPriceIn         += $in;
-    $totalPriceBranch     += $branch;
-    $totalPriceSub        += $sub;
-    $totalPriceSubBranch  += ($branch + $sub);
-    $totalPriceEnd        += $end;
 ?>
 
 <tr>
@@ -103,13 +97,13 @@ foreach ($querys as $item):
 
     <td class="text-end fw-bolder"><?= number_format(trunc2($in), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($begin + $in), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceBegin), 2) ?></td>
 
     <td class="text-end fw-bolder"><?= number_format(trunc2($branch), 2) ?></td>
 
     <td class="text-end fw-bolder"><?= number_format(trunc2($sub), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sumPriceOut), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceOut), 2) ?></td>
 
     <td class="text-end fw-bolder"><?= number_format(trunc2($end), 2) ?></td>
 </tr>
@@ -120,19 +114,19 @@ foreach ($querys as $item):
     <td></td>
     <td class="text-center">รวม</td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceBegin), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['begin_price']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceIn), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['price_in']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceBegin + $totalPriceIn), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['total_price_begin']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceBranch), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['branch_price_out']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceSub), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['price_out']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceSubBranch), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['total_price_out']), 2) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceEnd), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['end_price']), 2) ?></td>
 </tr>
 
 </tbody>

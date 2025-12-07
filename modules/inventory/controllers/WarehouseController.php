@@ -125,6 +125,14 @@ class WarehouseController extends Controller
             $query->andFilterWhere(['e.warehouse_id' => $searchModel->warehouse_id])
                 ->andFilterWhere(['e.transaction_type' => 'OUT'])
                 ->andFilterWhere(['e.order_status' => $searchModel->order_status]);
+                  // ค้นหาตาม keyword q
+            if (!empty($searchModel->q)) {
+                $query->andFilterWhere([
+                    'or',
+                    ['like', 'e.code', $searchModel->q],
+                    ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
+                ]);
+            }
 
 
             /**

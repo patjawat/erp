@@ -62,10 +62,20 @@ class ReportController extends \yii\web\Controller
             $orderBy ?? null
         );
 
-        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
+
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
+        //หาผลรวม
+        list($sqlSummary, $params) = StockEvent::buildStockOrderSql(
+            $conditions,
+            $params,
+            null,
+            null
+        );
+        $sum = Yii::$app->db->createCommand($sqlSummary, $params)->queryOne();
         return $this->render('index', [
             'querys' => $querys,
+            'sum' => $sum,
             'dateStart' => $dateStart,
             'dateEnd' => $dateEnd,
             'searchModel' => $searchModel,
@@ -138,7 +148,7 @@ class ReportController extends \yii\web\Controller
             $conditions[] = "e.code = :q_code";
             $params[':q_code'] = $qCode;
         }
-         $qWarehouseType = $searchModel->q_warehouse_type;
+        $qWarehouseType = $searchModel->q_warehouse_type;
         if (!empty($qWarehouseType)) {
             $conditions[] = "wo.warehouse_type = :warehouse_type";
             $params[':warehouse_type'] = $qWarehouseType;
@@ -626,6 +636,7 @@ class ReportController extends \yii\web\Controller
             $groupBy ?? null,
             $orderBy ?? null
         );
+        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         list($sql, $params) = StockEvent::buildStockOrderSql(
             $conditions,
@@ -634,7 +645,15 @@ class ReportController extends \yii\web\Controller
             $orderBy ?? null
         );
 
-        $querys = Yii::$app->db->createCommand($sql, $params)->queryAll();
+
+        //หาผลรวม
+        list($sqlSummary, $params) = StockEvent::buildStockOrderSql(
+            $conditions,
+            $params,
+            null,
+            null
+        );
+        $sum = Yii::$app->db->createCommand($sqlSummary, $params)->queryOne();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -791,8 +810,28 @@ class ReportController extends \yii\web\Controller
 
         $StartRow = 6;
         $number = 1;
+
+        function trunc2($v)
+        {
+            return floor($v * 100) / 100;
+        }
+
+
         foreach ($querys as $value) {
             $numRow = $StartRow++;
+            //สินค้าคงเหลือ
+            $begin   = trunc2($value['begin_price']) ?? 0;
+            //ซื้อระหว่างเดือน
+            $in      = trunc2($value['price_in']) ?? 0;
+            //สินค้าคงเหลือ+ซื้อระหว่างเดือน
+            $totalPriceBegin = trunc2($value['total_price_begin']);
+            $branch  = trunc2($value['branch_price_out']) ?? 0;
+            $sub     = trunc2($value['price_out']) ?? 0;
+            // จ่ายส่วนของ รพ.สต.+จ่ายส่วนของโรงพยาบาล
+            $totalPriceOut = trunc2($value['total_price_out']) ?? 0;
+            //สินค้าคงเหลือ
+            $endPrice     = trunc2($value['end_price']) ?? 0;
+
             // $total =  $value['balance_after'];
             // $a[] = ['B' => 'B'.$StartRow++];
             $sheet->setCellValue('A' . $numRow, $number++);
@@ -808,51 +847,51 @@ class ReportController extends \yii\web\Controller
             $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('B' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-
-            $sheet->setCellValue('C' . $numRow, ($value['begin_price']));
+            //สินค้าคงเหลือ
+            $sheet->setCellValue('C' . $numRow, $begin);
             $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('C' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('C' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            // $sheet->setCellValue('D' . $numRow, $value['sum_month']);
-            $sheet->setCellValue('D' . $numRow, $value['price_in']);
+            //ซื้อระหว่างเดือน
+            $sheet->setCellValue('D' . $numRow, $in);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-            $sheet->setCellValue('E' . $numRow, ($value['begin_price'] + $value['price_in']) ?? 0);
+            //สินค้าคงเหลือ+ซื้อระหว่างเดือน
+            $sheet->setCellValue('E' . $numRow, $totalPriceBegin);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('E' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('F' . $numRow, $value['branch_price_out']);
+            $sheet->setCellValue('F' . $numRow, $branch);
             $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('F' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('F' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('G' . $numRow, $value['price_out']);
+            $sheet->setCellValue('G' . $numRow, $sub);
             $sheet->getStyle('G' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('G' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('H' . $numRow, ($value['branch_price_out'] + $value['price_out'] ?? 0));
+            $sheet->setCellValue('H' . $numRow, $totalPriceOut);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('H' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-            $sheet->setCellValue('I' . $numRow, $value['end_price']);
+            $sheet->setCellValue('I' . $numRow, $endPrice);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle('I' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -877,7 +916,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
 
         $rowSum = 'C' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,C6:C' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['begin_price']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -885,7 +924,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'D' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,D6:D' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['price_in']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -893,7 +932,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'E' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,E6:E' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['total_price_begin']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -901,7 +940,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'F' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,F6:F' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['branch_price_out']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -909,7 +948,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'G' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,G6:G' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['price_out']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -917,7 +956,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'H' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,H6:H' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['total_price_out']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -925,7 +964,7 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowSum = 'I' . $StartRow;
-        $sheet->setCellValue($rowSum, '=SUBTOTAL(9,I6:I' . ($StartRow - 1) . ')');
+        $sheet->setCellValue($rowSum, trunc2($sum['end_price']) ?? 0);
         $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -978,15 +1017,7 @@ class ReportController extends \yii\web\Controller
         $sheet2->getColumnDimension('M')->setWidth(13);
 
         $StartRowSheet2 = 3;
-
-        // $params2 = [
-        //     ':date_start' => $dateStart,
-        //     ':date_end' => $dateEnd,
-        // ];
-
-        //         return $querys2;
-
-        $querys2 = $this->listQueryByItem($dateStart,$dateEnd);
+        $querys2 = $this->listQueryByItem($dateStart, $dateEnd);
 
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
@@ -1153,12 +1184,11 @@ ORDER BY
     CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED);";
 
 
-$query = Yii::$app->db->createCommand($sql, [
-        ':date_start' => $dateStart,
-        ':date_end' => $dateEnd,
-    ])->queryAll();
+        $query = Yii::$app->db->createCommand($sql, [
+            ':date_start' => $dateStart,
+            ':date_end' => $dateEnd,
+        ])->queryAll();
 
-        return $query;  
+        return $query;
     }
-
 }
