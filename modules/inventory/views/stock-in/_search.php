@@ -21,6 +21,7 @@ use yii\widgets\ActiveForm;
     ],
 ]); ?>
 <div class="row">
+       
     <div class="col-2">
          <?= $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
             'data' => $model->ListAssetOnWarehouse(),
@@ -37,7 +38,17 @@ use yii\widgets\ActiveForm;
     <div class="col-2">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-lg-5 col-md-5 col-sm-12">
+    <div class="col-3">
+         <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+            'data' => $model->listWareHouseMain(),
+            'options' => ['placeholder' => 'เลือกคลังสินค้า'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+    </div>
+    <div class="col-lg-3 col-md-3 col-sm-12">
         <?= $form->field($model, 'order_status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -48,13 +59,7 @@ use yii\widgets\ActiveForm;
         ])->label(false); ?>
     </div>
 
-    <div class="col-lg-1 col-md-1 col-sm-12">
-        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-filter"></i>
-        </button>
-    </div>
+    
 </div>
 
 
@@ -65,7 +70,7 @@ use yii\widgets\ActiveForm;
     <div class="col-2">
         <?= $form->field($model, 'po_number')->textInput(['placeholder' => 'เลขที่สั่งซื้อ'])->label(false) ?>
     </div>
-    <div class="col-lg-6 col-md-6 col-sm-12">
+    <div class="col-lg-5 col-md-5 col-sm-12">
         <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
             'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
@@ -75,6 +80,14 @@ use yii\widgets\ActiveForm;
         ])->label(false);
         ?>
     </div>
+    <div class="col-lg-1 col-md-1 col-sm-12">
+        <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary']) ?>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            aria-expanded="false" aria-controls="collapseFilter">
+            <i class="fa-solid fa-filter"></i>
+        </button>
+    </div>
+     
 </div>
 <div class="collapse mt-3" id="collapseFilter">
 

@@ -4,12 +4,12 @@ use yii\helpers\Html;
 use yii\bootstrap5\LinkPager;
 // คำนวณค่าเริ่มต้นของลำดับที
 ?>
+<span class="fw-semibold badge rounded-pill text-bg-light fs-6 mb-0"><?= $totalPrice ?></span>
 <table class="table table-striped table-sm">
     <thead>
         <tr>
             <th class="fw-semibold text-center" style="width:30px">ลำดับ</th>
             <th style="width:210px">รหัส/วันที่ขอ</th>
-            <th scope="col">ประเถท</th>
             <th scope="col">ผู้เบิก</th>
             <th>หัวหน้าตรวจสอบ</th>
             <th class="fw-semibold text-end">มูลค่า</th>
@@ -34,7 +34,6 @@ use yii\bootstrap5\LinkPager;
                     <p class="fw-semibold mb-0"><?= $item->code ?></p>
                     <p class="text-muted mb-0 fs-13"><?= $item->viewCreatedAt() ?></p>
                 </td>
-                <td><?= $item->assetType?->title ?? '-' ?></td>
                 <td>
                     <?php
                     try {
@@ -47,7 +46,8 @@ use yii\bootstrap5\LinkPager;
                 <td><?= $item->viewChecker()['avatar'] ?></td>
                 <td class="text-end">
                     <span class="fw-semibold">
-                        <?php echo $item->order_status == 'success' ? number_format($item->getTotalOrderPriceSuccess(), 2) : number_format($item->getTotalOrderPrice(), 2) ?>
+                        <?php // echo $item->order_status == 'success' ? number_format($item->getTotalOrderPriceSuccess(), 2) : number_format($item->getTotalOrderPrice(), 2) ?>
+                        <?php echo number_format($item->getTotalOrderPriceSuccess(), 2) ?>
                     </span>
                 </td>
                 <td class="text-center"><?= $item->viewMoveMentDate() ?></td>

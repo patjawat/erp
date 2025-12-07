@@ -58,27 +58,26 @@ function format_no_round($number, $decimals = 2)
                 <thead class="table-primary" style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th scope="col" class="text-center">ลำดับ</th>
-                        <th scope="col" class="text-start">ชื่อคลัง</th>
-                        <th scope="col" class="text-start">ประเภทคลัง</th>
-                        <th scope="col" class="text-start">ประเภทวัสดุ</th>
-                        <th scope="col" class="text-start">
+                        <th scope="col" class="text-start" style="width: 200px;">ประเภทวัสดุ</th>
+                        <th scope="col" class="text-start" style="width: 175px;">คลังหลัก</th>
+                        <th scope="col" class="text-start" style="width: 250px;">
                             <?php if ($searchModel->transaction_type == 'IN'): ?>
                                 ผู้ขาย
                             <?php elseif ($searchModel->transaction_type == 'OUT'): ?>
-                                คลังที่ขอเบิก
+                                คลังย่อย
                             <?php else: ?>
-                                ผู้ขาย/คลังที่ขอเบิก
+                                ผู้ขาย/คลังย่อย
                             <?php endif; ?>
                         </th>
                         <th scope="col" class="text-center">วันที่</th>
-                        <th scope="col" class="text-start">เลขที่</th>
-                        <th scope="col" class="text-center">ความเคลื่อนไหว</th>
-                        <th scope="col" class="text-start">รหัสวัสดุ</th>
+                        <th scope="col" class="text-start" style="width: 100px;">เลขที่</th>
+                        <th scope="col" class="text-center" style="width: 110px;">ความเคลื่อนไหว</th>
+                        <th scope="col" class="text-start" style="width: 90px;">รหัสวัสดุ</th>
                         <th scope="col" class="text-start">ชื่อวัสดุ</th>
                         <th scope="col" class="text-center">หน่วย</th>
                         <th scope="col" class="text-center">จำนวน</th>
-                        <th scope="col" class="text-end">ราคาต่อหน่วย</th>
-                        <th scope="col" class="text-end">รวมราคา</th>
+                        <th scope="col" class="text-end" style="width: 100px;">ราคาต่อหน่วย</th>
+                        <th scope="col" class="text-end" style="width: 150px;">รวมราคา</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -87,16 +86,9 @@ function format_no_round($number, $decimals = 2)
                     <?php foreach ($querys as $item): ?>
                         <tr>
                             <td class="text-center"><?= $n++ ?></td>
-                            <td><?= $item['warehouse_name'] ?></td>
-                            <td>
-                                <?php
-                                if ($item['warehouse_type'] == 'MAIN') echo 'คลังหลัก';
-                                elseif ($item['warehouse_type'] == 'SUB') echo 'คลังย่อย';
-                                elseif ($item['warehouse_type'] == 'BRANCH') echo 'คลังรพ.สต.';
-                                else echo '-';
-                                ?>
-                            </td>
                             <td><?= $item['asset_type_name'] ?></td>
+                            <td><?= $item['warehouse_name'] ?></td>
+                        
                             <td><?= $item['transaction_type'] == 'IN' ? $item['vendor_name'] : $item['form_warehouse_name'] ?></td>
                             <td><?= AppHelper::convertToThai($item['movement_date']); ?></td>
                             <td><?= $item['code'] ?></td>
@@ -114,7 +106,7 @@ function format_no_round($number, $decimals = 2)
                 <!-- ✅ ย้ายรวมราคามาใส่ใน <tfoot> เพื่อ fix footer -->
                 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
                     <tr class="fw-bold">
-                        <td colspan="13" class="fw-bold text-end">รวมราคาทั้งหมด</td>
+                        <td colspan="12" class="fw-bold text-end">รวมราคาทั้งหมด</td>
                         <td class="text-end"><?= format_no_round($totalPrice) ?></td>
                     </tr>
                 </tfoot>

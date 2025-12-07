@@ -4,14 +4,15 @@ namespace app\modules\inventory\controllers;
 
 use Yii;
 use yii\web\Response;
+use yii\db\Expression;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 // Microsoft Excel
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\inventory\models\StockEvent;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -137,6 +138,11 @@ class ReportController extends \yii\web\Controller
             $conditions[] = "e.code = :q_code";
             $params[':q_code'] = $qCode;
         }
+         $qWarehouseType = $searchModel->q_warehouse_type;
+        if (!empty($qWarehouseType)) {
+            $conditions[] = "wo.warehouse_type = :warehouse_type";
+            $params[':warehouse_type'] = $qWarehouseType;
+        }
 
 
         $where = implode(' AND ', $conditions);
@@ -144,6 +150,7 @@ class ReportController extends \yii\web\Controller
             v.code as vendor_id,
             v.title as vendor_name,
             wo.warehouse_name as form_warehouse_name,
+            wo.warehouse_type as form_warehouse_type,
             wi.warehouse_name,
             wi.warehouse_type,
             i.asset_item,
@@ -1153,4 +1160,5 @@ $query = Yii::$app->db->createCommand($sql, [
 
         return $query;  
     }
+
 }

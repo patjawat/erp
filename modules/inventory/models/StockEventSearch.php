@@ -46,6 +46,7 @@ class StockEventSearch extends StockEvent
                 'asset_type_id',
                 'q_asset_type',
                 'q_warehouse_id',
+                'q_warehouse_type',
                 'q_code',
                 'q_vendor',
                 'po_number'

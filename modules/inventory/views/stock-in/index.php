@@ -89,6 +89,7 @@ if (isset($warehouseModel->data_json['item_type'])) {
                 <tr>
                     <th class="text-center">#</th>
                     <th scope="col">รหัส/วันที่รับเข้าคลัง</th>
+                    <th>คลังหลัก</th>
                     <th>เลขทะเบียนคุม/ประเภทวัสดุ</th>
                     <th>รับจาก</th>
                     <th>เจ้าหน้าที่</th>
@@ -108,6 +109,7 @@ if (isset($warehouseModel->data_json['item_type'])) {
                                 <?= $item->viewMoveMentDate(); ?>
                             </div>
                         </td>
+                        <td><?=$item->warehouse->warehouse_name?></td>
                         <td class="fw-light align-middle">
                             <div class=" d-flex flex-column">
                                 <?php if (isset($item->purchase)): ?>

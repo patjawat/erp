@@ -56,6 +56,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public $q;
     public $q_asset_type;
     public $q_warehouse_id;
+    public $q_warehouse_type;
     public $mfgDate;
     public $expDate;
     public $note;
@@ -105,6 +106,7 @@ class StockEvent extends Yii\db\ActiveRecord
                 'asset_type_id',
                 'q_asset_type',
                 'q_warehouse_id',
+                'q_warehouse_type',
                 'q_vendor',
                 'q_code',
             ], 'safe'],
