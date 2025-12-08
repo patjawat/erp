@@ -105,7 +105,7 @@ foreach ($model->getItems() as $item): ?>
                     <td>คลังของผู้เบิก</td>
                     <td><?= $model->fromWarehouse->warehouse_name ?? '-' ?></td>
                     <td>มูลค่า</td>
-                    <td><span><?= number_format($model->getTotalOrderPrice(), 2) ?></span></td>
+                    <td><span><?= $model->getTotalOrderPrice() ?></span></td>
 
                 </tr>
                 <tr>

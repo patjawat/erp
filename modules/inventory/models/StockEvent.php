@@ -364,7 +364,7 @@ class StockEvent extends Yii\db\ActiveRecord
         $sql = "
         SELECT 
             IFNULL(
-                CAST(SUM(total_price) AS DECIMAL(10, 2))
+                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5))
             , 0) AS total 
         FROM `stock_events` 
         WHERE name = 'order_item' 
@@ -379,10 +379,33 @@ class StockEvent extends Yii\db\ActiveRecord
         return $total;
     }
 
+    //หาจำนวนราคาทั้งหมดของแต่ละชิ้น
+        public function itemSumTotalPrice()
+    {
+        $sql = "
+        SELECT 
+            IFNULL(
+                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5))
+            , 0) AS total 
+        FROM `stock_events` 
+        WHERE name = 'order_item' 
+          AND `id` = :id
+    ";
+
+        $total = \Yii::$app
+            ->db
+            ->createCommand($sql)
+            ->bindValue(':id', $this->id)
+            ->queryScalar();
+        return $total;
+    }
+
+
 
     public function getTotalOrderPriceSuccess()
     {
-        $sql = "SELECT IFNULL(SUM(qty * unit_price),0) as total FROM `stock_events` WHERE name = 'order_item' AND order_status = 'success' AND `category_id` = :category_id;";
+        $sql = "SELECT IFNULL(
+                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5)), 0) as total FROM `stock_events` WHERE name = 'order_item' AND order_status = 'success' AND `category_id` = :category_id;";
         $query = \Yii::$app
             ->db
             ->createCommand($sql)

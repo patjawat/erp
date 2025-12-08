@@ -127,7 +127,7 @@ if (isset($warehouseModel->data_json['item_type'])) {
                         <td><?= $item->CreateBy($item->viewMoveMentDate())['avatar']; ?></td>
                         </td>
                         <td class="text-end">
-                            <span class="fw-semibold "><?= number_format($item->getTotalOrderPrice(), 2); ?>
+                            <span class="fw-semibold "><?=$item->getTotalOrderPrice(); ?>
                             </span>
                         </td>
                         <td class="text-center"><?= $item->viewStatus(); ?></td>

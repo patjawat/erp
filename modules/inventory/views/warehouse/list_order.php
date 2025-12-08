@@ -47,7 +47,7 @@ use yii\bootstrap5\LinkPager;
                 <td class="text-end">
                     <span class="fw-semibold">
                         <?php // echo $item->order_status == 'success' ? number_format($item->getTotalOrderPriceSuccess(), 2) : number_format($item->getTotalOrderPrice(), 2) ?>
-                        <?php echo number_format($item->getTotalOrderPriceSuccess(), 2) ?>
+                        <?php echo$item->getTotalOrderPriceSuccess() ?>
                     </span>
                 </td>
                 <td class="text-center"><?= $item->viewMoveMentDate() ?></td>
