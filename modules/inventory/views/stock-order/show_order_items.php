@@ -16,12 +16,13 @@ $emp = UserHelper::GetEmployee();
     <thead class="table-primary">
         <tr>
             <th>รายการ</th>
-            <th class="text-end">ราคา</th>
             <th class="text-start">ล็อตผลิต</th>
             <th class="text-center">ขอเบิก</th>
             <th class="text-center">หน่วย</th>
             <th class="text-center">คงเหลือ</th>
             <th class="text-center">อนุมัติจ่าย</th>
+            <th class="text-end">ราคา/ต่อหน่วย</th>
+            <th class="text-end">รวม</th>
             <th class="text-center" scope="col" style="width:180px;">ดำเนินการ</th>
         </tr>
     </thead>
@@ -54,8 +55,7 @@ $emp = UserHelper::GetEmployee();
                 <td class="align-middle">
                     <?php echo $item->product?->Avatar(); ?></td>
 
-                <td class="align-middle text-end">
-                    <?php echo $item->unit_price !== null ? number_format($item->unit_price, 2) : '-'; ?></td>
+
                 <td class="align-middle text-start"><?= $item->lot_number; ?></td>
                 <td class="align-middle text-center">
                     <?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : '-'; ?></td>
@@ -99,7 +99,8 @@ $emp = UserHelper::GetEmployee();
                         <?= floatval($item->qty); ?>
                     <?php endif; ?>
                 </td>
-
+                <td class="align-middle text-end"><?php echo $item->unit_price !== null ? number_format($item->unit_price, 5) : '-'; ?></td>
+                <td class="align-middle text-end"><?php echo $item->unit_price !== null ? $item->itemSumTotalPrice() : '-'; ?></td>
                 <td class="text-center">
                     <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                         <div class="btn-group">

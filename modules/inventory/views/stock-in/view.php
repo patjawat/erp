@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'label' => 'มูลค่า',
-                            'value' => number_format($model->getTotalOrderPrice(), 2)
+                            'value' => $model->getTotalOrderPrice()
                         ],
                         [
                             'label' => 'สถานะ',
@@ -180,7 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="align-middle text-center">
                                     <?= isset($item->data_json['item_type']) ? $item->data_json['item_type'] : '-' ?></td>
                                 <td class="align-middle text-end">
-                                    <?= isset($item->unit_price) ? number_format($item->unit_price, 2) : '-' ?></td>
+                                    <?= isset($item->unit_price) ? $item->unit_price : '-' ?></td>
 
                                 <td class="align-middle text-center"><?= $item->qty ?></td>
 
@@ -190,8 +190,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="align-middle text-center">
                                     <?= $item->expDate ?></td>
                                 <td class="align-middle text-end">
-                                    <span class="fw-semibold">
-                                        <?php echo isset($item->total_price) ? number_format($item->total_price, 2) : '-' ?>
+                                  <span class="fw-semibold">
+                                      <?php echo $item->itemSumTotalPrice() ?>
                                     </span>
                                 </td>
                                 <td class="align-middle">

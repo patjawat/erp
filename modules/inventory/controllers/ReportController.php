@@ -164,7 +164,7 @@ class ReportController extends \yii\web\Controller
             wi.warehouse_name,
             wi.warehouse_type,
             i.asset_item,
-            i.qty AS item_qty,
+            CAST(i.qty AS DECIMAL(10,5)) AS item_qty,
              i.unit_price,
             a.title as asset_name,
             a.data_json->>'$.unit' AS unit,
@@ -175,8 +175,8 @@ class ReportController extends \yii\web\Controller
             e.transaction_type,
             e.movement_date,
             i.qty,
-            i.unit_price,
-            SUM(i.qty*i.unit_price) as end_price
+            CAST(i.unit_price AS DECIMAL(10,5)) AS unit_price,
+           CAST(SUM(i.qty * i.unit_price) AS DECIMAL(10,5)) AS end_price
                 FROM `stock_events` i
                 LEFT JOIN `stock_events` e ON e.id = i.category_id
                 LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
@@ -537,19 +537,20 @@ class ReportController extends \yii\web\Controller
         // ข้อมูลเริ่มแถวที่ 3
         // --------------------------------------------------
         $rowIndex = 3;
+        
         foreach ($querys as $r) {
             $sheet->fromArray([
                 $r['asset_item'],
                 $r['asset_name'],
                 $r['asset_type_name'],
-                (string)$r['begin_qty'],
-                (string)$r['begin_price'],
-                (string)$r['qty_in'],
-                (string)$r['price_in'],
-                (string)$r['total_qty_out'],
-                (string)$r['total_price_out'],
-                (string)$r['end_qty'],
-                (string)$r['end_price'],
+                $r['begin_qty'],
+                $r['begin_price'],
+                $r['qty_in'],
+                $r['price_in'],
+                $r['total_qty_out'],
+                $r['total_price_out'],
+                $r['end_qty'],
+                $r['end_price'],
             ], NULL, "A{$rowIndex}");
 
             // ทำตัวเลข (E-L) เป็นตัวหนาและกำหนด NumberFormat

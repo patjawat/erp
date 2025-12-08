@@ -861,6 +861,19 @@ class Order extends \yii\db\ActiveRecord
         return $name;
     }
 
+function cutDecimal($number, $precision = 5)
+{
+    $number = (string)$number;
+
+    if (strpos($number, '.') !== false) {
+        list($int, $dec) = explode('.', $number);
+        $dec = substr($dec, 0, $precision);
+        return $int . '.' . str_pad($dec, $precision, '0');
+    }
+
+    return $number . '.' . str_repeat('0', $precision);
+}
+
 
     // คำนวน vat
     function calculateVAT()
@@ -902,24 +915,16 @@ class Order extends \yii\db\ActiveRecord
                 break;
         }
 
-        // return [
-        //     'priceBeforeVAT' => round($priceBeforeVAT, 20),
-        //     'priceAfterVAT' => round($priceAfterVAT, 20),
-        //     'priceAfterVAT' => round($priceAfterVAT, 2),
-        //     'vatAmount' => round($vatAmount, 20),
-        //     'priceBeforeDiscount' => round($priceBeforeDiscount, 10),
-        //     'priceAfterDiscount' => round($priceAfterDiscount, 10)
-        // ];
-        return [
-            'priceBeforeVAT' => floor($priceBeforeVAT * 100) / 100,
-            'priceAfterVAT' => floor($priceAfterVAT * 100) / 100,
-            'priceAfterVAT' => floor($priceAfterVAT * 100) / 100,
-            'vatAmount' => floor($vatAmount * 100) / 100,
-            'priceBeforeDiscount' => floor($priceBeforeDiscount * 100) / 100,
-            'priceAfterDiscount' => floor($priceAfterDiscount * 100) / 100
-        ];
+       return [
+    'priceBeforeVAT' => $this->cutDecimal($priceBeforeVAT, 5),
+    'priceAfterVAT' => $this->cutDecimal($priceAfterVAT, 5),
+    'vatAmount' => $this->cutDecimal($vatAmount, 5),
+    'priceBeforeDiscount' => $this->cutDecimal($priceBeforeDiscount, 5),
+    'priceAfterDiscount' => $this->cutDecimal($priceAfterDiscount, 5),
+];
     }
 
+    
     public function getVat()
     {
         $priceWithVAT = ($this->SumPo() - $this->discount_price);
