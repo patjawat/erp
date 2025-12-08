@@ -24,49 +24,25 @@ use app\components\DateFilterHelper;
         <fieldset class="border p-3 rounded">
             <legend class="float-none w-auto px-2 fs-6">ค้นหาจากคำขอ</legend>
             <div class="row">
-                <div class="col-4">
-                    <?php
-                    echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-                        'data' =>  DateFilterHelper::getDropdownItems(),
-                        'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                        ],
-                        'pluginEvents' => [
-                            "select2:select" => "function(result) { 
-                                    $.ajax({
-                                        type: 'get',
-                                        url: '/depdrop/date-filter',
-                                        data:{date_filter:$(this).val()},
-                                        dataType: 'json',
-                                        success: function (res) {
-                                           $('#stockeventsearch-req_date_start').val(res.date_start)
-                                           $('#stockeventsearch-req_date_end').val(res.date_end)
-                                        }
-                                    });
-                            }",
-                        ]
-                    ])->label(false);
-                    ?>
-                </div>
-                <div class="col-4">
+
+                <div class="col-6">
                     <?= $form->field($model, 'req_date_start')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label(false); ?>
                 </div>
-                <div class="col-4">
+                <div class="col-6">
                     <?= $form->field($model, 'req_date_end')->textInput(['placeholder' => 'เลือกช่วงวันที่'])->label(false); ?>
                 </div>
             </div>
             <div class="row mt-2">
-                <div class="col-4">
-                    <?= $form->field($model, 'code')->textInput(['placeholder' => 'รหัสคำขอ..'])->label(false) ?>
+                <div class="col-6">
+                    <?= $form->field($model, 'q')->textInput(['placeholder' => 'รหัสคำขอ..'])->label(false) ?>
                 </div>
-                <div class="col-lg-8 col-md-6 col-sm-12">
+                <div class="col-lg-6 col-md-6 col-sm-12">
                     <?php
                     echo $form->field($model, 'from_warehouse_id')->widget(Select2::classname(), [
                         'data' => $model->listFormWarehouse(),
                         'options' => ['placeholder' => 'คลังทั้งหมด ...'],
                         'pluginOptions' => ['allowClear' => true],
-                        
+
                     ])->label(false);
                     ?>
                 </div>
@@ -98,40 +74,67 @@ use app\components\DateFilterHelper;
                     ])->label(false);
                     ?>
                 </div>
-                <div class="col-lg-3 col-md-3 col-sm-12">
-                        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-        'data' => $model->ListThaiYear(),
-        'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-        'pluginOptions' => [
-            'allowClear' => true,
-        ],
-    ])->label(false); ?>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
+                        'data' => $model->ListThaiYear(),
+                        'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ])->label(false); ?>
 
 
-                    </div>
-                <div class="col-lg-2 col-md-2 col-sm-12">
-                <div class="d-flex flex-row align-items-center gap-2">
-                    <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-                    <button class="btn btn-warning reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                        aria-expanded="false" aria-controls="collapseFilter">
-                        <i class="fa-solid fa-filter"></i>
-                    </button>
                 </div>
-            </div>
+
+
 
         </fieldset>
     </div>
 </div>
 
+<div class="row mt-3">
+    <div class="col-6">
+        <?= $form->field($model, 'warehouse_id')->widget(Select2::classname(), [
+            'data' => $model->listWareHouseMain(),
+            'options' => ['placeholder' => 'เลือกคลังสินค้า'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-12">
+        <?= $form->field($model, 'q_warehouse_type')->widget(Select2::classname(), [
+            'data' => ['SUB' => 'คลังย่อย', 'BRANCH' => 'คลังรพ.สต.'],
+            'options' => ['placeholder' => 'คลังย่อยทั้งหมด'],
+            'pluginEvents' => [
+                "select2:unselect" => "function() { 
+                }",
+                "select2:select" => "function() {
 
+                    }",
+            ],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+
+        ?>
+    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-12">
+                    <div class="d-flex flex-row align-items-center gap-2">
+                        <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
+                        <button class="btn btn-warning reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                            aria-expanded="false" aria-controls="collapseFilter">
+                            <i class="fa-solid fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+</div>
 
 
 <div class="d-flex justify-content-center gap-1">
-
-
-
-
 
     <!-- 
     <div class="form-group">

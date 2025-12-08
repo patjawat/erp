@@ -57,7 +57,7 @@ $createIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vi
                         <?php echo Html::a('<i class="fa-solid fa-angles-right"></i> แสดงท้ังหมด', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-sm btn-light rounded-pill','data' =>['pjax' => 0]]) ?>
                     </div>
                 </div>
-                <?= $this->render('list_order',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+                <?= $this->render('list_order',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider, 'totalPrice' =>($totalPrice ?? 0)])?>
             </div>
         </div>
     </div>

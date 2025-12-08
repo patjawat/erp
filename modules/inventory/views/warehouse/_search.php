@@ -18,7 +18,7 @@ use kartik\widgets\ActiveForm;
     ],
 ]); ?>
 <div class="row">
-    <div class="col-lg-7 col-md-7 col-sm-12">
+    <div class="col-lg-5 col-md-7 col-sm-12">
         <?= $form->field($model, 'warehouse_name')->textInput(['placeholder' => 'ระบุชื่อคลังที่ต้องการค้นหา...'])->label(false) ?>
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12">
