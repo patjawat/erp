@@ -97,8 +97,8 @@ function format_no_round($number, $decimals = 2)
                             <td><?= $item['asset_name'] ?></td>
                             <td class="text-center"><?= $item['unit'] ?></td>
                             <td class="text-center"><?= $item['item_qty'] ?></td>
-                            <td class="text-end"><?=$item['unit_price'] ?? 0 ?></td>
-                            <td class="text-end"><?= $item['end_price'] ?? 0 ?></td>
+                            <td class="text-end"><?=number_format($item['unit_price'],5) ?? 0 ?></td>
+                            <td class="text-end"><?= number_format($item['end_price'],5) ?? 0 ?></td>
                         </tr>
                         <?php $totalPrice += ($item['end_price']); ?>
                     <?php endforeach; ?>
@@ -107,7 +107,7 @@ function format_no_round($number, $decimals = 2)
                 <tfoot class="table-warning" style="position: sticky; bottom: 0; background-color: #ffeb3b; z-index: 9;">
                     <tr class="fw-bold">
                         <td colspan="12" class="fw-bold text-end">รวมราคาทั้งหมด</td>
-                        <td class="text-end"><?= $totalPrice ?></td>
+                        <td class="text-end fw-bold"><?= number_format($totalPrice,5) ?></td>
                     </tr>
                 </tfoot>
             </table>
