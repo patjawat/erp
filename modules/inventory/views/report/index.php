@@ -93,19 +93,19 @@ foreach ($querys as $item):
 
     <td>(<?= $item['asset_type_code'] ?>)<?= $item['asset_type_name'] ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($begin), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($begin, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($in), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($in, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceBegin), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($totalPriceBegin, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($branch), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($branch, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sub), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sub, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($totalPriceOut), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($totalPriceOut, 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($end), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($end, 5) ?></td>
 </tr>
 
 <?php endforeach; ?>
@@ -114,19 +114,19 @@ foreach ($querys as $item):
     <td></td>
     <td class="text-center">รวม</td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['begin_price']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['begin_price'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['price_in']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['price_in'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['total_price_begin']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['total_price_begin'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['branch_price_out']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['branch_price_out'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['price_out']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['price_out'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['total_price_out']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['total_price_out'], 5) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format(trunc2($sum['end_price']), 2) ?></td>
+    <td class="text-end fw-bolder"><?= number_format($sum['end_price'], 5) ?></td>
 </tr>
 
 </tbody>

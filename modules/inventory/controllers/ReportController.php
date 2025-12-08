@@ -287,8 +287,8 @@ class ReportController extends \yii\web\Controller
             }
 
             // ✔ ตัดทศนิยมราคา
-            $unitPrice = $trunc2($value['unit_price'] ?? 0);
-            $totalPrice = $trunc2($value['end_price'] ?? 0);
+            $unitPrice = $value['unit_price'] ?? 0;
+            $totalPrice = $value['end_price'] ?? 0;
 
             // ✔ ใส่ข้อมูลเป็น Number (ไม่ใช่ตัวหนังสือ)
             $sheet->setCellValue('A' . $numRow, $row++);
@@ -655,7 +655,7 @@ class ReportController extends \yii\web\Controller
         );
         $sum = Yii::$app->db->createCommand($sqlSummary, $params)->queryOne();
 
-        $spreadsheet = new Spreadsheet();
+       $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         // ตั้งชื่อแผ่นงาน
         $sheet->setTitle('สรุปวัสดุคงคลัง');
@@ -667,7 +667,7 @@ class ReportController extends \yii\web\Controller
         $sheet->mergeCells('D4:D5');
         $sheet->mergeCells('E4:E5');
         $sheet->mergeCells('F4:H4');
-        $sheet->mergeCells('I4:I4');
+        $sheet->mergeCells('I4:I5'); // แก้ไขเป็น I4:I5 เพื่อรวมเซลล์เหมือนคอลัมน์อื่นๆ
         // กำหนดความกว้างของคอลัมน์
         $sheet->getColumnDimension('A')->setWidth(8);
         $sheet->getColumnDimension('B')->setWidth(30);
@@ -679,8 +679,18 @@ class ReportController extends \yii\web\Controller
         $sheet->getColumnDimension('H')->setWidth(25);
         $sheet->getColumnDimension('I')->setWidth(30);
 
+        // ------------------------------------------------------------
+        // 1) ตั้ง Format สำหรับคอลัมน์ตัวเลขให้เป็น 0.00000 (สำหรับคอลัมน์ทั้งหมด)
+        // ------------------------------------------------------------
+        $numberColumns = ['C', 'D', 'E', 'F', 'G', 'H', 'I'];
+        foreach ($numberColumns as $col) {
+            // ✅ ใช้ '0.00000' สำหรับ 5 ตำแหน่ง
+            $sheet->getStyle($col . '6:' . $col . (count($querys) + 6))->getNumberFormat()->setFormatCode('0.00000');
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ส่วนหัวรายงาน
         $rowF1 = 'F1';
-        // $sheet->setCellValue($rowF1, 'สรุปงานวัสดุคงคลัง ' . ($warehouse ? $warehouse->warehouse_name : 'ทั้งหมด'));
         $sheet->setCellValue($rowF1, 'สรุปงานวัสดุคงคลัง');
         $sheet->getStyle($rowF1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowF1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
@@ -699,8 +709,6 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowF3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $rowG2 = 'G2';
-        // $monthName = AppHelper::getMonthName($params['receive_month']);
-        // $sheet->setCellValue($rowG2, $monthName);
         $sheet->getStyle($rowG2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowG2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowG2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
@@ -712,265 +720,119 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle($rowG3)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowG3)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-        $rowA = 'A4';
-        $sheet->setCellValue($rowA, 'ที่');
-        $sheet->getStyle($rowA)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowA)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowA)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowA)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('A5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('A5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowA)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        // ส่วนหัวตาราง (A4:I5)
+        $sheet->setCellValue('A4', 'ที่');
+        $sheet->setCellValue('B4', 'รายการ');
+        $sheet->setCellValue('C4', 'สินค้าคงเหลือ');
+        $sheet->setCellValue('D4', 'ซื้อระหว่างเดือน');
+        $sheet->setCellValue('E4', 'รวม');
+        $sheet->setCellValue('F4', 'สินค้าที่ใช้ไป');
+        $sheet->setCellValue('I4', 'สินค้าคงเหลือ'); // รวมเซลล์แล้ว
+        $sheet->setCellValue('A5', ''); // A4:A5 รวมแล้ว
+        $sheet->setCellValue('B5', ''); // B4:B5 รวมแล้ว
+        $sheet->setCellValue('C5', ''); // C4:C5 รวมแล้ว
+        $sheet->setCellValue('D5', ''); // D4:D5 รวมแล้ว
+        $sheet->setCellValue('E5', ''); // E4:E5 รวมแล้ว
+        $sheet->setCellValue('F5', 'จ่ายส่วนของ รพ.สต.');
+        $sheet->setCellValue('G5', 'จ่ายส่วนของโรงพยาบาล');
+        $sheet->setCellValue('H5', 'รวม');
+        $sheet->setCellValue('I5', ''); // I4:I5 รวมแล้ว
 
-        $rowB = 'B4';
-        $sheet->setCellValue($rowB, 'รายการ');
-        $sheet->getStyle($rowB)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowB)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowB)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowB)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('B5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('B5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowB)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        // จัดรูปแบบและเส้นขอบส่วนหัวตาราง
+        $headerRange = 'A4:I5';
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet->getStyle($headerRange)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-        $rowC = 'C4';
-        $sheet->setCellValue($rowC, 'สินค้าคงเหลือ');
-        $sheet->getStyle($rowC)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowC)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowC)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowC)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('C5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('C5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowC)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowD = 'D4';
-        $sheet->setCellValue($rowD, 'ซื้อระหว่างเดือน');
-        $sheet->getStyle($rowD)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowD)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowD)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowD)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('D5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('D5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowD)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowE = 'E4';
-        $sheet->setCellValue($rowE, 'รวม');
-        $sheet->getStyle($rowE)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowE)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowE)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowE)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('E5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('E5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowD)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowF = 'F4';
-        $sheet->setCellValue($rowF, 'สินค้าที่ใช้ไป');
-        $sheet->getStyle($rowF)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowF)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowF)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowF)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowF)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowF5 = 'F5';
-        $sheet->setCellValue($rowF5, 'จ่ายส่วนของ รพ.สต.');
-        $sheet->getStyle($rowF5)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowF5)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowF5)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowF5)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowF5)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowG = 'G5';
-        $sheet->setCellValue($rowG, 'จ่ายส่วนของโรงพยาบาล');
-        $sheet->getStyle($rowG)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowG)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowG)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowG)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('G4')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('G4')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowG)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowH = 'H5';
-        $sheet->setCellValue($rowH, 'รวม');
-        $sheet->getStyle($rowH)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowH)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowH)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowH)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('H4')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('H4')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowH)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowI = 'I4';
-        $sheet->setCellValue($rowI, 'สินค้าคงเหลือ');
-        $sheet->getStyle($rowI)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowI)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowI)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowI)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('I5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle('I5')->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle('I5')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
         $StartRow = 6;
         $number = 1;
 
-        function trunc2($v)
-        {
-            return floor($v * 100) / 100;
-        }
-
-
+        // ส่วนแสดงข้อมูลแต่ละรายการ
         foreach ($querys as $value) {
             $numRow = $StartRow++;
             //สินค้าคงเหลือ
-            $begin   = trunc2($value['begin_price']) ?? 0;
+            $begin   = $value['begin_price'] ?? 0;
             //ซื้อระหว่างเดือน
-            $in      = trunc2($value['price_in']) ?? 0;
+            $in      = $value['price_in'] ?? 0;
             //สินค้าคงเหลือ+ซื้อระหว่างเดือน
-            $totalPriceBegin = trunc2($value['total_price_begin']);
-            $branch  = trunc2($value['branch_price_out']) ?? 0;
-            $sub     = trunc2($value['price_out']) ?? 0;
+            $totalPriceBegin = $value['total_price_begin'] ?? 0;
+            $branch  = $value['branch_price_out'] ?? 0;
+            $sub     = $value['price_out'] ?? 0;
             // จ่ายส่วนของ รพ.สต.+จ่ายส่วนของโรงพยาบาล
-            $totalPriceOut = trunc2($value['total_price_out']) ?? 0;
+            $totalPriceOut = $value['total_price_out'] ?? 0;
             //สินค้าคงเหลือ
-            $endPrice     = trunc2($value['end_price']) ?? 0;
+            $endPrice     = $value['end_price'] ?? 0;
 
-            // $total =  $value['balance_after'];
-            // $a[] = ['B' => 'B'.$StartRow++];
             $sheet->setCellValue('A' . $numRow, $number++);
             $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('A' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('A' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('A' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('A' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-
             $sheet->setCellValue('B' . $numRow, $value['asset_type_name']);
             $sheet->getStyle('B' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $sheet->getStyle('B' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('B' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('B' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            //สินค้าคงเหลือ
+
+            // สินค้าคงเหลือ (C)
             $sheet->setCellValue('C' . $numRow, $begin);
             $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('C' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('C' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('C' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-            //ซื้อระหว่างเดือน
+            // ซื้อระหว่างเดือน (D)
             $sheet->setCellValue('D' . $numRow, $in);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('D' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('D' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('D' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-            //สินค้าคงเหลือ+ซื้อระหว่างเดือน
+            // รวม (E)
             $sheet->setCellValue('E' . $numRow, $totalPriceBegin);
             $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('E' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('E' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('E' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
+            // จ่ายส่วนของ รพ.สต. (F)
             $sheet->setCellValue('F' . $numRow, $branch);
             $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('F' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('F' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('F' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
+            // จ่ายส่วนของโรงพยาบาล (G)
             $sheet->setCellValue('G' . $numRow, $sub);
             $sheet->getStyle('G' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('G' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('G' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('G' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
+            // รวม (H)
             $sheet->setCellValue('H' . $numRow, $totalPriceOut);
             $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('H' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('H' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('H' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
+            // สินค้าคงเหลือ (I)
             $sheet->setCellValue('I' . $numRow, $endPrice);
             $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('I' . $numRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('I' . ($numRow))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('I' . ($numRow))->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('I' . ($numRow))->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+
+            // จัดรูปแบบตัวอักษรและเส้นขอบสำหรับแถวข้อมูล
+            $dataRowRange = 'A' . $numRow . ':I' . $numRow;
+            $sheet->getStyle($dataRowRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle($dataRowRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle($dataRowRange)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle($dataRowRange)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+            $sheet->getStyle('C' . $numRow . ':I' . $numRow)->getFont()->setBold(true);
+
+            // ✅ ตรวจสอบให้แน่ใจว่าได้ใช้ '0.00000' สำหรับแถวข้อมูลแต่ละแถว
+            $sheet->getStyle('C' . $numRow . ':I' . $numRow)->getNumberFormat()->setFormatCode('0.00000');
         }
 
         // หาผลรวม
-        $rowSum = 'A' . $StartRow;
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+        $rowSum = $StartRow;
+        $sumRange = 'A' . $rowSum . ':I' . $rowSum;
 
-        $rowSum = 'B' . $StartRow;
-        $sheet->setCellValue($rowSum, 'รวม');
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
+        $sheet->setCellValue('B' . $rowSum, 'รวม');
+        $sheet->getStyle('B' . $rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $rowSum = 'C' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['begin_price']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->setCellValue('C' . $rowSum, $sum['begin_price'] ?? 0);
+        $sheet->setCellValue('D' . $rowSum, $sum['price_in'] ?? 0);
+        $sheet->setCellValue('E' . $rowSum, $sum['total_price_begin'] ?? 0);
+        $sheet->setCellValue('F' . $rowSum, $sum['branch_price_out'] ?? 0);
+        $sheet->setCellValue('G' . $rowSum, $sum['price_out'] ?? 0);
+        $sheet->setCellValue('H' . $rowSum, $sum['total_price_out'] ?? 0);
+        $sheet->setCellValue('I' . $rowSum, $sum['end_price'] ?? 0);
 
-        $rowSum = 'D' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['price_in']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        // จัดรูปแบบแถวผลรวม
+        $sheet->getStyle($sumRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($sumRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($sumRange)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet->getStyle($sumRange)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-        $rowSum = 'E' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['total_price_begin']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        // ✅ ตั้งค่าทศนิยม 5 ตำแหน่งสำหรับแถวผลรวม
+        $sheet->getStyle('C' . $rowSum . ':I' . $rowSum)->getNumberFormat()->setFormatCode('0.00000');
+        $sheet->getStyle('C' . $rowSum . ':I' . $rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-        $rowSum = 'F' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['branch_price_out']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
 
-        $rowSum = 'G' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['price_out']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowSum = 'H' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['total_price_out']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
-        $rowSum = 'I' . $StartRow;
-        $sheet->setCellValue($rowSum, trunc2($sum['end_price']) ?? 0);
-        $sheet->getStyle($rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle($rowSum)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle($rowSum)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet->getStyle($rowSum)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-
+        // ❌ ลบโค้ดนี้ออก เพราะมันจะเปลี่ยน format เป็น 2 ตำแหน่ง
+        /*
         $endRow = $StartRow;
         $sheet->getStyle('C2:C' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet->getStyle('D2:D' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
@@ -979,8 +841,9 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('G2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet->getStyle('H2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
         $sheet->getStyle('I2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        */
 
-        // // เพิ่มแผ่นงานที่สอง
+        // --- เริ่มต้นแผ่นงานที่สอง (สรุปรายการ) ---
         $sheet2 = $spreadsheet->createSheet();  // สร้างแผ่นงานใหม่
         $sheet2->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
 
@@ -1021,7 +884,7 @@ class ReportController extends \yii\web\Controller
 
         foreach ($querys2 as $key => $value) {
             $numRow = $StartRowSheet2++;
-            $sheet2->setCellValue('A' . $numRow, $numRow);
+            $sheet2->setCellValue('A' . $numRow, $key + 1); // เปลี่ยนจาก $numRow เป็น $key + 1 เพื่อให้เป็นลำดับที่
             $sheet2->setCellValue('B' . $numRow, $value['asset_item']);
             $sheet2->setCellValue('C' . $numRow, $value['asset_name']);
             $sheet2->setCellValue('D' . $numRow, $value['asset_type_name']);
@@ -1035,50 +898,63 @@ class ReportController extends \yii\web\Controller
             $sheet2->setCellValue('L' . $numRow, $value['end_qty']);
             $sheet2->setCellValue('M' . $numRow, $value['end_price']);
         }
+        $dataEndRow = $StartRowSheet2 - 1; // แถวสุดท้ายของข้อมูลจริง
 
         // เปิด AutoFilter
-        $sheet2->setAutoFilter("A2:M" . ($StartRowSheet2));
+        $sheet2->setAutoFilter("A2:M" . ($dataEndRow));
 
-        // ตั้งค่ารูปแบบ
-        $setHeader = 'A1:Z3000';
-        $sheet2->getStyle($setHeader)->getFont()->setName('TH Sarabun New')->setSize(16);
-        $sheet2->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet2->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet2->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet2->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-        $sheet2->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
+        // ตั้งค่ารูปแบบพื้นฐาน
+        $fullRangeSheet2 = 'A1:M' . $dataEndRow;
+        $sheet2->getStyle($fullRangeSheet2)->getFont()->setName('TH Sarabun New')->setSize(16);
+        $sheet2->getStyle($fullRangeSheet2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet2->getStyle($fullRangeSheet2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet2->getStyle($fullRangeSheet2)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet2->getStyle($fullRangeSheet2)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+        $sheet2->getStyle('A1:M2')->getFill()->getStartColor()->setRGB('8DB4E2'); // ใส่สีพื้นหลังหัวตาราง
         $sheet2->getStyle('A1:M2')->getFont()->setBold(true);
 
-        // SUBTOTAL แถวบน
-        $sheet2->setCellValue('G1', '=SUBTOTAL(9,G3:G' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('G1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . (count($querys2) + 2) . ')');
-        $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        // ✅ ตั้งค่าทศนิยม 5 ตำแหน่งสำหรับคอลัมน์มูลค่า (G, I, K, M)
+        $valueColumnsSheet2 = ['G', 'I', 'K', 'M'];
+        foreach ($valueColumnsSheet2 as $col) {
+            $range = $col . '3:' . $col . $dataEndRow;
+            $sheet2->getStyle($range)->getNumberFormat()->setFormatCode('0.00000');
+            $sheet2->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
+        // หากคอลัมน์จำนวน (F, H, J, L) ต้องเป็นทศนิยม 5 ตำแหน่งด้วย ให้ใช้โค้ดนี้:
+        $qtyColumnsSheet2 = ['F', 'H', 'J', 'L'];
+        foreach ($qtyColumnsSheet2 as $col) {
+            $range = $col . '3:' . $col . $dataEndRow;
+            $sheet2->getStyle($range)->getNumberFormat()->setFormatCode('0.00000');
+            $sheet2->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
 
-        // กำหนด alignment เพิ่มเติม (เฉพาะที่จำเป็น)
-        $rowsheet2B = 'B3:B' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2B)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2B)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        // SUBTOTAL แถวบน (Row 1)
+        $totalRowFormula = count($querys2) + 2; // แถวสุดท้ายของข้อมูล + 2 (A1)
+        
+        $sheet2->setCellValue('G1', '=SUBTOTAL(9,G3:G' . $totalRowFormula . ')');
+        $sheet2->getStyle('G1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . $totalRowFormula . ')');
+        $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . $totalRowFormula . ')');
+        $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . $totalRowFormula . ')');
+        $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . $totalRowFormula . ')');
+        $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . $totalRowFormula . ')');
+        $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
+        
+        $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . $totalRowFormula . ')');
+        $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
 
-        $rowsheet2C = 'C3:C' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2C)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2C)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        // กำหนด alignment เพิ่มเติมสำหรับคอลัมน์ข้อความ/รหัส
+        $sheet2->getStyle('B3:D' . $dataEndRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
-        $rowsheet2D = 'D3:D' . (count($querys2) + 2);
-        $sheet2->getStyle($rowsheet2D)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet2->getStyle($rowsheet2D)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-
-        // ... (ส่วนจัด alignment คอลัมน์ F–M สามารถคงไว้ได้เหมือนเดิม)
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/myStock.xlsx';
