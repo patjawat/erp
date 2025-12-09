@@ -44,6 +44,7 @@ $group = Yii::$app->request->get('group');
 <div class="d-flex flex-column gap-4 pb-5">
 
     <div class="px-0">
+        <form class="row g-4">
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header bg-white">
@@ -88,9 +89,9 @@ $group = Yii::$app->request->get('group');
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-2">
-                                <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
-                            </div>
+                             <div class="col-md-2">
+                            <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
+                        </div>
 
                             <div class="col-md-4">
                                 <?php
@@ -127,44 +128,44 @@ $group = Yii::$app->request->get('group');
                                 ?>
                             </div>
                             <div class="col-md-3">
-                                <?php
-                                echo $form->field($model, 'purchase')->widget(Select2::classname(), [
-                                    'data' => $model->ListPurchase(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
+                            <?php
+                            echo $form->field($model, 'purchase')->widget(Select2::classname(), [
+                                'data' => $model->ListPurchase(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
                                             var data = $(this).select2('data')[0]
                                             $('#asset-data_json-purchase_text').val(data.text)
                                         }",
-                                    ]
-                                ])->label('วิธีการได้มา');
-                                ?>
+                                ]
+                            ])->label('วิธีการได้มา');
+                            ?>
                             </div>
                             <div class="col-md-6"><label class="form-label fw-medium">รหัสงบ GFMIS (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
                             <div class="col-md-6"><label class="form-label fw-medium">เลขที่สัญญา (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
                             <div class="col-md-6">
-                                <?php
-                                echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
-                                    'data' => $model->ListVendor(),
-                                    'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
+                                 <?php
+                            echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
+                                'data' => $model->ListVendor(),
+                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
                                             var data = $(this).select2('data')[0]
                                             $('#asset-data_json-vendor_text').val(data.text)
                                          }",
-                                    ]
-                                ])->label('ซื้อจาก');
-                                ?>
+                                ]
+                            ])->label('ซื้อจาก');
+                            ?>
                             </div>
                             <div class="col-md-3"><label class="form-label fw-medium">วันที่รับ</label><input type="date" class="form-control" value="2010-01-15"></div>
                             <div class="col-md-3">
-                                <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('วงเงิน') ?>
+                                 <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('วงเงิน') ?>
                             </div>
                         </div>
                     </div>
@@ -180,53 +181,135 @@ $group = Yii::$app->request->get('group');
                             <div class="col-md-4"><label class="form-label fw-medium">ไฟล์สแกนโฉนด</label><input type="file" class="form-control"></div>
                             <div class="col-md-4"><label class="form-label fw-medium">ใบอนุญาตใช้น้ำ (ถ้ามี)</label><input type="file" class="form-control"></div>
                             <div class="col-md-4"><label class="form-label fw-medium">ภาพถ่าย</label><input type="file" class="form-control" accept="image/*"></div>
-                            <div class="col-12">
-                                <?= $form->field($model, 'data_json[land_address]')->textArea(['maxlength' => true])->label('ที่ตั้ง') ?>
-                                <?= $model->upload('asset') ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?php
-                                echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                                    'data' => $model->ListAssetStatus(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก...'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-method_get_text').val(data.text)
-                                         }",
-                                    ]
-                                ])->label('สถานะ');
-                                ?>
-                            </div>
-                            <div class="col-6">
-<div class="col-12 d-flex justify-content-end gap-2 py-4">
-                <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
-                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
-            </div>
-                            </div>
+                            <div class="col-12"><?= $form->field($model, 'data_json[land_address]')->textArea(['maxlength' => true])->label('ที่ตั้ง') ?></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div>
-            </div>
-            
 
+            <div class="col-12 d-flex justify-content-end gap-2 py-4"><button type="button" class="btn btn-outline-secondary btn-lg">ย้อนกลับ</button><button type="submit" class="btn btn-primary btn-lg d-flex align-items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save">
+                        <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path>
+                        <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"></path>
+                        <path d="M7 3v4a1 1 0 0 0 1 1h7"></path>
+                    </svg> บันทึกข้อมูล</button></div>
+        </form>
     </div>
 </div>
 
 
 
 
+<div class="card">
+    <div class="card-body">
 
+
+        <h5 class="section-title">ข้อมูลทั่วไป</h5>
+        <div class="form-section">
+            <div class="row">
+                <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                    <!-- ข้อมูลทั่วไป -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+
+                        </div>
+                        <div class="col-md-6">
+
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center justify-content-between">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="row">
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                <!-- ข้อมูลงบประมาณ -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลงบประมาณ</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+
+                        </div>
+
+                        <div class="col-md-4">
+                           
+                        </div>
+
+                       
+
+
+                        <div class="col-md-6">
+                            <?php
+                            echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+                                'data' => $model->ListAssetStatus(),
+                                'options' => ['placeholder' => 'กรุณาเลือก...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('สถานะ');
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                <!-- ข้อมูลการได้มา -->
+                <div class="form-section">
+                    <div class="row g-3">
+
+
+                        <div class="col-md-6 purchase-method-field">
+
+                        </div>
+
+                        <div class="col-md-6">
+                           
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="documentRef" class="form-label">เลขที่เอกสารอ้างอิง</label>
+                            <input type="text" class="form-control" id="documentRef"
+                                placeholder="เช่น เลขที่สัญญา, ใบสั่งซื้อ">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <?= $model->upload('asset') ?>
+    </div>
+</div>
 
 <!-- ปุ่มดำเนินการ -->
 <div class="row mt-4">
     <div class="col-12 d-flex justify-content-center">
+        <div>
+            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
+            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
 
+        </div>
     </div>
 </div>
 

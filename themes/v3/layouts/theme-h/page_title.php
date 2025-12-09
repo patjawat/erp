@@ -16,15 +16,15 @@ use yii\bootstrap5\Breadcrumbs;
                   <div class="d-flex flex-column flex-lg-row justify-content-lg-between">
                      <div>
                         <div class="page-title"  data-aos="fade-left">
-                          <?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : '';?>
-                          <?= Breadcrumbs::widget([
-                                 'encodeLabels' => false,
-                                 'homeLink' => [
-                                    'label' => '<i class="bi bi-house"></i> หน้าหลัก',
-                                    'url' => '/',
-                                ],
-								'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
-								]) ?>
+                           <?= Breadcrumbs::widget([
+                              'encodeLabels' => false,
+                              'homeLink' => [
+                                 'label' => '<i class="bi bi-house"></i> หน้าหลัก',
+                                 'url' => '/',
+                              ],
+                              'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
+                              ]) ?>
+                              <?=isset($this->blocks['page-title']) ? $this->blocks['page-title'] : '';?>
                         </div>
                      </div>
                      <div>
