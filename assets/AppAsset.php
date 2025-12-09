@@ -22,32 +22,25 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
 
     public $css = [
-        // "css/site.css",
         'css/custom.css',
-        // "css/v2.css",
-        // "css/docs.css",
         'css/fontawesome-free-6.6.0-web/css/all.css',
         'css/bootstrap-icons.min.css',
         'aos/aos.css',
         'sweetalert2/dist/sweetalert2.css',
         'apexcharts/apexcharts.css',
-        // 'css/style.min.css',
         'css/waves.min.css',
         'https://unpkg.com/nprogress@0.2.0/nprogress.css',
         'css/tour.min.css',
-        'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
+        // 'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
         'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
     ];
 
     public $js = [
-        // 'js/v2.js',
         'js/erp.js',
         'js/waves.js',
         'js/thai.datepicker.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js',
+        // 'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js',
         'js/fullcalendar.min.js',
-        // 'js/erp-app.js',
-        // 'js/vendor-app.min.js',
         'sweetalert2/dist/sweetalert2.all.min.js',
         'aos/aos.js',
         'apexcharts/apexcharts.min.js',
@@ -55,7 +48,7 @@ class AppAsset extends AssetBundle
         'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js', // lazyload รูปภาพ
         // 'https://code.highcharts.com/highcharts.js',
         // 'https://code.highcharts.com/modules/exporting.js',
-        'https://unpkg.com/nprogress@0.2.0/nprogress.js',
+        // 'https://unpkg.com/nprogress@0.2.0/nprogress.js',
         'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
