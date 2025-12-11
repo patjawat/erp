@@ -136,7 +136,7 @@ $this->title = 'ทรัพย์สิน';
                         <th class="py-2 text-center text-dark" style="font-weight: 600; font-size: 1rem;">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody>
+               <tbody>
                     <tr>
                         <td class="text-center text-muted fw-medium py-2" style="font-size: 1rem;">1</td>
                         <td class="py-2">
@@ -155,9 +155,10 @@ $this->title = 'ทรัพย์สิน';
                         </td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center gap-1">
-                                <button class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
+                                <a href="<?= \yii\helpers\Url::to(['view', 'id' => 1]) ?>" ...>
+                                <a href="<?= \yii\helpers\Url::to(['/dev/asset/view', 'id' => 1]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
+                                </a>
                                 <button class="btn btn-icon btn-ghost-secondary" title="แก้ไข">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>
                                 </button>
@@ -189,9 +190,9 @@ $this->title = 'ทรัพย์สิน';
                         </td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center gap-1">
-                                <button class="btn btn-icon btn-ghost-secondary">
+                                <a href="<?= \yii\helpers\Url::to(['view', 'id' => 2]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
+                                </a>
                                 <button class="btn btn-icon btn-ghost-secondary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>
                                 </button>
@@ -223,9 +224,9 @@ $this->title = 'ทรัพย์สิน';
                         </td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center gap-1">
-                                <button class="btn btn-icon btn-ghost-secondary">
+                                <a href="<?= \yii\helpers\Url::to(['view', 'id' => 3]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
+                                </a>
                                 <button class="btn btn-icon btn-ghost-secondary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>
                                 </button>
@@ -257,9 +258,9 @@ $this->title = 'ทรัพย์สิน';
                         </td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center gap-1">
-                                <button class="btn btn-icon btn-ghost-secondary">
+                                <a href="<?= \yii\helpers\Url::to(['view', 'id' => 4]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
+                                </a>
                                 <button class="btn btn-icon btn-ghost-secondary">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>
                                 </button>
