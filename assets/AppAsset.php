@@ -29,31 +29,26 @@ class AppAsset extends AssetBundle
         'sweetalert2/dist/sweetalert2.css',
         'apexcharts/apexcharts.css',
         'css/waves.min.css',
-        'https://unpkg.com/nprogress@0.2.0/nprogress.css',
+        'css/nprogress/nprogress.css',
         'css/tour.min.css',
-        // 'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css',
-        'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
+        'libs/datepicker/jquery.datetimepicker.css',
+        'libs/animate.css/animate.min.css'
     ];
 
     public $js = [
         'js/erp.js',
         'js/waves.js',
         'js/thai.datepicker.js',
-        // 'https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js',
+        'libs/datepicker/jquery.datetimepicker.full.min.js',
         'js/fullcalendar.min.js',
         'sweetalert2/dist/sweetalert2.all.min.js',
         'aos/aos.js',
         'apexcharts/apexcharts.min.js',
         'chart-assets/echart/echarts.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js', // lazyload รูปภาพ
-        // 'https://code.highcharts.com/highcharts.js',
-        // 'https://code.highcharts.com/modules/exporting.js',
-        // 'https://unpkg.com/nprogress@0.2.0/nprogress.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
-        // 'js/tour.js'
-        // 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
+        'libs/lazysizes/lazysizes.min.js', // lazyload รูปภาพ
+        'libs/fabric.js/5.3.0/fabric.min.js',
+        'libs/jspdf/jspdf.umd.min.js',
+        'libs/pdf/pdf.min.js'
     ];
 
     public $depends = [
