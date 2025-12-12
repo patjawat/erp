@@ -453,7 +453,7 @@ class Asset extends \yii\db\ActiveRecord
         // $data = ['icon' => '','color' => ''];
         switch ($status) {
             case $status == 1:
-                $data = ['icon' => '<i class="bi bi-clipboard-check"></i>', 'color' => 'success'];
+                $data = ['icon' => '', 'color' => 'success'];
                 break;
             case $status == 2:
                 $data = ['icon' => '<i class="fa-solid fa-circle-xmark"></i>', 'color' => 'secondary'];
@@ -473,7 +473,7 @@ class Asset extends \yii\db\ActiveRecord
                 break;
         }
 
-        return '<label class="status-badge text-white status-active bg-' . $data['color'] . ' text-truncate">' . $data['icon'] . ' ' . $this->statusName() . '</label>';
+        return '<span class="badge bg-' . $data['color'] . ' bg-opacity-10 text-success border border-' . $data['color'] . '-subtle rounded-pill fw-medium px-2 py-1">' . $this->statusName() . '</span>';
     }
 
     public function QrCode()
