@@ -1,6 +1,4 @@
 <?php
-// $this->registerCssFile('https://cdn.jsdelivr.net/npm/jstree/dist/themes/default/style.min.css');
-// $this->registerJsFile('https://cdn.jsdelivr.net/npm/jstree/dist/jstree.min.js', ['depends'=>[\yii\web\JqueryAsset::class]]);
 $getUrl = \yii\helpers\Url::to(['tree/get-nodes']);
 $createUrl = \yii\helpers\Url::to(['tree/create-node']);
 $renameUrl = \yii\helpers\Url::to(['tree/rename-node']);

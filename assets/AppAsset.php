@@ -29,10 +29,9 @@ class AppAsset extends AssetBundle
         'sweetalert2/dist/sweetalert2.css',
         'apexcharts/apexcharts.css',
         'css/waves.min.css',
-        'css/nprogress/nprogress.css',
         'css/tour.min.css',
         'libs/datepicker/jquery.datetimepicker.css',
-        'libs/animate.css/animate.min.css'
+        'libs/animate/animate.min.css'
     ];
 
     public $js = [
@@ -46,7 +45,7 @@ class AppAsset extends AssetBundle
         'apexcharts/apexcharts.min.js',
         'chart-assets/echart/echarts.min.js',
         'libs/lazysizes/lazysizes.min.js', // lazyload รูปภาพ
-        'libs/fabric.js/5.3.0/fabric.min.js',
+        'libs/fabric/fabric.min.js',
         'libs/jspdf/jspdf.umd.min.js',
         'libs/pdf/pdf.min.js'
     ];

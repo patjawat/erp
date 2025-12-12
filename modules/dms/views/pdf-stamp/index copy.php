@@ -1,7 +1,7 @@
 
 <?php
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', ['position' => \yii\web\View::POS_HEAD]);
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js', ['position' => \yii\web\View::POS_HEAD]);
+// $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', ['position' => \yii\web\View::POS_HEAD]);
+// $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js', ['position' => \yii\web\View::POS_HEAD]);
 ?>
 
 <div class="row">

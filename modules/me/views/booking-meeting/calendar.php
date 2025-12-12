@@ -1,13 +1,7 @@
 <?php
 
 use yii\web\View;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use app\modules\booking\models\Meeting;
 
-
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $this->title = 'ระบบจองห้องประชุม';
 $this->params['breadcrumbs'][] = $this->title;

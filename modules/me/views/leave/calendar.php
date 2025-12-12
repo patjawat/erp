@@ -13,8 +13,6 @@ $thaiYear = AppHelper::YearBudget();
 
 $listLeaveType = Categorise::find()->where(['name' => 'leave_type'])->all();
 $listLeaveStatus = Categorise::find()->where(['name' => 'leave_status'])->all();
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $this->title = 'ปฏิทินการลา';
 $this->params['breadcrumbs'][] = $this->title;
