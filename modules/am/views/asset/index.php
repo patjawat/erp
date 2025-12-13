@@ -21,16 +21,21 @@ $this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
-<?php Pjax::begin(['id' => 'title-container', 'timeout' => 50000]); ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-folder-check fs-1"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package text-primary">
+            <path d="m7.5 4.27 9 5.15"></path>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+            <path d="m3.3 7 8.7 5 8.7-5"></path>
+            <path d="M12 22V12"></path>
+        </svg> ระบบบริหารทรัพย์สิน</h4>
+</div>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-ทั้งหมด <span id="showTotalCount"><?= $dataProvider->getTotalCount() ?></span> รายการ
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
-<?php $this->endBlock(); ?>
+
+<?php Pjax::begin(['id' => 'title-container', 'timeout' => 50000]); ?>
+
+
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('../default/menu', ['active' => 'asset']) ?>
@@ -43,6 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?= $this->render('@app/modules/am/views/default/car_summary_price') ?>
 <?= $this->render('@app/modules/am/views/default/_list', [
+    'tabs' => $tabs,
     'searchModel' => $searchModel,
     'dataProvider' => $dataProvider,
 ]) ?>

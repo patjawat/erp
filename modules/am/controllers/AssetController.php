@@ -115,6 +115,7 @@ class AssetController extends Controller
         }
 
         return $this->render('index', [
+            'tabs' => 'asset',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);

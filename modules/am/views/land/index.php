@@ -18,12 +18,22 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/am/land/create'], ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('../default/menu', ['active' => 'asset']) ?>
 <?php $this->endBlock(); ?>
+
+
+<?= $this->render('@app/modules/am/views/default/car_summary_price') ?>
+<?= $this->render('@app/modules/am/views/default/_list', [
+    'tabs' => $tabs,
+    'searchModel' => $searchModel,
+    'dataProvider' => $dataProvider,
+]) ?>
+
+
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">

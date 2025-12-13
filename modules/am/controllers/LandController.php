@@ -56,6 +56,7 @@ class LandController extends \yii\web\Controller
             }
 
         return $this->render('index', [
+            'tabs' => 'land',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
