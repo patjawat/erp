@@ -330,7 +330,6 @@ class LeaveController extends Controller
     public function actionExportLeave()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -396,167 +395,145 @@ class LeaveController extends Controller
         $dataProvider->pagination = false;
 
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->mergeCells('A1:I1');
+       $spreadsheet = new Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
 
-        $rowTitle = 'A1';
-        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+// --- 1. จัดการส่วนหัวรายงาน (A1) ---
+$sheet->mergeCells('A1:J1'); // ขยาย Merge Cells เป็น I1 -> J1 เพื่อให้ครอบคลุมคอลัมน์ "จำนวนวันลา"
+$dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+$dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+$dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
 
-        $sheet->setCellValue($rowTitle, 'ทะเบียนวันลา ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport);
-        $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('A')->setWidth(6);
+$reportTitle = 'ทะเบียนวันลา ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport;
+$sheet->setCellValue('A1', $reportTitle);
 
-        $rowA1 = 'A2';
-        $sheet->setCellValue($rowA1, 'ลำดับ');
-        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('A')->setWidth(6);
+$sheet->getStyle('A1')->applyFromArray([
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+    ],
+    'font' => [
+        'name' => 'TH Sarabun New',
+        'size' => 16,
+        'bold' => true,
+    ],
+]);
 
-        $rowB1 = 'B2';
-        $sheet->setCellValue($rowB1, 'สถานะ');
-        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('B')->setWidth(13);
+// --- 2. จัดการหัวตาราง (Row 2) โดยใช้ Array Map และ Loop ---
 
-        $rowC1 = 'C2';
-        $sheet->setCellValue($rowC1, 'ปีงบ');
-        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('C')->setWidth(10);
+// กำหนดคอลัมน์, ชื่อหัวตาราง, และความกว้าง
+$headerConfig = [
+    'A' => ['title' => 'ลำดับ', 'width' => 6],
+    'B' => ['title' => 'สถานะ', 'width' => 13],
+    'C' => ['title' => 'ปีงบ', 'width' => 10],
+    'D' => ['title' => 'ชื่อผู้แจ้งลา', 'width' => 30],
+    'E' => ['title' => 'ประเภทการลา', 'width' => 15],
+    'F' => ['title' => 'เหตุผลการลา', 'width' => 35],
+    'G' => ['title' => 'ตำแหน่ง', 'width' => 35],
+    'H' => ['title' => 'หน่วยงาน', 'width' => 35],
+    'I' => ['title' => 'ระหว่างวันที่', 'width' => 40],
+    'J' => ['title' => 'จำนวนวันลา', 'width' => 20],
+    'L' => ['title' => 'สถานะ', 'width' => 20],
+];
 
-        $rowD1 = 'D2';
-        $sheet->setCellValue($rowD1, 'ชื่อผู้แจ้งลา');
-        $sheet->getStyle($rowD1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowD1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowD1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('D')->setWidth(30);
+// กำหนด Style สำหรับหัวตารางทั้งหมด (เพื่อให้โค้ดสั้นลง)
+$headerStyle = [
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+    ],
+    'font' => [
+        'name' => 'TH Sarabun New',
+        'size' => 16,
+        'bold' => true,
+        'italic' => false,
+    ],
+    // เพิ่ม Border ให้ส่วนหัวตาราง เพื่อให้สอดคล้องกับข้อมูลที่คุณทำในลูปก่อนหน้า
+    'borders' => [
+        'allBorders' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['rgb' => Color::COLOR_BLACK],
+        ],
+    ],
+    // เพิ่ม Fill สีพื้นหลัง หากต้องการ
+    'fill' => [
+        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+        'startColor' => ['rgb' => 'D9E1F2'], // สีพื้นหลังหัวตารางที่แตกต่างจากข้อมูล
+    ],
+];
 
-        $rowE1 = 'E2';
-        $sheet->setCellValue($rowE1, 'ประเภทการลา');
-        $sheet->getStyle($rowE1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowE1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowE1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('E')->setWidth(15);
+// Loop เพื่อใส่ค่าและกำหนดความกว้าง
+foreach ($headerConfig as $col => $config) {
+    $cell = $col . '2';
+    $sheet->setCellValue($cell, $config['title']);
+    $sheet->getColumnDimension($col)->setWidth($config['width']);
+}
 
-        $rowF1 = 'F2';
-        $sheet->setCellValue($rowF1, 'เหตุผลการลา');
-        $sheet->getStyle($rowF1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowF1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowF1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('F')->setWidth(35);
+// Apply Style ทีเดียวทั้งช่วง A2:J2
+$sheet->getStyle('A2:L2')->applyFromArray($headerStyle);
 
+       $StartRowSheet = 3;
+$numRow = $StartRowSheet; // เริ่มนับแถวที่ 3
 
-        $rowG1 = 'G2';
-        $sheet->setCellValue($rowG1, 'ตำแหน่ง');
-        $sheet->getStyle($rowG1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowG1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowG1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('G')->setWidth(35);
-        $rowH1 = 'H2';
-        $sheet->setCellValue($rowH1, 'หน่วยงาน');
-        $sheet->getStyle($rowH1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowH1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowH1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('H')->setWidth(35);
+// --- 1. ใส่ข้อมูล (ให้เร็วที่สุด) ---
+foreach ($dataProvider->getModels() as $key => $item) {
+    // ใส่ข้อมูลอย่างเดียว ห้ามจัดรูปแบบในลูปนี้!
+    $sheet->setCellValue('A' . $numRow, ($key + 1));
+    $sheet->setCellValue('B' . $numRow, $item->leaveStatus->title  ?? '-');
+    $sheet->setCellValue('C' . $numRow, $item->thai_year);
+    $sheet->setCellValue('D' . $numRow, $item->employee->fullname());
+    $sheet->setCellValue('E' . $numRow, $item->leaveType?->title ?? '-');
+    $sheet->setCellValue('F' . $numRow,  $item->data_json['reason']);
+    $sheet->setCellValue('G' . $numRow,  $item->employee->positionName());
+    $sheet->setCellValue('H' . $numRow,  $item->employee->departmentName());
+    $sheet->setCellValue('I' . $numRow,  $item->showLeaveDate());
+    $sheet->setCellValue('J' . $numRow,  $item->total_days);
+    $sheet->setCellValue('L' . $numRow,  $item->leaveStatus->title  ?? '-');
 
-        $rowI1 = 'I2';
-        $sheet->setCellValue($rowI1, 'ระหว่างวันที่');
-        $sheet->getStyle($rowI1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowI1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowI1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('I')->setWidth(40);
+    $numRow++; // เลื่อนไปแถวถัดไป
+}
 
-        $rowJ1 = 'J2';
-        $sheet->setCellValue($rowJ1, 'จำนวนวันลา');
-        $sheet->getStyle($rowJ1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowJ1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowJ1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('I')->setWidth(20);
+// กำหนดแถวสุดท้ายที่เขียนข้อมูล
+$lastRow = $numRow - 1;
+$dataRange = 'A' . $StartRowSheet . ':J' . $lastRow;
 
+// --- 2. จัดรูปแบบทีละมากๆ (หลังจบลูป) ---
+if ($lastRow >= $StartRowSheet) {
+    
+    // **จัดรูปแบบพื้นฐาน (ฟอนต์, ขอบ, สีพื้นหลัง) ทั้งหมดในครั้งเดียว**
+    $sheet->getStyle($dataRange)->applyFromArray([
+        'font' => [
+            'name' => 'TH Sarabun New',
+            'size' => 16,
+            'bold' => false,
+            'italic' => false,
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => Color::COLOR_BLACK],
+            ],
+        ],
+        'fill' => [
+            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+            'startColor' => ['rgb' => '8DB4E2'], 
+        ],
+    ]);
 
-        $StartRowSheet = 3;
-        foreach ($dataProvider->getModels() as $key => $item) {
-            $numRow = $StartRowSheet++;
-            $sheet->setCellValue('A' . $numRow, ($key + 1));
-            $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('A' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('A' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
+    // **จัดตำแหน่งกึ่งกลาง (Horizontal Center)**
+    $centerColumns = ['A', 'C', 'E', 'F', 'G', 'H', 'I', 'J','L'];
+    foreach ($centerColumns as $col) {
+        $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+              ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    }
 
-            $sheet->setCellValue('B' . $numRow, $item->leaveStatus->title  ?? '-');
-            $sheet->getStyle('B' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('B' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('C' . $numRow, $item->thai_year);
-            $sheet->getStyle('C' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('C' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('C' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('D' . $numRow, $item->employee->fullname());
-            $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $sheet->getStyle('D' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('D' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('E' . $numRow, $item->leaveType?->title ?? '-');
-            $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('E' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('E' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-
-            // $sheet->setCellValue('F' . $numRow,  ThaiDateHelper::formatThaiDate($item->doc_transactions_date));
-            $sheet->setCellValue('F' . $numRow,  $item->data_json['reason']);
-            $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('F' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('F' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-
-            $sheet->setCellValue('G' . $numRow,  $item->employee->positionName());
-            $sheet->getStyle('G' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('G' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('G' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('G' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('G' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('H' . $numRow,  $item->employee->departmentName());
-            $sheet->getStyle('H' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('H' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('H' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('H' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('H' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('I' . $numRow,  $item->showLeaveDate());
-            $sheet->getStyle('I' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('I' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('I' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('I' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('I' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('J' . $numRow,  $item->total_days);
-            $sheet->getStyle('J' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('J' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('J' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('J' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('J' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-        }
+    // **จัดตำแหน่งชิดซ้าย (Horizontal Left)**
+    $leftColumns = ['B', 'D'];
+    foreach ($leftColumns as $col) {
+        $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+              ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+    }
+}
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/export-leave.xlsx';
