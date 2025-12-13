@@ -14,7 +14,9 @@ use yii\helpers\Url;
     <div class="d-flex align-items-center gap-2 text-secondary small mb-3">
         <a href="<?= Url::to(['index']) ?>" class="text-decoration-none text-secondary hover-text-primary">ทรัพย์สิน</a>
         <span>/</span>
-        <span class="text-dark fw-medium">แก้ไขข้อมูล</span>
+        <span class="text-dark fw-medium">
+            <?= Yii::$app->controller->action->id == 'create' ? 'เพิ่มข้อมูล' : 'แก้ไขข้อมูล' ?>
+        </span>
     </div>
 
     <?php $form = ActiveForm::begin([
@@ -32,7 +34,7 @@ use yii\helpers\Url;
         <div class="card-header px-4 py-3 d-flex justify-content-between align-items-center rounded-top-3" style="background-color: #1a508e !important;">
             <h5 class="mb-0 fw-bold d-flex align-items-center gap-2 text-white" style="font-size: 1.1rem;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white opacity-75"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg> 
-                บันทึกข้อมูลครุภัณฑ์
+                <?= Yii::$app->controller->action->id == 'create' ? 'เพิ่มข้อมูลครุภัณฑ์' : 'บันทึกข้อมูลครุภัณฑ์' ?>
             </h5>
             <div class="badge bg-white bg-opacity-10 text-white px-3 py-2 fw-normal rounded">
                 หมวดพัสดุ: ครุภัณฑ์
@@ -45,6 +47,7 @@ use yii\helpers\Url;
                 <div class="col-lg-3 col-xl-2">
                     <div class="sticky-top" style="top: 20px; z-index: 1;">
                         <div class="bg-light rounded-3 border border-2 border-dashed d-flex flex-column align-items-center justify-content-center cursor-pointer hover-bg-gray transition mb-2 position-relative" style="aspect-ratio: 1/1;">
+                            
                             <?php if (!empty($model->photo)): ?>
                                 <img src="<?= Yii::getAlias('@web/uploads/') . $model->photo ?>" class="w-100 h-100 object-fit-cover rounded-3">
                             <?php else: ?>
