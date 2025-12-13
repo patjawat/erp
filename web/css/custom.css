@@ -14792,5 +14792,25 @@ small, .small {
     max-width: 90%;
   }
 }
+.btn {
+  --bs-btn-bg-rgb: var(--bs-btn-bg);
+}
+
+.shadow-color {
+  /* ใช้สีจากปุ่ม ถ้าไม่มี ใช้ bs-primary */
+  box-shadow: 0 0.5rem 1rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.35);
+}
+
+.shadow-sm-color {
+  box-shadow: 0 0.125rem 0.25rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.25);
+}
+
+.shadow-color {
+  box-shadow: 0 0.5rem 1rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.35);
+}
+
+.shadow-lg-color {
+  box-shadow: 0 1rem 3rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.45);
+}
 
 /*# sourceMappingURL=custom.css.map */
