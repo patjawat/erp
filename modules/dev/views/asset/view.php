@@ -4,10 +4,10 @@ use yii\helpers\Url;
 
 /* @var $this yii\web\View */
 
-// 1. หัวข้อใหญ่
+// 1. หัวข้อใหญ่ (Title) จะไปแสดงที่ Layout หลัก
 $this->title = 'ทรัพย์สิน';
 
-// 2. Breadcrumb
+// 2. Breadcrumb (เส้นทางด้านบน)
 $this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['index']];
 ?>
 
@@ -26,10 +26,12 @@ $this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['in
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
                 QR Code
             </button>
-            <button class="btn btn-warning bg-warning bg-opacity-10 text-warning border-warning border-opacity-50 d-flex align-items-center gap-2 btn-sm px-3 py-2 shadow-sm">
+            
+            <a href="<?= Url::to(['update', 'id' => 1]) ?>" class="btn btn-warning bg-warning bg-opacity-10 text-warning border-warning border-opacity-50 d-flex align-items-center gap-2 btn-sm px-3 py-2 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
                 แก้ไขข้อมูล
-            </button>
+            </a>
+
             <a href="<?= Url::to(['index']) ?>" class="btn btn-white border shadow-sm text-secondary d-flex align-items-center gap-2 btn-sm px-3 py-2 bg-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                 ย้อนกลับ
@@ -180,7 +182,10 @@ $this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['in
                 <div class="tab-pane fade p-4" id="tab-maintenance" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h6 class="fw-bold text-dark mb-0">ประวัติการซ่อมบำรุง</h6>
-                        <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center gap-1 text-primary" style="font-size: 0.9rem;">
+                        
+                        <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center gap-1 text-primary" 
+                                style="font-size: 0.9rem;"
+                                data-bs-toggle="modal" data-bs-target="#maintenanceModal">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                             บันทึกการซ่อม
                         </button>
@@ -213,37 +218,7 @@ $this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['in
                                         </span>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td class="px-4 py-3 text-dark fw-medium">2567-05-15</td>
-                                    <td class="px-4 py-3">
-                                        <div class="fw-medium text-dark">ซ่อมหน้าจอแสดงผล</div>
-                                        <div class="text-muted small">หน้าจอแสดงผลติดๆ ดับๆ ส่งซ่อมศูนย์</div>
-                                    </td>
-                                    <td class="px-4 py-3 text-secondary">Omron Thailand</td>
-                                    <td class="px-4 py-3 text-end fw-medium">฿1,200.00</td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-medium d-inline-flex align-items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
-                                            Completed
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-4 py-3 text-dark fw-medium">2567-02-20</td>
-                                    <td class="px-4 py-3">
-                                        <div class="fw-medium text-dark">อัปเกรด RAM</div>
-                                        <div class="text-muted small">เพิ่ม RAM จาก 8GB เป็น 16GB</div>
-                                    </td>
-                                    <td class="px-4 py-3 text-secondary">JIB Computer Group</td>
-                                    <td class="px-4 py-3 text-end fw-medium">฿1,500.00</td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-medium d-inline-flex align-items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
-                                            Completed
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -262,15 +237,62 @@ $this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['in
 
 </div>
 
+<div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="maintenanceModalLabel">บันทึกประวัติการซ่อม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-4">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-medium">วันที่แจ้งซ่อม</label>
+                        <input type="date" class="form-control shadow-sm" value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-medium">หัวข้อ / อาการเสีย</label>
+                        <input type="text" class="form-control shadow-sm" placeholder="เช่น เครื่องเปิดไม่ติด, เปลี่ยนอะไหล่">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-medium">รายละเอียดเพิ่มเติม</label>
+                        <textarea class="form-control shadow-sm" rows="3" placeholder="ระบุรายละเอียด..."></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-medium">ผู้ดำเนินการ</label>
+                            <input type="text" class="form-control shadow-sm" placeholder="ระบุร้านซ่อม">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-medium">ค่าใช้จ่าย (บาท)</label>
+                            <input type="number" class="form-control shadow-sm" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-medium">สถานะ</label>
+                        <select class="form-select shadow-sm text-primary fw-medium">
+                            <option value="1">กำลังดำเนินการ</option>
+                            <option value="2">เสร็จสิ้น (Completed)</option>
+                            <option value="0">ยกเลิก</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                <button type="button" class="btn btn-light border text-secondary w-50" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary w-50 shadow-sm">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .hover-bg-light:hover { background-color: #f8f9fa; color: #212529 !important; }
-    
-    /* สไตล์สำหรับ Active Tab */
     .nav-tabs .nav-link { color: #6c757d; }
     .nav-tabs .nav-link:hover { background-color: #f8f9fa; color: #212529; }
     .nav-tabs .nav-link.active {
         color: var(--erp-primary, #0d6efd);
         border-color: transparent transparent var(--erp-primary, #0d6efd);
-        background-color: #eff6ff; /* สีฟ้าอ่อนจางๆ เหมือนต้นแบบ */
+        background-color: #eff6ff; 
     }
 </style>
