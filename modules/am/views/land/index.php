@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?= $this->render('@app/modules/am/views/default/car_summary_price') ?>
-<?= $this->render('@app/modules/am/views/default/_list', [
+<?= $this->render('@app/modules/am/views/asset/_list', [
     'tabs' => $tabs,
     'searchModel' => $searchModel,
     'dataProvider' => $dataProvider,

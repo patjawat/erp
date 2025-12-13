@@ -3,9 +3,12 @@
 namespace app\modules\am\models;
 
 use Yii;
-use app\modules\filemanager\components\FileManagerHelper;
-use yii\helpers\ArrayHelper;
+use yii\db\Expression;
 use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use app\modules\filemanager\components\FileManagerHelper;
 /**
  * This is the model class for table "asset_detail".
  *
@@ -67,8 +70,27 @@ class AssetDetail extends \yii\db\ActiveRecord
         ];
     }
 
-    public function Upload($ref, $name)
+
+        public function behaviors()
     {
+        return [
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+            ],
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => ['updated_at'],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
+    public function Upload()
+    {   $ref = $this->ref;
+        $name = $this->name;
         return FileManagerHelper::FileUpload($ref, $name);
     }
 

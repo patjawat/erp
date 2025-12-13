@@ -9,7 +9,7 @@ use app\components\widgets\DataSummaryWidget;
     <div class="card-header bg-white border-bottom py-3 px-4">
 
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-            <?= $this->render('@app/modules/am/components/tab_menu', [
+            <?= $this->render('@app/modules/am/views/asset/tab_menu', [
                 'tabs' => $tabs
             ]) ?>
 

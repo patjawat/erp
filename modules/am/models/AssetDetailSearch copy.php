@@ -18,7 +18,7 @@ class AssetDetailSearch extends AssetDetail
     {
         return [
             [['id', 'user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'data_json', 'updated_at', 'created_at'], 'safe'],
+            [['ref', 'code', 'name', 'data_json', 'updated_at', 'created_at'], 'safe'],
         ];
     }
 
@@ -35,11 +35,10 @@ class AssetDetailSearch extends AssetDetail
      * Creates data provider instance with search query applied
      *
      * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
      *
      * @return ActiveDataProvider
      */
-    public function search($params, $formName = null)
+    public function search($params)
     {
         $query = AssetDetail::find();
 
@@ -49,7 +48,7 @@ class AssetDetailSearch extends AssetDetail
             'query' => $query,
         ]);
 
-        $this->load($params, $formName);
+        $this->load($params);
 
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
@@ -60,8 +59,6 @@ class AssetDetailSearch extends AssetDetail
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'date_start' => $this->date_start,
-            'date_end' => $this->date_end,
             'user_id' => $this->user_id,
             'emp_id' => $this->emp_id,
             'updated_at' => $this->updated_at,
