@@ -12253,6 +12253,10 @@ textarea:focus {
   padding: 0;
 }
 
+.page-content-wrapper .page-title-box {
+  background-color: rgba(var(--bs-primary-rgb), 0.11);
+}
+
 .horizontal-navbar .page-title-box {
   background-color: rgba(var(--bs-primary-rgb), 0.11);
 }
@@ -12265,7 +12269,7 @@ textarea:focus {
   color: var(--bs-gray-700);
 }
 
-.horizontal-navbar .page-title-box .breadcrumb.active {
+.page-title-box .breadcrumb.active {
   color: var(--bs-gray-600);
 }
 
@@ -12848,6 +12852,33 @@ textarea:focus {
   color: var(--bs-pink);
 }
 
+[data-bs-theme=dark] {
+  /* Brand */
+  --bs-primary: #255fad;
+  --bs-blue: #255fad;
+  --bs-primary-rgb: 139, 156, 255;
+  /* Background */
+  --bs-body-bg: #0f1224;
+  --bs-body-color: #e5e7eb;
+  /* Surface */
+  --bs-card-bg: #14183a;
+  --bs-modal-bg: #14183a;
+  --bs-dropdown-bg: #14183a;
+  /* Border */
+  --bs-border-color: #252a5a;
+  /* Text */
+  --bs-secondary-color: #9ca3af;
+  --bs-muted-color: #9ca3af;
+  /* Link */
+  --bs-link-color: #a5b4fc;
+  --bs-link-hover-color: #c7d2fe;
+}
+
+/* Gradient สำหรับ Dark */
+[data-bs-theme=dark] .bg-primary-gradient {
+  background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
+}
+
 [data-bs-theme=purple] {
   --bs-primary: #6e81d9;
   --bs-blue: #6e81d9;
@@ -13338,6 +13369,10 @@ a {
   margin-top: -45px;
 }
 
+.mt--65 {
+  margin-top: -65px;
+}
+
 .mh-16 {
   max-height: 16px;
 }
@@ -13533,7 +13568,7 @@ a {
   color: var(--bs-gray-800);
 }
 .breadcrumb .breadcrumb-item.active {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(37, 95, 173, 0.8);
 }
 .breadcrumb .breadcrumb-item + .breadcrumb-item:before {
   color: var(--bs-gray-800);
@@ -13573,6 +13608,7 @@ fieldset {
 .text-muted {
   --bs-text-opacity: 1;
   color: #6c757d !important;
+  font-size: 0.9rem !important;
 }
 
 .progress-sm {
@@ -14791,26 +14827,6 @@ small, .small {
   .modal-dialog {
     max-width: 90%;
   }
-}
-.btn {
-  --bs-btn-bg-rgb: var(--bs-btn-bg);
-}
-
-.shadow-color {
-  /* ใช้สีจากปุ่ม ถ้าไม่มี ใช้ bs-primary */
-  box-shadow: 0 0.5rem 1rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.35);
-}
-
-.shadow-sm-color {
-  box-shadow: 0 0.125rem 0.25rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.25);
-}
-
-.shadow-color {
-  box-shadow: 0 0.5rem 1rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.35);
-}
-
-.shadow-lg-color {
-  box-shadow: 0 1rem 3rem rgba(var(--bs-btn-bg-rgb, var(--bs-primary-rgb)), 0.45);
 }
 
 /*# sourceMappingURL=custom.css.map */

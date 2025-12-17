@@ -473,8 +473,6 @@ class DocumentsController extends Controller
         $dateTime = new DateTime();
         $time = $dateTime->format('H:i');
         $model->doc_time = $time;
-        // End Set Default
-        // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
         $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {

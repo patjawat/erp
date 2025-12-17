@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
+
 $this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if ($model->document_group == 'receive') {
@@ -20,41 +21,19 @@ $this->params['breadcrumbs'][] = $this->title;
 /** @var app\modules\dms\models\Documents $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<?php if ($model->document_group == 'receive'): ?>
-<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
-<?php endif; ?>
-<?php if ($model->document_group == 'send'): ?>
-<i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
-<?php endif; ?>
 <style>
-.form-label {
-    font-weight: 600 !important;
-}
+    .form-label {
+        font-weight: 600 !important;
+    }
 
-.file-upload-btn {
-    height: 100% !important;
-}
+    .file-upload-btn {
+        height: 100% !important;
+    }
 
-.file-upload {
-    height: 800px !important;
-}
-
-
+    .file-upload {
+        height: 800px !important;
+    }
 </style>
-
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/dms/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/dms/menu', ['model' => $model, 'active' => 'receive']) ?>
-<?php $this->endBlock(); ?>
-
 
 
 <?php $form = ActiveForm::begin([
@@ -158,7 +137,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'options' => ['placeholder' => 'เลือกชั้นความลับ'],
                                     'pluginOptions' => [
                                         'allowClear' => true,
-                                          'dropdownParent' => '#main-modal',
+                                        'dropdownParent' => '#main-modal',
                                     ],
                                 ])->label('ชั้นเร็ว');
                                 ?>
@@ -170,7 +149,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'options' => ['placeholder' => 'เลือกชั้นความลับ'],
                                     'pluginOptions' => [
                                         'allowClear' => true,
-                                          'dropdownParent' => '#main-modal',
+                                        'dropdownParent' => '#main-modal',
                                     ],
                                 ])->label('ชั้นความลับ');
                                 ?>
@@ -205,7 +184,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                                     'pluginOptions' => [
                                         'allowClear' => true,
-                                          'dropdownParent' => '#main-modal',
+                                        'dropdownParent' => '#main-modal',
                                         'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                                     ],
                                     'pluginEvents' => [

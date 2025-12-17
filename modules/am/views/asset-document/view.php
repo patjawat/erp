@@ -12,19 +12,31 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="asset-detail-view">
-
-    <h1><?= Html::encode($this->title) ?></h1>
+    
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
-            'ref',
-            'code',
-            'date_start',
-            'date_end',
-            'name',
-            'user_id',
-            'emp_id',
+            [
+                'label' => 'ชื่อเอกสาร',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return $model->data_json['title'] ?? '-';
+                },
+            ],
+            [
+                'label' => 'ประเภท',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return $model->data_json['asset_document_type'] ?? '-';
+                },
+            ],
+            [
+                'label' => 'ผู้อัปโหลด',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return $model->createdBy?->employee?->fullname ?? '-';
+                },
+            ],
         ],
     ]) ?>
 

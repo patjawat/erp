@@ -1,19 +1,13 @@
 <?php
-
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use app\components\AppHelper;
-use app\modules\dms\models\Documents;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = $title;
 
+$this->params['breadcrumbs'][] = ['label' => 'งานสารบรรณ', 'url' => ['/dms/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $dataFile = Yii::getAlias('@app/doc_receive/data.json');
@@ -26,20 +20,25 @@ if (file_exists($dataFile)) {
     }
 }
 ?>
+
+
 <?php $this->beginBlock('page-title'); ?>
-<?php if ($searchModel->document_group == 'receive'): ?>
-    <i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
-<?php endif; ?>
-<?php if ($searchModel->document_group == 'send'): ?>
-    <i class="fa-solid fa-paper-plane text-danger"></i></i><?= $this->title; ?>
-<?php endif; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download">
+            <path d="M12 15V3" />
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <path d="m7 10 5 5 5-5" />
+        </svg>
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel]) ?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel,'active' => $searchModel->document_group]) ?>
 <?php $this->endBlock(); ?>
+
 
 <?php if ($jsonCount > 0): ?>
     <?php $this->beginBlock('action'); ?>

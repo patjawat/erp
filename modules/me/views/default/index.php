@@ -8,14 +8,18 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 ?>
 
 
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge fs-4 text-primaryr"></i> <?php echo $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+         MyDashboard
+        </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
+<?php $this->beginBlock('action'); ?>
+
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>

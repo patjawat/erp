@@ -23,7 +23,7 @@ class AppAsset extends AssetBundle
 
     public $css = [
         'css/custom.css',
-        'css/fontawesome-free-6.6.0-web/css/all.css',
+        'libs/font-awesome/all.min.css',
         'css/bootstrap-icons.min.css',
         'aos/aos.css',
         'sweetalert2/dist/sweetalert2.css',

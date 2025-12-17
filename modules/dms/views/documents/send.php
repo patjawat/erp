@@ -1,22 +1,25 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-    $this->title = 'หนังสือส่ง';
+$this->title = 'หนังสือส่ง';
 
+$this->params['breadcrumbs'][] = ['label' => 'งานสารบรรณ', 'url' => ['/dms/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-paper-plane"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send-icon lucide-send">
+            <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+            <path d="m21.854 2.147-10.94 10.939" />
+        </svg>
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'send']) ?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel,'active' => $searchModel->document_group]) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'send','timeout' => 80000]); ?>

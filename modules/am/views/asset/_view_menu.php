@@ -22,14 +22,14 @@ use yii\helpers\Url;
         </svg>
         ประวัติซ่อมบำรุง
     </a>
-
+<!-- 
     <a href="<?=Url::to(['depreciation','id' => $model->id])?>" class="btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'depreciation'  ? 'btn-primary' : 'bg-body' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 17h6v-6"></path>
             <path d="m22 17-8.5-8.5-5 5L2 7"></path>
         </svg>
         ค่าเสื่อมราคา
-    </a>
+    </a> -->
     
     <a href="<?=Url::to(['document','id' => $model->id])?>" class="btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'documents'  ? 'btn-primary' : 'bg-body' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

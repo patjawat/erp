@@ -5,16 +5,11 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use kartik\file\FileInput;
-use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
-// use softark\duallistbox\DualListbox;
-use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\components\FileManagerHelper;
 
 
-    $this->title = 'หนังสือประกาศ/นโยบาย';
+$this->title = 'หนังสือประกาศ/นโยบาย';
 
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -24,24 +19,8 @@ $this->params['breadcrumbs'][] = $this->title;
 /** @var app\modules\dms\models\Documents $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-bullhorn fs-1"></i> <?= $this->title; ?>
-
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-สร้าง<?=$this->title;?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/dms/menu') ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'appointment']) ?>
-<?php $this->endBlock(); ?>
-
 
 </h1>
-<?php $this->endBlock(); ?>
 <?php $form = ActiveForm::begin([
     'id' => 'form-document',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation

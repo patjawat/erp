@@ -9,6 +9,8 @@ use yii\helpers\ArrayHelper;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\usermanager\models\User;
+
 /**
  * This is the model class for table "asset_detail".
  *
@@ -87,6 +89,13 @@ class AssetDetail extends \yii\db\ActiveRecord
             ],
         ];
     }
+
+       public function getCreatedBy()
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
+
+
 
     public function Upload()
     {   $ref = $this->ref;

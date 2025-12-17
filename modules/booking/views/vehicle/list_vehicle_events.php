@@ -62,11 +62,13 @@ use yii\widgets\Pjax;
                 </tr>
                 <?php endforeach; ?>
             </tbody>
+            
         </table>
 
     </div>
     <div class="body-footer">
-        <div class="d-flex justify-content-center">
+        <div class="d-flex justify-content-between align-items-center p-2">
+            <?=Html::a('ทะเบียนการจองทั้งหมด',['//booking/vehicle/index'],['class' => 'btn btn-primary'])?>
             <?= yii\bootstrap5\LinkPager::widget([
                     'pagination' => $dataProvider->pagination,
                      'maxButtonCount' => 5, // ✅ แสดงแค่ 5 หน้าพร้อมกัน
@@ -74,7 +76,7 @@ use yii\widgets\Pjax;
                         'class' => 'pagination pagination-sm',
                     ],
                 ]); ?>
-        </div>
+    </div>
     </div>
 </div>
 <?php Pjax::end(); ?>
