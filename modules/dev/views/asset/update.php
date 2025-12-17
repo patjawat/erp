@@ -1,15 +1,13 @@
 <?php
 
 /* @var $this yii\web\View */
-/* @var $model yii\base\Model */
+/* @var $model yii\base\DynamicModel */
+/* @var $type string */
 
-$this->title = 'ทรัพย์สิน';
-$this->params['breadcrumbs'][] = ['label' => 'รายการ', 'url' => ['index']];
-
+$this->title = 'แก้ไขข้อมูล: ' . $model->name;
 ?>
 
-<div class="fade-in">
-    <?= $this->render('_form', [
-        'model' => $model,
-    ]) ?>
-</div>
+<?= $this->render('_form', [
+    'model' => $model,
+    'type' => $type,
+]) ?>
