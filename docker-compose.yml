@@ -64,7 +64,7 @@ services:
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   demo:
-    image: patjawat/erp:latest
+    image: patjawat/erp:demo
     container_name: demo
     platform: linux/amd64
     volumes:
