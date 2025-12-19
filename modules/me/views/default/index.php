@@ -36,25 +36,23 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 }
 </style>
 
-<div class="row">
-    <div class="col-12">
+
         <div class="row">
-            <div class="col-6">
+            <div class="col-lg-6 col-md-12 col-sm-12">
                 <?php echo $this->render('welcome'); ?>
                 <?php echo $this->render('attendance'); ?>
 
             </div>
-            <div class="col-6">
+           <div class="col-lg-6 col-md-12 col-sm-12">
                 <?php echo $this->render('leave', ['searchModel' => $searchModel]); ?>
             </div>
-            <div class="col-12">
+            <div class="col-lg-12 col-md-12 col-sm-12">
                 <?php echo Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด', ['/me/activity'], ['class' => 'btn btn-light']); ?>
                 <div id="viewDocument"></div>
 
             </div>
         </div>
-    </div>
-</div>
+
 
 
 
