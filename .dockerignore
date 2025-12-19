@@ -11,4 +11,4 @@ db/
 .sh
 .yml
 modules/filemanager/fileupload/
-# vendors/
+vendors/

@@ -26,7 +26,7 @@ use yii\helpers\Html;
                     </div>
                     <div class="text-end">
                         <div class="text-secondary small mb-1">มูลค่าทรัพย์สิน</div>
-                        <h3 class="fw-bold text-dark mb-0"><?= number_format($model->price, 2) ?></h3>
+                        <h3 class="fw-bold text-dark mb-0"><?= number_format($model->price ?? 0, 2) ?></h3>
                     </div>
                 </div>
 
