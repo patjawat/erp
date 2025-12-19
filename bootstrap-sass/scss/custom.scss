@@ -7,6 +7,7 @@
 // @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&family=Noto+Sans+Thai:wght@100..900&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap');
+
 :root {
   --bg-primary: var(--bg-primary) --bs-gray-100: #f6f6f7;
   --bs-secondary-color:
@@ -32,10 +33,10 @@ body {
   font-style: normal;
 }
 
-  .calendar-bg-primary{
-    background-color: var(--bg-primary);
-    color: '#fffff';
-  }
+.calendar-bg-primary {
+  background-color: var(--bg-primary);
+  color: '#fffff';
+}
 
 
 .btn {
@@ -423,6 +424,7 @@ textarea:focus {
 .page-content-wrapper .page-title-box {
   background-color: rgba(var(--bs-primary-rgb), .11)
 }
+
 .horizontal-navbar .page-title-box {
   background-color: rgba(var(--bs-primary-rgb), .11)
 }
@@ -677,8 +679,8 @@ textarea:focus {
 }
 
 .badge-soft-danger {
-    color: #c73f34;
-    background-color: rgb(234 223 222);
+  color: #c73f34;
+  background-color: rgb(234 223 222);
 }
 
 
@@ -1059,49 +1061,56 @@ textarea:focus {
 // }
 
 [data-bs-theme="dark"] {
-    /* Brand */
-    --bs-primary: #255fad;
-    --bs-blue: #255fad;
-    --bs-primary-rgb: 139, 156, 255;
+  /* Brand */
+  --bs-primary: #255fad;
+  --bs-blue: #255fad;
+  --bs-primary-rgb: 139, 156, 255;
 
-    /* Background */
-    --bs-body-bg: #0f1224;
-    --bs-body-color: #e5e7eb;
+  /* Background */
+  --bs-body-bg: #31383e;
+  --bs-body-color: #ffffff;
 
-    /* Surface */
-    --bs-card-bg: #14183a;
-    --bs-modal-bg: #14183a;
-    --bs-dropdown-bg: #14183a;
+  /* Surface */
+  --bs-card-bg: #4a5461;
+  --bs-modal-bg: #14183a;
+  --bs-dropdown-bg: #14183a;
 
-    /* Border */
-    --bs-border-color: #252a5a;
+  /* Border */
+  --bs-border-color: #252a5a;
 
-    /* Text */
-    --bs-secondary-color: #9ca3af;
-    --bs-muted-color: #9ca3af;
+  /* Text */
+  --bs-secondary-color: #9ca3af;
+  --bs-muted-color: #9ca3af;
 
-    /* Link */
-    --bs-link-color: #a5b4fc;
-    --bs-link-hover-color: #c7d2fe;
+  /* Link */
+  --bs-link-color: #a5b4fc;
+  --bs-link-hover-color: #c7d2fe;
 }
 
 /* Gradient สำหรับ Dark */
 [data-bs-theme="dark"] .bg-primary-gradient {
-    background: linear-gradient(
-        153deg,
-        #5089de 0%,
-        #0d47a1 100%
-    ) !important;
+  background: linear-gradient(153deg,
+      #5089de 0%,
+      #0d47a1 100%) !important;
 }
 
 [data-bs-theme="purple"] {
   --bs-primary: #6e81d9;
   --bs-blue: #6e81d9;
   --bs-primary-rgb: 110, 129, 217;
+
   .bg-primary-gradient {
     background: linear-gradient(153deg, #6e81d9 0%, #9173ec 100%) !important;
   }
 
+    .bg-primary-gradient h1,
+  .bg-primary-gradient h2,
+  .bg-primary-gradient h3,
+  .bg-primary-gradient h4,
+  .bg-primary-gradient h5,
+  .bg-primary-gradient h6 {
+    color: #fff;
+  }
   .text-primary {
     color: #6e81d9 !important;
   }
@@ -1140,10 +1149,19 @@ textarea:focus {
   --bs-primary: #078da9;
   --bs-blue: #078da9;
   --bs-primary-rgb: 7, 141, 169;
+
   .bg-primary-gradient {
     background: linear-gradient(153deg, #078da9 0%, #0e6e7e 100%) !important;
   }
 
+    .bg-primary-gradient h1,
+  .bg-primary-gradient h2,
+  .bg-primary-gradient h3,
+  .bg-primary-gradient h4,
+  .bg-primary-gradient h5,
+  .bg-primary-gradient h6 {
+    color: #fff;
+  }
   .navbar-brand-box .logo {
     color: #078da9;
   }
@@ -1169,9 +1187,20 @@ textarea:focus {
   --bs-primary: #255fad;
   --bs-blue: #0866ad;
   --bs-primary-rgb: 8, 102, 173;
-    .bg-primary-gradient{
-      background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
-    }
+
+  .bg-primary-gradient {
+    background: linear-gradient(153deg, #5089de 0%, #0d47a1 100%) !important;
+  }
+
+  .bg-primary-gradient h1,
+  .bg-primary-gradient h2,
+  .bg-primary-gradient h3,
+  .bg-primary-gradient h4,
+  .bg-primary-gradient h5,
+  .bg-primary-gradient h6 {
+    color: #fff;
+  }
+
   .btn-primary {
     color: #fff;
   }
@@ -1211,6 +1240,7 @@ textarea:focus {
   .bg-primary-gradient {
     background: linear-gradient(153deg, #B0578D 0%, #7D3C6F 100%) !important;
   }
+
   .navbar-brand-box .logo {
     color: #B0578D;
   }
@@ -1522,13 +1552,13 @@ th {
 input,
 input::placeholder {
   font-weight: 300;
-  color:var(--bs-gray-600) !important;
+  color: var(--bs-gray-600) !important;
 }
 
 .select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
-    font-weight: 200;
-    color: var(--bs-gray-600) !important;
-    font-family: var(--bs-mitr-font-family);
+  font-weight: 200;
+  color: var(--bs-gray-600) !important;
+  font-family: var(--bs-mitr-font-family);
 }
 
 .btn-indigo {
@@ -1648,6 +1678,7 @@ a {
 .mt--65 {
   margin-top: -65px;
 }
+
 .mh-16 {
   max-height: 16px;
 }
@@ -1908,7 +1939,7 @@ h6 {
   font-weight: 400;
 }
 
-fieldset{
+fieldset {
   font-family: var(--bs-mitr-font-family);
 }
 
@@ -1979,6 +2010,7 @@ fieldset{
 .fs-9 {
   font-size: .4rem
 }
+
 .fs-10 {
   font-size: .5rem
 }

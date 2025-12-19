@@ -1,5 +1,11 @@
 <?php
+
 use yii\helpers\Url;
+use yii\helpers\Html;
+use app\models\Categorise;
+use app\components\UserHelper;
+$site = Categorise::findOne(['name' => 'site']);
+$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : 'blue';
 ?>
 <style>
     /* container สำหรับ animation เปิด–ปิด */
@@ -42,7 +48,7 @@ use yii\helpers\Url;
             <polyline points="3.29 7 12 12 20.71 7"></polyline>
             <path d="m7.5 4.27 9 5.15"></path>
         </svg>
-        <a href="<?=Url::to(['/me'])?>">
+        <a href="<?= Url::to(['/me']) ?>">
 
             <div style="line-height: 1;">
                 <div class="fw-bold text-white" style="font-size: 1.35rem; letter-spacing: 0.5px;">HOSPITAL</div>
@@ -62,29 +68,57 @@ use yii\helpers\Url;
             <button type="button" class="header-btn" id="toggleTheme"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"></path>
                 </svg></button>
-            <button type="button" class="header-btn d-none d-lg-flex"  id="toggleFullscreen"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
                     <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
                     <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
                     <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
                 </svg></button>
-<a href="<?=Url::to(['/settings'])?>"  class="header-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="<?= Url::to(['/settings']) ?>" class="header-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-</a>
+            </a>
 
         </div>
         <div class="header-divider"></div>
-        <div class="d-flex align-items-center gap-3 header-profile">
-            <div class="rounded-circle border border-2 border-white border-opacity-50 d-flex align-items-center justify-content-center overflow-hidden" style="width: 38px; height: 38px; background-color: rgba(255,255,255,0.1);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+        <div class="d-inline-flex ms-0 ms-sm-2 dropdown">
+            <div class="d-flex align-items-center gap-3 header-profile" data-bs-toggle="dropdown" aria-haspopup="true" type="button"
+                id="page-header-profile-dropdown" aria-expanded="false">
+                <?php if (UserHelper::GetEmployee()): ?>
+                    <div class="rounded-circle border border-2 border-white border-opacity-50 d-flex align-items-center justify-content-center overflow-hidden" style="width: 38px; height: 38px; background-color: rgba(255,255,255,0.1);">
+                        <?= Html::img(UserHelper::GetEmployee()->ShowAvatar(), ['class' => 'avatar avatar-xs me-0']) ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="d-none d-md-block text-white fw-medium"><?= UserHelper::GetEmployee()->fullname ?></div>
             </div>
-            <div class="d-none d-md-block text-white fw-medium">Administrator Lastname</div>
+
+
+            <div aria-labelledby="page-header-profile-dropdown" class="dropdown-menu-right dropdown-menu">
+                <a href="<?= Url::to('/profile') ?>" class="dropdown-item">
+                    <i class="fa-solid fa-clipboard-user fs-4 me-3"></i> โปรไฟล์
+                </a>
+                <a href="<?= Url::to('/profile/setting') ?>" class="dropdown-item">
+                    <i class="fa-solid fa-user-gear fs-4 me-3"></i> ตั้งค่า
+                </a>
+                <a href="<?= Url::to('/profile/line-connect') ?>" class="dropdown-item">
+                    <i class="fa-brands fa-line fs-4 me-3 text-success"></i> เชื่อม LineID
+                </a>
+                <div class="dropdown-divider"></div>
+                <?php if (!Yii::$app->user->isGuest): ?>
+                    <?php
+                    echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
+                        . Html::submitButton(
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power-icon lucide-power"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg> &nbsp;ออกจากระบบ',
+                            ['class' => 'dropdown-item btn btn-danger']
+                        )
+                        . Html::endForm();
+                    ?>
+                <?php endif; ?>
+            </div>
+
         </div>
     </div>
 </header>
@@ -111,16 +145,16 @@ $(function () {
     /* ======================
      * Theme (Bootstrap 5.3)
      * ====================== */
-    // const theme = localStorage.getItem('theme') || '';
-    // $('html').attr('data-bs-theme', theme);
+    const theme = localStorage.getItem('theme') || '$colorName';
+    $('html').attr('data-bs-theme', theme);
 
-    // $('#toggleTheme').on('click', function () {
-    //     const current = $('html').attr('data-bs-theme');
-    //     const next = current === 'dark' ? '' : 'dark';
+    $('#toggleTheme').on('click', function () {
+        const current = $('html').attr('data-bs-theme');
+        const next = current === 'dark' ? '$colorName' : 'dark';
 
-    //     $('html').attr('data-bs-theme', next);
-    //     localStorage.setItem('theme', next);
-    // });
+        $('html').attr('data-bs-theme', next);
+        localStorage.setItem('theme', next);
+    });
 
     /* ======================
      * Fullscreen

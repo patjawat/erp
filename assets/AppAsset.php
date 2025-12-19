@@ -31,7 +31,8 @@ class AppAsset extends AssetBundle
         'css/waves.min.css',
         'css/tour.min.css',
         'libs/datepicker/jquery.datetimepicker.css',
-        'libs/animate/animate.min.css'
+        'libs/animate/animate.min.css',
+        'libs/magnific-popup/magnific-popup.css'
     ];
 
     public $js = [
@@ -47,7 +48,8 @@ class AppAsset extends AssetBundle
         'libs/lazysizes/lazysizes.min.js', // lazyload รูปภาพ
         'libs/fabric/fabric.min.js',
         'libs/jspdf/jspdf.umd.min.js',
-        'libs/pdf/pdf.min.js'
+        'libs/pdf/pdf.min.js',
+        'libs/magnific-popup/jquery.magnific-popup.js'
     ];
 
     public $depends = [

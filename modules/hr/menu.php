@@ -32,7 +32,7 @@ use yii\helpers\Url;
             <span class="d-none d-sm-inline">ตั้งค่า</span>
         </button>
 
-        <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1" style="">
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
             <li>
                 <a href="#" id="download-button" class="dropdown-item">
                     <i class="fa-solid fa-file-export me-1"></i>ส่งออก</a>

@@ -15,14 +15,6 @@ $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
 
 ?>
-<?php $this->beginBlock('action'); ?>
- <p class="mb-0">
-                                <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
-                                    'class' => 'btn btn-danger delete-item',
-                                    ]) ?>
-                                    <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-light']) ?>
-                            </p>
-<?php $this->endBlock(); ?>
 
 <style>
     .modal-footer {

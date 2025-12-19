@@ -29,8 +29,16 @@ class BuildingController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', 'asset_name', $searchModel->q],
+            ['LIKE', 'code', $searchModel->q],
+            ['LIKE', 'price', $searchModel->q],
+            ['LIKE', 'on_year', $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.building_type_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.location')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.floors')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.area')"), $searchModel->q],
         ]);
 
         // ค้นหาตามอายุ

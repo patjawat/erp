@@ -6,24 +6,27 @@ use yii\widgets\Pjax;
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ระบบการลา';
+$this->title = 'ทะเบียนการลา';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar-day fs-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-check-icon lucide-book-check">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+            <path d="m9 9.5 2 2 4-4" />
+        </svg>
+        ทะเบียนประวัติการลา
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'list'])?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'index'])?>
-<?php $this->endBlock(); ?>
-<?php  // Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 
 <style>
 .hover-card-under {

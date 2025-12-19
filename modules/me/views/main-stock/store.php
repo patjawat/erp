@@ -15,20 +15,20 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-shop fs-4 text-primaryr"></i> <?php echo $this->title; ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'store']) ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-check-icon lucide-clipboard-check"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+      <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?php echo Html::a('ทะเบียนการเบิก',['/me/stock-event/reuqest-order'],['class' => 'btn btn-primary shadow'])?>
+<div class="d-flex gap-2">
+    <?= $this->render('@app/components/ui/btnReturn')?>
+</div>
 <?php $this->endBlock(); ?>
+
 
 
 <?php

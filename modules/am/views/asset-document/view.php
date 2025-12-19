@@ -39,5 +39,5 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ],
     ]) ?>
-
+<?= $model->listImages() ?>
 </div>

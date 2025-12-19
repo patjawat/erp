@@ -1,17 +1,25 @@
 <?php
-$this->title = 'Dashboard';
+
+$this->title = 'ภาพรวมการลา';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['/me']];
+$this->params['breadcrumbs'][] = ['label' => 'ภาพรวม', 'url' => ['/me']];
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge-high fs-1"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+        ภาพรวมการลา
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../menu') ?>
-<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'dashboard'])?>
 <?php $this->endBlock(); ?>
 

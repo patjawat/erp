@@ -4,17 +4,23 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 $this->title = $title;
+$this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = $this->title;
-$this->params['breadcrumbs'][] = 'Dashboard';
+$this->params['breadcrumbs'][] = 'ภาพรวม';
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<?=$icon?> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+
+        <?=$icon?> ภาพรวม<?= $this->title; ?>
+  </h4>
+</div>
 <?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?php echo $this->render('@app/modules/helpdesk2/menu',['active' => $active]) ?>
 <?php $this->endBlock(); ?>
+
 
 <?= $this->render('@app/modules/helpdesk2/views/service/summary_status', ['model' => $searchModel]) ?>
 <div class="row">

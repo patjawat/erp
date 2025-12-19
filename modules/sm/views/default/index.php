@@ -8,53 +8,54 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 
-$this->title = 'Dashboard';
+$this->title = 'ภาพรวมระบบขอซื้อ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', 'url' => ['/sm']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = 'ภาพรวม';
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge-high me-1"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+    <?= $this->title ?>
+  </h4>
+</div>
 <?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('sub-title'); ?>
-
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
-<?php $this->endBlock(); ?>
-
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu',['active' => 'dashboard'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('menu', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="row">
-    <div class="col-9">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</p>
-                 <div class="mb-3">
-                  <?=$this->render('_search_year',['model' => $searchModel])?></div>
-                </div>
-                <?= $this->render('order_summary',['model' => $searchModel]) ?>
-                <?= $this->render('order_chart_column',['model' => $searchModel]) ?>
-            </div>
+  <div class="col-9">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?> </span> รายการ</p>
+          <div class="mb-3">
+            <?= $this->render('_search_year', ['model' => $searchModel]) ?></div>
         </div>
+        <?= $this->render('order_summary', ['model' => $searchModel]) ?>
+        <?= $this->render('order_chart_column', ['model' => $searchModel]) ?>
+      </div>
+    </div>
 
-    </div>
-    <div class="col-3">
-        <?= $this->render('budget_balanced',['model' => $searchModel]) ?>
-    </div>
+  </div>
+  <div class="col-3">
+    <?= $this->render('budget_balanced', ['model' => $searchModel]) ?>
+  </div>
 </div>
 <div class="row">
-    <div class="col-6">
-        <div id="showPrOrderList"></div>
-        <div id="showPrAcceptOrderList"></div>
-    </div>
-    <div class="col-6">
-        <div id="showPqOrder"></div>
-    </div>
+  <div class="col-6">
+    <div id="showPrOrderList"></div>
+    <div id="showPrAcceptOrderList"></div>
+  </div>
+  <div class="col-6">
+    <div id="showPqOrder"></div>
+  </div>
 </div>
 
 
@@ -63,6 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php
+
 use yii\widgets\Pjax;
 
 $PrOrderListUrl = Url::to(['/sm/default/pr-order']);
@@ -171,4 +173,5 @@ $js = <<< JS
     JS;
 $this->registerJS($js, View::POS_END);
 ?>
-<?php // Pjax::end(); ?>
+<?php // Pjax::end(); 
+?>

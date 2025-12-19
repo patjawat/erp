@@ -1,13 +1,9 @@
 <?php
 
 use yii\helpers\Html;
-use yii\web\JsExpression;
 use app\models\Categorise;
 use kartik\form\ActiveForm;
-use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
-use app\modules\hr\models\Employees;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetSearch $model */
@@ -35,7 +31,7 @@ $listAssetGroup = ArrayHelper::map(Categorise::find()
 </style>
 
 <?php $form = ActiveForm::begin([
-    'action' => ['/am/asset'],
+
     'method' => 'get',
     'options' => [
         'data-pjax' => 0
@@ -58,146 +54,6 @@ $listAssetGroup = ArrayHelper::map(Categorise::find()
     </div>
 </div>
 
-
-<div class="collapse mt-3" id="collapseFilter">
-    <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-        'name' => 'department',
-        'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-        'value' => 1,
-        'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-        'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-        'fontAwesome' => true,
-        'asDropdown' => true,
-        'multiple' => false,
-        'options' => ['disabled' => false],
-        'dropdownConfig' => [
-            'input' => [
-                'placeholder' => 'หน่วยงา...',
-            ],
-            'options' => [
-                // 'style' => 'width:300px;' // ✅ กำหนดความกว้างของ dropdown
-            ]
-        ],
-    ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
-    <div class="row">
-        <div class="col-6">
-            <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
-                'data' => $model->ListMethodget(),
-                'options' => ['placeholder' => 'เลือกวิธีได้มา'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label('วิธีได้มา');
-            ?>
-        </div>
-        <div class="col-6">
-            <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
-                'data' => $model->ListBudgetdetail(),
-                'options' => ['placeholder' => 'เลือกประเภทเงิน'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label('ประเภทเงิน');
-            ?>
-        </div>
-        <div class="col-6">
-
-
-            <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
-                'data' => $model->ListOnYear(),
-                'options' => ['placeholder' => 'เลือกปีงบประมาณ'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'width' => '150px',
-                ],
-            ])->label('งบประมาณ');
-            ?>
-        </div>
-        <div class="col-6">
-
-
-            <?php
-            $url = \yii\helpers\Url::to(['/depdrop/employee']);
-            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
-            echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                // 'data' => $model->ListEmployees(),
-                'initValueText' => $owner,
-                'options' => ['placeholder' => 'กรุณาเลือก'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'minimumInputLength' => 1,
-                    'language' => [
-                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-                    ],
-                    'ajax' => [
-                        'url' => $url,
-                        'dataType' => 'json',
-                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
-                    ],
-                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
-                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
-                ],
-                'pluginEvents' => [
-                    // "select2:select" => "function(result) { 
-                    //     var data = $(this).select2('data')[0]
-                    //     $('#asset-data_json-method_get_text').val(data.text)
-                    //  }",
-                ]
-            ])->label('ผู้รับผิดชอบ');
-            ?>
-        </div>
-        <div class="col-6">
-            <?= $form->field($model, 'q_receive_date')->widget(\yii\widgets\MaskedInput::className(), [
-                'mask' => '99/99/9999',
-            ])->label('วันที่รับเข้า');
-            ?>
-        </div>
-        <div class="col-6">
-            <?php
-            echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                'data' => $model->ListAssetStatus(),
-                'options' => ['placeholder' => 'กรุณาเลือก...'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-                'pluginEvents' => [
-                    "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-method_get_text').val(data.text)
-                                         }",
-                ]
-            ])->label('สถานะ');
-            ?>
-        </div>
-
-    </div>
-
-    <div class="row">
-        <div class="col-6">
-
-            <?= $form->field($model, 'price1')->textInput(['type' => 'number'])->label('ระบุราคาต่ำสุด') ?>
-        </div>
-        <div class="col-6">
-
-            <?= $form->field($model, 'price2')->textInput(['type' => 'number'])->label('ระบุราคาสูงสุด') ?>
-        </div>
-        <div class="col-12">
-            <?= $form->field($model, 'po_number')->textInput()->label('เลขที่สั่งซื้อ') ?>
-        </div>
-    </div>
-
-    <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-light mt-3']); ?>
-    <?= app\components\AppHelper::Btn(
-        [
-            'title' => '<i class="fa-solid fa-circle-exclamation"></i> รายการไม่สมบูรณ์',
-            'url' => ['/am/asset/omit'],
-            'modal' => true,
-            'size' => 'lg',
-            'class' => 'btn btn-danger mt-3'
-        ]
-    ) ?>
-</div>
 
 
 <?php ActiveForm::end(); ?>

@@ -6,10 +6,11 @@ use Yii;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\components\AppHelper;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\usermanager\models\User;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
  * This is the model class for table "asset_detail".
@@ -102,31 +103,36 @@ class AssetDetail extends \yii\db\ActiveRecord
         $name = $this->name;
         return FileManagerHelper::FileUpload($ref, $name);
     }
+    public function listImages()
+    {   $ref = $this->ref;
+        return FileManagerHelper::listViewImages($ref);
+    }
 
-    public function beforeSave($insert)
+public function beforeSave($insert)
     {
+        if (parent::beforeSave($insert)) {
+            // 1. แปลงวันที่หลัก
+            if ($this->date_start && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $this->date_start)) {
+                $this->date_start = AppHelper::DateToDb($this->date_start);
+            }
+            if ($this->date_end && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $this->date_end)) {
+                $this->date_end = AppHelper::DateToDb($this->date_end);
+            }
 
-        try {
-            //บันทึกการบำรุงรักษา
-            // if (is_string($this->ma)) {
-            //     $this->ma = explode(",", $this->ma);
-            // };
-
-            // $items = [
-            //     "item" => $this->ma
-            // ];
-            // if ($this->name != "asset_item"){
-            //     $this->data_json = ArrayHelper::merge($this->data_json, $items);
-            // }else{
-            //     $this->data_json = $items;
-            // }
-            //บันทึกอุปกรภายใน
-
-
-        } catch (\Throwable $th) {
-            //throw $th;
-        }    
-        return parent::beforeSave($insert);
+            // 2. จัดการ data_json (ป้องกันข้อมูลเดิมหาย)
+            if (is_array($this->data_json)) {
+                $data = $this->data_json;
+                foreach ($data as $key => $value) {
+                    // ตรวจสอบว่ามีรูปแบบ 00/00/0000 และเป็นฟิลด์วันที่
+                    if (is_string($value) && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
+                        $data[$key] = AppHelper::DateToDb($value);
+                    }
+                }
+                $this->data_json = $data;
+            }
+            return true;
+        }
+        return false;
     }
 
       //Relationships

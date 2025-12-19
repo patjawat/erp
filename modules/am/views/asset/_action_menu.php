@@ -3,6 +3,7 @@ use yii\helpers\Html;
 ?>
 <div class="d-flex gap-2">
 
+    <?php if(Yii::$app->user->can('asset')):?>
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button"
                 id="dropdownNewButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -22,8 +23,8 @@ use yii\helpers\Html;
                 'method' => 'post',
             ],
         ]) ?>
-        <button class="btn btn-white border shadow-sm text-secondary d-flex align-items-center gap-2 btn-sm px-3 py-2 bg-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <?php endif;?>
+        <?= Html::a(' <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="5" height="5" x="3" y="3" rx="1"></rect>
                 <rect width="5" height="5" x="16" y="3" rx="1"></rect>
                 <rect width="5" height="5" x="3" y="16" rx="1"></rect>
@@ -36,14 +37,7 @@ use yii\helpers\Html;
                 <path d="M16 12h1"></path>
                 <path d="M21 12v.01"></path>
                 <path d="M12 21v-1"></path>
-            </svg>
-            QR Code
-        </button>
-        <a href="/dev/asset/index" class="btn btn-white border shadow-sm text-secondary d-flex align-items-center gap-2 btn-sm px-3 py-2 bg-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m12 19-7-7 7-7"></path>
-                <path d="M19 12H5"></path>
-            </svg>
-            ย้อนกลับ
-        </a>
+            </svg> QR-Code', ['/am/asset/qrcode', 'id' => $model->id], ['class' => 'btn btn-white border shadow-sm text-secondary d-flex align-items-center gap-2 btn-sm px-3 py-2 bg-white open-modal', 'data' => ['size' => 'modal-md']]) ?>
+      
+       <?= $this->render('@app/components/ui/btnReturn') ?>
     </div>

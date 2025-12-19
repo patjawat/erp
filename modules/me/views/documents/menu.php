@@ -10,6 +10,6 @@ $listAssetGroups = Categorise::find()
 ->all();
 ?>
 <div class="d-flex gap-2">
-    <?=Html::a('ถึง'.UserHelper::GetEmployee()->fullname,['/me/documents/index'],['class' => (isset($action) && $action == 'index') ? 'btn btn-primary' : 'btn btn-light'])?>
-    <?=Html::a('ถึงหน่วยงาน',['/me/documents/department'],['class' => (isset($action) && $action == 'department') ? 'btn btn-primary' : 'btn btn-light'])?>
+    <?=Html::a('ถึง'.UserHelper::GetEmployee()->fullname,['/me/documents/index'],['class' => (isset($action) && $action == 'index') ? 'btn btn-primary' : 'btn btn-outline-primary'])?>
+    <?=Html::a('ถึงหน่วยงาน',['/me/documents/department'],['class' => (isset($action) && $action == 'department') ? 'btn btn-primary' : 'btn btn-outline-primary'])?>
 </div>

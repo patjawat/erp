@@ -1,21 +1,3 @@
-<?php
-$this->title = 'รายละเอียดครุภัณฑ์ ';
-$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนทรัพย์สิน', 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => 'ครุภัณฑ์', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
-?>
-
-<?php $this->beginBlock('page-title'); ?>
-<div class="d-flex align-items-center gap-2 mb-1">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package text-primary">
-            <path d="m7.5 4.27 9 5.15"></path>
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-            <path d="m3.3 7 8.7 5 8.7-5"></path>
-            <path d="M12 22V12"></path>
-        </svg> ระบบบริหารทรัพย์สิน</h4>
-</div>
-<?php $this->endBlock(); ?>
-
 <div class="row g-5">
     <div class="col-12 col-md-6">
         <h6 class="fw-bold text-dark mb-4 border-start border-4 border-primary ps-3">ข้อมูลทั่วไป</h6>
@@ -25,7 +7,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <dt class="col-sm-4 text-secondary fw-normal mb-3">ชื่อรายการ</dt>
             <dd class="col-sm-8 text-dark fw-medium mb-3"><?= $model->asset_name ?></dd>
-
+            <?php if ($model->license_plate !== null): ?>
+                <dt class="col-sm-4 text-secondary fw-normal mb-3">หมายเลขทะเบียน</dt>
+                <dd class="col-sm-8 text-dark fw-medium mb-3"><?= $model->license_plate ?></dd>
+            <?php endif; ?>
             <dt class="col-sm-4 text-secondary fw-normal mb-3">ยี่ห้อ / รุ่น</dt>
             <dd class="col-sm-8 text-dark fw-medium mb-3"><?= $model->data_json['brand'] ?? 'ไม่ระบุ' ?>/<?= $model->data_json['asset_model'] ?? 'ไม่ระบุ' ?></dd>
 

@@ -10,23 +10,29 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
-$this->title = 'ระบบบริหารทรัพย์สิน';
-$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
+$this->title = 'ครุภัณฑ์';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2 mb-1">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="20" height="14" x="2" y="3" rx="2"></rect>
             <line x1="8" x2="16" y1="21" y2="21"></line>
             <line x1="12" x2="12" y1="17" y2="21"></line>
         </svg>
-         ครุภัณฑ์</h4>
+     ทะเบียน<?= $this->title ?>     
+    </h4>
 </div>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/am/menu', ['active' => 'equip']) ?>
+<?php $this->endBlock(); ?>
+
 
 <?php Pjax::begin(['id' => 'title-container', 'timeout' => 50000]); ?>
 
@@ -38,34 +44,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::end(); ?>
-<?php // Pjax::begin(['id' => 'am-container','timeout' => 50000 ]); 
-?>
 
-<?= $this->render('@app/modules/am/views/default/car_summary_price') ?>
-<?= $this->render('@app/modules/am/views/asset/_list', [
-    'tabs' => $tabs,
-    'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider,
-]) ?>
-
-<?php if ($group): ?>
-    <?= app\components\AppHelper::Btn([
-        'title' => '<i class="fa-solid fa-circle-plus"></i> ลงทะเบียน' . $title,
-        'url' => ['create', 'group' => $group, 'title' => $title],
-        'model' => true,
-        'size' => 'lg',
-    ]) ?>
-<?php else: ?>
-
-<?php endif; ?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-        <div>
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-        </div>
+  
     </div>
     <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -73,24 +57,26 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
-<div class="dropdown">
-    <button class="btn btn-success shadow dropdown-toggle" type="button"
-        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fa-solid fa-file-excel"></i> Excel
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-        <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
-        <li>
-            <?= Html::a(
-                '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
-                '#',
-                ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
-            ) ?>
-
-        </li>
-    </ul>
+<div class="card">
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between">
+            <h6 class="text-white">
+                <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
+                <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
+            </h6>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+        </div>
+    </div>
+    <div class="card-body p-0">
+<?= $this->render('@app/modules/am/views/asset/_list', [
+    'tabs' => $tabs,
+    'searchModel' => $searchModel,
+    'dataProvider' => $dataProvider,
+]) ?>
+  </div>
 </div>
+
+
 
 
 

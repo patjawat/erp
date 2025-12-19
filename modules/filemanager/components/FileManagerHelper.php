@@ -401,4 +401,16 @@ class FileManagerHelper extends Component
             }
         }
     }
+    //แสดงรูปภาพตาม ref
+   public static function listViewImages($ref)
+    {
+        // 1. ค้นหาข้อมูล
+        $uploads = Uploads::find()->where(['ref' => $ref])->all();
+
+        // 2. ใช้ Yii::$app->view แทน $this
+        // 3. ส่ง ['uploads' => $uploads] เพื่อให้ใน View ใช้งานตัวแปร $uploads ได้
+        return Yii::$app->view->render('@app/modules/filemanager/views/uploads/list_images', [
+            'uploads' => $uploads,
+        ]);
+    }
 }

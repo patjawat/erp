@@ -1,28 +1,36 @@
 <?php
 use yii\helpers\Url;
 use app\components\ApproveHelper;
+use app\components\UserHelper;
+$me = UserHelper::GetEmployee();
 $notify = ApproveHelper::Info();
 $totalLeave = $notify['leave']['total'];
 $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];
 $totalStock = $notify['stock']['total'];
 $totalDevelopment= $notify['development']['total'];
-$this->title = "รายการที่ต้องอนุมัติและตรวจสอบ";
-$this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
+$this->title = "รายการที่รออนุมัติ";
+$this->params['breadcrumbs'][] = ['label' => 'ระบบการอนุมัติ', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+        <?= $this->title?>ของ<?= $me->fullname() ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
-<?php $this->endBlock(); ?>
 
 
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn')?>
 <?php $this->endBlock(); ?>
 
 

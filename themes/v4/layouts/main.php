@@ -38,16 +38,16 @@ AppAsset::register($this);
         --erp-bg: #f3f7fa;
     }
 
-    body {
+    /* body {
         background-color: var(--erp-bg);
-    }
+    } */
 
     .header-fixed {
         position: sticky;
         top: 0;
         z-index: 1050;
         height: 64px;
-        background-color: var(--erp-primary);
+        background-color: var(--bs-primary);
         color: white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
@@ -178,6 +178,9 @@ AppAsset::register($this);
     .erp-nav-item.active .erp-nav-text {
         font-weight: 600;
     }
+    .page-content-wrapper{
+        background-color: var(--bs-body-bg);
+    }
 
     /* .page-content-wrapper .page-title-box {
             background-color: rgba(var(--bs-primary-rgb), 0.11);
@@ -197,7 +200,7 @@ AppAsset::register($this);
 
 
 
-    <div class="navbar-fixed-container d-none">
+    <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center">
         <div class="erp-nav-list">
             <?= $this->render('navbar') ?>
         </div>

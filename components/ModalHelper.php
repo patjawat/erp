@@ -16,7 +16,8 @@ class ModalHelper extends Component
 
      public static function modalFooterUpdateDeleteClose($id)
     {
-        return Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $id], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) .
+        $icon = '<i class="fa-regular fa-pen-to-square"></i>';
+        return Html::a($icon.' แก้ไข', ['update', 'id' => $id,'title' => $icon.' แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) .
             Html::button('<i class="fa-solid fa-xmark"></i> ปิด', ['class' => 'btn btn-secondary pull-left', 'data-bs-dismiss' => "modal"]);
     }
 }

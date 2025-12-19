@@ -1,5 +1,7 @@
 <?php
+
 /** @var yii\web\View $this */
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Json;
@@ -7,20 +9,31 @@ use yii\db\Expression;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
 
-$this->title = 'บริหารทรัพย์สิน | Dashboard';
-$this->params['breadcrumbs'][] = $this->title;
+$this->title = 'ระบบบริหารทรัพย์สิน';
+$this->params['breadcrumbs'][] = 'ระบบบริหารทรัพย์สิน';
+$this->params['breadcrumbs'][] = ['label' => 'ภาพรวม', 'url' => ['/am']];
+
+$countLan = Asset::find()->where(['asset_group_id' => 1, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
+$countBuilding = Asset::find()->where(['asset_group_id' => 2, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
+$countEquip = Asset::find()->where(['asset_group_id' => 4, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
 ?>
-<?php $this->beginBlock('page-title');?>
-<i class="fa-solid fa-gauge-high fs-3"></i> Dashboard
-<?php $this->endBlock();?>
-<?php $this->beginBlock('sub-title');?>
 
-<?php $this->beginBlock('page-action');?>
-<?=$this->render('menu')?>
-<?php $this->endBlock();?>
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+      <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+      <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+      <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+    </svg>
+    ภาพรวม<?= $this->title ?>
+  </h4>
+</div>
+<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu',['active' => 'index'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/am/menu', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 <?php
@@ -33,137 +46,35 @@ ORDER BY on_year DESC LIMIT 10")->queryAll();
 
 
 <div class="row">
-    <div class="col-8">
+  <div class="col-8">
+
+    <?= $this->render('@app/modules/am/views/default/car_summary_count') ?>
 
 
-        <div class="row">
 
-            <div class="col-lg-4 col-md-4 col-sm-12 col-sx-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="<?=Url::to(['/am/asset'])?>">
-                                    <span class="text-muted text-uppercase fs-6">มูลค่าทรัพย์สินทั้งหมด</span>
-                                </a>
-                                <h2 class="text-muted text-uppercase fs-5"><?=number_format($totalPrice, 2)?> บาท</h2>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div id="t-rev" style="min-height: 45px;">
-                                    <div id="apexchartsdlqwjkgl"
-                                        class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                                        style="width: 90px; height: 45px;">
-                                        <i class="fa-solid fa fa-recycle fs-1"></i>
-                                        <div class="apexcharts-legend"></div>
 
-                                    </div>
-                                </div>
-                                <div class="resize-triggers">
-                                    <div class="expand-trigger">
-                                        <div style="width: 91px; height: 70px;"></div>
-                                    </div>
-                                    <div class="contract-trigger"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End-col -->
-
-            <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <a href="#">
-                                    <span class="text-muted text-uppercase fs-6">มูลค่าครุภัณฑ์</span>
-                                </a>
-                                <h2 class="text-muted text-uppercase fs-5"><?=number_format($totalPriceGroup3, 2)?> บาท
-                                </h2>
-                            </div>
-
-                            <div class="text-center" style="position: relative;">
-                                <div id="t-rev" style="min-height: 45px;">
-                                    <div id="apexchartsdlqwjkgl"
-                                        class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                                        style="width: 90px; height: 45px;">
-                                        <i class="fa-solid fa-cash-register fs-1"></i>
-                                        <div class="apexcharts-legend"></div>
-
-                                    </div>
-                                </div>
-
-                                <div class="resize-triggers">
-                                    <div class="expand-trigger">
-                                        <div style="width: 91px; height: 70px;"></div>
-                                    </div>
-                                    <div class="contract-trigger"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End-col -->
-
-            <!-- End-col -->
-            <div class="col-lg-4 col-md-12 col-sm-12 col-sx-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fs-6">มูลค่าสิ่งก่อสร้าง</span>
-                                <h2 class="text-muted text-uppercase fs-5"><?=number_format($totalPriceGroup2, 2)?> บาท
-                                </h2>
-                            </div>
-                            <div class="text-center" style="position: relative;">
-                                <div id="t-rev" style="min-height: 45px;">
-                                    <div id="apexchartsdlqwjkgl"
-                                        class="apexcharts-canvas apexchartsdlqwjkgl apexcharts-theme-light"
-                                        style="width: 90px; height: 45px;">
-                                        <i class="fa-solid fa-building fs-1"></i>
-                                        <div class="apexcharts-legend"></div>
-
-                                    </div>
-                                </div>
-
-                                <div class="resize-triggers">
-                                    <div class="expand-trigger">
-                                        <div style="width: 91px; height: 70px;"></div>
-                                    </div>
-                                    <div class="contract-trigger"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End-col -->
-
-        </div>
-        <div class="card">
-            <div class="card-body">
-                มูลค่าครุภัณฑ์ (ย้อนหลัง 10 ปี)
-                <div id="line-chart" style="width:100%;height:550px;"></div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-body">
-                มูลค่าประเภทงบการเงิน (ย้อนหลัง 10 ปี)
-                <div id="line-stack" style="width:100%;height:550px;"></div>
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-body">
+        มูลค่าครุภัณฑ์ (ย้อนหลัง 10 ปี)
+        <div id="line-chart" style="width:100%;height:550px;"></div>
+      </div>
     </div>
-
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body">
-                ร้อยละของรายการครุภัณฑ์ และสิ่งก่อสร้าง (ย้อนหลัง 5 ปี)
-                <div id="pie-chart-container" style="width:100%;height:550px;"></div>
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-body">
+        มูลค่าประเภทงบการเงิน (ย้อนหลัง 10 ปี)
+        <div id="line-stack" style="width:100%;height:550px;"></div>
+      </div>
     </div>
+  </div>
+
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body">
+        ร้อยละของรายการครุภัณฑ์ และสิ่งก่อสร้าง (ย้อนหลัง 5 ปี)
+        <div id="pie-chart-container" style="width:100%;height:550px;"></div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -177,28 +88,27 @@ $dataLabel = [];
 <?php
 krsort($querys);
 foreach ($querys as $item1) {
-    $data[] = $item1['on_year'];
-
+  $data[] = $item1['on_year'];
 }
 
 foreach (Categorise::find()->where(['name' => 'budget_type'])->all() as $item2) {
-    $value = [];
-    foreach ($querys as $item1) {
-        $price = Asset::find()
-            ->where(['on_year' => $item1['on_year']])
-            ->andWhere(new Expression('JSON_EXTRACT(asset.data_json, "$.budget_type") = "' . $item2->code . '"'))
-            ->sum('price');
-        $p = isset($price) ? $price : 0;
-        $value[] = $p;
-    }
+  $value = [];
+  foreach ($querys as $item1) {
+    $price = Asset::find()
+      ->where(['on_year' => $item1['on_year']])
+      ->andWhere(new Expression('JSON_EXTRACT(asset.data_json, "$.budget_type") = "' . $item2->code . '"'))
+      ->sum('price');
+    $p = isset($price) ? $price : 0;
+    $value[] = $p;
+  }
 
-    $dataLabel[] = $item2->title;
-    $seriesData[] = [
-        'type' => 'line',
-        'stack' => 'Total',
-        'name' => $item2->title,
-        'data' => $value,
-    ];
+  $dataLabel[] = $item2->title;
+  $seriesData[] = [
+    'type' => 'line',
+    'stack' => 'Total',
+    'name' => $item2->title,
+    'data' => $value,
+  ];
 }
 ?>
 
@@ -212,9 +122,8 @@ krsort($priceLastOfYear);
 $getCategories = [];
 $getTotal = [];
 foreach ($priceLastOfYear as $item) {
-    $getCategories[] = $item['on_year'];
-    $getTotal[] = (float) $item['total'];
-
+  $getCategories[] = $item['on_year'];
+  $getTotal[] = (float) $item['total'];
 }
 
 ?>

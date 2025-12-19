@@ -37,7 +37,7 @@ use yii\helpers\Html;
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="text-secondary small mb-1">อายุการใช้งาน</div>
-                        <div class="fw-medium text-dark">5 ปี</div>
+                        <div class="fw-medium text-dark">- ปี</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="text-secondary small mb-1">สถานะ</div>
@@ -51,8 +51,8 @@ use yii\helpers\Html;
                 </div>
 
                 <div class="d-flex gap-3">
-                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ทะเบียนคุม', ['depreciation', 'id' => $model->id], ['class' => 'btn btn-white border w-50 text-secondary fw-medium" open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <button class="btn btn-primary w-50 fw-medium shadow-sm">ส่งซ่อม / แจ้งปัญหา</button>
+                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ทะเบียนคุม', ['/am/asset/depreciation', 'id' => $model->id], ['class' => 'btn btn-white border w-50 text-secondary fw-medium" open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'btn btn-warning w-50 fw-medium shadow-sm open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
             </div>
         </div>

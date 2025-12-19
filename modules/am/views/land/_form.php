@@ -3,62 +3,227 @@
 use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use kartik\depdrop\DepDrop;
 use yii\widgets\MaskedInput;
+use app\modules\hr\models\Employees;
+use kartik\editors\Summernote;
 
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
+
 ?>
+ประเภทครุภัณฑ์
 
-<?php $this->beginBlock('page-title'); ?>
-<div class="d-flex align-items-center gap-2 mb-1">
-    <?= Html::a(
-        '<i class="fa-solid fa-angle-left"></i>',
-        Yii::$app->request->referrer ?: ['/am/land'],
-        [
-            'class' => 'btn btn-light btn-sm rounded-circle p-1 d-flex align-items-center justify-content-center',
-            'style' => 'width:32px; height:32px;'
-        ]
-    ) ?>
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package text-primary">
-            <path d="m7.5 4.27 9 5.15"></path>
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-            <path d="m3.3 7 8.7 5 8.7-5"></path>
-            <path d="M12 22V12"></path>
-        </svg> ระบบบริหารทรัพย์สิน</h4>
-</div>
-
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('../default/menu', ['active' => 'asset']) ?>
-<?php $this->endBlock(); ?>
-
+<style>
+    .modal-footer {
+        display: none !important;
+    }
+</style>
 <?php $form = ActiveForm::begin([
     'id' => 'form-asset',
     'enableAjaxValidation' => true,
     'validationUrl' => ['/am/asset/validator'],
     'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
-<div class="d-flex flex-column gap-4 pb-5">
 
-    <div class="px-0">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h6 class="mb-0 fw-bold">ข้อมูลพัสดุหลัก</h6>
+<?= $form->field($model, 'asset_item_id')->hiddenInput()->label(false); ?>
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
+                <!-- รูปภาพ -->
+                <label class="form-label mb-0">รูปภาพทรัพย์สิน</label>
+                <div class="mb-3">
+                    <div class="file-file-preview" id="editImagePreview" data-isfile="<?= $model->showImg()['isFile'] ?>" data-newfile="false">
+                        <?= Html::img($model->showImg()['image'], ['id' => 'editPreviewImg']) ?>
+                        <div class="file-remove" id="editRemoveImage">
+                            <i class="bi bi-x"></i>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label fw-medium">หมวดพัสดุ <span class="text-danger">*</span></label><input type="text" class="form-control bg-light" readonly="" value="ที่ดิน"></div>
-                            <div class="col-md-6">
-                                <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('รหัสคุม FSN (Federal Stock Number)') ?>
-                            </div>
+                    <div class="file-upload">
+                        <div class="file-upload-btn" id="editUploadBtn">
+                            <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
+                            <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
+                            <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
+                        </div>
+                        <input type="file" class="file-upload-input" id="my_file" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-body">
+
+                <!-- ข้อมูลงบประมาณ -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลงบประมาณ</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <?php
+                            echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
+                                'data' => $model->ListBudgetdetail(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-budget_type_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('ประเภทเงิน');
+                            ?>
+                        </div>
+
+                        <div class="col-md-4">
+                            <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('ราคาแรกรับ') ?>
+                        </div>
+
+                        <div class="col-md-4">
+                            <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
+                        </div>
+
+
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'department')->widget(\kartik\tree\TreeViewInput::className(), [
+                                'name' => 'department',
+                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                                'value' => 1,
+                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                'fontAwesome' => true,
+                                'asDropdown' => true,
+                                'multiple' => false,
+                                'options' => ['disabled' => false],
+                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+
+                <!-- ข้อมูลการได้มา -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลการได้มา</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+
+                            <?php
+                            echo $form->field($model, 'data_json[method_get]')->widget(Select2::classname(), [
+                                'data' => $model->ListMethodget(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('วิธีได้มา');
+                            ?>
+                        </div>
+
+                        <div class="col-md-12 purchase-method-field">
+                            <?php
+                            echo $form->field($model, 'purchase')->widget(Select2::classname(), [
+                                'data' => $model->ListPurchase(),
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-purchase_text').val(data.text)
+                                        }",
+                                ]
+                            ])->label('วิธีการได้มา');
+                            ?>
+                        </div>
+
+                        <div class="col-md-12">
+                            <?php
+                            echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
+                                'data' => $model->ListVendor(),
+                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-vendor_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('ผู้ขาย/ผู้บริจาค');
+                            ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?= $form->field($model, 'data_json[inspection_date]')->textInput()->label('วันที่ตรวจรับ'); ?>
+                        </div>
+                        <div class="col-6">
+                            <?= $form->field($model, 'receive_date')->textInput()->label('วันที่รับเข้า'); ?>
+                        </div>
+                        <div class="col-12">
+                            <?= $form->field($model, 'data_json[expire_date]')->textInput()->label('วันหมดประกัน'); ?>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </div>
+    <div class="col-8">
+
+        <div class="card">
+            <div class="card-body">
+                <!-- ข้อมูลทั่วไป -->
+                <div class="form-section">
+                    <h5 class="section-title">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0">ข้อมูลทั่วไป</p>
+                           
+                        </div>
+                    </h5>
+
+                    <div class="row g-3">
+                           
                             <div class="col-md-6">
                                 <?= $form->field($model, 'data_json[lan_number]')->textInput(['maxlength' => true])->label('เลขที่ โฉนด') ?>
                             </div>
-                            <div class="col-md-6"><label class="form-label fw-medium">ที่เอกสาร (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
+                              <div class="col-md-6">
+                            <?php
+                            echo $form->field($model, 'code', [
+                                'addon' => [
+                                    'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
+                                ]
+                            ])->textInput([
+                                'maxlength' => true,
+                                'placeholder' => 'ค้นหาเลข FSN',
+                                'readonly' => false,  // Make field readonly
+                                // 'class' => 'form-control bg-primary text-white'  // Add background color
+                                'class' => 'form-control'  // Add background color
+                            ])->label('หมายเลขครุภัณฑ์'); ?>
+                        </div>
+                            <div class="col-md-12"><label class="form-label fw-medium">ที่เอกสาร (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
                             <div class="col-12 border-top my-2"></div>
                             <div class="col-12"><label class="form-label fw-medium">เนื้อที่</label></div>
 
@@ -78,166 +243,132 @@ $group = Yii::$app->request->get('group');
                                 ])->textInput()->label(false) ?>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h6 class="mb-0 fw-bold">ข้อมูลงบประมาณและการได้มา</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <?= $form->field($model, 'on_year')->widget(MaskedInput::className(), ['mask' => '9999'])->label('ปีงบประมาณ') ?>
-                            </div>
+                        
+                    <div class="row g-3">
+                      
+   
 
-                            <div class="col-md-4">
-                                <?php
-                                echo $form->field($model, 'data_json[budget_type]')->widget(Select2::classname(), [
-                                    'data' => $model->ListBudgetdetail(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
+                       
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'data_json[asset_options]')->widget(Summernote::class, [
+                                'useKrajeePresets' => true,
+                                'pluginOptions' => [
+                                    'height' => 150, // ความสูงเริ่มต้น (px)
+                                    'minHeight' => 150, // ความสูงต่ำสุด
+                                    'maxHeight' => 500, // ความสูงสูงสุด
+                                ]
+                            ])->label('คุณลักษณะเฉพาะ / รายละเอียดเพิ่มเติม'); ?>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ข้อมูลสถานที่และวันที่ -->
+                <div class="form-section">
+                    <h5 class="section-title">ข้อมูลสถานที่และวันที่</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <?php
+                            $url = \yii\helpers\Url::to(['/depdrop/employee']);
+                            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
+                            echo $form->field($model, 'owner')->widget(Select2::classname(), [
+                                // 'data' => $model->ListEmployees(),
+                                'initValueText' => $owner,
+                                'options' => ['placeholder' => 'กรุณาเลือก'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'minimumInputLength' => 1,
+                                    'language' => [
+                                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
                                     ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-budget_type_text').val(data.text)
-                                         }",
-                                    ]
-                                ])->label('ประเภทเงิน');
-                                ?>
-                            </div>
-                            <div class="col-md-3">
-                                <?php
-                                echo $form->field($model, 'data_json[method_get]')->widget(Select2::classname(), [
-                                    'data' => $model->ListMethodget(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
+                                    'ajax' => [
+                                        'url' => $url,
+                                        'dataType' => 'json',
+                                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
                                     ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
+                                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
+                                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
+                                ],
+                                'pluginEvents' => [
+                                    // "select2:select" => "function(result) { 
+                                    //     var data = $(this).select2('data')[0]
+                                    //     $('#asset-data_json-method_get_text').val(data.text)
+                                    //  }",
+                                ]
+                            ])->label('ผู้รับผิดชอบ');
+                            ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?php
+                            echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+                                'data' => $model->ListAssetStatus(),
+                                'options' => ['placeholder' => 'กรุณาเลือก...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                    "select2:select" => "function(result) { 
                                             var data = $(this).select2('data')[0]
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
-                                    ]
-                                ])->label('วิธีได้มา');
-                                ?>
-                            </div>
-                            <div class="col-md-3">
-                                <?php
-                                echo $form->field($model, 'purchase')->widget(Select2::classname(), [
-                                    'data' => $model->ListPurchase(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-purchase_text').val(data.text)
-                                        }",
-                                    ]
-                                ])->label('วิธีการได้มา');
-                                ?>
-                            </div>
-                            <div class="col-md-6"><label class="form-label fw-medium">รหัสงบ GFMIS (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
-                            <div class="col-md-6"><label class="form-label fw-medium">เลขที่สัญญา (ถ้ามี)</label><input type="text" class="form-control" value=""></div>
-                            <div class="col-md-6">
-                                <?php
-                                echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
-                                    'data' => $model->ListVendor(),
-                                    'options' => ['placeholder' => 'เลือกผู้จำหน่าย'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-vendor_text').val(data.text)
-                                         }",
-                                    ]
-                                ])->label('ซื้อจาก');
-                                ?>
-                            </div>
-                            <div class="col-md-3"><label class="form-label fw-medium">วันที่รับ</label><input type="date" class="form-control" value="2010-01-15"></div>
-                            <div class="col-md-3">
-                                <?= $form->field($model, 'price')->textInput(['type' => 'number'])->label('วงเงิน') ?>
-                            </div>
+                                ]
+                            ])->label('สถานะ'); ?>
+                        </div>ข้อมูลคุณลักษณะเพิ่มเติม
+                    </div>
+                </div>
+
+
+
+
+                <!-- ปุ่มดำเนินการ -->
+                <div class="row mt-4">
+                    <div class="col-12 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                            <i class="bi bi-x-circle me-2"></i>ล้างข้อมูล
+                        </button>
+                        <div>
+                            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
+                            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
+
                         </div>
                     </div>
                 </div>
+
             </div>
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h6 class="mb-0 fw-bold">ไฟล์แนบเอกสารประกอบ</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label fw-medium">ไฟล์สแกนโฉนด</label><input type="file" class="form-control"></div>
-                            <div class="col-md-4"><label class="form-label fw-medium">ใบอนุญาตใช้น้ำ (ถ้ามี)</label><input type="file" class="form-control"></div>
-                            <div class="col-md-4"><label class="form-label fw-medium">ภาพถ่าย</label><input type="file" class="form-control" accept="image/*"></div>
-                            <div class="col-12">
-                                <?= $form->field($model, 'data_json[land_address]')->textArea(['maxlength' => true])->label('ที่ตั้ง') ?>
-                                <?= $model->upload('asset') ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?php
-                                echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                                    'data' => $model->ListAssetStatus(),
-                                    'options' => ['placeholder' => 'กรุณาเลือก...'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                    ],
-                                    'pluginEvents' => [
-                                        "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-method_get_text').val(data.text)
-                                         }",
-                                    ]
-                                ])->label('สถานะ');
-                                ?>
-                            </div>
-                            <div class="col-6">
-<div class="col-12 d-flex justify-content-end gap-2 py-4">
-                <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
-                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
-            </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-            </div>
-            
+        </div>
+
 
     </div>
+
 </div>
 
 
 
 
-
-
-<!-- ปุ่มดำเนินการ -->
-<div class="row mt-4">
-    <div class="col-12 d-flex justify-content-center">
-
-    </div>
-</div>
 
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'asset_group_id')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'asset_name')->hiddenInput(['value' => 'ที่ดิน'])->label(false) ?>
+
+
+<?php //  $this->render('_form_detail3',['model' => $model, 'form' => $form]) 
+?>
+
+<!-- ถ้าเป็นรถยนต์ -->
+<?php // if ($model->assetItem?->asset_category_id == 4): 
+?>
+<?php //  $this->render('asset_item', ['model' => $model, 'form' => $form]) 
+?>
+<?php // endif; 
+?>
+
 <?php ActiveForm::end(); ?>
-
-
-
-
 
 
 </div>
@@ -250,10 +381,61 @@ $ref = Json::encode($model->ref); // ปลอดภัยแม้มีอั�
 $urlUpload = Url::to('/filemanager/uploads/single');
 
 $js = <<< JS
+
  //กำหนดให้ปฏิทินแสดงวันที่
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
 
+
  isFile()
+
+ $('.next-code').on('click', function (e) { 
+    e.preventDefault();
+    $.ajax({
+        type: "post",
+        url: "/am/asset/next-code",
+        data: $('#form-asset').serialize(),
+        dataType: "json",
+        success: function (response) {
+            // ลบ class invalid เดิมทั้งหมดก่อน
+            $('#form-asset .is-invalid').removeClass('is-invalid');
+
+            if(response.status == 'error') {
+                for (let inputId in response.data) {
+                    let input = $('#' + inputId);
+
+                    // เพิ่ม class invalid ให้ input
+                    input.addClass('is-invalid');
+
+                    // แสดง toast แค่แจ้งเตือน ไม่แสดงใต้ input
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'ต้องระบุ FSN ก่อน',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }
+
+            if(response.status == 'success') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'ค้นหาหมายเลขครุภัณฑ์สำเร็จ',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+
+                // อัพเดตค่าใน input fsn_number
+                $('#asset-code').val(response.data);
+            }
+        }
+    });
+});
+
+
 \$('#form-asset').on('beforeSubmit', function (e) {
             var form = \$(this);
            
@@ -293,6 +475,53 @@ $js = <<< JS
             return false;
         });
 
+        
+    \$('.select-image').click(function (e) { 
+            \$('#file').click();
+            
+        });
+        \$('#file').on('change', function (e) {
+        const image = this.files[0];
+
+        if (image.size < 2000000) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const imgArea = \$('.img-area');
+                imgArea.find('img').remove();
+
+                const imgUrl = reader.result;
+                const img = \$('<img>').attr('src', imgUrl);
+                imgArea.append(img).addClass('active').data('img', image.name);
+
+                const file = \$('#file').prop('files')[0];
+                const formData = new FormData();
+                formData.append("asset", file);
+                formData.append("id", 1);
+                formData.append("ref", '$ref');
+                formData.append("name", 'asset');
+
+                console.log(file);
+
+                \$.ajax({
+                    url: '$urlUpload',
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        console.log(res);
+                        \$('.img-room').attr('src', res.img);
+                        // await \$.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
+                    }
+                });
+            };
+            reader.readAsDataURL(image);
+        } else {
+            alert("Image size more than 2MB");
+        }
+    });
+
+    
 JS;
 $this->registerJs($js);
 ?>

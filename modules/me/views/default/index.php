@@ -2,29 +2,32 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-
-$this->title = 'MyDashboard';
-$this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
+use app\components\UserHelper;
+$me = UserHelper::GetEmployee();
+$this->title = 'ภาพรวมของ'.$me->fullname();
+$this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
+$this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 ?>
 
-
-
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex align-items-center gap-2 mb-1">
+<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-         MyDashboard
-        </h4>
+       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+        <?= $this->title?>
+    </h4>
 </div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'dashboard']) ?>
+
 <?php $this->endBlock(); ?>
+
 
 
 <style>

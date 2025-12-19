@@ -162,12 +162,6 @@ class AssetDocumentController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
-    {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
-    }
 
     // ตรวจสอบความถูกต้อง
     public function actionValidator()
@@ -190,6 +184,14 @@ class AssetDocumentController extends Controller
         }
     }
 
+        public function actionDelete($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $this->findModel($id)->delete();
+        return [
+            'status' => 'success'
+        ];
+    }
 
     /**
      * Finds the AssetDetail model based on its primary key value.

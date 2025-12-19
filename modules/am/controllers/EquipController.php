@@ -337,12 +337,12 @@ class EquipController extends Controller
         }
 
         $viewDate = [
-                'expire_date' => (isset($model->data_json['expire_date']) ? AppHelper::DateFormDb($model->data_json['expire_date']) : ''),
-                'inspection_date' => (isset($model->data_json['inspection_date']) ? AppHelper::DateFormDb($model->data_json['inspection_date']) : ''),
-            ];
+            'expire_date' => (isset($model->data_json['expire_date']) ? AppHelper::DateFormDb($model->data_json['expire_date']) : ''),
+            'inspection_date' => (isset($model->data_json['inspection_date']) ? AppHelper::DateFormDb($model->data_json['inspection_date']) : ''),
+        ];
 
-       $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
-       $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
 
         return $this->render('update', [
             'model' => $model,
@@ -508,16 +508,43 @@ class EquipController extends Controller
 
     public function actionRepairHistory($id)
     {
-         $model = $this->findModel($id);
+        $model = $this->findModel($id);
         return $this->render('_view_repair_history', [
             'model' => $model,
         ]);
     }
-
-        public function actionDocument($id)
+    //หนังสือเอกสารคู่มือต่างๆ
+    public function actionDocument($id)
     {
-         $model = $this->findModel($id);
+        $model = $this->findModel($id);
         return $this->render('_view_document', [
+            'model' => $model,
+        ]);
+    }
+
+    // การบำรุงรักษา
+    public function actionMaintenance($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('maintenance', [
+            'model' => $model,
+        ]);
+    }
+
+    // พรบ.ต่อภาษี
+    public function actionVehicleTax($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('vehicle_tax', [
+            'model' => $model,
+        ]);
+    }
+
+    // พรบ.ต่อภาษี
+    public function actionCalibration($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('calibration', [
             'model' => $model,
         ]);
     }
@@ -538,5 +565,4 @@ class EquipController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
 }
