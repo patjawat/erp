@@ -1,17 +1,14 @@
 <?php
 
-use app\modules\am\models\AssetDetail;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\ActionColumn;
-use yii\grid\GridView;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetDetailSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Asset Details';
+$this->title = 'รายการบำรุงรักษา';
 $this->params['breadcrumbs'][] = $this->title;
 $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brush-cleaning-icon lucide-brush-cleaning">
             <path d="m16 22-1-4"></path>

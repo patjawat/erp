@@ -8,6 +8,7 @@ use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
+use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
@@ -164,14 +165,14 @@ class MedicalController extends \yii\web\Controller
         ]);
     }
 
-    public function actionView($id)
+    public function actionViewAsset($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
-        return $this->render('@app/modules/am/views/asset/view', [
+        return $this->render('@app/modules/helpdesk2/views/service/view_asset', [
             'model' => $model,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

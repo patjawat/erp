@@ -175,7 +175,7 @@ class GeneralController extends \yii\web\Controller
         ]);
     }
 
-    public function actionView($id)
+    public function actionViewAsset($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();

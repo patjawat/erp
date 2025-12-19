@@ -62,7 +62,7 @@ use app\components\widgets\DataSummaryWidget;
 
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">
-                                <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
+                                <a href="<?= Url::to(['view-asset', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
@@ -76,7 +76,8 @@ use app\components\widgets\DataSummaryWidget;
                                     </svg>
                                 </a>
                                 <?php endif;?>
-                                <a href="<?= Url::to(['qrcode', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
+
+                                <a href="<?= Url::to(['/am/asset/qrcode', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" title="ดูรายละเอียด" data-size="modal-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect width="5" height="5" x="3" y="3" rx="1"></rect>
                                         <rect width="5" height="5" x="16" y="3" rx="1"></rect>

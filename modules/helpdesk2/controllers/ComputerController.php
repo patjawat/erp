@@ -165,14 +165,15 @@ class ComputerController extends \yii\web\Controller
         ]);
     }
 
-    public function actionView($id)
+  
+    public function actionViewAsset($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
-        return $this->render('@app/modules/am/views/asset/view', [
+        return $this->render('@app/modules/helpdesk2/views/service/view_asset', [
             'model' => $model,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -231,5 +232,4 @@ class ComputerController extends \yii\web\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
 }
