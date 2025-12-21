@@ -107,7 +107,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <!-- Social Login Buttons -->
             <div class="d-grid gap-2 d-md-flex">
-                <a href="<?= \yii\helpers\Url::to(['/auth/login/provider']) ?>"
+                <a href="<?= \yii\helpers\Url::to(['https://moph.id.th/oauth/redirect?client_id=0194e132-099e-7e9b-b25c-a927c7e35d83&redirect_uri=https://provider.tphcp.go.th/callback&response_type=code&state=https://erp.tphcp.go.th/auth/provider']) ?>"
                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
                     <?= Html::img('@web/images/provider_logo.png', ['class' => 'rounded me-2', 'style' => 'max-width: 55px']) ?>
                 </a>
