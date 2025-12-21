@@ -143,7 +143,7 @@ $config = [
         'view' => [
             'theme' => [
                 'pathMap' => [
-                    '@app/views' => '@app/themes/v3'
+                    '@app/views' => '@app/themes/v4'
                 ],
             ],
         ],

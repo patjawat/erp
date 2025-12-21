@@ -13,16 +13,21 @@ use app\modules\sm\models\Order;
 /** @var app\modules\sm\models\OrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = $title;
+$this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = ['label' => $title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
 
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<?=$icon?> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
 
-<?php $this->beginBlock('navbar_menu'); ?>
+        <?=$icon?> <?= $this->title; ?>
+  </h4>
+</div>
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('action'); ?>
 <?php echo $this->render('@app/modules/helpdesk2/menu',['active' => $active]) ?>
 <?php $this->endBlock(); ?>
 

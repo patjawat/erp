@@ -1,94 +1,104 @@
 <?php
-use yii\helpers\Html;
-use app\components\AppHelper;
-$this->title = 'ทะเบียนอาคาร';
-$this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['/am']];
+
+use yii\widgets\Pjax;
+
+/** @var yii\web\View $this */
+/** @var app\modules\am\models\Asset $model */
+
+$this->title = 'อาคาร/สิ่งปลูกสร้าง';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
+
+$title = Yii::$app->request->get('title');
+$group = Yii::$app->request->get('group');
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-house fs-3"></i> <?=$this->title;?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 12h4"></path>
+            <path d="M10 8h4"></path>
+            <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path>
+            <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path>
+            <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+        </svg>
+        ทะเบียน<?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('../default/menu')?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'asset'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/am/views/asset/_action_menu',['model' => $model]) ?>
 <?php $this->endBlock(); ?>
 
 
-<div class="card mb-3">
-    <div class="row g-0">
-        <div class="col-md-4">
-            <div class="position-relative p-2 d-flex">
-                <?php // Html::img('@web/images/imac.png',['class' => 'img-fluid rounded-start p-5']);?>
+<?= $this->render('@app/modules/am/views/asset/_title', ['model' => $model]) ?>
 
-                <?= Html::img($model->showImg()['image'],['class' => 'avatar-profile object-fit-cover rounded m-auto','style' =>'max-width:100%;min-width: 320px;']) ?>
-
-            </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card border-0 shadow-none h-75">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-item-middle">
-                        <div>
-
-                            <h5 class="card-title mb-0"><?=isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-'?></h5>
-                            <i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เลขโฉนดที่ดิน</span>
-                            <span class="text-danger"><?=isset($model->data_json['code']) ? $model->data_json['code'] : ''?><span>
-                        </div>
-                        <div>
-                            <?=Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข',['update','id'=> $model->id],['class' => 'btn btn-warning rounded-pill shadow'])?>
-                            <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], ['class' => 'btn btn-secondary rounded-pill shadow delete-asset']) ?>
-                        </div>
-
-                    </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-                            <ul class="list-inline">
-                            <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
-                                        class="fw-semibold">ประเภท </span>
-                                        <?=isset($model->data_json['asset_type_text']) ? $model->data_json['asset_type_text'] : '-'?>
-                                    <?=$model->type_name?></li>
-                                <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">เลขระวาง</span> : <?=isset($model->data_json['tonnage_number']) ? $model->data_json['tonnage_number'] : ''?></li>
-                                <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span class="fw-semibold">หมายเลขที่ดิน</span> <?=isset($model->data_json['land_number']) ? $model->data_json['land_number'] : ''?></li>
-                            </ul>
-
-                        </div>
-                        <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
-
-                            <ul class="list-inline">
-                            <li><i class="bi bi-check2-circle text-primary fs-5"></i> <span
-                                        class="fw-semibold">เนื้อที่</span>
-                                    <?=isset($model->data_json['land_size']) ? $model->data_json['land_size'].' ' : ''?>
-                                    <?=isset($model->data_json['land_size_ngan']) ? $model->data_json['land_size_ngan'].' งาน' : ''?>
-                                    <?=isset($model->data_json['land_size_tarangwa']) ? $model->data_json['land_size_tarangwa'].' เนื้อที่ตารางวา' : ''?> 
-                                    
-                                </li>
-                                <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">ผู้ถือครอง</span> <?=isset($model->data_json['land_owner']) ? $model->data_json['land_owner'].' ' : ''?>
-                                </li>
-                                <li>
-                                    <i class="bi bi-check2-circle text-primary fs-5"></i>
-                                    <span class="fw-semibold">ที่ตั้งบ้านเลขที่</span> :
-                                    <?=isset($model->data_json['land_add']) ? $model->data_json['land_add'].' ' : ''?>
-                                </li>
-                            </ul>
-                        </div>
-
-                    </div>
-
-
-                </div>
-                <!-- End Card body -->
-
-            </div>
-            <!-- End card -->
-
-        </div>
+<div class="card mt-4">
+    <div class="card-header">
+        <?= $this->render('@app/modules/am/views/asset/_view_menu', ['model' => $model, 'menu' => 'detail']) ?>
+    </div>
+    <div class="card-body">
+        <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
     </div>
 </div>
+
+<?php
+$js = <<< JS
+
+
+$('.delete-asset').click(function (e) { 
+    e.preventDefault();
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'คุณแน่ใจหรือไม่?',
+        text: "ข้อมูลนี้จะถูกลบและไม่สามารถกู้คืนได้!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "post",
+                url: url,
+                dataType: "json",
+                success: function (res) {
+                    if (res.status == 'success') {
+                        Swal.fire({
+                            title: 'ลบข้อมูลสำเร็จ!',
+                            text: 'รายการถูกลบเรียบร้อยแล้ว',
+                            icon: 'success',
+                            timer: 1000, // ตั้งค่าให้ Swal ปิดอัตโนมัติหลัง 1 วินาที
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/am/asset'; // Redirect หลังจาก timer หมด
+                        });
+                    } else {
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด!',
+                            res.message || 'ไม่สามารถลบข้อมูลได้',
+                            'error'
+                        );
+                    }
+                },
+                error: function () {
+                    Swal.fire(
+                        'เกิดข้อผิดพลาด!',
+                        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+});
+
+JS;
+$this->registerJS($js, \yii\web\View::POS_END);
+
+?>

@@ -382,14 +382,15 @@ class DocumentsController extends Controller
         if ($group) {
             $dataProvider->query->andFilterWhere(['document_group' => $group]);
         }
+
+         $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_number', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],
-            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.des'))"), $searchModel->q],
+            ['like', 'topic', $q],
+            ['like', 'doc_regis_number', $q],  // Fixed typo here
+            ['like', 'doc_number', $q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
         ]);
-
         if ($searchModel->date_filter) {
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
@@ -473,8 +474,6 @@ class DocumentsController extends Controller
         $dateTime = new DateTime();
         $time = $dateTime->format('H:i');
         $model->doc_time = $time;
-        // End Set Default
-        // $model->ref =  substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
 
         $model->doc_regis_number = $model->runNumber();
         if ($this->request->isPost) {

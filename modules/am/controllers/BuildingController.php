@@ -3,29 +3,13 @@
 namespace app\modules\am\controllers;
 
 use yii;
-use yii\helpers\Json;
 use yii\web\Response;
 use yii\db\Expression;
-use yii\web\Controller;
-use yii\web\UploadedFile;
-use app\models\Categorise;
-use app\models\UploadForm;
-use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
-use app\components\UserHelper;
-use app\components\AssetHelper;
 use app\modules\am\models\Asset;
-use app\modules\sm\models\Vendor;
-use ruskid\csvimporter\CSVReader;
 use yii\web\NotFoundHttpException;
-use ruskid\csvimporter\CSVImporter;
-use app\components\CategoriseHelper;
-use app\modules\hr\models\UploadCsv;
 use app\modules\am\models\AssetSearch;
-use app\modules\hr\models\Organization;
-use ruskid\csvimporter\MultipleImportStrategy;
 
 class BuildingController extends \yii\web\Controller
 {
@@ -45,8 +29,16 @@ class BuildingController extends \yii\web\Controller
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', 'asset_name', $searchModel->q],
+            ['LIKE', 'code', $searchModel->q],
+            ['LIKE', 'price', $searchModel->q],
+            ['LIKE', 'on_year', $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.building_type_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.location')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.floors')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.area')"), $searchModel->q],
         ]);
 
         // ค้นหาตามอายุ
@@ -71,6 +63,7 @@ class BuildingController extends \yii\web\Controller
         }
 
         return $this->render('index', [
+            'tabs' => 'building',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);

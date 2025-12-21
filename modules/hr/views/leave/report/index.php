@@ -8,13 +8,20 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['in
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-chart-simple fs-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-pie-icon lucide-chart-pie">
+            <path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z" />
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+        </svg>
+       <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'report'])?>
 <?php $this->endBlock(); ?>
 

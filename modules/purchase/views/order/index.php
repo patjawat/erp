@@ -29,12 +29,17 @@ if ($searchModel->date_between == 'pr_create_date') {
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-list-ul me-1"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-check-icon lucide-book-check">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path>
+            <path d="m9 9.5 2 2 4-4"></path>
+        </svg>
+    <?= $this->title ?>
+  </h4>
+</div>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/sm/views/default/menu', ['active' => 'order']) ?>
 <?php $this->endBlock(); ?>
 

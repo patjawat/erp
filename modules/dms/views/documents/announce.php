@@ -11,23 +11,28 @@ use app\modules\dms\models\Documents;
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-    $this->title = 'หนังประกาศ/นโยบาย ';
+$this->title = 'หนังประกาศ/นโยบาย ';
 
+$this->params['breadcrumbs'][] = ['label' => 'งานสารบรรณ', 'url' => ['/dms/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-bullhorn fs-1"></i></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+ <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-megaphone-icon lucide-megaphone">
+            <path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+            <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" />
+            <path d="M8 6v8" />
+        </svg>
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel]) ?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel, 'active' => $searchModel->document_group]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$searchModel,'active' => 'announce']) ?>
-<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
 

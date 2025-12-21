@@ -11,22 +11,23 @@ use app\modules\hr\models\LeavePolicies;
 /** @var app\modules\hr\models\LeavePoliciesSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $this->title = 'นโยบายการลา';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
+                <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+       <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
-
 
 <?php Pjax::begin(); ?>
 <div class="card">

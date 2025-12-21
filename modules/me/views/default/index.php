@@ -2,25 +2,32 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-
-$this->title = 'MyDashboard';
-$this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
+use app\components\UserHelper;
+$me = UserHelper::GetEmployee();
+$this->title = 'ภาพรวมของ'.$me->fullname();
+$this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
+$this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge fs-4 text-primaryr"></i> <?php echo $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+        <?= $this->title?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?php echo $this->render('@app/modules/me/menu',['active' => 'dashboard']) ?>
+
 <?php $this->endBlock(); ?>
+
 
 
 <style>
@@ -29,25 +36,23 @@ $this->params['breadcrumbs'][] = ['label' => 'MyDashboard', 'url' => ['/me']];
 }
 </style>
 
-<div class="row">
-    <div class="col-12">
+
         <div class="row">
-            <div class="col-6">
+            <div class="col-lg-6 col-md-12 col-sm-12">
                 <?php echo $this->render('welcome'); ?>
                 <?php echo $this->render('attendance'); ?>
 
             </div>
-            <div class="col-6">
+           <div class="col-lg-6 col-md-12 col-sm-12">
                 <?php echo $this->render('leave', ['searchModel' => $searchModel]); ?>
             </div>
-            <div class="col-12">
+            <div class="col-lg-12 col-md-12 col-sm-12">
                 <?php echo Html::a('<i class="fa-solid fa-list-check"></i> กิจกรรมทั้งหมด', ['/me/activity'], ['class' => 'btn btn-light']); ?>
                 <div id="viewDocument"></div>
 
             </div>
         </div>
-    </div>
-</div>
+
 
 
 

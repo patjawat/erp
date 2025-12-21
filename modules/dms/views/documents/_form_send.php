@@ -25,26 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 /** @var app\modules\dms\models\Documents $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<?php if($model->document_group == 'receive'):?>
-<i class="fa-solid fa-download"></i></i> <?= $this->title; ?>
-<?php endif; ?>
-<?php if($model->document_group == 'send'):?>
-<i class="fa-solid fa-paper-plane"></i></i> <?= $this->title; ?>
-<?php endif; ?>
 
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/dms/menu') ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/dms/menu',['model' =>$model,'active' => 'send']) ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->endBlock(); ?>
 <style>
 .form-label {
     font-weight: 600 !important;

@@ -23,17 +23,37 @@ $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'เบิกวัสดุ';
 yii\web\YiiAsset::register($this);
 ?>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?php echo $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-receipt-text-icon lucide-receipt-text"><path d="M13 16H8"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/></svg>
+       รายละเอียดใบเบิกวัสดุ
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<div class="d-flex  align-items-center gap-3">
+    <?= Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['class' => 'btn btn-outline-primary open-modal', 'data-pjax' => '0', 'data' => ['size' => 'modal-xl']]) ?>
+    <div class="d-flex justify-content-between">
+        <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
+            <div class="dropdown float-end">
+                <a href="javascript:void(0)" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="fa-solid fa-bars"></i> จัดการ
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
+                <?php echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?= $this->render('@app/components/ui/btnReturn') ?>
+        </div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('../default/menu', ['active' => 'request']) ?>
-<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory-container']); ?>
 
@@ -54,26 +74,9 @@ foreach ($model->getItems() as $item): ?>
 <?php endforeach; ?>
 
 <div class="card">
-    <div class="card-header bg-primary-gradient d-flex justify-content-between  align-items-center">
-        <h6 class="text-white mb-0">ใบเบิกวัสดุเลขที่ : <?= $model->code ?></h6>
-        <div class="d-flex  align-items-center gap-3">
-            <?= Html::a('<i class="fa-solid fa-arrow-left"></i> ย้อนกลับ', ['/inventory/warehouse/order-request'], ['class' => 'btn btn-light']) ?>
-            <?= Html::a('<i class="fa-solid fa-print me-1"></i> เอกสารใบเบิก', ['/inventory/document/stock-order', 'id' => $model->id], ['class' => 'btn btn-light open-modal', 'data-pjax' => '0', 'data' => ['size' => 'modal-xl']]) ?>
-            <div class="d-flex justify-content-between">
-                <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
-                    <div class="dropdown float-end">
-                        <a href="javascript:void(0)" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="fa-solid fa-bars"></i> จัดการ
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <?php echo Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-order/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]); ?>
-                            <?php echo $model->OrderApprove() ? Html::a('<i class="fa-solid fa-eraser me-2"></i> ยกเลิก', ['/inventory/stock-order/cancel-order', 'id' => $model->id, 'title' => '<i class="fa-solid fa-eraser"></i> ยกเลิก'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) : ''; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
+    <div class="card-header bg-primary-gradient d-flex justify-content-between  align-items-center p-2">
+        <h6 class="text-white">ใบเบิกวัสดุเลขที่ : <?= $model->code ?></h6>
+        
     </div>
     <div class="card-body">
         <table class="table border-0 table-striped-columns mt-3">

@@ -12,8 +12,8 @@ $this->title = "รายการที่ต้องอนุมัติแ�
 <!-- <i class="bi bi-ui-checks"></i>-->
 <i class="fa-solid fa-bell noti-animate"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php  echo $this->render('@app/modules/me/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?php  echo $this->render('@app/modules/me/menu',['active' => 'approve']) ?>
 <?php $this->endBlock(); ?>
 
 

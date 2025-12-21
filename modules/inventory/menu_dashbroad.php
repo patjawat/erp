@@ -1,0 +1,59 @@
+<?php
+
+use yii\helpers\Url;
+use yii\helpers\Html;
+
+$layout = app\components\SiteHelper::getInfo()['layout'];
+
+?>
+
+<div class="d-flex gap-2">
+    <a href="<?= Url::to(['/inventory/default/dashboard']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+        </svg>
+        ภาพรวม
+    </a>
+    <a href="<?= Url::to(['/inventory/default/index']) ?>" class="btn <?= $active !== 'warehouse' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-store-icon lucide-store">
+            <path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5" />
+            <path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244" />
+            <path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05" />
+        </svg>
+        คลัง
+    </a>
+    <div class="dropdown">
+        <button class="btn <?= $active !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-chart-line-icon lucide-file-chart-line">
+                <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+                <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                <path d="m16 13-3.5 3.5-2-2L8 17" />
+            </svg>
+            <span class="d-none d-sm-inline">รายงานวัสดุคงคลัง</span>
+        </button>
+
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li>
+                <?= Html::a('<i class="fa-solid fa-gauge me-2"></i> สรุปรายงานวัสดุคงคลัง ', ['/inventory/report'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุรับ-จ่าย ', ['/inventory/report/list-by-order'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุคงคลังหลักรายตัว ', ['/inventory/report/list-by-item'], ['class' => 'dropdown-item']) ?>
+            </li>
+
+        </ul>
+    </div>
+
+    <a href="<?= Url::to(['/inventory/warehouse']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
+            <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+        ตั้งค่าคลัง
+    </a>
+</div>

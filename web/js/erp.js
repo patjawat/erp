@@ -53,6 +53,13 @@ $("#treeID").on("treeview:change", function (event, key, name) {
   $("body").find(".kv-tree-dropdown").removeClass("show");
 });
 
+  $("body").on("click", ".form-submit", async function (e) {
+  e.preventDefault();
+  var formId = $(this).data("id");
+  $('#'+formId).submit();
+
+  
+});
 /**
  * Handle AJAX form submission with confirmation and success feedback.
  * @param {string} formSelector - jQuery selector for the form.

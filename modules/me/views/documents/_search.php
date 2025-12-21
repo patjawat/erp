@@ -19,35 +19,20 @@ use app\components\DateFilterHelper;
     'options' => [
         'data-pjax' => 1
     ],
-    'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
+     'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
-
-<div class="row">
-    <div class="col-lg-3 col-md-3 col-sm-12">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
+<div class="row g-2 align-items-start">
+    <div class="col-6 col-md-2">
+        <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php
-        echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
-            'data' =>  DateFilterHelper::getDropdownItems(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label(false);
-        ?>
-
-
+    <div class="col-6 col-md-2">
+        <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_start')->textInput(['class' => 'form-control','placeholder' => 'ตั้งแต่วันที่'])->label(false);?>
+    <div class="col-6 col-md-2">
+        <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php echo $form->field($model, 'date_end')->textInput(['class' => 'form-control','placeholder' => 'ถึงวันที่'])->label(false);?>
-    </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-        <?php
+    <div class="col-6 col-md-3">
+      <?php
                                 $status = ArrayHelper::merge( $model->listStatus(), ['Y' => 'บันทึกไว้']);
                                 echo $form->field($model, 'q_status')->widget(Select2::classname(), [
                                     'data' =>$status,
@@ -57,38 +42,40 @@ use app\components\DateFilterHelper;
                                     ],
                                 ])->label(false);?>
     </div>
-    <div class="col-lg-1 col-md-1 col-sm-12">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
+    <div class="col-12 col-md-3">
+        <?= $form->field($model, 'document_org')->widget(Select2::classname(), [
+            'data' => $model->ListDocumentOrg(),
+            'options' => ['placeholder' => 'หน่วยงานทั้งหทด'],
+            'pluginOptions' => ['allowClear' => true, 'tags' => true],
+        ])->label(false); ?>
+    </div>
+
+    <div class="col-12">
+        <div class="input-group mb-3">
+            <span class="input-group-text bg-light text-muted border-end-0">
+                <i class="bi bi-search"></i>
+            </span>
+            <?= $form->field($model, 'q', [
+                'options' => ['tag' => false], // ลบ div wrapper ของฟิลด์ออกเพื่อให้เข้าชุดกับ input-group
+            ])->textInput([
+                'placeholder' => 'พิมพ์คำค้นหาที่นี่...',
+                'class' => 'form-control border-start-0'
+            ])->label(false) ?>
+            
+            <button class="btn btn-primary px-4" type="submit">
+                ค้นหา
+            </button>
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false border-start-0">
+                <i class="fa-solid fa-filter"></i> ตัวกรอง
             </button>
         </div>
     </div>
 </div>
-<div class="collapse mt-3" id="collapseFilter">
-    <div class="row">
-        <div class="col-lg-3 col-md-3 col-sm-12">
 
-            <?php
-        echo $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                    $(this).submit()
-                    }',
-                    'select2:unselecting' => 'function() {
-                        }',
-                        ]
-                        ])->label(false);
-                        ?>
-        </div>
-    </div>
+<div class="collapse" id="collapseFilter">
+  <div class="card card-body mb-3 shadow-sm border-primary">
+    <p class="small text-muted mb-0">ตัวเลือกการกรองเพิ่มเติม...</p>
+  </div>
 </div>
 
 <?php ActiveForm::end(); ?>
@@ -122,3 +109,4 @@ $js = <<< JS
     JS;
 $this->registerJS($js)
 ?>
+

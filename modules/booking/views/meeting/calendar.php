@@ -5,24 +5,38 @@ use yii\helpers\Url;
 use app\models\Categorise;
 use app\modules\booking\models\Meeting;
 
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
+// $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $this->title = 'ปฏิทินการใช้ห้องประชุม';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบห้องประชุม', 'url' => ['/booking/meeting/index']];
+$this->params['breadcrumbs'][] = ['label' => 'จองห้องประชุม', 'url' => ['/booking/meeting/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-regular fa-calendar fs-1"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4"></path>
+            <path d="M16 2v4"></path>
+            <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+            <path d="M3 10h18"></path>
+            <path d="M8 14h.01"></path>
+            <path d="M12 14h.01"></path>
+            <path d="M16 14h.01"></path>
+            <path d="M8 18h.01"></path>
+            <path d="M12 18h.01"></path>
+            <path d="M16 18h.01"></path>
+        </svg>
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-ปฏิทินการใช้ห้องประชุม
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/meeting_menu', ['active' => 'calendar']) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('menu') ?>
-<?php $this->endBlock(); ?>
+
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('menu', ['active' => 'calendar']) ?>

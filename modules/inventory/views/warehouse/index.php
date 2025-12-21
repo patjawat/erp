@@ -4,30 +4,29 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
-use app\modules\inventory\models\Warehouse;
 
 $this->title = 'ตั้งค่าระบบคลัง';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
+            <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/inventory/views/default/menu_dashbroad') ?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/inventory/menu_dashbroad', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu_dashbroad',['active' => 'warehouse'])?>
-<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'inventory']); ?>
 <div class="card">
@@ -40,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="card">
-        <div class="card-header bg-primary-gradient text-white">
+    <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> จำนวนคลัง
@@ -66,33 +65,33 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $model): ?>
-                <tr class="">
-                    <td scope="row"><?=$model->id ?></td>
-                    <td><?=$model->warehouse_name ?></td>
-                    <td><?=$model->departmentName() ?></td>
-                    <td><?=$model->viewWarehouseType() ?>
-                    </td>
-                    <td><?= $model->avatarStack() ?></td>
-                    <td class="d-flex justify-content-center gap-2">
-                        <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/warehouse/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-xl']]); ?>
-                        <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/warehouse/delete', 'id' => $model->id], ['class' => 'btn btn-danger delete-item']) ?>
-                    </td>
-                </tr>
-                <?php endforeach;?>
+                    <tr class="">
+                        <td scope="row"><?= $model->id ?></td>
+                        <td><?= $model->warehouse_name ?></td>
+                        <td><?= $model->departmentName() ?></td>
+                        <td><?= $model->viewWarehouseType() ?>
+                        </td>
+                        <td><?= $model->avatarStack() ?></td>
+                        <td class="d-flex justify-content-center gap-2">
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/warehouse/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-xl']]); ?>
+                            <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/inventory/warehouse/delete', 'id' => $model->id], ['class' => 'btn btn-danger delete-item']) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
 
         <div class="d-flex justify-content-center mt-5">
             <div class="text-muted">
                 <?= LinkPager::widget([
-                            'pagination' => $dataProvider->pagination,
-                            'firstPageLabel' => 'หน้าแรก',
-                            'lastPageLabel' => 'หน้าสุดท้าย',
-                            'options' => [
-                                'listOptions' => 'pagination pagination-sm',
-                                'class' => 'pagination-sm',
-                            ],
-                        ]); ?>
+                    'pagination' => $dataProvider->pagination,
+                    'firstPageLabel' => 'หน้าแรก',
+                    'lastPageLabel' => 'หน้าสุดท้าย',
+                    'options' => [
+                        'listOptions' => 'pagination pagination-sm',
+                        'class' => 'pagination-sm',
+                    ],
+                ]); ?>
             </div>
         </div>
 

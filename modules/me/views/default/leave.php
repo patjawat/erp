@@ -10,7 +10,7 @@ use yii\helpers\Html;
             
         <div class="mt-3">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-lg-4 col-md-4 col-sm-6">
                     <div class="d-flex justify-content-center flex-column">
                        
                         <h4 class="text-primary text-center">
@@ -19,31 +19,31 @@ use yii\helpers\Html;
                         <p class="text-center">ลาพักผ่อนเหลือ</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+              <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="d-flex justify-content-center flex-column">
                         <h4 class="text-center"><?php echo $searchModel->sumLeaveType('LT3') ?></h4>
                         <p class="text-center">ลากิจ</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+               <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="d-flex justify-content-center flex-column">
                         <h4 class="text-center"><?php echo $searchModel->sumLeaveType('LT1')?></h4>
                         <p class="text-center">ลาป่วย</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+               <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="d-flex justify-content-center flex-column">
                         <h4 class="text-center"><?php echo $searchModel->countLeaveType('Pending')?></h4>
                         <p class="text-center">รอดำเนินการ</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+               <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="d-flex justify-content-center flex-column">
                         <h4 class="text-center"><?php echo $searchModel->countLeaveType('Cancel')?></h4>
                         <p class="text-center">ยกเลิก</p>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="d-flex justify-content-center flex-column">
                         <h4 class="text-center"><?php echo $searchModel->countLeaveType('Allow')?></h4>
                         <p class="text-center">อนุมัติ</p>

@@ -11,17 +11,18 @@ $this->params['breadcrumbs'][] = $this->title;
 $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<?=$icon?> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <?= $icon ?>
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/vehicle_menu',['active' => $vehicle_type]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => $vehicle_type]) ?>
-<?php $this->endBlock(); ?>
 
 <style>
     .status-indicator {
