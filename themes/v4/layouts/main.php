@@ -221,7 +221,7 @@ AppAsset::register($this);
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center text-secondary small">
             <div class="mb-3 mb-md-0 text-center text-md-start">
                 <p class="mb-0 fw-semibold text-dark">2025 © ERP Hospital.</p>
-                <p class="mb-0 text-muted" style="font-size: 11px;">v1.4.1</p>
+                <p class="mb-0 text-muted" style="font-size: 11px;"><?=Yii::$app->version ?></p>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span>ผู้ให้การสนับสนุน</span>
