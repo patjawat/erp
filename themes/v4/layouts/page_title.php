@@ -12,7 +12,7 @@ use yii\bootstrap5\Breadcrumbs;
    .page-title-box {
       background-color: #fff;
       border-bottom: 1px solid #e9ecef;
-      margin-bottom: 20px;
+      /* margin-bottom: 20px; */
    }
    .breadcrumb {
       margin-bottom: 5px;
