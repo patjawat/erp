@@ -101,6 +101,7 @@ class ThaidController extends \yii\web\Controller
             $user->username = $emp->email;
             $user->email = $emp->email;
             $user->setPassword($password);
+            $user->hash_cid = Yii::$app->security->generatePasswordHash($data['cid']);
             $user->generateAuthKey();
             $user->status = 10;
             if ($user->save(false)) {

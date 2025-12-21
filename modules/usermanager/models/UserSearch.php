@@ -18,7 +18,7 @@ class UserSearch extends User
     {
         return [
             [['id', 'confirmed_at', 'blocked_at', 'created_at', 'updated_at', 'last_login_at', 'status'], 'integer'],
-            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token','fullname','q','phone','line_id'], 'safe'],
+            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token','fullname','q','phone','line_id','hash_cid'], 'safe'],
         ];
     }
 
@@ -64,6 +64,7 @@ class UserSearch extends User
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'last_login_at' => $this->last_login_at,
+            'hash_cid' => $this->hash_cid,
             'status' => $this->status,
         ]);
 

@@ -1,5 +1,5 @@
 <?php
-
+use yii\helpers\Url;
 use yii\web\View;
 use yii\helpers\Html;
 use app\models\Categorise;
@@ -11,6 +11,18 @@ $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
 $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
+
+// 1. Get the Client ID from your env or config
+$thaidClientId = env('THAID_CLIENT_ID');
+
+// 2. Build the URL (Keeping logic out of the HTML tag)
+$authUrl = "https://moph.id.th/oauth/redirect?" . http_build_query([
+    'client_id'     => '0194e132-099e-7e9b-b25c-a927c7e35d83',
+    'redirect_uri'  => 'https://provider.tphcp.go.th/callback',
+    'response_type' => 'code',
+    'state'         => $thaidClientId, // Using the variable here
+]);
+
 ?>
 
 <div class="container-fluid min-vh-100 d-flex p-0">
@@ -107,10 +119,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <!-- Social Login Buttons -->
             <div class="d-grid gap-2 d-md-flex">
-                <a href="<?= \yii\helpers\Url::to(['https://moph.id.th/oauth/redirect?client_id=0194e132-099e-7e9b-b25c-a927c7e35d83&redirect_uri=https://provider.tphcp.go.th/callback&response_type=code&state=https://erp.tphcp.go.th/auth/provider']) ?>"
-                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
-                    <?= Html::img('@web/images/provider_logo.png', ['class' => 'rounded me-2', 'style' => 'max-width: 55px']) ?>
-                </a>
+<a href="<?= \yii\helpers\Url::to('https://moph.id.th/oauth/redirect?' . http_build_query([
+    'client_id' => '0194e132-099e-7e9b-b25c-a927c7e35d83',
+    'redirect_uri' => 'https://provider.tphcp.go.th/callback',
+    'response_type' => 'code',
+    'state' => env('PROVIDER_REDIRECT_URI')
+])) ?>"
+   class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
+    <?= \yii\helpers\Html::img('@web/images/provider_logo.png', [
+        'class' => 'rounded me-2', 
+        'style' => 'max-width: 55px',
+        'alt' => 'Provider Logo'
+    ]) ?>
+</a>
 
                 <a href="<?= \yii\helpers\Url::to(['/auth/thaid/']) ?>"
                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
