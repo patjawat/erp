@@ -55,7 +55,7 @@ use yii\bootstrap5\Breadcrumbs;
             </div>
          </div>
 
-         <div class="action-box mt-3 mt-lg-0 w-100 w-lg-auto d-flex justify-content-center justify-content-lg-start">
+         <div class="action-box mt-3 mt-lg-0 w-100 w-lg-auto d-flex justify-content-center justify-content-lg-end">
             <div class="d-flex gap-2 flex-wrap justify-content-center justify-content-lg-end">
                <?= isset($this->blocks['action']) ? $this->blocks['action'] : '' ?>
             </div>

@@ -10,7 +10,7 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex align-items-center gap-2 mb-2  text-primary-gradient">
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
   <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
 
         <?=$icon?> ภาพรวม<?= $this->title; ?>
