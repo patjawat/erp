@@ -13,45 +13,49 @@ use app\modules\hr\models\EmployeeDetail;
 
 class ProviderController extends Controller
 {
-    public function actionHandle()
-    {
-        $request = Yii::$app->request;
-        
-        // รับค่า Parameters
-        $hashCid = $request->get('hash_cid');
-        $ts = $request->get('ts');
-        $sig = $request->get('sig');
-        $hospcode = $request->get('hospcode');
-        $pname = $request->get('pname');
-        $fname = $request->get('fname');
-        $lname = $request->get('lname');
-        $email = $request->get('email');
-        $position = $request->get('position');
-        $organization = $request->get('organization');
 
-        // 1. ตรวจสอบ Parameters เบื้องต้น
+    public function beforeAction($action)
+{
+    if ($action->id === 'callback') {
+        $this->enableCsrfValidation = false;
+    }
+    return parent::beforeAction($action);
+}
+
+
+
+
+    public function actionIndex()
+    {
+        return 'Hello';
+    }
+    public function actionCallback()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $sharedSecret = env('SSO_SHARED_SECRET');
+        // 1. รับค่า Parameters
+        $hashCid = $this->request->post('hash_cid');
+        $ts = $this->request->post('ts');
+        $sig = $this->request->post('sig');
+
+        // 2. ตรวจสอบ Parameters เบื้องต้น
         if (!$hashCid || !$ts || !$sig) {
             Yii::$app->response->statusCode = 400;
             return $this->asJson(['error' => 'Missing parameters']);
         }
 
-        // 2. ตรวจสอบ Timestamp (ไม่เกิน 5 นาที)
+        // 3. ตรวจสอบ Timestamp (ไม่เกิน 5 นาที)
         if (abs(time() - (int)$ts) > 300) {
             Yii::$app->response->statusCode = 403;
             return $this->asJson(['error' => 'Signature expired']);
         }
 
-        // 3. ตรวจสอบ Signature
+        // 4. ตรวจสอบ Signature
         $payloadData = [
             'hash_cid' => $hashCid,
             'ts' => (int)$ts,
         ];
-        
-        // Yii2 เทียบเท่า JSON_UNESCAPED_UNICODE
         $payload = Json::encode($payloadData);
-        
-        // ดึง secret จาก config/params.php หรือ .env
-        $sharedSecret = Yii::$app->params['sso_shared_secret']; 
         $expectedSig = hash_hmac('sha256', $payload, $sharedSecret);
 
         if (!hash_equals($expectedSig, $sig)) {
@@ -59,109 +63,96 @@ class ProviderController extends Controller
             return $this->asJson(['error' => 'Invalid signature']);
         }
 
-        $user = User::findOne(['hash_cid' => $hashCid]);
+        // 5. ตรวจสอบข้อมูลพนักงาน (คืนค่าเป็น Array จาก DAO)
+        $empData = $this->checkEmployee($hashCid);
 
-
-        // ตรวจสอบข้อมูลพนักงาน
-        $emp = $this->checkEmployee($thaidData);
-
-        // ถ้าไม่พบข้อมูลพนักงาน
-        if (!$emp) {
-            $this->redirect(['/auth/login/fail']);
+        if (!$empData) {
+            // กรณีไม่พบข้อมูลพนักงานในตาราง employees
+            return $this->redirect(['/auth/login/fail']);
         }
 
-        // ถ้าพบข้อมูลพนักงาน แต่ยังไม่มี user_id
-        if ($emp && $emp->hash_cid == 0) {
-            $user = $this->registerUser($emp);
-            if ($user) {
-                Yii::$app->user->login($user);
-                return $this->redirect(['/me']);
-            }
+        // 6. ตรวจสอบว่ามี User หรือยัง
+        $user = null;
+        if (!empty($empData['user_id'])) {
+            // ถ้ามี user_id ผูกอยู่แล้ว ให้ดึงข้อมูล User มา
+            $user = User::findOne($empData['user_id']);
         }
 
-        // ถ้าพบข้อมูลพนักงาน และมี user_id อยู่แล้ว
-        if ($emp && $emp->user_id >= 1) {
-            $user = User::findOne($emp->user_id);
-            Yii::$app->user->login($user);
+        // 7. ถ้ายังไม่มี User ให้ทำการ Register
+        if (!$user) {
+            $user = $this->registerUser($empData, $hashCid);
+        }
+
+        // 8. ทำการ Login
+        if ($user && Yii::$app->user->login($user)) {
             return $this->redirect(['/me']);
         }
 
-
-
-        // if ($user) {
-        //     // ทำการ Login (Session-based)
-        //     if (Yii::$app->user->login($user)) {
-        //         return $this->goHome(); // หรือ redirect('/')
-        //     }
-        // }
-
-        // กรณีไม่พบ User หรือ Login ไม่สำเร็จ
+        // กรณีเกิดข้อผิดพลาดในการสร้าง User หรือ Login
         Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลผู้ใช้งานในระบบ หรือคุณไม่มีสิทธิ์เข้าถึง');
-        return $this->redirect(['auth/login']); // ส่งกลับหน้า Login หลัก
+        return $this->redirect(['auth/login']);
     }
 
-     public function checkUser($id)
+    // ตรวจสอบข้อมูลพนักงานจากฐานข้อมูลด้วย SHA2
+    private function checkEmployee($hashCid)
     {
-        $user = User::findOne(['id' => $id]);
+        return Yii::$app->db->createCommand('SELECT * FROM employees WHERE SHA2(cid, 256) = :hash')
+            ->bindValue(':hash', $hashCid)
+            ->queryOne(); // คืนค่าเป็น Array หรือ false
     }
+
     // สร้าง user ใหม่
-    private function registerUser($data)
+    private function registerUser($empData, $hashCid)
     {
-
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            // ดึง Model Employees เพื่อเตรียมอัปเดต
+            $emp = Employees::findOne($empData['id']);
+            if (!$emp) {
+                return null;
+            }
+
             $password = Yii::$app->security->generateRandomString(12);
-            $emp =  Employees::find()->where(['cid' => $data['cid']])->one();
-
-            $email = $data['cid'] . '@local';
-            $user = new User([
-                'password' => $password,
-                'confirm_password' => $password
-            ]);
-
-            $user->username = $emp->email;
-            $user->email = $emp->email;
+            
+            $user = new User();
+            // ใช้ Email จากพนักงาน ถ้าไม่มีให้ใช้ cid@local
+            $user->username = !empty($emp->email) ? $emp->email : $emp->cid;
+            $user->email = !empty($emp->email) ? $emp->email : $emp->cid . '@local';
             $user->setPassword($password);
-            $user->hash_cid = Yii::$app->security->generatePasswordHash($data['cid']);
+            $user->hash_cid = $hashCid; // เก็บค่า Hash SHA256 ที่ส่งมาจากต้นทาง
             $user->generateAuthKey();
-            $user->status = 10;
-            if ($user->save(false)) {
-                $emp->user_id  =  $user->id;
-                $emp->email = $email;
-                $emp->save(false);
-                $createPdpa = new EmployeeDetail();
-                $createPdpa->emp_id =  $emp->id;
-                $createPdpa->name = 'pdpa';
-                $createPdpa->data_json = Yii::$app->session->get('accept_condition');
-                $createPdpa->save(false);
+            $user->status = 10; // Active status
 
-                $user->assignment();
+            if ($user->save(false)) {
+                // 1. อัปเดต user_id กลับไปที่ตาราง employees
+                $emp->user_id = $user->id;
+                $emp->save(false);
+
+                // 2. บันทึกข้อมูล PDPA (ถ้ามี)
+                $acceptCondition = Yii::$app->session->get('accept_condition');
+                if ($acceptCondition) {
+                    $createPdpa = new EmployeeDetail();
+                    $createPdpa->emp_id = $emp->id;
+                    $createPdpa->name = 'pdpa';
+                    $createPdpa->data_json = Json::encode($acceptCondition);
+                    $createPdpa->save(false);
+                }
+
+                // 3. กำหนดสิทธิ์ (ถ้ามี method นี้ใน Model User)
+                if (method_exists($user, 'assignment')) {
+                    $user->assignment();
+                }
+
                 $transaction->commit();
                 return $user;
             }
+
+            $transaction->rollBack();
+            return null;
         } catch (\Exception $e) {
             $transaction->rollBack();
-            throw $e;
+            Yii::error("Register Error: " . $e->getMessage());
+            return null;
         }
     }
-        // ตรวจสอบข้อมูลพนักงาน
-    private function checkEmployee($data)
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $emp = Employees::find()->where(
-            [
-                'cid' => $data['cid'],
-                'fname' => $data['fname'],
-                'lname' => $data['lname'],
-                'birthday' => $data['birthday']
-            ]
-        )->one();
-        if (!$emp) {
-            return false;
-        } else {
-            return $emp;
-        }
-    }
-    
-    
 }
