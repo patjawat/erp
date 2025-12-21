@@ -22,6 +22,9 @@ class ProviderController extends Controller
         $ts = $request->get('ts');
         $sig = $request->get('sig');
         $hospcode = $request->get('hospcode');
+        $fname = $request->get('fname');
+        $lname = $request->get('lname');
+        $email = $request->get('email');
 
         // 1. ตรวจสอบ Parameters เบื้องต้น
         if (!$hashCid || !$ts || !$sig) {
