@@ -90,7 +90,7 @@ class ProviderController extends Controller
 
         // กรณีเกิดข้อผิดพลาดในการสร้าง User หรือ Login
         Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลผู้ใช้งานในระบบ หรือคุณไม่มีสิทธิ์เข้าถึง');
-        return $this->redirect(['auth/login']);
+        return $this->redirect(['/auth/login']);
     }
 
     // ตรวจสอบข้อมูลพนักงานจากฐานข้อมูลด้วย SHA2
