@@ -95,7 +95,7 @@ class User extends ActiveRecord implements IdentityInterface {
             ['confirm_password', 'required'],
             ['confirm_password', 'string', 'min' => 6],
             ['confirm_password', 'compare', 'compareAttribute' => 'password'],
-            [['roles', 'doctor_id', 'fullname','fullname_en','q', 'old_password','phone'], 'safe'],
+            [['roles', 'doctor_id', 'fullname','fullname_en','q', 'old_password','phone','hash_cid'], 'safe'],
             // ['phone', 'unique', 'targetClass' => 'app\modules\hr\models\Employees', 'message' => 'เบอร์โทรศัพท์ถูกใช้แล้ว'],
         ];
     }
