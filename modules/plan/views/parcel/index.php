@@ -11,20 +11,28 @@ use yii\helpers\Html;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'แผนคำขอพัสดุ';
+$this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-dolly me-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 12h4"></path>
+            <path d="M10 8h4"></path>
+            <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path>
+            <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path>
+            <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/plan/menu', ['active' => 'parcel']) ?>
 <?php $this->endBlock(); ?>
-
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -39,7 +47,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between align-items-center">
-            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span class="badge text-bg-light">
+            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span
+                    class="badge text-bg-light">
                     <?= $dataProvider->getTotalCount() ?></span> รายการ</h6>
             <div>
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
@@ -48,7 +57,6 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="card-body">
-
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -65,29 +73,29 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr class="">
-                    <tr>
-                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-                        </td>
-                        <td><?= $item->planType?->title ?></td>
-                        <td>
-                            <?= $item->planItem?->title ?>
-                            <?= $item->assetType?->title ?>
-                        </td>
-                        <td><?= $item->description ?></td>
-                        <td class="text-end"><?= number_format((float)($item->order_price ?? 0), 2) ?></td>
-                        <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
-                        <td><?= $item->departmentName() ?></td>
-                        <td><?= $item->viewStatus()['view'] ?></td>
-                        <td class="text-center">
-                            <?=$this->render('action',['model' => $item])?>
-                        </td>
-                    </tr>
+                <tr class="">
+                <tr>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                    </td>
+                    <td><?= $item->planType?->title ?></td>
+                    <td>
+                        <?= $item->planItem?->title ?>
+                        <?= $item->assetType?->title ?>
+                    </td>
+                    <td><?= $item->description ?></td>
+                    <td class="text-end"><?= number_format((float)($item->order_price ?? 0), 2) ?></td>
+                    <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
+                    <td><?= $item->departmentName() ?></td>
+                    <td><?= $item->viewStatus()['view'] ?></td>
+                    <td class="text-center">
+                        <?=$this->render('action',['model' => $item])?>
+                    </td>
+                </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
 
-        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
+        <div class="text-muted d-flex justify-content-center mt-4">
             <?= yii\bootstrap5\LinkPager::widget([
                 'pagination' => $dataProvider->pagination,
                 'firstPageLabel' => 'หน้าแรก',

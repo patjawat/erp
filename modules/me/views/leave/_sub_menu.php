@@ -1,8 +1,13 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
-        <?php echo  Html::a('<i class="fa-solid fa-calendar-day"></i>  ปฏิทินการลา',['/me/leave/calendar'],['class' => 'btn '.(isset($active) && $active == 'calendar' ? 'btn-primary' : 'btn-light')])?>
-        <?php echo  Html::a('<i class="bi bi-ui-checks"></i> ทะเบียนประวัติ',['/me/leave'],['class' => 'btn '.(isset($active) && $active == 'index' ? 'btn-primary' : 'btn-light')])?>
+          <a href="<?= Url::to(['/me/leave']) ?>" class="btn <?= $active !== 'index' ? 'btn-outline-primary' : 'btn-primary' ?>">
+                <i class="bi bi-ui-checks"></i> ทะเบียนประวัติ
+        </a>
+        <a href="<?= Url::to(['/me/leave/calendar']) ?>" class="btn <?= $active !== 'calendar' ? 'btn-outline-primary' : 'btn-primary' ?>">
+                <i class="fa-solid fa-calendar-day"></i>
+                ปฏิทินการลา
+        </a>
+      
 </div>

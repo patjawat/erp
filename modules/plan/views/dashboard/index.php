@@ -1,33 +1,42 @@
 <?php
 use yii\helpers\Url;
-$this->title = 'Dashboard';
+$this->title = 'ภาพรวมแผนงาน';
+$this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gauge me-1"></i> </i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path>
+            <path d="M15 5.764v15"></path>
+            <path d="M9 3.236v15"></path>
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?=$this->render('_search',['model' => $searchModel])?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('@app/modules/plan/menu', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 
 <!-- <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 text-muted">Dashboard</h3>
-        <select class="form-select w-auto">
-            <option>แผนประจำปี 2569</option>
-            <option>แผนประจำปี 2568</option>
-        </select>
-    </div> -->
-
+    <h3 class="mb-0 text-muted">Dashboard</h3>
+    <select class="form-select w-auto">
+        <option>แผนประจำปี 2569</option>
+        <option>แผนประจำปี 2568</option>
+    </select>
+</div> -->
+<div class="row">
+<div class="col-4">
+    <?=$this->render('_search',['model' => $searchModel])?>
+</div>
+</div>
 <div class="row">
     <div class="col-md-6 col-lg-4">
         <div class="card border-4 border-secondary border-top-0 border-end-0 border-bottom-0">

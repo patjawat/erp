@@ -165,17 +165,71 @@ class ComputerController extends \yii\web\Controller
         ]);
     }
 
-    public function actionView($id)
+  
+    public function actionViewAsset($id)
     {
         $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
-        return $this->render('@app/modules/am/views/asset/view', [
+        return $this->render('@app/modules/helpdesk2/views/service/view_asset', [
             'model' => $model,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+
+    public function actionRepairHistory($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/_view_repair_history', [
+            'model' => $model,
+        ]);
+    }
+    //หนังสือเอกสารคู่มือต่างๆ
+    public function actionDocument($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/_view_document', [
+            'model' => $model,
+        ]);
+    }
+
+    // การบำรุงรักษา
+    public function actionMaintenance($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/maintenance', [
+            'model' => $model,
+        ]);
+    }
+
+    // พรบ.ต่อภาษี
+    public function actionVehicleTax($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/vehicle_tax', [
+            'model' => $model,
+        ]);
+    }
+
+    // พรบ.ต่อภาษี
+    public function actionCalibration($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/calibration', [
+            'model' => $model,
+        ]);
+    }
+
+     protected function findModelAsset($id)
+    {
+        if (($model = Asset::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

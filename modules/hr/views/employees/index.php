@@ -11,7 +11,8 @@ use app\components\SiteHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'บุคลากร';
+$this->title = 'ทะเบียนบุคลากร';
+$this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
 // ออกแบบ
 // https://www.canva.com/ai/code/thread/4c1031df-3a56-4eff-8b71-df1a519ca530
@@ -24,9 +25,27 @@ $this->params['breadcrumbs'][] = $this->title;
         padding: 10px;
     }
 </style>
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+        </svg>
+        <?=$this->title?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?=$this->render('@app/modules/hr/menu',['active' => 'employees'])
+?>
+<?php $this->endBlock(); ?>
+
+
 <?php $this->beginBlock('sub-title'); ?>
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
 </span>

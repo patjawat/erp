@@ -151,6 +151,8 @@ https://gemini.google.com/share/7236f4657713
 https://www.canva.com/ai/code/thread/ea327072-db24-488e-a38b-a838d74ec8e1
 https://www.canva.com/ai/code/thread/ba6b2ae4-bc5b-443a-8ed2-7c92798ae56a
 
+## การค้นหาบุคลากรที่อายุผิดปกติ
+SELECT id, fname, birthday, gender, YEAR(NOW()) - YEAR(birthday) AS calculated_age FROM employees WHERE (YEAR(NOW()) - YEAR(birthday)) BETWEEN 0 AND 4 OR birthday IS NULL OR birthday = '0000-00-00';
 
 
 ## ขั้นตอนการ  update ระบบทรัพย์สินใหม่

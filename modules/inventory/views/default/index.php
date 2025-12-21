@@ -8,36 +8,30 @@ $this->title = 'ระบบคลัง';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-shop fs-1"></i> <?php echo $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+        </svg>
+        <?=$this->title?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/inventory/views/default/menu_dashbroad') ?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/inventory/menu_dashbroad',['active' => 'index']) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu_dashbroad',['active' => 'index'])?>
-<?php $this->endBlock(); ?>
+
 <!-- https://www.canva.com/ai/code/thread/f82e0038-8164-4102-82d3-085d4d193cd0 -->
 
 <div class="row row-cols-1 row-cols-sm-3 row-cols-md-4 g-3 justify-content-center">
 
     <?php foreach($dataProvider->getModels() as $model):?>
-        <!-- <div class="col">
-            <a href="<?php // echo Url::to(['/me/store-v2/set-warehouse','id' => $item->id]);?>">
-                <div class="card border-0 shadow-sm hover-card">
-                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
-                        <i class="bi bi-shop fs-1 text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="text-center"><?php // echo $item->warehouse_name?></h6>
-                    </div>
-                </div>
-            </a>
-        </div> -->
-
+\
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12">
         <!-- Card -->
         <div class="p-2 bg-white rounded transform transition-all hover-translate-y-n2 duration-300 shadow-lg hover-shadow mt-3 zoom-in">

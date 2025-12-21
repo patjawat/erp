@@ -8,17 +8,27 @@ use yii\helpers\Html;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'แผนคำขอค่าใช้สอย';
+$this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-file-invoice me-1"></i> </i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-arrow-down-icon lucide-banknote-arrow-down">
+            <path d="M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5" />
+            <path d="m16 19 3 3 3-3" />
+            <path d="M18 12h.01" />
+            <path d="M19 16v6" />
+            <path d="M6 12h.01" />
+            <circle cx="12" cy="12" r="2" />
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
+<?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/plan/menu', ['active' => 'expenses']) ?>
 <?php $this->endBlock(); ?>
 
@@ -67,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                         </td>
                         <td><?= $item->planItem?->planCategory?->planType->title ?? '-' ?></td>
-                       <td> <?= $item->planItem?->planCategory?->title ?? '-' ?></td>
+                        <td> <?= $item->planItem?->planCategory?->title ?? '-' ?></td>
                         <td><?= $item->planItem?->title ?></td>
                         <td><?= $item->description ?></td>
                         <td class="text-end"><?= number_format($item->order_price, 2) ?></td>

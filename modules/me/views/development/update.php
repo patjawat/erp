@@ -11,10 +11,6 @@ $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' 
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?php  echo $this->render('@app/modules/me/menu',['active' => 'development']) ?>
-<?php $this->endBlock(); ?>
-
 
 <div class="development-update">
 

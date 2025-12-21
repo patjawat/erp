@@ -311,8 +311,8 @@ class VehicleController extends Controller
     public function actionCalendar()
     {
         return $this->render('calendar', [
-              'icon' => '<i class="fa-solid fa-car-on"></i>',
-            'title' => 'ปฏิทินการใช้รถทั่วไป',
+            'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-car-icon lucide-car"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>',
+            'title' => 'รถยนต์ทั้วไป',
             'vehicle_type' => 'official'
         ]);
     }
@@ -321,8 +321,8 @@ class VehicleController extends Controller
     public function actionCalendarAmbulance()
     {
         return $this->render('calendar',[
-            'title' => 'ปฏิทินการใช้รถพยาบาล',
-            'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
+            'title' => 'รถฉุกเฉิน',
+            'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ambulance-icon lucide-ambulance"><path d="M10 10H6"/><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/><path d="M8 8v4"/><path d="M9 18h6"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>',
             'vehicle_type' => 'ambulance'
         ]);
     }

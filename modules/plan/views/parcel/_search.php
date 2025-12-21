@@ -160,5 +160,3 @@ use yii\helpers\ArrayHelper;
 </div>
 
 <?php ActiveForm::end(); ?>
-
-</div>

@@ -10,12 +10,10 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
-use yii\data\ActiveDataProvider;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
-use app\modules\dms\models\DocumentTagsSearch;
 use app\modules\dms\models\DocumentsDetailSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -41,13 +39,14 @@ class DocumentsController extends \yii\web\Controller
                     ->andOnCondition(['d_read.name' => 'read']);
             }
         ]);
+        $q = trim($searchModel->q ?? '');
 
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', 'doc_number', $searchModel->q],
-            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
+            ['like', 'topic', $q],
+            ['like', 'doc_regis_number', $q],  // Fixed typo here
+            ['like', 'doc_number', $q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
         ]);
         if ($searchModel->q_status == 'Y') {
             $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
@@ -75,7 +74,8 @@ class DocumentsController extends \yii\web\Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'action' => 'index'
+            'action' => 'index',
+            'to' => 'ถึง'.$emp->fullname()
         ]);
     }
 
@@ -134,7 +134,8 @@ class DocumentsController extends \yii\web\Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'action' => 'department'
+            'action' => 'department',
+             'to' => 'ถึงหน่วยงาน'
         ]);
     }
 

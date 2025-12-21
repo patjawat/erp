@@ -31,7 +31,12 @@ class LandController extends \yii\web\Controller
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['LIKE', 'asset.code', $searchModel->q],
+                ['LIKE', 'price', $searchModel->q],
                 ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
+                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size')"), $searchModel->q],
+                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_ngan')"), $searchModel->q],
+                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_tarangwa')"), $searchModel->q],
             ]);
 
             // ค้นหาตามอายุ
@@ -56,6 +61,7 @@ class LandController extends \yii\web\Controller
             }
 
         return $this->render('index', [
+            'tabs' => 'land',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
@@ -76,7 +82,12 @@ class LandController extends \yii\web\Controller
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+                  // แปลง receive_date ถ้ามีค่า
+            if (!empty($model->receive_date)) {
+                $model->receive_date = AppHelper::convertToThai($model->receive_date);
+            }
+            $model->save();
 
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -102,10 +113,12 @@ class LandController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->receive_date = AppHelper::DateFormDb($model->receive_date);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-
+            if ($model->load($this->request->post())) {
+                $model->receive_date = AppHelper::DateToDb($model->receive_date);
+                $model->save();
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
