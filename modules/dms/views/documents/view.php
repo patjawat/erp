@@ -62,10 +62,6 @@ $this->title = $model->topic;
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 
-<?php  // Pjax::begin(['id' => 'document','timeout' => 80000]); ?>
-<!-- Tab panes -->
-
-
 <div class="row">
     <div class="col-7">
         <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
@@ -112,12 +108,6 @@ $this->title = $model->topic;
 </div>
 
 
-<?php // echo $this->render('_form_comment',['model'=> $modelComment]);?>
-
-
-<?php // echo $this->render('track',['model' => $model])?>
-
-
 <?php
 $getCommentUrl = Url::to(['/dms/documents/comment','id' => $model->id]);
 $listCommentUrl = Url::to(['/dms/documents/list-comment','id' => $model->id]);
@@ -138,13 +128,6 @@ $js = <<< JS
 
     });
 })();
-
-    // iframe.onload = () => {
-    // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-    // if (iframeDocument) {
-    //     iframeDocument.body.style.zoom = "150%";
-    // }
-    // };
 
     async function getComment()
     {
@@ -215,4 +198,3 @@ $js = <<< JS
 JS;
 $this->registerJS($js,View::POS_END);
 ?>
-<?php //  Pjax::end(); ?>

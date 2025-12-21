@@ -10,7 +10,7 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
       - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      # - /Volumes/Backup/erp/source/dansai/fileupload:/app/modules/filemanager/fileupload
+      - /Volumes/Backup/erp/source/dansai/fileupload:/app/modules/filemanager/fileupload
     ports:
       - "${HOS_CODE}:80"
     links:
