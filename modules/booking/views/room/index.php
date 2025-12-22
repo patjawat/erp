@@ -17,17 +17,20 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบจัดการห�
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
+
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-people-fill"></i> <?= $this->title; ?>
+<div class="d-flex align-items-center gap-2 mb-1">
+   
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
+        <?= $this->title ?>
+    </h4>
+</div>
+
+<?php $this->endBlock(); ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn') ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('@app/modules/booking/views/meeting/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('../meeting/menu', ['active' => 'setting']) ?>
-<?php $this->endBlock(); ?>
 <?php Pjax::begin()?>
 <?php
 $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#e91e63', '#607d8b'];
