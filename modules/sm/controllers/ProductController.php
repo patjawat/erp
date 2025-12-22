@@ -45,6 +45,7 @@ class ProductController extends Controller
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        $dataProvider->query->andFilterWhere(['group_id' => 'MATER']);
         $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
         if($searchModel->innovation_account == 1){
             $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.innovation_account')"), "1"]);

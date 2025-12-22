@@ -16,7 +16,7 @@ class ProductSearch extends Product
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category', 'q', 'metter_type', 'unit','innovation_account'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category', 'q', 'metter_type', 'unit','innovation_account','group_id'], 'safe'],
         ];
     }
 
@@ -58,6 +58,7 @@ class ProductSearch extends Product
         $query->andFilterWhere([
             'id' => $this->id,
             'active' => $this->active,
+            'group_id' => $this->group_id,
         ]);
         $query
             ->andFilterWhere(['like', 'ref', $this->ref])

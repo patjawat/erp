@@ -52,11 +52,12 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="card">
-    <div class="card-header bg-primary-gradient text-white">
+    <div class="card-header d-flex justify-content-between bg-primary-gradient text-white">
         <h6 class="text-white mt-2">
             <i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?> 
             <?= number_format($dataProvider->getTotalCount()) ?> รายการ
         </h6>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     </div>
 
     <div class="card-body">
