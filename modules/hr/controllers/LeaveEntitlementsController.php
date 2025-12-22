@@ -194,7 +194,6 @@ class LeaveEntitlementsController extends Controller
                 ];
             }
 
-            $data = [];
             foreach (Employees::find()->where(['status' => 1])->andWhere(['<>', 'id', 1])->all() as $emp) {
                 $leaveBefore = LeaveEntitlements::find()->where(['emp_id' => $emp->id, 'thai_year' => ($thaiYear - 1)])->one();
 
