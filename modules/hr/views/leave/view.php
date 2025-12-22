@@ -14,15 +14,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Leaves', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-calendar-day fs-1"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu') ?>
-<?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?= $this->render('@app/modules/hr/views/leave/view_detail', ['model' => $model]) ?>
 
