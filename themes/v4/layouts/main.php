@@ -36,16 +36,7 @@ AppAsset::register($this);
         --erp-primary-light: #eff6ff;
         --erp-icon-bg-active: #dbeafe;
         --erp-bg: #f3f7fa;
-        /* แนะนำให้เพิ่มความสูงมาตรฐานเป็นตัวแปร */
-        --header-height: 64px;
-        --navbar-height: 86px;
     }
-
-
-    html {
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%; /* ป้องกันฟอนต์ขยายเองบนแนวนอนในมือถือ */
-}
 
     /* body {
         background-color: var(--erp-bg);
@@ -55,14 +46,10 @@ AppAsset::register($this);
         position: sticky;
         top: 0;
         z-index: 1050;
+        height: 64px;
         background-color: var(--bs-primary);
         color: white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        height: var(--header-height);
-        color: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        /* ป้องกันการกระตุกบน Mobile */
-        will-change: transform;
     }
 
     .header-btn {
@@ -91,28 +78,18 @@ AppAsset::register($this);
     }
 
     .navbar-fixed-container {
-        position: -webkit-sticky;
-        /* สำหรับ Safari เก่า */
         position: sticky;
-        /* แก้ไขปัญหาทับซ้อน: top ต้องเท่ากับความสูงของ header */
-        top: var(--header-height);
+        top: 64px;
         z-index: 1040;
-        height: var(--navbar-height);
+        height: 86px;
         background-color: white;
         border-bottom: 1px solid #dee2e6;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         width: 100%;
-
-        /* แก้ไขการเลื่อนบน Android/iOS */
         overflow-x: auto;
         overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        /* ทำให้การ Scroll บน iPhone/iPad ลื่นไหล */
-        display: block;
     }
 
-
-    
     .navbar-fixed-container::-webkit-scrollbar {
         height: 6px;
     }
@@ -126,7 +103,6 @@ AppAsset::register($this);
         border-radius: 3px;
     }
 
-    
     .erp-nav-list {
         display: flex !important;
         flex-direction: row !important;
@@ -202,8 +178,7 @@ AppAsset::register($this);
     .erp-nav-item.active .erp-nav-text {
         font-weight: 600;
     }
-
-    .page-content-wrapper {
+    .page-content-wrapper{
         background-color: var(--bs-body-bg);
     }
 
@@ -246,7 +221,7 @@ AppAsset::register($this);
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center text-secondary small">
             <div class="mb-3 mb-md-0 text-center text-md-start">
                 <p class="mb-0 fw-semibold text-dark">2025 © ERP Hospital.</p>
-                <p class="mb-0 text-muted" style="font-size: 11px;"><?= Yii::$app->version ?></p>
+                <p class="mb-0 text-muted" style="font-size: 11px;"><?=Yii::$app->version ?></p>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span>ผู้ให้การสนับสนุน</span>
