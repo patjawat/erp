@@ -130,7 +130,7 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' =
         </div>
 
 <?php if($warehouse['warehouse_type'] == 'MAIN'):?>
-<?php echo $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
+<?php //echo $this->render('_order_request',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
 <?php // $this->render('_order_withdraw',[  'searchModel' => $searchModel,'dataProvider' => $dataProvider,])?>
 <?php endif?>
 
