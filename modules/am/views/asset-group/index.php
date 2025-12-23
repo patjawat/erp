@@ -14,20 +14,32 @@ use app\modules\am\models\AssetItem;
 $this->title = 'กลุ่มทรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
-<?php $this->endBlock();?>
 
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/am/views/default/menu',['active' => 'setting'])?>
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-group-icon lucide-group">
+            <path d="M3 7V5c0-1.1.9-2 2-2h2" />
+            <path d="M17 3h2c1.1 0 2 .9 2 2v2" />
+            <path d="M21 17v2c0 1.1-.9 2-2 2h-2" />
+            <path d="M7 21H5c-1.1 0-2-.9-2-2v-2" />
+            <rect width="7" height="5" x="7" y="7" rx="1" />
+            <rect width="7" height="5" x="10" y="12" rx="1" />
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
+
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn'); ?>
+<?php $this->endBlock() ?>
 
 
 <div class="card">
-     <div class="card-header bg-primary-gradient text-white">
-        <h6 class="text-white mt-2"><i class="bi bi-ui-checks me-1"></i><?=$this->title;?> <span class="badge bg-light"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h6>
+    <div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
     </div>
     <div class="card-body">
         <table class="table">
@@ -39,14 +51,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
-                <?php foreach($dataProvider->getModels() as $key => $item):?>
-                <tr>
-                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td class="fw-semibold text-primary"><?=$item->code?></td>
-                    <td><?=$item->title?></td>
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="fw-semibold text-primary"><?= $item->code ?></td>
+                        <td><?= $item->title ?></td>
 
-                </tr>
-                <?php endforeach;?>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
 
         </table>

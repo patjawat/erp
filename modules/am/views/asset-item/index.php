@@ -14,14 +14,25 @@ use app\modules\am\models\AssetItem;
 $this->title = 'ฐานข้อมูลพัสดุครุภัณฑ์กระทรวงสาธารณสุข';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
-<?php $this->endBlock();?>
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
 
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-bar-stacked-icon lucide-chart-bar-stacked">
+            <path d="M11 13v4" />
+            <path d="M15 5v4" />
+            <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+            <rect x="7" y="13" width="9" height="4" rx="1" />
+            <rect x="7" y="5" width="12" height="4" rx="1" />
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/am/views/default/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn'); ?>
+<?php $this->endBlock() ?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
