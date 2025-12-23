@@ -14,7 +14,6 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\EmployeeDetail;
 use app\modules\hr\models\Employees;
 use yii\console\Controller;
-use yii\console\ExitCode;
 use yii\helpers\ArrayHelper;
 use yii\helpers\BaseConsole;
 use yii\helpers\BaseFileHelper;
@@ -139,6 +138,10 @@ class ImportEmployeeHosController extends Controller
                     $model->education = 0;  // การศึกษา
                     $model->status = $person['status'];  // สถานะ
                     $model->address = $person['address'];
+                    // 1. คัดลอกข้อมูล person มาไว้ในตัวแปรใหม่
+                    $old_person_data = $person;
+                    // 2. ลบเฉพาะ key 'image' ออก
+                    unset($old_person_data['image']);
                     $data_json = [
                         'marry' => $person['marry'],
                         'nationality' => $person['nationality'],
@@ -149,7 +152,7 @@ class ImportEmployeeHosController extends Controller
                         'position_name_text' => $person['position_name'],
                         'department_text' => '',
                         'position_level_text' => '',
-                        'old_data' => $person
+                        'old_data' => $old_person_data
                     ];
 
                     $model->data_json = $data_json;
