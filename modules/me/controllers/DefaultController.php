@@ -25,10 +25,15 @@ class DefaultController extends Controller
 
         $model = UserHelper::GetEmployee();
 
-        if($model->getInfo()['position'] == '-'){
+        if ($model === null) {
             return $this->render('warning');
         }
 
+        $info = $model->getInfo();
+
+        if (empty($info['position']) || $info['position'] === '-') {
+            return $this->render('warning');
+        }
         $searchModel = new LeaveSearch([
             'thai_year' => AppHelper::YearBudget(),
             'emp_id' => $model->id
@@ -47,7 +52,8 @@ class DefaultController extends Controller
     }
 
 
-    public function actionWarning(){
+    public function actionWarning()
+    {
         return $this->render('warning');
     }
 
@@ -69,7 +75,7 @@ class DefaultController extends Controller
         ]);
     }
 
-        public function actionV3()
+    public function actionV3()
     {
         $model = UserHelper::GetEmployee();
 
