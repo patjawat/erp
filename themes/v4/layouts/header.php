@@ -31,7 +31,8 @@ $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['the
 
     /* ให้เมนูไม่หด */
     .erp-nav-list {
-        min-width: max-content;
+        width: 90%;
+
     }
 
     /* ถ้าเมนูเป็น ul */
