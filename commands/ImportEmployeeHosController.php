@@ -71,8 +71,8 @@ class ImportEmployeeHosController extends Controller
         p.`HR_PHONE` as phone,
         p.`HR_BIRTHDAY` as birthday,
         p.HR_ZIPCODE as zipcode,
-        p.HR_POSITION_ID as position_name,
-        p.HR_PERSON_TYPE_ID as position_type,
+        hp.HR_POSITION_NAME as position_name,
+        pt.HR_PERSON_TYPE_NAME as person_type_name,
         p.HR_LEVEL_ID as position_level,
         dep.HR_DEPARTMENT_NAME as department_group,
         dep_sub.HR_DEPARTMENT_SUB_NAME as department_group2,
@@ -96,9 +96,10 @@ class ImportEmployeeHosController extends Controller
         LEFT JOIN hr_person_type p_type ON p_type.HR_PERSON_TYPE_ID = p.PERSON_TYPE
         LEFT JOIN hr_department dep ON dep.HR_DEPARTMENT_ID = p.HR_DEPARTMENT_ID
         LEFT JOIN hr_department_sub dep_sub ON dep_sub.HR_DEPARTMENT_SUB_ID = p.HR_DEPARTMENT_SUB_ID
-        LEFT JOIN hr_department_sub_sub dep_sub_sub ON dep_sub_sub.HR_DEPARTMENT_SUB_SUB_ID = p.HR_DEPARTMENT_SUB_SUB_ID;";
+        LEFT JOIN hr_department_sub_sub dep_sub_sub ON dep_sub_sub.HR_DEPARTMENT_SUB_SUB_ID = p.HR_DEPARTMENT_SUB_SUB_ID
+        LEFT JOIN hr_person_type pt ON pt.HR_PERSON_TYPE_ID  =p.HR_PERSON_TYPE_ID
+        LEFT JOIN hr_position hp ON hp.HR_POSITION_ID = p.HR_POSITION_ID;";
         $queryPersons = \Yii::$app->db2->createCommand($sqlPerson)->queryAll();
-        $data = [];
         if (BaseConsole::confirm('Are you sure?')) {
             $i = 1;
             foreach ($queryPersons as $person) {
@@ -147,23 +148,21 @@ class ImportEmployeeHosController extends Controller
                         // 'position_group' => $person['position_group_name'],
                         'position_name_text' => $person['position_name'],
                         'department_text' => '',
-                        'position_level_text' => ''
+                        'position_level_text' => '',
+                        'old_data' => $person
                     ];
 
-                    // $fullname =   $this->getPrefix($person['HR_PREFIX_ID'], $person['SEX']).$model->fname = $person['fname'].' '.$model->lname = $person['lname'];
                     $model->data_json = $data_json;
 
                     $this->Family($model->id, $model->cid);
 
-                    // $message = ('# '.$i++.' ').$fullname.' Success';
                     if ($model->save(false)) {
                         $this->UpdatePosition($model, $person);
-                        // echo $model->fname . ' ' . $model->lname . "\n";
                     } else {
                         echo "False \n";
                     }
                 } else {
-                    // echo "นำเข้าข้อมูลแล้ว เข้าใจไม!!  \n";
+                    echo "นำเข้าข้อมูลแล้ว!!  \n";
                     // return ExitCode::OK;
                     $this->UpdatePosition($checker, $person);
                 }

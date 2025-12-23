@@ -1085,6 +1085,8 @@ class Employees extends Yii\db\ActiveRecord
     // แสดงชื่อตำแหน่ง
     public function positionName($arr = [])
     {
+        try {
+
         $level = $this->positionLevelName() ? $this->positionLevelName() : '';
 
         if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
@@ -1092,18 +1094,12 @@ class Employees extends Yii\db\ActiveRecord
         } else {
             $isIcon = null;
         }
-
-        // return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon.$this->data_json['position_name_text'].' '.$level : AppHelper::MsgWarning('ไม่ระบุตำแหน่ง');
         return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon . $this->data_json['position_name_text'] . ' ' . $level : '-';
-
-        //     if ($this->position_level) {
-        //         $level = ' (ระดับ' . $this->positionLevelName() . ')';
-        //         // return isset($this->data_json['position_name_text']) ? $isIcon.$this->data_json['position_name_text']. $level : AppHelper::MsgWarning();
-        //         return $this->data_json['position_name_text'] != '' ? $isIcon.$this->data_json['position_name_text']. $level : AppHelper::MsgWarning();
-        //     } else {
-        //         return isset($this->data_json['position_name_text']) ? $isIcon.$this->data_json['position_name_text'] : AppHelper::MsgWarning();
-        //     }
-        // $model = CategoriseHelper::TreeById($this->position_name);
+            //code...
+        } catch (\Throwable $th) {
+           return '-';
+        }
+      
     }
 
     // แสดงประเภทตำแหน่ง
