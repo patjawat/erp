@@ -25,27 +25,27 @@ jQuery(document).on("pjax:end", function () {
   }
 });
 
-
 // ฟังก์ชันเลื่อนขึ้นบนสุด
-document.getElementById('btnScrollTop').addEventListener('click', function() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+document.getElementById("btnScrollTop").addEventListener("click", function () {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 // ฟังก์ชันเลื่อนลงล่างสุด
-document.getElementById('btnScrollBottom').addEventListener('click', function() {
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-});
+document
+  .getElementById("btnScrollBottom")
+  .addEventListener("click", function () {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  });
 
 // แสดงปุ่มเมื่อ scroll ลงมา
-window.addEventListener('scroll', function() {
-  const buttons = document.getElementById('scroll-buttons');
+window.addEventListener("scroll", function () {
+  const buttons = document.getElementById("scroll-buttons");
   if (window.scrollY > 100) {
-    buttons.style.display = 'block';
+    buttons.style.display = "block";
   } else {
-    buttons.style.display = 'none';
+    buttons.style.display = "none";
   }
 });
-
 
 //แก้ treeview ไม่ปิดเวลาเลือก
 $("#treeID").on("treeview:change", function (event, key, name) {
@@ -53,12 +53,10 @@ $("#treeID").on("treeview:change", function (event, key, name) {
   $("body").find(".kv-tree-dropdown").removeClass("show");
 });
 
-  $("body").on("click", ".form-submit", async function (e) {
+$("body").on("click", ".form-submit", async function (e) {
   e.preventDefault();
   var formId = $(this).data("id");
-  $('#'+formId).submit();
-
-  
+  $("#" + formId).submit();
 });
 /**
  * Handle AJAX form submission with confirmation and success feedback.
@@ -106,10 +104,19 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
                 text: "บันทึกข้อมูลเรียบร้อยแล้ว",
                 timer: 1000,
                 showConfirmButton: false,
-              }).then(() => {
+              }).then(async () => {
+                // เพิ่ม async ตรงนี้เพื่อรองรับ await ใน callback
+
                 if (typeof successCallback === "function") {
-                  successCallback(response);
-                } else {
+                  // ทำงานใน callback ก่อน
+                  await successCallback(response);
+                }
+
+                // ถ้าใน response มี redirect_url ให้วิ่งไปที่นั่น (ถ้าไม่ได้โดน reload ไปก่อน)
+                if (response.redirect_url) {
+                  window.location.href = response.redirect_url;
+                } else if (typeof successCallback !== "function") {
+                  // ถ้าไม่มีทั้ง callback และ redirect url ให้ reload ตามปกติ
                   location.reload();
                 }
               });
@@ -521,8 +528,8 @@ $("body").on("click", ".delete-item", async function (e) {
           } else if (response.status == "success" && response.close) {
             success("ดำเนินการลบสำเร็จ!.");
             $("#main-modal").modal("hide");
-          }else if (response.status == "success" && response.url) {
-             window.location.href = response.url;
+          } else if (response.status == "success" && response.url) {
+            window.location.href = response.url;
           } else {
             location.reload();
           }

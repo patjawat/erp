@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = 'สต๊อก/เบิกใช้งาน
 
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex gap-2">
-    <?php echo $this->render('@app/modules/me/stock_menu',['active' => 'store']) ?>
+    <?php echo $this->render('@app/modules/me/stock_menu',['active' => 'sub-stock']) ?>
     <?= $this->render('@app/components/ui/btnReturn')?>
 </div>
 <?php $this->endBlock(); ?>
