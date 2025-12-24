@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = 'Dashboard'
 
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex gap-2">
-    <?php echo $this->render('@app/modules/me/stock_menu',['active' => 'store']) ?>
+    <?php echo $this->render('@app/modules/me/stock_menu',['active' => 'dashboard']) ?>
     <?= $this->render('@app/components/ui/btnReturn')?>
 </div>
 <?php $this->endBlock(); ?>

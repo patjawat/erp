@@ -66,65 +66,15 @@ async function ViewMainCar()
         }
     });
     }
-    
-    $('#form').on('beforeSubmit',  function (e) {
-        e.preventDefault();
-         Swal.fire({
-                title: 'ยืนยัน',
-                text: 'เบิกวัสดุ',
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "ใช่, ยืนยัน!",
-                cancelButtonText: "ยกเลิก",
-                }).then(async (result) => {
-                if (result.value == true) {
-                    var form = \$(this);
 
-                        $('#main-modal').hide();
-
-                        // 🔹 แสดง Loading ก่อนยิง AJAX
-                        Swal.fire({
-                            title: 'กำลังดำเนินการ...',
-                            text: 'กรุณารอสักครู่',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: 'post',
-                        data: form.serialize(),
-                        dataType: 'json',
-                        success: async function (response) {
-                                form.yiiActiveForm('updateMessages', response, true);
-                                if(response.status == 'error') 
-                                {
-                                    Swal.fire({
-                                        title: "เกิดข้อผิดพลาดบางอย่าง!",
-                                        text: response.message,
-                                        icon: "error"
-                                        });
-                                    }
-                                    if(response.status == 'success') {
-                                            // location.reload()
-                                            // closeModal()
-                                            // success()
-                                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
-                                        }
-                                    }
-                            });
-                        return false;
-                        
-                    }
-                    return false;
-                });
-                return false;
-                
+    handleFormSubmit('#form', null, async function(response) {
+        if (response.redirect_url) {
+        window.location.href = response.redirect_url;
+    } else {
+        location.reload();
+    }
     });
+    
 JS;
 $this->registerJS($js);
 ?>
