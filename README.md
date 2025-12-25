@@ -412,30 +412,3 @@ update `approve` SET title = 'ผอ.อนุมัติ' WHERE `name` = 'leav
 UPDATE approve
 SET data_json = JSON_SET(data_json, '$.label', 'ผ่าน')
 WHERE `name` = 'leave' AND `level` = 3
-
-
-
-SELECT o.id,o.code,i.id,i.code,i.category_id,i.qty,i.unit_price,SUM(i.qty*i.unit_price) as total FROM stock_events o
-LEFT JOIN stock_events i ON i.category_id = o.id
-WHERE o.code IN (
-    'REQ-690136',
-    'REQ-690137',
-    'REQ-690166',
-    'REQ-690167',
-    'REQ-690214',
-    'REQ-690215',
-    'REQ-690216',
-    'REQ-690217',
-    'REQ-690218',
-    'REQ-690219',
-    'REQ-690220',
-    'REQ-690222',
-    'REQ-690223',
-    'REQ-690224',
-    'REQ-690225',
-    'REQ-690226',
-    'REQ-690227',
-    'REQ-690231',
-    'REQ-690232'
-)
-GROUP BY o.code;
