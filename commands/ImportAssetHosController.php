@@ -117,7 +117,7 @@ class ImportAssetHosController extends Controller
                     $upload->save(false);
                 }
         }
-            $model->asset_group = '3';
+            $model->asset_group_id = '3';
             $model->code = $asset['code'];
             $model->asset_item = $asset['asset_item'];
             $model->receive_date = $asset['receive_date'];
@@ -181,7 +181,7 @@ class ImportAssetHosController extends Controller
                 'land_size_tarangwa' => $query['LAND_SIZE_TARANGWA'],
                 'land_owner' => $query['LAND_OWNER'],
             ];
-            $model->asset_group =  1;
+            $model->asset_group_id =  1;
             $model->code =  $query['LAND_RAWANG'];
             echo $model->save(false);
         }
@@ -223,7 +223,7 @@ class ImportAssetHosController extends Controller
 
 
             
-            $model->asset_group = 2;
+            $model->asset_group_id = 2;
             $model->asset_item = $query['LAND_RAWANG'];
             $model->asset_item = $query['BUILD_NAME'];
             $model->price = $query['BUILD_NGUD_MONEY'];
