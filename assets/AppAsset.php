@@ -23,7 +23,6 @@ class AppAsset extends AssetBundle
 
     public $css = [
         'css/custom.css',
-        'libs/font-awesome/all.min.css',
         'css/bootstrap-icons.min.css',
         'aos/aos.css',
         'sweetalert2/dist/sweetalert2.css',
@@ -32,7 +31,9 @@ class AppAsset extends AssetBundle
         'css/tour.min.css',
         'libs/datepicker/jquery.datetimepicker.css',
         'libs/animate/animate.min.css',
-        'libs/magnific-popup/magnific-popup.css'
+        'libs/magnific-popup/magnific-popup.css',
+        // 'libs/font-awesome/all.min.css',
+        'libs/font-awesome/fontawesome-free-7.1.0-web/css/all.min.css',
     ];
 
     public $js = [
@@ -49,7 +50,8 @@ class AppAsset extends AssetBundle
         'libs/fabric/fabric.min.js',
         'libs/jspdf/jspdf.umd.min.js',
         'libs/pdf/pdf.min.js',
-        'libs/magnific-popup/jquery.magnific-popup.js'
+        'libs/magnific-popup/jquery.magnific-popup.js',
+        'libs/font-awesome/fontawesome-free-7.1.0-web/js/all.min.js',
     ];
 
     public $depends = [
