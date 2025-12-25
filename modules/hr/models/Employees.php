@@ -601,117 +601,109 @@ class Employees extends Yii\db\ActiveRecord
             ];
         }
     }
-
-    public function generalMenu()
-    {
-        return [
-            [
-                'title' => 'ข้อมูลพื้นฐาน',
-                'icon' => '<i class="fa-solid fa-user-tag avatar-title text-primary"></i> ',
-                'name' => '',
-                'subtitle' => 'ข้อมูลพื้นฐานตามบัตรประชาชน',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
-                'icon' => '<i class="fa-solid fa-briefcase avatar-title text-primary"></i> ',
-                'name' => 'position',
-                'subtitle' => 'ข้อมูลการบรรจุ/ต่อสัญญาจ้าง/เลื่อนขั้น',
-                'count' => count($this->positions),
-            ],
-            [
-                'title' => 'ข้อมูลการศึกษา',
-                'icon' => '<i class="fa-solid fa-user-graduate  avatar-title text-primary"></i>',
-                'name' => 'education',
-                'subtitle' => 'ประวัติการศึกษา/คุณวุฒิต่างๆ',
-                'count' => count($this->educations),
-            ],
-            [
-                'title' => 'ข้อมูลครอบครัว',
-                'icon' => '<i class="fa-solid fa-people-roof avatar-title text-primary"></i> ',
-                'name' => 'family',
-                'subtitle' => 'ประวัติสมาชิกในครอบครัว',
-                'count' => 0,
-            ],
-            [
-                'title' => 'รางวัลเชิดชูเกียรติ',
-                'icon' => '<i class="fa-solid fa-award avatar-title text-primary"></i> ',
-                'name' => 'award',
-                'subtitle' => 'ประวัติการรับรางวัลต่างๆ',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลประวัติเครื่องราชอิสริยาภรณ์',
-                'icon' => '<i class="fa-solid fa-crown avatar-title text-primary"></i> ',
-                'name' => 'insignia',
-                'subtitle' => 'เหรียญ และตรา อันเป็นเครื่องประดับยศ',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลการเปลี่ยนชื่อและสกุล',
-                'icon' => '<i class="fa-solid fa-file-contract avatar-title text-primary"></i> ',
-                'name' => 'rename',
-                'subtitle' => 'ประวัติการเปลี่ยนชื่อ นามสกุล',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลใบประกอบวิชาชีพ',
-                'icon' => '<i class="fa-regular fa-id-badge avatar-title text-primary"></i> ',
-                'name' => 'license',
-                'subtitle' => 'ใบอนุญาตต่างๆ/ใบประกอบวิชาชีพ',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลการอบรมดูงาน',
-                'icon' => '<i class="fa-solid fa-person-walking-luggage avatar-title text-primary"></i> ',
-                'name' => 'develop',
-                'subtitle' => 'ประวัติการสัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ',
-                'count' => 0,
-            ],
-            [
-                'title' => 'การรับทุน',
-                'icon' => '<i class="fa-solid fa-graduation-cap avatar-title text-primary"></i> ',
-                'name' => 'scholarships',
-                'subtitle' => 'ประวัติการรับทุน',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลการรับโทษทางวินัย',
-                'icon' => '<i class="fa-solid fa-graduation-cap avatar-title text-primary"></i> ',
-                'name' => 'blame',
-                'subtitle' => 'ประวัติการรับโทษทางวินัย',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลสวัสดิการ',
-                'icon' => '<i class="fa-solid fa-heart-circle-plus avatar-title text-primary"></i> ',
-                'name' => 'benefit',
-                'subtitle' => 'สิทธิประโยชน์ สวัสดิการที่ได้รับ',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ข้อมูลปฏิบัติหน้าที่/ราชการ',
-                'icon' => '<i class="fa-solid fa-users-gear avatar-title text-primary"></i> ',
-                'name' => 'position_manage',
-                'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
-                'count' => 0,
-            ],
-            [
-                'title' => 'ลายเซ็น',
-                'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
-                'name' => 'signature',
-                'subtitle' => 'ลายเซ็น',
-                'count' => 0,
-            ],
-            // [
-            //     'title' => 'Line',
-            //     'icon' => '<i class="fa-solid fa-file-signature avatar-title text-primary"></i> ',
-            //     'name' => 'line',
-            //     'subtitle' => 'Line',
-            //     'count' => 0,
-            // ]
-        ];
-    }
+public function generalMenu()
+{
+    return [
+        [
+            'title' => 'ข้อมูลพื้นฐาน',
+            'icon' => '<i data-lucide="user-round" class="lucide-icon text-primary"></i>',
+            'name' => '',
+            'subtitle' => 'ข้อมูลพื้นฐานตามบัตรประชาชน',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
+            'icon' => '<i data-lucide="briefcase" class="lucide-icon text-primary"></i>',
+            'name' => 'position',
+            'subtitle' => 'ข้อมูลการบรรจุ/ต่อสัญญาจ้าง/เลื่อนขั้น',
+            'count' => count($this->positions),
+        ],
+        [
+            'title' => 'ข้อมูลการศึกษา',
+            'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
+            'name' => 'education',
+            'subtitle' => 'ประวัติการศึกษา/คุณวุฒิต่างๆ',
+            'count' => count($this->educations),
+        ],
+        [
+            'title' => 'ข้อมูลครอบครัว',
+            'icon' => '<i data-lucide="users-2" class="lucide-icon text-primary"></i>',
+            'name' => 'family',
+            'subtitle' => 'ประวัติสมาชิกในครอบครัว',
+            'count' => 0,
+        ],
+        [
+            'title' => 'รางวัลเชิดชูเกียรติ',
+            'icon' => '<i data-lucide="trophy" class="lucide-icon text-primary"></i>',
+            'name' => 'award',
+            'subtitle' => 'ประวัติการรับรางวัลต่างๆ',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลประวัติเครื่องราชอิสริยาภรณ์',
+            'icon' => '<i data-lucide="medal" class="lucide-icon text-primary"></i>',
+            'name' => 'insignia',
+            'subtitle' => 'เหรียญ และตรา อันเป็นเครื่องประดับยศ',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลการเปลี่ยนชื่อและสกุล',
+            'icon' => '<i data-lucide="file-signature" class="lucide-icon text-primary"></i>',
+            'name' => 'rename',
+            'subtitle' => 'ประวัติการเปลี่ยนชื่อ นามสกุล',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลใบประกอบวิชาชีพ',
+            'icon' => '<i data-lucide="id-card" class="lucide-icon text-primary"></i>',
+            'name' => 'license',
+            'subtitle' => 'ใบอนุญาตต่างๆ/ใบประกอบวิชาชีพ',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลการอบรมดูงาน',
+            'icon' => '<i data-lucide="plane-landing" class="lucide-icon text-primary"></i>',
+            'name' => 'develop',
+            'subtitle' => 'ประวัติการสัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ',
+            'count' => 0,
+        ],
+        [
+            'title' => 'การรับทุน',
+            'icon' => '<i data-lucide="hand-coins" class="lucide-icon text-primary"></i>',
+            'name' => 'scholarships',
+            'subtitle' => 'ประวัติการรับทุน',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลการรับโทษทางวินัย',
+            'icon' => '<i data-lucide="gavel" class="lucide-icon text-primary"></i>',
+            'name' => 'blame',
+            'subtitle' => 'ประวัติการรับโทษทางวินัย',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลสวัสดิการ',
+            'icon' => '<i data-lucide="heart-handshake" class="lucide-icon text-primary"></i>',
+            'name' => 'benefit',
+            'subtitle' => 'สิทธิประโยชน์ สวัสดิการที่ได้รับ',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ข้อมูลปฏิบัติหน้าที่/ราชการ',
+            'icon' => '<i data-lucide="cog" class="lucide-icon text-primary"></i>',
+            'name' => 'position_manage',
+            'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
+            'count' => 0,
+        ],
+        [
+            'title' => 'ลายเซ็น',
+            'icon' => '<i data-lucide="pen-tool" class="lucide-icon text-primary"></i>',
+            'name' => 'signature',
+            'subtitle' => 'ลายเซ็น',
+            'count' => 0,
+        ],
+    ];
+}
 
     // คำนำหน้า
     public function ListPrefixTh()
@@ -1107,8 +1099,6 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             return $this->positionType ? $this->positionType->title : $this->position_type;
-            // return isset($this->data_json['position_type']) ? $this->data_json['position_type'] : '-';
-            // return $this->positionName->positionGroup->positionType->title;
         } catch (\Throwable $th) {
             return false;
         }

@@ -30,16 +30,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="row d-flex flex-sm-row-reverse">
-
-
     <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 col-sx-12">
         <?= $this->render('avatar',['model' => $model])?>
 
         <?php //  $this->render('member_on_dep',['model' => $model])?>
 
         <?=Html::a('<i class="bi bi-cloud-plus-fill fs-3"></i> แบบสารสนเทศเบื้องต้น', ['upload-basic-doc', 'id' => $model->id], ['class' => 'w-100 mb-3 btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']])?>
-
-
         <div class="list-group">
             <?php foreach($model->generalMenu() as $list):?>
             <a href="<?=Url::to(['/hr/employees/view','id' => $model->id,'name' => $list['name']])?>"

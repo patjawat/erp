@@ -243,6 +243,7 @@ AppAsset::register($this);
 
     <?php
     $js = <<< JS
+    lucide.createIcons();
     //ส่วนการ load overlay
         // tableLoading1.style.display = 'none';
         //         function showTableLoading() {
