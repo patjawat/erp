@@ -22,7 +22,6 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
         <div class="col-sm-6">
             <label class="small text-muted d-block">สถานะ</label>
             <?= $model->vehicleStatus?->title ?? '-' ?>
-            <!-- <span class="badge bg-success-subtle text-success border border-success-subtle">จัดสรรแล้ว</span> -->
         </div>
         <div class="col-12">
             <hr class="my-1 opacity-5">
