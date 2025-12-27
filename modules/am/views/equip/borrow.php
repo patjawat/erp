@@ -1,12 +1,12 @@
 <?php
+use yii\web\View;
+use yii\helpers\Url;
+use app\modules\helpdesk2\models\Helpdesk;
 
-use yii\helpers\Html;
-use yii\widgets\DetailView;
-use app\components\AppHelper;
-
-$this->title = 'แสดงรายละเอียดที่ดิน';
+$repairHistorys = Helpdesk::find()->where(['asset_number' => $model->code])->all();
+$this->title = 'แสดงรายละเอียดครุภัณฑ์';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
-$this->params['breadcrumbs'][] = ['label' => 'ที่ดิน', 'url' => ['/am/land']];
+$this->params['breadcrumbs'][] = ['label' => 'ครุภัณฑ์', 'url' => ['/am/equip']];
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
@@ -26,13 +26,34 @@ $this->params['breadcrumbs'][] = ['label' => 'ที่ดิน', 'url' => ['/a
 <?php $this->endBlock(); ?>
 
 
+<?= $this->render('@app/modules/am/views/asset/_title', ['model' => $model]) ?>
 
-<?= $this->render('_title', ['model' => $model]) ?>
-
-        <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
-
-<div class="card">
+<div class="card mt-4">
+    <div class="card-header">
+        <?= $this->render('@app/modules/am/views/asset/_view_menu', ['model' => $model, 'menu' => 'borrow']) ?>
+    </div>
     <div class="card-body">
-        <?= $model->listShowImage() ?>
+        <div id="listborrow"></div>
     </div>
 </div>
+
+<?php
+
+$url = Url::to(['/am/borrow','code' => $model->code]);
+$js = <<< JS
+
+loadborrow()
+function loadborrow()
+{
+    $.ajax({
+        type: "get",
+        url: "$url",
+        dataType: "json",
+        success: function (res) {
+            $('#listborrow').html(res.content)
+        }
+    });
+}
+JS;
+$this->registerJS($js,View::POS_END);
+?>

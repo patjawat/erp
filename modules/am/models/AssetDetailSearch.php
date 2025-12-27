@@ -18,7 +18,7 @@ class AssetDetailSearch extends AssetDetail
     {
         return [
             [['id', 'user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'data_json', 'updated_at', 'created_at'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'data_json', 'updated_at', 'created_at','plan_date','actual_date'], 'safe'],
         ];
     }
 

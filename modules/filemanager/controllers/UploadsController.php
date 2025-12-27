@@ -104,16 +104,6 @@ class UploadsController extends \yii\web\Controller
             Yii::$app->response->headers->set('Content-Type', 'application/octet-stream');
         }
 
-
-        // Yii::$app->getResponse()->getHeaders()
-        //     ->set('Pragma', 'public')
-        //     ->set('Expires', '0')
-        //     ->set('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
-        //     ->set('Content-Transfer-Encoding', 'binary')
-        //     ->set('Content-type', 'image/*');
-        //     // header('Content-type: application/pdf');
-        //     // header('Content-type', 'video/mp4');
-        //     header('Content-type', 'image/*');
     }
 
 
@@ -151,4 +141,5 @@ class UploadsController extends \yii\web\Controller
             return ['success' => false];
         }
     }
+
 }

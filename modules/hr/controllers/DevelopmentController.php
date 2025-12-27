@@ -171,7 +171,8 @@ class DevelopmentController extends Controller
             return $this->redirect('index');
         }
 
-        return $this->render('update', [
+        // return $this->render('_form_dev', [
+        return $this->render('_form', [
             'model' => $model,
         ]);
     }

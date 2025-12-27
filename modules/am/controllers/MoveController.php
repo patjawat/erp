@@ -14,9 +14,9 @@ use app\modules\am\models\AssetDetail;
 use app\modules\am\models\AssetDetailSearch;
 
 /**
- * calibrationController implements the CRUD actions for AssetDetail model.
+ * moveController implements the CRUD actions for AssetDetail model.
  */
-class CalibrationController extends Controller
+class MoveController extends Controller
 {
     /**
      * @inheritDoc
@@ -45,7 +45,7 @@ class CalibrationController extends Controller
     {
         $code = $this->request->get('code');
         $searchModel = new AssetDetailSearch([
-            'name' => 'calibration',
+            'name' => 'move',
             'code' => $code,
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -80,16 +80,16 @@ class CalibrationController extends Controller
      */
     public function actionView($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = $this->findModel($id);
+         \Yii::$app->response->format = Response::FORMAT_JSON;
+         $model = $this->findModel($id);
         return [
             'title' => 'แสดงรายละเอียด',
             'content' => $this->renderAjax('view', [
-                'model' => $model,
-
+            'model' => $model,
+            
             ]),
             'footer' => ModalHelper::modalFooterUpdateDeleteClose($id),
-        ];
+    ];
     }
 
     /**
@@ -104,19 +104,15 @@ class CalibrationController extends Controller
         $model = new AssetDetail([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'code' => $code,
-            'name' => 'calibration'
+            'name' => 'move'
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if (!empty($model->plan_date)) {
-                    $model->plan_date = AppHelper::DateToDb($model->plan_date);
+                if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
-                if (!empty($model->actual_date)) {
-                    $model->actual_date = AppHelper::DateToDb($model->date_start);
-                }
-
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
@@ -155,21 +151,15 @@ class CalibrationController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        if (!empty($model->plan_date)) {
-            $model->plan_date = AppHelper::ConvertToThai($model->plan_date);
-        }
-        if (!empty($model->actual_date)) {
-            $model->actual_date = AppHelper::ConvertToThai($model->actual_date);
-        }
+         if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::ConvertToThai($model->date_start);
+                }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if (!empty($model->plan_date)) {
-                    $model->plan_date = AppHelper::DateToDb($model->plan_date);
-                }
-                if (!empty($model->actual_date)) {
-                    $model->actual_date = AppHelper::DateToDb($model->actual_date);
+                if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;

@@ -154,7 +154,7 @@ if (!empty($menuItems)) {
     ?>
     <?php if(isset($item['show']) && $item['show']):?>
     <a href="<?= Url::to($item['url']) ?>" class="erp-nav-item <?= $isActive ? 'active' : '' ?>">
-        <div class="erp-icon-box zoom-in">
+        <div class="erp-icon-box">
             <?= $item['icon'] ?> 
         </div>
         <span class="erp-nav-text"><?= $item['label'] ?></span>

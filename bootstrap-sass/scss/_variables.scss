@@ -18,6 +18,7 @@ $black:#303030;
 $menu-item:$black;
 $menu-item-bg-hove:#eee;
 $light:#eee;
+$soft-light:#f3f3f3;
 $list-group-color:#303030;
 $badge-color: #303030;
 $white:#fff;
@@ -47,3 +48,39 @@ $font-weight-bold: 600; // เปลี่ยนจาก 700 เป็น 800 �
 $success: #198754;
 $success-rgb: 25, 135, 84;
 $input-focus-box-shadow: 0 0 0 .25rem rgba($success, .25);
+
+// 1. กำหนดค่า Variables ที่ต้องการ Customize
+$input-bg:                          $soft-light; // เทียบเท่า bg-light
+$input-border-width:               0;       // เทียบเท่า border-0
+$input-border-radius:              0.5rem;  // เทียบเท่า rounded-3 (โดยปกติคือ 0.5rem)
+$input-padding-y:                  0.5rem;  // เทียบเท่า py-2
+$input-font-weight:                500;     // เทียบเท่า fw-bold
+
+// ปรับแต่ง Select2 Container ให้เหมือน Input ที่เราทำไว้
+.select2-container--krajee-bs5 {
+    .select2-selection {
+        background-color: $soft-light !important; // bg-light
+        border: 0 !important;                // border-0
+        border-radius: 0.5rem !important;    // rounded-3
+        box-shadow: inset 0 1px 1px rgb(0 0 0 / 0%);
+        // height: auto !important;             // ให้ขยายตาม padding                 // ปรับให้ใกล้เคียง py-2
+        // font-weight: 700;                    // fw-bold
+        
+        // จัดการเรื่องกึ่งกลางตัวอักษร
+        // .select2-selection__rendered {
+        //     line-height: 1.5;
+        //     padding: 0.5rem 0.75rem;         // py-2 สอดคล้องกับ Input
+        // }
+
+        // .select2-selection__arrow {
+        //     height: 100%;                    // ให้ลูกศรอยู่ตรงกลาง
+        // }
+    }
+    
+    // เมื่อมีการ Focus
+    &.select2-container--focus {
+        .select2-selection {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); // จำลอง Focus Ring
+        }
+    }
+}
