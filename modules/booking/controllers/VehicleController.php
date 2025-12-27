@@ -558,7 +558,7 @@ class VehicleController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' =>$model->userRequest()['avatar'],
+                'title' =>'<i class="fa-solid fa-circle-info"></i> แสดงข้อมูลการจองรถ',
                 // 'title' => 'เลขที่#' . $model->code,
                 'content' => $this->renderAjax('_form_approve', [
                     'model' => $model,
