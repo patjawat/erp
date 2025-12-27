@@ -386,26 +386,7 @@ $("body").on("click", ".open-modal", function (e) {
         "modal-sm modal-md modal-lg modal-xl modal-xxl"
       );
       $(".modal-dialog").addClass("modal-md");
-      console.log(xhr);
 
-      // if error occured
-      // alert("Error occured.please try again");
-      // console.log(xhr.statusText + xhr.responseText);
-      // Swal.fire({
-      //   icon: "error",
-      //   title: "Oops...",
-      //   html: xhr.statusText + "</hr>" + xhr.responseText,
-      //   // text: xhr.responseText,
-      //   // footer: '<a href="#">Why do I have this issue?</a>'
-      // }).then(function (dismiss) {
-      //   console.log(dismiss);
-      //   if (dismiss.isConfirmed) {
-      //     $("#main-modal").modal("hide");
-      //   }
-      // });
-
-      // $(placeholder).append(xhr.statusText + xhr.responseText);
-      // $(placeholder).removeClass('loading');
     },
   });
 });
