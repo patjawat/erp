@@ -21,18 +21,13 @@ use kartik\widgets\ActiveForm;
         <div class="col-lg-6 col-md-6 col-sm-12">
             <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขทรัพย์สิน/ครุภัณฑ์') ?>
         </div>
-         
         <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'plan_date')->textInput(['placeholder' => 'ระบุบวันที่กำหนดแผน calibration'])->label('วันที่กำหนดแผน'); ?>
-        </div>
-         <div class="col-lg-6 col-md-6 col-sm-12">
-             <?= $form->field($model, 'data_json[title]')->textInput()->label('หัวข้อ') ?>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'actual_date')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
+            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
         </div>
     </div>
 
+
+    <?= $form->field($model, 'data_json[title]')->textInput()->label('หัวข้อการบำรุงรักษา') ?>
     <?= $model->Upload() ?>
 
 
@@ -43,7 +38,7 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-actual_date,#assetdetail-plan_date')
+ thaiDatepicker('#assetdetail-date_start')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

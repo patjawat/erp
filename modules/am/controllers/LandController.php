@@ -5,6 +5,7 @@ namespace app\modules\am\controllers;
 use yii;
 use yii\web\Response;
 use yii\db\Expression;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\modules\am\models\Asset;
@@ -21,44 +22,44 @@ class LandController extends \yii\web\Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere('deleted_at IS NULL');
 
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
-            $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
-            $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.budget_type')"), $searchModel->budget_type]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.method_get')"), $searchModel->method_get]);
+        $dataProvider->query->andFilterWhere(['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.po_number')"), $searchModel->po_number]);
+        $dataProvider->query->andFilterWhere(['receive_date' => AppHelper::DateToDb($searchModel->q_receive_date)]);
 
 
-            $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
-            $dataProvider->query->andFilterWhere([
-                'or',
-                ['LIKE', 'asset.code', $searchModel->q],
-                ['LIKE', 'price', $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size')"), $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_ngan')"), $searchModel->q],
-                ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_tarangwa')"), $searchModel->q],
-            ]);
+        $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', 'price', $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_ngan')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.land_size_tarangwa')"), $searchModel->q],
+        ]);
 
-            // ค้นหาตามอายุ
-            if ($searchModel->price1 && !$searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
-            }
-            // ค้นหาระหว่างช่วงอายุ
-            if ($searchModel->price1 && $searchModel->price2) {
-                $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
-            }
+        // ค้นหาตามอายุ
+        if ($searchModel->price1 && !$searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
+        }
+        // ค้นหาระหว่างช่วงอายุ
+        if ($searchModel->price1 && $searchModel->price2) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
+        }
 
-            $dataProvider->setSort([
-                'defaultOrder' => [
-                    'code' => 'SORT_DESC',
-                    'receive_date' => 'SORT_DESC',
-                    // 'service_start_time' => SORT_DESC
-                ],
-            ]);
+        $dataProvider->setSort([
+            'defaultOrder' => [
+                'code' => 'SORT_DESC',
+                'receive_date' => 'SORT_DESC',
+                // 'service_start_time' => SORT_DESC
+            ],
+        ]);
 
-            if ($this->request->get('view')) {
-                SiteHelper::setDisplay($this->request->get('view'));
-            }
+        if ($this->request->get('view')) {
+            SiteHelper::setDisplay($this->request->get('view'));
+        }
 
         return $this->render('index', [
             'tabs' => 'land',
@@ -67,7 +68,7 @@ class LandController extends \yii\web\Controller
         ]);
     }
 
-      public function actionView($id)
+    public function actionView($id)
     {
         $model = $this->findModel($id);
         return $this->render('view', [
@@ -80,16 +81,52 @@ class LandController extends \yii\web\Controller
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'asset_group_id' => 1, // 1 = ที่ดิน
         ]);
+        // แปลง receive_date ถ้ามีค่า
+        if (!empty($model->receive_date)) {
+            $model->receive_date = AppHelper::convertToThai($model->receive_date);
+        }
 
+        // ตรวจสอบ data_json ว่าเป็น array ก่อน
+        $dataJson = is_array($model->data_json) ? $model->data_json : [];
+
+        // แปลง expire_date
+        $dataJson['expire_date'] = !empty($dataJson['expire_date'])
+            ? AppHelper::convertToThai($dataJson['expire_date'])
+            : null;
+
+        // แปลง inspection_date
+        $dataJson['inspection_date'] = !empty($dataJson['inspection_date'])
+            ? AppHelper::convertToThai($dataJson['inspection_date'])
+            : null;
+
+        $dataJson['fsn_old'] = !empty($dataJson['fsn_old'])
+            ? $dataJson['fsn_old'] = $model->code
+            : null;
+
+
+
+        $model->data_json = $dataJson;
+
+        $old_data_json = $model->data_json;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                  // แปลง receive_date ถ้ามีค่า
-            if (!empty($model->receive_date)) {
-                $model->receive_date = AppHelper::convertToThai($model->receive_date);
-            }
-            $model->save();
+                // แปลง receive_date ถ้ามีค่า
+                if (!empty($model->receive_date)) {
+                    $model->receive_date = AppHelper::convertToThai($model->receive_date);
+                }
+                $convert_date = [
+                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
+                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                ];
 
-                return $this->redirect(['view', 'id' => $model->id]);
+                $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
+
+
+                if ($model->save(false)) {
+                    return $this->redirect(['view', 'id' => $model->id]);
+                } else {
+                    return $model->getErrors();
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -113,14 +150,16 @@ class LandController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $model->receive_date = AppHelper::DateFormDb($model->receive_date);
+        // return $model;
+        $model->receive_date = AppHelper::convertToThai($model->receive_date);
+        
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->receive_date = AppHelper::DateToDb($model->receive_date);
+            $model->save(false);
+            //  Yii::$app->response->format = Response::FORMAT_JSON;
+            // return $model;
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $model->receive_date = AppHelper::DateToDb($model->receive_date);
-                $model->save();
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
+            return $this->redirect(['view', 'id' => $model->id]);
         } else {
             $model->loadDefaultValues();
         }
@@ -148,5 +187,4 @@ class LandController extends \yii\web\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
 }

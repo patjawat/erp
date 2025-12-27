@@ -368,13 +368,43 @@ class EmployeeDetailController extends Controller
           
           
            //ครื่องราชอิสริยาภรณ์
-           if($model->name == "insignia")
-           {
-               $model->data_json['name'] == "" ? $model->addError('data_json[name]', 'ชื่อรางวัลต้องไม่ว่าง') : null;
-               $model->data_json['company_name'] == "" ? $model->addError('data_json[company_name]',$requiredName) : null;
-               $model->data_json['date_start'] == "__/__/____" ? $model->addError('data_json[date_start]',$requiredName) : null;
-               $model->data_json['date_end'] == "__/__/____" ? $model->addError('data_json[date_end]',$requiredName) : null;
-           }
+    if ($model->name == "insignia") {
+        $data = $model->data_json;
+        $requiredMsg = "{attribute} ไม่สามารถว่างได้";
+
+        // 1. ตรวจสอบชื่อชั้นตรา
+        if (empty($data['name'])) {
+            $model->addError('data_json[name]', str_replace('{attribute}', 'ชั้นตราเครื่องราชฯ', $requiredMsg));
+        }
+
+        // 2. ตรวจสอบปี พ.ศ. (ต้องเป็นตัวเลข 4 หลัก)
+        if (empty($data['thai_year'])) {
+            $model->addError('data_json[thai_year]', str_replace('{attribute}', 'ปี พ.ศ.', $requiredMsg));
+        } elseif (!preg_match('/^[0-9]{4}$/', $data['thai_year'])) {
+            $model->addError('data_json[thai_year]', 'ปี พ.ศ. ต้องเป็นตัวเลข 4 หลัก');
+        }
+
+        // 3. ตรวจสอบข้อมูลราชกิจจาฯ (เล่ม/ตอน/หน้า)
+        if (empty($data['gazette_book'])) {
+            $model->addError('data_json[gazette_book]', str_replace('{attribute}', 'เล่มที่', $requiredMsg));
+        }
+        if (empty($data['gazette_section'])) {
+            $model->addError('data_json[gazette_section]', str_replace('{attribute}', 'ตอนที่', $requiredMsg));
+        }
+        if (empty($data['gazette_page'])) {
+            $model->addError('data_json[gazette_page]', str_replace('{attribute}', 'หน้าที่', $requiredMsg));
+        }
+
+        // 4. ตรวจสอบวันที่ (ถ้ามีการกรอก ต้องอยู่ในรูปแบบ Date ที่ถูกต้อง)
+        if (empty($data['gazette_date'])) {
+            $model->addError('data_json[gazette_date]', str_replace('{attribute}', 'วันที่ประกาศ', $requiredMsg));
+        }
+        
+        // 5. ตรวจสอบสถานะการส่งคืน
+        if (empty($data['return_status'])) {
+            $model->addError('data_json[return_status]', 'กรุณาเลือกสถานะการส่งคืน');
+        }
+    }
 
              //ประวัติการเปลี่ยนชื่อ
              if($model->name == "rename")

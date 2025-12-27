@@ -68,72 +68,72 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
   $(document).on("beforeSubmit", formSelector, function (e) {
     e.preventDefault();
     const form = $(this);
+
     Swal.fire({
-      title: "ยืนยัน?",
-      text: "บันทึกข้อมูล!",
-      icon: "warning",
+      title: "ยืนยันการบันทึกข้อมูล?",
+      text: "โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน",
+      icon: "question", // เปลี่ยนจาก warning เป็น question เพื่อความรู้สึกที่ซอฟต์ลง
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "ยกเลิก!",
-      confirmButtonText: "ใช่, ยืนยัน!",
+      confirmButtonColor: "#28a745", // สีเขียว Success (Bootstrap Standard)
+      cancelButtonColor: "#6c757d", // สีเทา Secondary (Bootstrap Standard)
+      confirmButtonText: '<i class="fa fa-save"></i> ยืนยันบันทึก',
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: false, // เอาปุ่มยกเลิกไว้ซ้าย ปุ่มยืนยันไว้ขวา (UX Standard)
     }).then((result) => {
       if (result.isConfirmed) {
-        // ซ่อน modal ก่อน submit
+        // ปิด Modal เดิม (ถ้ามี)
         $("#main-modal").modal("hide");
-        // แสดง loading
+
+        // Loading State
         Swal.fire({
-          title: "กำลังบันทึก...",
-          text: "กรุณารอสักครู่",
+          title: "กำลังดำเนินการ",
+          text: "ระบบกำลังบันทึกข้อมูลของคุณลงฐานข้อมูล...",
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
           },
         });
+
         $.ajax({
           url: actionUrl || form.attr("action"),
           type: "POST",
           data: form.serialize(),
           dataType: "json",
           success: function (response) {
-            Swal.close();
             if (response.status === "success") {
               Swal.fire({
                 icon: "success",
-                title: "สำเร็จ!",
-                text: "บันทึกข้อมูลเรียบร้อยแล้ว",
-                timer: 1000,
+                title: "ดำเนินการสำเร็จ",
+                text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
+                timer: 1500, // เพิ่มเวลาเล็กน้อยให้ User ได้อ่านชื่อชั้นตราที่บันทึก
                 showConfirmButton: false,
               }).then(async () => {
-                // เพิ่ม async ตรงนี้เพื่อรองรับ await ใน callback
-
                 if (typeof successCallback === "function") {
-                  // ทำงานใน callback ก่อน
                   await successCallback(response);
                 }
 
-                // ถ้าใน response มี redirect_url ให้วิ่งไปที่นั่น (ถ้าไม่ได้โดน reload ไปก่อน)
                 if (response.redirect_url) {
                   window.location.href = response.redirect_url;
                 } else if (typeof successCallback !== "function") {
-                  // ถ้าไม่มีทั้ง callback และ redirect url ให้ reload ตามปกติ
                   location.reload();
                 }
               });
             } else {
               Swal.fire({
                 icon: "error",
-                title: "เกิดข้อผิดพลาด",
-                text: response.message || "ไม่สามารถบันทึกข้อมูลได้",
+                title: "ไม่สามารถบันทึกข้อมูลได้",
+                text: response.message || "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่อีกครั้ง",
+                confirmButtonText: "ตกลง",
+                confirmButtonColor: "#d33",
               });
             }
           },
-          error: function () {
-            Swal.close();
+          error: function (xhr) {
             Swal.fire({
               icon: "error",
-              title: "เกิดข้อผิดพลาด",
-              text: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
+              title: "การเชื่อมต่อขัดข้อง",
+              text: "ไม่สามารถติดต่อ Server ได้ (Error " + xhr.status + ")",
+              confirmButtonText: "รับทราบ",
             });
           },
         });

@@ -1469,8 +1469,8 @@ a:hover {
 .page-title-box {
   padding: 12px 12px 54px 12px;
   margin: 0 -12px;
-  background: var(--bs-primary);
-  color: #fff;
+  // background: var(--bs-primary);
+  // color: #fff;
 }
 
 .card {
@@ -1555,11 +1555,11 @@ input::placeholder {
   color: var(--bs-gray-600) !important;
 }
 
-.select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
-  font-weight: 200;
-  color: var(--bs-gray-600) !important;
-  font-family: var(--bs-mitr-font-family);
-}
+// .select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
+//   font-weight: 200;
+//   color: var(--bs-gray-600) !important;
+//   font-family: var(--bs-mitr-font-family);
+// }
 
 .btn-indigo {
   color: $indigo;

@@ -48,7 +48,7 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma','accessories_item'], 'safe'],
+            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma','accessories_item','plan_date','actual_date'], 'safe'],
             [['ref', 'code', 'name'], 'string', 'max' => 255],
         ];
     }
@@ -98,11 +98,13 @@ class AssetDetail extends \yii\db\ActiveRecord
 
 
 
-    public function Upload()
-    {   $ref = $this->ref;
-        $name = $this->name;
-        return FileManagerHelper::FileUpload($ref, $name);
+    public function Upload($options = [])
+    {
+        // เช็กว่ามีการส่ง 'view' => true มาหรือไม่ ถ้าไม่มีให้ default เป็น false
+        $view = isset($options['view']) ? $options['view'] : false;
+        return FileManagerHelper::FileUpload($this->ref, $this->name, $view);
     }
+    
     public function listImages()
     {   $ref = $this->ref;
         return FileManagerHelper::listViewImages($ref);

@@ -9,11 +9,10 @@ use yii\bootstrap5\Breadcrumbs;
       -webkit-text-fill-color: transparent;
    }
    /* ปรับแต่งความสวยงามเพิ่มเติม */
-   .page-title-box {
+   /* .page-title-box {
       background-color: #fff;
       border-bottom: 1px solid #e9ecef;
-      /* margin-bottom: 20px; */
-   }
+   } */
    .breadcrumb {
       margin-bottom: 5px;
       font-size: 13px;
