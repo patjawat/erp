@@ -67,14 +67,10 @@ use yii\helpers\Html;
                                     จัดการ
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
-                                    <li> <?= Html::a(
-                                                '<i class="fa-solid fa-user-tag me-1"></i> จัดสรร',
-                                                ['/booking/vehicle/approve', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขข้มูลขอใช้รถ'],
-                                                ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
-                                            ) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['update', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <!-- <li><?php // Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li> -->
+
+                                    <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['/booking/vehicle/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['/booking/vehicle/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการจงรถ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+
                                     <li><?= Html::a(
                                         '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอรถยนต์',
                                         ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'],

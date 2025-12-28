@@ -28,7 +28,7 @@ use yii\widgets\Pjax;
                 <?php foreach ($dataProvider->getModels() as $item): ?>
                 <tr>
                     <td>
-                        <a href="<?= Url::to(['approve', 'id' => $item->vehicle->id,'title' => 'เลขที่#'.$item->vehicle->code]) ?>" class="open-modal" data-size="modal-lg">
+                        <a href="<?= Url::to(['view', 'id' => $item->vehicle->id,'title' => 'เลขที่#'.$item->vehicle->code]) ?>" class="open-modal" data-size="modal-lg">
                         <p class="mb-0"> <span class="text-danger"><?= ($item->vehicle->viewTime()['full'] ?? '-'); ?></span> <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
                         <p class="mb-0 fs-11"><?php echo $item->vehicle->reason ?? '-' ?></p>
                     </a>

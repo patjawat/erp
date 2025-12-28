@@ -54,12 +54,12 @@ $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 
         <?php foreach ($model->vehicleDetails as $index => $detail): ?>
             <div class="row g-2">
-                <div class="col-md-2">
-                    <?= $model->go_type == 1 ? $detail->showDate() : $model->showDateRange() ?>
+                <div class="col-md-3">
+                    <?php //  $model->go_type == 1 ? $detail->showDate() : $model->showDateRange() ?>
+                       <input type="text" value="<?=$detail->showDate()?>" class="form-control" disabled>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input type="hidden" name="vehicleDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
-
                     <?php
                     echo Html::dropDownList(
                         "vehicleDetails[{$index}][car]",  // เปลี่ยนชื่อ name
