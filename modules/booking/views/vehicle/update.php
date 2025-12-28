@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' 
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="vehicle-update">
-    <?= $this->render('_form', [
+    <?= $this->render('@app/modules/booking/views/vehicle/_form', [
         'model' => $model,
     ]) ?>
 

@@ -181,7 +181,7 @@ $js = <<<JS
                     beforLoadModal();
                     $.ajax({
                         type: "get",
-                        url: '/me/booking-vehicle/create',
+                        url: '/booking/vehicle/create',
                         data: {
                             date_start: dateStart,
                             date_end: dateEnd,
@@ -222,7 +222,8 @@ $js = <<<JS
                         info.jsEvent.preventDefault(); // ป้องกันการเปลี่ยนลิงก์
                         // กำหนด URL ไปยัง action ที่ใช้แสดงรายละเอียด
                        var code = info.event.extendedProps.code || '';
-                        var url = '$url/'+'approve?id=' + info.event.id;
+                        // var url = '$url/'+'approve?id=' + info.event.id;
+                        var url = '$url/'+'view?id=' + info.event.id;
                         // โหลดเนื้อหามาแสดงใน Modal
                             $.ajax({
                                 type: "get",

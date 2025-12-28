@@ -371,9 +371,7 @@ $("body").on("click", ".open-modal", function (e) {
       $("#main-modal-label").html(response.title);
       $(".modal-body").html(response.content);
       $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass(
-        "modal-sm modal-md modal-lg modal-xl modal-xxl"
-      );
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
       $(".modal-dialog").addClass(size);
       $(".modal-content").addClass("card-outline card-primary");
     },
