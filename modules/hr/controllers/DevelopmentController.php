@@ -171,11 +171,42 @@ class DevelopmentController extends Controller
             return $this->redirect('index');
         }
 
+        // return $this->render('_form_dev', [
+        return $this->render('_form', [
+            'model' => $model,
+        ]);
+    }
+
+    // ทดสอบ form ใหม่
+     public function actionUpdateDev($id)
+    {
+        $model = $this->findModel($id);
+        $model->date_start = $model->date_start ? AppHelper::convertToThai($model->date_start) : null;
+        $model->date_end = $model->date_end ? AppHelper::convertToThai($model->date_end) : null;
+        $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToThai($model->vehicle_date_start) : null;
+        $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToThai($model->vehicle_date_end) : null;
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            try {
+                $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+            } catch (\Throwable $th) {
+            }
+
+            $model->save();
+            return $model->status;
+
+            return $this->redirect('index');
+        }
+
         return $this->render('_form_dev', [
         // return $this->render('_form', [
             'model' => $model,
         ]);
     }
+
 
     public function actionCheck($id)
     {
