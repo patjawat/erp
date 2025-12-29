@@ -1,83 +1,76 @@
 <?php
 
-use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\components\AppHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetDetailSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'รายการบำรุงรักษา';
+$this->title = 'รายการยืม-คืนทั้งหมด';
 $this->params['breadcrumbs'][] = $this->title;
-$iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brush-cleaning-icon lucide-brush-cleaning">
-            <path d="m16 22-1-4"></path>
-            <path d="M19 14a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1"></path>
-            <path d="M19 14H5l-1.973 6.767A1 1 0 0 0 4 22h16a1 1 0 0 0 .973-1.233z"></path>
-            <path d="m8 22 1-4"></path>
-        </svg>'
+$iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calendar-sync" class="lucide lucide-calendar-sync"><path d="M11 10v4h4"></path><path d="m11 14 1.535-1.605a5 5 0 0 1 8 1.5"></path><path d="M16 2v4"></path><path d="m21 18-1.535 1.605a5 5 0 0 1-8-1.5"></path><path d="M21 22v-4h-4"></path><path d="M21 8.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4.3"></path><path d="M3 10h4"></path><path d="M8 2v4"></path></svg>'
 ?>
-<div class="asset-detail-index">
-    <div class="d-flex justify-content-between">
-        <h6><?= Html::encode($this->title) ?></h6>
-
-        <p>
-            <?= Html::a('<i data-lucide="circle-plus"></i> สร้างใหม่', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' การบำรุงรักษา'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-        </p>
-    </div>
-
-    <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); 
-    ?>
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th class="text-center" style="width:30px">ลำดับ</th>
-                    <th>ชื่อรายการ</th>
-                    <th>วันที่</th>
-                    <th>ผู้ดำเนินการ</th>
-                    <th class="text-center" style="width:130px">จัดการ</th>
+<div class="d-flex justify-content-between">
+    <h6><?= Html::encode($this->title) ?></h6>
+    <p>
+        <?= Html::a('<i class="fa-solid fa-plus"></i> บันทึกการยืม', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' บันทึกการยืม'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    </p>
+</div>
+<div class="table-responsive">
+    <table class="table table-hover align-middle border-top">
+        <thead class="bg-light">
+            <tr>
+                <th class="text-center" style="width:30px">ลำดับ</th>
+                <th>ผู้ยืม / หน่วยงาน</th>
+                <th class="text-center">วันที่ยืม</th>
+                <th class="text-center">กำหนดคืน</th>
+                <th class="text-center">วันที่คืนจริง</th>
+                <th class="">ผู้ดำเนินการ</th>
+                <th class="text-center">สถานะ</th>
+                <th class="text-end">จัดการ</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tbody>
+            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                <?php
+                // UX: ถ้ายังไม่คืนให้แถวมีสีเหลืองจางๆ (table-warning-subtle) 
+                // ถ้าคืนแล้วให้เป็นสีปกติ เพื่อแยกแยะรายการที่ค้างอยู่
+                $isReturned = !empty($item->actual_date);
+                $rowClass = $isReturned ? '' : 'table-warning-subtle';
+                ?>
+                <tr class="<?= $rowClass ?>">
+                    <td class="text-center text-muted">
+                        <?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+                    </td>
+                    <td><?= $item->employee->getAvatar(false) ?></td>
+                    <td class="text-center"><?= AppHelper::convertToThai($item->date_start) ?></td>
+                    <td class="text-center text-primary fw-bold"><?= AppHelper::convertToThai($item->date_end) ?></td>
+                    <td class="text-center">
+                        <?= $isReturned ? AppHelper::convertToThai($item->actual_date) : '<span class="text-muted small">-</span>' ?>
+                    </td>
+                    <td><?= $item->staff?->getAvatar(false) ?? '-' ?></td>
+                    <td class="text-center">
+                        <?= $item->getBorrowStatusLabel() ?>
+                    </td>
+                    <td class="text-end">
+                        <?= Html::a('view',['view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                        <?php if (!$isReturned): ?>
+                            <?= Html::a(
+                                '<i class="bi bi-arrow-return-left me-1"></i> รับคืน',
+                                ['borrow-return', 'id' => $item->id, 'title' => 'บันทึกการรับคืน'],
+                                ['class' => 'btn btn-sm btn-success rounded-pill px-3 open-modal', 'data' => ['size' => 'modal-lg']]
+                            ) ?>
+                        <?php else: ?>
+                            <?= Html::a('<i class="bi bi-printer"></i>', ['print-receipt', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                        <?php endif; ?>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr>
-                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td><?= $item->data_json['title'] ?? '-' ?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->created_at, true, false); ?></td>
-                        <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
-                        <td class="text-center py-2">
-                            <div class="d-flex justify-content-center">
-                                <a href="<?= Url::to(['/am/maintenance/view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                </a>
-                                <a href="<?= Url::to(['/am/maintenance/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข']) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
-                                    </svg>
-                                </a>
-
-                                <a href="<?= Url::to(['/am/maintenance/delete', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary delete-item" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M10 11v6"></path>
-                                        <path d="M14 11v6"></path>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                                        <path d="M3 6h18"></path>
-                                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php Pjax::end(); ?>
-
+            <?php endforeach; ?>
+        </tbody>
+        </tbody>
+    </table>
 </div>

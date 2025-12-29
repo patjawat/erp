@@ -91,7 +91,8 @@
         "setasign/fpdf": "dev-master",
         "tecnickcom/tcpdf": "dev-main",
         "mpdf/mpdf": "^8.2",
-        "setasign/fpdi": "^2.6"
+        "setasign/fpdi": "^2.6",
+        "2amigos/yii2-qrcode-helper": "^3.1"
         
     },
     "require-dev": {
