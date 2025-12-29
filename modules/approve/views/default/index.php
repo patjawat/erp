@@ -34,7 +34,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-
 <?php
 $items = [
     [

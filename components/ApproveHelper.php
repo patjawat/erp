@@ -184,7 +184,7 @@ class ApproveHelper extends Component
                 ->alias('approve')
                 ->leftJoin('`development`', "approve.from_id = `development`.id")
                 ->where([
-                    'approve.name' => 'leave',
+                    'approve.name' => 'development',
                     'approve.emp_id' => $me->id,
                     'approve.status' => 'Pending'
                 ])
