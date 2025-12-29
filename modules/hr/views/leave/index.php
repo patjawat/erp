@@ -1,6 +1,7 @@
 <?php
 
 use yii\web\View;
+use yii\helpers\Url;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
@@ -24,25 +25,25 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'list'])?>
+<?= $this->render('@app/modules/hr/views/leave/menu', ['active' => 'list']) ?>
 <?php $this->endBlock(); ?>
 
 
 <style>
-.hover-card-under {
+    .hover-card-under {
 
-    transition: border-color 0.3s ease, transform 0.3s ease;
-}
+        transition: border-color 0.3s ease, transform 0.3s ease;
+    }
 
-.hover-card-under:hover {
-    border: 3px solid transparent !important;
-    border-color: #dc3545 !important;
-    border-top: 0 !important;
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-left: 0 !important;
-    transform: scale(1.04);
-}
+    .hover-card-under:hover {
+        border: 3px solid transparent !important;
+        border-color: #dc3545 !important;
+        border-top: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-left: 0 !important;
+        transform: scale(1.04);
+    }
 </style>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -62,11 +63,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-center gap-2">
-              
+
             </div>
         </div>
     </div>
-  <div class="card-body p-0">
+    <div class="card-body p-0">
         <?php
         echo $this->render('list', [
             'searchModel' => $searchModel,
@@ -88,8 +89,19 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-
 <?php
+
+echo "<pre>";
+print_r($searchModel->position_type_id);
+echo "</pre>";
+?>
+<?php
+
+$urlExportLeave = Url::to(array_merge(
+    ['/hr/leave/export-leave'],
+    Yii::$app->request->queryParams
+));
+
 $js = <<< JS
 
     \$('.filter-status').click(function (e) { 
@@ -102,10 +114,6 @@ $js = <<< JS
 
         $("body").on("click", ".export-leave", function (e) {
             e.preventDefault();
-            let form = $('#search-leave');
-            let action = form.attr('action');
-            let data = form.serialize();
-
             Swal.fire({
                 title: 'ยืนยันการส่งออกข้อมูล?',
                 text: 'คุณต้องการส่งออกข้อมูลหรือไม่',
@@ -126,10 +134,13 @@ $js = <<< JS
 
                     $.ajax({
                         type: "get",
-                        url: '/hr/leave/export-leave',
-                        data: form.serialize(),
+                       url: '$urlExportLeave', // Adjust to match your controller and action URL
+                        method: 'GET',
                         xhrFields: {
-                            responseType: 'blob' 
+                            responseType: 'blob' // Important for handling binary data
+                        },
+                        beforeSend: function(){
+                            beforLoadModal();
                         },
                         success: function (response) {
                             Swal.close();
@@ -166,7 +177,8 @@ $js = <<< JS
             });
         });
     JS;
-$this->registerJs($js,View::POS_END);
+$this->registerJs($js, View::POS_END);
 ?>
 
-<?php //  Pjax::end(); ?>
+<?php //  Pjax::end(); 
+?>

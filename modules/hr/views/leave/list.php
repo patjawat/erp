@@ -23,7 +23,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
         <thead style="position: sticky; top: 0; z-index: 10;">
             <tr>
                 <th class="text-center" style="width:30px">ลำดับ</th>
-                <th class="text-center" scope="col" style="width:30px">ปีงบประมาณ</th>
+                <th class="text-center" scope="col" style="width:150px">ประเภทบุคลากร</th>
                 <th scope="col">ผู้ขออนุมัติการลา</th>
                 <th scope="col" style="width:100px">ประเภทเวร</th>
                 <th><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
@@ -38,7 +38,7 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                 <tr>
                     <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                    <td class="text-center "><?php echo $item->thai_year ?></td>
+                    <td class="text-center "><?php echo $item->employee->positionType->title ?? '-' ?></td>
                     <td class="text-truncate" style="max-width: 230px;">
                         <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                             class="open-modal" data-size="modal-xl">

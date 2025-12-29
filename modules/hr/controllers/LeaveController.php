@@ -65,7 +65,7 @@ class LeaveController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $query = $dataProvider->query;
-        $query->with('employee');
+        $query->joinWith('employee');
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -79,6 +79,9 @@ class LeaveController extends Controller
 
         if ($status) {
             $query->andFilterWhere(['leave.status' => $searchModel->status]);
+        }
+          if ($searchModel->position_type_id) {
+            $dataProvider->query->andFilterWhere(['employees.position_type' => $searchModel->position_type_id]);
         }
 
 
@@ -166,12 +169,15 @@ class LeaveController extends Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
-        if (!empty($searchModel->leave_type_id)) {
+        if ($searchModel->leave_type_id) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
         }
 
-        if (!empty($searchModel->leave_type_id)) {
+        if ($searchModel->leave_type_id) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+        if ($searchModel->position_type_id) {
+            $dataProvider->query->andFilterWhere(['position_type' => $searchModel->position_type_id]);
         }
 
 
@@ -210,7 +216,6 @@ class LeaveController extends Controller
             // ไม่ต้องใส่ pagination
             $dataProvider->pagination = false;
             $this->ExportReport($dataProvider, $searchModel);
-
         } else {
             return $this->render('report/index', [
                 'searchModel' => $searchModel,
@@ -332,7 +337,9 @@ class LeaveController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch();
+        // $searchModel->load($this->request->queryParams);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        // return $this->request->queryParams;
         $dataProvider->query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
@@ -352,8 +359,11 @@ class LeaveController extends Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        if (!empty($searchModel->leave_type_id)) {
+        if ($searchModel->leave_type_id) {
             $dataProvider->query->andFilterWhere(['in', 'leave_type_id', $searchModel->leave_type_id]);
+        }
+       if ($searchModel->position_type_id) {
+            $dataProvider->query->andFilterWhere(['employees.position_type' => $searchModel->position_type_id]);
         }
 
         if ($status) {
@@ -395,145 +405,149 @@ class LeaveController extends Controller
         $dataProvider->pagination = false;
 
 
-       $spreadsheet = new Spreadsheet();
-$sheet = $spreadsheet->getActiveSheet();
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-// --- 1. จัดการส่วนหัวรายงาน (A1) ---
-$sheet->mergeCells('A1:J1'); // ขยาย Merge Cells เป็น I1 -> J1 เพื่อให้ครอบคลุมคอลัมน์ "จำนวนวันลา"
-$dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-$dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-$dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+        // --- 1. จัดการส่วนหัวรายงาน (A1) ---
+        $sheet->mergeCells('A1:M1'); // ขยาย Merge Cells เป็น I1 -> J1 เพื่อให้ครอบคลุมคอลัมน์ "จำนวนวันลา"
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
 
-$reportTitle = 'ทะเบียนวันลา ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport;
-$sheet->setCellValue('A1', $reportTitle);
+        $reportTitle = 'ทะเบียนวันลา ปีงบประมาณ ' . $searchModel->thai_year . ' วันที่ ' . $dateReport;
+        $sheet->setCellValue('A1', $reportTitle);
 
-$sheet->getStyle('A1')->applyFromArray([
-    'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-    ],
-    'font' => [
-        'name' => 'TH Sarabun New',
-        'size' => 16,
-        'bold' => true,
-    ],
-]);
-
-// --- 2. จัดการหัวตาราง (Row 2) โดยใช้ Array Map และ Loop ---
-
-// กำหนดคอลัมน์, ชื่อหัวตาราง, และความกว้าง
-$headerConfig = [
-    'A' => ['title' => 'ลำดับ', 'width' => 6],
-    'B' => ['title' => 'สถานะ', 'width' => 13],
-    'C' => ['title' => 'ปีงบ', 'width' => 10],
-    'D' => ['title' => 'ชื่อผู้แจ้งลา', 'width' => 30],
-    'E' => ['title' => 'ประเภทการลา', 'width' => 15],
-    'F' => ['title' => 'เหตุผลการลา', 'width' => 35],
-    'G' => ['title' => 'ตำแหน่ง', 'width' => 35],
-    'H' => ['title' => 'หน่วยงาน', 'width' => 35],
-    'I' => ['title' => 'ระหว่างวันที่', 'width' => 40],
-    'J' => ['title' => 'จำนวนวันลา', 'width' => 20],
-    'L' => ['title' => 'สถานะ', 'width' => 20],
-];
-
-// กำหนด Style สำหรับหัวตารางทั้งหมด (เพื่อให้โค้ดสั้นลง)
-$headerStyle = [
-    'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-    ],
-    'font' => [
-        'name' => 'TH Sarabun New',
-        'size' => 16,
-        'bold' => true,
-        'italic' => false,
-    ],
-    // เพิ่ม Border ให้ส่วนหัวตาราง เพื่อให้สอดคล้องกับข้อมูลที่คุณทำในลูปก่อนหน้า
-    'borders' => [
-        'allBorders' => [
-            'borderStyle' => Border::BORDER_THIN,
-            'color' => ['rgb' => Color::COLOR_BLACK],
-        ],
-    ],
-    // เพิ่ม Fill สีพื้นหลัง หากต้องการ
-    'fill' => [
-        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-        'startColor' => ['rgb' => 'D9E1F2'], // สีพื้นหลังหัวตารางที่แตกต่างจากข้อมูล
-    ],
-];
-
-// Loop เพื่อใส่ค่าและกำหนดความกว้าง
-foreach ($headerConfig as $col => $config) {
-    $cell = $col . '2';
-    $sheet->setCellValue($cell, $config['title']);
-    $sheet->getColumnDimension($col)->setWidth($config['width']);
-}
-
-// Apply Style ทีเดียวทั้งช่วง A2:J2
-$sheet->getStyle('A2:L2')->applyFromArray($headerStyle);
-
-       $StartRowSheet = 3;
-$numRow = $StartRowSheet; // เริ่มนับแถวที่ 3
-
-// --- 1. ใส่ข้อมูล (ให้เร็วที่สุด) ---
-foreach ($dataProvider->getModels() as $key => $item) {
-    // ใส่ข้อมูลอย่างเดียว ห้ามจัดรูปแบบในลูปนี้!
-    $sheet->setCellValue('A' . $numRow, ($key + 1));
-    $sheet->setCellValue('B' . $numRow, $item->leaveStatus->title  ?? '-');
-    $sheet->setCellValue('C' . $numRow, $item->thai_year);
-    $sheet->setCellValue('D' . $numRow, $item->employee->fullname());
-    $sheet->setCellValue('E' . $numRow, $item->leaveType?->title ?? '-');
-    $sheet->setCellValue('F' . $numRow,  $item->data_json['reason']);
-    $sheet->setCellValue('G' . $numRow,  $item->employee->positionName());
-    $sheet->setCellValue('H' . $numRow,  $item->employee->departmentName());
-    $sheet->setCellValue('I' . $numRow,  $item->showLeaveDate());
-    $sheet->setCellValue('J' . $numRow,  $item->total_days);
-    $sheet->setCellValue('L' . $numRow,  $item->leaveStatus->title  ?? '-');
-
-    $numRow++; // เลื่อนไปแถวถัดไป
-}
-
-// กำหนดแถวสุดท้ายที่เขียนข้อมูล
-$lastRow = $numRow - 1;
-$dataRange = 'A' . $StartRowSheet . ':J' . $lastRow;
-
-// --- 2. จัดรูปแบบทีละมากๆ (หลังจบลูป) ---
-if ($lastRow >= $StartRowSheet) {
-    
-    // **จัดรูปแบบพื้นฐาน (ฟอนต์, ขอบ, สีพื้นหลัง) ทั้งหมดในครั้งเดียว**
-    $sheet->getStyle($dataRange)->applyFromArray([
-        'font' => [
-            'name' => 'TH Sarabun New',
-            'size' => 16,
-            'bold' => false,
-            'italic' => false,
-        ],
-        'borders' => [
-            'allBorders' => [
-                'borderStyle' => Border::BORDER_THIN,
-                'color' => ['rgb' => Color::COLOR_BLACK],
+        $sheet->getStyle('A1')->applyFromArray([
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
             ],
-        ],
-        'fill' => [
-            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-            'startColor' => ['rgb' => '8DB4E2'], 
-        ],
-    ]);
+            'font' => [
+                'name' => 'TH Sarabun New',
+                'size' => 16,
+                'bold' => true,
+            ],
+        ]);
 
-    // **จัดตำแหน่งกึ่งกลาง (Horizontal Center)**
-    $centerColumns = ['A', 'C', 'E', 'F', 'G', 'H', 'I', 'J','L'];
-    foreach ($centerColumns as $col) {
-        $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
-              ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    }
+        // --- 2. จัดการหัวตาราง (Row 2) โดยใช้ Array Map และ Loop ---
 
-    // **จัดตำแหน่งชิดซ้าย (Horizontal Left)**
-    $leftColumns = ['B', 'D'];
-    foreach ($leftColumns as $col) {
-        $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
-              ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-    }
-}
+        // กำหนดคอลัมน์, ชื่อหัวตาราง, และความกว้าง
+        $headerConfig = [
+            'A' => ['title' => 'ลำดับ', 'width' => 6],
+            'B' => ['title' => 'สถานะ', 'width' => 13],
+            'C' => ['title' => 'ปีงบ', 'width' => 10],
+            'D' => ['title' => 'ชื่อผู้แจ้งลา', 'width' => 30],
+            'E' => ['title' => 'ประเภทบุคลากร', 'width' => 20], // เพิ่มใหม่
+            'F' => ['title' => 'ประเภทการลา', 'width' => 15],
+            'G' => ['title' => 'เหตุผลการลา', 'width' => 35],
+            'H' => ['title' => 'ตำแหน่ง', 'width' => 35],
+            'I' => ['title' => 'หน่วยงาน', 'width' => 35],
+            'J' => ['title' => 'ตั้งแต่วันที่', 'width' => 40],
+            'K' => ['title' => 'ถึงวันที่', 'width' => 40],
+            'L' => ['title' => 'จำนวนวันลา', 'width' => 20],
+            'M' => ['title' => 'สถานะ', 'width' => 20],
+        ];
+
+        // กำหนด Style สำหรับหัวตารางทั้งหมด (เพื่อให้โค้ดสั้นลง)
+        $headerStyle = [
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'name' => 'TH Sarabun New',
+                'size' => 16,
+                'bold' => true,
+                'italic' => false,
+            ],
+            // เพิ่ม Border ให้ส่วนหัวตาราง เพื่อให้สอดคล้องกับข้อมูลที่คุณทำในลูปก่อนหน้า
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => Color::COLOR_BLACK],
+                ],
+            ],
+            // เพิ่ม Fill สีพื้นหลัง หากต้องการ
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9E1F2'], // สีพื้นหลังหัวตารางที่แตกต่างจากข้อมูล
+            ],
+        ];
+
+        // Loop เพื่อใส่ค่าและกำหนดความกว้าง
+        foreach ($headerConfig as $col => $config) {
+            $cell = $col . '2';
+            $sheet->setCellValue($cell, $config['title']);
+            $sheet->getColumnDimension($col)->setWidth($config['width']);
+        }
+
+        // Apply Style ทีเดียวทั้งช่วง A2:J2
+        $sheet->getStyle('A2:L2')->applyFromArray($headerStyle);
+
+        $StartRowSheet = 3;
+        $numRow = $StartRowSheet; // เริ่มนับแถวที่ 3
+
+        // --- 1. ใส่ข้อมูล (ให้เร็วที่สุด) ---
+        foreach ($dataProvider->getModels() as $key => $item) {
+            // ใส่ข้อมูลอย่างเดียว ห้ามจัดรูปแบบในลูปนี้!
+            $sheet->setCellValue('A' . $numRow, ($key + 1));
+            $sheet->setCellValue('B' . $numRow, $item->leaveStatus->title  ?? '-');
+            $sheet->setCellValue('C' . $numRow, $item->thai_year);
+            $sheet->setCellValue('D' . $numRow, $item->employee->fullname());
+            $sheet->setCellValue('E' . $numRow, $item->employee->positionType->title ?? '-' );
+            $sheet->setCellValue('F' . $numRow, $item->leaveType?->title ?? '-');
+            $sheet->setCellValue('G' . $numRow, $item->data_json['reason'] ?? '-');
+            $sheet->setCellValue('H' . $numRow, $item->employee->positionName());
+            $sheet->setCellValue('I' . $numRow, $item->employee->departmentName());
+            $sheet->setCellValue('J' . $numRow, AppHelper::convertToThai($item->date_start));
+            $sheet->setCellValue('K' . $numRow, AppHelper::convertToThai($item->date_end));
+            $sheet->setCellValue('L' . $numRow, $item->total_days);
+            $sheet->setCellValue('M' . $numRow, $item->leaveStatus->title  ?? '-');
+
+            $numRow++; // เลื่อนไปแถวถัดไป
+        }
+
+        // กำหนดแถวสุดท้ายที่เขียนข้อมูล
+        $lastRow = $numRow - 1;
+        $dataRange = 'A' . $StartRowSheet . ':M' . $lastRow;
+
+        // --- 2. จัดรูปแบบทีละมากๆ (หลังจบลูป) ---
+        if ($lastRow >= $StartRowSheet) {
+
+            // **จัดรูปแบบพื้นฐาน (ฟอนต์, ขอบ, สีพื้นหลัง) ทั้งหมดในครั้งเดียว**
+            $sheet->getStyle($dataRange)->applyFromArray([
+                'font' => [
+                    'name' => 'TH Sarabun New',
+                    'size' => 16,
+                    'bold' => false,
+                    'italic' => false,
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => Color::COLOR_BLACK],
+                    ],
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '8DB4E2'],
+                ],
+            ]);
+
+            // **จัดตำแหน่งกึ่งกลาง (Horizontal Center)**
+           $centerColumns = ['A', 'C', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+            foreach ($centerColumns as $col) {
+                $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // **จัดตำแหน่งชิดซ้าย (Horizontal Left)**
+            $leftColumns = ['B', 'D'];
+            foreach ($leftColumns as $col) {
+                $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            }
+        }
 
         $writer = new Xlsx($spreadsheet);
         $filePath = Yii::getAlias('@webroot') . '/downloads/export-leave.xlsx';
@@ -722,7 +736,7 @@ if ($lastRow >= $StartRowSheet) {
     public function actionCreateValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-       $id = Yii::$app->request->post('id', Yii::$app->request->get('id'));
+        $id = Yii::$app->request->post('id', Yii::$app->request->get('id'));
         $model = $id ? Leave::findOne($id) : new Leave();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {

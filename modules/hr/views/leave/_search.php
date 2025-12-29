@@ -57,17 +57,13 @@ use app\modules\hr\models\Organization;
     </div>
     <div class="col-2">
 
-        <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-            'data' => $model->ListThaiYear(),
-            'options' => [
-                'placeholder' => 'ปีงบประมาณทั้งหมด',
-                'id' => 'thaiYear',
-            ],
+       <?= $form->field($model, 'position_type_id')->widget(Select2::classname(), [
+            'data' => $model->ListPositionType(),
+            'options' => ['placeholder' => 'ประเภทบุคลากรทั้งหมด ...'],
             'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '120px',
+                'allowClear' => true
             ],
-        ])->label(false); ?>
+        ])->label(false) ?>
 
     </div>
         <div class="col-2">
