@@ -337,9 +337,7 @@ class LeaveController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $status = $this->request->get('status');
         $searchModel = new LeaveSearch();
-        // $searchModel->load($this->request->queryParams);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // return $this->request->queryParams;
         $dataProvider->query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
