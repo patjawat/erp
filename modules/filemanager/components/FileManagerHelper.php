@@ -33,8 +33,8 @@ class FileManagerHelper extends Component
             'options' => ['multiple' => true, 'accept' => '*'],
             'pluginOptions' => [
                 'showPreview' => true,
-                'overwriteInitial' => false,
-                'initialPreviewShowDelete' => false,
+                'overwriteInitial' => true,
+                'initialPreviewShowDelete' => true,
                 'initialPreviewAsData' => true,
                 'initialPreview' => $initialPreview,
                 'initialPreviewConfig' => $initialPreviewConfig,
@@ -52,8 +52,9 @@ class FileManagerHelper extends Component
                 'showCaption' => !$view, // ซ่อนแถบชื่อไฟล์
 
                 'fileActionSettings' => [
-                    'showRemove' => !$view, // ซ่อนปุ่มถังขยะรายไฟล์
-                    'showDrag'   => !$view, // ซ่อนปุ่มลากสลับตำแหน่ง
+                    'showDelete' =>true,
+                    'showRemove' => true, // ซ่อนปุ่มถังขยะรายไฟล์
+                    'showDrag'   => true, // ซ่อนปุ่มลากสลับตำแหน่ง
                     'showZoom'   => true,   // ปุ่มแว่นขยายให้เปิดไว้เสมอแม้จะ view อย่างเดียว
                     'showDownload' => true, // ปุ่มดาวน์โหลดเปิดไว้เสมอ
                 ],
@@ -304,6 +305,7 @@ class FileManagerHelper extends Component
                 'size' => 827000,
                 'url' => Url::to(['/filemanager/uploads/deletefile-ajax']),
                 'key' => $value->id,
+                'showDelete' => true, // เพิ่มบรรทัดนี้ลงไปใน Config รายไฟล์
             ]);
         }
         return [$initialPreview, $initialPreviewConfig];
