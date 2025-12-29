@@ -56,12 +56,13 @@ class StockInController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['name' => 'order']);
+        $q = isset($searchModel->q) ? trim($searchModel->q) : '';
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'code', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $searchModel->q],
+            ['like', 'code', $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.vendor_name')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.pq_number')"), $q],
+            ['like', new Expression("JSON_EXTRACT(data_json, '$.po_number')"), $q],
         ]);
 
         //ค้นหาช่วบงวันที่
@@ -682,7 +683,7 @@ class StockInController extends Controller
         if ($countPayStock >= 1) {
             return [
                 'status' => 'error',
-                'msg' => 'มีการเบิกจ่ายวัสดุแล้ว ไม่สามารถย้อนสถานะได้'
+                'msg' => 'ไม่สามารถยกเลิกได้มีการเนื่องจากมีการเบิกจ่ายวัสดุแล้ว'
             ];
         }
 
@@ -701,6 +702,8 @@ class StockInController extends Controller
             // คืนสถานะรายการย่อยทั้งหมด
             foreach ($model->ListItems() as $item) {
                 $item->order_status = 'cancel';
+                Stock::findOne(['lot_number' => $item->lot_number])?->delete();
+
                 $item->save(false);
             }
 

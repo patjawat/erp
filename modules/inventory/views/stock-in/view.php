@@ -31,9 +31,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('action'); ?>
  <?= $this->render('@app/components/ui/btnReturn') ?>
 <?php $this->endBlock(); ?>
-
-
-
 <div class="row">
 
     <div class="col-lg-6 col-md-6 col-sm-12">
@@ -49,10 +46,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <!-- ถ้ารอดำเนินการ หรือ รับเข้าสำเร็จแล้วและยังไม่มีการเบิกให้งานสามารถยกเลิกได้ รอแปรึกษาพี่โด้ -->
+                            <?php if (in_array($model->order_status, ['pending', 'success'])): ?>
+                              <?php Html::a('<i class="fa-solid fa-rotate-left me-2"></i> ยกเลิก', ['/inventory/stock-in/undo-status', 'title' => 'คืนสถานะรอดำเนินการ'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'คืนสถานะเป็นรอ (ดำเนินการ)']]) ?>
+                              <?php endif?>
                             <?php if($model->po_number):?>
                                 <?php // Html::a('<i class="fa-solid fa-circle-xmark me-2"></i> ยกเลิก', ['/inventory/stock-in/cancel', 'title' => 'ยกเลิกใบรับเข้า'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'ยกเลิกใบรับเข้านี้']]) ?>
                         <?php else:?>
-                            <?php //  Html::a('<i class="fa-solid fa-rotate-left me-2"></i> คืนสถานะรอดำเนินการ', ['/inventory/stock-in/undo-status', 'title' => 'คืนสถานะรอดำเนินการ'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'คืนสถานะเป็นรอ (ดำเนินการ)']]) ?>
                         <?php endif;?>
                         </div>
                     </div>
