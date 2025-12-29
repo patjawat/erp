@@ -358,7 +358,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         // เช็กว่ามีการส่ง 'view' => true มาหรือไม่ ถ้าไม่มีให้ default เป็น false
         $view = isset($options['view']) ? $options['view'] : false;
-        return FileManagerHelper::FileUpload($this->ref, $this->name, $view);
+        return FileManagerHelper::FileUpload($this->ref, 'asset', $view);
     }
 
     public function listShowImage()
