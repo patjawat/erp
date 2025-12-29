@@ -8,6 +8,69 @@ use kartik\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
+
+<form id="form-calibration" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">รหัสเครื่องมือ (Asset ID)</label>
+              <input type="text" class="form-control" name="asset_id" placeholder="เช่น EQ-67-001" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">หน่วยงานที่รับผิดชอบ</label>
+              <input type="text" class="form-control" name="department" value="ศูนย์เครื่องมือแพทย์" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold">วันที่ตามแผน (Plan Date)</label>
+              <input type="date" class="form-control" name="plan_date" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">วันที่ดำเนินการ (Cal Date)</label>
+              <input type="date" class="form-control" name="actual_date" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold">ผู้ให้บริการสอบเทียบ (Provider)</label>
+              <select class="form-select" name="provider_type">
+                <option value="external">หน่วยงานภายนอก (Outsource)</option>
+                <option value="internal">ดำเนินการเอง (In-house)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">ผลการสอบเทียบ</label>
+              <div class="mt-2">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="cal_result" id="pass" value="pass" checked>
+                  <label class="form-check-label text-success" for="pass font-weight-bold">ผ่าน (Pass)</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="cal_result" id="fail" value="fail">
+                  <label class="form-check-label text-danger" for="fail font-weight-bold">ไม่ผ่าน (Fail)</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold">รายละเอียด/หมายเหตุ</label>
+              <textarea class="form-control" name="remark" rows="2" placeholder="ระบุค่าความคลาดเคลื่อนหรือรายละเอียดเพิ่มเติม"></textarea>
+            </div>
+
+            <div class="col-12">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <label class="form-label fw-bold">แนบใบสอบเทียบ (Calibration Certificate)</label>
+                  <input class="form-control" type="file" name="cert_file" id="cert_file" accept=".pdf,.jpg,.png">
+                  <div class="form-text">รองรับไฟล์ PDF หรือรูปภาพ ขนาดไม่เกิน 5MB</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+       
+      </form>
+
+
 <div class="asset-detail-form">
 
     <?php $form = ActiveForm::begin([
