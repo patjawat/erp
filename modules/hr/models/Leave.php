@@ -13,6 +13,7 @@ use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\components\ThaiDateHelper;
+use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -59,6 +60,7 @@ class Leave extends \yii\db\ActiveRecord
     public $sum_lt3;
     public $sum_lt4;
     public $work_shift_name;
+    public $position_type_id;
 
     public static function tableName()
     {
@@ -74,7 +76,7 @@ class Leave extends \yii\db\ActiveRecord
 
             [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
-            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export', 'work_shift_name'], 'safe'],
+            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export', 'work_shift_name','position_type_id'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
             ['date_end', 'default', 'value' => function ($model) {
@@ -1037,4 +1039,11 @@ class Leave extends \yii\db\ActiveRecord
             return $model['fullname'];
         });
     }
+
+//ประเภทของบุคลากร
+       public function ListPositionType()
+    {
+        return CategoriseHelper::PositionType();
+    }
+
 }
