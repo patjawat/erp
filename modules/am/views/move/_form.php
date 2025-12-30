@@ -55,16 +55,19 @@ $resultsJs = <<< JS
 
 <div class="asset-detail-form">
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'form'
-    ]); ?>
+ <?php $form = ActiveForm::begin([
+    'id' => 'form',
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/am/move/validator'],
+])
+?>
 
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'asset_id')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <div class="row">
         <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขทรัพย์สิน/ครุภัณฑ์') ?>
+           
         </div>
     </div>
 
@@ -83,9 +86,12 @@ $resultsJs = <<< JS
                     <div class="fw-bold"><?= $model->asset?->asset_name ?? '-' ?></div>
                     <div class="small text-muted">หมายเลขครุภัณฑ์: <?= $model->asset?->code ?? '-' ?> | สถานที่: <?= $model->asset?->data_json['location'] ?? '-' ?> </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+
+                 <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขทรัพย์สิน/ครุภัณฑ์') ?>
+
+                <!-- <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                     <i class="bi bi-search me-1"></i> เลือกใหม่
-                </button>
+                </button> -->
             </div>
         </div>
 
@@ -126,55 +132,10 @@ $resultsJs = <<< JS
         <!-- ผู้อนุมัติ -->
         <div class="col-md-12">
 
-
-<?php
-                        // try {
-                         
-                        //         $initEmployee =  Employees::find()->where(['id' => $model->data_json['leader']])->one()->getAvatar(false);    
-                     
-                        // } catch (\Throwable $th) {
-                        //     $initEmployee = '';
-                        // }
-
-                        // echo $form->field($model, 'data_json[leader]')->widget(Select2::classname(), [
-                        //     'initValueText' => $initEmployee,
-                        //     // 'initValueText' => $model->Approve()['leader']['avatar'],
-                        //     'options' => ['placeholder' => 'เลือกรายการ...'],
-                        //     'pluginEvents' => [
-                        //         'select2:unselect' => 'function() {
-                        //             $("#order-data_json-board_fullname").val("")
-                        //             }',
-                        //         'select2:select' => 'function() {
-                        //                     var fullname = $(this).select2("data")[0].fullname;
-                        //                     var position_name = $(this).select2("data")[0].position_name;
-                        //                     $("#order-data_json-board_fullname").val(fullname)
-                        //                     $("#order-data_json-position_name").val(position_name)
-                                        
-                        //             }',
-                        //     ],
-                        //     'pluginOptions' => [
-                        //         'allowClear' => true,
-                        //         'dropdownParent' => '#main-modal',
-                        //         'minimumInputLength' => 1,
-                        //         'ajax' => [
-                        //             // 'url' => Url::to(['/depdrop/employee-by-id']),
-                        //             'url' => Url::to(['/hr/leave/get-leader-approve']),
-                        //             'dataType' => 'json',
-                        //             'delay' => 250,
-                        //             'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                        //             'processResults' => new JsExpression($resultsJs),
-                        //             'cache' => true,
-                        //         ],
-                        //         'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        //         'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        //         'templateResult' => new JsExpression('formatRepo'),
-                        //     ],
-                        // ])->label('หัวหน้างาน')
-                        ?>
                      <?php
                             $url = Url::to(['/hr/leave/get-leader-approve']);
-                            $leader = empty($model->data_json['leader']) ? '' : Employees::findOne(['id' => $model->data_json['leader']])->fullname;
-                            echo $form->field($model, 'data_json[leader]')->widget(Select2::classname(), [
+                            $leader = empty($model->data_json['leader_id']) ? '' : Employees::findOne(['id' => $model->data_json['leader_id']])->fullname;
+                            echo $form->field($model, 'data_json[leader_id]')->widget(Select2::classname(), [
                                 // 'data' => $model->ListEmployees(),
                                 'initValueText' => $leader,
                                 'options' => ['placeholder' => 'กรุณาเลือก'],

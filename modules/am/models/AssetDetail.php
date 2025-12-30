@@ -195,7 +195,7 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         try {
 
-        $employee = Employees::findOne(['id' => $this->data_json['leader']]);
+        $employee = Employees::findOne(['id' => $this->data_json['leader_id']]);
         if($employee){
             return [
                 'avatar' => $employee->getAvatar(false),
@@ -215,6 +215,64 @@ class AssetDetail extends \yii\db\ActiveRecord
             ];
         }
     }
+
+//เหตุผลการเคลื่อนย้าย
+public function getReasonLabel()
+{
+    // ดึงค่าจาก json
+    $reason = $this->data_json['reason'] ?? null;
+    
+    if (!$reason) {
+        return '<span class="text-muted">ไม่ได้ระบุ</span>';
+    }
+
+    // กำหนดสีตามเงื่อนไข (Optional)
+    $class = 'badge rounded-pill bg-light text-dark border border-secondary';
+    
+    // ส่งกลับเป็น HTML Tag
+    return sprintf(
+        '<span class="%s" style="padding: 0.5rem 1rem;">%s</span>',
+        $class,
+        htmlspecialchars($reason)
+    );
+}
+// สถานะการอนุมัติของหัวหน้า
+// models/AssetDetail.php
+
+public function getLeaderStatusBadge()
+{
+    $status = $this->data_json['leader_status'] ?? 'Pending';
+    
+    // กำหนดรูปแบบตามสถานะ
+    $config = [
+        'Pending' => [
+            'label' => 'รออนุมัติ',
+            'class' => 'bg-warning bg-opacity-10 text-warning border border-warning-subtle',
+        ],
+        'Pass' => [
+            'label' => 'อนุมัติแล้ว',
+            'class' => 'bg-success bg-opacity-10 text-success border border-success-subtle',
+        ],
+        'Reject' => [
+            'label' => 'ไม่อนุมัติ',
+            'class' => 'bg-danger bg-opacity-10 text-danger border border-danger-subtle',
+        ],
+    ];
+
+    $item = $config[$status] ?? [
+        'label' => $status, 
+        'class' => 'bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle'
+    ];
+
+    // ใช้ Class ที่คุณระบุมา: rounded-pill fw-medium px-2 py-1
+    return sprintf(
+        '<span class="badge %s rounded-pill fw-medium px-2 py-1">%s</span>',
+        $item['class'],
+        $item['label']
+    );
+}
+
+
 //สถานะการเครื่อนย้าย
     public function viewMoveStatus()
     {
