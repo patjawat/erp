@@ -35,7 +35,7 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                 <tr>
                     <th class="text-center" style="width:30px">ลำดับ</th>
                     <th>เหตุผลการเคลื่อนย้าย</th>
-                    <th>วันที่ดำเนินการ</th>
+                    <th>วันที่ต้องการย้าย</th>
                     <th>ผู้ดำเนินการ</th>
                     <th>ผู้อนุมัติ</th>
                     <th>สถานะ</th>
@@ -46,20 +46,24 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td><?= $item->data_json['title'] ?? '-' ?></td>
+                        <td><?= $item->getReasonLabel() ?></td>
                         <td><?= Yii::$app->thaiDate->toThaiDate($item->date_start, false, false); ?></td>
                         <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
                         <td><?= $item->viewLeader()['avatar'] ?></td>
-                        <td></td>
+                        <td><?= $item->getLeaderStatusBadge() ?></td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">
+                                 <?php if (isset($item->data_json['leader_status']) && in_array($item->data_json['leader_status'], ['Pass', 'Pending'])): ?>
                                 <a href="<?= Url::to(['/am/move/view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
                                     <i class="fa-regular fa-eye"></i></a>
+                                    <?php endif;?>
+                                <?php if(isset($item->data_json['leader_status']) &&  $item->data_json['leader_status'] == 'Pending'):?>
                                 <a href="<?= Url::to(['/am/move/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข']) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
                                  <i class="fa-regular fa-pen-to-square"></i></a>
 
                                 <a href="<?= Url::to(['/am/move/delete', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary delete-item" title="ดูรายละเอียด">
                                    <i class="fa-regular fa-trash-can"></i></a>
+                                <?php endif;?>
                             </div>
                         </td>
                     </tr>

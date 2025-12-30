@@ -3,9 +3,12 @@
 namespace app\modules\am\controllers;
 
 use Yii;
+use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ModalHelper;
 use app\modules\am\models\Asset;
@@ -88,7 +91,7 @@ class MoveController extends Controller
             'model' => $model,
             
             ]),
-            'footer' => ModalHelper::modalFooterUpdateDeleteClose($id),
+            'footer' => Html::button('<i class="fa-solid fa-xmark"></i> ปิด', ['class' => 'btn btn-secondary pull-left', 'data-bs-dismiss' => "modal"]),
     ];
     }
 
@@ -113,6 +116,11 @@ class MoveController extends Controller
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
+                $model->data_json = ArrayHelper::merge($model->data_json,[
+                    'leader_status' => 'Pending'
+                ]);
+
+
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
@@ -154,13 +162,15 @@ class MoveController extends Controller
          if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::ConvertToThai($model->date_start);
                 }
-
+$oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
+                $newJson = ArrayHelper::merge($oldJson, $model->data_json);
+                $model->data_json = $newJson;
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
@@ -185,6 +195,29 @@ class MoveController extends Controller
             return $this->render('update', [
                 'model' => $model,
             ]);
+        }
+    }
+
+
+       // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetDetail();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+             $model->data_json['leader_id'] == "" ? $model->addError('data_json[leader_id]', $requiredName) : null;
+             $model->data_json['location'] == "" ? $model->addError('data_json[location]', $requiredName) : null;
+             $model->data_json['reason'] == "" ? $model->addError('data_json[reason]', $requiredName) : null;
+             $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
+           
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
         }
     }
 
