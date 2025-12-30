@@ -3,9 +3,11 @@
 namespace app\modules\am\controllers;
 
 use Yii;
+use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\components\ModalHelper;
@@ -90,7 +92,8 @@ class BorrowController extends Controller
                 'model' => $model,
 
             ]),
-            'footer' => ModalHelper::modalFooterUpdateDeleteClose($id),
+            'footer' => Html::a('<i class="fa-regular fa-pen-to-square"></i>'.' แก้ไขใบคืน', ['/am/borrow/borrow-return', 'id' => $id,'title' => '<i class="fa-regular fa-pen-to-square"></i>'.' แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) .
+            Html::button('<i class="fa-solid fa-xmark"></i> ปิด', ['class' => 'btn btn-secondary pull-left', 'data-bs-dismiss' => "modal"]),
         ];
     }
 
@@ -114,7 +117,7 @@ class BorrowController extends Controller
             if ($model->load($this->request->post())) {
                 $model->is_borrowed = true;
 
-               if (!empty($model->date_start)) {
+                if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
                 if (!empty($model->date_end)) {
@@ -200,15 +203,20 @@ class BorrowController extends Controller
 
     public function actionBorrowReturn($id)
     {
-     \Yii::$app->response->format = Response::FORMAT_JSON;
-     $model = $this->findModel($id);
-     $model->date_start = AppHelper::convertToThai($model->date_start);
-     $model->date_end = AppHelper::convertToThai($model->date_end);
-     $model->actual_date = AppHelper::convertToThai($model->actual_date);
-     
-     
-     if ($this->request->isPost) {
-         if ($model->load($this->request->post())) {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
+
+        // แปลงวันที่ใน JSON
+        $json = $model->data_json; // ดึง array ออกมาก่อน
+        if (!empty($json['actual_date'])) {
+            $json['actual_date'] = AppHelper::convertToThai($json['actual_date']);
+        }
+        $model->data_json = $json; // ใส่กลับเข้าไป
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
                 $me = UserHelper::GetEmployee();
                 $model->is_borrowed = false;
                 $model->staff_id = $me->id;
@@ -218,9 +226,7 @@ class BorrowController extends Controller
                 if (!empty($model->date_end)) {
                     $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
-                if (!empty($model->actual_date)) {
-                    $model->actual_date = AppHelper::DateToDb($model->actual_date);
-                }
+
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
@@ -251,7 +257,7 @@ class BorrowController extends Controller
     public function actionPrintReceipt($id)
     {
         $model = $this->findModel($id);
-        return $this->render('print-receipt',[
+        return $this->render('print-receipt', [
             'model' => $model
         ]);
     }

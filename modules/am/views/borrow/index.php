@@ -28,9 +28,10 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                 <th class="text-center">วันที่ยืม</th>
                 <th class="text-center">กำหนดคืน</th>
                 <th class="text-center">วันที่คืนจริง</th>
-                <th class="">ผู้ดำเนินการ</th>
+                <th class="text-center">สภาพ</th>
+                <th class="">ผู้รับคืน</th>
                 <th class="text-center">สถานะ</th>
-                <th class="text-end">จัดการ</th>
+                <th class="text-end" style="width:120px;">จัดการ</th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +40,7 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                 <?php
                 // UX: ถ้ายังไม่คืนให้แถวมีสีเหลืองจางๆ (table-warning-subtle) 
                 // ถ้าคืนแล้วให้เป็นสีปกติ เพื่อแยกแยะรายการที่ค้างอยู่
-                $isReturned = !empty($item->actual_date);
+                $isReturned = !empty($item->data_json['actual_date']);
                 $rowClass = $isReturned ? '' : 'table-warning-subtle';
                 ?>
                 <tr class="<?= $rowClass ?>">
@@ -50,22 +51,24 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                     <td class="text-center"><?= AppHelper::convertToThai($item->date_start) ?></td>
                     <td class="text-center text-primary fw-bold"><?= AppHelper::convertToThai($item->date_end) ?></td>
                     <td class="text-center">
-                        <?= $isReturned ? AppHelper::convertToThai($item->actual_date) : '<span class="text-muted small">-</span>' ?>
+                        <?= $isReturned ? AppHelper::convertToThai($item->data_json['actual_date']) : '<span class="text-muted small">-</span>' ?>
                     </td>
-                    <td><?= $item->staff?->getAvatar(false) ?? '-' ?></td>
+                    <td class="text-center">
+                        <?=$item->getReturnConditionLabel() ?>
+                    </td>
+                    <td class="text-center"><?= $item->staff?->getAvatar(false) ?? '-' ?></td>
                     <td class="text-center">
                         <?= $item->getBorrowStatusLabel() ?>
                     </td>
                     <td class="text-end">
-                        <?= Html::a('view',['view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
-                        <?php if (!$isReturned): ?>
+                        <?php if ($item->is_borrowed): ?>
                             <?= Html::a(
                                 '<i class="bi bi-arrow-return-left me-1"></i> รับคืน',
                                 ['borrow-return', 'id' => $item->id, 'title' => 'บันทึกการรับคืน'],
                                 ['class' => 'btn btn-sm btn-success rounded-pill px-3 open-modal', 'data' => ['size' => 'modal-lg']]
-                            ) ?>
+                                ) ?>
                         <?php else: ?>
-                            <?= Html::a('<i class="bi bi-printer"></i>', ['print-receipt', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                            <?= Html::a('<i class="fa-regular fa-eye"></i>',['view','id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
                         <?php endif; ?>
                     </td>
                 </tr>

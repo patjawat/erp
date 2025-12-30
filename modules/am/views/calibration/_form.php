@@ -26,10 +26,10 @@ use kartik\widgets\ActiveForm;
             </div>
 
   <div class="col-lg-6 col-md-6 col-sm-12">
-    <?= $form->field($model, 'plan_date')->textInput(['placeholder' => 'ระบุบวันที่กำหนดแผน calibration'])->label('วันที่ตามแผน'); ?>
+    <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'ระบุบวันที่กำหนดแผน calibration'])->label('วันที่ตามแผน'); ?>
   </div>
     <div class="col-lg-6 col-md-6 col-sm-12">
-    <?= $form->field($model, 'actual_date')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
+    <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
   </div>
   
 <div class="col-lg-6 col-md-6 col-sm-12">
@@ -83,7 +83,7 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-actual_date,#assetdetail-plan_date')
+ thaiDatepicker('#assetdetail-date_start,#assetdetail-date_end')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

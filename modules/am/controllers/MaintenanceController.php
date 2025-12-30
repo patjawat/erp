@@ -113,6 +113,9 @@ class MaintenanceController extends Controller
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
+                  if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
+                }
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
@@ -154,12 +157,19 @@ class MaintenanceController extends Controller
          if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::ConvertToThai($model->date_start);
                 }
+         if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::ConvertToThai($model->date_end);
+                }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;

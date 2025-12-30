@@ -7,6 +7,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\ModalHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
@@ -109,12 +110,13 @@ class CalibrationController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-
-                if (!empty($model->plan_date)) {
-                    $model->plan_date = AppHelper::DateToDb($model->plan_date);
+                $me = UserHelper::GetEmployee();
+                $model->emp_id = $me->id;
+                if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
-                if (!empty($model->actual_date)) {
-                    $model->actual_date = AppHelper::DateToDb($model->date_start);
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
 
                 $asset = Asset::findOne(['code' => $model->code]);
@@ -158,19 +160,20 @@ class CalibrationController extends Controller
         if (!empty($model->plan_date)) {
             $model->plan_date = AppHelper::ConvertToThai($model->plan_date);
         }
-        if (!empty($model->actual_date)) {
-            $model->actual_date = AppHelper::ConvertToThai($model->actual_date);
+        if (!empty($model->date_end)) {
+            $model->date_end = AppHelper::ConvertToThai($model->date_end);
         }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if (!empty($model->plan_date)) {
-                    $model->plan_date = AppHelper::DateToDb($model->plan_date);
+                  if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
-                if (!empty($model->actual_date)) {
-                    $model->actual_date = AppHelper::DateToDb($model->actual_date);
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
+
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();

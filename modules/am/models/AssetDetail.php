@@ -57,8 +57,6 @@ class AssetDetail extends \yii\db\ActiveRecord
                 'date_end',
                 'ma',
                 'accessories_item',
-                'plan_date',
-                'actual_date',
                 'provider_type',
                 'cal_result',
                 'is_borrowed',
@@ -82,8 +80,6 @@ class AssetDetail extends \yii\db\ActiveRecord
             'name' => 'ชื่อรายการครุภัณฑ์',
 
             // ส่วนการจัดการสอบเทียบ (Calibration)
-            'plan_date' => 'วันที่ตามแผน (Plan)',
-            'actual_date' => 'วันที่ดำเนินการจริง',
             'provider_type' => 'ประเภทผู้ให้บริการ (Provider)',
             'cal_result' => 'ผลการตรวจสอบ/สอบเทียบ',
 
@@ -138,11 +134,11 @@ class AssetDetail extends \yii\db\ActiveRecord
         return FileManagerHelper::FileUpload($this->ref, $this->name, $view);
     }
 
-    public function listImages()
-    {
-        $ref = $this->ref;
-        return FileManagerHelper::listViewImages($ref);
-    }
+    // public function listImages()
+    // {
+    //     $ref = $this->ref;
+    //     return FileManagerHelper::listViewImages($ref);
+    // }
 
     public function beforeSave($insert)
     {
@@ -194,6 +190,36 @@ class AssetDetail extends \yii\db\ActiveRecord
         return $resultHtml; // แสดงผล
     }
 
+//หัวหน้าอนุมัติ
+    public function viewLeader()
+    {
+        try {
+
+        $employee = Employees::findOne(['id' => $this->data_json['leader']]);
+        if($employee){
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'fullname' => $employee->fullname
+            ];
+        }else{
+              return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+
+        } catch (\Throwable $th) {
+              return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+    }
+//สถานะการเครื่อนย้าย
+    public function viewMoveStatus()
+    {
+        
+    }
     /**
      * ฟังก์ชันสำหรับแสดง Label สถานะการยืม
      * @return string HTML Badge
@@ -216,7 +242,7 @@ class AssetDetail extends \yii\db\ActiveRecord
 
     public function getReturnConditionLabel()
     {
-        if (empty($this->actual_date)) {
+        if (empty($this->data_json['actual_date'])) {
             return '<span class="text-muted">-</span>';
         }
 
