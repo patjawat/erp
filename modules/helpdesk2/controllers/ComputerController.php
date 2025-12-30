@@ -96,7 +96,9 @@ class ComputerController extends \yii\web\Controller
             'asset_type_id' => $assetTypeItem
         ]);
 
+
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_name', $searchModel->q],

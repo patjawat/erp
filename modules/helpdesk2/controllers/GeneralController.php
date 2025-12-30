@@ -3,6 +3,7 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -91,16 +92,20 @@ class GeneralController extends \yii\web\Controller
 
     public function actionAsset()
     {
+
         $assetTypeItem = ['MED', 'SCI', 'COM'];
         $listsData = Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 'EQUIP'])->andWhere(['NOT IN', 'code', $assetTypeItem])->all();
         $listAssetType = ArrayHelper::map($listsData, 'code', 'title');
         $assetTypeColumn = ArrayHelper::getColumn($listsData, 'code');
-
+        
         $searchModel = new AssetSearch([
             'asset_group_id' => 4,
-            'asset_type_id' => $assetTypeColumn
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
+        if (empty($searchModel->asset_type_id)) {
+        $dataProvider->query->andWhere(['asset_type_id' => $assetTypeColumn]);
+    }
 
         $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
