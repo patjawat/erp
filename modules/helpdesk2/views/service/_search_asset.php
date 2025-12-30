@@ -52,18 +52,20 @@ $listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_it
     <div class="col-lg-3 col-md-3 col-sm-12">
         <?php
 
-        // ถ้าสุดท้ายยังว่างอยู่ หรือไม่ใช่ array ให้บังคับเป็น array ว่าง []
-        if ($listAssetitem) {
-            $data = $listAssetitem;
-        } else {
-            $data = ['' => ''];
-        }
 
+        // ถ้าสุดท้ายยังว่างอยู่ หรือไม่ใช่ array ให้บังคับเป็น array ว่าง []
+        // if ($listAssetitem) {
+        //     $data = $listAssetType;
+        // } else {
+        //     $data = ['' => ''];
+        // }
+$data = (!empty($listAssetType)) ? $listAssetType : [];
         echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
             'data' => $data,
             'options' => [
                 'placeholder' => 'ทุกประเภท',
-                'id' => 'asset_type_id'
+                'id' => 'asset_type_id',
+                'value' => $model->asset_type_id,
             ],
             'pluginOptions' => [
                 'allowClear' => true,
