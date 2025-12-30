@@ -39,6 +39,28 @@ class BorrowController extends Controller
         );
     }
 
+
+           // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetDetail();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+             $model->data_json['remark'] == "" ? $model->addError('data_json[remark]', $requiredName) : null;
+             $model->emp_id == "" ? $model->addError('emp_id', $requiredName) : null;
+             $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
+             $model->date_end == "" ? $model->addError('date_end', $requiredName) : null;
+           
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
     /**
      * Lists all AssetDetail models.
      *
@@ -111,7 +133,6 @@ class BorrowController extends Controller
             'code' => $code,
             'name' => 'borrow'
         ]);
-        $model->emp_id = 8;
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
