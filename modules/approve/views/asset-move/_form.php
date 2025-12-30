@@ -70,7 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="bg-light p-3 rounded border">
             <?= $form->field($model, 'data_json[leader_remask]')->textArea(["rows" => 3, "placeholder" => "ระบุเหตุผลในการอนุมัติ หรือเหตุผลที่ไม่อนุมัติ...", 'style' => 'height:173px;'])->label('ความเห็นผู้อนุมัติ') ?>
-            <?= $form->field($model, 'data_json[leader_status]')->textInput()->label(false) ?>
+            <?= $form->field($model, 'data_json[leader_status]')->hiddenInput()->label(false) ?>
 
             <div class="d-grid gap-2">
                 <button type="button" class="btn-action btn btn-outline-success btn-sm py-2 rounded-pill" data-status="Pass">

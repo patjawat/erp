@@ -101,7 +101,7 @@ class AssetMoveController extends \yii\web\Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
+                'title' => 'อนุมัติการเคลื่อนย้าย',
                 'content' => $this->renderAjax('_form', [
                     'model' => $model,
                 ]),
