@@ -109,7 +109,7 @@ class UpdateTableController extends Controller
             ['name' => '/dms/documents/view', 'type' => 2, 'description' => 'แสดงหนังสือ'],
             ['name' => '/dms/documents/delete', 'type' => 2, 'description' => 'ลบหนังสือ'],
 
-            ['name' => '/am/asset/*', 'type' => 2, 'description' => ''],
+            ['name' => '/am/*', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/depreciation', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/index', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/qrcode', 'type' => 2, 'description' => ''],
@@ -265,7 +265,7 @@ class UpdateTableController extends Controller
             //แผนงานและโครงดาร
             ['child' => '/plan/*', 'parent' => 'plan'],
 
-            ['child' => '/am/asset/*', 'parent' => 'user'],
+            ['child' => '/am/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
             ['child' => '/am/asset/index', 'parent' => 'user'],
             ['child' => '/am/asset/qrcode', 'parent' => 'user'],

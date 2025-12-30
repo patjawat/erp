@@ -35,7 +35,8 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                 <tr>
                     <th class="text-center" style="width:30px">ลำดับ</th>
                     <th>ชื่อรายการ</th>
-                    <th>วันที่</th>
+                    <th>วันที่ตามแผน</th>
+                    <th>วันที่ดำเนินการ</th>
                     <th>ผู้ดำเนินการ</th>
                     <th class="text-center" style="width:130px">จัดการ</th>
                 </tr>
@@ -45,7 +46,8 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?= $item->data_json['title'] ?? '-' ?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->created_at, true, false); ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->date_start, false, false); ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->date_end, false, false); ?></td>
                         <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">

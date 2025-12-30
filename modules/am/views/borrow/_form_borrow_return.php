@@ -59,7 +59,7 @@ use kartik\widgets\ActiveForm;
   
 
         <div class="col-6 mt-4">
-            <?= $form->field($model, 'actual_date')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่คืนจริง'); ?>
+            <?= $form->field($model, 'data_json[actual_date]')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่คืนจริง'); ?>
         </div>
 
 
@@ -78,7 +78,7 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-actual_date,#assetdetail-plan_date')
+ thaiDatepicker('#assetdetail-actual_date,#assetdetail-data_json-actual_date')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

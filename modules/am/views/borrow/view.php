@@ -6,7 +6,7 @@ use app\components\AppHelper;
 /* @var $this yii\web\View */
 /* @var $model app\models\BorrowLog */
 
-$this->title = 'รายละเอียดการยืม: ' . $model->ref;
+$this->title = 'รายละเอียดการยืม';
 $this->params['breadcrumbs'][] = ['label' => 'รายการยืม-คืน', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -15,13 +15,13 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4><i class="bi bi-file-earmark-text text-primary"></i> <?= Html::encode($this->title) ?></h4>
         <div class="action-buttons">
-            <?php if (empty($model->actual_date)): ?>
+            <?php if (empty($model->data_json['actual_date'])): ?>
                 <?= Html::a('<i class="bi bi-arrow-return-left"></i> รับคืนเครื่องมือ', ['borrow-return', 'id' => $model->id], [
                     'class' => 'btn btn-success rounded-pill px-4 shadow-sm open-modal',
                     'data-size' => 'modal-lg'
                 ]) ?>
             <?php else: ?>
-                <?= Html::a('<i class="bi bi-printer"></i> พิมพ์ใบรับคืน', ['print-receipt', 'id' => $model->id], [
+                <?php Html::a('<i class="bi bi-printer"></i> พิมพ์ใบรับคืน', ['print-receipt', 'id' => $model->id], [
                     'class' => 'btn btn-outline-secondary rounded-pill px-4',
                     'target' => '_blank'
                 ]) ?>
@@ -40,18 +40,16 @@ $this->params['breadcrumbs'][] = $this->title;
                         'model' => $model,
                         'options' => ['class' => 'table table-hover mb-0'],
                         'attributes' => [
-                            [
-                                'attribute' => 'ref',
-                                'label' => 'เลขที่อ้างอิง',
-                                'contentOptions' => ['class' => 'fw-bold text-primary'],
-                            ],
+                            // [
+                            //     'attribute' => 'ref',
+                            //     'label' => 'เลขที่อ้างอิง',
+                            //     'contentOptions' => ['class' => 'fw-bold text-primary'],
+                            // ],
                             [
                                 'label' => 'ผู้ยืม / หน่วยงาน',
                                 'format' => 'raw',
                                 'value' => function($model) {
-                                    return $model->employee->getAvatar(false) . ' ' . 
-                                           Html::encode($model->employee->fullname) . 
-                                           ' <br><small class="text-muted ms-5">' . Html::encode($model->employee->departmentName()) . '</small>';
+                                    return $model->employee->getAvatar(false);
                                 }
                             ],
                             [
@@ -66,15 +64,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => AppHelper::convertToThai($model->date_end),
                             ],
                             [
-                                'attribute' => 'actual_date',
                                 'label' => 'วันที่คืนจริง',
-                                'value' => $model->actual_date ? AppHelper::convertToThai($model->actual_date) : '(ยังไม่คืน)',
-                                'contentOptions' => ['class' => $model->actual_date ? 'text-success' : 'text-muted italic'],
+                                'value' => $model->data_json['actual_date'] ? AppHelper::convertToThai($model->data_json['actual_date']) : '(ยังไม่คืน)',
+                                'contentOptions' => ['class' => $model->data_json['actual_date'] ? 'text-success' : 'text-muted italic'],
                             ],
                             [
-                                'attribute' => 'received_by',
+                                'format' => 'raw',
                                 'label' => 'ผู้รับคืน',
-                                'value' => $model->receiver->fullname ?? '-', // Relation ไปยัง User/Employee
+                                'value' => $model->staff?->getAvatar(false) ?? '-' // Relation ไปยัง User/Employee
                             ],
                         ],
                     ]) ?>
@@ -96,15 +93,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <hr>
                     <div class="row text-start small">
                         <div class="col-6 text-muted">Serial No:</div>
-                        <div class="col-6 fw-bold"><?= Html::encode($model->asset->serial_number ?? '-') ?></div>
+                        <div class="col-6 fw-bold"><?= Html::encode($model->asset->data_json['serial_number'] ?? '-') ?></div>
                         <div class="col-6 text-muted mt-2">สภาพหลังใช้งาน:</div>
                         <div class="col-6 mt-2">
                             <?= $model->getReturnConditionLabel() // ฟังก์ชันแสดง Badge ปกติ/ชำรุด ?>
                         </div>
                     </div>
-                </div>
-                <div class="card-footer bg-white border-top-0">
-                    <?= Html::a('ดูประวัติเครื่องนี้', ['asset/view', 'id' => $model->asset_id], ['class' => 'btn btn-sm btn-link w-100']) ?>
                 </div>
             </div>
 
@@ -117,9 +111,3 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-
-<style>
-    .table th { width: 40%; background-color: #f8f9fa; }
-    .borrow-log-view .card { border-radius: 12px; }
-    .italic { font-style: italic; }
-</style>

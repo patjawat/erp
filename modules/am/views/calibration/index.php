@@ -45,9 +45,9 @@ $iconClean = '<i data-lucide="circle-plus"></i> '
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?= $item->provider_type == 'external' ? 'หน่วยงานภายนอก (Outsource)' : 'ดำเนินการเอง (In-house)'?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->plan_date, false, false); ?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->actual_date, false, false); ?></td>
-                        <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->date_start, false, false); ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->date_end, false, false); ?></td>
+                        <td><?= $item->createdBy->employee->fullname ?? '-' ?></td>
                         <td><?= $item->viewResult() ?></td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">

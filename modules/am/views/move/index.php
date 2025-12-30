@@ -22,7 +22,7 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
         <h6><?= Html::encode($this->title) ?></h6>
 
         <p>
-            <?= Html::a('<i data-lucide="circle-plus"></i> สร้างใหม่', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' การบำรุงรักษา'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-plus"></i> แจ้งย้ายใหม่', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' การบำรุงรักษา'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </p>
     </div>
 
@@ -34,9 +34,11 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
             <thead>
                 <tr>
                     <th class="text-center" style="width:30px">ลำดับ</th>
-                    <th>ชื่อรายการ</th>
-                    <th>วันที่</th>
+                    <th>เหตุผลการเคลื่อนย้าย</th>
+                    <th>วันที่ดำเนินการ</th>
                     <th>ผู้ดำเนินการ</th>
+                    <th>ผู้อนุมัติ</th>
+                    <th>สถานะ</th>
                     <th class="text-center" style="width:130px">จัดการ</th>
                 </tr>
             </thead>
@@ -45,8 +47,10 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?= $item->data_json['title'] ?? '-' ?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->created_at, true, false); ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->date_start, false, false); ?></td>
                         <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
+                        <td><?= $item->viewLeader()['avatar'] ?></td>
+                        <td></td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">
                                 <a href="<?= Url::to(['/am/move/view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
@@ -66,3 +70,4 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
     <?php Pjax::end(); ?>
 
 </div>
+
