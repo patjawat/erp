@@ -10,9 +10,12 @@ use kartik\widgets\ActiveForm;
 
 <div class="asset-detail-form">
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'form'
-    ]); ?>
+ <?php $form = ActiveForm::begin([
+    'id' => 'form',
+    'enableAjaxValidation' => true, //เปิดการใช้งาน AjaxValidation
+    'validationUrl' => ['/am/borrow/validator'],
+])
+?>
 
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'asset_id')->hiddenInput()->label(false) ?>
