@@ -5,7 +5,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-$this->title = 'อนุมัติอบรม/ประชุม/ดูงาน';
+$this->title = 'อนุมัติเคลื่อนย้ายครุภัณฑ์';
 $msg = 'ขอ';
 ?>
 
@@ -22,14 +22,7 @@ $msg = 'ขอ';
 <?= $this->render('@app/components/ui/btnReturn')?>
 <?php $this->endBlock(); ?>
 
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-    </div>
-    <div class="card-body">
-        <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
-</div>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
@@ -38,7 +31,7 @@ $msg = 'ขอ';
             <?php // echo Html::a('อนุมัติทั้งหมด', ['/approve/development/approve-all'], ['class' => 'btn btn-light shadow approve-all']); 
             ?>
 
-            <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
+            <?php  Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
                 'class' => 'btn btn-success btn-approve-reject',
                 'type' => 'button',
                 'data-status' => 'Pass' // สำหรับส่งไป controller
