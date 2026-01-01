@@ -75,6 +75,7 @@ $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
+$modules['approve-v2'] = ['class' => 'app\modules\approveV2\Module'];  // module การจอง
 $modules['asset'] = ['class' => 'app\modules\asset\Module'];  // module ทรัพสินย์
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
