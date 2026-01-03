@@ -400,6 +400,26 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'assigned_to']);
     }
 
+ public function ApproveDate()
+{
+    // ค้นหาข้อมูลการอนุมัติ
+    $approve = Approve::findOne(['from_id' => $this->id,'name' => 'development', 'level' => 4]);
+    
+    // ตรวจสอบว่าพบข้อมูล และมีค่า approve_date ใน json หรือไม่
+    if ($approve && isset($approve->data_json['approve_date'])) {
+        $dateStr = $approve->data_json['approve_date'];
+        
+        // ตรวจสอบว่าวันที่ไม่ใช่ค่าว่าง
+        if (!empty($dateStr)) {
+            // สร้าง DateTime object เพื่อความแม่นยำในการ format
+            $date = new \DateTime($dateStr);
+            return $date->format('Y-m-d');
+        }
+    }
+    
+    return ''; // คืนค่าว่างถ้าไม่พบข้อมูล
+}
+
     public function VehicleTypeName()
     {
         $model = Categorise::find()
