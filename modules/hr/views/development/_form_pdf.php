@@ -14,10 +14,116 @@ use kartik\widgets\ActiveForm;
 
 
 
+    <style>
+  
+        /* สไตล์หน้ากระดาษจำลอง */
+        #pdf-container {
+            width: 794px; /* ขนาด A4 ในหน่วย Pixel ที่ 96 DPI (โดยประมาณ) */
+            height: 1123px;
+            background-image: url('https://via.placeholder.com/794x1123/ffffff/808080?text=PDF+Background+Image'); 
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            margin: 0 auto;
+        }
+
+        /* สไตล์ของ Label ที่ลากได้ */
+        .draggable-label {
+            position: absolute;
+            padding: 4px 8px;
+            background: rgba(13, 110, 253, 0.1);
+            border: 1px solid #0d6efd;
+            color: #0d6efd;
+            cursor: move;
+            font-size: 12px;
+            white-space: nowrap;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .draggable-label:hover {
+            background: rgba(13, 110, 253, 0.2);
+        }
+
+        /* จัดระเบียบ Sidebar */
+        .control-panel {
+            height: 100vh;
+            overflow-y: auto;
+            background: white;
+            border-left: 1px solid #dee2e6;
+            padding: 20px;
+        }
+    </style>
+
+    <div class="row">
+        <div class="col-md-8 p-4 overflow-auto" style="height: 100vh;">
+            <div class="d-flex justify-content-between mb-3 bg-white p-2 rounded shadow-sm">
+                <h5 class="m-0">Preview: แบบฟอร์มขออนุญาต</h5>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm">Zoom Out</button>
+                    <button class="btn btn-outline-secondary btn-sm">Zoom In</button>
+                </div>
+            </div>
+            
+            <div id="pdf-container">
+                <div id="label_dept_h" class="draggable-label" data-target="dept_h" style="top: 150px; left: 100px;">ส่วนราชการ-แนวนอน</div>
+                <div id="label_dept_v" class="draggable-label" data-target="dept_v" style="top: 200px; left: 100px;">ส่วนราชการ-แนวตั้ง</div>
+                <div id="label_repair_no" class="draggable-label" data-target="repair_no" style="top: 250px; left: 100px;">เลขที่ส่งซ่อม</div>
+            </div>
+        </div>
+
+        <div class="col-md-4 control-panel">
+            <h4 class="mb-4">ตั้งค่าตำแหน่ง</h4>
+            <form id="coord-form">
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary">ส่วนราชการ</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="small">แนวแกน X</label>
+                                <input type="number" class="form-control coord-input" id="dept_h" value="100">
+                            </div>
+                            <div class="col-6">
+                                <label class="small">แนวแกน Y</label>
+                                <input type="number" class="form-control coord-input" id="dept_v" value="150">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary">เลขที่ส่งซ่อม</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="small">แกน X</label>
+                                <input type="number" class="form-control coord-input" id="repair_no_x" value="100">
+                            </div>
+                            <div class="col-6">
+                                <label class="small">แกน Y</label>
+                                <input type="number" class="form-control coord-input" id="repair_no_y" value="250">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+                <button type="button" class="btn btn-success w-100 py-2">บันทึกตำแหน่งทั้งหมด</button>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
 <div class="row">
     <div class="col-6">
-        <iframe id="preview-frame" src="<?= \yii\helpers\Url::to(['hr/development/preview-setting']) ?>" width="100%"
+        <iframe id="preview-frame" src="<?= \yii\helpers\Url::to(['/hr/development/preview-pdf']) ?>" width="100%"
             height="800px">
         </iframe>
     </div>
@@ -113,14 +219,42 @@ use kartik\widgets\ActiveForm;
 
 
 <?php
-
 $ref = $model->ref;
 
+
 $urlUpload = Url::to('/filemanager/uploads/upload-pdf');
-$formName = 'development_pdf_layout'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
+// $formName = 'development_pdf_layout'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
+$formName = 'form_development_pdf'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
 
 
 $js = <<< JS
+
+
+$(function() {
+    // เปิดการใช้งาน Draggable
+    $(".draggable-label").draggable({
+        containment: "#pdf-container",
+        stop: function(event, ui) {
+            // เมื่อวาง Label ให้เอาค่าพิกัดไปใส่ในช่อง Input ด้านขวา
+            let targetId = $(this).data('target');
+            // ในที่นี้สมมติโครงสร้าง ID ของ Input ไว้
+            if(targetId === 'dept_h' || targetId === 'dept_v') {
+                $('#dept_h').val(Math.round(ui.position.left));
+                $('#dept_v').val(Math.round(ui.position.top));
+            } else if(targetId === 'repair_no') {
+                $('#repair_no_x').val(Math.round(ui.position.left));
+                $('#repair_no_y').val(Math.round(ui.position.top));
+            }
+        }
+    });
+
+    // ถ้าพิมพ์ตัวเลขใน Input ให้ Label ขยับตาม (Two-way binding แบบง่าย)
+    $('.coord-input').on('change keyup', function() {
+        // โค้ดส่วนนี้สำหรับอัปเดตตำแหน่ง Label เมื่อพิมพ์ตัวเลข
+        // (ต้องเขียน Logic แมตช์ ID เพิ่มเติม)
+    });
+});
+
 
    handleFormSubmit('#form', null, async function(response) {
         await location.reload();
@@ -179,7 +313,7 @@ $('#my_file').on('change', function (e) {
         if (result.isConfirmed) {
             const formData = new FormData();
             formData.append("$formName", file);
-            formData.append("id", 1);
+            // formData.append("id", 1);
             formData.append("ref", '$ref');
             formData.append("name", '$formName');
 
@@ -196,7 +330,7 @@ $('#my_file').on('change', function (e) {
                         showConfirmButton: false,
                         timer: 1200
                     }).then(() => {
-                        location.reload();
+                        // location.reload();
                     });
                 },
                 error: function () {
