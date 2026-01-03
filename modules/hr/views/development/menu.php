@@ -25,7 +25,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         </svg>
         ทะเบียนประวัติ
     </a>
-    <a href="<?= Url::to(['/hr/development/form-pdf']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?>">
+    <a href="<?= Url::to(['/hr/development/pdf-editor']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i data-lucide="settings"></i>
         ตั้งค่า
     </a>
