@@ -15,12 +15,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 
 <div class="d-flex gap-2">
     <a href="<?= Url::to(['/hr/development/dashboard']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-        </svg>
+<i data-lucide="layout-grid"></i>  
         ภาพรวม
     </a>
     <a href="<?= Url::to(['/hr/development', 'status' => 'Checking']) ?>" class="btn <?= $active !== 'index' ? 'btn-outline-primary' : 'btn-primary' ?>">
@@ -29,5 +24,9 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <path d="m9 9.5 2 2 4-4" />
         </svg>
         ทะเบียนประวัติ
+    </a>
+    <a href="<?= Url::to(['/hr/development/pdf-layout-setting']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i data-lucide="settings"></i>
+        ตั้งค่า
     </a>
 </div>
