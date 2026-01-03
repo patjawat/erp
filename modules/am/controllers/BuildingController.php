@@ -5,6 +5,7 @@ namespace app\modules\am\controllers;
 use yii;
 use yii\web\Response;
 use yii\db\Expression;
+use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\modules\am\models\Asset;
@@ -106,32 +107,51 @@ class BuildingController extends \yii\web\Controller
         }
     }
 
-    public function actionUpdate($id)
+     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model->receive_date = AppHelper::DateFormDb($model->receive_date);
+        if ($model->ref == '') {
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
+        if (isset($model->data_json['item_options'])) {
+            $model->item_options = $model->data_json['item_options'];
+        }
+        $old_data_json = $model->data_json;
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->receive_date = AppHelper::DateToDb($model->receive_date);
+
+
+            $convert_date = [
+                'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
+                'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+            ];
+
+
+            $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
+            if ($model->save()) {
 
                 return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return $model->getErrors();
             }
-        } else {
-            $model->loadDefaultValues();
         }
 
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('update', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
-        }
+        $viewDate = [
+            'expire_date' => (isset($model->data_json['expire_date']) ? AppHelper::DateFormDb($model->data_json['expire_date']) : ''),
+            'inspection_date' => (isset($model->data_json['inspection_date']) ? AppHelper::DateFormDb($model->data_json['inspection_date']) : ''),
+        ];
+
+        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
+
+        return $this->render('update', [
+            'model' => $model,
+            // 'group' => $model->asset_group_id
+        ]);
     }
 
 
