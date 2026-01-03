@@ -58,11 +58,10 @@ use yii\helpers\Html;
                             </li>
                             <li><?= $item->development_type_id == 'dev3' ? Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['/me/development/response-dev', 'id' => $item->id, 'title' => '<i class="fa-solid fa-user-check"></i> การตอบรับเป็นวิทยากร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
                             </li>
-                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ newxx', ['/hr/development/print-pdf', 'id' => $item->id], ['class' => 'dropdown-item open-modalx','_target' => 'blank','data' => ['size' => 'modal-xl']]) ?>
+
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(PDF)', ['/hr/development/print', 'id' => $item->id], ['class' => 'dropdown-item open-modalx','_target' => 'blank','data' => ['size' => 'modal-xl']]) ?>
                             </li>
-                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ new', ['/hr/development/print', 'id' => $item->id], ['class' => 'dropdown-item open-modalx','_target' => 'blank','data' => ['size' => 'modal-xl']]) ?>
-                            </li>
-                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(word)', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             </li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['/me/development/permit-request', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             </li>
