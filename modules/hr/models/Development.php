@@ -629,6 +629,12 @@ class Development extends \yii\db\ActiveRecord
     {
         return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])->all();
     }
+//แสดงรายชื่อคณะเดินทางยกเว้นผู้สร้างใบเดินทาง
+       public function listMemberPrint()
+    {
+        return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])
+        ->andWhere(['<>','emp_id',$this->emp_id])->all();
+    }
 
 
     //  ภาพทีมผูตรวจสอบ
