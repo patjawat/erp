@@ -7,10 +7,13 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use app\models\Uploads;
 use kartik\form\ActiveForm;
-
+use app\components\ThaiDateHelper;
+use app\modules\filemanager\components\FileManagerHelper;
 
 $this->title = 'Layout Designer';
 $pdfFile = Uploads::findOne(['name' => 'form_development_pdf', 'ref' => $model->ref]);
+
+
 // กำหนดค่าเริ่มต้นเป็น null
 $existingPdfUrl = null;
 
@@ -156,8 +159,8 @@ if ($pdfFile) {
         <h6>2. กำหนดตำแหน่งฟิลด์</h6>
         <div id="fields-list">
             <?php $form = ActiveForm::begin(['id' => 'form']); ?>
-            <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-            <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+            <?= $form->field($model, 'name')->textInput()->label(false) ?>
+
             <!-- Field Item: ส่วนราชการ -->
             <div class="card field-card shadow-sm" data-field="company_name" data-title="ชื่อส่วนราชการ">
                 <div class="card-body p-2">
@@ -175,7 +178,7 @@ if ($pdfFile) {
             </div>
 
             <!-- Field Item: ที่ -->
-            <div class="card field-card shadow-sm" data-field="doc_number" data-title="(ที่)">
+            <div class="card field-card shadow-sm" data-field="doc_number" data-title="เลขที่หนังสือ (ที่)">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ที่(1234/1)</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -206,7 +209,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="fullname" data-title="(ด้วยข้าพเจ้า)">
+            <div class="card field-card shadow-sm" data-field="fullname" data-title="นายทดสอบ ระบบพิมพ์">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ด้วยข้าพเจ้า</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -221,7 +224,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="fullname_signature" data-title="ชื่อ-นามสกุล(ผู้ขออนุญาติ)">
+            <div class="card field-card shadow-sm" data-field="fullname_signature" data-title="นายทดสอบ ระบบพิมพ์">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ผู้ขออนุญาติ</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -235,7 +238,7 @@ if ($pdfFile) {
                     </div>
                 </div>
             </div>
-            <div class="card field-card shadow-sm" data-field="position_signature" data-title="ตำแหน่ง(ผู้ขออนุญาติ)">
+            <div class="card field-card shadow-sm" data-field="position_signature" data-title="นักจัดการงานทั่วไป">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ตำแหน่งผู้ขอ</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -249,22 +252,8 @@ if ($pdfFile) {
                     </div>
                 </div>
             </div>
-            <div class="card field-card shadow-sm" data-field="fullname_signature_img" data-title="ลายเซ็นต์(ผู้ขออนุญาติ)">
-                <div class="card-body p-2">
-                    <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์(ผู้ขออนุญาติ)</div>
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <?= $form->field($model, 'data_json[fullname_signature_img_x]', [
-                            'addon' => ['prepend' => ['content' => 'X']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
 
-                        <?= $form->field($model, 'data_json[fullname_signature_img_y]', [
-                            'addon' => ['prepend' => ['content' => 'Y']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card field-card shadow-sm" data-field="position" data-title="ตำแหน่ง(ด้วยข้าเจ้า)">
+            <div class="card field-card shadow-sm" data-field="position" data-title="นักจัดการงานทั่วไป">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ด้วยข้าพเจ้า</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -281,7 +270,7 @@ if ($pdfFile) {
 
 
 
-            <div class="card field-card shadow-sm" data-field="topic" data-title="(วัตถุประสงค์)">
+            <div class="card field-card shadow-sm" data-field="topic" data-title="เพื่อไปเป็นวิทยากรสอนระบบ ERP">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">วัดถุประสงค์</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -296,7 +285,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="location" data-title="(สถานที่ไป)">
+            <div class="card field-card shadow-sm" data-field="location" data-title="มูลนิธิรามาธิบดี">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">สถานที่ไป</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -311,7 +300,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="date_start" data-title="(ในวันที่)">
+            <div class="card field-card shadow-sm" data-field="date_start" data-title="<?= ThaiDateHelper::formatThaiDate(date('Y-m-d'), 'medium') ?>">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">วันที่ไป</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -325,7 +314,11 @@ if ($pdfFile) {
                     </div>
                 </div>
             </div>
-            <div class="card field-card shadow-sm" data-field="date_end" data-title="(ถึงวันที่)">
+            <?php
+            $tomorrow_timestamp = strtotime('+1 day');
+            $endDate =  date('Y-m-d', $tomorrow_timestamp);
+            ?>
+            <div class="card field-card shadow-sm" data-field="date_end" data-title="<?= ThaiDateHelper::formatThaiDate($endDate, 'medium') ?>">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ถึงวันที่</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -340,7 +333,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="vehicle_date_start" data-title="(วันออกเดินทาง)">
+            <div class="card field-card shadow-sm" data-field="vehicle_date_start" data-title="<?= ThaiDateHelper::formatThaiDate($endDate, 'medium') ?>(วันออกเดินทาง)">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">วันออกเดินทาง</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -371,7 +364,7 @@ if ($pdfFile) {
             </div>
 
 
-            <div class="card field-card shadow-sm" data-field="vehicle_date_end" data-title="(วันกลับ)">
+            <div class="card field-card shadow-sm" data-field="vehicle_date_end" data-title="<?= ThaiDateHelper::formatThaiDate($endDate, 'medium') ?>(วันกลับ)">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">วันกลับ</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -401,7 +394,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="claim_type_name" data-title="เบิกค่าใช้จ่ายจาก">
+            <div class="card field-card shadow-sm" data-field="claim_type_name" data-title="เบิกจากผู้จัด">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">การเบิกเงิน</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -434,7 +427,7 @@ if ($pdfFile) {
 
 
 
-            <div class="card field-card shadow-sm" data-field="vehicle_type" data-title="เดินทางไปราชการโดย">
+            <div class="card field-card shadow-sm" data-field="vehicle_type" data-title="รถยนต์ส่วนตัว">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">พาหนะเดินทาง</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -449,7 +442,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="assigned_to" data-title="(ชื่อ ผู้ปฏิบัติหน้าที่แทน)">
+            <div class="card field-card shadow-sm" data-field="assigned_to" data-title="นายสมชาย ผู้ปฏิบัติหน้าที่แทน">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ผู้ปฏิบัติหน้าที่แทน</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -463,7 +456,7 @@ if ($pdfFile) {
                     </div>
                 </div>
             </div>
-            <div class="card field-card shadow-sm" data-field="assigned_to_position" data-title="ตำแหน่ง ผู้ปฏิบัติหน้าที่แทน">
+            <div class="card field-card shadow-sm" data-field="assigned_to_position" data-title="นักวิชาการคอมพิวเตอร์">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ตำแหน่งผู้ปฏิบัติหน้าที่แทน</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -479,7 +472,7 @@ if ($pdfFile) {
             </div>
 
 
-            <div class="card field-card shadow-sm" data-field="assigned_to_signature" data-title="ชื่อผู้ปฏิบัติหน้าที่แทน(เซ็นต์)">
+            <div class="card field-card shadow-sm" data-field="assigned_to_signature" data-title="นายสมชาย ผู้ปฏิบัติหน้าที่แทน">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ลงชื่อผู้ปฏิบัติหน้าที่แทน</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -493,21 +486,7 @@ if ($pdfFile) {
                     </div>
                 </div>
             </div>
-            <div class="card field-card shadow-sm" data-field="assigned_to_signature_img" data-title="ชื่อผู้ปฏิบัติหน้าที่แทน(ลายเซ็นต์)">
-                <div class="card-body p-2">
-                    <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ผู้ปฏิบัติหน้าที่แทน</div>
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <?= $form->field($model, 'data_json[assigned_to_signature_img_x]', [
-                            'addon' => ['prepend' => ['content' => 'X']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
-
-                        <?= $form->field($model, 'data_json[assigned_to_signature_img_y]', [
-                            'addon' => ['prepend' => ['content' => 'Y']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
-                    </div>
-                </div>
-            </div>
-            <!-- <div class="card field-card shadow-sm" data-field="assigned_to_position_signature" data-title="ชื่อตำแหน่งผู้ปฏิบัติหน้าที่แทน(เซ็นต์)">
+            <div class="card field-card shadow-sm" data-field="assigned_to_position_signature" data-title="นักวิชาการคอมพิวเตอร์">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ลงชื่อตำแหน่งผู้ปฏิบัติหน้าที่แทน</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -520,9 +499,9 @@ if ($pdfFile) {
                         ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
                     </div>
                 </div>
-            </div> -->
+            </div>
 
-            <div class="card field-card shadow-sm" data-field="member_fullname_start" data-title="ชื่อ-นามสกุล(คณะเดินทาง)">
+            <div class="card field-card shadow-sm" data-field="member_fullname_start" data-title="นายทดสอบ ใจดี">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ชื่อคณะเดินทาง</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -537,7 +516,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="member_position_start" data-title="ตำแหน่งคณะ(เดินทาง)">
+            <div class="card field-card shadow-sm" data-field="member_position_start" data-title="เจ้าพนักงานพัสดุ">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ตำแหน่งคณะเดินทาง</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -552,7 +531,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="approve_date" data-title="วันที่ ผอ.อนุมัติ">
+            <div class="card field-card shadow-sm" data-field="approve_date" data-title="<?= ThaiDateHelper::formatThaiDate($endDate, 'medium') ?>">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">วันอนุมัติ</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -567,35 +546,6 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="leader_signature_img" data-title="(ลายเซ็นต์ หัวหน้าเจ้า)">
-                <div class="card-body p-2">
-                    <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ หัวหน้าเจ้า.</div>
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <?= $form->field($model, 'data_json[leader_signature_img_x]', [
-                            'addon' => ['prepend' => ['content' => 'X']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
-
-                        <?= $form->field($model, 'data_json[leader_signature_img_y]', [
-                            'addon' => ['prepend' => ['content' => 'Y']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card field-card shadow-sm" data-field="director_signature_img" data-title="(ลายเซ็นต์ ผอ.)">
-                <div class="card-body p-2">
-                    <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ ผอ.</div>
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <?= $form->field($model, 'data_json[director_signature_img_x]', [
-                            'addon' => ['prepend' => ['content' => 'X']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
-
-                        <?= $form->field($model, 'data_json[director_signature_img_y]', [
-                            'addon' => ['prepend' => ['content' => 'Y']]
-                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
-                    </div>
-                </div>
-            </div>
 
 
 
@@ -614,9 +564,6 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf
 $this->registerJsFile('https://code.jquery.com/ui/1.13.2/jquery-ui.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $existingPdf = $existingPdfUrl;
-$urlUpload = Url::to('/filemanager/uploads/upload-pdf');
-$formName = 'form_development_pdf'; // ชื่อแบบฟอร์มที่ใช้สำหรับการจัดเก็บ layout
-$ref = $model->ref;
 
 $js = <<<JS
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -654,38 +601,6 @@ async function loadPdfFromUrl(url) {
                 renderPDF(typedarray);
             };
             reader.readAsArrayBuffer(file);
-            // 2. อัปโหลดไฟล์ลงฐานข้อมูลทันที
-            const formData = new FormData();
-            formData.append("$formName", file);
-            formData.append("id", 1);
-            formData.append("ref", '$ref');
-            formData.append("name", '$formName');
-
-            $.ajax({
-                url: '$urlUpload',
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (res) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'อัปโหลดสำเร็จ',
-                        showConfirmButton: false,
-                        timer: 1200
-                    }).then(() => {
-                        // location.reload();
-                    });
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: 'ไม่สามารถอัปโหลดไฟล์ได้'
-                    });
-                }
-            });
-
         }
     });
 

@@ -34,7 +34,8 @@ class SiteHelper extends Component
                 } catch (\Throwable $th) {
                         $_layout = 'vertical';
                 }
-
+                //หัวหน้าเจ้าหน้าที่
+                $leader = isset($model->data_json['leader']) ? Employees::findOne($model->data_json['leader']) : new Employees();
 
                 return [
                         'layout' => $_layout,
@@ -48,6 +49,7 @@ class SiteHelper extends Component
                         'leader' => isset($model->data_json['leader']) ? $model->data_json['leader'] : null,
                         'leader_fullname' => isset($model->data_json['leader_fullname']) ? $model->data_json['leader_fullname'] : null,
                         'leader_position' => isset($leader->data_json['position_name_text']) ? ($leader->data_json['position_name_text'].$leader->data_json['position_level_text']) : '',
+                        'leader_signature_path' => $leader->SignatureFilePath(),
                         'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
                         'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'phone' => isset($model->data_json['phone']) ? $model->data_json['phone'] : null,
@@ -78,7 +80,8 @@ class SiteHelper extends Component
                                 'avatar' => $employee->getAvatar(false),
                                 'department' => $employee->departmentName(),
                                 'fullname' => $employee->fullname,
-                                'position_name' => $employee->positionName()
+                                'position_name' => $employee->positionName(),
+                                'signature' => $employee->SignatureFilePath()
                         ];
                 } catch (\Throwable $th) {
                         return [
@@ -87,6 +90,8 @@ class SiteHelper extends Component
                                 'department' => '',
                                 'fullname' => '',
                                 'position_name' => '',
+                                'signature' => '',
+
                         ];
                 }
         }

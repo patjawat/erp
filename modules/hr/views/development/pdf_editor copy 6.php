@@ -11,6 +11,8 @@ use kartik\form\ActiveForm;
 
 $this->title = 'Layout Designer';
 $pdfFile = Uploads::findOne(['name' => 'form_development_pdf', 'ref' => $model->ref]);
+
+
 // กำหนดค่าเริ่มต้นเป็น null
 $existingPdfUrl = null;
 
@@ -158,7 +160,7 @@ if ($pdfFile) {
             <?php $form = ActiveForm::begin(['id' => 'form']); ?>
             <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
             <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-            <!-- Field Item: ส่วนราชการ -->
+<!-- Field Item: ส่วนราชการ -->
             <div class="card field-card shadow-sm" data-field="company_name" data-title="ชื่อส่วนราชการ">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ส่วนราชการ</div>
@@ -567,7 +569,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="leader_signature_img" data-title="(ลายเซ็นต์ หัวหน้าเจ้า)">
+                      <div class="card field-card shadow-sm" data-field="leader_signature_img" data-title="(ลายเซ็นต์ หัวหน้าเจ้า)">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ หัวหน้าเจ้า.</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
@@ -582,7 +584,7 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="director_signature_img" data-title="(ลายเซ็นต์ ผอ.)">
+                                 <div class="card field-card shadow-sm" data-field="director_signature_img" data-title="(ลายเซ็นต์ ผอ.)">
                 <div class="card-body p-2">
                     <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ ผอ.</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">

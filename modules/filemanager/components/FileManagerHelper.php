@@ -387,6 +387,31 @@ class FileManagerHelper extends Component
         }
     }
 
+    //การดึง File จาก Path โดยตรง
+    public static function getFilePath($id = null)
+{
+    $model = Uploads::findOne($id);
+    if ($model) {
+        $filename = $model->real_filename;
+        $basePath = FileManagerHelper::getUploadPath() . $model->ref . '/';
+        
+        $thumbPath = $basePath . 'thumbnail/' . $filename;
+        $fullPath  = $basePath . $filename;
+
+        // 1. ลองหา thumbnail ก่อน
+        if (file_exists($thumbPath)) {
+            return $thumbPath;
+        } 
+        // 2. ถ้าไม่มี thumb ให้เอาไฟล์จริง
+        if (file_exists($fullPath)) {
+            return $fullPath;
+        }
+    }
+    // 3. ถ้าไม่พบไฟล์เลย คืนค่า null หรือ path ของรูป placeholder (ถ้าจำเป็น)
+    return null; 
+}
+
+
     //ดึง file จาก ref
     public static function getFileFormRef($ref)
     {

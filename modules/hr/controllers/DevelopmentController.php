@@ -313,12 +313,20 @@ class DevelopmentController extends Controller
     public function actionPdfEditor()
     {
         $check = Categorise::findOne(['name' => 'form_development_pdf']);
-        $model = $check ?? new Categorise(['name' => 'form_development_pdf']);
+        if (!$check) {
+            $model =  new Categorise([
+                'name' => 'form_development_pdf',
+                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
+            ]);
+            $model->save();
+        } else {
+            $model = $check;
+        }
+
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ['status' => 'success', 'message' => 'บันทึกพิกัดเรียบร้อยแล้ว'];
         }
-
         return $this->render('pdf_editor', ['model' => $model]);
     }
 
@@ -340,16 +348,14 @@ class DevelopmentController extends Controller
             Yii::$app->session->setFlash('error', 'ไม่พบไฟล์เทมเพลต PDF ต้นฉบับ');
             return $this->redirect(['view', 'id' => $id]);
         }
-
         // 3. เริ่มต้นสร้าง PDF ด้วย FPDI
         $pdf = new Fpdi();
-
         // ตั้งค่าฟอนต์ไทย (ต้องมีไฟล์ .php และ .z ในโฟลเดอร์ฟอนต์ของ fpdf)
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
         $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
 
         // โหลดเทมเพลตหน้าแรก
-        $pageCount = $pdf->setSourceFile($templateFile);
+        $pdf->setSourceFile($templateFile);
         $tplIdx = $pdf->importPage(1);
         $size = $pdf->getTemplateSize($tplIdx);
 
@@ -388,21 +394,92 @@ class DevelopmentController extends Controller
 
         // --- เริ่มพิมพ์ฟิลด์ต่างๆ ---
 
+        // --- ลายเซ็นต์ผู้ขอ ---
+        try {
+  
+        $createdSig = $model->createdByEmp?->SignatureFilePath();
+        if ($createdSig) {
+            // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+            $key = 'fullname_signature_img';
+            $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+            $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+
+            // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+            // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+            $pdf->Image($createdSig, $x, $y, 20, 0);
+        }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        // --- ลายเซ็นต์ผู้ปฏิบัติหน้าที่แทน ---
+        try {
+
+            $assignedToSig = $model->assignedTo?->SignatureFilePath();
+            if ($createdSig) {
+                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+                $key = 'assigned_to_signature_img';
+                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+
+                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+                $pdf->Image($assignedToSig, $x, $y, 20, 0);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        // --- ลายเซ็นต์ หัวหน้าเจ้าหน้าที่. ---
+        try {
+            $leaderSig = SiteHelper::getInfo()['leader_signature_path'];
+            if ($leaderSig) {
+                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+                $key = 'leader_signature_img';
+                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+
+                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+                $pdf->Image($leaderSig, $x, $y, 20, 0);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        // --- ลายเซ็นต์ ผอ. ---
+        if ($model->status == 'Approve') {
+
+            $directorSig = \Yii::$app->site::viewDirector()['signature'];
+            if ($directorSig) {
+                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+                $key = 'director_signature_img';
+                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+
+                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+                $pdf->Image($directorSig, $x, $y, 20, 0);
+            }
+        }
+
+
+
         // ส่วนราชการ
         $writeText('company_name', $info['company_name'] ?? '-');
-
         // เลขที่หนังสือ (ที่)
         $writeText('doc_number', $model->id);
-
         // วันที่
         $writeText('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d'), 'medium'));
         //ด้วยข้าพเจ้า
         $writeText('fullname', $model->createdByEmp?->fullname ?? '-');
         $writeText('position', $model->createdByEmp?->positionName() ?? '-');
         $writeText('fullname_signature', $model->createdByEmp?->fullname ?? '-');
-        $writeText('position_signature', $model->createdByEmp?->positionName() ?? '-');
-        $writeText('topic', $model->topic);
+        $writeText('position_signature', 'ตำแหน่ง' . $model->createdByEmp?->positionName() ?? '-');
 
+
+
+        $writeText('topic', $model->topic);
         $writeText('location', $model->data_json['location'] ?? '-');
         $writeText('date_start',  ThaiDateHelper::formatThaiDate($model->date_start, 'medium'));
         $writeText('date_end',  ThaiDateHelper::formatThaiDate($model->date_end, 'medium'));
@@ -416,9 +493,7 @@ class DevelopmentController extends Controller
         $writeText('assigned_to', ($model->assignedTo?->fullname ?? '-'));
         $writeText('assigned_to_position', ($model->assignedTo?->positionName() ?? '-'));
         $writeText('assigned_to_signature', ($model->assignedTo?->fullname ?? '-'));
-        $writeText('assigned_to_position_signature', ($model->assignedTo?->positionName() ?? '-'));
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
-
         // 1. ดึงค่าพิกัดเริ่มต้นจาก JSON
         $startX = (float)($dataJson['member_fullname_start_x'] ?? 0);
         $startY = (float)($dataJson['member_fullname_start_y'] ?? 0);
@@ -440,7 +515,7 @@ class DevelopmentController extends Controller
             $yPosition = (($startPositionY * $ptToMm) + $offsetY) + ($index * $lineSpacing);
 
             $pdf->SetXY($x, $y);
-        
+
 
             // แสดงลำดับที่และชื่อ
             $displayText = ($index + 1) . ". " . ($memberItem->emp->fullname ?? '-');
