@@ -395,80 +395,77 @@ class DevelopmentController extends Controller
         // --- เริ่มพิมพ์ฟิลด์ต่างๆ ---
 
         // --- ลายเซ็นต์ผู้ขอ ---
-        try {
+        // try {
   
-        $createdSig = $model->createdByEmp?->SignatureFilePath();
-        if ($createdSig) {
-            // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
-            $key = 'fullname_signature_img';
-            $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
-            $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+        // $createdSig = $model->createdByEmp?->SignatureFilePath();
+        // if ($createdSig) {
+        //     // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+        //     $key = 'fullname_signature_img';
+        //     $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+        //     $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+        //     $pdf->Image($createdSig, $x, $y, 20, 0);
+        // }
+        // } catch (\Throwable $th) {
 
-            // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
-            // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
-            $pdf->Image($createdSig, $x, $y, 20, 0);
-        }
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        // }
 
         // --- ลายเซ็นต์ผู้ปฏิบัติหน้าที่แทน ---
-        try {
+        // try {
 
-            $assignedToSig = $model->assignedTo?->SignatureFilePath();
-            if ($createdSig) {
-                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
-                $key = 'assigned_to_signature_img';
-                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
-                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+        //     $assignedToSig = $model->assignedTo?->SignatureFilePath();
+        //     if ($createdSig) {
+        //         // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+        //         $key = 'assigned_to_signature_img';
+        //         $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+        //         $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
 
-                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
-                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
-                $pdf->Image($assignedToSig, $x, $y, 20, 0);
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        //         // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+        //         // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+        //         $pdf->Image($assignedToSig, $x, $y, 20, 0);
+        //     }
+        // } catch (\Throwable $th) {
+
+        // }
 
         // --- ลายเซ็นต์ หัวหน้าเจ้าหน้าที่. ---
-        try {
-            $leaderSig = SiteHelper::getInfo()['leader_signature_path'];
-            if ($leaderSig) {
-                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
-                $key = 'leader_signature_img';
-                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
-                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+        // try {
+        //     $leaderSig = SiteHelper::getInfo()['leader_signature_path'];
+        //     if ($leaderSig) {
+        //         // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+        //         $key = 'leader_signature_img';
+        //         $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+        //         $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
 
-                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
-                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
-                $pdf->Image($leaderSig, $x, $y, 20, 0);
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
+        //         // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+        //         // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+        //         $pdf->Image($leaderSig, $x, $y, 20, 0);
+        //     }
+        // } catch (\Throwable $th) {
+
+        // }
 
         // --- ลายเซ็นต์ ผอ. ---
-        if ($model->status == 'Approve') {
+        // if ($model->status == 'Approve') {
 
-            $directorSig = \Yii::$app->site::viewDirector()['signature'];
-            if ($directorSig) {
-                // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
-                $key = 'director_signature_img';
-                $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
-                $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
+        //     $directorSig = \Yii::$app->site::viewDirector()['signature'];
+        //     if ($directorSig) {
+        //         // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
+        //         $key = 'director_signature_img';
+        //         $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
+        //         $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
 
-                // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
-                // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
-                $pdf->Image($directorSig, $x, $y, 20, 0);
-            }
-        }
+        //         // แทรกรูปลง PDF โดยใช้ Path ตรงๆ (ไม่ต้องผ่าน URL)
+        //         // ปรับ $y - 12 เพื่อให้รูปอยู่เหนือชื่อ
+        //         $pdf->Image($directorSig, $x, $y, 20, 0);
+        //     }
+        // }
 
 
 
         // ส่วนราชการ
         $writeText('company_name', $info['company_name'] ?? '-');
         // เลขที่หนังสือ (ที่)
-        $writeText('doc_number', $model->id);
+        $writeText('doc_number', $info['doc_number']);
         // วันที่
         $writeText('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d'), 'medium'));
         //ด้วยข้าพเจ้า
