@@ -567,15 +567,30 @@ if ($pdfFile) {
                 </div>
             </div>
 
-            <div class="card field-card shadow-sm" data-field="leader_signature_img" data-title="(ลายเซ็นต์ หัวหน้าเจ้า)">
+            <div class="card field-card shadow-sm" data-field="leader_fullname" data-title="(หัวหน้ากลุ่มมงาน)">
                 <div class="card-body p-2">
-                    <div class="small fw-bold mb-2 text-primary">ลายเซ็นต์ หัวหน้าเจ้า.</div>
+                    <div class="small fw-bold mb-2 text-primary">ชื่อหัวหน้ากลุ่มมงาน.</div>
                     <div class="d-flex justify-content-between align-items-center gap-2">
-                        <?= $form->field($model, 'data_json[leader_signature_img_x]', [
+                        <?= $form->field($model, 'data_json[leader_fullname_x]', [
                             'addon' => ['prepend' => ['content' => 'X']]
                         ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
 
-                        <?= $form->field($model, 'data_json[leader_signature_img_y]', [
+                        <?= $form->field($model, 'data_json[leader_fullname_y]', [
+                            'addon' => ['prepend' => ['content' => 'Y']]
+                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card field-card shadow-sm" data-field="leader_date" data-title="(วันที่หัวหน้ากลุ่มมงาน อนุมัติ)">
+                <div class="card-body p-2">
+                    <div class="small fw-bold mb-2 text-primary">ลายเซ็.</div>
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <?= $form->field($model, 'data_json[leader_date_x]', [
+                            'addon' => ['prepend' => ['content' => 'X']]
+                        ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-x'])->label(false) ?>
+
+                        <?= $form->field($model, 'data_json[leader_date_y]', [
                             'addon' => ['prepend' => ['content' => 'Y']]
                         ])->textInput(['type' => 'number', 'class' => 'form-control form-control-sm coord-y'])->label(false) ?>
                     </div>
