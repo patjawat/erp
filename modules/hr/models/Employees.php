@@ -1368,6 +1368,23 @@ public function generalMenu()
             return null;
         }
     }
+// การดึง File จาก Path โดยตรง
+        public function SignatureFilePath()
+    {
+        try {
+            $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
+            if ($model) {
+                return FileManagerHelper::getFilePath($model->id);
+            } else {
+                return null;
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return null;
+        }
+    }
+
+
 
     public function fullname()
     {

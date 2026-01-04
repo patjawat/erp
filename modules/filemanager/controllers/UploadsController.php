@@ -30,6 +30,7 @@ class UploadsController extends \yii\web\Controller
         }
         $this->setHttpHeaders($model->type);
         \Yii::$app->response->data = file_get_contents($filepath);
+        return \Yii::$app->response;
         if ($model->name == 'logo') {
             return \Yii::$app->response;
         }
