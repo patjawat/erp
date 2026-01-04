@@ -17,6 +17,7 @@ use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
+use app\modules\approve\models\Approve;
 use app\modules\hr\models\DevelopmentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -375,6 +376,8 @@ class DevelopmentController extends Controller
         $info = $this->GetInfo();
         $dataJson = $layout->data_json ?? [];
 
+        $leader = Approve::findOne(['name' => 'development','from_id' => $model->id,'level' => 3,'status' => 'Pass']);
+
         // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด
         $writeText = function ($key, $text, $fontSize = 13, $style = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
             $xKey = $key . '_x';
@@ -474,8 +477,6 @@ class DevelopmentController extends Controller
         $writeText('fullname_signature', $model->createdByEmp?->fullname ?? '-');
         $writeText('position_signature', 'ตำแหน่ง' . $model->createdByEmp?->positionName() ?? '-');
 
-
-
         $writeText('topic', $model->topic);
         $writeText('location', $model->data_json['location'] ?? '-');
         $writeText('date_start',  ThaiDateHelper::formatThaiDate($model->date_start, 'medium'));
@@ -490,6 +491,10 @@ class DevelopmentController extends Controller
         $writeText('assigned_to', ($model->assignedTo?->fullname ?? '-'));
         $writeText('assigned_to_position', ($model->assignedTo?->positionName() ?? '-'));
         $writeText('assigned_to_signature', ($model->assignedTo?->fullname ?? '-'));
+        $writeText('leader_fullname', ($leader->employee->fullname ?? '-'));
+        $writeText('leader_date', (isset($leader->data_json['approve_date']) ? (ThaiDateHelper::formatThaiDate($leader->data_json['approve_date'], 'medium') ?? '-') : '') );
+
+
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
         // 1. ดึงค่าพิกัดเริ่มต้นจาก JSON
         $startX = (float)($dataJson['member_fullname_start_x'] ?? 0);
