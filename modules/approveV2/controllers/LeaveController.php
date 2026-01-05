@@ -31,11 +31,11 @@ class LeaveController extends \yii\web\Controller
         // เพิ่ม join กับ employees
         $dataProvider->query->joinWith(['leave']);       // join leave
         $dataProvider->query->joinWith(['leave.employee']); // join employee
+        $dataProvider->query->andWhere(['<>','approve.status','None']);
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['approve.name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
         $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['leave.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -43,11 +43,11 @@ class LeaveController extends \yii\web\Controller
         ]);
         $dataProvider->query->groupBy(['approve.from_id']);
 
-        if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+        // if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
+        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
+        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
+        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        // }
 
         $dataProvider->query->andFilterWhere(['>=', 'leave.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'leave.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->andFilterWhere(['leave.thai_year' => $searchModel->thai_year]);

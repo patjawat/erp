@@ -119,19 +119,19 @@ $authUrl = "https://moph.id.th/oauth/redirect?" . http_build_query([
 
             <!-- Social Login Buttons -->
             <div class="d-grid gap-2 d-md-flex">
-<a href="<?= \yii\helpers\Url::to('https://moph.id.th/oauth/redirect?' . http_build_query([
-    'client_id' => '0194e132-099e-7e9b-b25c-a927c7e35d83',
-    'redirect_uri' => 'https://provider.tphcp.go.th/callback',
-    'response_type' => 'code',
-    'state' => env('PROVIDER_REDIRECT_URI')
-])) ?>"
-   class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
-    <?= \yii\helpers\Html::img('@web/images/provider_logo.png', [
-        'class' => 'rounded me-2', 
-        'style' => 'max-width: 55px',
-        'alt' => 'Provider Logo'
-    ]) ?>
-</a>
+                <a href="<?= \yii\helpers\Url::to('https://moph.id.th/oauth/redirect?' . http_build_query([
+                    'client_id' => '0194e132-099e-7e9b-b25c-a927c7e35d83',
+                    'redirect_uri' => 'https://providerid.erpcph.com/callback',
+                    'response_type' => 'code',
+                    'state' => env('PROVIDER_REDIRECT_URI')
+                ])) ?>"
+                class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 mb-md-0">
+                    <?= \yii\helpers\Html::img('@web/images/provider_logo.png', [
+                        'class' => 'rounded me-2', 
+                        'style' => 'max-width: 55px',
+                        'alt' => 'Provider Logo'
+                    ]) ?>
+                </a>
 
                 <a href="<?= \yii\helpers\Url::to(['/auth/thaid/']) ?>"
                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
