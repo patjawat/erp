@@ -3,7 +3,7 @@
  ?>
 
 
-<div class="card border-0 shadow-sm p-2 mb-4 rounded-4 mt-4">
+<div class="card border-0 shadow-sm p-3 mb-4 rounded-4 mt-4">
     <div class="d-flex justify-content-between">
 
  <div class="d-flex flex-row gap-3">
@@ -16,7 +16,6 @@
                 <i data-lucide="calendar"></i>  
                 วันลา
             </a>
-
 
             <a href="<?= Url::to(['repair-history']) ?>" class="position-relative btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'repair_history'  ? 'btn-primary' : 'bg-body' ?>">
                <i data-lucide="car-front"></i>  
