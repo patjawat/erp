@@ -10,10 +10,12 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\ModalHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetDetail;
+use app\modules\approve\models\Approve;
 use app\modules\am\models\AssetDetailSearch;
 
 /**
@@ -103,6 +105,7 @@ class MoveController extends Controller
     public function actionCreate()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
         $code = $this->request->get('code');
         $model = new AssetDetail([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
@@ -119,11 +122,19 @@ class MoveController extends Controller
                 $model->data_json = ArrayHelper::merge($model->data_json,[
                     'leader_status' => 'Pending'
                 ]);
-
+                $model->emp_id = $me->id;
 
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
-                $model->save();
+                if($model->save()){
+                    $newApprove = new Approve();
+                    $newApprove->name = 'asset_move';
+                    $newApprove->from_id = $model->id;
+                    $newApprove->emp_id = $model->data_json['leader_id'] ?? 0;
+                    $newApprove->status = 'Pending';
+                    $newApprove->save(false);
+                }
+               ;
                 return [
                     'status' => 'success'
                 ];

@@ -59,7 +59,7 @@ $products = $cart->getItems();
             <i class="bi bi-ui-checks"></i>ทะเบียนเบิกวัสดุคลังหลัก <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?></span> รายการ
         </h6>
             <a href="<?= Url::to(['/me/main-stock/store']) ?>" class="btn btn-light">
-i data-lucide="circle-plus"></i>  
+<i data-lucide="circle-plus"></i>  
        เลือกเบิกวัสดุ
     </a>
     </div>

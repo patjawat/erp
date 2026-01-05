@@ -23,7 +23,7 @@ use yii\widgets\ActiveForm;
 
         <?= $this->render('@app/components/ui/_date_end',['form' => $form,'model' => $model,'label' => false])?>
         <div style="width:200px">
-            <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false,'placeholder' => 'ผู้ขออนุมัติการลา'])?>
+            <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false,'placeholder' => $emp_label])?>
         </div>
         <?= $form->field($model, 'status')->dropDownList(
             [
@@ -37,6 +37,11 @@ use yii\widgets\ActiveForm;
             ]
         )->label(false) ?>
          <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary']);?>
+          <?= Html::button('<i class="fa-solid fa-check"></i> อนุมัติที่เลือก', [
+                'class' => 'btn btn-success btn-approve-reject',
+                'type' => 'button',
+                'data-status' => 'Pass' // สำหรับส่งไป controller
+            ]) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

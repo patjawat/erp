@@ -111,10 +111,11 @@ class PrOrderController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                 $me = UserHelper::GetEmployee();
                 \Yii::$app->response->format = Response::FORMAT_JSON;
                 $oldObj = $model->data_json;
                 $vendor = $model->vendor;
-                
+                $model->emp_id = $me->id;
                 $model->data_json = [
                     'pr_create_date' => AppHelper::convertToGregorian($model->data_json['pr_create_date']),
                     'due_date' => AppHelper::convertToGregorian($model->data_json['due_date']),

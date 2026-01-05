@@ -8,15 +8,17 @@ use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\am\models\Asset;
+use app\modules\am\models\AssetDetail;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveType;
 use app\modules\hr\models\Development;
 use app\modules\purchase\models\Order;
 use app\modules\booking\models\Vehicle;
-use app\modules\inventory\models\StockEvent;
 
 use function PHPUnit\Framework\isEmpty;
+use app\modules\inventory\models\StockEvent;
 
 /**
  * This is the model class for table "approve".
@@ -108,13 +110,15 @@ class Approve extends \yii\db\ActiveRecord
     }
     public function getPurchase()
     {
-        return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['name' => 'order']);
+        return $this->hasOne(Order::class, ['id' => 'from_id'])->andOnCondition(['orders.name' => 'order']);
     }
 
     public function getVehicle()
     {
         return $this->hasOne(Vehicle::class, ['id' => 'from_id']);
     }
+
+    
 
     /*************  ✨ Windsurf Command ⭐  *************/
     /**
@@ -127,13 +131,19 @@ class Approve extends \yii\db\ActiveRecord
     /*******  d89483bd-f223-47e9-9c96-a9679ae1625c  *******/
     public function getStock()
     {
-        return $this->hasOne(StockEvent::class, ['id' => 'from_id']);
+        return $this->hasOne(StockEvent::class, ['id' => 'from_id'])->andOnCondition(['stock_events.name' => 'order']);
     }
 
     public function getDevelopment()
     {
         return $this->hasOne(Development::class, ['id' => 'from_id']);
     }
+
+        public function getAssetMove()
+    {
+        return $this->hasOne(AssetDetail::class, ['id' => 'from_id'])->andOnCondition(['asset_detail.name' => 'move']);
+    }
+
 
 
     // แสดงปีงบประมานทั้งหมด
