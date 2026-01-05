@@ -121,7 +121,7 @@ if ($pdfFile) {
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <strong class="text-primary me-3">Layout Designer</strong>
+                        <strong class="text-primary me-3">ใบขอไปราชการ</strong>
                         <span class="badge bg-secondary" id="file-name-display">ยังไม่ได้เลือกไฟล์</span>
                     </div>
                     <div>

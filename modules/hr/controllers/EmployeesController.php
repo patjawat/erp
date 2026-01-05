@@ -70,7 +70,7 @@ class EmployeesController extends Controller
         if (isset($searchModel->user_register) && $searchModel->user_register == 1) {
             $dataProvider->query->andWhere(['!=', 'user_id', 0]);
         }
-        $q = trim($searchModel->q);
+        $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'cid', $q],
