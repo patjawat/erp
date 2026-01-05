@@ -83,7 +83,8 @@ class VehicleController extends Controller
         ]);
 
 
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
+       $dataProvider->query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->orderBy([
             'date_start' => SORT_DESC,
             'location' =>  SORT_DESC,
@@ -156,7 +157,7 @@ class VehicleController extends Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
-            'type' => 'official',
+            'vehicle_type' => 'official',
             'icon' => '<i class="fa-solid fa-car-on"></i>',
             'title' => 'ทะเบียนการจัดสรรรถทั่วไป (พขร.)',
             'searchModel' => $searchModel,

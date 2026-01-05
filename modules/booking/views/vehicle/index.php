@@ -25,11 +25,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => $type]) ?>
-<?php $this->endBlock(); ?>
-
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
@@ -39,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<?=$this->render('@app/modules/booking/views/vehicle/list', [
+<?php echo $this->render('@app/modules/booking/views/vehicle/list', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ])?>
