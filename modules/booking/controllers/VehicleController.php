@@ -206,14 +206,20 @@ class VehicleController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
-            if ($model->status == 'Pass') {
+            
+            // if ($model->status == 'Success') {
+              
+            // }
+            if($model->save()){
                 $model->vehicle->status = $model->status;
                 $model->vehicle->save();
+                 return ['status' => 'success',];
+                }else{
+                return ['status' => 'error',];
+
             }
-            $model->save();
-            return [
-                'status' => 'success',
-            ];
+
+           
         }
 
         if ($this->request->isAJax) {

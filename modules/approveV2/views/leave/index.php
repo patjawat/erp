@@ -18,8 +18,6 @@
 
   <?= $this->render('@app/modules/approveV2/views/default/card_summary') ?>
 
-  <div class="card">
     <?= $this->render('@app/modules/approveV2/tab_menu', [
       'menu' => 'leave'
     ]) ?>
-  </div>
