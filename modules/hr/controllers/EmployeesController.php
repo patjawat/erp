@@ -77,6 +77,7 @@ class EmployeesController extends Controller
             ['like', 'email', $q],
             ['like', 'fname', $q],
             ['like', 'lname', $q],
+            ['like', new \yii\db\Expression("CONCAT(prefix,fname, ' ', lname)"), $q],
         ]);
 
         $dataProvider->query->andWhere(['NOT', ['id' => 1]]);
