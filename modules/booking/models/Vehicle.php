@@ -536,14 +536,14 @@ if (count($datas) >= 1) {
             $data .= '<div class="avatar-stack">';
             foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
                 $emp = Employees::findOne(['id' => $item->driver_id]);
-                $data .= Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                $data .= Html::a(Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
                         'src' => $emp->showAvatar()
                     ]
-                ]);
+                ]),['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]);
             }
             $data .= '</div>';
             return $data;

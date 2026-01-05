@@ -349,7 +349,7 @@ class Employees extends Yii\db\ActiveRecord
     }
     public function getImg()
     {
-        return Html::img('@web/img/placeholder-img.jpg', [
+        return Html::img('@web/img/loading.gif', [
             'class' => 'avatar avatar-sm bg-primary text-white lazyload',
             'data' => [
                 'expand' => '-20',

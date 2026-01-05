@@ -360,7 +360,9 @@ $resultsJs = <<<JS
             ]
         ])->label('พนักงานขับรถ');
         ?>
-
+<?php if (Yii::$app->user->can('driver')): ?>
+                <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+<?php endif;?>
 <!-- <?php if(!$model->isNewRecord):?>
 <?= $form->field($model, 'status')->widget(Select2::classname(), [
                         'data' => $model->ListStatus(),
