@@ -418,7 +418,7 @@ class VehicleController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => '<i class="fa-solid fa-car"></i> แสดงข้อมูลการขอใช้ยานภาหนะ',
+                'title' => '<i class="fa-solid fa-car"></i> แสดงข้อมูลการขอใช้ยานพาหนะ',
                 'content' => $this->renderAjax('view', [
                     'model' => $model
                 ]),
