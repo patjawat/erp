@@ -9,6 +9,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
 
+use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\helpdesk2\models\HelpdeskSearch;
@@ -225,6 +226,26 @@ class ComputerController extends \yii\web\Controller
             'model' => $model,
         ]);
     }
+
+
+    //การยืมคืน
+    public function actionBorrow($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/borrow', [
+            'model' => $model,
+        ]);
+    }
+
+    //การเคลื่อนย้าย
+    public function actionMove($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/move', [
+            'model' => $model,
+        ]);
+    }
+
 
      protected function findModelAsset($id)
     {

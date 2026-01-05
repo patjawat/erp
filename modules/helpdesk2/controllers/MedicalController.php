@@ -223,6 +223,25 @@ class MedicalController extends \yii\web\Controller
         ]);
     }
 
+    //การยืมคืน
+    public function actionBorrow($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/borrow', [
+            'model' => $model,
+        ]);
+    }
+
+    //การเคลื่อนย้าย
+    public function actionMove($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/move', [
+            'model' => $model,
+        ]);
+    }
+
+
      protected function findModelAsset($id)
     {
         if (($model = Asset::findOne(['id' => $id])) !== null) {
