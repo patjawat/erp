@@ -16,7 +16,8 @@
                 <tr>
                     <td class="px-4 py-3"><i class="bi bi-square text-light"></i></td>
                     <td class="px-3 py-3">
-                        <div class="d-flex align-items-center gap-3">
+                        <?= $item->leave->id; ?>
+                        <!-- <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                                 <i class="bi bi-calendar-event text-primary"></i>
                             </div>
@@ -24,7 +25,7 @@
                                 <div class="fw-bold text-dark"><?php echo $item->name?></div>
                                 <div class="text-muted fw-bold" style="font-size: 10px;">LV-2568-001</div>
                             </div>
-                        </div>
+                        </div> -->
                     </td>
                     <td class="px-3 py-3">
                         <div class="small fw-semibold text-dark">นางสาววิภา รักดี</div>

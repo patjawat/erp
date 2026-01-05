@@ -35,7 +35,7 @@ use yii\helpers\Html;
                <tbody class="align-middle table-group-divider">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <tr>
-                              <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     <?php
@@ -49,7 +49,7 @@ use yii\helpers\Html;
                                     ]
                                     ]);?>
                                     <div>
-                                        <div class="fw-bold mb-0">น.ส.จิราพรรณ สุวรรณก้าว</div>
+                                        <div class="fw-bold mb-0"><?= $item->userRequest()['fullname'] ?></div>
                                         <small class="text-primary" style="font-size: 0.75rem;"><?= $item->userRequest()['department'] ?></small>
                                         <small class="text-muted d-block"><?= $item->code ?></small>
                                     </div>
