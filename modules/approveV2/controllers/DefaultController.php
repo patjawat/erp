@@ -4,7 +4,7 @@ namespace app\modules\approveV2\controllers;
 
 use yii\web\Controller;
 use app\components\UserHelper;
-use app\modules\approveV2\models\ApproveSearch;
+use app\modules\approve\models\ApproveSearch;
 
 /**
  * Default controller for the `approve-v2` module

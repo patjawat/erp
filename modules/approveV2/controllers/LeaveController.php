@@ -11,8 +11,8 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
-use app\modules\approveV2\models\Approve;
-use app\modules\approveV2\models\ApproveSearch;
+use app\modules\approve\models\Approve;
+use app\modules\approve\models\ApproveSearch;
 
 class LeaveController extends \yii\web\Controller
 {

@@ -33,7 +33,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= Html::a($item->getAvatar(false),['/hr/employees/view','id' => $item->id]) ?></td>
                         <td><?=$item->positionType?->title ?? 'ไม่ระบุ'?></td>
                         <td class="text-truncate"><?= $item->departmentName() ?></td>
-                        <td class="align-middle"><?= Yii::$app->thaiFormatter->asDate($item->join_date, 'medium') ?></td>
+                        <td class="align-middle">
+                             <?php
+                                    try {
+                                        echo Yii::$app->thaiFormatter->asDate($item->joinDate(), 'medium');
+                                    } catch (\Throwable $th) {
+                                    }
+                                    ?>
+                        </td>
                         <td class="text-center align-middle"><?=$item->viewWorkType()?></td>
                         <td class="align-middle">
                              <?= $item->age_join_date['full'] ?>                   
