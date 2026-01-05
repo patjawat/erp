@@ -19,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?= $this->render('@app/modules/approveV2/views/default/card_summary') ?>
+<?php // $this->render('@app/modules/approveV2/views/default/card_summary') ?>
 
 
 

@@ -31,30 +31,23 @@ $msg = 'ขอ';
 <?php $this->beginBlock('action'); ?>
 <?php // $this->render('@app/components/ui/btnReturn') 
 ?>
-<?= $this->render('@app/modules/approveV2/menu', ['active' => 'leave']) ?>
+<?php //  $this->render('@app/modules/approveV2/menu', ['active' => 'leave']) 
+?>
 <?php $this->endBlock(); ?>
-<?= $this->render('@app/modules/approveV2/views/default/card_summary') ?>
+
+<?= $this->render('@app/modules/approveV2/tab_menu', [
+  'menu' => 'leave'
+]) ?>
 
 
-<div class="card p-2  mt-4">
-  <div class="d-flex justify-content-between">
-    <?= $this->render('@app/modules/approveV2/tab_menu', [
-      'menu' => 'leave'
-    ]) ?>
-
-    <div class="d-flex px-2">
-
-    </div>
-  </div>
-</div>
 
 <div class="card">
   <div class="card-body">
     <div class="d-flex justify-content-between">
-<h6>เห็นชอบการลา <?= $dataProvider->getTotalCount()?> รายการ</h6>
+      <h6>เห็นชอบการลา <?= $dataProvider->getTotalCount() ?> รายการ</h6>
 
-<?php echo $this->render('@app/modules/approveV2/views/default/_search', ['model' => $searchModel]) ?>
-      
+      <?php echo $this->render('@app/modules/approveV2/views/default/_search', ['model' => $searchModel, 'emp_label' => 'ผู้ขออนุมัติการลา']) ?>
+
     </div>
     <div class="table-responsive" style="max-height: 600px;max-height: 600px;min-height:300px; overflow: auto;">
       <table class="table table-striped table-hover mb-0">
@@ -123,10 +116,10 @@ $msg = 'ขอ';
 
               <td class="text-center">
                 <?= Html::a(
-                  '<i class="bi bi-eye-fill"></i>',
+                  '<i class="fa-regular fa-circle-check"></i> ตรวจสอบ',
                   ['/approve/leave/update', 'id' => $item->id],
                   [
-                    'class' => 'btn btn-outline-primary btn-sm rounded-circle open-modal',
+                    'class' => 'btn btn-sm btn-outline-primary rounded-pill open-modal',
                     'data' => ['size' => 'modal-xl']
                   ]
                 ) ?>
@@ -156,236 +149,6 @@ $calendarUrl = Url::to(['/approve/leave/get-events']);
 $currentDate = $date;
 
 $js = <<< JS
-
-
-
-let currentDate = new Date('$currentDate');
-    
-    // ฟังก์ชันแสดงปฏิทิน
-    function renderCalendar(date) {
-        // สร้างวันที่สำหรับสัปดาห์ (7 วัน)
-        let weekDates = [];
-        let startOfWeek = new Date(date);
-        
-        // ปรับวันเริ่มต้นตามวันที่เลือก (center the view around the selected date)
-        startOfWeek.setDate(startOfWeek.getDate() - 3); // ย้อนหลัง 3 วัน เพื่อให้วันที่เลือกอยู่ตรงกลาง
-        
-        for (let i = 0; i < 7; i++) {
-            let day = new Date(startOfWeek);
-            day.setDate(startOfWeek.getDate() + i);
-            weekDates.push(day);
-        }
-        
-        // สร้างส่วนหัวของปฏิทิน
-        let headerHtml = '<th width="50">เวลา</th>';
-        for (let i = 0; i < weekDates.length; i++) {
-            let date = weekDates[i];
-            let dayName = new Intl.DateTimeFormat('th-TH', { weekday: 'short' }).format(date);
-            let dateStr = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short' }).format(date);
-            let isSelectedDay = isSameDay(date, currentDate) ? 'bg-primary text-white' : '';
-            let isToday = isSameDay(date, new Date()) ? 'bg-success text-white' : '';
-            let bgClass = isSelectedDay ? 'bg-primary text-white' : (isToday ? 'bg-success text-white' : '');
-            headerHtml += `<th class="\${bgClass}">\${dayName}<br>\${dateStr}</th>`;
-        }
-        $('#calendar-header').html(headerHtml);
-        
-        // สร้างเซลล์เวลาในปฏิทิน (ตั้งแต่ 8:00 ถึง 20:00)
-        let bodyHtml = '';
-        for (let hour = 8; hour <= 20; hour++) {
-            let timeStr = `\${hour}:00`;
-            bodyHtml += `<tr><th class="text-center">\${timeStr}</th>`;
-            
-            for (let date of weekDates) {
-                let dateStr = formatDate(date);
-                let isSelectedDay = isSameDay(date, currentDate) ? 'bg-light' : '';
-                bodyHtml += `<td class="calendar-cell \${isSelectedDay}" data-date="\${dateStr}" data-time="\${hour}:00"></td>`;
-            }
-            
-            bodyHtml += '</tr>';
-        }
-        $('#calendar-body').html(bodyHtml);
-        
-        // แสดงช่วงวันที่กำลังดู
-        let startDateStr = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }).format(weekDates[0]);
-        let endDateStr = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }).format(weekDates[6]);
-        let currentDateStr = new Intl.DateTimeFormat('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(currentDate);
-        $('#date-range').html(`วันที่เลือก: <strong>\${currentDateStr}</strong><br>ช่วงที่แสดง: \${startDateStr} - \${endDateStr}`);
-        
-        // ดึงข้อมูลกิจกรรม
-        let startDate = formatDate(weekDates[0]);
-        let endDate = formatDate(weekDates[6]);
-        loadEvents(startDate, endDate);
-    }
-    
-    // ฟังก์ชันโหลดกิจกรรมจาก API
-    function loadEvents(start, end) {
-        $.ajax({
-            url: '$calendarUrl',
-            data: {
-                start: start,
-                end: end
-            },
-            dataType: 'json',
-            success: function(events) {
-                renderEvents(events);
-                console.log('load event');
-                
-            }
-        });
-    }
-    
-    // แสดงกิจกรรมบนปฏิทิน
-    function renderEvents(events) {
-        // ล้างกิจกรรมเก่า
-        $('.event-item').remove();
-        
-        for (let event of events) {
-            let startDate = new Date(event.start);
-            let eventDate = formatDate(startDate);
-            let eventHour = startDate.getHours();
-            console.log(eventDate);
-            
-            
-            let cell = $(`.calendar-cell[data-date="\${eventDate}"][data-time="\${eventHour}:00"]`);
-            
-            let eventHtml = `
-                <a class="event-item p-1 mb-1 rounded badge-soft-success" 
-                     data-id="\${event.id}"
-                     data-title="\${event.title}"
-                     data-description="\${event.description || ''}"
-                     data-start="\${event.start}"
-                     data-end="\${event.end || ''}">
-                    \${event.title}
-                </a>
-            `;
-            
-            cell.append(eventHtml);
-        }
-        
-        // เพิ่ม event click เพื่อแสดงรายละเอียด
-        $('.event-item').on('click', function() {
-            let id = $(this).data('id');
-            let title = $(this).data('title');
-            let description = $(this).data('description');
-            let start = new Date($(this).data('start'));
-            let end = $(this).data('end') ? new Date($(this).data('end')) : null;
-            
-            let startStr = new Intl.DateTimeFormat('th-TH', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(start);
-            
-            let endStr = end ? new Intl.DateTimeFormat('th-TH', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(end) : '';
-            
-            let detailsHtml = `
-                <p><strong>เริ่ม:</strong> \${startStr}</p>
-                \${end ? `<p><strong>สิ้นสุด:</strong> \${endStr}</p>` : ''}
-                \${description ? `<p><strong>รายละเอียด:</strong><br>\${description}</p>` : ''}
-            `;
-            
-
-                $.ajax({
-                    type: "get",
-                    url: '/approve/leave/update',
-                    data:{id:id},
-                    dataType: "json",
-                    success: function (response) {
-                    $("#main-modal").modal("show");
-                    $("#main-modal-label").html(response.title);
-                    $(".modal-body").html(response.content);
-                    $(".modal-footer").html(response.footer);
-                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                    $(".modal-dialog").addClass('modal-xl');
-                    $(".modal-content").addClass("card-outline card-primary");
-                    },
-                    error: function (xhr) {
-                    $("#main-modal-label").html("เกิดข้อผิดพลาด");
-                    $(".modal-body").html(
-                        '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
-                    );
-                    $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-                    $(".modal-dialog").addClass("modal-md");
-                    console.log(xhr);
-
-                    }
-                })
-            // $('#event-title').text(title);
-            // $('#event-details').html(detailsHtml);
-            
-            // let modal = new bootstrap.Modal(document.getElementById('eventModal'));
-            // modal.show();
-        });
-    }
-    
-    // ฟังก์ชันช่วยจัดการวันที่
-    function formatDate(date) {
-        let year = date.getFullYear();
-        let month = (date.getMonth() + 1).toString().padStart(2, '0');
-        let day = date.getDate().toString().padStart(2, '0');
-        return `\${year}-\${month}-\${day}`;
-    }
-    
-    function isSameDay(date1, date2) {
-        return date1.getFullYear() === date2.getFullYear() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getDate() === date2.getDate();
-    }
-    
-    // แสดงปฏิทินเริ่มต้น
-    renderCalendar(currentDate);
-    
-    // กำหนด event handlers สำหรับปุ่มนำทาง
-    $('#prev-day').on('click', function() {
-        currentDate.setDate(currentDate.getDate() - 1);
-        renderCalendar(currentDate);
-        updateUrlParam();
-    });
-    
-    $('#next-day').on('click', function() {
-        currentDate.setDate(currentDate.getDate() + 1);
-        renderCalendar(currentDate);
-        updateUrlParam();
-    });
-    
-    $('#prev-week').on('click', function() {
-        currentDate.setDate(currentDate.getDate() - 7);
-        renderCalendar(currentDate);
-        updateUrlParam();
-    });
-    
-    $('#next-week').on('click', function() {
-        currentDate.setDate(currentDate.getDate() + 7);
-        renderCalendar(currentDate);
-        updateUrlParam();
-    });
-    
-    $('#today').on('click', function() {
-        currentDate = new Date();
-        renderCalendar(currentDate);
-        updateUrlParam();
-    });
-    
-    // อัปเดต URL parameter เมื่อเปลี่ยนวันที่
-    function updateUrlParam() {
-        let dateParam = formatDate(currentDate);
-        let url = new URL(window.location.href);
-        url.searchParams.set('date', dateParam);
-        window.history.replaceState({}, '', url);
-    }
-
-
-
 
 $('.approve-all').click(function (e) { 
     e.preventDefault();

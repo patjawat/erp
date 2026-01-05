@@ -28,3 +28,4 @@ class m251227_074408_add_plandate_assset_detail extends Migration
             $this->dropColumn($table, 'staff_id');
     }
 }
+

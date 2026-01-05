@@ -77,6 +77,7 @@ class Order extends \yii\db\ActiveRecord
             [['price'], 'number'],
             [[
                 'qty',
+                'emp_id',
                 'data_json',
                 'created_at',
                 'updated_at',
@@ -715,8 +716,8 @@ class Order extends \yii\db\ActiveRecord
         foreach (Order::find()->where(['name' => 'committee', 'category_id' => $this->id])->all() as $key => $item) {
             $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
             $data .= Html::a(
-                Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',

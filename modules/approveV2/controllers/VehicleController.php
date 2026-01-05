@@ -19,9 +19,12 @@ class VehicleController extends \yii\web\Controller
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
-        $searchModel = new ApproveSearch();
+        $searchModel = new ApproveSearch([
+            'status' => 'Pending'
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'vehicle','emp_id' => $me->id,'status' => 'Pending']);
+        $dataProvider->query->andFilterWhere(['name' => 'vehicle','emp_id' => $me->id]);
+         $dataProvider->query->andWhere(['<>','approve.status','None']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
         
         return $this->render('index',[

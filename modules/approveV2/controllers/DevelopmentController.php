@@ -4,58 +4,70 @@ namespace app\modules\approveV2\controllers;
 
 use Yii;
 use yii\web\Response;
-use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;
 
-class LeaveController extends \yii\web\Controller
+class DevelopmentController extends \yii\web\Controller
 {
     public function actionIndex()
     {
-        $date = Yii::$app->request->get('date', date('Y-m-d'));
         $me = UserHelper::GetEmployee();
+
         $searchModel = new ApproveSearch([
             'status' => 'Pending'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        // เพิ่ม join กับ employees
-        $dataProvider->query->joinWith(['leave']);       // join leave
-        $dataProvider->query->joinWith(['leave.employee']); // join employee
-        $dataProvider->query->andWhere(['<>','approve.status','None']);
-        $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
-        $dataProvider->query->andFilterWhere(['approve.name' => 'leave']);
+        $dataProvider->query->joinWith(['development', 'development.developmentDetail']);
+        $dataProvider->query->andFilterWhere(['approve.name' => 'development']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['leave.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['employees.department' => $searchModel->q_department]);
+        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
+        $dataProvider->query->andFilterWhere(['development.development_type_id' => $searchModel->q_development_type_id]);
+
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ['like', 'topic', $searchModel->q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(development.data_json, '$.location'))"), $searchModel->q],
+
         ]);
-        $dataProvider->query->groupBy(['approve.from_id']);
 
-        // if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
-        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
-        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
-        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        // }
 
-        $dataProvider->query->andFilterWhere(['>=', 'leave.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'leave.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        
-        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        $dataProvider->query->groupBy(['development.id']);
+        $dataProvider->query->orderBy(['development.id' => SORT_DESC]);
+        // $dataProvider->pagination = ['pageSize' => false];
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'date' => $date
         ]);
     }
+
+
+    public function actionView($id)
+    {
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
+                'content' => $this->renderAjax('@app/modules/hr/views/development/view', [
+                    'model' => $model->development,
+                ]),
+            ];
+        } else {
+            return $this->render('@app/modules/hr/views/development/view', [
+                'model' => $model->development,
+            ]);
+        }
+    }
+
 
     public function actionUpdate($id)
     {
@@ -87,24 +99,24 @@ class LeaveController extends \yii\web\Controller
 
                 // ถ้าไม่อนุมัติ
                 if ($model->status === 'Reject') {
-                    $model->leave->status = 'Reject';
-                    $model->leave->save(false);
-                    $model->leave->MsgReject();
+                    $model->development->status = 'Reject';
+                    $model->development->save(false);
+                    $model->development->MsgReject();
                     return ['status' => 'success'];
                 }
 
                 // ถ้าเป็น level สุดท้าย
                 if ($model->maxLevel() && $model->status === 'Pass') {
-                    $model->leave->status = 'Approve';
-                    $model->leave->save(false);
-                    $model->leave->MsgApprove();
+                    $model->development->status = 'Approve';
+                    $model->development->save(false);
+                    $model->development->MsgApprove();
                     return ['status' => 'success'];
                 }
 
                 // หา nextApprove
                 $nextApprove = Approve::findOne([
                     'from_id' => $model->from_id,
-                    'name' => 'leave',
+                    'name' => 'development',
                     'level' => $model->level + 1
                 ]);
 
@@ -118,8 +130,8 @@ class LeaveController extends \yii\web\Controller
 
                 // ตั้งค่าตาม map
                 if (isset($statusMap[$model->level][$model->status])) {
-                    $model->leave->status = $statusMap[$model->level][$model->status];
-                    $model->leave->save(false);
+                    $model->development->status = $statusMap[$model->level][$model->status];
+                    $model->development->save(false);
                 }
 
                 // ถ้ามีคนอนุมัติถัดไป และสถานะผ่าน
@@ -135,7 +147,7 @@ class LeaveController extends \yii\web\Controller
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'ขออนุมัติวันลา',
+                'title' => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
@@ -187,17 +199,17 @@ class LeaveController extends \yii\web\Controller
 
                     // ถ้าไม่อนุมัติ
                     if ($status === 'Reject') {
-                        $model->leave->status = 'Reject';
-                        $model->leave->save(false);
-                        $model->leave->MsgReject();
+                        $model->development->status = 'Reject';
+                        $model->development->save(false);
+                        $model->development->MsgReject();
                         continue; // ไปตัวถัดไป
                     }
 
                     // ถ้าเป็น level สุดท้าย และอนุมัติผ่าน
                     if ($model->maxLevel() && $status === 'Pass') {
-                        $model->leave->status = 'Approve';
-                        $model->leave->save(false);
-                        $model->leave->MsgApprove();
+                        $model->development->status = 'Approve';
+                        $model->development->save(false);
+                        $model->development->MsgApprove();
                         continue;
                     }
 
@@ -210,8 +222,8 @@ class LeaveController extends \yii\web\Controller
 
                     // Mapping สถานะตาม level
                     if (isset($statusMap[$model->level][$status])) {
-                        $model->leave->status = $statusMap[$model->level][$status];
-                        $model->leave->save(false);
+                        $model->development->status = $statusMap[$model->level][$status];
+                        $model->development->save(false);
                     }
 
                     // ถ้ามีคนอนุมัติถัดไป และ status ผ่าน
@@ -230,47 +242,6 @@ class LeaveController extends \yii\web\Controller
 
 
 
-    public function actionApproveAllOld()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $me = UserHelper::GetEmployee();
-        $approves = Approve::find()->where(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending'])->all();
-        foreach ($approves as $item) {
-            $model = Approve::findOne($item->id);
-            $model->status = 'Pass';
-            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
-            // if ($model->save()) {
-            //     $nextApprove = Approve::findOne(['name' => 'leave', 'from_id' => $model->from_id, 'level' => ($model->level + 1)]);
-            //     if ($nextApprove && $model->status !== 'Reject') {
-            //         // เงื่อนไขระบบลา
-            //         if ($model->name == 'leave') {
-            //             if ($model->level == 2) {
-            //                 $model->leave->status = 'Checking';
-            //                 $model->leave->save();
-            //             }
-            //             if ($model->level == 3) {
-            //                 $model->leave->status = 'Verify';
-            //                 $model->leave->save();
-            //             } else {
-            //             }
-            //         }
-
-            //         $nextApprove->status = 'Pending';
-            //         $nextApprove->save();
-            //     }
-
-            //     if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'leave') {
-            //         $model->leave->status = 'Approve';
-            //         $model->leave->save();
-            //         $model->leave->MsgApprove();
-            //     }
-            // }
-        }
-        return [
-            'status' => 'success'
-        ];
-    }
 
     protected function findModel($id)
     {
@@ -285,24 +256,29 @@ class LeaveController extends \yii\web\Controller
     public function actionGetEvents()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        $start = Yii::$app->request->get('start');
+        $end = Yii::$app->request->get('end');
 
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending']);
+        $dataProvider->query->andFilterWhere(['name' => 'development', 'emp_id' => $me->id, 'status' => 'Pending']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         $result = [];
         foreach ($dataProvider->getModels() as $event) {
             $result[] = [
                 'id' => $event->id,
-                'title' => $event->leave->data_json['reason'] ?? '-',
-                'start' => $event->leave->date_start . ' 08:00',
-                'end' => $event->leave->date_end . ' 16:00',
+                'title' => $event->development->data_json['reason'] ?? '-',
+                'start' => $event->development->date_start . ' 08:00',
+                'end' => $event->development->date_end . ' 16:00',
+                // 'start' => $event->date_start . ' ' . $event->start_time,
+                // 'end' => $event->date_end . ' ' . $event->end_time,
+                // 'description' => $event->description,
+                // 'color' => $event->color,
             ];
         }
 
         return $result;
     }
-
 }

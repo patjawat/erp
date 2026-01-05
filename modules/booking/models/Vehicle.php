@@ -509,7 +509,7 @@ if (count($datas) >= 1) {
 
             $emp = Employees::findOne(['id' => $item->emp_id]);
             if ($emp) {
-                $data .= Html::img('@web/img/placeholder-img.jpg', [
+                $data .= Html::img('@web/img/loading.gif', [
                     'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
                     'data' => [
                         'expand' => '-20',

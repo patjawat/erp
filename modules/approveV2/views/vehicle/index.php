@@ -16,8 +16,6 @@ $this->title = 'อนุมัติขอใช้รถยนต์';
     </h4>
   <?php $this->endBlock(); ?>
 
-  <?= $this->render('@app/modules/approveV2/views/default/card_summary') ?>
-
     <?= $this->render('@app/modules/approveV2/tab_menu', [
       'menu' => 'vehicle'
     ]) ?>
@@ -74,7 +72,7 @@ $this->title = 'อนุมัติขอใช้รถยนต์';
                             <td class="text-center">
                         <div class="d-flex gap-2 justify-content-center">
 
-                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/vehicle/update', 'id' => $item->id],['class' => 'open-modal','data' => ['size' => 'modal-xl']])?>
+                            <?php echo Html::a('<i class="fa-solid fa-eye fa-2x"></i>',['/approve/vehicle/update', 'id' => $item->id],['class' => 'btn btn-sm btn-outline-primary rounded-pill open-modal','data' => ['size' => 'modal-xl']])?>
                         </div>
 
                     </td>
