@@ -56,7 +56,7 @@ $msg = 'ขอ';
                         <th>ผู้ดำเนินการ</th>
                         <th>ผู้อนุมัติ</th>
                         <th>สถานะ</th>
-                        <th class="text-center" style="width:130px">จัดการ</th>
+                        <th class="text-center" style="width:115px">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>

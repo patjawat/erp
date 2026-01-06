@@ -39,7 +39,12 @@ $msg = 'ขอ';
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php echo $this->render('@app/modules/approveV2/views/default/_search', ['model' => $searchModel,'emp_label' => 'ผู้ขอเบิก']) ?>
+            <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
+            ['model' => $searchModel,
+            'emp_label' => 'ผู้ขอเบิก',
+            'approveAllUrl' => Url::to(['/approve/main-stock/approve-all'])
+            ]
+            ) ?>
 
             <?php // echo Html::a('อนุมัติทั้งหมด',['/approve/leave/approve-all'],['class' => 'btn btn-primary rounded-pill shadow approve-all']);
             ?>
@@ -56,7 +61,7 @@ $msg = 'ขอ';
                         <th class="text-start" style="width: 165px;">สถานะ</th>
                         <th scope="col">ผู้ขอเบิก</th>
                         <th scope="col">วันที่</th>
-                        <th class="text-center">ดำเนินการ</th>
+                        <th class="text-center" style="width:115px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
