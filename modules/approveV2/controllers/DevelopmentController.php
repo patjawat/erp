@@ -178,7 +178,6 @@ class DevelopmentController extends \yii\web\Controller
                 3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
                 4 => ['Pass' => 'Approve', 'Reject' => 'Reject']
             ];
-
             foreach ($ids as $id) {
                 $model = Approve::findOne($id);
                 if (!$model) continue;
@@ -216,7 +215,7 @@ class DevelopmentController extends \yii\web\Controller
                     // หา nextApprove
                     $nextApprove = Approve::findOne([
                         'from_id' => $model->from_id,
-                        'name' => 'leave',
+                        'name' => 'development',
                         'level' => $model->level + 1
                     ]);
 

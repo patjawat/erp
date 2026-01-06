@@ -84,6 +84,13 @@ class AssetMoveController extends \yii\web\Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = AssetDetail::findOne($id);
+        // ตรวจสอบว่าพบ Model หลักหรือไม่
+        if ($model === null) {
+            return [
+                'title' => 'ข้อผิดพลาด',
+                'content' => 'ไม่พบข้อมูลที่ต้องการ',
+            ];
+        }
 
         // 1. ดึงข้อมูล JSON เดิมเก็บไว้ก่อน (และจัดการกรณีที่เป็น null)
         $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);

@@ -222,7 +222,7 @@ $config = [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
             'telegrambot/*',
-            // '*',
+            '*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

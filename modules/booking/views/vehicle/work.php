@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card shadow-sm">
     <div class="card-header bg-primary-gradient">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> กาจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> การจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
         </div>
     </div>
     <div class="card-body p-0">
