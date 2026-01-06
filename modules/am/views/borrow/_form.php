@@ -17,17 +17,37 @@ use kartik\widgets\ActiveForm;
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'asset_id')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
-    <div class="row">
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('หมายเลขทรัพย์สิน/ครุภัณฑ์') ?>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
+    <?= $form->field($model, 'code')->hiddenInput()->label(false) ?>
+
+
+    <div class="alert alert-info bg-info bg-opacity-10 border-info-subtle d-flex align-items-center mb-4">
+        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        <div>
+            <small class="d-block text-muted">ครุภัณฑ์ที่ต้องการยืม:</small>
+            <strong><?= $model->asset->asset_name ?></strong> (<?= $model->code ?>)
         </div>
     </div>
 
+    <form>
+        <div class="row g-3">
+            <div class="col-md-12">
+                <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'modal' => true,'label' => 'ผู้ขอยืม / หน่วยงานที่รับผิดชอบ'])?>
 
-    <?= $form->field($model, 'data_json[title]')->textInput()->label('หัวข้อการบำรุงรักษา') ?>
+            </div>
+
+            <div class="col-md-6">
+                <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'วันที่ยืม...'])->label('วันที่ยืม'); ?>
+            </div>
+            <div class="col-md-6">
+                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'กำหนดคืน (โดยประมาณ)...'])->label('กำหนดคืน'); ?>
+            </div>
+
+            <div class="col-12">
+                 <?= $form->field($model, 'data_json[remark]')->textArea(['rows' => 4,'placeholder' => 'ระบุเหตุผลการยืม เช่น ยืมใช้ชั่วคราวระหว่างเครื่องหลักส่งซ่อม...'])->label('วัตถุประสงค์ / หมายเหตุการยืม') ?>
+            </div>
+        </div>
+    </form>
+
     <?= $model->Upload() ?>
 
 
@@ -38,7 +58,7 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-date_start')
+ thaiDatepicker('#assetdetail-date_start,#assetdetail-date_end')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

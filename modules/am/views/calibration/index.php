@@ -24,14 +24,19 @@ $iconClean = '<i data-lucide="circle-plus"></i> '
     <?php Pjax::begin(); ?>
     <?php // echo $this->render('_search', ['model' => $searchModel]); 
     ?>
+
+
+
     <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th class="text-center" style="width:30px">ลำดับ</th>
-                    <th>ชื่อรายการ</th>
-                    <th>วันที่</th>
+                    <th>ผู้ให้บริการ</th>
+                    <th>วันที่ตามแผน</th>
+                    <th>วันที่ดำเนินการ</th>
                     <th>ผู้ดำเนินการ</th>
+                    <th>ผลการสอบเทียบ</th>
                     <th class="text-center" style="width:130px">จัดการ</th>
                 </tr>
             </thead>
@@ -39,33 +44,20 @@ $iconClean = '<i data-lucide="circle-plus"></i> '
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td><?= $item->data_json['title'] ?? '-' ?></td>
-                        <td><?= Yii::$app->thaiDate->toThaiDate($item->created_at, true, false); ?></td>
+                        <td><?= $item->provider_type == 'external' ? 'หน่วยงานภายนอก (Outsource)' : 'ดำเนินการเอง (In-house)'?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->plan_date, false, false); ?></td>
+                        <td><?= Yii::$app->thaiDate->toThaiDate($item->actual_date, false, false); ?></td>
                         <td><?= $item->createdBy->employees->fullname ?? '-' ?></td>
+                        <td><?= $item->viewResult() ?></td>
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">
                                 <a href="<?= Url::to(['/am/calibration/view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                </a>
+                                    <i class="fa-regular fa-eye"></i></a>
                                 <a href="<?= Url::to(['/am/calibration/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข']) ?>" class="btn btn-icon btn-ghost-secondary open-modal" data-size="modal-lg" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
-                                    </svg>
-                                </a>
+                                 <i class="fa-regular fa-pen-to-square"></i></a>
 
                                 <a href="<?= Url::to(['/am/calibration/delete', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary delete-item" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M10 11v6"></path>
-                                        <path d="M14 11v6"></path>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                                        <path d="M3 6h18"></path>
-                                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                </a>
+                                   <i class="fa-regular fa-trash-can"></i></a>
                             </div>
                         </td>
                     </tr>

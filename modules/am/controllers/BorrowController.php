@@ -7,6 +7,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\UserHelper;
 use app\components\ModalHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
@@ -43,7 +44,7 @@ class BorrowController extends Controller
      */
     public function actionIndex()
     {
-         \Yii::$app->response->format = Response::FORMAT_JSON;
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $code = $this->request->get('code');
         $searchModel = new AssetDetailSearch([
             'name' => 'borrow',
@@ -81,16 +82,16 @@ class BorrowController extends Controller
      */
     public function actionView($id)
     {
-         \Yii::$app->response->format = Response::FORMAT_JSON;
-         $model = $this->findModel($id);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
         return [
             'title' => 'แสดงรายละเอียด',
             'content' => $this->renderAjax('view', [
-            'model' => $model,
-            
+                'model' => $model,
+
             ]),
             'footer' => ModalHelper::modalFooterUpdateDeleteClose($id),
-    ];
+        ];
     }
 
     /**
@@ -107,12 +108,17 @@ class BorrowController extends Controller
             'code' => $code,
             'name' => 'borrow'
         ]);
+        $model->emp_id = 8;
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $model->is_borrowed = true;
 
-                if (!empty($model->date_start)) {
+               if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
@@ -152,15 +158,18 @@ class BorrowController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-         if (!empty($model->date_start)) {
-                    $model->date_start = AppHelper::ConvertToThai($model->date_start);
-                }
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end = AppHelper::convertToThai($model->date_end);
+
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
                 }
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
@@ -189,6 +198,63 @@ class BorrowController extends Controller
         }
     }
 
+    public function actionBorrowReturn($id)
+    {
+     \Yii::$app->response->format = Response::FORMAT_JSON;
+     $model = $this->findModel($id);
+     $model->date_start = AppHelper::convertToThai($model->date_start);
+     $model->date_end = AppHelper::convertToThai($model->date_end);
+     $model->actual_date = AppHelper::convertToThai($model->actual_date);
+     
+     
+     if ($this->request->isPost) {
+         if ($model->load($this->request->post())) {
+                $me = UserHelper::GetEmployee();
+                $model->is_borrowed = false;
+                $model->staff_id = $me->id;
+                if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
+                }
+                if (!empty($model->actual_date)) {
+                    $model->actual_date = AppHelper::DateToDb($model->actual_date);
+                }
+                $asset = Asset::findOne(['code' => $model->code]);
+                $model->asset_id = $asset->id ?? 0;
+                $model->save();
+                return [
+                    'status' => 'success'
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_borrow_return', [
+                    'model' => $model,
+                ]),
+                'footer' =>  ModalHelper::modalFooterSaveClose(),
+            ];
+        } else {
+
+            return $this->render('_form_borrow_return', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionPrintReceipt($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('print-receipt',[
+            'model' => $model
+        ]);
+    }
     /**
      * Deletes an existing AssetDetail model.
      * If deletion is successful, the browser will be redirected to the 'index' page.

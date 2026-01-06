@@ -100,7 +100,7 @@ $group = Yii::$app->request->get('group');
                                 'asDropdown' => true,
                                 'multiple' => false,
                                 'options' => ['disabled' => false],
-                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                            ])->label('หน่วยงานผู้รับผิดชอบ'); ?>
                         </div>
                     </div>
                 </div>
