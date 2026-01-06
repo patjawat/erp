@@ -39,7 +39,7 @@ $msg = 'ขอ';
         <div class="d-flex justify-content-between">
             <h6>
                 <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?>
-                <span class="badge rounded-pill"><?= $dataProvider->getTotalCount() ?> </span> รายการ
+                <span class="badge rounded-pill"><?= number_format($dataProvider->getTotalCount(), 0) ?> </span> รายการ
             </h6>
             <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
             [

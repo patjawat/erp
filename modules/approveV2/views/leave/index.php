@@ -44,7 +44,7 @@ $msg = 'ขอ';
 <div class="card">
   <div class="card-body">
     <div class="d-flex justify-content-between">
-      <h6>เห็นชอบการลา <?= $dataProvider->getTotalCount() ?> รายการ</h6>
+      <h6>เห็นชอบการลา <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</h6>
 
       <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
       ['model' => $searchModel,
