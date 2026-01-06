@@ -26,10 +26,6 @@ $this->title = 'อนุมัติขอใช้รถยนต์';
 
 
 <?php if($dataProvider->getTotalCount() >= 1):?>
-
-
-
-
 <div class="container my-4">
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">

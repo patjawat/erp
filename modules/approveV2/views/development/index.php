@@ -58,7 +58,7 @@ $msg = 'ขอ';
                         <th>เรื่อง</th>
                         <th>วันที่</th>
                         <th scope="col" style="width: 200px;">ผู้อนุมัติ</th>
-                        <th class="fw-semibold text-center">ดำเนินการ</th>
+                        <th class="fw-semibold text-center" style="width:115px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">

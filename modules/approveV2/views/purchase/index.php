@@ -29,7 +29,7 @@ $msg = 'ขอ';
 
 
 <?= $this->render('@app/modules/approveV2/tab_menu', [
-    'menu' => 'purchase'
+    'menu' => 'purchase',
 ]) ?>
 
 
@@ -37,7 +37,12 @@ $msg = 'ขอ';
     <div class="card-body">
         <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php echo $this->render('@app/modules/approveV2/views/default/_search', ['model' => $searchModel, 'emp_label' => 'ผู้ขอซื้อ']) ?>
+            <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
+            ['model' => $searchModel,
+            'emp_label' => 'ผู้ขอซื้อ',
+            'approveAllUrl' => Url::to(['/approve/purchase/approve-all'])
+            ]
+            ) ?>
 
 
         </div>
@@ -56,7 +61,7 @@ $msg = 'ขอ';
                         <th>เลขที่สั่งซื้อ/ผู้ขาย</th>
                         <th style="width: 200px;">กรรมการตรวจรับ</th>
                         <th class="fw-semibold text-end" style="width:150px">มูลค่า/ประเภทเงิน</th>
-                        <th class="fw-semibold text-cener" style="width:100px">ดำเนินการ</th>
+                        <th class="fw-semibold text-cener" style="width:115px">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
