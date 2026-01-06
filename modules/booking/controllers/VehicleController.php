@@ -183,7 +183,7 @@ class VehicleController extends Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
-            'type' => 'ambulance',
+            'vehicle_type' => 'ambulance',
             'title' => 'ทะเบียนการจัดสรรรถพยาบาล (พขร.)',
             'icon' => '<i class="fa-solid fa-truck-medical text-danger"></i>',
             'searchModel' => $searchModel,
