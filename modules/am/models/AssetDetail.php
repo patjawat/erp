@@ -7,11 +7,12 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\models\Employees;
 
 /**
  * This is the model class for table "asset_detail".
@@ -60,7 +61,8 @@ class AssetDetail extends \yii\db\ActiveRecord
                 'provider_type',
                 'cal_result',
                 'is_borrowed',
-                'staff_id'
+                'staff_id',
+                'status',
             ], 'safe'],
             [['ref', 'code', 'name'], 'string', 'max' => 255],
         ];
@@ -78,6 +80,7 @@ class AssetDetail extends \yii\db\ActiveRecord
             'user_id' => 'ผู้ใช้งานระบบ',
             'emp_id' => 'รหัสพนักงาน/ผู้รับผิดชอบ',
             'name' => 'ชื่อรายการครุภัณฑ์',
+            'status' => 'สถานะ',
 
             // ส่วนการจัดการสอบเทียบ (Calibration)
             'provider_type' => 'ประเภทผู้ให้บริการ (Provider)',
@@ -239,9 +242,9 @@ public function getReasonLabel()
 // สถานะการอนุมัติของหัวหน้า
 // models/AssetDetail.php
 
-public function getLeaderStatusBadge()
+public function getStatusBadge()
 {
-    $status = $this->data_json['leader_status'] ?? 'Pending';
+    $status = $this->status;
     
     // กำหนดรูปแบบตามสถานะ
     $config = [

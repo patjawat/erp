@@ -124,7 +124,7 @@ $resultsJs = <<< JS
                     'class' => 'd-flex flex-wrap gap-2 mb-3' // wrapper class
                 ]
             )->label('4. เหตุผลการเคลื่อนย้าย', ['class' => 'form-label fw-bold']) ?>
-            <?= $form->field($model, 'data_json[remask]')->textArea(["rows" => 3, "placeholder" => "ระบุรายละเอียดเพิ่มเติม (ถ้ามี) เช่น ชื่อโครงการ หรือเลขที่คำสั่ง..."])->label('หัวข้อการบำรุงรักษา') ?>
+            <?= $form->field($model, 'data_json[remask]')->textArea(["rows" => 3, "placeholder" => "ระบุรายละเอียดเพิ่มเติม (ถ้ามี) เช่น ชื่อโครงการ หรือเลขที่คำสั่ง..."])->label('--เพิ่มเติม--') ?>
 
 
         </div>

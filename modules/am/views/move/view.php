@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="row">
     <!-- รายละเอียดครุภัณฑ์ -->
-    <div class="col-md-12 border-end">
+    <div class="col-md-8 border-end">
         <h6 class="fw-bold text-muted mb-3"><i class="bi bi-info-circle me-1"></i> ข้อมูลครุภัณฑ์</h6>
         <div class="asset-preview-box mb-4">
             <div class="row align-items-center">
@@ -54,18 +54,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
 
-            <div class="col-6 text-muted">
+            <!-- <div class="col-6 text-muted">
                 <label class="text-muted d-block">สถานะการอนุมัติของหัวหน้า</label>
-                <span class="fw-bold"><?= $model->getLeaderStatusBadge()?></span>
+                <span class="fw-bold"><?= $model->getStatusBadge()?></span>
             </div>
             <div class="col-6">
                 <label class="text-muted d-block">ความเห็นขอของหัวหน้า</label>
                 <span class="fw-bold"><?=$model->data_json['leader_remask'] ?? '-' ?></span>
-            </div>
+            </div> -->
 
 
 
             
         </div>
+    </div>
+    <div class="col-4">
+<?php echo $this->render('@app/modules/approveV2/views/default/level_approve_v2', ['model' => $model, 'name' => $model->name]) ?>
     </div>
 </div>

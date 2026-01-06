@@ -42,7 +42,7 @@ $msg = 'ขอ';
             <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
             ['model' => $searchModel,
             'emp_label' => 'ผู้ขอเบิก',
-            'approveAllUrl' => Url::to(['/approve/main-stock/approve-all'])
+            'approveAllUrl' => Url::to(['/approve-v2/main-stock/approve-all'])
             ]
             ) ?>
 
@@ -97,7 +97,7 @@ $msg = 'ขอ';
                             <td class="text-center">
                                 <div class="d-flex gap-2 justify-content-center">
 
-                                    <?php echo Html::a('<i class="fa-regular fa-circle-check"></i> ตรวจสอบ', ['/approve/main-stock/update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?php echo Html::a('<i class="fa-regular fa-circle-check"></i> ตรวจสอบ', ['/approve-v2/main-stock/update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                 </div>
 
                             </td>

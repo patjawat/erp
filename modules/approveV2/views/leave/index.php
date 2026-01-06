@@ -49,7 +49,7 @@ $msg = 'ขอ';
       <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
       ['model' => $searchModel,
       'emp_label' => 'ผู้ขออนุมัติการลา',
-      'approveAllUrl' => Url::to(['/approve/leave/approve-all'])
+      'approveAllUrl' => Url::to(['/approve-v2/leave/approve-all'])
       ]
       ) ?>
 
@@ -122,7 +122,7 @@ $msg = 'ขอ';
               <td class="text-center">
                 <?= Html::a(
                   '<i class="fa-regular fa-circle-check"></i> ตรวจสอบ',
-                  ['/approve/leave/update', 'id' => $item->id],
+                  ['/approve-v2/leave/update', 'id' => $item->id],
                   [
                     'class' => 'btn btn-sm btn-outline-primary rounded-pill open-modal',
                     'data' => ['size' => 'modal-xl']

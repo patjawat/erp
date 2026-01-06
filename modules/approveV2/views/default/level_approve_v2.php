@@ -3,7 +3,7 @@
 use yii\web\View;
 use yii\helpers\Html;
 use app\components\UserHelper;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 
 $this->registerCssFile('@web/css/timeline.css');
 $me = UserHelper::GetEmployee();
@@ -74,7 +74,7 @@ $listApprove = Approve::find()
                         <?php
                         echo Html::a(
                             '<i class="fa-solid fa-circle-check"></i> ' . ($item->data_json['label'] ?? ''),
-                            ['/approve/'.$name.'/update', 'id' => $item->id],
+                            ['/approve-v2/'.$name.'/update', 'id' => $item->id],
                             [
                                 'class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve',
                                 'data' => ['id' => $item->id, 'status' => 'Pass', 'label' => ($item->data_json['label'] ?? '')]
@@ -84,7 +84,7 @@ $listApprove = Approve::find()
                         <?php
                         echo Html::a(
                             '<i class="fa-solid fa-circle-check"></i> ไม่' . ($item->data_json['label'] ?? ''),
-                            ['/approve/'.$name.'/update', 'id' => $item->id],
+                            ['/approve-v2/'.$name.'/update', 'id' => $item->id],
                             [
                                 'class' => 'btn btn-sm btn-outline-danger rounded-pill border-1 shadow btn-approve',
                                 'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => "ไม่" . ($item->data_json['label'] ?? '')]

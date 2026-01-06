@@ -23,7 +23,7 @@ class AssetMoveController extends \yii\web\Controller
         $me = UserHelper::GetEmployee();
 
         $searchModel = new AssetDetailSearch([
-            'name' => 'move'
+            'name' => 'asset_move'
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);

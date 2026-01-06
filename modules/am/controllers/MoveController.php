@@ -15,7 +15,7 @@ use app\components\ModalHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetDetail;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\am\models\AssetDetailSearch;
 
 /**
@@ -50,7 +50,7 @@ class MoveController extends Controller
     {
         $code = $this->request->get('code');
         $searchModel = new AssetDetailSearch([
-            'name' => 'move',
+            'name' => 'asset-move',
             'code' => $code,
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -85,16 +85,16 @@ class MoveController extends Controller
      */
     public function actionView($id)
     {
-         \Yii::$app->response->format = Response::FORMAT_JSON;
-         $model = $this->findModel($id);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
         return [
             'title' => 'แสดงรายละเอียด',
             'content' => $this->renderAjax('view', [
-            'model' => $model,
-            
+                'model' => $model,
+
             ]),
             'footer' => Html::button('<i class="fa-solid fa-xmark"></i> ปิด', ['class' => 'btn btn-secondary pull-left', 'data-bs-dismiss' => "modal"]),
-    ];
+        ];
     }
 
     /**
@@ -110,7 +110,7 @@ class MoveController extends Controller
         $model = new AssetDetail([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             'code' => $code,
-            'name' => 'move'
+            'name' => 'asset-move'
         ]);
 
         if ($this->request->isPost) {
@@ -119,22 +119,22 @@ class MoveController extends Controller
                 if (!empty($model->date_start)) {
                     $model->date_start = AppHelper::DateToDb($model->date_start);
                 }
-                $model->data_json = ArrayHelper::merge($model->data_json,[
-                    'leader_status' => 'Pending'
-                ]);
                 $model->emp_id = $me->id;
 
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
-                if($model->save()){
+                $model->status = 'Pending';
+                if ($model->save()) {
                     $newApprove = new Approve();
-                    $newApprove->name = 'asset_move';
+                    $newApprove->name = 'asset-move';
                     $newApprove->from_id = $model->id;
                     $newApprove->emp_id = $model->data_json['leader_id'] ?? 0;
                     $newApprove->status = 'Pending';
+                    $newApprove->title = 'หน.เห็นชอบ';
+                    $newApprove->data_json = ['label' => 'เห็นชอบ'];
+                    $newApprove->level = 1;
                     $newApprove->save(false);
-                }
-               ;
+                };
                 return [
                     'status' => 'success'
                 ];
@@ -170,10 +170,10 @@ class MoveController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-         if (!empty($model->date_start)) {
-                    $model->date_start = AppHelper::ConvertToThai($model->date_start);
-                }
-$oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);
+        if (!empty($model->date_start)) {
+            $model->date_start = AppHelper::ConvertToThai($model->date_start);
+        }
+        $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
@@ -210,7 +210,7 @@ $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($mode
     }
 
 
-       // ตรวจสอบความถูกต้อง
+    // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -218,11 +218,11 @@ $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($mode
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
 
-             $model->data_json['leader_id'] == "" ? $model->addError('data_json[leader_id]', $requiredName) : null;
-             $model->data_json['location'] == "" ? $model->addError('data_json[location]', $requiredName) : null;
-             $model->data_json['reason'] == "" ? $model->addError('data_json[reason]', $requiredName) : null;
-             $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
-           
+            $model->data_json['leader_id'] == "" ? $model->addError('data_json[leader_id]', $requiredName) : null;
+            $model->data_json['location'] == "" ? $model->addError('data_json[location]', $requiredName) : null;
+            $model->data_json['reason'] == "" ? $model->addError('data_json[reason]', $requiredName) : null;
+            $model->date_start == "" ? $model->addError('date_start', $requiredName) : null;
+
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
             }

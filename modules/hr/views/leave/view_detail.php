@@ -132,7 +132,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="card border-0 shadow-sm rounded-4 flex-grow-1">
                 <div class="card-body p-4">
-                    <?php echo $this->render('@app/modules/approve/views/approve/level_approve_v2', ['model' => $model, 'name' => 'leave']) ?>
+                    <?php echo $this->render('@app/modules/approveV2/views/default/level_approve_v2', ['model' => $model, 'name' => 'leave']) ?>
                 </div>
             </div>
         </div>

@@ -3,18 +3,13 @@
 namespace app\modules\approveV2\controllers;
 
 use Yii;
-use yii\helpers\Json;
 use yii\web\Response;
-use app\models\Categorise;
 use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetDetail;
-use app\modules\approve\models\Approve;
-use app\modules\am\models\AssetDetailSearch;
-use app\modules\approve\models\ApproveSearch;
-use Google\Service\Datastream\Merge;
+use app\modules\approveV2\models\Approve;
+use app\modules\approveV2\models\ApproveSearch;
 
 class AssetMoveController extends \yii\web\Controller
 {
@@ -30,30 +25,9 @@ class AssetMoveController extends \yii\web\Controller
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith(['assetMove']);
-        $dataProvider->query->andFilterWhere(['approve.name' => 'asset_move']);
+        $dataProvider->query->andFilterWhere(['approve.name' => 'asset-move']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['development.development_type_id' => $searchModel->q_development_type_id]);
 
-
-
-        // $searchModel = new AssetDetailSearch([
-        //     'name' => 'move'
-        // ]);
-
-        // $dataProvider = $searchModel->search($this->request->queryParams);
-
-        // $dataProvider->query->andFilterWhere([
-        //     '=',
-        //     new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader_id'))"),
-        //     (string)$me->id
-        // ]);
-
-        // $dataProvider->query->andFilterWhere([
-        //     '=',
-        //     new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader_status'))"),
-        //     'Pending'
-        // ]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -82,58 +56,105 @@ class AssetMoveController extends \yii\web\Controller
 
     public function actionUpdate($id)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = AssetDetail::findOne($id);
-        // ตรวจสอบว่าพบ Model หลักหรือไม่
-        if ($model === null) {
-            return [
-                'title' => 'ข้อผิดพลาด',
-                'content' => 'ไม่พบข้อมูลที่ต้องการ',
-            ];
-        }
-
-        // 1. ดึงข้อมูล JSON เดิมเก็บไว้ก่อน (และจัดการกรณีที่เป็น null)
-        $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);
+        $me = UserHelper::GetEmployee();
+        $model = Approve::findOne(['id' => $id,'name' => 'asset-move']);
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $newJson = ArrayHelper::merge($oldJson, $model->data_json);
-                $newJson['leader_action_at'] = date('Y-m-d H:i:s');
-                $newJson['leader_user_id'] = Yii::$app->user->id;
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $status = $this->request->post('status');
+            $model->emp_id = $me->id;
 
-                $model->data_json = $newJson;
-                if ($model->data_json['leader_status'] == 'Pass') {
-                    $newLocation = [
-                        'location' => $model->data_json['location']
+             // ระบบอนุมัติเบิกคลัง
+             $oldData = $model->data_json;
+             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+             $model->data_json = ArrayHelper::merge($oldData, $model->data_json, $approveDate);
+             $model->status = $status;
+             //ถ้าบันทุกเรียบร้อย
+             if($model->save(false))
+             {
+                     $newLocation = [
+                        'location' => $model->assetMove->data_json['location']
                     ];
-                    $oldAssetJson = $model->asset->data_json;
-                    $model->asset->data_json =  ArrayHelper::merge($oldAssetJson, $newLocation);
-                    $model->asset->save();
-                }
+                    $oldAssetJson = $model->assetMove->asset->data_json;
+                    $model->assetMove->status = $model->status;
+                    $model->assetMove->save();
+                    $model->assetMove->asset->data_json =  ArrayHelper::merge($oldAssetJson, $newLocation);
+                    $model->assetMove->asset->save();
 
-                $model->save();
-                return [
-                    'status' => 'success'
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
+                return ['status' => 'success'];
         }
-
-
+        
+    }
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => 'อนุมัติการเคลื่อนย้าย',
-                'content' => $this->renderAjax('_form', [
+                'title' => 'ขอเคลื่อนย้ายครุภัณฑ์',
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('_form', [
+            return $this->render('update', [
                 'model' => $model,
             ]);
         }
     }
+
+
+
+    // public function actionUpdate($id)
+    // {
+    //     \Yii::$app->response->format = Response::FORMAT_JSON;
+    //     $model = Approve::findOne($id);
+    //     // ตรวจสอบว่าพบ Model หลักหรือไม่
+    //     if ($model === null) {
+    //         return [
+    //             'title' => 'ข้อผิดพลาด',
+    //             'content' => 'ไม่พบข้อมูลที่ต้องการ',
+    //         ];
+    //     }
+
+    //     // 1. ดึงข้อมูล JSON เดิมเก็บไว้ก่อน (และจัดการกรณีที่เป็น null)
+    //     $oldJson = is_array($model->data_json) ? $model->data_json : (Json::decode($model->data_json, true) ?? []);
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post())) {
+    //             $newJson = ArrayHelper::merge($oldJson, $model->data_json);
+    //             $newJson['leader_action_at'] = date('Y-m-d H:i:s');
+    //             $newJson['leader_user_id'] = Yii::$app->user->id;
+
+    //             $model->data_json = $newJson;
+    //             if ($model->data_json['leader_status'] == 'Pass') {
+    //                 $newLocation = [
+    //                     'location' => $model->data_json['location']
+    //                 ];
+    //                 $oldAssetJson = $model->asset->data_json;
+    //                 $model->asset->data_json =  ArrayHelper::merge($oldAssetJson, $newLocation);
+    //                 $model->asset->save();
+    //             }
+
+    //             $model->save();
+    //             return [
+    //                 'status' => 'success'
+    //             ];
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+
+
+    //     if ($this->request->isAJax) {
+    //         \Yii::$app->response->format = Response::FORMAT_JSON;
+    //         return [
+    //             'title' => 'อนุมัติการเคลื่อนย้าย',
+    //             'content' => $this->renderAjax('_form', [
+    //                 'model' => $model,
+    //             ]),
+    //         ];
+    //     } else {
+    //         return $this->render('_form', [
+    //             'model' => $model,
+    //         ]);
+    //     }
+    // }
 
 
     public function actionApproveAll()

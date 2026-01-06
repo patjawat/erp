@@ -4,7 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\form\ActiveForm;
 use app\components\UserHelper;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 
 $this->registerCssFile('@web/css/timeline.css');
 $me = UserHelper::GetEmployee();

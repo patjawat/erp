@@ -10,7 +10,7 @@ use app\models\Categorise;
 use app\modules\am\models\AssetDetail;
 use yii\helpers\ArrayHelper;
 use app\modules\purchase\models\Order;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 
@@ -218,18 +218,8 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $querys = AssetDetail::find()->andWhere([
-            '=',
-            new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader_id'))"),
-            (string)$me->id
-        ])->andWhere([
-            '=',
-            new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader_status'))"),
-            'Pending'
-        ]);
+             $datas = Approve::find()->where(['name' => 'asset_move', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
 
-
-            $datas = $querys->all();
             return [
                 'title' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
                 'total' => isset($datas) ? count($datas) : 0,
@@ -241,6 +231,7 @@ class ApproveHelper extends Component
                 'title' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
                 'total' => 0,
                 'datas' => [],
+                 'emp_id' => 0
             ];
         }
     }

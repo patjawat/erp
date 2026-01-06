@@ -21,11 +21,12 @@ class m251227_074408_add_plandate_assset_detail extends Migration
      */
     public function safeDown()
     {
-           $table = '{{%asset_detail}}';
-            $this->dropColumn($table, 'provider_type');
-            $this->dropColumn($table, 'cal_result');
-            $this->dropColumn($table, 'is_borrowed');
-            $this->dropColumn($table, 'staff_id');
+        return true;
+        //    $table = '{{%asset_detail}}';
+        //     $this->dropColumn($table, 'provider_type');
+        //     $this->dropColumn($table, 'cal_result');
+        //     $this->dropColumn($table, 'is_borrowed');
+        //     $this->dropColumn($table, 'staff_id');
     }
 }
 

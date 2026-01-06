@@ -38,12 +38,14 @@ $msg = 'ขอ';
         <div class="d-flex justify-content-between mb-3">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?> <span
                     class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
-            <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
-            [
-                'model' => $searchModel,
-                'emp_label' => 'ผู้ขอ',
-                'approveAllUrl' => Url::to(['/approve/asset-move/approve-all'])
-            ]) ?>
+            <?php echo $this->render(
+                '@app/modules/approveV2/views/default/_search',
+                [
+                    'model' => $searchModel,
+                    'emp_label' => 'ผู้ขอ',
+                    'approveAllUrl' => Url::to(['/approve/asset-move/approve-all'])
+                ]
+            ) ?>
 
         </div>
         <div class="table-responsive" style="max-height: 600px;max-height: 600px;min-height:300px; overflow: auto;">
@@ -55,12 +57,11 @@ $msg = 'ขอ';
                             <input type="checkbox" id="check-all">
                         </th>
                         <th class="text-center" style="width:30px">ลำดับ</th>
-                        <th class="text-start" style="width: 165px;">สถานะ</th>
+                        <th class="text-start" style="width: 160px;">สถานะ</th>
+                        <th>ครุภัณฑ์</th>
                         <th>เหตุผลการเคลื่อนย้าย</th>
                         <th>วันที่ต้องการย้าย</th>
-                        <th>ผู้ดำเนินการ</th>
-                        <th>ผู้อนุมัติ</th>
-                        <th>สถานะ</th>
+                        <th>ผู้ขออนุมัติ</th>
                         <th class="text-center" style="width:115px">จัดการ</th>
                     </tr>
                 </thead>
@@ -79,11 +80,29 @@ $msg = 'ขอ';
                             <td>
                                 <?= $item->viewApproveStatus() ?>
                             </td>
-                            <td><?= $item->assetMove->getReasonLabel() ?></td>
-                            <td><?= Yii::$app->thaiDate->toThaiDate($item->assetMove->date_start, false, false); ?></td>
-                            <td><?= $item->assetmove->employees->fullname ?? '-' ?></td>
-                            <td><?= $item->assetMove->viewLeader()['avatar'] ?></td>
-                            <td></td>
+                            <td>
+                                <div class="asset-preview-box mb-4">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto text-primary">
+                                            <?= Html::img($item->assetMove->asset->showImg()['image'], ['class' => 'w-100 h-100 object-fit-cover', 'style' => 'max-width: 76px;']) ?>
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="fw-bold mb-1"><?= $item->assetMove->asset->asset_name ?? '-' ?></h6>
+                                            <p class="text-muted mb-0">หมายเลขครุภัณฑ์: <?= $item->assetMove->asset->code ?? '' ?> | ยี่ห้อ: <?= $item->assetMove->asset->data_json['brand'] ?? '' ?></p>
+                                            <p class="text-muted mb-0">สถานะปัจจุบัน: <?= $item->assetMove->asset->viewstatus() ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><?= $item->assetMove->getReasonLabel()  ?? '-' ?></td>
+                            <td><?php
+                                try {
+                                    echo Yii::$app->thaiDate->toThaiDate($item->assetMove->date_start, false, false);
+                                } catch (\Throwable $th) {
+                                }
+
+                                ?></td>
+                            <td><?= $item->assetMove->employee->fullname ?? '-' ?></td>
                             <td class="text-center py-2">
                                 <div class="d-flex justify-content-center">
                                     <a href="<?= Url::to(['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข']) ?>" class="btn btn-sm btn-outline-primary rounded-pill open-modal" data-size="modal-xl" title="ดูรายละเอียด">

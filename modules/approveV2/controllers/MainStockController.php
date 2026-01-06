@@ -7,8 +7,8 @@ use yii\web\Response;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\approve\models\Approve;
-use app\modules\approve\models\ApproveSearch;
+use app\modules\approveV2\models\Approve;
+use app\modules\approveV2\models\ApproveSearch;
 
 class MainStockController extends \yii\web\Controller
 {

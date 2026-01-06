@@ -15,7 +15,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\Documents;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\DevelopmentDetail;
 

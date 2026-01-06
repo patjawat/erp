@@ -17,7 +17,7 @@ use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\LeaveEntitlements;
 use app\modules\filemanager\components\FileManagerHelper;

@@ -17,6 +17,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
+        return $this->redirect(['/approve-v2/leave']);
         $name = trim($this->request->get("name", "")); // กำหนดค่าเริ่มต้นเป็น "" ถ้าไม่มีค่า name
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch();

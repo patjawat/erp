@@ -84,7 +84,8 @@ class UpdateTableController extends Controller
             ['name' => 'plan', 'type' => 1, 'description' => 'แผนงานและโครงการ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
-
+            //การอนุมัติ
+            ['name' => '/approve-v2/*', 'type' => 2, 'description' => ''],
             // ยานพาหนะ
             ['name' => '/booking/vehicle/*', 'type' => 2, 'description' => ''],
             ['name' => '/booking/asset/*', 'type' => 2, 'description' => ''],
@@ -246,7 +247,8 @@ class UpdateTableController extends Controller
             ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
             ['child' => 'plan', 'parent'  => 'admin'],
-
+            //การอนุมัติ
+            ['child' => '/approve-v2/*', 'parent' => 'user'],
             // ยานพาหนะ
             ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
             ['child' => '/booking/asset/*', 'parent' => 'vehicle'],
@@ -292,7 +294,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/service-record/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair-parts/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/general/*', 'parent' => 'technician'],
-             ['child' => '/am/maintenance/*', 'parent' => 'technician'],
+            ['child' => '/am/maintenance/*', 'parent' => 'technician'],
             ['child' => '/am/calibration/*', 'parent' => 'technician'],
             ['child' => '/am/asset-document/*', 'parent' => 'technician'],
 
