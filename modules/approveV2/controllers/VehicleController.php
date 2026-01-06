@@ -57,7 +57,7 @@ class VehicleController extends \yii\web\Controller
                 if ($model->status == 'Reject') {
                     $model->vehicle->status = 'Reject';
                     $model->vehicle->save();
-                    $model->vehicle->MsgReject();
+                    // $model->vehicle->MsgReject();
 
                 }else{
                     $model->vehicle->status = 'Approve';

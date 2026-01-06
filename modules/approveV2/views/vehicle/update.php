@@ -1,5 +1,6 @@
 
-
+<div class="row">
+<div class="col-8">
 <div class="mb-3 badge-soft-primary p-3 rounded">
     <label class="form-label fw-bold">เลขที่คำขอ: <?php echo $model->vehicle->code?></label>
     <p><?php echo $model->vehicle->userRequest()['fullname'];?>
@@ -9,4 +10,8 @@
 
 </div>
 <?php echo $this->render('@app/modules/booking/views/vehicle/view',['model' => $model->vehicle])?>
-<?php echo $this->render('@app/modules/approve/views/approve/level_approve',['model' => $model->vehicle,'name' => 'vehicle',])?>
+</div>
+<div class="col-4">
+    <?php echo $this->render('@app/modules/approveV2/views/default/level_approve_v2',['model' => $model->vehicle,'name' => 'vehicle',])?>
+</div>
+</div>

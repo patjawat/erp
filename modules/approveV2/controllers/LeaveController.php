@@ -5,12 +5,10 @@ namespace app\modules\approveV2\controllers;
 use Yii;
 use yii\web\Response;
 use yii\db\Expression;
-use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
-use app\components\DateFilterHelper;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveSearch;
 
@@ -29,6 +27,7 @@ class LeaveController extends \yii\web\Controller
         $dataProvider->query->joinWith(['leave']);       // join leave
         $dataProvider->query->joinWith(['leave.employee']); // join employee
         $dataProvider->query->andWhere(['<>','approve.status','None']);
+        $dataProvider->query->andWhere(['<>','leave.status','Cancel']);
         $dataProvider->query->andFilterWhere(['leave.leave_type_id' => $searchModel->leave_type_id]);
         $dataProvider->query->andFilterWhere(['approve.name' => 'leave']);
         $dataProvider->query->andFilterWhere(['approve.emp_id' => $me->id]);

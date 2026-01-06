@@ -10,6 +10,12 @@ $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : 'blue';
 $notify = ApproveHelper::Info();
 $total = $notify['total'];
+$totalLeave = $notify['leave']['total'];
+$totalBookingCar = $notify['booking_car']['total'];
+$totalPurchase = $notify['purchase']['total'];
+$totalStock = $notify['stock']['total'];
+$totalDevelopment = $notify['development']['total'];
+$totalAssetMove = $notify['assetMove']['total'];
 ?>
 <style>
     /* container สำหรับ animation เปิด–ปิด */
@@ -57,13 +63,71 @@ $total = $notify['total'];
         </a>
     </div>
     <div class="d-flex align-items-center">
-        <div class="d-flex align-items-center gap-1">
-            <a href="<?= Url::to(['/approve-v2']) ?>" class="header-btn position-relative">
-                <i data-lucide="bell"></i>
-                <?php if ($total > 0): ?>
+        <div class="d-flex align-items-center gap-2">
+
+            <div class="dropdown">
+                <button class="header-btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i data-lucide="bell"></i>
+                     <?php if ($total > 0): ?>
                     <span class="position-absolute bottom-0 start-0 translate-middle badge rounded-pill text-bg-danger"><?= $total ?> </span>
                 <?php endif; ?>
-            </a>
+                </button>
+
+                <ul class="dropdown-menu pe-4" aria-labelledby="dropdownMenuButton1" style="">
+                    <li>
+                        <a href="<?= Url::to(['/approve-v2/leave']) ?>"class="dropdown-item">
+                            <i data-lucide="calendar" class="me-1"></i> ขออนุมัติการลา
+                            <?php if ($totalLeave > 0): ?>
+                                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                                    <?= $totalLeave ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= Url::to(['/approve-v2/purchase']) ?>"  class="dropdown-item">
+                            <i data-lucide="shopping-cart" class="me-1"></i>   ขออนุมัติจัดซื้อจัดจ้าง
+                            <?php if ($totalPurchase > 0): ?>
+                                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                                    <?= $totalPurchase ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= Url::to(['/approve-v2/main-stock']) ?>"  class="dropdown-item">
+                            <i data-lucide="shopping-basket" class="me-1"></i>   ขออนุมัติเบิกวัสดุ
+                            <?php if ($totalStock > 0): ?>
+                                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                                    <?= $totalStock ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= Url::to(['/approve-v2/devlopment']) ?>"  class="dropdown-item">
+                            <i data-lucide="user-star" class="me-1"></i> ขออนุมัติอบรม/ประชุม/ดูงาน
+                            <?php if ($totalDevelopment > 0): ?>
+                                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                                    <?= $totalDevelopment ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                     <li>
+                        <a href="<?= Url::to(['/approve-v2/asset-move']) ?>"  class="dropdown-item">
+                            <i data-lucide="arrow-left-right" class="me-1"></i> ขออนุมัติเคลื่อนย้ายครุภัณฑ์
+                            <?php if ($totalAssetMove > 0): ?>
+                                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                                    <?= $totalAssetMove ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+
             <button class="header-btn" id="toggleNavbar">
                 <i data-lucide="menu"></i>
             </button>
