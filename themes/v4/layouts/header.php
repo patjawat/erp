@@ -58,7 +58,7 @@ $total = $notify['total'];
     </div>
     <div class="d-flex align-items-center">
         <div class="d-flex align-items-center gap-1">
-            <a href="<?= Url::to(['/approve-v2']) ?>" class="header-btn position-relative">
+            <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="header-btn position-relative">
                 <i data-lucide="bell"></i>
                 <?php if ($total > 0): ?>
                     <span class="position-absolute bottom-0 start-0 translate-middle badge rounded-pill text-bg-danger"><?= $total ?> </span>
