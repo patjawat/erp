@@ -11,7 +11,7 @@
 :root {
   --bg-primary: var(--bg-primary) --bs-gray-100: #f6f6f7;
   --bs-secondary-color:
-    --bs-gray-200: #f3f7f9;
+  --bs-gray-200: #f3f7f9;
   --bs-gray-300: #e2e7f1;
   --bs-gray-300-rgb: 226, 231, 241;
   --bs-gray-400: #ced4da;
@@ -1065,9 +1065,9 @@ textarea:focus {
 //     --bs-border-color: #1f2937;
 // }
 
-[data-bs-theme="dark"] {
+[theme-mode="dark"] {
   /* Brand */
-  --bs-primary: #255fad;
+  --bs-primary: #2e4d77;
   --bs-blue: #255fad;
   --bs-primary-rgb: 139, 156, 255;
 
