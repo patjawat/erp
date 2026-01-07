@@ -1086,7 +1086,7 @@ public function generalMenu()
         } else {
             $isIcon = null;
         }
-        return (isset($this->status) && isset($this->data_json['position_name_text']) && $this->data_json['position_name_text'] != '') ? $isIcon . $this->data_json['position_name_text'] . ' ' . $level : '-';
+        return (isset($this->status) && isset($this->positionName->title) && $this->positionName->title != '') ? $isIcon . $this->positionName->title . ' ' . $level : '-';
             //code...
         } catch (\Throwable $th) {
            return '-';

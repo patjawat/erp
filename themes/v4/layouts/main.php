@@ -244,13 +244,10 @@ AppAsset::register($this);
     <?php
     $js = <<< JS
     lucide.createIcons();
-    
    
     AOS.init({});
 
 			// });
-
-			
          	$('header .dropdown-mega').on('show.bs.dropdown', function () {
 		if(!ddSliderIns){
 			setTimeout(function(){

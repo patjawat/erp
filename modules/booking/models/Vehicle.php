@@ -200,7 +200,7 @@ class Vehicle extends \yii\db\ActiveRecord
     // ผู้ขอบริการ
     public function userRequest()
     {
-        // try {
+        try {
         $emp = $this->employee;
         $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
         return [
@@ -211,14 +211,15 @@ class Vehicle extends \yii\db\ActiveRecord
             'signature' => $emp->getInfo()['signature'],
 
         ];
-        // } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
 
-        //     return [
-        //         'avatar' => '',
-        //         'fullname' => '',
-        //         'department' => '',
-        //     ];
-        // }
+            return [
+                'photo' => '@web/img/placeholder-img.jpg',
+                'avatar' => '',
+                'fullname' => '',
+                'department' => '',
+            ];
+        }
 
     }
 

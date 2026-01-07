@@ -96,6 +96,7 @@ class VehicleController extends Controller
             'icon' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+             'action' => ''
         ]);
     }
 
@@ -132,6 +133,7 @@ class VehicleController extends Controller
             'title' => 'ทะเบียนขอใช้รถพยาบาล',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'action' => ['ambulance'],
             // 'dataProviderDetail' => $dataProviderDetail,
         ]);
     }
