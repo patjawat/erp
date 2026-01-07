@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel,'action' => $action]); ?>
     </div>
 </div>
 

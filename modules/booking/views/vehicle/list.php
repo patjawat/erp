@@ -24,10 +24,11 @@ use yii\helpers\Html;
                     <tr>
                         <th class="text-center" style="width:30px">ลำดับ</th>
                         <th class="ps-4" style="width: 300px">รหัส/ผู้จอง</th>
-                        <th style="width: 20%;">วันที่และเวลา</th>
+                        <th style="width:200px">วันที่และเวลา</th>
+                        <th>วัตถุประสงค์</th>
                         <th style="width: 25%;">สถานที่ไป</th>
                         <th class="text-center">พขร</th>
-                        <th class="text-center">ความเร่งด่วน</th>
+                        <th class="text-center" style="width:100px">ความเร่งด่วน</th>
                         <th class="text-center">สถานะ</th>
                         <th class="text-end pe-4" style="width:120px;">จัดการ</th>
                     </tr>
@@ -62,6 +63,7 @@ use yii\helpers\Html;
                                     <i class="bi bi-clock me-1"></i> <?= $item->viewTime()['full'] ?>
                                 </div>
                             </td>
+                            <td class="fw-bold"><?= $item->reason ?></td>
 
                             <td>
                                 <div class="text-truncate" style="max-width: 200px;">
@@ -75,6 +77,9 @@ use yii\helpers\Html;
                                 <?php if ($item->is_shared == 1): ?>
                                     <i class="fa-solid fa-user-group"></i> จัดสรรร่วม
                                 <?php else: ?>
+                                    <?php
+                                        echo $item->status;
+                                        ?>
                                     <?= $item->viewStatus()['view'] ?? '-' ?>
                                 <?php endif; ?>
                             </td>

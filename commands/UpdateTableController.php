@@ -80,6 +80,7 @@ class UpdateTableController extends Controller
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
+            ['name' => 'driver', 'type' => 1, 'description' => 'พนักงานขับรถ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => 'plan', 'type' => 1, 'description' => 'แผนงานและโครงการ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
