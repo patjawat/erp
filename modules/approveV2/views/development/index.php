@@ -41,12 +41,16 @@ $msg = 'ขอ';
                 <i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title ?>
                 <span class="badge rounded-pill"><?= number_format($dataProvider->getTotalCount(), 0) ?> </span> รายการ
             </h6>
+<<<<<<< HEAD
+            <?php echo $this->render('@app/modules/approveV2/views/default/_search', ['model' => $searchModel, 'emp_label' => 'ผู้ขอ']) ?>
+=======
             <?php echo $this->render('@app/modules/approveV2/views/default/_search', 
             [
                 'model' => $searchModel,
                 'emp_label' => 'ผู้ขอ',
                 'approveAllUrl' => Url::to(['/approve-v2/development/approve-all'])
                 ]) ?>
+>>>>>>> main
         </div>
 
         <div class="table-responsive" style="max-height: 600px;max-height: 600px;min-height:300px; overflow: auto;">

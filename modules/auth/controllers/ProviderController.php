@@ -38,12 +38,17 @@ class ProviderController extends Controller
         $ts = $this->request->post('ts');
         $sig = $this->request->post('sig');
 
+
+        $hostInfo = \Yii::$app->request->hostName;
+        $hashedPassword = hash_hmac('md5', $hostInfo, $sharedSecret);
+        //return $this->asJson(['success' => $hashedPassword]);
+
         // 2. ตรวจสอบ Parameters เบื้องต้น
         if (!$hashCid || !$ts || !$sig) {
             Yii::$app->response->statusCode = 400;
             return $this->asJson(['error' => 'Missing parameters']);
         }
-
+        
         // 3. ตรวจสอบ Timestamp (ไม่เกิน 5 นาที)
         if (abs(time() - (int)$ts) > 300) {
             Yii::$app->response->statusCode = 403;
@@ -56,7 +61,8 @@ class ProviderController extends Controller
             'ts' => (int)$ts,
         ];
         $payload = Json::encode($payloadData);
-        $expectedSig = hash_hmac('sha256', $payload, $sharedSecret);
+        //$expectedSig = hash_hmac('sha256', $payload, $sharedSecret);
+        $expectedSig = hash_hmac('sha256', $payload, $hashedPassword);
 
         if (!hash_equals($expectedSig, $sig)) {
             Yii::$app->response->statusCode = 403;
