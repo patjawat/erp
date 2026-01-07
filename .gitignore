@@ -43,3 +43,5 @@ web/import-csv/*
 db-backup
 doc_receive/*
 modules/filemanager/fileupload/*
+ngrok.exe
+composer.lock
