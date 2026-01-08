@@ -9,12 +9,14 @@ use yii\web\Controller;
 use yii\web\UploadedFile;
 use app\models\Categorise;
 use app\components\AppHelper;
+use app\components\DateHelper;
 use app\models\UploadCsvForm;
 use app\modules\am\models\Asset;
 use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
 use app\modules\am\models\AssetImportForm;
 use app\modules\inventory\models\StockEvent;
+use Google\Service\AdExchangeBuyerII\Date;
 
 class ImportController extends Controller
 {
@@ -156,13 +158,13 @@ class ImportController extends Controller
                     'vendor_id' => $data[10],
                     'budget_type' => $data[9],
                     'inspection_date' => $data[11],
-                    'receive_date' => $data[12],
+                    'receive_date' => DateHelper::convertToDatabaseDate($data[12]),
                     'expire_date' => $data[13],
                     'location' => $data[15],
                 ];
                 $model->price = $data[8];
                 $model->method_get = $data[10];
-                $model->receive_date = $data[12];
+                $model->receive_date = DateHelper::convertToDatabaseDate($data[12]);
                 $model->on_year = $data[15];
                 $model->license_plate = $data[17];
                 $model->asset_status = 1;
