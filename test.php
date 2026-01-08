@@ -1,72 +1,261 @@
-WITH stock_summary AS (
-                            SELECT 
-                                
-                                asset_type.code AS asset_type_code,
-                                asset_type.title AS asset_type_name,
-                                p.title as asset_name,
-                                p.code as asset_item,
-                                p.data_json->>'$.unit' AS unit,
-                                w.warehouse_name as warehouse_name,
-	-- จำนวนคงเหลือ (ก่อนเดือน)
-            SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'IN'  
-                 THEN i.qty ELSE 0 END) 
-        -
-        SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'OUT' 
-                 THEN i.qty  ELSE 0 END) AS balance_before_qty,
-                                -- ยอดยกมา (ก่อนเดือน)
-                                SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'IN'  
-                                        THEN i.qty * i.unit_price ELSE 0 END) 
-                                -
-                                SUM(CASE WHEN o.movement_date < '2025-08-01' AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS balance_before,
+WITH t AS (SELECT 
+                v.code as vendor_id,
+                v.title as vendor_name,
+                wi.warehouse_name,
+                 wi.warehouse_type AS main_warehouse_type,
+                i.asset_item,
+                a.title as asset_name,
+                t.code as asset_type_code,
+                t.title  as asset_type_name,
+                e.id AS e_id,
+                e.order_status AS e_status,
+                i.order_status AS i_status,
+                i.id AS i_id,
+                a.data_json->>'$.unit' AS unit,
+                i.qty AS item_qty,
+                i.unit_price,
+                e.thai_year,
+                e.transaction_type,
+                e.movement_date,
+                COALESCE(wo.warehouse_type, wi.warehouse_type) AS warehouse_type,
+                
 
-                               -- จำนวนรับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'IN' 
-                                        THEN i.qty ELSE 0 END) AS total_in_month_qty,
+                -- 🔹 ยอดยกมา (ก่อนเริ่มงวด)
+                SUM(
+                    CASE 
+                        WHEN e.movement_date < '2025-12-01' 
+                            AND i.transaction_type = 'IN' 
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                        THEN i.qty
+                        WHEN e.movement_date < '2025-12-01' 
+                            AND i.transaction_type = 'OUT' 
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                        THEN -i.qty
+                        ELSE 0 
+                    END
+                ) AS begin_qty,
 
-                                -- รับเข้าระหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'IN' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_in_month,
- -- จำนวนจ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'OUT' 
-                                        THEN i.qty  ELSE 0 END) AS total_out_month_qty,
+                -- 🔹 ยอดยกมาราคา (แก้ floating-point ด้วย DECIMAL)
+                SUM(
+                    CAST(
+                        CASE
+                            WHEN e.movement_date < '2025-12-01'
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN (i.qty * i.unit_price)
+                            WHEN e.movement_date < '2025-12-01'
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                            THEN - (i.qty * i.unit_price)
+                            ELSE 0
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS begin_price,
 
-                                -- จ่ายไประหว่างเดือน
-                                SUM(CASE WHEN o.movement_date BETWEEN '2025-08-01' AND '2025-08-31' 
-                                        AND o.transaction_type = 'OUT' 
-                                        THEN i.qty * i.unit_price ELSE 0 END) AS total_out_month
+                -- 🔹 ยอดรับเข้า
+                SUM(
+                    CASE 
+                        WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                            AND i.transaction_type = 'IN' 
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                        THEN i.qty 
+                        ELSE 0 
+                    END
+                ) AS qty_in,
 
-                            FROM stock_events o
-                            LEFT JOIN stock_events i ON i.category_id = o.id
-                            LEFT JOIN categorise asset_type ON asset_type.code = o.asset_type_id
-                            LEFT JOIN warehouses w ON w.id = o.warehouse_id
-                            LEFT JOIN categorise p ON p.code = i.asset_item
-                            WHERE o.name = 'order'
-                            AND o.order_status = 'success'
-                            AND i.name = 'order_item'
-                            AND w.warehouse_type = 'MAIN'
-                            AND asset_type.category_id = 4
-                            AND asset_type.name = 'asset_type'
-                            AND p.name = 'asset_item'
-                        )
+                SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                                AND i.transaction_type = 'IN' 
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN i.qty * i.unit_price 
+                            ELSE 0 
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS price_in,
 
-                        SELECT 
-                            warehouse_name,
-                            asset_item,
-                            asset_name,
-                            unit,
-                            asset_type_code,
-                            asset_type_name,
-                            balance_before_qty,
-                            balance_before,                     -- 1. ยอดยกมา
-                            total_in_month,                     -- 2. รับเข้าระหว่างเดือน
-                            total_in_month_qty,                     -- 2. รับเข้าระหว่างเดือน
-                            (balance_before + total_in_month) AS total_before_out,   -- 3. รวม
-                            total_out_month,                    -- 4. จ่ายไประหว่างเดือน
-                            total_out_month_qty,                    -- 4. จ่ายไประหว่างเดือน
-                            (balance_before + total_in_month - total_out_month) AS balance_after  -- 5. ยอดยกไป
-                        FROM stock_summary
-                        ORDER BY CAST(SUBSTRING(asset_type_code, 2) AS UNSIGNED);
+                -- 🔹 ยอดเบิกออก รพ.
+                SUM(
+                    CASE 
+                        WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                            AND i.transaction_type = 'OUT'
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+                        THEN i.qty 
+                        ELSE 0 
+                    END
+                ) AS qty_out,
+
+                SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
+                            THEN i.qty * i.unit_price 
+                            ELSE 0 
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS price_out,
+
+                -- 🔹 ยอดเบิกออก รพ.สต.
+                SUM(
+                    CASE 
+                        WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                            AND i.transaction_type = 'OUT'
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
+                        THEN i.qty 
+                        ELSE 0 
+                    END
+                ) AS branch_qty_out,
+
+                SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
+                            THEN i.qty * i.unit_price 
+                            ELSE 0 
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS branch_price_out,
+
+                -- 🔹 ยอดเบิกออก รวม
+                SUM(
+                    CASE 
+                        WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                            AND i.transaction_type = 'OUT'
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                        THEN i.qty 
+                        ELSE 0 
+                    END
+                ) AS total_qty_out,
+
+                SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date BETWEEN '2025-12-01' AND '2025-12-31'
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                            THEN i.qty * i.unit_price 
+                            ELSE 0 
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS total_price_out,
+
+                -- 🔹 ยอดคงเหลือสิ้นงวด
+                SUM(
+                    CASE 
+                        WHEN e.movement_date <= '2025-12-31' 
+                            AND i.transaction_type = 'IN'
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                        THEN CAST(i.qty AS DECIMAL(18,5))
+                        WHEN e.movement_date <= '2025-12-31' 
+                            AND i.transaction_type = 'OUT'
+                            AND i.order_status = 'success'
+                            AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                        THEN -CAST(i.qty AS DECIMAL(18,5))
+                        ELSE 0 
+                    END
+                ) AS end_qty,
+
+                SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date <= '2025-12-31' 
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                            WHEN e.movement_date <= '2025-12-31' 
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                            THEN - CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                            ELSE 0
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS end_price
+
+            FROM stock_events i
+            LEFT JOIN stock_events e ON e.id = i.category_id
+            LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+            LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+            LEFT JOIN categorise a ON a.code = i.asset_item AND a.name = 'asset_item'
+            LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+            LEFT JOIN (
+                SELECT code, title
+                FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER(PARTITION BY code ORDER BY code) AS rn
+                    FROM categorise
+                    WHERE name = 'vendor'
+                ) t
+                WHERE rn = 1
+            ) v ON v.code = e.vendor_id
+            WHERE e.name = 'order' AND i.asset_item IS NOT NULL
+                    GROUP BY t.code
+                    ORDER BY CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED), CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED), CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED)
+            )
+            SELECT 
+                *,
+                -- 🔹 เพิ่มผลรวมแบบไม่ปัดเศษ
+               (begin_price+price_in) as total_price_begin,
+               (price_out+branch_price_out) as total_price_out
+            FROM t;
+
+
+
+
+
+
+
+                        SUM(
+                    CAST(
+                        CASE
+                            WHEN e.movement_date < '2025-12-01'
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN (i.qty * i.unit_price)
+                            WHEN e.movement_date < '2025-12-01'
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
+                            THEN - (i.qty * i.unit_price)
+                            ELSE 0
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS begin_price,
+
+                 SUM(
+                    CAST(
+                        CASE 
+                            WHEN e.movement_date <= '2025-12-31' 
+                                AND i.transaction_type = 'IN'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                            WHEN e.movement_date <= '2025-12-31' 
+                                AND i.transaction_type = 'OUT'
+                                AND i.order_status = 'success'
+                                AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                            THEN - CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                            ELSE 0
+                        END AS DECIMAL(18,5)
+                    )
+                ) AS end_price

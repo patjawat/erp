@@ -1532,12 +1532,12 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         WHEN e.movement_date < :date_start 
                             AND i.transaction_type = 'OUT' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                        THEN -i.qty
+                        THEN -CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS begin_qty,
@@ -1550,12 +1550,12 @@ class StockEvent extends Yii\db\ActiveRecord
                                 AND i.transaction_type = 'IN'
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                            THEN (i.qty * i.unit_price)
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             WHEN e.movement_date < :date_start
                                 AND i.transaction_type = 'OUT'
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                            THEN - (i.qty * i.unit_price)
+                            THEN - CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             ELSE 0
                         END AS DECIMAL(18,5)
                     )
@@ -1568,7 +1568,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS qty_in,
@@ -1580,7 +1580,7 @@ class StockEvent extends Yii\db\ActiveRecord
                                 AND i.transaction_type = 'IN' 
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                            THEN i.qty * i.unit_price 
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             ELSE 0 
                         END AS DECIMAL(18,5)
                     )
@@ -1593,7 +1593,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS qty_out,
@@ -1605,7 +1605,7 @@ class StockEvent extends Yii\db\ActiveRecord
                                 AND i.transaction_type = 'OUT'
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB')
-                            THEN i.qty * i.unit_price 
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             ELSE 0 
                         END AS DECIMAL(18,5)
                     )
@@ -1618,7 +1618,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS branch_qty_out,
@@ -1630,7 +1630,7 @@ class StockEvent extends Yii\db\ActiveRecord
                                 AND i.transaction_type = 'OUT'
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('BRANCH')
-                            THEN i.qty * i.unit_price 
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             ELSE 0 
                         END AS DECIMAL(18,5)
                     )
@@ -1643,7 +1643,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS total_qty_out,
@@ -1655,7 +1655,7 @@ class StockEvent extends Yii\db\ActiveRecord
                                 AND i.transaction_type = 'OUT'
                                 AND i.order_status = 'success'
                                 AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                            THEN i.qty * i.unit_price 
+                            THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                             ELSE 0 
                         END AS DECIMAL(18,5)
                     )
@@ -1761,12 +1761,12 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         WHEN e.movement_date < :date_start 
                             AND i.transaction_type = 'OUT' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                        THEN -i.qty
+                        THEN -CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS begin_qty,
@@ -1778,12 +1778,12 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty * i.unit_price
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         WHEN e.movement_date < :date_start
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH')
-                        THEN - (i.qty * i.unit_price)
+                        THEN - CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         ELSE 0
                     END
                 ) AS begin_price,
@@ -1795,7 +1795,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS qty_in,
@@ -1806,7 +1806,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN' 
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty * i.unit_price 
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS price_in,
@@ -1818,7 +1818,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB'
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS qty_out,
@@ -1829,7 +1829,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB'
-                        THEN i.qty * i.unit_price 
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS price_out,
@@ -1841,7 +1841,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH'
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS branch_qty_out,
@@ -1852,7 +1852,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH'
-                        THEN i.qty * i.unit_price 
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5)) 
                         ELSE 0 
                     END
                 ) AS branch_price_out,
@@ -1864,7 +1864,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
-                        THEN i.qty 
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS total_qty_out,
@@ -1875,7 +1875,7 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
-                        THEN i.qty * i.unit_price 
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS total_price_out,
@@ -1887,12 +1887,12 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN i.qty
+                        THEN CAST(i.qty AS DECIMAL(18,5))
                         WHEN e.movement_date <= :date_end 
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
-                        THEN -i.qty
+                        THEN -CAST(i.qty AS DECIMAL(18,5))
                         ELSE 0 
                     END
                 ) AS end_qty,
@@ -1903,12 +1903,12 @@ class StockEvent extends Yii\db\ActiveRecord
                             AND i.transaction_type = 'IN'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
-                        THEN (i.qty * i.unit_price)
+                        THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         WHEN e.movement_date <= :date_end 
                             AND i.transaction_type = 'OUT'
                             AND i.order_status = 'success'
                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
-                        THEN - (i.qty * i.unit_price)
+                        THEN - CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
                         ELSE 0
                     END
                 ) AS end_price
