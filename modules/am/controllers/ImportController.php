@@ -157,15 +157,15 @@ class ImportController extends Controller
                     'serial_number' => $data[7],
                     'vendor_id' => $data[10],
                     'budget_type' => $data[9],
-                    'inspection_date' => $data[11],
-                    'receive_date' => DateHelper::convertToDatabaseDate($data[12]),
+                    'inspection_date' => DateHelper::convertToDatabaseDate($data[11]),
+                    'receive_date' => DateHelper::convertToDatabaseDate($data[13]),
                     'expire_date' => $data[13],
                     'location' => $data[15],
                 ];
                 $model->price = $data[8];
                 $model->method_get = $data[10];
-                $model->receive_date = DateHelper::convertToDatabaseDate($data[12]);
-                $model->on_year = $data[15];
+                $model->receive_date = DateHelper::convertToDatabaseDate($data[13]);
+                $model->on_year = $data[12];
                 $model->license_plate = $data[17];
                 $model->asset_status = 1;
                 $model->asset_group_id = 4;
