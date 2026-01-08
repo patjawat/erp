@@ -9,12 +9,14 @@ use yii\web\Controller;
 use yii\web\UploadedFile;
 use app\models\Categorise;
 use app\components\AppHelper;
+use app\components\DateHelper;
 use app\models\UploadCsvForm;
 use app\modules\am\models\Asset;
 use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
 use app\modules\am\models\AssetImportForm;
 use app\modules\inventory\models\StockEvent;
+use Google\Service\AdExchangeBuyerII\Date;
 
 class ImportController extends Controller
 {
@@ -155,15 +157,17 @@ class ImportController extends Controller
                     'serial_number' => $data[7],
                     'vendor_id' => $data[10],
                     'budget_type' => $data[9],
-                    'inspection_date' => $data[11],
-                    'receive_date' => $data[12],
-                    'expire_date' => $data[13],
-                    'location' => $data[15],
+                    'inspection_date' => DateHelper::convertToDatabaseDate($data[11]),
+                    'receive_date' => DateHelper::convertToDatabaseDate($data[13]),
+                    'expire_date' => $data[14],
+                    'location' => $data[16],
+                    'fsn_old' => $data[0],
+                    'vendor_id' => $this->findVendor($data[18]),
                 ];
                 $model->price = $data[8];
-                $model->method_get = $data[10];
-                $model->receive_date = $data[12];
-                $model->on_year = $data[15];
+                $model->purchase = $this->findPurchase($data[10]);
+                $model->receive_date = DateHelper::convertToDatabaseDate($data[13]);
+                $model->on_year = $data[12];
                 $model->license_plate = $data[17];
                 $model->asset_status = 1;
                 $model->asset_group_id = 4;
@@ -211,6 +215,29 @@ class ImportController extends Controller
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
     }
 
+public function findPurchase($tite = null)
+    {
+        $model = Categorise::find()->where(['name' => 'purchase', 'title' => $tite])->one();
+        if ($model) {
+            return $model->code;
+        } else {
+            return 0;
+        }
+    }
+
+    public function findVendor($tite = null)
+    {
+        $model = Categorise::find()->where(['name' => 'vendor', 'title' => $tite])->one();
+        if(!$model){
+            $newVender = new Categorise(['name'=>'vendor','title'=>$tite]);
+            $newVender-> code = \mdm\autonumber\AutoNumber::generate('vendor-?');
+            $newVender-> save(false);
+            return $newVender->code;
+        }else{
+            return $model->code;    
+
+    }
+    }
 
 
     protected function findProduct($code = null, $title = null, $categoryId = null, $unit = null)

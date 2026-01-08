@@ -53,6 +53,13 @@ class DocumentsController extends \yii\web\Controller
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
         $dataProvider->query->andFilterWhere(['d_tags.to_id' => $emp->id]);
+        $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
+        
 
 
         $dataProvider->setSort(['defaultOrder' => [
@@ -106,6 +113,14 @@ class DocumentsController extends \yii\web\Controller
         }
 
         $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
+
+                $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
+
 
 
         return $this->render('index', [
