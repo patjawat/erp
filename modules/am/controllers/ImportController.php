@@ -159,11 +159,13 @@ class ImportController extends Controller
                     'budget_type' => $data[9],
                     'inspection_date' => DateHelper::convertToDatabaseDate($data[11]),
                     'receive_date' => DateHelper::convertToDatabaseDate($data[13]),
-                    'expire_date' => $data[13],
-                    'location' => $data[15],
+                    'expire_date' => $data[14],
+                    'location' => $data[16],
+                    'fsn_old' => $data[0],
+                    'vendor_id' => $this->findVendor($data[18]),
                 ];
                 $model->price = $data[8];
-                $model->method_get = $data[10];
+                $model->purchase = $this->findPurchase($data[10]);
                 $model->receive_date = DateHelper::convertToDatabaseDate($data[13]);
                 $model->on_year = $data[12];
                 $model->license_plate = $data[17];
@@ -213,6 +215,29 @@ class ImportController extends Controller
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
     }
 
+public function findPurchase($tite = null)
+    {
+        $model = Categorise::find()->where(['name' => 'purchase', 'title' => $tite])->one();
+        if ($model) {
+            return $model->code;
+        } else {
+            return 0;
+        }
+    }
+
+    public function findVendor($tite = null)
+    {
+        $model = Categorise::find()->where(['name' => 'vendor', 'title' => $tite])->one();
+        if(!$model){
+            $newVender = new Categorise(['name'=>'vendor','title'=>$tite]);
+            $newVender-> code = \mdm\autonumber\AutoNumber::generate('vendor-?');
+            $newVender-> save(false);
+            return $newVender->code;
+        }else{
+            return $model->code;    
+
+    }
+    }
 
 
     protected function findProduct($code = null, $title = null, $categoryId = null, $unit = null)
