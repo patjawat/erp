@@ -818,6 +818,7 @@ class StockOrderController extends Controller
 
         $inStock = Stock::findOne($id);
         $model = new StockEvent();
+        $model->code = $order->code;
         $model->category_id = $order->id;
         $model->thai_year = $order->thai_year;
         $model->name = 'order_item';
@@ -900,6 +901,8 @@ class StockOrderController extends Controller
 
         $model = new StockEvent();
         $model->category_id = $category_id;
+        $model->code = $order->code;
+        $model->transaction_type = $order->transaction_type;
         $model->warehouse_id = $order->warehouse_id;
         $model->from_warehouse_id = $order->from_warehouse_id;
         $model->asset_item = $asset_item;
