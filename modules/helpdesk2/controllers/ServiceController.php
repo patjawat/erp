@@ -36,6 +36,25 @@ class ServiceController extends \yii\web\Controller
             ]);
         }
     }
+
+     public function actionViewV2($id)
+    {
+        $model = $this->findModel($id);
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('view-v2', [
+                    'model' => $model,
+                ])
+            ];
+        } else {
+            return $this->render('view-v2', [
+                'model' => $model,
+            ]);
+        }
+    }
+
     public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();

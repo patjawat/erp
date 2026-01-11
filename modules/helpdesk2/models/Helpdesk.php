@@ -351,6 +351,26 @@ class Helpdesk extends \yii\db\ActiveRecord
         }
     }
 
+    //แสดงวันเวลาที่แก้ไข
+        public function viewUpdated()
+    {
+        try {
+            $datetime = explode(' ', $this->updated_at);
+            $date = ThaiDateHelper::formatThaiDate($datetime[0]);
+            $time = $datetime[1] . '.น';
+            return [
+                'full' => $date . ' ' . $time,
+                'date' => $date,
+                'time' => $time
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'full' => '',
+                'date' => '',
+                'time' => ''
+            ];
+        }
+    }
 
     // ประเภทของงานซ่อม
     public function RepairType(): array
@@ -606,19 +626,19 @@ class Helpdesk extends \yii\db\ActiveRecord
             if (isset($this->data_json['urgency'])) {
                 $model = Categorise::findOne(['name' => 'repair_status', 'code' => $this->status]);
 
-                if ($model->code == 1) {
+                if ($model->code == 'pending') {
                     return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-triangle-exclamation"></i> ' . $model->title . '</span>';
                 }
-                if ($model->code == 2) {
+                if ($model->code == 'receive') {
                     return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-user-check"></i> ' . $model->title . '</span>';
                 }
-                if ($model->code == 3) {
+                if ($model->code == 'in_progress') {
                     return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-person-digging text-primary"></i> ' . $model->title . '</span>';
                 }
-                if ($model->code == 4) {
+                if ($model->code == 'success') {
                     return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> ' . $model->title . '</span>';
                 }
-                if ($model->code == 5) {
+                if ($model->code == 'cancel') {
                     return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> ' . $model->title . '</span>';
                 }
             }

@@ -32,7 +32,8 @@ use iamsaint\datetimepicker\Datetimepicker;
     'form' => $form,
     'model' => $model,
     'label' => false,
-    'status' => $model->listRepairStatus()
+    'status' => $model->listRepairStatus(),
+    'placeholder' => 'ผู้แจ้งซ่อม',
 ])
 ?>
 <div class="row mt-2">
