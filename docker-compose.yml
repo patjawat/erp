@@ -18,7 +18,7 @@ services:
     env_file:
       - ./.env
 
-     # ใช้ custom command เพื่อเปิดใช้งาน calendar extension
+    # ใช้ custom command เพื่อเปิดใช้งาน calendar extension
     command: >
       bash -c "docker-php-ext-install calendar && apache2-foreground"
   mysqlDB:
@@ -52,7 +52,7 @@ services:
         "--interactive_timeout=28800",
         "--character-set-server=utf8mb4",
         "--collation-server=utf8mb4_general_ci",
-        "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
+        "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
       ]
 
     ports:
@@ -70,7 +70,7 @@ services:
     volumes:
       - ./modules/filemanager/fileupload:/app/modules/filemanager/fileupload
     env_file:
-       - ./.env
+      - ./.env
     ports:
       - "81:80"
 
@@ -87,3 +87,11 @@ services:
       MYSQL_ROOT_PASSWORD: docker
       PMA_HOST: mysqlDB
       UPLOAD_LIMIT: 300M
+  databasus:
+    container_name: databasus
+    image: databasus/databasus:latest  # ลบ ./docker/ ออก
+    ports:
+      - "4005:4005"
+    volumes:
+      - ./databasus-data:/databasus-data
+    restart: unless-stopped
