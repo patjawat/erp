@@ -229,18 +229,16 @@ class ImportHosOfficeController extends Controller
 
     public function MapEmployeeStatus($data)
     {
-        // กำหนดโครงสร้างข้อมูลสำหรับการ Mapping
-        $map = [
-            'ทำงานปกติ' => ['code' => '1', 'title' => 'ปฏิบัติราชการ'],
-            'ลาออก' => ['code' => '2', 'title' => 'ลาออก'],
-            'ย้าย' => ['code' => '13', 'title' => 'จ้างเหมาบริการรายวัน'],
-            'ลาศึกษาต่อ' => ['code' => '21', 'title' => 'ลาศึกษาในประเทศ'],
-            'ให้ออก' => ['code' => '25', 'title' => 'ไล่ออก']
-        ];
-        return  isset($map[$data['status_name']]) ? $map[$data['status_name']] : [
-            'code' => null,
-            'title' => 'ไม่พบข้อมูล'
-        ];
+        if($data['status_name'] == 'ทำงานปกติ'){
+            return 1;
+        }else{
+            $data = Categorise::findOne(['name' => 'emp_status','title' => $data['status_name']]);
+            if($data){
+                return $data->code;
+            }else{
+                return 0;
+            }
+        }
     }
     public function MapPositionType($data)
     {
