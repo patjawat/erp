@@ -145,7 +145,7 @@ class ImportHosOfficeController extends Controller
                 LEFT JOIN hr_person_type pt ON pt.HR_PERSON_TYPE_ID = p.HR_PERSON_TYPE_ID
                 LEFT JOIN hr_position hp ON hp.HR_POSITION_ID = p.HR_POSITION_ID
                 LEFT JOIN hr_status ON hr_status.HR_STATUS_ID = p.HR_STATUS_ID
-                LEFT JOIN hr_level ON hr_level.HR_LEVEL_ID = p.HR_LEVEL_ID where p.HR_STATUS_ID = '01';";
+                LEFT JOIN hr_level ON hr_level.HR_LEVEL_ID = p.HR_LEVEL_ID";
         // if (BaseConsole::confirm('Are you sure?')) {
         $querys = \Yii::$app->db2->createCommand($sqlPerson)->queryAll();
         $num = 1;
