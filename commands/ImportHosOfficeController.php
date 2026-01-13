@@ -207,7 +207,7 @@ class ImportHosOfficeController extends Controller
                 // 2. ลบเฉพาะ key 'image' ออก
                 unset($old_person_data['image']);
 
-                $model->data_json = $old_person_data;
+                 $model->data_json = ArrayHelper::merge($model->data_json, $person);
 
                 $this->Family($model->id, $model->cid);
 
@@ -445,10 +445,7 @@ class ImportHosOfficeController extends Controller
                 $model->license_plate = $item['car_req'];
 
                 if ($emp) {
-                    $model->data_json = [
-                        'old_data' => $item
-
-                    ];
+                    $model->data_json = ArrayHelper::merge($model->data_json, $item);
                 }
 
                 $model->save(false);
@@ -613,10 +610,8 @@ class ImportHosOfficeController extends Controller
                 $model->license_plate = $item['CAR_REG'];
 
                 // if($emp){
-                $model->data_json = [
-                    'old_data' => $item,
-
-                ];
+                    $model->data_json = ArrayHelper::merge($model->data_json, $item);
+                
                 // }
                 $model->save(false);
                 //code...
@@ -881,9 +876,7 @@ class ImportHosOfficeController extends Controller
                 $model->category_id = 'ET' . $item['MONEY_ID'];
                 $model->name = 'expense_type';
                 $model->price = $item['SUMMONEY'];
-                $model->data_json = [
-                    'old_data' => $item,
-                ];
+                $model->data_json = ArrayHelper::merge($model->data_json, $item);
                 if ($model->save(false)) {
                     echo 'Create Expense Type : ' . $model->id . "\n";
                 }
@@ -1163,11 +1156,11 @@ class ImportHosOfficeController extends Controller
                 $model->urgent = 'ปกติ';
                 $model->emp_number = $item['TOTAL_PEOPLE'];
                 $model->status = $this->BookingStatus($item['STATUS']);
-                $model->data_json = [
+                $dataJson = [
                     'phone' => $item['PERSON_REQUEST_PHONE'],
                     'meeting_details' => $item['SERVICE_FOR_DETAIL'],
-                    'old_data' => $item
                 ];
+                $model->data_json = ArrayHelper::merge($model->data_json,$dataJson, $item);
                 if ($model->save(false)) {
                 }
             } catch (\Throwable $th) {
@@ -1264,7 +1257,7 @@ class ImportHosOfficeController extends Controller
             $model->created_at = $item['DATE_TIME_REQUEST'];
             $model->receive_date = $receiveDateTime;
 
-            $model->data_json = [
+            $dataJson = [
                 'time_start' => $item['REPAIR_TIME'],
                 'end_start' => $item['TECH_REPAIR_TIME'],
                 'status' =>  $item['REPAIR_STATUS'],
@@ -1283,8 +1276,8 @@ class ImportHosOfficeController extends Controller
                 'location_other' => '',
                 'technician_req' => '0',
                 'technician_name' => '',
-                'old_data' => $cleanItem
             ];
+            $model->data_json = ArrayHelper::merge($model->data_json,$dataJson, $cleanItem);
 
             if ($model->save(false)) {
 
@@ -1410,7 +1403,7 @@ class ImportHosOfficeController extends Controller
             $model->date_start = $item['TECH_REPAIR_DATE'];
             $model->date_end = $item['TECH_SUCCESS_DATE'];
             $model->rating = $item['FANCINESS_SCORE'];
-            $model->data_json = [
+            $dataJson = [
                 'time_start' => $item['REPAIR_TIME'],
                 'end_start' => $item['TECH_REPAIR_TIME'],
                 'status' => $item['REPAIR_STATUS'],
@@ -1428,8 +1421,8 @@ class ImportHosOfficeController extends Controller
                 'location_other' => '',
                 'technician_req' => '0',
                 'technician_name' => '',
-                'old_data' => $item
             ];
+             $model->data_json = ArrayHelper::merge($model->data_json,$dataJson, $item);
             if ($model->save(false)) {
                 $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
                 // $this->serviceItems($model, $item);
