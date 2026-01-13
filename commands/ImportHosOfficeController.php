@@ -68,6 +68,7 @@ class ImportHosOfficeController extends Controller
             $this->actionMeeting();
             $this->actionRepairGeneral();
             $this->actionAsset();
+            $this->actionMaterial();
         } else {
             echo "user typed no\n";
         }
