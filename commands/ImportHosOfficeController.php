@@ -23,6 +23,7 @@ use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
+use app\modules\am\models\Asset;
 use app\modules\hr\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Development;
@@ -36,6 +37,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\helpdesk2\models\HelpdeskDetail;
+use app\components\AssetHelper;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -57,14 +59,15 @@ class ImportHosOfficeController extends Controller
     public function actionAll()
     {
         if (BaseConsole::confirm('ยืนยันการนำเข้าทั้งหมด?')) {
-        $this->actionEmployee();
-        $this->actionUpdatePosition();
-        $this->actionLeave();
-        $this->actionCreateApproveLeave();
-        $this->actionDevelopment();
-        $this->actionVehicle();
-        $this->actionMeeting();
-        $this->actionRepairGeneral();
+            $this->actionEmployee();
+            $this->actionUpdatePosition();
+            $this->actionLeave();
+            $this->actionCreateApproveLeave();
+            $this->actionDevelopment();
+            $this->actionVehicle();
+            $this->actionMeeting();
+            $this->actionRepairGeneral();
+            $this->actionAsset();
         } else {
             echo "user typed no\n";
         }
@@ -408,7 +411,7 @@ class ImportHosOfficeController extends Controller
         $num = 1;
         $total = count($querys);
         echo "นำเข้าข้อมูลจองรถ...\n";
-        
+
         foreach ($querys as $key => $item) {
             if ($item['RESERVE_BEGIN_DATE'] && $item['RESERVE_END_DATE']) {
                 $emp = $this->Person($item['RESERVE_PERSON_ID']);
@@ -755,7 +758,7 @@ class ImportHosOfficeController extends Controller
                     $this->creteDevApprove($model);
                 }
             }
-              BaseConsole::updateProgress($num, $total);
+            BaseConsole::updateProgress($num, $total);
             $num++;
         }
     }
@@ -812,7 +815,7 @@ class ImportHosOfficeController extends Controller
             'approve_date' => null
         ];
         $approve2->status = $model->status;
-       $approve2->save(false);
+        $approve2->save(false);
     }
 
     private function getDevStatus($data)
@@ -987,7 +990,7 @@ class ImportHosOfficeController extends Controller
                     'leader_person_name' => $item['LEADER_PERSON_NAME'],
                     'leader_person_position' => $item['LEADER_PERSON_POSITION'],
                 ];
-                $leave->data_json = ArrayHelper::merge($leave->data_json ?? [], $leaveJson,$item);
+                $leave->data_json = ArrayHelper::merge($leave->data_json ?? [], $leaveJson, $item);
 
                 if ($leave->save(false)) {
                     // $this->CreateApprove($item);
@@ -996,7 +999,7 @@ class ImportHosOfficeController extends Controller
             } catch (\Throwable $th) {
                 //throw $th;
             }
-              BaseConsole::updateProgress($num, $total);
+            BaseConsole::updateProgress($num, $total);
             $num++;
         }
         $this->UpdateStatus();
@@ -1112,7 +1115,7 @@ class ImportHosOfficeController extends Controller
                 $newApprove4 = new Approve($obj4);
                 $newApprove4->save(false);
             }
-             BaseConsole::updateProgress($num, $total);
+            BaseConsole::updateProgress($num, $total);
             $num++;
         }
     }
@@ -1491,5 +1494,147 @@ class ImportHosOfficeController extends Controller
         } catch (\Throwable $th) {
             // throw $th;
         }
+    }
+
+    public function actionAsset()
+    {
+
+        // ** Query 
+        $sql = "SELECT
+        s.*,    
+        b.*,
+        c.*,
+        m.*,
+        mt.*,
+        s_bg.*,
+        s_buy.*,
+        st.*,
+        sd.*,
+        ar_status.*,
+        v.*,
+        dep.*,
+        l.*,
+        u.*,
+                ll.LOCATION_LEVEL_NAME,
+        lr.LEVEL_ROOM_NAME,
+        a.*
+                                        FROM `ar_article`  a
+                                        LEFT JOIN sup_model m ON m.MODEL_ID = a.MODEL_ID
+                                        LEFT JOIN sup_size s ON s.SIZE_ID = a.SIZE_ID
+                                        LEFT JOIN sup_brand b ON b.BRAND_ID = a.BRAND_ID
+                                        LEFT JOIN sup_color c ON c.COLOR_ID = a.COLOR_ID
+                                        LEFT JOIN sup_method mt ON mt.METHOD_ID = a.METHOD_ID
+                                        LEFT JOIN sup_budget s_bg ON s_bg.BUDGET_ID = a.BUDGET_ID
+                                        LEFT JOIN sup_buy s_buy ON s_buy.BUY_ID = a.BUY_ID
+                                        LEFT JOIN sup_type st ON st.SUP_TYPE_ID = a.TYPE_ID
+                                        LEFT JOIN sup_decline sd ON sd.DECLINE_ID = a.DECLINE_ID
+                                        LEFT JOIN ar_status  ON ar_status.STATUS_ID = a.STATUS_ID  
+                                        LEFT JOIN sup_vendor v ON v.VENDOR_ID = a.VENDOR_ID 
+                                        LEFT JOIN sup_location l ON l.LOCATION_ID = a.LOCATION_ID
+                                        LEFT JOIN sup_unit u ON u.SUP_UNIT_ID = a.UNIT_ID
+                                        LEFT JOIN hr_department_sub_sub dep ON dep.HR_DEPARTMENT_SUB_SUB_ID = a.DEP_ID
+                                        LEFT JOIN hr_person person ON person.ID = a.PERSON_ID
+                                        LEFT JOIN sup_location_level ll ON ll.LOCATION_LEVEL_ID = a.LOCATION_LEVEL_ID
+                                        LEFT JOIN sup_location_level_room lr ON lr.LEVEL_ROOM_ID = a.LEVEL_ROOM_ID
+ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
+        //  End Query
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $num = 1;
+        $total = count($querys);
+        echo "เริ่มนำเข้าข้อมูลครุภัณฑ์...\n";
+        foreach ($querys as $asset) {
+            try {
+
+
+            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            $checkItem = Asset::findOne(['code' => $asset['ARTICLE_NAME']]);
+            $model = $checkItem ? $checkItem : new Asset([
+                'ref' => $ref
+            ]);
+
+            if (!$checkItem) {
+                $this->CreateDir($ref);
+                if ($asset['IMG']) {
+
+                    $name = time() . '.jpg';
+                    file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $asset['IMG']);
+
+                    $upload = new Uploads;
+                    $upload->ref = $ref;
+                    $upload->name = 'asset';
+                    $upload->file_name = $name;
+                    $upload->real_filename = $name;
+                    $upload->type = 'jpg';
+                    $upload->save(false);
+                }
+            }
+           
+
+            // ตรวจสอบว่ามีข้อมูลในฐานข้อมูลหรือไม่ ถ้าไม่มีให้เพิ่มข้อมูลลงไป
+            $assetType = $asset['DECLINE_NAME'];
+            $assetItemName = $asset['ARTICLE_NAME'];
+            $assetCode = $asset['ARTICLE_NUM'];
+            $vendorName = $asset['VENDOR_NAME'];
+            $methodGet = $asset['METHOD_NAME'];
+            $purchaseText = $asset['BUY_NAME'];
+            $budgetType = $asset['BUDGET_NAME'];
+            $departmentName = $asset['HR_DEPARTMENT_SUB_SUB_NAME'];
+            $onYear = $asset['YEAR_ID'];
+            $price =  $asset['PRICE_PER_UNIT'];
+            $receiveDate = $asset['RECEIVE_DATE'];
+            $assetStatus = $asset['STATUS_NAME'];
+            $assetItem = AssetHelper::CheckAssetItem($assetType, $assetCode, $assetItemName);
+            $assetType =  Categorise::findOne(['title' => $asset['DECLINE_NAME'],'name' => 'asset_type','group_id' => 'EQUIP']);
+
+            $checkAsset = $assetCode ? Asset::find()->where(['code' => $assetCode])->one() : null;
+            $org = $departmentName ? Organization::find()->where(['name' => $departmentName])->one() : null;
+            $model->department = $org && isset($org->id) ? $org->id : 0;  // หน่วยงานภายในตามโครงสร้าง
+            // สมมติว่าคุณมี Model ชื่อ YourModel
+            $model = $checkAsset ?? new Asset();
+            $model->asset_group_id = 4;
+            $model->asset_type_id = isset($assetType->code) ? $assetType->code : null;
+            $model->asset_item_id = isset($assetItem) ? $assetItem->code : null;
+            $model->code = $assetCode;
+            $model->owner = $this->Person($asset['PERSON_ID']) ?->id ?? 0;
+            $data_json = [
+                'fsn_old' => $assetCode,
+                'brand' => $asset['BRAND_NAME'],
+                'asset_model' => $asset['MODEL_NAME'],
+                'color_name' => $asset['COLOR_NAME'],
+                'serial_number' => $asset['SERIAL_NO'],
+                'location' => $asset['LOCATION_NAME'].' '.$asset['LOCATION_LEVEL_NAME'].' '.$asset['LEVEL_ROOM_NAME'],
+                'unit' => $asset['SUP_UNIT_NAME'],
+                'asset_options' => $asset['ARTICLE_PROP'],
+                'expire_date' => $asset['EXPIRE_DATE'],
+                'vendor_id' => $vendorName ? AssetHelper::findByName('vendor', $vendorName) : null,
+                'method_get' => $methodGet ? AssetHelper::findByName('method_get', $methodGet) : null,
+                'budget_type' => $budgetType ? AssetHelper::findByName('budget_type', $budgetType) : null,
+                'asset_type_text' => $assetType,
+                'method_get_text' => $methodGet,
+                'purchase_text' => $purchaseText,
+                'budget_type_text' => $budgetType,
+                'department_name' => $departmentName,
+            ];
+            $model->asset_name = $asset['ARTICLE_NAME'];
+            $model->fsn_number = $asset['SUP_FSN'];
+            $model->purchase = $purchaseText ? AssetHelper::findByName('purchase', $purchaseText) : null;  // วิธีการได้มา
+            $model->on_year = $onYear;
+            $model->price = $price;
+            $model->receive_date = $receiveDate;// วันที่รับเข้า
+            // $model->asset_status = $assetStatus ? AssetHelper::findByName('asset_status', $assetStatus) : null;  // วิธีการได้มา
+            $model->asset_status = $asset['STATUS_ID'];
+
+           
+            $model->data_json = ArrayHelper::merge($model->data_json, $data_json, $this->cleanUtf8($asset));
+            $model->save(false);
+            BaseConsole::updateProgress($num, $total);
+            $num++;
+                            //code...
+            } catch (\Throwable $th) {
+                echo "เกิดข้อผิดพลาด : " . $asset['ARTICLE_ID'] . " - " . $th->getMessage() . "\n";
+                exit;
+            }
+        }
+        echo "นำเข้าข้อมูลครุภัณฑ์เสร็จสิ้น!\n";
     }
 }
