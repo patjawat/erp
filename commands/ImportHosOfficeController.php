@@ -447,10 +447,7 @@ class ImportHosOfficeController extends Controller
                     ];
                 }
 
-                if ($model->save(false)) {
-                    $percentage = (($num++) / $total) * 100;
-                    $this->createDetail($model, $item);
-                }
+                $model->save(false);
             }
             BaseConsole::updateProgress($num, $total);
             $num++;
