@@ -750,8 +750,8 @@ class ImportHosOfficeController extends Controller
                 $model->emp_id = $this->Person($item['HR_ID'])?->id ?? 0;
                 $model->development_type_id = $this->getDevType($item['RECORD_TYPE_ID']);
 
-                $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id;
-                $model->leader_group_id = $this->Person($item['HR_DEPART_ID'])?->id;
+                $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id ?? 0;
+                $model->leader_group_id = $this->Person($item['HR_DEPART_ID'])?->id ?? 0;
                 $model->data_json = $item;
                 if ($model->save(false)) {
                     $this->creteDetailMember($model);
@@ -1636,6 +1636,27 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
             }
         }
         echo "นำเข้าข้อมูลครุภัณฑ์เสร็จสิ้น!\n";
+    }
+
+    public function actionMaterial()
+    {
+        $sql = "SELECT * FROM sup
+                LEFT JOIN 
+                    sup_type ON sup.SUP_TYPE_ID = sup_type.SUP_TYPE_ID
+                LEFT JOIN 
+                    sup_type_kind ON sup.SUP_TYPE_KIND_ID = sup_type_kind.SUP_TYPE_KIND_ID
+                WHERE sup.SUP_TYPE_KIND_ID IN('1','2','4')  AND sup.SUP_NAME LIKE '%กระดาษ%' 
+                ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC";
+                 $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+                 $num = 1;
+                 $total = count($querys);
+
+                 foreach ($querys as $asset) {
+
+                 }
+                BaseConsole::updateProgress($num, $total);
+                $num++;
+
     }
 
 }
