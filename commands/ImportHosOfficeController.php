@@ -282,7 +282,7 @@ class ImportHosOfficeController extends Controller
     public function actionUpdatePosition()
     {
         // ใช้ batch() หากพนักงานมีจำนวนมากเพื่อประหยัด Memory
-        $querys = Employees::find()->all();
+        $querys = Employees::find()->where(['status' => 1])->all();
         $num = 1;
         $total = count($querys);
         echo "เริ่มอัพเดทข้อมูลตำแหน่งงาน...\n";
