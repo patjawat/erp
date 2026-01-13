@@ -93,5 +93,5 @@ services:
     ports:
       - "4005:4005"
     volumes:
-      - ./databasus-data:/databasus-data
+      - ./docker/databasus-data:/databasus-data
     restart: unless-stopped

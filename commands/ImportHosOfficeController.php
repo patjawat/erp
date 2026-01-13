@@ -59,12 +59,12 @@ class ImportHosOfficeController extends Controller
         if (BaseConsole::confirm('ยืนยันการนำเข้าทั้งหมด?')) {
         $this->actionEmployee();
         $this->actionUpdatePosition();
-        // $this->actionLeave();
-        // // $this->actionCreateApproveLeave();
-        // // $this->actionDevelopment();
-        // // $this->actionVehicle();
-        // // $this->actionMeeting();
-        // // $this->actionRepairGeneral();
+        $this->actionLeave();
+        $this->actionCreateApproveLeave();
+        $this->actionDevelopment();
+        $this->actionVehicle();
+        $this->actionMeeting();
+        $this->actionRepairGeneral();
         } else {
             echo "user typed no\n";
         }
