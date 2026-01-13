@@ -1640,23 +1640,48 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
 
     public function actionMaterial()
     {
-        $sql = "SELECT * FROM sup
-                LEFT JOIN 
-                    sup_type ON sup.SUP_TYPE_ID = sup_type.SUP_TYPE_ID
-                LEFT JOIN 
-                    sup_type_kind ON sup.SUP_TYPE_KIND_ID = sup_type_kind.SUP_TYPE_KIND_ID
-                WHERE sup.SUP_TYPE_KIND_ID IN('1','2','4')  AND sup.SUP_NAME LIKE '%กระดาษ%' 
-                ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC";
-                 $querys = Yii::$app->db2->createCommand($sql)->queryAll();
-                 $num = 1;
-                 $total = count($querys);
+        $sql = "SELECT 
+*
+FROM 
+    sup
+LEFT JOIN 
+    sup_type ON sup.SUP_TYPE_ID = sup_type.SUP_TYPE_ID
+LEFT JOIN 
+    sup_type_kind ON sup.SUP_TYPE_KIND_ID = sup_type_kind.SUP_TYPE_KIND_ID
+LEFT JOIN sup_unit u ON u.SUP_UNIT_ID = sup.SUP_UNIT_ID
+WHERE sup.SUP_TYPE_KIND_ID IN('1','2','4') 
+ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC";
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $num = 1;
+        $total = count($querys);
 
-                 foreach ($querys as $asset) {
+        foreach ($querys as $item) {
+            $checkMaterial = Categorise::find()->where(['title' => $item['SUP_NAME'], 'name' => 'asset_item'])->one();
+            $assetType = Categorise::find()->where(['category_id' => 4, 'name' => 'asset_type', 'title' => $item['SUP_TYPE_NAME']])->one();
+            if ($checkMaterial) {
+                $model = $checkMaterial;
+            } else {
+                $model = new Categorise;
+                $model->ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                $model->name = 'asset_item';
+            }
+            $dataJson = [
+                'unit' => $item['SUP_UNIT_NAME'],
+                'metter_type' => $item['SUP_TYPE_KIND_NAME'],
+                'purchase_type' => ''
+            ];
 
-                 }
-                BaseConsole::updateProgress($num, $total);
-                $num++;
+            $model->qty_max = (float)$item['MAX'];
+            $model->qty_min = (float)$item['MIN'];
+            $model->group_id = 'MATER';
+            $model->category_id = $assetType ? $assetType->code : '';
+            $model->code = $item['SUP_FSN_NUM'];
+            $model->title = $item['SUP_NAME'];
+            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson, $item);
+            $model->save(false);
 
+            BaseConsole::updateProgress($num, $total);
+            $num++;
+        }
     }
-
 }
