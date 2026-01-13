@@ -1546,90 +1546,90 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
             try {
 
 
-            $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-            $checkItem = Asset::findOne(['code' => $asset['ARTICLE_NAME']]);
-            $model = $checkItem ? $checkItem : new Asset([
-                'ref' => $ref
-            ]);
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                $checkItem = Asset::findOne(['code' => $asset['ARTICLE_NAME']]);
+                $model = $checkItem ? $checkItem : new Asset([
+                    'ref' => $ref
+                ]);
 
-            if (!$checkItem) {
-                $this->CreateDir($ref);
-                if ($asset['IMG']) {
+                if (!$checkItem) {
+                    $this->CreateDir($ref);
+                    if ($asset['IMG']) {
 
-                    $name = time() . '.jpg';
-                    file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $asset['IMG']);
+                        $name = time() . '.jpg';
+                        file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $asset['IMG']);
 
-                    $upload = new Uploads;
-                    $upload->ref = $ref;
-                    $upload->name = 'asset';
-                    $upload->file_name = $name;
-                    $upload->real_filename = $name;
-                    $upload->type = 'jpg';
-                    $upload->save(false);
+                        $upload = new Uploads;
+                        $upload->ref = $ref;
+                        $upload->name = 'asset';
+                        $upload->file_name = $name;
+                        $upload->real_filename = $name;
+                        $upload->type = 'jpg';
+                        $upload->save(false);
+                    }
                 }
-            }
-           
 
-            // ตรวจสอบว่ามีข้อมูลในฐานข้อมูลหรือไม่ ถ้าไม่มีให้เพิ่มข้อมูลลงไป
-            $assetType = $asset['DECLINE_NAME'];
-            $assetItemName = $asset['ARTICLE_NAME'];
-            $assetCode = $asset['ARTICLE_NUM'];
-            $vendorName = $asset['VENDOR_NAME'];
-            $methodGet = $asset['METHOD_NAME'];
-            $purchaseText = $asset['BUY_NAME'];
-            $budgetType = $asset['BUDGET_NAME'];
-            $departmentName = $asset['HR_DEPARTMENT_SUB_SUB_NAME'];
-            $onYear = $asset['YEAR_ID'];
-            $price =  $asset['PRICE_PER_UNIT'];
-            $receiveDate = $asset['RECEIVE_DATE'];
-            $assetStatus = $asset['STATUS_NAME'];
-            $assetItem = AssetHelper::CheckAssetItem($assetType, $assetCode, $assetItemName);
-            $assetType =  Categorise::findOne(['title' => $asset['DECLINE_NAME'],'name' => 'asset_type','group_id' => 'EQUIP']);
 
-            $checkAsset = $assetCode ? Asset::find()->where(['code' => $assetCode])->one() : null;
-            $org = $departmentName ? Organization::find()->where(['name' => $departmentName])->one() : null;
-            $model->department = $org && isset($org->id) ? $org->id : 0;  // หน่วยงานภายในตามโครงสร้าง
-            // สมมติว่าคุณมี Model ชื่อ YourModel
-            $model = $checkAsset ?? new Asset();
-            $model->asset_group_id = 4;
-            $model->asset_type_id = isset($assetType->code) ? $assetType->code : null;
-            $model->asset_item_id = isset($assetItem) ? $assetItem->code : null;
-            $model->code = $assetCode;
-            $model->owner = $this->Person($asset['PERSON_ID']) ?->id ?? 0;
-            $data_json = [
-                'fsn_old' => $assetCode,
-                'brand' => $asset['BRAND_NAME'],
-                'asset_model' => $asset['MODEL_NAME'],
-                'color_name' => $asset['COLOR_NAME'],
-                'serial_number' => $asset['SERIAL_NO'],
-                'location' => $asset['LOCATION_NAME'].' '.$asset['LOCATION_LEVEL_NAME'].' '.$asset['LEVEL_ROOM_NAME'],
-                'unit' => $asset['SUP_UNIT_NAME'],
-                'asset_options' => $asset['ARTICLE_PROP'],
-                'expire_date' => $asset['EXPIRE_DATE'],
-                'vendor_id' => $vendorName ? AssetHelper::findByName('vendor', $vendorName) : null,
-                'method_get' => $methodGet ? AssetHelper::findByName('method_get', $methodGet) : null,
-                'budget_type' => $budgetType ? AssetHelper::findByName('budget_type', $budgetType) : null,
-                'asset_type_text' => $assetType,
-                'method_get_text' => $methodGet,
-                'purchase_text' => $purchaseText,
-                'budget_type_text' => $budgetType,
-                'department_name' => $departmentName,
-            ];
-            $model->asset_name = $asset['ARTICLE_NAME'];
-            $model->fsn_number = $asset['SUP_FSN'];
-            $model->purchase = $purchaseText ? AssetHelper::findByName('purchase', $purchaseText) : null;  // วิธีการได้มา
-            $model->on_year = $onYear;
-            $model->price = $price;
-            $model->receive_date = $receiveDate;// วันที่รับเข้า
-            // $model->asset_status = $assetStatus ? AssetHelper::findByName('asset_status', $assetStatus) : null;  // วิธีการได้มา
-            $model->asset_status = $asset['STATUS_ID'];
+                // ตรวจสอบว่ามีข้อมูลในฐานข้อมูลหรือไม่ ถ้าไม่มีให้เพิ่มข้อมูลลงไป
+                $assetType = $asset['DECLINE_NAME'];
+                $assetItemName = $asset['ARTICLE_NAME'];
+                $assetCode = $asset['ARTICLE_NUM'];
+                $vendorName = $asset['VENDOR_NAME'];
+                $methodGet = $asset['METHOD_NAME'];
+                $purchaseText = $asset['BUY_NAME'];
+                $budgetType = $asset['BUDGET_NAME'];
+                $departmentName = $asset['HR_DEPARTMENT_SUB_SUB_NAME'];
+                $onYear = $asset['YEAR_ID'];
+                $price =  $asset['PRICE_PER_UNIT'];
+                $receiveDate = $asset['RECEIVE_DATE'];
+                $assetStatus = $asset['STATUS_NAME'];
+                $assetItem = AssetHelper::CheckAssetItem($assetType, $assetCode, $assetItemName);
+                $assetType =  Categorise::findOne(['title' => $asset['DECLINE_NAME'], 'name' => 'asset_type', 'group_id' => 'EQUIP']);
 
-           
-            $model->data_json = ArrayHelper::merge($model->data_json, $data_json, $this->cleanUtf8($asset));
-            $model->save(false);
-            BaseConsole::updateProgress($num, $total);
-            $num++;
-                            //code...
+                $checkAsset = $assetCode ? Asset::find()->where(['code' => $assetCode])->one() : null;
+                $org = $departmentName ? Organization::find()->where(['name' => $departmentName])->one() : null;
+                $model->department = $org && isset($org->id) ? $org->id : 0;  // หน่วยงานภายในตามโครงสร้าง
+                // สมมติว่าคุณมี Model ชื่อ YourModel
+                $model = $checkAsset ?? new Asset();
+                $model->asset_group_id = 4;
+                $model->asset_type_id = isset($assetType->code) ? $assetType->code : null;
+                $model->asset_item_id = isset($assetItem) ? $assetItem->code : null;
+                $model->code = $assetCode;
+                $model->owner = $this->Person($asset['PERSON_ID'])?->id ?? 0;
+                $data_json = [
+                    'fsn_old' => $assetCode,
+                    'brand' => $asset['BRAND_NAME'],
+                    'asset_model' => $asset['MODEL_NAME'],
+                    'color_name' => $asset['COLOR_NAME'],
+                    'serial_number' => $asset['SERIAL_NO'],
+                    'location' => $asset['LOCATION_NAME'] . ' ' . $asset['LOCATION_LEVEL_NAME'] . ' ' . $asset['LEVEL_ROOM_NAME'],
+                    'unit' => $asset['SUP_UNIT_NAME'],
+                    'asset_options' => $asset['ARTICLE_PROP'],
+                    'expire_date' => $asset['EXPIRE_DATE'],
+                    'vendor_id' => $vendorName ? AssetHelper::findByName('vendor', $vendorName) : null,
+                    'method_get' => $methodGet ? AssetHelper::findByName('method_get', $methodGet) : null,
+                    'budget_type' => $budgetType ? AssetHelper::findByName('budget_type', $budgetType) : null,
+                    'asset_type_text' => $assetType,
+                    'method_get_text' => $methodGet,
+                    'purchase_text' => $purchaseText,
+                    'budget_type_text' => $budgetType,
+                    'department_name' => $departmentName,
+                ];
+                $model->asset_name = $asset['ARTICLE_NAME'];
+                $model->fsn_number = $asset['SUP_FSN'];
+                $model->purchase = $purchaseText ? AssetHelper::findByName('purchase', $purchaseText) : null;  // วิธีการได้มา
+                $model->on_year = $onYear;
+                $model->price = $price;
+                $model->receive_date = $receiveDate; // วันที่รับเข้า
+                // $model->asset_status = $assetStatus ? AssetHelper::findByName('asset_status', $assetStatus) : null;  // วิธีการได้มา
+                $model->asset_status = $asset['STATUS_ID'];
+
+
+                $model->data_json = ArrayHelper::merge($model->data_json, $data_json, $this->cleanUtf8($asset));
+                $model->save(false);
+                BaseConsole::updateProgress($num, $total);
+                $num++;
+                //code...
             } catch (\Throwable $th) {
                 echo "เกิดข้อผิดพลาด : " . $asset['ARTICLE_ID'] . " - " . $th->getMessage() . "\n";
                 exit;
@@ -1637,4 +1637,5 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
         }
         echo "นำเข้าข้อมูลครุภัณฑ์เสร็จสิ้น!\n";
     }
+
 }
