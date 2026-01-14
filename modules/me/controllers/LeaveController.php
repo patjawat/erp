@@ -356,10 +356,11 @@ class LeaveController extends Controller
             'date_end' => $dateEnd,
             'on_holidays' => 0,
             'total_days' => 0,
-            'emp_id' => $me->id
+            'emp_id' => $me->id,
         ]);
-
+        
         $model->data_json = [
+            'work_shift' => $me->work_shift,
             'title' => $this->request->get('title'),
             'address' => strip_tags($model->CreateBy()->fulladdress),
             'phone' => $model->CreateBy()->phone,

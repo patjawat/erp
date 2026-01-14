@@ -72,12 +72,12 @@ $resultsJs = <<<JS
 <?php $form = ActiveForm::begin([
     'id' => 'form-elave',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-      'validationUrl' => ['/hr/leave/create-validator', 'id' => $model->id],
+    'validationUrl' => ['/hr/leave/create-validator', 'id' => $model->id],
 ]); ?>
 
-<?php if(!$model->isNewRecord):?>
- <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
- <?php endif?>
+<?php if (!$model->isNewRecord): ?>
+    <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
+<?php endif ?>
 <div class="row d-flex justify-content-center">
     <div class="col-lg-12 col-md-12">
         <!-- Row -->
@@ -144,67 +144,46 @@ $resultsJs = <<<JS
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
                     ],
-                        'pluginEvents' => [
-                                'select2:unselect' => 'function() {
+                    'pluginEvents' => [
+                        'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                                'select2:select' => 'function() {
+                        'select2:select' => 'function() {
                                         calDays();
                                     }',
-                            ],
+                    ],
                 ])->label('ประเภท');
                 ?>
             </div>
             <div class="col-6">
+                <?php
+                echo $form->field($model, 'data_json[work_shift]')->widget(Select2::classname(), [
+                    'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
+                    'options' => [
+                        'id' => 'work_shift',
+                        'placeholder' => '--- ประเภทของเวร ---',
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                    // เพิ่มการดักจับ Event ตรงนี้
+                    'pluginEvents' => [
+                        "change" => "function() { calDays(); }",
+                    ]
+                ])->label('(หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์) *');
+                ?>
+                <div class="d-flex justify-content-between gap-3">
+                    <div class="w-50">
+                        <?php echo $form->field($model, 'data_json[sat_sun_days]')->textInput([
+                            'id' => 'satsunDays'
+                        ])->label('วันเสาร์-อาทิตย์') ?>
+                    </div>
 
-                <div class="bg-primary bg-opacity-10 p-3 rounded mb-3">
-                    <div>
-                        <!-- <h6>สรุปวันลา : <span class="cal-days text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13"></h6> -->
-                        <table class="table table-hover">
-                            <tbody>
-                                <tr class="">
-                                    <td scope="row"><span class="fw-bolder">วันเสาร์-อาทิตย์</span></td>
-                                    <td class="text-center"><span clas="f-wsemibold"
-                                            id="satsunDays"><?php echo $model->data_json['sat_sun_days'] ?? 0 ?></span>
-                                    </td>
-                                </tr>
-                                <tr class="">
-                                    <td scope="row">
-                                        <span class="fw-bolder">วันหยุดนักขัตฤกษ์</span>
-                                    </td>
-                                    <td class="text-center"> <span clas="f-wsemibold"
-                                            id="holiday"><?php echo $model->data_json['holidays'] ?? 0 ?></span></td>
-                                </tr>
-                                <tr class="">
-                                    <td scope="row">
-                                        <span class="fw-bolder">ประเภทของเวร</span>
-                                    </td>
-                                    <td class="text-center"> <span clas="f-wsemibold"
-                                            id="shift"><?php echo $model->data_json['work_shift'] ?? 0 ?></span></td>
-                                </tr>
-                                <tr class="">
-                                    <td scope="row">
-                                        <span class="fw-bolder">สรุปวันลา</span>
-                                    </td>
-                                    <td class="text-center"> <span clas="f-wsemibold"
-                                            id="summaryDay"><?php echo $model->total_days ?></span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p class="text-danger p-0">
-                            (หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์) *
-                        </p>
-
-                        <!-- <ul>
-                            <li class="day_normal">วันเสาร์-อาทิตย์ : <span class="cal-satsunDays text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
-                            <li class="day_normal">วันหยุดนักขัตฤกษ์ : <span class="cal-holiday text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span></li>
-                            <li class="day_off">วัน OFF : <span class="cal-holiday_me text-black bg-danger-subtle badge rounded-pill fw-ligh fs-13">0</span>
-                        </ul> -->
+                    <div class="w-50">
+                        <?php echo $form->field($model, 'data_json[holidays]')->textInput(['id' => 'holiday'])->label('วันหยุดนักขัตฤกษ์') ?>
                     </div>
                 </div>
-
-
-
+                <?php echo $form->field($model, 'total_days')->textInput(['id' => 'summaryDay'])->label('สรุปวันลา') ?>
             </div>
         </div>
 
@@ -316,10 +295,10 @@ $resultsJs = <<<JS
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[sat_sun_days]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[holidays]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[work_shift]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'total_days')->hiddenInput()->label(false) ?>
+
+
+
+
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
@@ -336,8 +315,9 @@ $resultsJs = <<<JS
 $calDaysUrl = Url::to(['/hr/leave/cal-days', 'emp_id' => $model->emp_id]);
 $js = <<<JS
 
-    calDays()
-      thaiDatepicker('#leave-date_start,#leave-date_end')
+        calDays()
+        // ตรวจสอบเบื้องต้นตอนโหลดหน้าเว็บ
+        thaiDatepicker('#leave-date_start,#leave-date_end')
 
         function toggleDateEndType() {
             let dateStart = \$('#leave-date_start').val();
@@ -446,9 +426,7 @@ $js = <<<JS
                 },
                 dataType: "json",
                 success: function (res) {
-                    console.log(res);
-                    
-
+                    console.log(res.shift);
                     if(res.status == 'error'){
                         Swal.fire({
                             icon: 'error',
@@ -470,18 +448,39 @@ $js = <<<JS
                        return false;
 
                     }
+
                     
-                    \$('#satsunDays').html(res.satsunDays)
-                    \$('#leave-data_json-sat_sun_days').val(res.satsunDays)
+                         var workShift = $('#work_shift');
+                          var holiday = $('#holiday');
+
+                        var satSunDays = $('#satsunDays'); // ปกติ Yii2 จะใช้ class 'field-[ID]' คลุมฟิลด์ไว้
+                                    
+                        var summaryDay =  $('#summaryDay');
+                        var totalDays = $('#leave-total_days');
                     
-                    \$('#shift').html(res.shift_name)
-                    \$('#leave-data_json-work_shift').val(res.shift)
+                    // ตรวจสอบค่า (ระวังคำสะกด: mormal -> normal หรือตามที่คุณตั้งใน data)
+                    if (workShift.val() == 'normal') {
+                        // ถ้าเป็น 'ปกติ' ให้ซ่อน
+                         holiday.prop('readOnly', true)
+                        summaryDay.prop('readOnly', true)
+                        totalDays.prop('readOnly', true)
+                        satSunDays.prop('readOnly', true)
+                    } else if (workShift.val() == 'shift') {
+                        // ถ้าเป็น 'เวร 8 ชั่วโมง' ให้แสดง
+                        holiday.prop('readOnly', false)
+                        summaryDay.prop('readOnly', false)
+                        totalDays.prop('readOnly', false)
+                        satSunDays.prop('readOnly', false)
+                    }
                     
-                    \$('#holiday').html(res.holiday)
-                   \$('#leave-data_json-holidays').val(res.holiday)
+                    \$('#satsunDays').val(res.satsunDays)
+                    satSunDays.val(res.satsunDays)
+                    satSunDays.val(res.satsunDays)
+                    
+                    \$('#holiday').val(res.holiday)
                    
-                   \$('#summaryDay').html(res.total)
-                   \$('#leave-total_days').val(res.total)
+                   \$('#summaryDay').val(res.total)
+
                    if(res.isDayOff >= 1){
                     \$('.day_normal').hide()
                     \$('.day_off').show()
@@ -508,7 +507,26 @@ $js = <<<JS
             }
         });
 
-
+    $("body").on("change", "#work_shift", function () {
+        var value = $(this).val();
+        var id = $('#leave-emp_id').val();
+        if(value){   
+            $.ajax({
+                url: "/hr/work-shift/update-shift", // <-- route ไปยัง action
+                type: "POST",
+                data: {
+                    id: id,
+                    work_shift: value,
+                },
+                success: async function (response) {
+                    await calDays();
+                },
+                error: function () {
+                    error("เกิดข้อผิดพลาดในการบันทึก");
+                }
+            });
+        }
+    });
 
     JS;
 $this->registerJS($js, View::POS_END);
