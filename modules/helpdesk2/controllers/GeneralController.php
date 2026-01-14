@@ -38,12 +38,13 @@ class GeneralController extends \yii\web\Controller
 
         // ย้าย search condition มาไว้ท้ายสุด และเช็ค empty ก่อน
         if (!empty($searchModel->q)) {
+            $q = trim($searchModel->q);
             $dataProvider->query->andFilterWhere([
                 'or',
-                ['like', 'repair_number', $searchModel->q],
-                ['like', 'title', $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+                ['like', 'repair_number', $q],
+                ['like', 'title', $q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
             ]);
         }
 

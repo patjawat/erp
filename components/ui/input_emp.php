@@ -49,7 +49,7 @@ $placeholder = $placeholder ?? 'บุคลากร';
             echo $form->field($model, $feild)->widget(Select2::classname(), [
                 'initValueText' => $initEmployee,
                 // 'size' => Select2::,
-                'options' => ['placeholder' => 'เลือก'.$placeholder.'...'],
+                'options' => ['placeholder' => $placeholder],
                 'pluginOptions'=>[
                     'dropdownParent' => (isset($modal) ? '#main-modal' : false),
                     'width' => '100%',

@@ -20,17 +20,16 @@ $this->params['breadcrumbs'][] = 'สต๊อก';
 
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+<i data-lucide="layout-grid"></i>  
+        <?=$this->title?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('../default/menu',['active' => 'in_stock'])?>
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/inventory/menu',['active' => 'stock']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -122,55 +121,54 @@ $products = $cart->getItems();
 
     <?php
 
-use app\modules\inventory\models\Stock;
 
 $StoreInWarehouseUrl = Url::to(['/inventory/stock/warehouse']);
 $OrderRequestInWarehouseUrl = Url::to(['/inventory/warehouse/list-order-request']);
 $js = <<< JS
-  getStoreInWarehouse()
+//   getStoreInWarehouse()
 
-  // รายการขอเบิก
-  async function getStoreInWarehouse(){
-    await $.ajax({
-      type: "get",
-      url: "$OrderRequestInWarehouseUrl",
-      dataType: "json",
-      success: function (res) {
-        $('#showOrderRequestInWarehouse').html(res.content)
-        $('#totalStock').html(res.totalstock)
-        $('#OrderConfirm').html(res.confirm)
-        $('#showTotalOrder').html(res.totalOrder)
-      }
-    });
-  }
-
-
+//   // รายการขอเบิก
+//   async function getStoreInWarehouse(){
+//     await $.ajax({
+//       type: "get",
+//       url: "$OrderRequestInWarehouseUrl",
+//       dataType: "json",
+//       success: function (res) {
+//         $('#showOrderRequestInWarehouse').html(res.content)
+//         $('#totalStock').html(res.totalstock)
+//         $('#OrderConfirm').html(res.confirm)
+//         $('#showTotalOrder').html(res.totalOrder)
+//       }
+//     });
+//   }
 
 
-    $("body").on("click", ".add-sub-cart", function (e) {
-    e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
-        success: function (res) {
-            if(res.status == 'error'){
-                    Swal.fire({
-                    icon: "warning",
-                    title: "เกินจำนวน",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                }
-                if(res.status =='success')
-                {
-                    $('#totalCount').text(res.totalCount);
-                }
-                success()
-                // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
-        }
-    });
-});
+
+
+//     $("body").on("click", ".add-sub-cart", function (e) {
+//     e.preventDefault();
+//     $.ajax({
+//         type: "get",
+//         url: $(this).attr('href'),
+//         dataType: "json",
+//         success: function (res) {
+//             if(res.status == 'error'){
+//                     Swal.fire({
+//                     icon: "warning",
+//                     title: "เกินจำนวน",
+//                     showConfirmButton: false,
+//                     timer: 1500,
+//                 });
+//                 }
+//                 if(res.status =='success')
+//                 {
+//                     $('#totalCount').text(res.totalCount);
+//                 }
+//                 success()
+//                 // $.pjax.reload({ container:res.container, history:false,replace: false,timeout: false});
+//         }
+//     });
+// });
 
 
 JS;

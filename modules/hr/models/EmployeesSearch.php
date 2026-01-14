@@ -103,6 +103,7 @@ class EmployeesSearch extends Employees
             'amphure' => $this->amphure,
             'district' => $this->district,
             'zipcode' => $this->zipcode,
+            'status' => $this->status,
             'position_name' => $this->position_name,
             'position_type' => $this->position_type,
             'department' => $this->department,
@@ -125,7 +126,6 @@ class EmployeesSearch extends Employees
             ->andFilterWhere(['like', 'fname_en', $this->fname_en])
             ->andFilterWhere(['like', 'lname_en', $this->lname_en])
             ->andFilterWhere(['like', 'address', $this->address])
-            ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'data_json', $this->data_json])
             ->andFilterWhere(['like', 'emergency_contact', $this->emergency_contact]);
 

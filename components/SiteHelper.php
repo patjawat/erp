@@ -49,7 +49,7 @@ class SiteHelper extends Component
                         'leader' => isset($model->data_json['leader']) ? $model->data_json['leader'] : null,
                         'leader_fullname' => isset($model->data_json['leader_fullname']) ? $model->data_json['leader_fullname'] : null,
                         'leader_position' => isset($leader->data_json['position_name_text']) ? ($leader->data_json['position_name_text'].$leader->data_json['position_level_text']) : '',
-                        'leader_signature_path' => $leader->SignatureFilePath(),
+                        'leader_signature_path' => $leader?->SignatureFilePath(),
                         'address' => isset($model->data_json['address']) ? $model->data_json['address'] : null,
                         'province' => isset($model->data_json['province']) ? $model->data_json['province'] : null,
                         'phone' => isset($model->data_json['phone']) ? $model->data_json['phone'] : null,

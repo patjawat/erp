@@ -1134,7 +1134,7 @@ public function generalMenu()
     // แสดงระดับของข้าราชการ
     public function positionLevelName()
     {
-        return isset($this->data_json['position_level_text']) ? $this->data_json['position_level_text'] : false;
+        return $this->positionLevel ? $this->positionLevel->title : $this->position_level;
     }
 
     public function educationName()
