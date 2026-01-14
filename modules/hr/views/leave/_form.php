@@ -343,8 +343,8 @@ $js = <<<JS
         var form = \$(this);
         
         
-        // let totalDays = parseInt(\$('#leave-total_days').val(), 10);
-        let totalDays = parseFloat($('#leave-total_days').val());
+        // let totalDays = parseInt(\$('#summaryDay').val(), 10);
+        let totalDays = parseFloat($('#summaryDay').val());
         console.log(totalDays);
 
         if (isNaN(totalDays) || totalDays <= 0) {
@@ -435,16 +435,14 @@ $js = <<<JS
                             confirmButtonText: 'ตกลง'
                         });
 
-                        \$('#satsunDays').html(0)
-                        \$('#leave-data_json-sat_sun_days').val(0)
+                        \$('#satsunDays').val(0)
                         
     
                         
-                        \$('#holiday').html(0)
-                       \$('#leave-data_json-holidays').val(0)
+                        \$('#holiday').val(0)
                        
-                       \$('#summaryDay').html(0)
-                       \$('#leave-total_days').val(0)
+                       \$('#summaryDay').val(0)
+                       \$('#summaryDay').val(0)
                        return false;
 
                     }
@@ -455,20 +453,17 @@ $js = <<<JS
 
                         var satSunDays = $('#satsunDays'); // ปกติ Yii2 จะใช้ class 'field-[ID]' คลุมฟิลด์ไว้
                                     
-                        var summaryDay =  $('#summaryDay');
-                        var totalDays = $('#leave-total_days');
+                        var totalDays = $('#summaryDay');
                     
                     // ตรวจสอบค่า (ระวังคำสะกด: mormal -> normal หรือตามที่คุณตั้งใน data)
                     if (workShift.val() == 'normal') {
                         // ถ้าเป็น 'ปกติ' ให้ซ่อน
                          holiday.prop('readOnly', true)
-                        summaryDay.prop('readOnly', true)
                         totalDays.prop('readOnly', true)
                         satSunDays.prop('readOnly', true)
                     } else if (workShift.val() == 'shift') {
                         // ถ้าเป็น 'เวร 8 ชั่วโมง' ให้แสดง
                         holiday.prop('readOnly', false)
-                        summaryDay.prop('readOnly', false)
                         totalDays.prop('readOnly', false)
                         satSunDays.prop('readOnly', false)
                     }
