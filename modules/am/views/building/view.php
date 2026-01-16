@@ -43,6 +43,12 @@ $group = Yii::$app->request->get('group');
         <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
     </div>
 </div>
+<div class="card">
+    <div class="card-body">
+        <?= $model->listShowImage() ?>
+    </div>
+</div>
+
 
 <?php
 $js = <<< JS

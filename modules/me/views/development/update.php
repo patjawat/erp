@@ -11,7 +11,6 @@ $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' 
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 
-
 <div class="development-update">
 
     <?= $this->render('@app/modules/hr/views/development/_form', [

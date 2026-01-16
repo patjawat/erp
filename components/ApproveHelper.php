@@ -7,9 +7,10 @@ use yii\db\Expression;
 use yii\base\Component;
 use app\models\Province;
 use app\models\Categorise;
+use app\modules\am\models\AssetDetail;
 use yii\helpers\ArrayHelper;
 use app\modules\purchase\models\Order;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 
@@ -26,6 +27,7 @@ class ApproveHelper extends Component
             'stock' => self::StockApprove(),
             'purchase' => self::Purchase(),
             'development' => self::Development(),
+            'assetMove' => self::AssetMove(),
             // 'helpdesk' => self::Helpdesk(),
         ];
     }
@@ -184,7 +186,7 @@ class ApproveHelper extends Component
                 ->alias('approve')
                 ->leftJoin('`development`', "approve.from_id = `development`.id")
                 ->where([
-                    'approve.name' => 'leave',
+                    'approve.name' => 'development',
                     'approve.emp_id' => $me->id,
                     'approve.status' => 'Pending'
                 ])
@@ -210,4 +212,28 @@ class ApproveHelper extends Component
             ];
         }
     }
+
+    // ขอเคลื่อนย้ายทรัพย์สิน
+     public static function AssetMove()
+    {
+        try {
+            $me = UserHelper::GetEmployee();
+             $datas = Approve::find()->where(['name' => 'asset_move', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+
+            return [
+                'title' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
+                'total' => isset($datas) ? count($datas) : 0,
+                'datas' => $datas,
+                'emp_id' => $me->id,
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
+                'total' => 0,
+                'datas' => [],
+                 'emp_id' => 0
+            ];
+        }
+    }
+
 }

@@ -28,7 +28,7 @@ $listApprove = Approve::find()
     <div class="position-absolute top-0 bottom-0 start-0 border-start border-2 border-light ms-4" style="z-index: 0;">
     </div>
     <div class="d-flex flex-column gap-4 position-relative">
-        <?php foreach ($model->listApprove() as $item): ?>
+        <?php foreach ($listApprove as $item): ?>
             <div class="d-flex gap-3 align-items-center bg-white z-1 p-2 <?= $item->status == 'Pending' ? 'border border-1 rounded-2 border-primary' : '' ?>">
                 <div class="d-flex align-items-center flex-grow-1">
                     <p class="mb-0 small fw-bold text-dark"></p>

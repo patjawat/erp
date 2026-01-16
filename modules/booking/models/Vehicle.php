@@ -200,25 +200,26 @@ class Vehicle extends \yii\db\ActiveRecord
     // ผู้ขอบริการ
     public function userRequest()
     {
-        // try {
+        try {
         $emp = $this->employee;
         $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
         return [
-            // 'avatar' => $emp->getAvatar(false, 'วันที่ขอ ' . $createDate),
+            'photo' => $emp->showAvatar(),
             'avatar' => $emp->getAvatar(false,$emp->departmentName()),
             'fullname' => $emp->fullname,
             'department' => $emp->departmentName(),
             'signature' => $emp->getInfo()['signature'],
 
         ];
-        // } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
 
-        //     return [
-        //         'avatar' => '',
-        //         'fullname' => '',
-        //         'department' => '',
-        //     ];
-        // }
+            return [
+                'photo' => '@web/img/placeholder-img.jpg',
+                'avatar' => '',
+                'fullname' => '',
+                'department' => '',
+            ];
+        }
 
     }
 
@@ -509,8 +510,8 @@ if (count($datas) >= 1) {
 
             $emp = Employees::findOne(['id' => $item->emp_id]);
             if ($emp) {
-                $data .= Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                $data .= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
@@ -536,14 +537,14 @@ if (count($datas) >= 1) {
             $data .= '<div class="avatar-stack">';
             foreach (VehicleDetail::find()->where(['vehicle_id' => $this->id])->all() as $key => $item) {
                 $emp = Employees::findOne(['id' => $item->driver_id]);
-                $data .= Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                $data .= Html::a(Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
                         'src' => $emp->showAvatar()
                     ]
-                ]);
+                ]),['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]);
             }
             $data .= '</div>';
             return $data;

@@ -80,11 +80,13 @@ class UpdateTableController extends Controller
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
+            ['name' => 'driver', 'type' => 1, 'description' => 'พนักงานขับรถ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => 'plan', 'type' => 1, 'description' => 'แผนงานและโครงการ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
-
+            //การอนุมัติ
+            ['name' => '/approve-v2/*', 'type' => 2, 'description' => ''],
             // ยานพาหนะ
             ['name' => '/booking/vehicle/*', 'type' => 2, 'description' => ''],
             ['name' => '/booking/asset/*', 'type' => 2, 'description' => ''],
@@ -93,6 +95,10 @@ class UpdateTableController extends Controller
             ['name' => '/booking/vehicle/list-event-todays', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/view', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/print', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/create', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/update', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/cancel', 'type' => 2, 'description' => ''],
+
             // ห้องประชุม
             ['name' => '/booking/meeting/*', 'type' => 2, 'description' => ''],
             ['name' => '/booking/meeting/events', 'type' => 2, 'description' => ''],
@@ -105,7 +111,7 @@ class UpdateTableController extends Controller
             ['name' => '/dms/documents/view', 'type' => 2, 'description' => 'แสดงหนังสือ'],
             ['name' => '/dms/documents/delete', 'type' => 2, 'description' => 'ลบหนังสือ'],
 
-            ['name' => '/am/asset/*', 'type' => 2, 'description' => ''],
+            ['name' => '/am/*', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/depreciation', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/index', 'type' => 2, 'description' => ''],
             ['name' => '/am/asset/qrcode', 'type' => 2, 'description' => ''],
@@ -242,7 +248,8 @@ class UpdateTableController extends Controller
             ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
             ['child' => 'plan', 'parent'  => 'admin'],
-
+            //การอนุมัติ
+            ['child' => '/approve-v2/*', 'parent' => 'user'],
             // ยานพาหนะ
             ['child' => '/booking/vehicle/*', 'parent' => 'vehicle'],
             ['child' => '/booking/asset/*', 'parent' => 'vehicle'],
@@ -250,6 +257,9 @@ class UpdateTableController extends Controller
             ['child' => '/booking/vehicle/list-event-tomorrow', 'parent' => 'user'],
             ['child' => '/booking/vehicle/view', 'parent' => 'user'],
             ['child' => '/booking/vehicle/print', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/create', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/update', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/cancel', 'parent' => 'user'],
             // ระบบห้องประชุม
             ['child' => '/booking/meeting/*', 'parent' => 'meeting'],
 
@@ -258,7 +268,7 @@ class UpdateTableController extends Controller
             //แผนงานและโครงดาร
             ['child' => '/plan/*', 'parent' => 'plan'],
 
-            ['child' => '/am/asset/*', 'parent' => 'user'],
+            ['child' => '/am/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
             ['child' => '/am/asset/index', 'parent' => 'user'],
             ['child' => '/am/asset/qrcode', 'parent' => 'user'],
@@ -285,7 +295,7 @@ class UpdateTableController extends Controller
             ['child' => '/helpdesk/service-record/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/repair-parts/*', 'parent' => 'technician'],
             ['child' => '/helpdesk/general/*', 'parent' => 'technician'],
-             ['child' => '/am/maintenance/*', 'parent' => 'technician'],
+            ['child' => '/am/maintenance/*', 'parent' => 'technician'],
             ['child' => '/am/calibration/*', 'parent' => 'technician'],
             ['child' => '/am/asset-document/*', 'parent' => 'technician'],
 

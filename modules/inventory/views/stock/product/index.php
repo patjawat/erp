@@ -10,6 +10,7 @@ use app\components\StockHelper;
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 </div>
 
+
 <div
     class="table-responsive">
     <table class="table table-striped table-hover">
@@ -19,7 +20,7 @@ use app\components\StockHelper;
                 <th scope="col">รายการ</th>
                 <th scope="col">ประเภทวัสดุ</th>
                 <th scope="col" class="text-center">จำนวนคงเหลือ</th>
-                <th scope="col">ล๊อตปัจจุบัน</th>
+                <th scope="col" class="text-center">ล๊อตปัจจุบัน</th>
                 <th scope="col">ดำเนินการ</th>
             </tr>
         </thead>
@@ -38,9 +39,11 @@ use app\components\StockHelper;
                     <td><?= $item->product?->Avatar(); ?></td>
                     <td><?= $item->product?->productType->title; ?></td>
                     <td class="text-center"><?= $item->sumStockItem() ?></td>
-                    <td><?=$firstOut['lot_number']  ?></td>
+                    <td class="text-center">
+
+                    <?=$firstOut['lot_number'] == "" ? '<i class="fa-solid fa-circle-exclamation text-danger"></i>' : $firstOut['lot_number'] ?></td>
                     <td>
-                    <?php if($item->sumStockItem() > 0):?>    
+                    <?php if($item->sumStockItem() > 0 && $firstOut['lot_number'] !==""):?>    
                     <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/stock-order/add-new-order-item','id' => $firstOut['id'],'order_id' => $searchModel->order_id], ['class' => 'btn btn-sm btn-primary add-new-item']) ?></td>
                <?php else:?>
                 <button type="button" class="btn btn-sm btn-secondary" disabled><i class="fa-solid fa-circle-plus"></i> เลือก</button>

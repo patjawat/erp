@@ -27,7 +27,7 @@ use yii\helpers\Html;
                     <p class="mb-0"><?= $item->topic ?></p>
                     <p class="mb-0">สถานที่ <span class="fw-semibold"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?><span>
 
-                     <?= $item->StackMember() ?>
+                                <?= $item->StackMember() ?>
                     </p>
                 </td>
                 <td>
@@ -38,28 +38,41 @@ use yii\helpers\Html;
 
                 </td>
                 <td>
-                   <?php
-                                try {
-                                    echo $item->createdByEmp->getAvatar(false) ?? '';
-                                } catch (\Throwable $th) {
-                                } ?>
+                    <?php
+                    try {
+                        echo $item->createdByEmp->getAvatar(false) ?? '';
+                    } catch (\Throwable $th) {
+                    } ?>
                 </td>
-                 <td><?php echo $item->stackChecker() ?></td>
+                <td><?php echo $item->stackChecker() ?></td>
                 <td class="text-center"><?= $item->getStatus($item->status)['view'] ?? '-' ?></td>
                 <td class="text-end">
 
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                             จัดการ
                         </button>
                         <ul class="dropdown-menu">
-                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item']) ?></li>
+                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item']) ?>
+                            </li>
                             <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดงรายละเอียด', ['view', 'id' => $item->id], ['class' => 'dropdown-item']) ?>
                             </li>
                             <li><?= $item->development_type_id == 'dev3' ? Html::a('<i class="fa-solid fa-user-check me-1"></i> ตอบรับเป็นวิทยากร', ['/me/development/response-dev', 'id' => $item->id, 'title' => '<i class="fa-solid fa-user-check"></i> การตอบรับเป็นวิทยากร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
                             </li>
-                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+
+                            <li>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(PDF)',
+                                    ['/hr/development/print', 'id' => $item->id],
+                                    [
+                                        'class' => 'dropdown-item', // เอา open-modalx ออกถ้าต้องการให้เปิดหน้าใหม่จริงๆ
+                                        'target' => '_blank',       // แก้ตรงนี้: target (ไม่มีขีดล่าง) => _blank (มีขีดล่าง)
+                                    ]
+                                ) ?>
                             </li>
+                            <!-- <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(word)', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            </li> -->
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['/me/development/permit-request', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             </li>
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบตอบรับเป็นวิทยากร', ['/me/development/form-academic', 'id' => $item->id], ['class' => 'dropdown-item  open-modal', 'data' => ['size' => 'modal-xl']]) ?>

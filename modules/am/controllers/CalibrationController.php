@@ -2,14 +2,20 @@
 
 namespace app\modules\am\controllers;
 
+use Yii;
+use yii\web\Response;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use app\components\AppHelper;
+use app\components\UserHelper;
+use app\components\ModalHelper;
+use app\modules\am\models\Asset;
+use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetDetail;
 use app\modules\am\models\AssetDetailSearch;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
- * CalibrationController implements the CRUD actions for AssetDetail model.
+ * calibrationController implements the CRUD actions for AssetDetail model.
  */
 class CalibrationController extends Controller
 {
@@ -38,13 +44,33 @@ class CalibrationController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new AssetDetailSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+        $code = $this->request->get('code');
+        $searchModel = new AssetDetailSearch([
+            'name' => 'calibration',
+            'code' => $code,
         ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->setSort(['defaultOrder' => [
+            'id' => SORT_DESC,
+        ]]);
+
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('index', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
     }
 
     /**
@@ -55,9 +81,16 @@ class CalibrationController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        return [
+            'title' => 'แสดงรายละเอียด',
+            'content' => $this->renderAjax('view', [
+                'model' => $model,
+
+            ]),
+            'footer' => ModalHelper::modalFooterUpdateDeleteClose($id),
+        ];
     }
 
     /**
@@ -67,19 +100,50 @@ class CalibrationController extends Controller
      */
     public function actionCreate()
     {
-        $model = new AssetDetail();
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $code = $this->request->get('code');
+        $model = new AssetDetail([
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'code' => $code,
+            'name' => 'calibration'
+        ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                $me = UserHelper::GetEmployee();
+                $model->emp_id = $me->id;
+                if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
+                }
+
+                $asset = Asset::findOne(['code' => $model->code]);
+                $model->asset_id = $asset->id ?? 0;
+                $model->save();
+                return [
+                    'status' => 'success'
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if ($this->request->isAjax) {
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+                'footer' =>  ModalHelper::modalFooterSaveClose(),
+            ];
+        } else {
+
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -91,15 +155,50 @@ class CalibrationController extends Controller
      */
     public function actionUpdate($id)
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if (!empty($model->plan_date)) {
+            $model->plan_date = AppHelper::ConvertToThai($model->plan_date);
+        }
+        if (!empty($model->date_end)) {
+            $model->date_end = AppHelper::ConvertToThai($model->date_end);
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+
+                  if (!empty($model->date_start)) {
+                    $model->date_start = AppHelper::DateToDb($model->date_start);
+                }
+                if (!empty($model->date_end)) {
+                    $model->date_end = AppHelper::DateToDb($model->date_end);
+                }
+
+                $asset = Asset::findOne(['code' => $model->code]);
+                $model->asset_id = $asset->id ?? 0;
+                $model->save();
+                return [
+                    'status' => 'success'
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if ($this->request->isAjax) {
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+                'footer' =>  ModalHelper::modalFooterSaveClose(),
+            ];
+        } else {
+
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -111,9 +210,11 @@ class CalibrationController extends Controller
      */
     public function actionDelete($id)
     {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
         $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        return [
+            'status' => 'success'
+        ];
     }
 
     /**

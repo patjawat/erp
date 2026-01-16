@@ -5,78 +5,60 @@ use yii\web\View;
 
 ?>
 
-<div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <?=$form->field($model, 'data_json[date_start]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่เสนอขอ');
-        ?>
-        <?=$form->field($model, 'data_json[date_end]')->widget(Datetimepicker::className(),[
-                    'options' => [
-                        'timepicker' => false,
-                        'datepicker' => true,
-                        'mask' => '99/99/9999',
-                        'lang' => 'th',
-                        'yearOffset' => 543,
-                        'format' => 'd/m/Y', 
-                    ],
-                    ])->label('วันที่รับรางวัล');
-        ?>
-    </div>
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <?= $form->field($model, 'data_json[name]')->textInput(['autofocus' => true])->label('ชื่อรางวัล') ?>
-    </div>
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <?= $form->field($model, 'data_json[company_name]')->textInput(['autofocus' => true])->label('หน่วยงานที่มอบรางวัล') ?>
-    </div>
-</div>
 
+
+    <div class="row">
+        <div class="col-md-12">
+            <?= $form->field($model, 'data_json[name]')->textInput(['placeholder' => 'เช่น ประถมาภรณ์มงกุฎไทย'])->label('ชั้นตราเครื่องราชอิสริยาภรณ์') ?>
+        </div>
+    </div>
+
+    <hr> <h5 class="mb-3 text-primary"><i class="glyphicon glyphicon-book"></i> ข้อมูลราชกิจจานุเบกษา</h5>
+
+    <div class="row">
+        <div class="col-md-3">
+            <?= $form->field($model, 'data_json[thai_year]')->textInput(['placeholder' => '2567'])->label('ปี พ.ศ.') ?>
+        </div>
+        <div class="col-md-3">
+            <?= $form->field($model, 'data_json[gazette_book]')->textInput()->label('เล่มที่') ?>
+        </div>
+        <div class="col-md-3">
+            <?= $form->field($model, 'data_json[gazette_section]')->textInput()->label('ตอนที่') ?>
+        </div>
+        <div class="col-md-3">
+            <?= $form->field($model, 'data_json[gazette_page]')->textInput()->label('หน้าที่') ?>
+        </div>
+    </div>
+
+    <hr>
+    <h5 class="mb-3 text-primary"><i class="glyphicon glyphicon-calendar"></i> วันที่และสถานะ</h5>
+
+    <div class="row">
+        <div class="col-md-4">
+            <?= $form->field($model, 'data_json[gazette_date]')->textInput()->label('วันที่ประกาศในราชกิจจาฯ') ?>
+        </div>
+        <div class="col-md-4">
+            <?= $form->field($model, 'data_json[receive_date]')->textInput()->label('วันที่ได้รับจริง') ?>
+        </div>
+        <div class="col-md-4">
+            <?= $form->field($model, 'data_json[return_status]')->dropDownList(
+                [
+                    'ไม่ต้องคืน' => 'ไม่ต้องคืน',
+                    'ยังไม่คืน' => 'ยังไม่คืน (อยู่ระหว่างครอบครอง)',
+                    'คืนแล้ว' => 'คืนแล้ว',
+                    'ชดใช้เงินแทน' => 'ชดใช้เงินแทน',
+                ],
+                ['prompt' => '--- เลือกสถานะ ---']
+            )->label('สถานะการส่งคืน') ?>
+        </div>
+    </div>
 
 <?php
-$js = <<<JS
-
-    var thaiYear = function (ct) {
-        var leap=3;  
-        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
-        if(ct){  
-            var yearL=new Date(ct).getFullYear()-543;  
-            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
-            if(leap==2){  
-                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
-            }  
-        }              
-        this.setOptions({  
-            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
-        })                
-    };    
-     
-    $("#employeedetail-data_json-date_start").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });       
- 
-    $("#employeedetail-data_json-date_end").datetimepicker({
-        timepicker:false,
-        format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
-        lang:'th',  // แสดงภาษาไทย
-        onChangeMonth:thaiYear,          
-        onShow:thaiYear,                  
-        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
-        closeOnDateSelect:true,
-    });       
- 
+$js = <<< JS
+ thaiDatepicker('#employeedetail-data_json-gazette_date,#employeedetail-data_json-receive_date')
+    handleFormSubmit('#form', null, async function(response) {
+        await location.reload();
+    });
 JS;
-$this->registerJS($js, View::POS_END)
+$this->registerJs($js);
 ?>

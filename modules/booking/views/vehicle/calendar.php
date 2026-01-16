@@ -23,7 +23,6 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 <?= $this->render('@app/modules/booking/vehicle_menu',['active' => $vehicle_type]) ?>
 <?php $this->endBlock(); ?>
 
-
 <style>
     .status-indicator {
         width: 12px;

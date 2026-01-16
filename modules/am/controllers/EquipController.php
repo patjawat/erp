@@ -279,7 +279,7 @@ class EquipController extends Controller
                 $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
 
                 if ($model->save()) {
-                    return $this->redirect(['view', 'id' => $model->id]);
+                    return $this->redirect(['view-asset', 'id' => $model->id]);
                 } else {
                     return $model->getErrors();
                 }
@@ -329,7 +329,7 @@ class EquipController extends Controller
             if ($model->save()) {
                 $model->updateFsn();
                 $this->CheckUpdateData($model);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['view-asset', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return $model->getErrors();
@@ -540,7 +540,7 @@ class EquipController extends Controller
         ]);
     }
 
-    // พรบ.ต่อภาษี
+    //การสอลเทียบ
     public function actionCalibration($id)
     {
         $model = $this->findModel($id);
@@ -548,6 +548,25 @@ class EquipController extends Controller
             'model' => $model,
         ]);
     }
+
+    //การยืมคืน
+    public function actionBorrow($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('borrow', [
+            'model' => $model,
+        ]);
+    }
+
+    //การเคลื่อนย้าย
+    public function actionMove($id)
+    {
+        $model = $this->findModel($id);
+        return $this->render('move', [
+            'model' => $model,
+        ]);
+    }
+
 
 
     /**

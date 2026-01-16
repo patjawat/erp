@@ -1,4 +1,5 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
@@ -51,11 +52,20 @@ $listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_it
     <div class="col-lg-3 col-md-3 col-sm-12">
         <?php
 
+
+        // ถ้าสุดท้ายยังว่างอยู่ หรือไม่ใช่ array ให้บังคับเป็น array ว่าง []
+        // if ($listAssetitem) {
+        //     $data = $listAssetType;
+        // } else {
+        //     $data = ['' => ''];
+        // }
+$data = (!empty($listAssetType)) ? $listAssetType : [];
         echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
-            'data' => $listAssetType ? $listAssetType : $model->listAssetType(),
+            'data' => $data,
             'options' => [
                 'placeholder' => 'ทุกประเภท',
-                'id' => 'asset_type_id'
+                'id' => 'asset_type_id',
+                'value' => $model->asset_type_id,
             ],
             'pluginOptions' => [
                 'allowClear' => true,
@@ -243,6 +253,6 @@ $js = <<< JS
 thaiDatepicker('#assetsearch-q_receive_date')
 
 JS;
-$this->registerJS($js,View::POS_END);
+$this->registerJS($js, View::POS_END);
 
 ?>

@@ -1092,4 +1092,8 @@ class DocumentsController extends Controller
     {
         return $this->render('tags');
     }
+        public function actionInfo()
+    {
+        return $this->render('info');
+    }
 }

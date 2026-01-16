@@ -170,6 +170,7 @@ class DevelopmentController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+     
 
         try {
             $model->date_start = AppHelper::convertToThai($model->date_start);
@@ -178,7 +179,6 @@ class DevelopmentController extends Controller
             $model->vehicle_date_end = AppHelper::convertToThai($model->vehicle_date_end);
         } catch (\Throwable $th) {
         }
-
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -308,29 +308,30 @@ class DevelopmentController extends Controller
         $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
         $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
         $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
-        $templateProcessor->setValue('position', $model->createdByEmp?->positionName());
+        $templateProcessor->setValue('position', ($model->createdByEmp?->positionName().(count($model->listMemberPrint()) > 0 ? ' พร้อมด้วย' : '')));
         $templateProcessor->setValue('topic', $model->topic);
         $templateProcessor->setValue('member', $model->memberText()['count'] > 1 ? 'พร้อมด้วย ' . $model->memberText()['text'] : '');
         $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
         $templateProcessor->setValue('distance', $model->data_json['distance'] ?? '-');
+        $templateProcessor->setValue('date_start', ThaiDateHelper::formatThaiDate($model->date_start,'medium'));
+        $templateProcessor->setValue('date_end', ThaiDateHelper::formatThaiDate($model->date_end,'medium'));
         $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
-        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
         $templateProcessor->setValue('date_go', ThaiDateHelper::formatThaiDate($model->vehicle_date_start));
         $templateProcessor->setValue('date_back', ThaiDateHelper::formatThaiDate($model->vehicle_date_end));
         $templateProcessor->setValue('v_type', ($model->vehicleType?->title ?? '-') . ' ทะเบียน ' . ($model->data_json['license_plate'] ?? '-'));
         $countDays = (new DateTime($model->date_end))->diff(new DateTime($model->date_start))->days + 1;
         $templateProcessor->setValue('count_days', $countDays);
 
-        $templateProcessor->cloneRow('num', count($model->listMember()));
+        $templateProcessor->cloneRow('member_name', count($model->listMemberPrint()));
         $i = 1;
         $num = 1;
-        foreach ($model->listMember() as $memberItem) {
-            $templateProcessor->setValue('num#' . $i, $num++);
-            $templateProcessor->setValue('member_name#' . $i, $memberItem->emp?->fullname ?? '-');
 
+        foreach ($model->listMemberPrint() as $memberItem) {
+            $data[] = $memberItem->emp->fullname;
+            $templateProcessor->setValue('member_name#' . $i, ($num++).'.'.$memberItem->emp->fullname ?? '-');
+            $templateProcessor->setValue('member_position#' . $i, 'ตำแหน่ง '.$memberItem->emp->positionName() ?? '-');
             $i++;
         }
-
 
         // ผู้ขออนุญาต
         try {

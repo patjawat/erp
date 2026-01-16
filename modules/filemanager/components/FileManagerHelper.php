@@ -23,15 +23,17 @@ class FileManagerHelper extends Component
         return Yii::getAlias('@app') . '/modules/filemanager/' . self::UPLOAD_FOLDER . '/';
     }
 
-    public static function FileUpload($ref, $name = null)
+    public static function FileUpload($ref, $name = null,$view = false)
     {
         list($initialPreview, $initialPreviewConfig) = self::getInitialPreview($ref, $name);
+        // ตรวจสอบเงื่อนไข ถ้า $view เป็น 'tree' ให้เก็บค่า false ไว้ในตัวแปร
+
         return FileInput::widget([
             'name' => 'upload_ajax[]',
             'options' => ['multiple' => true, 'accept' => '*'],
             'pluginOptions' => [
-                 'showPreview' => true,
-                'overwriteInitial' => false,
+                'showPreview' => true,
+                'overwriteInitial' => true,
                 'initialPreviewShowDelete' => true,
                 'initialPreviewAsData' => true,
                 'initialPreview' => $initialPreview,
@@ -43,8 +45,20 @@ class FileManagerHelper extends Component
                     'name' => $name,
                 ],
                 'maxFileCount' => 100,
+                // --- ควบคุมปุ่มหลัก ---
+                'showBrowse' => !$view, // ถ้า $view เป็น true จะกลายเป็น false (ซ่อน)
+                'showUpload' => !$view, // ถ้า $view เป็น true จะกลายเป็น false (ซ่อน)
+                'showRemove' => !$view, // ซ่อนปุ่มลบทั้งหมด
+                'showCaption' => !$view, // ซ่อนแถบชื่อไฟล์
+
+                'fileActionSettings' => [
+                    'showDelete' =>true,
+                    'showRemove' => true, // ซ่อนปุ่มถังขยะรายไฟล์
+                    'showDrag'   => true, // ซ่อนปุ่มลากสลับตำแหน่ง
+                    'showZoom'   => true,   // ปุ่มแว่นขยายให้เปิดไว้เสมอแม้จะ view อย่างเดียว
+                    'showDownload' => true, // ปุ่มดาวน์โหลดเปิดไว้เสมอ
+                ],
                 'previewFileIconSettings' => [
-                    // configure your icon file extensions
                     'doc' => '<i class="fas fa-file-word text-primary"></i>',
                     'docx' => '<i class="fa-regular fa-file-word"></i>',
                     'xls' => '<i class="fas fa-file-excel text-success"></i>',
@@ -100,13 +114,11 @@ class FileManagerHelper extends Component
                         if ($isAjax === true) {
                             return ['success' => 'true'];
                         }
-
                     } else {
                         if ($isAjax === true) {
                             return ['success' => 'false', 'eror' => $file->error];
                         }
                     }
-
                 }
             }
         }
@@ -158,7 +170,6 @@ class FileManagerHelper extends Component
                     'data' => $model,
                     'img' => self::getImg($model->id),
                 ];
-
             }
             //     } else {
             //         if ($isAjax === true) {
@@ -294,6 +305,7 @@ class FileManagerHelper extends Component
                 'size' => 827000,
                 'url' => Url::to(['/filemanager/uploads/deletefile-ajax']),
                 'key' => $value->id,
+                'showDelete' => true, // เพิ่มบรรทัดนี้ลงไปใน Config รายไฟล์
             ]);
         }
         return [$initialPreview, $initialPreviewConfig];
@@ -319,7 +331,6 @@ class FileManagerHelper extends Component
             }
         } else {
             return false;
-
         }
     }
 
@@ -376,17 +387,42 @@ class FileManagerHelper extends Component
         }
     }
 
+    //การดึง File จาก Path โดยตรง
+    public static function getFilePath($id = null)
+{
+    $model = Uploads::findOne($id);
+    if ($model) {
+        $filename = $model->real_filename;
+        $basePath = FileManagerHelper::getUploadPath() . $model->ref . '/';
+        
+        $thumbPath = $basePath . 'thumbnail/' . $filename;
+        $fullPath  = $basePath . $filename;
+
+        // 1. ลองหา thumbnail ก่อน
+        if (file_exists($thumbPath)) {
+            return $thumbPath;
+        } 
+        // 2. ถ้าไม่มี thumb ให้เอาไฟล์จริง
+        if (file_exists($fullPath)) {
+            return $fullPath;
+        }
+    }
+    // 3. ถ้าไม่พบไฟล์เลย คืนค่า null หรือ path ของรูป placeholder (ถ้าจำเป็น)
+    return null; 
+}
+
+
     //ดึง file จาก ref
-     public static function getFileFormRef($ref)
+    public static function getFileFormRef($ref)
     {
-            $fileUpload = Uploads::findOne(['ref' => $ref]);
-            if($fileUpload){
-                $filename = $fileUpload->real_filename;
-                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
-                return $filepath;
-            }else{
-                return false;
-            }
+        $fileUpload = Uploads::findOne(['ref' => $ref]);
+        if ($fileUpload) {
+            $filename = $fileUpload->real_filename;
+            $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
+            return $filepath;
+        } else {
+            return false;
+        }
     }
 
     //ตรวจสอบที่ยังไม่มี Thempnail และให้ลร้าง
@@ -402,13 +438,10 @@ class FileManagerHelper extends Component
         }
     }
     //แสดงรูปภาพตาม ref
-   public static function listViewImages($ref)
+    public static function listViewImages($ref)
     {
         // 1. ค้นหาข้อมูล
         $uploads = Uploads::find()->where(['ref' => $ref])->all();
-
-        // 2. ใช้ Yii::$app->view แทน $this
-        // 3. ส่ง ['uploads' => $uploads] เพื่อให้ใน View ใช้งานตัวแปร $uploads ได้
         return Yii::$app->view->render('@app/modules/filemanager/views/uploads/list_images', [
             'uploads' => $uploads,
         ]);

@@ -3,6 +3,7 @@
 namespace app\modules\helpdesk2\controllers;
 
 use Yii;
+use yii\web\Response;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -37,12 +38,13 @@ class GeneralController extends \yii\web\Controller
 
         // ย้าย search condition มาไว้ท้ายสุด และเช็ค empty ก่อน
         if (!empty($searchModel->q)) {
+            $q = trim($searchModel->q);
             $dataProvider->query->andFilterWhere([
                 'or',
-                ['like', 'repair_number', $searchModel->q],
-                ['like', 'title', $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $searchModel->q],
+                ['like', 'repair_number', $q],
+                ['like', 'title', $q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
+                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
             ]);
         }
 
@@ -91,16 +93,20 @@ class GeneralController extends \yii\web\Controller
 
     public function actionAsset()
     {
+
         $assetTypeItem = ['MED', 'SCI', 'COM'];
         $listsData = Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 'EQUIP'])->andWhere(['NOT IN', 'code', $assetTypeItem])->all();
         $listAssetType = ArrayHelper::map($listsData, 'code', 'title');
         $assetTypeColumn = ArrayHelper::getColumn($listsData, 'code');
-
+        
         $searchModel = new AssetSearch([
             'asset_group_id' => 4,
-            'asset_type_id' => $assetTypeColumn
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
+        if (empty($searchModel->asset_type_id)) {
+        $dataProvider->query->andWhere(['asset_type_id' => $assetTypeColumn]);
+    }
 
         $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
@@ -229,6 +235,25 @@ class GeneralController extends \yii\web\Controller
     {
         $model = $this->findModelAsset($id);
         return $this->render('@app/modules/am/views/equip/calibration', [
+            'model' => $model,
+        ]);
+    }
+
+
+    //การยืมคืน
+    public function actionBorrow($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/borrow', [
+            'model' => $model,
+        ]);
+    }
+
+    //การเคลื่อนย้าย
+    public function actionMove($id)
+    {
+        $model = $this->findModelAsset($id);
+        return $this->render('@app/modules/am/views/equip/move', [
             'model' => $model,
         ]);
     }

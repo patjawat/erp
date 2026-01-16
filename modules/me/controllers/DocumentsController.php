@@ -23,7 +23,6 @@ class DocumentsController extends \yii\web\Controller
     {
         $emp = UserHelper::GetEmployee();
         $searchModel = new DocumentSearch([
-            'thai_year' => (date('Y') + 543),
             'date_filter' => 'today'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -54,17 +53,14 @@ class DocumentsController extends \yii\web\Controller
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
         $dataProvider->query->andFilterWhere(['d_tags.to_id' => $emp->id]);
+        $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
+        
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
-
-        if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
         $dataProvider->setSort(['defaultOrder' => [
             // 'doc_regis_number' => SORT_DESC,
@@ -86,7 +82,6 @@ class DocumentsController extends \yii\web\Controller
         $department = $emp->department;
 
         $searchModel = new DocumentSearch([
-            'thai_year' => (date('Y') + 543),
             'date_filter' => 'today'
         ]);
 
@@ -119,16 +114,13 @@ class DocumentsController extends \yii\web\Controller
 
         $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
 
-       if($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        }
+                $dataProvider->query->andFilterWhere([
+            'between',
+            'doc_transactions_date',
+            AppHelper::convertToGregorian($searchModel->date_start),
+            AppHelper::convertToGregorian($searchModel->date_end)
+        ]);
 
-        if ($searchModel->date_filter == '' && $searchModel->thai_year !== '' && $searchModel->thai_year !== null) {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
-        }
 
 
         return $this->render('index', [

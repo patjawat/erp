@@ -97,7 +97,16 @@ $querys = Yii::$app->db->createCommand($sql)->queryAll();
         </div>
 <div class="row">
 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-        <?= $form->field($model, 'roles')->checkboxList($model->getAllRoles())->label(false) ?>
+    <?php
+    // ระบุ list ที่ไม่ต้องการแสดง
+    $exclude = ['director']; 
+    // $exclude = ['']; 
+    
+    // กรองเอาเฉพาะที่ไม่มีในรายการ exclude
+    $filteredRoles = array_diff_key($model->getAllRoles(), array_flip($exclude));
+    
+    ?>
+        <?= $form->field($model, 'roles')->checkboxList($filteredRoles)->label(false) ?>
 
     </div>
     <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">

@@ -100,7 +100,7 @@ $group = Yii::$app->request->get('group');
                                 'asDropdown' => true,
                                 'multiple' => false,
                                 'options' => ['disabled' => false],
-                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                            ])->label('หน่วยงานผู้รับผิดชอบ'); ?>
                         </div>
                     </div>
                 </div>
@@ -199,7 +199,7 @@ $group = Yii::$app->request->get('group');
                     <h5 class="section-title">
                         <div class="d-flex justify-content-between align-items-center">
                             <p class="mb-0">ข้อมูลทั่วไป</p>
-                           
+
                         </div>
                     </h5>
                     <div class="row g-3">
@@ -251,20 +251,20 @@ $group = Yii::$app->request->get('group');
                                 ],
                             ])->label('หมวดหมู่'); ?>
                         </div>
-                     <div class="col-md-6">
-                           <?= $form->field($model, 'fsn_number', [
-                                    'addon' => [
-                                        'append' => [
-                                            'content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/fsn/list-fsn', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 
-                                            'asButton' => true
-                                        ]
+                        <div class="col-md-6">
+                            <?= $form->field($model, 'fsn_number', [
+                                'addon' => [
+                                    'append' => [
+                                        'content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/fsn/list-fsn', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]),
+                                        'asButton' => true
                                     ]
-                                ])->textInput([
-                                    'maxlength' => true,
-                                    'placeholder' => 'ค้นหาเลข FSN',
-                                    'readonly' => false,
-                                    'class' => 'form-control'
-                                ])->label('FSN'); ?>
+                                ]
+                            ])->textInput([
+                                'maxlength' => true,
+                                'placeholder' => 'ค้นหาเลข FSN',
+                                'readonly' => false,
+                                'class' => 'form-control'
+                            ])->label('FSN'); ?>
                         </div>
                         <div class="col-md-6">
                             <?php
@@ -280,7 +280,7 @@ $group = Yii::$app->request->get('group');
                                 'class' => 'form-control'  // Add background color
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
-   
+
 
                         <div class="col-md-6">
                             <?= $form->field($model, 'data_json[fsn_old]')->textInput(['maxlength' => true])->label('เลขครุภัณฑ์เดิม') ?>
@@ -378,32 +378,21 @@ $group = Yii::$app->request->get('group');
                         <div class="col-md-6">
                             <?php
                             $url = \yii\helpers\Url::to(['/depdrop/employee']);
-                            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
+
+                            // 1. หาข้อมูลพนักงานก่อน
+                            $employee = !empty($model->owner) ? Employees::findOne($model->owner) : null;
+
+                            // 2. เช็กว่าเจอตัวแปร $employee ไหม ถ้าเจอค่อยดึง fullname ถ้าไม่เจอให้เป็นค่าว่าง
+                            $ownerName = $employee ? $employee->fullname : '';
+
                             echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                                // 'data' => $model->ListEmployees(),
-                                'initValueText' => $owner,
+                                'initValueText' => $ownerName, // ใช้ตัวแปรที่เช็กแล้ว
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                     'minimumInputLength' => 1,
-                                    'language' => [
-                                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-                                    ],
-                                    'ajax' => [
-                                        'url' => $url,
-                                        'dataType' => 'json',
-                                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
-                                    ],
-                                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
-                                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
+                                    // ... ส่วนที่เหลือเหมือนเดิม ...
                                 ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>

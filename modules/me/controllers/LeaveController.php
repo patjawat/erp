@@ -356,10 +356,11 @@ class LeaveController extends Controller
             'date_end' => $dateEnd,
             'on_holidays' => 0,
             'total_days' => 0,
-            'emp_id' => $me->id
+            'emp_id' => $me->id,
         ]);
-
+        
         $model->data_json = [
+            'work_shift' => $me->work_shift,
             'title' => $this->request->get('title'),
             'address' => strip_tags($model->CreateBy()->fulladdress),
             'phone' => $model->CreateBy()->phone,
@@ -378,7 +379,6 @@ class LeaveController extends Controller
                 
                 //ถ้าเป็น ผอ. ให้อนุมัติเลย
                 $model->status = $me->isDirector() ? 'Approve' : 'Pending';
-
                 
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
@@ -386,16 +386,11 @@ class LeaveController extends Controller
 
                 if ($model->save()) {
                     //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
-                    if(!$me->isDirector()){
                         $model->createApprove();
-                    }
                 }
 
                 return $this->redirect(['/me/leave']);
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#leave'
-                // ];
+
             }
         } else {
             $model->loadDefaultValues();

@@ -17,12 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-        </svg>
+<i data-lucide="layout-grid"></i>  
         <?= $this->title ?>
     </h4>
 </div>
@@ -31,9 +26,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('action'); ?>
  <?= $this->render('@app/components/ui/btnReturn') ?>
 <?php $this->endBlock(); ?>
-
-
-
 <div class="row">
 
     <div class="col-lg-6 col-md-6 col-sm-12">
@@ -49,10 +41,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> แก้ไข', ['/inventory/stock-in/update', 'id' => $model->id, 'title' => 'แก้ไขใบรับเข้า'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <!-- ถ้ารอดำเนินการ หรือ รับเข้าสำเร็จแล้วและยังไม่มีการเบิกให้งานสามารถยกเลิกได้ รอแปรึกษาพี่โด้ -->
+                            <?php if (in_array($model->order_status, ['pending', 'success'])): ?>
+                              <?php Html::a('<i class="fa-solid fa-rotate-left me-2"></i> ยกเลิก', ['/inventory/stock-in/undo-status', 'title' => 'คืนสถานะรอดำเนินการ'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'คืนสถานะเป็นรอ (ดำเนินการ)']]) ?>
+                              <?php endif?>
                             <?php if($model->po_number):?>
                                 <?php // Html::a('<i class="fa-solid fa-circle-xmark me-2"></i> ยกเลิก', ['/inventory/stock-in/cancel', 'title' => 'ยกเลิกใบรับเข้า'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'ยกเลิกใบรับเข้านี้']]) ?>
                         <?php else:?>
-                            <?php //  Html::a('<i class="fa-solid fa-rotate-left me-2"></i> คืนสถานะรอดำเนินการ', ['/inventory/stock-in/undo-status', 'title' => 'คืนสถานะรอดำเนินการ'], ['class' => 'dropdown-item cancel-stock-order', 'data' => ['size' => 'modal-md', 'id' => $model->id,'title' => 'คืนสถานะเป็นรอ (ดำเนินการ)']]) ?>
                         <?php endif;?>
                         </div>
                     </div>

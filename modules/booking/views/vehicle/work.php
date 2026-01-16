@@ -15,13 +15,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/vehicle_menu',['active' => $vehicle_type]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => $type]) ?>
-<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'vehicles-container', 'timeout' => 500000]); ?>
 
@@ -37,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card shadow-sm">
     <div class="card-header bg-primary-gradient">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> กาจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> การจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
         </div>
     </div>
     <div class="card-body p-0">

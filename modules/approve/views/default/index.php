@@ -9,6 +9,7 @@ $totalBookingCar = $notify['booking_car']['total'];
 $totalPurchase = $notify['purchase']['total'];
 $totalStock = $notify['stock']['total'];
 $totalDevelopment= $notify['development']['total'];
+$totalAssetMove= $notify['assetMove']['total'];
 $this->title = "รายการที่รออนุมัติ";
 $this->params['breadcrumbs'][] = ['label' => 'ระบบการอนุมัติ', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -32,7 +33,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/components/ui/btnReturn')?>
 <?php $this->endBlock(); ?>
-
 
 
 <?php
@@ -66,6 +66,12 @@ $items = [
         'url' => ['/approve/development'],
         'icon' => '<i class="fa-solid fa-briefcase fs-1 text-white"></i>',
         'count' => $totalDevelopment,
+    ],
+    [
+        'label' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
+        'url' => ['/approve/asset-move'],
+        'icon' => '<i class="fa-solid fa-arrow-right-arrow-left fs-1 text-white"></i>',
+        'count' => $totalAssetMove,
     ]
     
 ];

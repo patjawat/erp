@@ -5,126 +5,118 @@ use kartik\widgets\ActiveForm;
 
 $this->title = 'แก้ไขการจองรถ: ' . $model->code;
 ?>
-
-<table class="table border-0 table-striped-columns mt-3">
-    <tbody>
-        <tr>
-            <td>หมายเลขการจอง </td>
-            <td> <?= $model->code ?></td>
-            <td>สถานะ : </td>
-            <td><?= $model->vehicleStatus?->title ?? '-' ?></td>
-
-        </tr>
-        <tr>
-            <td>วัตถุประสงค์ </td>
-            <td> <?= $model->reason ?></td>
-            <td> ลักษณะการไป: </td>
-            <td><?= $model->viewGoType() ?></td>
-
-        </tr>
-        <tr>
-            <td>สถานที่ไป : </td>
-            <td><?= $model->locationOrg?->title ?? '-' ?></td>
-             <td>ความเร่งด่วน : </td>
-            <td><?= $model->viewUrgent() ?></td>
-           
-        </tr>
-        <tr>
-            <td>วันออกเดินทาง </td>
-            <td><?php echo $model->showDateRange() ?></td>
-            <td>เวลา : </td>
-            <td><?= $model->viewTime()['full'] ?></td>
-        </tr>
-        <tr>
-            <td>ผู้ร่วมเดินทาง : </td>
-            <td colspan="3"><?= $model->data_json['note'] ?? '-' ?></td>
-        </tr>
-        <tr>
-            <td>หมายเหตุ : </td>
-            <td colspan="3"><?= $model->data_json['coment'] ?? '-' ?></td>
-        </tr>
-    </tbody>
-</table>
-
-
 <?php $form = ActiveForm::begin(['id' => 'booking-form']); ?>
-
-<div class="booking-details">
-    <div class="d-flex justify-content-between">
-        <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+<div class="p-4 border-bottom bg-light">
+    <div class="d-flex align-items-center">
+   <?= $model->userRequest()['avatar'] ?>
     </div>
-    <table class="table table-bordered" id="details-table">
-        <thead class="table-light">
-            <tr>
-                <th>วันที่</th>
-                <th>รถ</th>
-                <th>พนักงานขับรถ</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($model->vehicleDetails as $index => $detail): ?>
-                <tr class="detail-row">
-                    <td>
-                        <?= $model->go_type == 1 ? $detail->showDate() : $model->showDateRange() ?>
-                        <input type="hidden" name="vehicleDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
-                    </td>
-                    <td>
-                        <?php
-                        echo Html::dropDownList(
-                            "vehicleDetails[{$index}][car]",  // เปลี่ยนชื่อ name
-                            $detail->license_plate,
-                            $model->ListCarItems(),
-                            ['class' => 'form-select form-select-sm', 'prompt' => 'เลือกทะเบียนรถ']
-                        )
-                        ?>
-                    </td>
-                    <td>
-                        <?php
-                        echo Html::dropDownList(
-                            "vehicleDetails[{$index}][driver]", // เปลี่ยนชื่อ name
-                            $detail->driver_id,
-                            $model->listDriver(),
-                            ['class' => 'form-select form-select-sm', 'prompt' => 'เลือกพนักงานขับรถ']
-                        )
-                        ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
 </div>
-<?php if (Yii::$app->user->can('driver')): ?>
-    <div class="form-group mb-3">
-        <?= $form->field($model, 'data_json[remarks]')
-            ->textarea(['rows' => 2])
-            ->label('หมายเหตุ') ?>
+<?= $model->data_json['note'] ?? '-' ?>
+
+<div class="p-4">
+    <div class="row g-3">
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">หมายเลขการจอง</label>
+            <span class="fw-medium"> <?= $model->code ?></span>
+        </div>
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">สถานะ</label>
+            <?= $model->vehicleStatus?->title ?? '-' ?>
+        </div>
+        <div class="col-12">
+            <hr class="my-1 opacity-5">
+        </div>
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">วัตถุประสงค์</label>
+            <span class="fw-medium"><?= $model->reason ?></span>
+        </div>
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">สถานที่ไป</label>
+            <span class="fw-medium"><?= $model->locationOrg?->title ?? '-' ?></span>
+        </div>
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">วัน/เวลา เดินทาง</label>
+            <span class="fw-medium"><?php echo $model->showDateRange() ?> (<?= $model->viewTime()['full'] ?>)</span>
+        </div>
+        <div class="col-sm-6">
+            <label class="small text-muted d-block">ความเร่งด่วน</label>
+            <span class="text-primary fw-medium"><?= $model->viewUrgent() ?></span>
+        </div>
     </div>
-<?php endif; ?>
 
-<div class="d-flex justify-content-center gap-3">
-    <?php if (Yii::$app->user->can('driver')): ?>
-        <?= Html::submitButton(
-            '<i class="bi bi-check-circle"></i> บันทึก',
-            ['class' => 'btn btn-primary rounded-pill shadow']
-        ) ?>
-    <?php endif; ?>
+    <div class="mt-4 p-3 border rounded-3 bg-white shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold text-secondary">การจัดสรรรถและพนักงาน</h6>
+            <div class="form-check form-switch">
+                <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+            </div>
+        </div>
 
-    <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal">
-        <i class="fa-regular fa-circle-xmark"></i> ปิด
-    </button>
-</div>
+        <?php foreach ($model->vehicleDetails as $index => $detail): ?>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <?php //  $model->go_type == 1 ? $detail->showDate() : $model->showDateRange() ?>
+                       <input type="text" value="<?=$detail->showDate()?>" class="form-control" disabled>
+                </div>
+                <div class="col-md-4">
+                    <input type="hidden" name="vehicleDetails[<?= $index ?>][id]" value="<?= $detail->id ?>">
+                    <?php
+                    echo Html::dropDownList(
+                        "vehicleDetails[{$index}][car]",  // เปลี่ยนชื่อ name
+                        $detail->license_plate,
+                        $model->ListCarItems(),
+                        ['class' => 'form-select', 'prompt' => 'เลือกทะเบียนรถ']
+                    )
+                    ?>
+                </div>
+                <div class="col-md-5">
+                    <?php
+                    echo Html::dropDownList(
+                        "vehicleDetails[{$index}][driver]", // เปลี่ยนชื่อ name
+                        $detail->driver_id,
+                        $model->listDriver(),
+                        ['class' => 'form-select', 'prompt' => 'เลือกพนักงานขับรถ']
+                    )
+                    ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
 
-<?php ActiveForm::end(); ?>
+        <?php if (Yii::$app->user->can('driver')): ?>
+            <div class="form-group mb-3">
+                <?= $form->field($model, 'data_json[remarks]')
+                    ->textarea(['rows' => 2])
+                    ->label('หมายเหตุเพิ่มเติม...') ?>
+            </div>
+        <?php endif; ?>
+    </div>
 
 
 
-<?php
-$js = <<<JS
+    <div class="d-flex justify-content-center gap-3 mt-3">
+        <?php if (Yii::$app->user->can('driver')): ?>
+            <?= Html::submitButton(
+                '<i class="bi bi-check-circle"></i> บันทึก',
+                ['class' => 'btn btn-primary rounded-pill shadow']
+            ) ?>
+        <?php endif; ?>
+
+        <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal">
+            <i class="fa-regular fa-circle-xmark"></i> ปิด
+        </button>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+
+
+    <?php
+    $js = <<<JS
 
     handleFormSubmit('#booking-form', null, async function(response) {
         await location.reload();
     });
 
 JS;
-$this->registerJs($js);
-?>
+    $this->registerJs($js);
+    ?>

@@ -1,0 +1,77 @@
+<?php
+use app\components\UserHelper;
+use app\components\ApproveHelper;
+
+    use yii\helpers\Url;
+
+    $me = UserHelper::GetEmployee();
+    $notify = ApproveHelper::Info();
+    $totalLeave = $notify['leave']['total'];
+    $totalBookingCar = $notify['booking_car']['total'];
+    $totalPurchase = $notify['purchase']['total'];
+    $totalStock = $notify['stock']['total'];
+    $totalDevelopment = $notify['development']['total'];
+    $totalAssetMove = $notify['assetMove']['total'];
+    ?>
+
+<?php //  $this->render('@app/modules/approveV2/views/default/card_summary') ?>
+
+ <div class="d-flex flex-row gap-3 bg-light p-2 rounded-3 mb-3">
+        <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="btn d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'leave'  ? 'bg-white shadow-sm' : '' ?>">
+            <i data-lucide="calendar"></i>
+            วันลา
+            <?php if($totalLeave > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?=$totalLeave?>
+                  </span>
+            <?php endif;?>
+
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/vehicle']) ?>" class="position-relative btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'vehicle'   ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="car-front"></i>
+         ใช้รถ
+
+     </a>
+
+
+     <a href="<?= Url::to(['/approve-v2/purchase']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'purchase'   ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="shopping-cart"></i>
+         จัดซื้อจัดจ้าง
+              <?php if($totalPurchase > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?=$totalPurchase?>
+                  </span>
+            <?php endif;?>
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/main-stock']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'main-stock'   ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="shopping-basket"></i>
+         เบิกวัสดุ
+           <?php if($totalStock > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?=$totalStock?>
+                  </span>
+            <?php endif;?>
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/development']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'development'   ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="user-star"></i>
+         อบรม/ประชุม/ดูงาน
+           <?php if($totalDevelopment > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?=$totalDevelopment?>
+                  </span>
+            <?php endif;?>
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/asset-move']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'asset-move'   ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="arrow-left-right"></i>
+         เคลื่อนย้ายครุภัณฑ์
+             <?php if($totalAssetMove > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?=$totalAssetMove?>
+                  </span>
+            <?php endif;?>
+     </a>
+ </div>

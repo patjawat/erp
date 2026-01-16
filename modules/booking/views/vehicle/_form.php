@@ -1,12 +1,16 @@
 <?php
+
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
+use kartik\field\FieldRange;
+use kartik\widgets\RadioButtonGroup;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
+use kartik\widgets\TimePicker;
 use app\modules\hr\models\Employees;
 use app\modules\dms\models\DocumentsDetail;
 
@@ -55,37 +59,147 @@ $resultsJs = <<<JS
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-
-
 <?php $form = ActiveForm::begin(['id' => 'vehicle-form']); ?>
 
+<div class="row g-4">
 
-<div class="row">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3 text-primary border-start border-4 border-primary ps-2">ข้อมูลการเดินทาง</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('วันออกเดินทาง') ?>
+
+                    </div>
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
+
+                    </div>
+                    <!-- <div class="col-md-6">
+                        <label class="form-label small fw-bold">เวลาไป - กลับ <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="08:00">
+                                    <span class="input-group-text">ถึง</span>
+                                    <input type="text" class="form-control" placeholder="16:00">
+                                </div>
+                    </div> -->
+                    <div class="col-md-6">
+
+                        <label class="form-label has-star pt-2">เวลาไป - กลับ <span class="text-danger">*</span></label>
+                        <div class="row g-2 align-items-center">
+                            <div class="col">
+                                <?= $form->field($model, 'time_start', ['showLabels' => false])->widget(TimePicker::classname(), [
+                                    'pluginOptions' => ['showMeridian' => false]
+                                ]) ?>
+                            </div>
+                            <div class="col-auto pb-3">
+                                <span class="fw-bold text-muted">ถึง</span>
+                            </div>
+                            <div class="col">
+                                <?= $form->field($model, 'time_end', ['showLabels' => false])->widget(TimePicker::classname(), [
+                                    'pluginOptions' => ['showMeridian' => false]
+                                ]) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                          <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
+                        'data' => $model->listReferType(),
+                        'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
+                        'pluginOptions' => [
+                            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
+                                            }',
+                            'select2:unselecting' => 'function() {
+
+                                            }',
+                        ],
+                    ])->label('ประเภท REFER'); ?>
+
+                        <?= $form->field($model, 'go_type')->radioList(
+                            [
+                                '1' => 'ไป-กลับ',
+                                '2' => 'ค้างคืน'
+                            ],
+                            [
+                                'inline' => true,
+                                'item' => function ($index, $label, $name, $checked, $value) {
+                                    $active = $checked ? 'checked' : '';
+                                    return "
+                <input type='radio' class='btn-check' name='{$name}' id='trip-type-{$value}' value='{$value}' {$active} autocomplete='off'>
+                <label class='btn btn-outline-primary w-50 py-2' for='trip-type-{$value}'>{$label}</label>
+            ";
+                                },
+                                'class' => 'btn-group w-100 mt-2', // จัดการ Grouping และความกว้าง
+                                'role' => 'group'
+                            ]
+                        )->label('ลักษณะการไป'); ?>
+                    </div>
+                    <div class="col-12">
+                        <?= $form->field($model, 'location')->widget(Select2::classname(), [
+                            'data' => $model->ListOrg(),
+                            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                            'pluginOptions' => [
+                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => 'function(result) { 
+                                            }',
+                                'select2:unselecting' => 'function() {
+
+                                            }',
+                            ],
+                        ]) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="mb-3">
+                    <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
+                </div>
+                 <div class="mb-3">
+                    <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+                </div>
+                <div class="mb-3">
+                    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
+                </div>
+                <div class="mb-0">
+                    <?= $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-4">
-        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('วันออกเดินทาง') ?>
-        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
+        <div class="card border-0 shadow-sm mb-4 bg-white">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3 text-secondary">ตั้งค่าการขอใช้รถ</h6>
+                <div class="mb-3">
+                    <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
+                        'data' => [
+                            'official' => 'รถยนต์ราชการ',
+                            'personal' => 'รถยนต์ส่วนตัว',
+                            'ambulance' => 'รถพยาบาล',
+                        ],
+                        'options' => ['placeholder' => 'เลือกประเภทรถ'],
+                        'pluginOptions' => [
+                            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                        ],
 
-    </div>
-    <div class="col-md-2">
-        <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาไป') ?>
-        <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลากลับ') ?>
-    </div>
-    <div class="col-6">
-        <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
-            'data' => [
-            'official' => 'รถยนต์ราชการ',
-            'personal' => 'รถยนต์ส่วนตัว',
-            'ambulance' => 'รถพยาบาล',
-            ],
-            'options' => ['placeholder' => 'เลือกประเภทรถ'],
-            'pluginOptions' => [
-            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-            'allowClear' => true,
-            'dropdownParent' => '#main-modal',
-            ],
-            
-            'pluginEvents' => [
-                'select2:select' => new JsExpression('function(result) { 
+                        'pluginEvents' => [
+                            'select2:select' => new JsExpression('function(result) { 
                     if ($(this).val() === "personal") {
                         $("#vehicle-driver_id").prop("disabled", true);
                         $("#vehicle-driver_id").val("").trigger("change");
@@ -105,255 +219,191 @@ $resultsJs = <<<JS
                         $(".field-vehicle-go_type").show();
                     }
                 }'),
-                'select2:unselecting' => new JsExpression('function() {
+                            'select2:unselecting' => new JsExpression('function() {
                     // Add any additional logic for unselecting if needed
                 }'),
-            ],
-        ])->label('ประเภทรถที่ต้องการใช้') ?>
-        <?= $form->field($model, 'go_type')->radioList([1 => 'ไปกลับ', 2 => 'ค้างคืน'], ['custom' => true, 'inline' => true])->label('ลักษณะการไป') ?>
-        
+                        ],
+                    ])->label('ประเภทรถที่ต้องการใช้') ?>
 
-        <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
-            'data' => $model->listReferType(),
-            'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
-            'pluginOptions' => [
-                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
+                  
+
+                </div>
+
+
+                <div class="mb-3">
+                    <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
+                        'data' => $model->ListUrgent(),
+                        'options' => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            // 'width' => '370px',
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => 'function(result) { 
                                             }',
-                'select2:unselecting' => 'function() {
+                            'select2:unselecting' => 'function() {}',
+                        ]
+                    ]) ?>
 
-                                            }',
-            ],
-        ])->label('ประเภท REFER'); ?>
-
-    </div>
-
-    <div class="col-12">
-        <?= $form->field($model, 'location')->widget(Select2::classname(), [
-            'data' => $model->ListOrg(),
-            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-            'pluginOptions' => [
-                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                                            }',
-                'select2:unselecting' => 'function() {
-
-                                            }',
-            ],
-        ]) ?>
-    </div>
-    <div class="col-9">
-        <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
-    </div>
-    <div class="col-3">
-        <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
-            'data' => $model->ListUrgent(),
-            'options' => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                // 'width' => '370px',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) { 
-                                            }',
-                'select2:unselecting' => 'function() {}',
-            ]
-        ]) ?>
-
-    </div>
-</div>
-
-<div id="officialCarOptions">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <?php
-            echo $form->field($model, 'driver_id', [
-                'addon' => [
-                    'append' => [
-                        'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                            'class' => 'btn btn-primary btn-driver',
-                            'title' => 'Mark on map',
-                            'data-toggle' => 'tooltip',
-                            'data-driver_id' => $model->id,
-                            'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
-                            'data-bs-toggle' => 'offcanvas',
-                            'data-bs-target' => '#offcanvasRightDriver',
-                            'aria-controls' => 'offcanvasRightDriver'
-                        ]),
-                        'asButton' => true
-                    ]
-                ]
-            ])->widget(Select2::classname(), [
-                'data' => $model->listDriver(),
-                'options' => ['placeholder' => 'เลือก...'],
-                'pluginOptions' => [
-                    'tags' => true,
-                    'allowClear' => true,
-                    'dropdownParent' => '#main-modal',
-                ]
-            ])->label('พนักงานขับรถ');
-            ?>
-
-
+                </div>
+            </div>
         </div>
 
-        <div class="col-md-6">
-            <?php
-            
-            echo $form->field($model, 'license_plate', [
-                'addon' => [
-                    'append' => [
-                        'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                            'class' => 'btn btn-primary list-car',
-                            'title' => 'Mark on map',
-                            'data-toggle' => 'tooltip',
-                            'data-driver_id' => $model->id,
-                            'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
-                            'data-bs-toggle' => 'offcanvas',
-                            'data-bs-target' => '#offcanvasRight',
-                            'aria-controls' => 'offcanvasRight'
-                        ]),
-                        'asButton' => true
-                    ]
-                ]
-            ])->widget(Select2::classname(), [
-                'data' => $model->ListCarItems(),
-                'options' => ['placeholder' => 'เลือก...'],
-                'pluginOptions' => [
-                    'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                    'allowClear' => true,
-                    'dropdownParent' => '#main-modal',
-                ]
-            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) '.$model->license_plate);
-            ?>
-        </div>
-    </div>
-</div>
-<div class="">
-    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
-</div>
+        <div class="card border-0 shadow-sm bg-primary-subtle">
+            <div class="card-body text-primary-emphasis">
 
-<div class="">
-    <?= $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
-</div>
+                <?php
+                try {
+                    if ($model->isNewRecord) {
+                        $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
+                    } else {
+                        $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
+                    }
+                } catch (\Throwable $th) {
+                    $initEmployee = '';
+                }
 
-<div class="row">
-    <div class="col-6">
-
-        <?php
-        try {
-            if ($model->isNewRecord) {
-                $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
-            } else {
-                $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
-            }
-        } catch (\Throwable $th) {
-            $initEmployee = '';
-        }
-
-        echo $form->field($model, 'leader_id')->widget(Select2::classname(), [
-            'initValueText' => $initEmployee,
-            // 'initValueText' => $model->Approve()['leader']['avatar'],
-            'options' => ['placeholder' => 'เลือกรายการ...'],
-            'size' => Select2::LARGE,
-            'pluginEvents' => [
-                'select2:unselect' => 'function() {
+                echo $form->field($model, 'leader_id')->widget(Select2::classname(), [
+                    'initValueText' => $initEmployee,
+                    // 'initValueText' => $model->Approve()['leader']['avatar'],
+                    'options' => ['placeholder' => 'เลือกรายการ...'],
+                    'size' => Select2::LARGE,
+                    'pluginEvents' => [
+                        'select2:unselect' => 'function() {
                                     $("#order-data_json-board_fullname").val("")
                                     }',
-                'select2:select' => 'function() {
+                        'select2:select' => 'function() {
                                             var fullname = $(this).select2("data")[0].fullname;
                                             // var position_name = $(this).select2("data")[0].position_name;
                                             // $("#order-data_json-board_fullname").val(fullname)
                                             // $("#order-data_json-position_name").val(position_name)
                                         
                                     }',
-            ],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-                'minimumInputLength' => 1,
-                'ajax' => [
-                    'url' => Url::to(['/depdrop/employee-by-id']),
-                    'dataType' => 'json',
-                    'delay' => 250,
-                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                    'processResults' => new JsExpression($resultsJs),
-                    'cache' => true,
-                ],
-                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                'templateResult' => new JsExpression('formatRepo'),
-            ],
-        ])->label('หัวหน้างาน')
-        ?>
-
-    </div>
-</div>
-<div class="row">
-    <div class="col-7">
-        <?php // $form->field($model, 'private_car', ['options' => ['class' => 'form-group mb-0']])->checkbox(['custom' => true, 'switch' => true, 'checked' => ($model->private_car == 1 ? true : false)])->label('ใช้รถยนต์ส่วนตัว'); ?>
-    </div>
-    <div class="col-5">
-
-
-
-        <?php if ($model->vehicle_type_id == 'ambulance'): ?>
-
-
-        <!-- <div class="card border border-1">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h6><i class="bi bi-person-circle"></i> แพทย์,พยยาบาล,ผู้ช่วยเหลือคนไข้</h6>
-
-                </div>
-                <div class="avatar-stack"></div>            </div>
-            <div class="card-footer d-flex justify-content-between">
-                <?php echo Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่ม', ['/me/booking-car/add-passenger', 'booking_id' => $model->id], [
-                    'class' => 'btn btn-sm btn-primary rounded-pill',
-                    'id' => 'listEmployee',
-                    'data-bs-toggle' => 'offcanvas',
-                    'data-bs-target' => '#offcanvasRightEmployee',
-                    'aria-controls' => 'offcanvasRightEmployee'
-                ]) ?>            </div>
-        </div> -->
-        <?php endif; ?>
-
-    </div>
-</div>
-
-<?php if ($model->vehicle_type_id == 'ambulance'): ?>
-<div class="card mb-2 border-2 border-primary" style="border-style:dashed">
-    <div class="card-body">
-
-        <div class="row">
-            <div class="col-6">
-                <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
-                <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
-                <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
-            </div>
-            <div class="col-6">
-                <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
-                <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
-                <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                        'minimumInputLength' => 1,
+                        'ajax' => [
+                            'url' => Url::to(['/depdrop/employee-by-id']),
+                            'dataType' => 'json',
+                            'delay' => 250,
+                            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                            'processResults' => new JsExpression($resultsJs),
+                            'cache' => true,
+                        ],
+                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                        'templateResult' => new JsExpression('formatRepo'),
+                    ],
+                ])->label('หัวหน้างาน')
+                ?>
 
             </div>
         </div>
-        <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+
+
+        <?php
+
+        echo $form->field($model, 'license_plate', [
+            'addon' => [
+                'append' => [
+                    'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
+                        'class' => 'btn btn-primary list-car',
+                        'title' => 'Mark on map',
+                        'data-toggle' => 'tooltip',
+                        'data-driver_id' => $model->id,
+                        'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
+                        'data-bs-toggle' => 'offcanvas',
+                        'data-bs-target' => '#offcanvasRight',
+                        'aria-controls' => 'offcanvasRight'
+                    ]),
+                    'asButton' => true
+                ]
+            ]
+        ])->widget(Select2::classname(), [
+            'data' => $model->ListCarItems(),
+            'options' => ['placeholder' => 'เลือก...'],
+            'pluginOptions' => [
+                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
+            ]
+        ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) ' . $model->license_plate);
+        ?>
+
+
+        <?php
+        echo $form->field($model, 'driver_id', [
+            'addon' => [
+                'append' => [
+                    'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
+                        'class' => 'btn btn-primary btn-driver',
+                        'title' => 'Mark on map',
+                        'data-toggle' => 'tooltip',
+                        'data-driver_id' => $model->id,
+                        'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
+                        'data-bs-toggle' => 'offcanvas',
+                        'data-bs-target' => '#offcanvasRightDriver',
+                        'aria-controls' => 'offcanvasRightDriver'
+                    ]),
+                    'asButton' => true
+                ]
+            ]
+        ])->widget(Select2::classname(), [
+            'data' => $model->listDriver(),
+            'options' => ['placeholder' => 'เลือก...'],
+            'pluginOptions' => [
+                'tags' => true,
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
+            ]
+        ])->label('พนักงานขับรถ');
+        ?>
+<?php if (Yii::$app->user->can('driver')): ?>
+                <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+<?php endif;?>
+<!-- <?php if(!$model->isNewRecord):?>
+<?= $form->field($model, 'status')->widget(Select2::classname(), [
+                        'data' => $model->ListStatus(),
+                        'options' => ['placeholder' => 'เลือกสถานะ'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                             'dropdownParent' => '#main-modal',
+                        ],
+                    ]) ?>
+                    <?php endif;?> -->
 
     </div>
+
 </div>
+
+
+<?php if ($model->vehicle_type_id == 'ambulance'): ?>
+    <div class="card mb-2 border-2 border-primary" style="border-style:dashed">
+        <div class="card-body">
+
+            <div class="row">
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
+                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
+                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
+                </div>
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
+                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
+                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+
+                </div>
+            </div>
+            <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+
+        </div>
+    </div>
 <?php endif; ?>
 
 <?php if ($model->vehicle_type_id == 'general'): ?>
-<?php
+    <?php
     echo $form->field($model, 'document_id')->widget(Select2::classname(), [
         'data' => $list,
         'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
@@ -362,10 +412,10 @@ $resultsJs = <<<JS
             'dropdownParent' => '#main-modal',
         ],
     ])->label('หนังสืออ้างอิง');
-?>
+    ?>
 <?php endif; ?>
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
-    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึกข้อมูลการจอง', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
     <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
             class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
@@ -382,8 +432,9 @@ $resultsJs = <<<JS
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-    <div id="showListCar"></div>
-        <?PHP // echo $this->render('list_cars', ['model' => $model]) ?>
+        <div id="showListCar"></div>
+        <?PHP // echo $this->render('list_cars', ['model' => $model]) 
+        ?>
     </div>
 </div>
 
@@ -455,19 +506,28 @@ $js = <<<JS
                     beforLoadModal()
                 },
                 success: function (response) {
-                    // form.yiiActiveForm('updateMessages', response, true);
                     if(response.status == 'success') {
                         closeModal()
+
                         Swal.fire({
                             title: "สำเร็จ!",
                             text: "บันทึกข้อมูลเรียบร้อยแล้ว",
                             icon: "success",
                             timer: 1000,
                             showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                            // window.location.href = "/me/booking-vehicle";
-                        });
+                        }).then(async () => {
+                            try {
+                                await calendar.refetchEvents(); // สำหรับ FullCalendar v5+
+                                await $("#main-modal").modal("hide");
+                                
+                            } catch (error) {
+                                
+                            }
+                            if(response.reload)
+                                {
+                                    location.reload();
+                                }
+                            });
                     }
                 }
             });
@@ -502,7 +562,7 @@ $js = <<<JS
         
        \$.ajax({
         type: "get",
-        url: "/me/booking-vehicle/list-cars",
+        url: "/booking/vehicle/list-cars",
         data: {
             vehicle_type_id: \$('#vehicle-vehicle_type_id').val(),
         },

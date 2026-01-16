@@ -18,7 +18,7 @@ class AssetDetailSearch extends AssetDetail
     {
         return [
             [['id', 'user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'data_json', 'updated_at', 'created_at'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'data_json', 'updated_at', 'created_at','plan_date','actual_date','provider_type','cal_result','staff_id','is_borrowed','status'], 'safe'],
         ];
     }
 
@@ -73,6 +73,7 @@ class AssetDetailSearch extends AssetDetail
         $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;

@@ -142,7 +142,7 @@ class Asset extends \yii\db\ActiveRecord
 
 
 
-       
+
     public function departmentName()
     {
         $department = Organization::findOne(['id' => $this->department]);
@@ -152,7 +152,7 @@ class Asset extends \yii\db\ActiveRecord
             return 'ไม่ระบุ';
         }
     }
-    
+
     //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
     public function updateFsn()
     {
@@ -257,20 +257,11 @@ class Asset extends \yii\db\ActiveRecord
                 // try {
 
                 $vendor = isset($this->data_json['vendor_id']) ? Categorise::find()->where(['code' => $this->data_json['vendor_id'], 'name' => 'vendor'])->one() : '';
-                // $Assetitem = AssetItem::find()->where(['code' => $this->asset_item_id,'name' => 'asset'])->one();
                 $department = Organization::find()->where(['id' => $this->department])->one();
                 $array2 = [
                     'vendor_id' => isset($this->data_json['vendor_id']) ? $this->data_json['vendor_id'] : '',
                     'vendor' => $vendor,
-                    // 'item' => $Assetitem,
                     'department_name' => isset($department) ? $department->name : '',
-                    // 'service_life' => '',
-                    // 'depreciation' => '',
-                    // 'asset_name' => $Assetitem->title,
-                    // 'asset_type_text' => $Assetitem->assetType->title,
-                    // 'service_life' => $Assetitem->assetType->data_json['service_life'],
-                    // 'depreciation' => $Assetitem->assetType->data_json['depreciation'],
-                    // 'asset_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['asset_type'],'asset_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['asset_type'],'asset_type')->title : '',
                     'budget_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title : '',
                     'method_get_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title : '',
                     'purchase_text' => isset(CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title) ? CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title : '',
@@ -290,13 +281,10 @@ class Asset extends \yii\db\ActiveRecord
                     'vendor' => $vendor,
                     'item' => $Assetitem,
                     'department_name' => isset($department) ? $department->name : '',
-                    // 'service_life' => '',
-                    // 'depreciation' => '',
                     'asset_name' => $Assetitem->title,
                     'asset_type_text' => $Assetitem->assetType->title,
                     'service_life' => $Assetitem->assetType->data_json['service_life'],
                     'depreciation' => $Assetitem->assetType->data_json['depreciation'],
-                    // 'asset_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['asset_type'],'asset_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['asset_type'],'asset_type')->title : '',
                     'budget_type_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['budget_type'], 'budget_type')->title : '',
                     'method_get_text' => isset(CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title) ? CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'], 'method_get')->title : '',
                     'purchase_text' => isset(CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title) ? CategoriseHelper::CategoriseByCodeName($this->purchase, 'purchase')->title : '',
@@ -342,11 +330,7 @@ class Asset extends \yii\db\ActiveRecord
             return '-';
         }
     }
-    // Relationships
-    // public function getAssetItem()
-    // {
-    //     return $this->hasOne(Categorise::class, ['code' => 'asset_item_id'])->andOnCondition(['name' => 'asset_item_id']);
-    // }
+
 
     public function getAssetGroup()
     {
@@ -357,17 +341,11 @@ class Asset extends \yii\db\ActiveRecord
         return $this->hasOne(AssetType::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);;
     }
 
-        public function getAssetCategory()
+    public function getAssetCategory()
     {
         return $this->hasOne(AssetCategory::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);;
     }
 
-
-
-    // public function getAssetItem()
-    // {
-    //     return $this->hasOne(AssetItem::class, ['id' => 'asset_item_id']);
-    // }
 
     // วิธีการได้มา
     public function getPurchaseName()
@@ -376,10 +354,18 @@ class Asset extends \yii\db\ActiveRecord
     }
 
 
-    public function Upload($name)
+    public function Upload($options = [])
     {
-        return FileManagerHelper::FileUpload($this->ref, $name);
+        // เช็กว่ามีการส่ง 'view' => true มาหรือไม่ ถ้าไม่มีให้ default เป็น false
+        $view = isset($options['view']) ? $options['view'] : false;
+        return FileManagerHelper::FileUpload($this->ref, 'asset', $view);
     }
+
+    public function listShowImage()
+    {
+        return FileManagerHelper::listViewImages($this->ref);
+    }
+
 
     // มูลค่าทรัพย์สินทั้งหมด
     public function TotalPrice()

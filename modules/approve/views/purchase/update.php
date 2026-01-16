@@ -170,7 +170,7 @@ use yii\helpers\Html;
                         <div class="mt-3 pt-3 border-top border-white border-opacity-25">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="opacity-75  text-white">ประเภทการจัดซื้อ</span>
-                            <span class="fw-bold text-white"><?= $model->purchase->viewRequestType() ?></span></div>
+                            <span class="fw-bold text-white"><?php //  $model->purchase?->viewRequestType() ?? '-' ?></span></div>
                         </div>
                     </div>
                 </div>

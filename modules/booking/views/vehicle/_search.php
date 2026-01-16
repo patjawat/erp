@@ -49,18 +49,7 @@ use app\components\DateFilterHelper;
 
 </div>
 <div class="collapse mt-3" id="collapseFilter">
-    <div class="row">
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'thai_year')->widget(Select2::classname(), [
-                'data' => $model->ListThaiYear(),
-                'options' => ['placeholder' => 'ทั้งหมดทุกปี'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label(false) ?>
-        </div>
-
-    </div>
+    
 </div>
 
 <?php ActiveForm::end(); ?>

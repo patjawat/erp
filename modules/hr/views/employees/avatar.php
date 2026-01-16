@@ -20,13 +20,12 @@ $avatar = $model->showAvatar();
                     ]
                 ]) ?>
                 <div class="position-absolute top-0 start-500 translate-middle">
-                    <?php if ($model->user_id == 0): ?>
+                    <?php if (!$model->positionTypeName()): ?>
                         <i class="bi bi-exclamation-circle-fill text-warning fs-4"></i>
                     <?php else: ?>
                         <i class="bi bi-check-circle-fill text-primary fs-4"></i>
                     <?php endif ?>
                 </div>
-                <!-- <span class="contact-status offline"></span> -->
             </div>
             <div class="flex-grow-1 w-50">
                 <div class="row">

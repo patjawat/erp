@@ -25,9 +25,7 @@ AppAsset::register($this);
 
     <title><?= Html::encode($this->title) ?></title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <?php $this->head() ?>
 </head>
 <style>
@@ -245,60 +243,11 @@ AppAsset::register($this);
 
     <?php
     $js = <<< JS
-    //ส่วนการ load overlay
-        // tableLoading1.style.display = 'none';
-        //         function showTableLoading() {
-        //             let progress = 0;
-        //             const tableLoading1 = document.getElementById('tableLoading1');
-        //             const tableProgress1 = document.getElementById('tableProgress1');
-        //             const tableStatus1 = document.getElementById('tableStatus1');
-
-        //             tableProgress1.style.width = '0%';
-        //             tableProgress1.setAttribute('aria-valuenow', '0');
-        //             tableStatus1.textContent = '0%';
-        //             updateProgressColorBar(0);
-
-        //             tableLoading1.style.display = 'flex';
-
-        //             const interval = setInterval(function () {
-        //                 progress += Math.floor(Math.random() * 15) + 5;
-        //                 if (progress > 100) progress = 100;
-
-        //                 tableProgress1.style.width = progress + '%';
-        //                 tableProgress1.setAttribute('aria-valuenow', progress);
-        //                 tableStatus1.textContent = progress + '%';
-
-        //                 updateProgressColorBar(progress);
-
-        //                 if (progress === 100) {
-        //                     clearInterval(interval);
-        //                     // setTimeout(hideTableLoading, 300);
-        //                 }
-        //             }, 300);
-        //         }
-                            
-        //     function updateProgressColorBar(progress) {
-        //         const el = document.getElementById('tableProgress1');
-                
-        //         // ลบคลาสเดิมก่อน
-        //         el.classList.remove('bg-danger', 'bg-warning', 'bg-primary', 'bg-success');
-        //         el.classList.add('bg-primary');  // น้ำเงิน
-
-        //     }
-
-        //     function hideTableLoading() {
-        //         tableLoading1.style.opacity = '0';
-        //         setTimeout(function() {
-        //             tableLoading1.style.display = 'none';
-        //             tableLoading1.style.opacity = '1';
-        //         }, 300);
-        //     }
-            // จบส่วนการ load overlay
-  AOS.init({});
+    lucide.createIcons();
+   
+    AOS.init({});
 
 			// });
-
-			
          	$('header .dropdown-mega').on('show.bs.dropdown', function () {
 		if(!ddSliderIns){
 			setTimeout(function(){

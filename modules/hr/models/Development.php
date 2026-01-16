@@ -15,7 +15,7 @@ use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\Documents;
-use app\modules\approve\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\DevelopmentDetail;
 
@@ -400,6 +400,26 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'assigned_to']);
     }
 
+ public function ApproveDate()
+{
+    // ค้นหาข้อมูลการอนุมัติ
+    $approve = Approve::findOne(['from_id' => $this->id,'name' => 'development', 'level' => 4]);
+    
+    // ตรวจสอบว่าพบข้อมูล และมีค่า approve_date ใน json หรือไม่
+    if ($approve && isset($approve->data_json['approve_date'])) {
+        $dateStr = $approve->data_json['approve_date'];
+        
+        // ตรวจสอบว่าวันที่ไม่ใช่ค่าว่าง
+        if (!empty($dateStr)) {
+            // สร้าง DateTime object เพื่อความแม่นยำในการ format
+            $date = new \DateTime($dateStr);
+            return $date->format('Y-m-d');
+        }
+    }
+    
+    return ''; // คืนค่าว่างถ้าไม่พบข้อมูล
+}
+
     public function VehicleTypeName()
     {
         $model = Categorise::find()
@@ -628,6 +648,12 @@ class Development extends \yii\db\ActiveRecord
     public function listMember()
     {
         return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])->all();
+    }
+//แสดงรายชื่อคณะเดินทางยกเว้นผู้สร้างใบเดินทาง
+       public function listMemberPrint()
+    {
+        return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])
+        ->andWhere(['<>','emp_id',$this->emp_id])->all();
     }
 
 

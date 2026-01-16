@@ -3,6 +3,7 @@
 namespace app\modules\me\controllers;
 
 use Yii;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
 use yii\web\Controller;
@@ -54,7 +55,7 @@ class MainStockController extends Controller
                     $transaction = \Yii::$app->db->beginTransaction();
                     // $transaction->commit();
                     // สร้างรหัสขอเบิก
-                     $emp = UserHelper::GetEmployee();
+                    $emp = UserHelper::GetEmployee();
                     $model->code = \mdm\autonumber\AutoNumber::generate('REQ-' . substr(AppHelper::YearBudget(), 2) . '????');
                     $model->name = 'order';
                     $model->transaction_type = 'OUT';
@@ -116,7 +117,10 @@ class MainStockController extends Controller
 
                     \Yii::$app->session->remove('main-warehouse');
                     \Yii::$app->session->remove('asset_type');
-                    return $this->redirect(['/me/main-stock/store']);
+                    return [
+                        'status' => 'success',
+                        'redirect_url' => Url::to(['/me/stock-event/reuqest-order'])
+                    ];
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
                     return ['status' => 'error', 'message' => $e->getMessage()];
@@ -192,13 +196,13 @@ class MainStockController extends Controller
     {
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
         $warehouse = Yii::$app->session->get('sub-warehouse');
-        
-        if(!$warehouse){
-            return $this->redirect(['/me/store-v2/set-warehouse','callback' => '/me/main-stock/store']);
+
+        if (!$warehouse) {
+            return $this->redirect(['/me/store-v2/set-warehouse', 'callback' => '/me/main-stock/store']);
         }
         $warehouseModel = \app\modules\inventory\models\Warehouse::findOne($warehouse->id);
         $item = $warehouseModel->data_json['item_type'];
-        
+
 
         $searchModel = new StockSearch([
             'warehouse_id' => isset($mainWarehouse->id) ? $mainWarehouse->id : '',
@@ -209,7 +213,7 @@ class MainStockController extends Controller
         $dataProvider->query->andWhere(['IN', 'p.category_id', $item]);
         $dataProvider->query->andFilterWhere(['warehouse_id' => ($mainWarehouse ? $mainWarehouse->id : $searchModel->warehouse_id)]);
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
-        $dataProvider->query->andFilterWhere(['warehouse_type' =>'MAIN']);
+        $dataProvider->query->andFilterWhere(['warehouse_type' => 'MAIN']);
 
         $dataProvider->query->andFilterWhere([
             'or',
@@ -287,7 +291,7 @@ class MainStockController extends Controller
     public function actionViewCart()
     {
         $cart = \Yii::$app->cartMain;
-        
+
         if ($cart->getCount() < 1) {
             \Yii::$app->session->remove('main-warehouse');
             \Yii::$app->session->remove('asset_type');
@@ -331,14 +335,14 @@ class MainStockController extends Controller
 
 
         $mainWarehouse = \Yii::$app->session->get('main-warehouse');
-        
+
         if (!$mainWarehouse) {
             $mainWarehouse = Warehouse::find()->where(['id' => $model->warehouse_id])->One();
             \Yii::$app->session->set('main-warehouse', $mainWarehouse);
-            \Yii::$app->session->set('asset_type',$model->product->productType);
+            \Yii::$app->session->set('asset_type', $model->product->productType);
         }
         //หา ID ที่สามารถจ่ายได้จาก stock
-        $firstOut = StockHelper::firstOut($model->asset_item,$model->warehouse_id);
+        $firstOut = StockHelper::firstOut($model->asset_item, $model->warehouse_id);
         //นำ id ที่หาได้ไปค้นหาเพื่อจะใส่ตีะกร้า
         $product = Stock::findOne($firstOut['id']);
 

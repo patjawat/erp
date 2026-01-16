@@ -14,15 +14,25 @@ use app\modules\am\models\AssetItem;
 $this->title = 'หมวดทรัพย์สิน';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<?php $this->beginBlock('page-title');?>
-<i class="bi bi-folder-check fs-1"></i> <?=$this->title;?>
-<?php $this->endBlock();?>
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex align-items-center gap-2 mb-1">
 
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-bar-stacked-icon lucide-chart-bar-stacked">
+            <path d="M11 13v4" />
+            <path d="M15 5v4" />
+            <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+            <rect x="7" y="13" width="9" height="4" rx="1" />
+            <rect x="7" y="5" width="12" height="4" rx="1" />
+        </svg>
+        <?= $this->title ?>
+    </h4>
+</div>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/am/views/default/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn'); ?>
+<?php $this->endBlock() ?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
@@ -36,11 +46,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
-       <div class="d-flex justify-content-between align-item-center">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i><?=$this->title;?> <span
-            class="badge bg-light"><?=number_format($dataProvider->getTotalCount(),0)?></span>
-            รายการ</h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+        <div class="d-flex justify-content-between align-item-center">
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span
+                    class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span>
+                รายการ</h6>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
     </div>
     <div class="card-body">
@@ -55,19 +65,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
-                <?php foreach($dataProvider->getModels() as $key => $item):?>
-                <tr>
-                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td class="fw-semibold text-primary"><?=$item->code?></td>
-                    <td class="fw-semibold"><?=$item->title?></td>
-                    <td><?=$item->assetType?->title ?? '-'?></td>
-                    <td class="text-center">
-                        <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูล'.$this->title],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-md']])?>
-                        <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
-                        <?=Html::a('<i class="bi bi-trash"></i>',['delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
-                    </td>
-                </tr>
-                <?php endforeach;?>
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td class="fw-semibold text-primary"><?= $item->code ?></td>
+                        <td class="fw-semibold"><?= $item->title ?></td>
+                        <td><?= $item->assetType?->title ?? '-' ?></td>
+                        <td class="text-center">
+                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูล' . $this->title], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข' . $this->title], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
 
         </table>

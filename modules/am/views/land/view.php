@@ -28,9 +28,11 @@ $this->params['breadcrumbs'][] = ['label' => 'ที่ดิน', 'url' => ['/a
 
 
 <?= $this->render('_title', ['model' => $model]) ?>
-<div class="card mt-4">
 
-    <div class="card-body">
         <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
+
+<div class="card">
+    <div class="card-body">
+        <?= $model->listShowImage() ?>
     </div>
 </div>

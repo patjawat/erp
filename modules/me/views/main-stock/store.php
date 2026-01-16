@@ -1,6 +1,7 @@
 <?php
 
 use yii\web\View;
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
@@ -25,7 +26,8 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex gap-2">
-    <?= $this->render('@app/components/ui/btnReturn')?>
+    <?= $this->render('@app/components/ui/btnReturn',['action' => Url::to(['/me/stock-event/reuqest-order'])])?>
+   
 </div>
 <?php $this->endBlock(); ?>
 

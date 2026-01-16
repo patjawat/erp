@@ -16,15 +16,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(), 'id', 'pq_number');
 ?>
 
-<?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
-<?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase']); ?>
 <?php $form = ActiveForm::begin([

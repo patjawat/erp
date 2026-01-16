@@ -17,6 +17,7 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm' => '@vendor/npm-asset',
     ],
+
     'container' => [
         'definitions' => [
             'yii\widgets\LinkPager' => [
@@ -33,51 +34,51 @@ $config = [
         'thaiFormatter' => [
             'class' => 'dixonsatit\thaiYearFormatter\ThaiYearFormatter',
         ],
-         'telegram' => [
-        'class' => 'app\components\Telegram',
-        // ไม่ต้องใส่ botToken เพราะดึงจาก DB
-    ],
-     'thaidAuth' => [
-        'class' => \app\modules\auth\components\ThaidAuth::class,
-    ],
+        'telegram' => [
+            'class' => 'app\components\Telegram',
+            // ไม่ต้องใส่ botToken เพราะดึงจาก DB
+        ],
+        'thaidAuth' => [
+            'class' => \app\modules\auth\components\ThaidAuth::class,
+        ],
         'thaiDate' => [
-        'class' => 'app\components\ThaiDate',
-    ],
+            'class' => 'app\components\ThaiDate',
+        ],
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
         'cart' => [
-			'class' => 'asyou99\cart\Cart',
-		],
+            'class' => 'asyou99\cart\Cart',
+        ],
         'cartMain' => [
-			'class' => 'asyou99\cart\Cart',
-			'storage' => [
-				'class' => 'asyou99\cart\MultipleStorage',
-				'storages' => [
-					['class' => 'asyou99\cart\SessionStorage'],
-					[
-						'class' => 'asyou99\cart\DatabaseStorage',
-						'table' => 'cart_main',
-					],
-				],
-			]
-		],
+            'class' => 'asyou99\cart\Cart',
+            'storage' => [
+                'class' => 'asyou99\cart\MultipleStorage',
+                'storages' => [
+                    ['class' => 'asyou99\cart\SessionStorage'],
+                    [
+                        'class' => 'asyou99\cart\DatabaseStorage',
+                        'table' => 'cart_main',
+                    ],
+                ],
+            ]
+        ],
         'cartSub' => [
-			'class' => 'asyou99\cart\Cart',
-			'storage' => [
-				'class' => 'asyou99\cart\MultipleStorage',
-				'storages' => [
-					['class' => 'asyou99\cart\SessionStorage'],
-					[
-						'class' => 'asyou99\cart\DatabaseStorage',
-						'table' => 'cart_sub',
-					],
-				],
-			]
-		],
+            'class' => 'asyou99\cart\Cart',
+            'storage' => [
+                'class' => 'asyou99\cart\MultipleStorage',
+                'storages' => [
+                    ['class' => 'asyou99\cart\SessionStorage'],
+                    [
+                        'class' => 'asyou99\cart\DatabaseStorage',
+                        'table' => 'cart_sub',
+                    ],
+                ],
+            ]
+        ],
         'committee' => [
-			'class' => 'asyou99\cart\Cart',
-		],
+            'class' => 'asyou99\cart\Cart',
+        ],
         'site' => 'app\components\SiteHelper',
         'employee' => 'app\components\UserHelper',
         // แจ่งเตือน line Group
@@ -124,12 +125,12 @@ $config = [
                     'clientId' => '261870609037-luvd13t9s0nabihs4tdg3d14knf93mk1.apps.googleusercontent.com',
                     'clientSecret' => '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',
                 ],
-              'line' => [
-                'class' => 'app\components\LineAuthClient',
-                'clientId' => '2006812489', // ใส่ Line Channel ID ของคุณ
-                'clientSecret' => '0dd15c7dcb72e4623206c18d2d013eb6', // ใส่ Line Channel Secret ของคุณ
-                'returnUrl' => 'https://c490-1-0-238-66.ngrok-free.app/line/default/auth?authclient=line', // URL สำหรับ Callback
-            ],
+                'line' => [
+                    'class' => 'app\components\LineAuthClient',
+                    'clientId' => '2006812489', // ใส่ Line Channel ID ของคุณ
+                    'clientSecret' => '0dd15c7dcb72e4623206c18d2d013eb6', // ใส่ Line Channel Secret ของคุณ
+                    'returnUrl' => 'https://c490-1-0-238-66.ngrok-free.app/line/default/auth?authclient=line', // URL สำหรับ Callback
+                ],
             ],
         ],
         'assetManager' => [
@@ -160,7 +161,7 @@ $config = [
             'port' => env('REDIS_PORT'),
             'database' => 0,
         ],
-        
+
         'user' => [
             'identityClass' => 'app\modules\usermanager\models\User',
             'loginUrl' => ['/auth/login'],
@@ -218,6 +219,9 @@ $config = [
     ],
     'modules' => $modules,
     'params' => $params,
+    'as checkConfig' => [
+        'class' => 'app\components\CheckMaintenanceMode',
+    ],
     'as access' => [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
@@ -244,7 +248,7 @@ $config = [
             'inventory/stock-in/add-item',
             'inventory/main-stock/add-to-cart',
             'inventory/main-stock/show-cart',
-            'inventory/main-stock/view-cart',  
+            'inventory/main-stock/view-cart',
             'inventory/stock-in/create-validator',
             'inventory/stock-order/update-lot-validator/*',
             'helpdesk/repair/create-validator',

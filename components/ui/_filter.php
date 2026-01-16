@@ -2,6 +2,7 @@
 <?php
 use yii\bootstrap5\Html;
 use kartik\widgets\Select2;
+$placeholder = isset($placeholder) ? $placeholder : 'ท';
 ?>
 <div class="row mb-2">
     <div class="col-2">
@@ -25,7 +26,7 @@ use kartik\widgets\Select2;
         ])->label(false);?>
     </div>
     <div class="col-3">
-        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false])?>
+        <?=$this->render('@app/components/ui/input_emp',['form' => $form,'model' => $model,'label' => false,'placeholder' => $placeholder])?>
     </div>
     <div class="col-1">
         <div class="d-flex flex-row align-items-center gap-2">

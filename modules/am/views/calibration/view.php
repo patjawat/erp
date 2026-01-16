@@ -11,39 +11,66 @@ $this->params['breadcrumbs'][] = ['label' => 'Asset Details', 'url' => ['index']
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="asset-detail-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
 
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id',
-            'asset_id',
-            'ref',
-            'code',
-            'date_start',
-            'date_end',
-            'name',
-            'user_id',
-            'emp_id',
-            'data_json',
-            'updated_at',
-            'created_at',
-            'created_by',
-            'updated_by',
+            [
+                'label' => 'หมายเลขทรัพย์สิน/ครุภัณฑ์',
+                'value' => function($model){
+                    return $model->code;
+                }
+            ],
+            [
+                'label' => 'หน่วยงานที่รับผิดชอบ',
+                'value' => function($model){
+                    return $model->asset?->departmentName();
+                }
+            ],
+           
+             [
+                'label' => 'วันที่ตามแผน',
+                'value' => function($model){
+                    return Yii::$app->thaiDate->toThaiDate($model->date_start, true, false);
+                }
+            ],
+            [
+                'label' => 'วันที่ดำเนินการ',
+                'value' => function($model){
+                    return Yii::$app->thaiDate->toThaiDate($model->date_end, true, false);
+                }
+            ],
+             [
+                'label' => 'ผู้ให้บริการสอบเทียบ ',
+                'value' => function($model){
+                    return $model->provider_type == 'external' ? 'หน่วยงานภายนอก (Outsource)' : 'ดำเนินการเอง (In-house)';
+                }
+            ],
+             [
+                'label' => 'ผลการตรวจสอล',
+                'format' => 'raw',
+                'value' => function($model){
+                    return $model->viewResult();
+                },
+            ],
+             [
+                'label' => 'รายละเอียด/หมายเหตุ',
+                'value' => function($model){
+                    return $model->data_json['remark'] ?? '-';
+                }
+            ],
+            [
+                'label' => 'ผู้ดำเนินการ',
+                'value' => function($model){
+                    return $model->createdBy->employee->fullname;
+                }
+            ],
+           
         ],
     ]) ?>
 
-</div>
+     <label class="form-label fw-bold">แนบใบสอบเทียบ (Calibration Certificate)</label>
+
+ <?= $model->Upload(['view' => true]) ?>
+

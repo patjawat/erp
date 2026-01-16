@@ -19,7 +19,7 @@ use app\components\AppHelper;
                         <th style="width: 32px;">#</th>
                         <th style="width:120px">วันที่เสนอ</th>
                         <th>วันที่ได้รับ</th>
-                        <th class="align-middle">รายการ</th>
+                        <th class="align-middle">ชื่อรางวัล</th>
                         <th class="align-middle">หน่วยงานที่มอบ</th>
                         <th class="text-center" style="width: 100px;">ดำเนินการ</th>
                     </tr>
@@ -35,10 +35,10 @@ use app\components\AppHelper;
                             <?=isset($item->data_json['date_end']) ? AppHelper::DateFormDb($item->data_json['date_end']) : ''?>
                         </td>
                         <td>
-                            <?=$item->award_company_name?>
+                            <?=$item->data_json['award_name'] ?? '-'?>
                         </td>
                         <td>
-                            <?=$item->award_company_name?>
+                            <?=$item->data_json['award_company_name'] ?? '-'?>
                         </td>
                         <td class="text-center align-middle">
                             <div class="dropdown">
@@ -46,7 +46,7 @@ use app\components\AppHelper;
                                     data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                                 <div class="dropdown-menu">
                                     <??>
-                                    <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-user-tag"></i> การศึกษา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']])?>
+                                    <?=Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/hr/employee-detail/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-award"></i> รางวัลเชิดชูเกียรติ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']])?>
 
                                     <?=Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/hr/employee-detail/delete', 'id' => $item->id], [
                                         'class' => 'dropdown-item delete-item',

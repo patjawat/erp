@@ -7,8 +7,10 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
+use app\modules\approve\models\Approve;
 use app\modules\usermanager\models\User;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -48,7 +50,20 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['data_json', 'updated_at', 'created_at','date_start','date_end','ma','accessories_item'], 'safe'],
+            [[
+                'data_json',
+                'updated_at',
+                'created_at',
+                'date_start',
+                'date_end',
+                'ma',
+                'accessories_item',
+                'provider_type',
+                'cal_result',
+                'is_borrowed',
+                'staff_id',
+                'status',
+            ], 'safe'],
             [['ref', 'code', 'name'], 'string', 'max' => 255],
         ];
     }
@@ -60,21 +75,30 @@ class AssetDetail extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'ref' => 'Ref',
-            'code' => 'Code',
-            'user_id' => 'User ID',
-            'emp_id' => 'Emp ID',
-            'name' => 'Name',
-            'data_json' => 'Data Json',
-            'updated_at' => 'Updated At',
-            'created_at' => 'Created At',
-            'created_by' => 'Created By',
-            'updated_by' => 'Updated By',
+            'ref' => 'เลขที่อ้างอิง',
+            'code' => 'รหัส/หมายเลขทรัพย์สิน',
+            'user_id' => 'ผู้ใช้งานระบบ',
+            'emp_id' => 'รหัสพนักงาน/ผู้รับผิดชอบ',
+            'name' => 'ชื่อรายการครุภัณฑ์',
+            'status' => 'สถานะ',
+
+            // ส่วนการจัดการสอบเทียบ (Calibration)
+            'provider_type' => 'ประเภทผู้ให้บริการ (Provider)',
+            'cal_result' => 'ผลการตรวจสอบ/สอบเทียบ',
+
+            // ส่วนสถานะการหมุนเวียน
+            'is_borrowed' => 'สถานะการยืมค้าง',
+            'staff_id' => 'ผู้รับคืน', // เก็บ ID พนักงานที่ล็อกอินอยู่
+            'data_json' => 'ข้อมูลรายละเอียดเพิ่มเติม (JSON)',
+            'updated_at' => 'แก้ไขล่าสุดเมื่อ',
+            'created_at' => 'วันที่บันทึก',
+            'created_by' => 'ผู้บันทึก',
+            'updated_by' => 'ผู้แก้ไข',
         ];
     }
 
 
-        public function behaviors()
+    public function behaviors()
     {
         return [
             [
@@ -91,24 +115,35 @@ class AssetDetail extends \yii\db\ActiveRecord
         ];
     }
 
-       public function getCreatedBy()
+    public function getCreatedBy()
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);
     }
 
-
-
-    public function Upload()
-    {   $ref = $this->ref;
-        $name = $this->name;
-        return FileManagerHelper::FileUpload($ref, $name);
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
-    public function listImages()
-    {   $ref = $this->ref;
-        return FileManagerHelper::listViewImages($ref);
+    public function getStaff()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'staff_id']);
     }
 
-public function beforeSave($insert)
+
+    public function Upload($options = [])
+    {
+        // เช็กว่ามีการส่ง 'view' => true มาหรือไม่ ถ้าไม่มีให้ default เป็น false
+        $view = isset($options['view']) ? $options['view'] : false;
+        return FileManagerHelper::FileUpload($this->ref, $this->name, $view);
+    }
+
+    // public function listImages()
+    // {
+    //     $ref = $this->ref;
+    //     return FileManagerHelper::listViewImages($ref);
+    // }
+
+    public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
             // 1. แปลงวันที่หลัก
@@ -135,14 +170,147 @@ public function beforeSave($insert)
         return false;
     }
 
-      //Relationships
-      public function getAsset()
-      {
-          return $this->hasOne(Asset::class, ['code' => 'code']);
-      }
+    //Relationships
+    public function getAsset()
+    {
+        return $this->hasOne(Asset::class, ['code' => 'code']);
+    }
 
-              public function getAssetItem()
-              {
-                  return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
-              }
+    public function getAssetItem()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+    }
+
+    public function viewResult()
+    {
+        $resultHtml = '';
+        if ($this->cal_result === 'pass') {
+            $resultHtml = '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium p-1"><i class="bi bi-check-lg"></i> ผ่าน (Pass)</span>';
+        } else {
+            $resultHtml = '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium"><i class="bi bi-x-lg"></i> ไม่ผ่าน (Fail)</span>';
+        }
+
+        return $resultHtml; // แสดงผล
+    }
+
+//หัวหน้าอนุมัติ
+    public function viewLeader()
+    {
+        try {
+
+        $employee = Employees::findOne(['id' => $this->data_json['leader_id']]);
+        if($employee){
+            return [
+                'avatar' => $employee->getAvatar(false),
+                'fullname' => $employee->fullname
+            ];
+        }else{
+              return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+
+        } catch (\Throwable $th) {
+              return [
+                'avatar' => '',
+                'fullname' => ''
+            ];
+        }
+    }
+
+//เหตุผลการเคลื่อนย้าย
+public function getReasonLabel()
+{
+    // ดึงค่าจาก json
+    $reason = $this->data_json['reason'] ?? null;
+    
+    if (!$reason) {
+        return '<span class="text-muted">ไม่ได้ระบุ</span>';
+    }
+
+    // กำหนดสีตามเงื่อนไข (Optional)
+    $class = 'badge rounded-pill bg-light text-dark border border-secondary';
+    
+    // ส่งกลับเป็น HTML Tag
+    return sprintf(
+        '<span class="%s" style="padding: 0.5rem 1rem;">%s</span>',
+        $class,
+        htmlspecialchars($reason)
+    );
+}
+// สถานะการอนุมัติของหัวหน้า
+// models/AssetDetail.php
+
+public function getStatusBadge()
+{
+    $status = $this->status;
+    
+    // กำหนดรูปแบบตามสถานะ
+    $config = [
+        'Pending' => [
+            'label' => 'รออนุมัติ',
+            'class' => 'bg-warning bg-opacity-10 text-warning border border-warning-subtle',
+        ],
+        'Pass' => [
+            'label' => 'อนุมัติแล้ว',
+            'class' => 'bg-success bg-opacity-10 text-success border border-success-subtle',
+        ],
+        'Reject' => [
+            'label' => 'ไม่อนุมัติ',
+            'class' => 'bg-danger bg-opacity-10 text-danger border border-danger-subtle',
+        ],
+    ];
+
+    $item = $config[$status] ?? [
+        'label' => $status, 
+        'class' => 'bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle'
+    ];
+
+    // ใช้ Class ที่คุณระบุมา: rounded-pill fw-medium px-2 py-1
+    return sprintf(
+        '<span class="badge %s rounded-pill fw-medium px-2 py-1">%s</span>',
+        $item['class'],
+        $item['label']
+    );
+}
+
+
+//สถานะการเครื่อนย้าย
+    public function viewMoveStatus()
+    {
+        
+    }
+    /**
+     * ฟังก์ชันสำหรับแสดง Label สถานะการยืม
+     * @return string HTML Badge
+     */
+    public function getBorrowStatusLabel()
+    {
+        if ($this->is_borrowed == 1) {
+            // กรณีถูกยืมอยู่: ใช้สีส้ม/เหลือง (Warning) เพื่อให้สะดุดตา
+            return '<span class="badge rounded-pill bg-warning text-dark shadow-sm px-3">' .
+                '<i class="bi bi-person-fill me-1"></i> ถูกยืม' .
+                '</span>';
+        }
+
+        // กรณีว่าง: ใช้สีเขียว (Success) หรือสีฟ้าจางๆ ตามธีมระบบเดิม
+        return '<span class="badge rounded-pill bg-opacity-10 text-success border border-success px-3">' .
+            '<i class="bi bi-check-circle me-1"></i> คืน' .
+            '</span>';
+    }
+
+
+    public function getReturnConditionLabel()
+    {
+        if (empty($this->data_json['actual_date'])) {
+            return '<span class="text-muted">-</span>';
+        }
+
+        if ($this->data_json['return_result'] === 'normal') {
+            return '<span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill"><i class="bi bi-check-circle me-1"></i>ปกติ</span>';
+        }
+
+        return '<span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill"><i class="bi bi-exclamation-triangle me-1"></i>ชำรุด</span>';
+    }
 }

@@ -25,27 +25,27 @@ jQuery(document).on("pjax:end", function () {
   }
 });
 
-
 // ฟังก์ชันเลื่อนขึ้นบนสุด
-document.getElementById('btnScrollTop').addEventListener('click', function() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+document.getElementById("btnScrollTop").addEventListener("click", function () {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 // ฟังก์ชันเลื่อนลงล่างสุด
-document.getElementById('btnScrollBottom').addEventListener('click', function() {
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-});
+document
+  .getElementById("btnScrollBottom")
+  .addEventListener("click", function () {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  });
 
 // แสดงปุ่มเมื่อ scroll ลงมา
-window.addEventListener('scroll', function() {
-  const buttons = document.getElementById('scroll-buttons');
+window.addEventListener("scroll", function () {
+  const buttons = document.getElementById("scroll-buttons");
   if (window.scrollY > 100) {
-    buttons.style.display = 'block';
+    buttons.style.display = "block";
   } else {
-    buttons.style.display = 'none';
+    buttons.style.display = "none";
   }
 });
-
 
 //แก้ treeview ไม่ปิดเวลาเลือก
 $("#treeID").on("treeview:change", function (event, key, name) {
@@ -53,12 +53,10 @@ $("#treeID").on("treeview:change", function (event, key, name) {
   $("body").find(".kv-tree-dropdown").removeClass("show");
 });
 
-  $("body").on("click", ".form-submit", async function (e) {
+$("body").on("click", ".form-submit", async function (e) {
   e.preventDefault();
   var formId = $(this).data("id");
-  $('#'+formId).submit();
-
-  
+  $("#" + formId).submit();
 });
 /**
  * Handle AJAX form submission with confirmation and success feedback.
@@ -70,63 +68,72 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
   $(document).on("beforeSubmit", formSelector, function (e) {
     e.preventDefault();
     const form = $(this);
+
     Swal.fire({
-      title: "ยืนยัน?",
-      text: "บันทึกข้อมูล!",
-      icon: "warning",
+      title: "ยืนยันการบันทึกข้อมูล?",
+      text: "โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน",
+      icon: "question", // เปลี่ยนจาก warning เป็น question เพื่อความรู้สึกที่ซอฟต์ลง
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      cancelButtonText: "ยกเลิก!",
-      confirmButtonText: "ใช่, ยืนยัน!",
+      confirmButtonColor: "#28a745", // สีเขียว Success (Bootstrap Standard)
+      cancelButtonColor: "#6c757d", // สีเทา Secondary (Bootstrap Standard)
+      confirmButtonText: '<i class="fa fa-save"></i> ยืนยันบันทึก',
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: false, // เอาปุ่มยกเลิกไว้ซ้าย ปุ่มยืนยันไว้ขวา (UX Standard)
     }).then((result) => {
       if (result.isConfirmed) {
-        // ซ่อน modal ก่อน submit
+        // ปิด Modal เดิม (ถ้ามี)
         $("#main-modal").modal("hide");
-        // แสดง loading
+
+        // Loading State
         Swal.fire({
-          title: "กำลังบันทึก...",
-          text: "กรุณารอสักครู่",
+          title: "กำลังดำเนินการ",
+          text: "ระบบกำลังบันทึกข้อมูลของคุณลงฐานข้อมูล...",
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
           },
         });
+
         $.ajax({
           url: actionUrl || form.attr("action"),
           type: "POST",
           data: form.serialize(),
           dataType: "json",
           success: function (response) {
-            Swal.close();
             if (response.status === "success") {
               Swal.fire({
                 icon: "success",
-                title: "สำเร็จ!",
-                text: "บันทึกข้อมูลเรียบร้อยแล้ว",
-                timer: 1000,
+                title: "ดำเนินการสำเร็จ",
+                text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
+                timer: 1500, // เพิ่มเวลาเล็กน้อยให้ User ได้อ่านชื่อชั้นตราที่บันทึก
                 showConfirmButton: false,
-              }).then(() => {
+              }).then(async () => {
                 if (typeof successCallback === "function") {
-                  successCallback(response);
-                } else {
+                  await successCallback(response);
+                }
+
+                if (response.redirect_url) {
+                  window.location.href = response.redirect_url;
+                } else if (typeof successCallback !== "function") {
                   location.reload();
                 }
               });
             } else {
               Swal.fire({
                 icon: "error",
-                title: "เกิดข้อผิดพลาด",
-                text: response.message || "ไม่สามารถบันทึกข้อมูลได้",
+                title: "ไม่สามารถบันทึกข้อมูลได้",
+                text: response.message || "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่อีกครั้ง",
+                confirmButtonText: "ตกลง",
+                confirmButtonColor: "#d33",
               });
             }
           },
-          error: function () {
-            Swal.close();
+          error: function (xhr) {
             Swal.fire({
               icon: "error",
-              title: "เกิดข้อผิดพลาด",
-              text: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
+              title: "การเชื่อมต่อขัดข้อง",
+              text: "ไม่สามารถติดต่อ Server ได้ (Error " + xhr.status + ")",
+              confirmButtonText: "รับทราบ",
             });
           },
         });
@@ -364,9 +371,7 @@ $("body").on("click", ".open-modal", function (e) {
       $("#main-modal-label").html(response.title);
       $(".modal-body").html(response.content);
       $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass(
-        "modal-sm modal-md modal-lg modal-xl modal-xxl"
-      );
+      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
       $(".modal-dialog").addClass(size);
       $(".modal-content").addClass("card-outline card-primary");
     },
@@ -379,26 +384,7 @@ $("body").on("click", ".open-modal", function (e) {
         "modal-sm modal-md modal-lg modal-xl modal-xxl"
       );
       $(".modal-dialog").addClass("modal-md");
-      console.log(xhr);
 
-      // if error occured
-      // alert("Error occured.please try again");
-      // console.log(xhr.statusText + xhr.responseText);
-      // Swal.fire({
-      //   icon: "error",
-      //   title: "Oops...",
-      //   html: xhr.statusText + "</hr>" + xhr.responseText,
-      //   // text: xhr.responseText,
-      //   // footer: '<a href="#">Why do I have this issue?</a>'
-      // }).then(function (dismiss) {
-      //   console.log(dismiss);
-      //   if (dismiss.isConfirmed) {
-      //     $("#main-modal").modal("hide");
-      //   }
-      // });
-
-      // $(placeholder).append(xhr.statusText + xhr.responseText);
-      // $(placeholder).removeClass('loading');
     },
   });
 });
@@ -521,8 +507,8 @@ $("body").on("click", ".delete-item", async function (e) {
           } else if (response.status == "success" && response.close) {
             success("ดำเนินการลบสำเร็จ!.");
             $("#main-modal").modal("hide");
-          }else if (response.status == "success" && response.url) {
-             window.location.href = response.url;
+          } else if (response.status == "success" && response.url) {
+            window.location.href = response.url;
           } else {
             location.reload();
           }

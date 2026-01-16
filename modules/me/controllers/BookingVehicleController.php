@@ -205,9 +205,13 @@ class BookingVehicleController extends Controller
         $me = UserHelper::GetEmployee();
         $dateStart = $this->request->get('date_start');
         $dateEnd = $this->request->get('date_end');
+        // กำหนดค่า Default ไว้ที่นี่
         $model = new Vehicle([
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
+            'data_json' => [
+            'phone' => $me->phone
+        ]
         ]);
         $model->leader_id = isset($model->Approve()['approve_1']['id']) ? $model->Approve()['approve_1']['id'] : '';
 
@@ -481,36 +485,5 @@ class BookingVehicleController extends Controller
         }
     }
 
-    // เลือกประเภทของการใช้งานรถ
-    public function actionListCars()
-    {
-        $carType = $this->request->get('vehicle_type_id');
-
-        $searchModel = new AssetSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['asset_status' => 1]);
-        $dataProvider->query->andWhere([
-            'AND',
-            ['IS NOT', 'license_plate', null],
-            ['<>', 'license_plate', ''],
-            ['<>', 'license_plate', ' ']
-        ]);
-
-        if ($this->request->isAJax) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('list_cars', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]),
-            ];
-        } else {
-            return $this->render('list_cars', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
+   
 }

@@ -110,4 +110,10 @@ class DevelopmentDetail extends \yii\db\ActiveRecord
         $data = Categorise::find()->where(['name' => 'expense_type'])->all();
         return \yii\helpers\ArrayHelper::map($data, 'code', 'title');
     }
+        public function getEmp()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+   
+
 }

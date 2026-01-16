@@ -60,7 +60,7 @@ class UserHelper extends Component
                 'user_id' => $employee->user_id,
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position' => isset($employee->data_json['position_name_text']) ? $employee->data_json['position_name_text'] : '',
+                'position' => $employee->positions->title ?? null,
                 'leader' => $employee->leaderUser()
             ];
       //   } catch (\Throwable $th) {

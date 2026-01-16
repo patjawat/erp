@@ -122,7 +122,8 @@ class User extends ActiveRecord implements IdentityInterface {
             'username' => 'ชื่อเข้าใช้งาน',
             'password' => 'รหัสผ่าน',
             'confirm_password' => 'ยืนยันรหัสผ่าน',
-            // 'license_number' => 'เลขใบประกอบฯ',
+            'email' => 'อีเมล์',
+            'status' => 'สถานะ',
             'fullname_en' => 'ชื่อ - สกุลแพทย์(อังกฤษ)'
         ];
     }
@@ -247,8 +248,8 @@ class User extends ActiveRecord implements IdentityInterface {
 
     public function getItemStatus() {
         return [
-            self::STATUS_ACTIVE => 'Active',
-            self::STATUS_DELETED => 'Deleted'
+            self::STATUS_ACTIVE => 'ใช้งาน',
+            self::STATUS_DELETED => 'ปิด'
         ];
     }
 
@@ -260,9 +261,6 @@ class User extends ActiveRecord implements IdentityInterface {
     public function getAllRoles() {
         $auth = $auth = Yii::$app->authManager;
         return ArrayHelper::map($auth->getRoles(), 'name','name');
-        // return ArrayHelper::map($auth->getRoles(), 'name',function($model){
-        //         return $model->description.' ('.$model->name.')';
-        // });
     }
 
     public function getRoleByUser() {

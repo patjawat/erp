@@ -13,28 +13,51 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
-<div class="asset-detail-view">
-
-    <p>
-        <?= Html::a('ตรวจสอบ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-    </p>
-
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
             [
-                'label' => 'หัวข้อการบำรุงรักษา',
+                'label' => 'หมายเลขทรัพย์สิน/ครุภัณฑ์',
                 'value' => function($model){
-                    return $model->data_json['title'] ?? '-';
+                    return $model->code;
+                }
+            ],
+            [
+                'label' => 'หน่วยงานที่รับผิดชอบ',
+                'value' => function($model){
+                    return $model->asset?->departmentName();
+                }
+            ],
+           
+             [
+                'label' => 'วันที่ตามแผน',
+                'value' => function($model){
+                    return Yii::$app->thaiDate->toThaiDate($model->plan_date, true, false);
+                }
+            ],
+            [
+                'label' => 'วันที่ดำเนินการ',
+                'value' => function($model){
+                    return Yii::$app->thaiDate->toThaiDate($model->actual_date, true, false);
                 }
             ],
              [
-                'label' => 'วันที่',
+                'label' => 'รายละเอียด/หมายเหตุ',
                 'value' => function($model){
-                    return Yii::$app->thaiDate->toThaiDate($model->created_at, true, false);
+                    return $model->data_json['remark'] ?? '-';
                 }
             ],
+            [
+                'label' => 'ผู้ดำเนินการ',
+                'value' => function($model){
+                      return $model->createdBy->employee->fullname;
+                }
+            ],
+           
         ],
     ]) ?>
-<?= $model->listImages() ?>
-</div>
+
+     <label class="form-label fw-bold">รูปภาพหรือไฟล์ที่เกี่ยวข้อง</label>
+
+ <?= $model->Upload(['view' => true]) ?>
+

@@ -18,10 +18,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="fa-solid fa-cubes-stacked"></i> <?= $this->title; ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../default/menu') ?>
+
+<?php $this->beginBlock('action'); ?>
+ <?= $this->render('@app/components/ui/btnReturn') ?>
 <?php $this->endBlock(); ?>
 
 

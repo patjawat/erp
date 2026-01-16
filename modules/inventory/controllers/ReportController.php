@@ -537,7 +537,7 @@ class ReportController extends \yii\web\Controller
         // ข้อมูลเริ่มแถวที่ 3
         // --------------------------------------------------
         $rowIndex = 3;
-        
+
         foreach ($querys as $r) {
             $sheet->fromArray([
                 $r['asset_item'],
@@ -656,7 +656,7 @@ class ReportController extends \yii\web\Controller
         );
         $sum = Yii::$app->db->createCommand($sqlSummary, $params)->queryOne();
 
-       $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         // ตั้งชื่อแผ่นงาน
         $sheet->setTitle('สรุปวัสดุคงคลัง');
@@ -832,18 +832,6 @@ class ReportController extends \yii\web\Controller
         $sheet->getStyle('C' . $rowSum . ':I' . $rowSum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
 
-        // ❌ ลบโค้ดนี้ออก เพราะมันจะเปลี่ยน format เป็น 2 ตำแหน่ง
-        /*
-        $endRow = $StartRow;
-        $sheet->getStyle('C2:C' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('D2:D' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('E2:E' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('F2:F' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('G2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('H2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        $sheet->getStyle('I2:I' . $endRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        */
-
         // --- เริ่มต้นแผ่นงานที่สอง (สรุปรายการ) ---
         $sheet2 = $spreadsheet->createSheet();  // สร้างแผ่นงานใหม่
         $sheet2->setTitle('สรุปรายการ');  // ตั้งชื่อแผ่นงานที่สอง
@@ -931,25 +919,25 @@ class ReportController extends \yii\web\Controller
 
         // SUBTOTAL แถวบน (Row 1)
         $totalRowFormula = count($querys2) + 2; // แถวสุดท้ายของข้อมูล + 2 (A1)
-        
+
         $sheet2->setCellValue('G1', '=SUBTOTAL(9,G3:G' . $totalRowFormula . ')');
         $sheet2->getStyle('G1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('H1', '=SUBTOTAL(9,H3:H' . $totalRowFormula . ')');
         $sheet2->getStyle('H1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('I1', '=SUBTOTAL(9,I3:I' . $totalRowFormula . ')');
         $sheet2->getStyle('I1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('J1', '=SUBTOTAL(9,J3:J' . $totalRowFormula . ')');
         $sheet2->getStyle('J1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('K1', '=SUBTOTAL(9,K3:K' . $totalRowFormula . ')');
         $sheet2->getStyle('K1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('L1', '=SUBTOTAL(9,L3:L' . $totalRowFormula . ')');
         $sheet2->getStyle('L1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
-        
+
         $sheet2->setCellValue('M1', '=SUBTOTAL(9,M3:M' . $totalRowFormula . ')');
         $sheet2->getStyle('M1')->getNumberFormat()->setFormatCode('0.00000'); // ✅ แก้ไข
 
@@ -985,80 +973,109 @@ class ReportController extends \yii\web\Controller
     {
         // querys by item ที่ตรงแล้ว
         $sql = "SELECT
-    -- 🔹 Fields for Grouping (Item & Type Info)
-    t.code AS asset_type_code,
-    t.title AS asset_type_name,
-    a.code AS asset_item,          -- รหัสรายการทรัพย์สิน
-    a.title AS asset_name,
-    a.data_json->>'$.unit' AS unit,
+                -- 🔹 ส่วนการจัดกลุ่ม (Item & Type Info)
+                t.code AS asset_type_code,
+                t.title AS asset_type_name,
+                a.code AS asset_item,
+                a.title AS asset_name,
+                a.data_json->>'$.unit' AS unit,
 
-    -- 🔹 Aggregated Summary Fields (ยอดรวมที่ต้องการให้คงเดิม)
-    -- ยอดยกมา (ก่อน 2025-11-01)
-    SUM(
-        CASE
-            WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty
-            WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN -i.qty
-            ELSE 0
-        END
-    ) AS begin_qty,
+                -- 🔹 ยอดยกมา (ก่อน :date_start)
+                SUM(CASE
+                    WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5))
+                    WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN -CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0
+                END) AS begin_qty,
 
-    -- ยอดยกมาราคา
-    SUM(
-        CAST(
-            CASE
-                WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN (i.qty * i.unit_price)
-                WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN - (i.qty * i.unit_price)
-                ELSE 0
-            END AS DECIMAL(18,10)
-        )
-    ) AS begin_price,
+                CAST(SUM(CASE
+                    WHEN e.movement_date < :date_start AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    WHEN e.movement_date < :date_start AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN -CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0
+                END) AS DECIMAL(18,5)) AS begin_price,
 
-    -- ยอดรับเข้า
-    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty ELSE 0 END) AS qty_in,
-    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS price_in,
+                -- 🔹 ยอดรับเข้า (In Period)
+                SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS qty_in,
 
-    -- ยอดเบิกออก รพ. (SUB)
-    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN i.qty ELSE 0 END) AS qty_out,
-    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS price_out,
+                CAST(SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS DECIMAL(18,5)) AS price_in,
 
-    -- ยอดเบิกออก รพ.สต. (BRANCH)
-    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN i.qty ELSE 0 END) AS branch_qty_out,
-    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS branch_price_out,
+                -- 🔹 ยอดเบิกออก รพ. (SUB)
+                SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS qty_out,
 
-    -- ยอดเบิกออก รวม
-    SUM(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN i.qty ELSE 0 END) AS total_qty_out,
-    SUM(CAST(CASE WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN i.qty * i.unit_price ELSE 0 END AS DECIMAL(18,10))) AS total_price_out,
+                CAST(SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'SUB' THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS DECIMAL(18,5)) AS price_out,
 
-    -- ยอดคงเหลือสิ้นงวด
-    SUM(CASE WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN i.qty
-             WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN -i.qty ELSE 0 END) AS end_qty,
+                -- 🔹 ยอดเบิกออก รพ.สต. (BRANCH)
+                SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS branch_qty_out,
 
-    SUM(CAST(CASE WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN (i.qty * i.unit_price)
-                  WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN - (i.qty * i.unit_price) ELSE 0 END AS DECIMAL(18,10))) AS end_price
+                CAST(SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'BRANCH' THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS DECIMAL(18,5)) AS branch_price_out,
 
-FROM categorise a  -- 🚀 ตารางหลักคือรายการทรัพย์สินทั้งหมด
-LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
-LEFT JOIN stock_events i ON i.asset_item = a.code AND i.name = 'order_item'
-LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order'
-LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
-LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
-LEFT JOIN (
-    SELECT code, title, ROW_NUMBER() OVER(PARTITION BY code ORDER BY code) AS rn
-    FROM categorise
-    WHERE name = 'vendor'
-) v ON v.code = e.vendor_id AND v.rn = 1
-WHERE a.name = 'asset_item'
--- AND a.group_id = 'MATER' -- เปิดใช้งานหากต้องการกรองกลุ่มสินค้า
-GROUP BY
-    a.code,
-    a.title,
-    t.code,
-    t.title,
-    a.data_json->>'$.unit'
-ORDER BY
-    CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
-    CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
-    CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED);";
+                -- 🔹 ยอดเบิกออก รวม (SUB + BRANCH)
+                SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS total_qty_out,
+
+                CAST(SUM(CASE 
+                    WHEN e.movement_date BETWEEN :date_start AND :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB', 'BRANCH') THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS DECIMAL(18,5)) AS total_price_out,
+
+                -- 🔹 ยอดคงเหลือสิ้นงวด (End Balance)
+                SUM(CASE 
+                    WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5))
+                    WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN -CAST(i.qty AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS end_qty,
+
+                CAST(SUM(CASE 
+                    WHEN e.movement_date <= :date_end AND i.transaction_type = 'IN' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN' THEN CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    WHEN e.movement_date <= :date_end AND i.transaction_type = 'OUT' AND i.order_status = 'success' AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH') THEN -CAST(i.qty AS DECIMAL(18,5)) * CAST(i.unit_price AS DECIMAL(18,5))
+                    ELSE 0 
+                END) AS DECIMAL(18,5)) AS end_price
+
+            FROM categorise a
+            LEFT JOIN categorise t ON t.code = a.category_id AND t.name = 'asset_type'
+            LEFT JOIN stock_events i ON i.asset_item = a.code AND i.name = 'order_item'
+            LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order'
+            LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+            LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+            LEFT JOIN (
+                SELECT code, title, ROW_NUMBER() OVER(PARTITION BY code ORDER BY code) AS rn
+                FROM categorise
+                WHERE name = 'vendor'
+            ) v ON v.code = e.vendor_id AND v.rn = 1
+
+            WHERE a.name = 'asset_item'
+            -- AND a.group_id = 'MATER'
+
+            GROUP BY
+                a.code,
+                a.title,
+                t.code,
+                t.title,
+                a.data_json->>'$.unit'
+
+            ORDER BY
+                CAST(SUBSTRING_INDEX(a.code, '-', 1) AS UNSIGNED),
+                CAST(SUBSTRING_INDEX(a.code, '-', -1) AS UNSIGNED),
+                CAST(SUBSTRING(a.category_id, 2) AS UNSIGNED);";
 
 
         $query = Yii::$app->db->createCommand($sql, [

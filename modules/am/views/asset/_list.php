@@ -63,18 +63,10 @@ use app\components\widgets\DataSummaryWidget;
                         <td class="text-center py-2">
                             <div class="d-flex justify-content-center">
                                 <a href="<?= Url::to(['view-asset', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                </a>
+                                    <i class="fa-regular fa-eye"></i></a>
                                 <?php if(Yii::$app->user->can('asset')):?>
                                 <a href="<?= Url::to(['update', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
-                                    </svg>
-                                </a>
+                                 <i class="fa-regular fa-pen-to-square"></i></a>
                                 <?php endif;?>
 
                                 <a href="<?= Url::to(['/am/asset/qrcode', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" title="ดูรายละเอียด" data-size="modal-md">
