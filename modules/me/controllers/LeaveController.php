@@ -379,7 +379,6 @@ class LeaveController extends Controller
                 
                 //ถ้าเป็น ผอ. ให้อนุมัติเลย
                 $model->status = $me->isDirector() ? 'Approve' : 'Pending';
-
                 
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
@@ -387,16 +386,11 @@ class LeaveController extends Controller
 
                 if ($model->save()) {
                     //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
-                    if(!$me->isDirector()){
                         $model->createApprove();
-                    }
                 }
 
                 return $this->redirect(['/me/leave']);
-                // return [
-                //     'status' => 'success',
-                //     'container' => '#leave'
-                // ];
+
             }
         } else {
             $model->loadDefaultValues();

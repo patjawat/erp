@@ -207,6 +207,62 @@ class Leave extends \yii\db\ActiveRecord
 
     public function createApprove()
     {
+       if(Yii::$app->user->can('director')) {
+                $me = UserHelper::GetEmployee();
+                $approveDate =  date('Y-m-d H:i:s');
+                $approve1 =  new Approve();
+                $approve1->from_id = $this->id;
+                $approve1->name = 'leave';
+                $approve1->emp_id = $me->id;
+                $approve1->title = 'อนุมัติ';
+                $approve1->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve1->level = 1;
+                $approve1->status = 'Pass';
+                $approve1->save(false);
+
+                $approve2 =  new Approve();
+                $approve2->from_id = $this->id;
+                $approve2->name = 'leave';
+                $approve2->emp_id = $me->id;
+                $approve2->title = 'อนุมัติ';
+                $approve2->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve2->level = 2;
+                $approve2->status = 'Pass';
+                $approve2->save(false);
+
+                $approve3 =  new Approve();
+                $approve3->from_id = $this->id;
+                $approve3->name = 'leave';
+                $approve3->emp_id = $me->id;
+                $approve3->title = 'อนุมัติ';
+                 $approve3->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve3->level = 3;
+                $approve3->status = 'Pass';
+                $approve3->save(false);
+
+                $approve4 =  new Approve();
+                $approve4->from_id = $this->id;
+                $approve4->name = 'leave';
+                $approve4->emp_id = $me->id;
+                $approve4->title = 'อนุมัติ';
+                $approve4->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve4->level = 4;
+                $approve4->status = 'Pass';
+                $approve4->save(false);
+
+        }else{
         // หัวหน้างาน
         $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
         try {
@@ -283,6 +339,8 @@ class Leave extends \yii\db\ActiveRecord
             // code...
         } catch (\Throwable $th) {
         }
+
+    }
     }
 
     public function listApprove()

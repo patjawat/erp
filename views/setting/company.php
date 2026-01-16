@@ -55,22 +55,6 @@ $resultsJs = <<< JS
     JS;
 
 ?>
-<style>
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #eaecee !important;
-        color: #fff;
-    }
-
-    :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
-    :not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-        height: calc(2.875rem + 12px) !important;
-    }
-
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #eaecee !important;
-        color: #3F51B5;
-    }
-</style>
 
 <!-- <h1 class="text-center"><i class="bi bi-building-fill-check fs-1"></i> ข้อมูลองค์กร</h1> -->
 

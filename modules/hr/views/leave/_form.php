@@ -175,15 +175,22 @@ $resultsJs = <<<JS
                 <div class="d-flex justify-content-between gap-3">
                     <div class="w-50">
                         <?php echo $form->field($model, 'data_json[sat_sun_days]')->textInput([
-                            'id' => 'satsunDays'
+                            'id' => 'satsunDays',
+                            'style' => 'background-color: antiquewhite;font-weight: 800;'
                         ])->label('วันเสาร์-อาทิตย์') ?>
                     </div>
 
                     <div class="w-50">
-                        <?php echo $form->field($model, 'data_json[holidays]')->textInput(['id' => 'holiday'])->label('วันหยุดนักขัตฤกษ์') ?>
+                        <?php echo $form->field($model, 'data_json[holidays]')->textInput([
+                            'id' => 'holiday',
+                            'style' => 'background-color: antiquewhite;'
+                            ])->label('วันหยุดนักขัตฤกษ์') ?>
                     </div>
                 </div>
-                <?php echo $form->field($model, 'total_days')->textInput(['id' => 'summaryDay'])->label('สรุปวันลา') ?>
+                <?php echo $form->field($model, 'total_days')->textInput([
+                    'id' => 'summaryDay',
+                    'style' => 'background-color: antiquewhite;font-weight: 800;
+                    '])->label('สรุปวันลา') ?>
             </div>
         </div>
 
@@ -295,14 +302,9 @@ $resultsJs = <<<JS
 <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-
-
-
-
 <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
-
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
@@ -346,6 +348,7 @@ $js = <<<JS
         // let totalDays = parseInt(\$('#summaryDay').val(), 10);
         let totalDays = parseFloat($('#summaryDay').val());
         console.log(totalDays);
+        var leaveTypeName = $('#leave-leave_type_id').select2('data')[0].text;
 
         if (isNaN(totalDays) || totalDays <= 0) {
             Swal.fire({
@@ -358,17 +361,54 @@ $js = <<<JS
         }
         
         Swal.fire({
-        title: "ยืนยัน?",
-        text: "บันทึกขออนุมัติการลา!",
+       title: '<span class="fw-bold" style="color: #1a1c1e;">ตรวจสอบรายละเอียดการลา</span>',
+    html: `
+        <div class="mt-3">
+            <p class="text-muted mb-4 small">กรุณาตรวจสอบข้อมูลก่อนยืนยันการส่งคำขออนุมัติ</p>
+            
+            <div class="leave-summary-card p-3 mb-2 text-start" style="background: #f8f9fa; border-radius: 16px; border: 1px solid #eee;">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">ประเภทการลา:</span>
+                    <span class="fw-bold text-dark">\${leaveTypeName}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary">จำนวนวันลา:</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                        \${totalDays} วัน
+                    </span>
+                </div>
+            </div>
+            
+            <div class="mt-3 text-center">
+                <p class="text-danger small mb-0">
+                    <i class="fa-solid fa-circle-info me-1"></i> 
+                    ระบบจะหักโควตาวันลาของคุณโดยอัตโนมัติ
+                </p>
+            </div>
+        </div>
+    `,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
         cancelButtonText: "ยกเลิก!",
-        confirmButtonText: "ใช่, ยืนยัน!"
+       confirmButtonText: "ยืนยันส่งใบลา",
+    customClass: {
+        popup: 'rounded-4 shadow-lg',
+        confirmButton: 'rounded-pill px-4 py-2',
+        cancelButton: 'rounded-pill px-4 py-2'
+    }
         }).then((result) => {
         if (result.isConfirmed) {
-            beforLoadModal()
+            $('#main-modal').hide();
+             Swal.fire({
+                    title: 'กำลังนำเข้า...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
             \$.ajax({
                 url: form.attr('action'),
                 type: 'post',
@@ -377,10 +417,15 @@ $js = <<<JS
                 success: async function (response) {
                     // form.yiiActiveForm('updateMessages', response, true);
                     if(response.status == 'success') {
-                        closeModal()
+                       Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        text: 'ใบลาถูกส่งเรียบร้อยแล้ว',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
                         location.reload();
-                        // success()
-                        // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                    });
                     }
                 }
             });

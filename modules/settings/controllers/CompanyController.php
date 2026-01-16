@@ -17,7 +17,10 @@ class CompanyController extends \yii\web\Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $model->data_json = ArrayHelper::merge($old,$model->data_json);
-                $model->save();
+                if($model->save()){
+                    $userId =  $model->data_json['director_name'];
+                    $this->updateDirector($userId);
+                }
                 $me = UserHelper::GetEmployee();
                 $data = [
                     "fullname" =>$me->fullname,
@@ -29,6 +32,30 @@ class CompanyController extends \yii\web\Controller
             }
         }
         return $this->render('index',['model' => $model]);
+    }
+
+    //ปรับปรุง roles ระดับผู้อำนวยการ
+    protected function updateDirector($userId)
+    {
+        // ลบสิทธิ์ director จากทุกคนที่ไม่ใช่ userId นี้
+    Yii::$app->db->createCommand()
+        ->delete('auth_assignment', ['and', ['item_name' => 'director'], ['!=', 'user_id', $userId]])
+        ->execute();
+    Yii::$app->db->createCommand()
+        ->delete('auth_item_child', ['and', ['child' => 'director']])
+        ->execute();
+
+        $checkOver = Yii::$app->db->createCommand("SELECT count(*)  FROM `auth_assignment` WHERE `item_name` = 'director'")->queryScalar();
+        if($checkOver == 0){
+            Yii::$app->db->createCommand()
+        ->insert('auth_assignment', [
+            'item_name' => 'director',
+            'user_id' => $userId,
+            'created_at' => time(), // ปกติ table นี้จะมีฟิลด์เวลาสร้าง
+        ])
+        ->execute();
+        }
+        
     }
 
 }

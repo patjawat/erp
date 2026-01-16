@@ -273,4 +273,10 @@ class SiteController extends Controller
         Yii::$app->user->login($user);
         return $this->goHome();
     }
+
+    public function actionWarning()
+    {
+          $this->layout = 'blank';
+        return $this->render('warning');
+    }
 }
