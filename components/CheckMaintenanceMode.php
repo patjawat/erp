@@ -27,19 +27,28 @@ class CheckMaintenanceMode extends Behavior
 
         // รายการหน้าที่จะไม่เช็ค (เพื่อป้องกัน Redirect Loop)
         $excluded = ['site/login', 'site/warning', 'site/error'];
-  if (strpos($route, 'settings/') === 0 || in_array($route, ['site/login', 'site/warning'])) {
-    return;
-}
-        if (!$this->checkDirector()['status']) {
-            if (Yii::$app->request->isAjax) {
-                throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าใช้งานในส่วนนี้');
+        if (strpos($route, 'settings/') === 0 || in_array($route, ['site/login', 'site/warning'])) {
+            return;
+        }
+        if (!Yii::$app->user->isGuest) {
+            // 1. Call the check once and store the result in a variable
+            $directorCheck = $this->checkDirector();
+
+            if (!$directorCheck['status']) {
+                // 2. Handle AJAX requests
+                if (Yii::$app->request->isAjax) {
+                    throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าใช้งานในส่วนนี้');
+                }
+
+                // 3. Set the flash message using the stored result
+                Yii::$app->session->setFlash('error', $directorCheck['label']);
+
+                // 4. Redirect and stop further execution
+                Yii::$app->response->redirect(['site/warning'])->send();
+
+                // Ensure the action doesn't run
+                return $event->isValid = false;
             }
-
-            // เก็บข้อความไว้ใน Flash Session
-            Yii::$app->session->setFlash('error', $this->checkDirector()['label']);
-
-            Yii::$app->response->redirect(['site/warning'])->send();
-            $event->isValid = false;
         }
     }
 
@@ -65,14 +74,14 @@ class CheckMaintenanceMode extends Behavior
         if ($checkOver > 1 || $checkOver2 > 0) {
             return [
                 'label' => $label,
-                'desc' => 'ครวจพบสิทธิผู้อำนวยการมีมากกว่า 1 คน',
+                'desc' => 'ตรวจพบสิทธิผู้อำนวยการมีมากกว่า 1 คน',
                 'url' => Url::to(['/settings/company']),
                 'status' => false,
 
             ];
         } else {
             return [
-                 'label' => $label,
+                'label' => $label,
                 'desc' => 'สำเร็จ',
                 'status' => true
             ];
