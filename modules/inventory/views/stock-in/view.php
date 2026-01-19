@@ -13,19 +13,19 @@ $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' =
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-<i data-lucide="layout-grid"></i>  
+        <i data-lucide="layout-grid"></i>  
         <?= $this->title ?>
     </h4>
 </div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
- <?= $this->render('@app/components/ui/btnReturn') ?>
+<?= $this->render('@app/components/ui/btnReturn') ?>
 <?php $this->endBlock(); ?>
+<?php Pjax::begin(['id' => 'inventory-container', 'enablePushState' => true, 'timeout' => 88888888]); ?>
 <div class="row">
 
     <div class="col-lg-6 col-md-6 col-sm-12">

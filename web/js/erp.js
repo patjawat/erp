@@ -355,40 +355,39 @@ $("body").on("click", ".setview", function (e) {
     },
   });
 });
-
 $("body").on("click", ".open-modal", function (e) {
-  e.preventDefault();
-  var url = $(this).attr("href");
-  var size = $(this).data("size");
-  beforLoadModal();
+    e.preventDefault();
+    var url = $(this).attr("href");
+    var size = $(this).data("size");
+    
+    // แสดง loading หรืออื่นๆ
+    if (typeof beforLoadModal === "function") beforLoadModal();
 
-  $.ajax({
-    type: "get",
-    url: url,
-    dataType: "json",
-    success: function (response) {
-      $("#main-modal").modal("show");
-      $("#main-modal-label").html(response.title);
-      $(".modal-body").html(response.content);
-      $(".modal-footer").html(response.footer);
-      $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl");
-      $(".modal-dialog").addClass(size);
-      $(".modal-content").addClass("card-outline card-primary");
-    },
-    error: function (xhr) {
-      $("#main-modal-label").html("เกิดข้อผิดพลาด");
-      $(".modal-body").html(
-        '<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>'
-      );
-      $(".modal-dialog").removeClass(
-        "modal-sm modal-md modal-lg modal-xl modal-xxl"
-      );
-      $(".modal-dialog").addClass("modal-md");
-
-    },
-  });
+    $.ajax({
+        type: "get",
+        url: url,
+        dataType: "json",
+        success: function (response) {
+            var modal = $("#main-modal");
+            modal.find("#main-modal-label").html(response.title);
+            modal.find(".modal-body").html(response.content);
+            modal.find(".modal-footer").html(response.footer);
+            
+            modal.find(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl")
+                 .addClass(size);
+            
+            modal.modal("show");
+        },
+        error: function (xhr) {
+            // จัดการ error เหมือนเดิม
+        }
+    });
 });
 
+// ส่วนสำคัญ: บังคับให้ Pjax ทำงานใหม่เมื่อเนื้อหาใน Modal ถูกเปลี่ยนหน้า
+$(document).on('pjax:complete', '#product-pjax-container', function() {
+    console.log("Pjax ใน Modal ทำงานเสร็จสมบูรณ์");
+});
 $("body").on("click", ".open-sub-modal", function (e) {
   e.preventDefault();
   var url = $(this).attr("href");

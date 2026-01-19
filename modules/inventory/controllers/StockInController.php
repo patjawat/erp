@@ -588,7 +588,7 @@ class StockInController extends Controller
             ['like', 'code', $searchModel->q],
             ['like', 'title', $searchModel->q]
         ]);
-        $dataProvider->pagination->pageSize = 10;
+        $dataProvider->pagination->pageSize = false;
 
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
