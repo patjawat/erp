@@ -71,7 +71,7 @@ class CheckMaintenanceMode extends Behavior
         $checkOver = Yii::$app->db->createCommand("SELECT count(*)  FROM `auth_assignment` WHERE `item_name` = 'director'")->queryScalar();
         $checkOver2 = Yii::$app->db->createCommand("SELECT count(*) FROM `auth_item_child` WHERE `child` LIKE 'director'")->queryScalar();
         $label = "ตรวจสอบการตั้งค่าองค์กร";
-        if ($checkOver > 1 || $checkOver2 > 0) {
+        if ($checkOver > 1 || $checkOver2 > 1) {
             return [
                 'label' => $label,
                 'desc' => 'ตรวจพบสิทธิผู้อำนวยการมีมากกว่า 1 คน',
