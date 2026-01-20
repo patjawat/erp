@@ -412,3 +412,12 @@ update `approve` SET title = 'ผอ.อนุมัติ' WHERE `name` = 'leav
 UPDATE approve
 SET data_json = JSON_SET(data_json, '$.label', 'ผ่าน')
 WHERE `name` = 'leave' AND `level` = 3
+
+
+<!-- แก้ไขการเก็บข้อมูลผู้รับผิดชอทรัพย์สินย์ -->
+UPDATE `asset` a
+INNER JOIN employees e ON e.cid = a.owner
+SET a.owner = e.id
+WHERE a.`owner` IS NOT NULL 
+  AND a.`owner` != '' 
+  AND a.`owner` REGEXP '^[0-9]{13}$';

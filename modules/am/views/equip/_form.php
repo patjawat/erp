@@ -391,8 +391,24 @@ $group = Yii::$app->request->get('group');
                                 'pluginOptions' => [
                                     'allowClear' => true,
                                     'minimumInputLength' => 1,
-                                    // ... ส่วนที่เหลือเหมือนเดิม ...
+                                    'language' => [
+                                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+                                    ],
+                                    'ajax' => [
+                                        'url' => $url,
+                                        'dataType' => 'json',
+                                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
+                                    ],
+                                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
+                                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
                                 ],
+                                'pluginEvents' => [
+                                    // "select2:select" => "function(result) { 
+                                    //     var data = $(this).select2('data')[0]
+                                    //     $('#asset-data_json-method_get_text').val(data.text)
+                                    //  }",
+                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>
