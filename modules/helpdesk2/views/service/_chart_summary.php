@@ -2,6 +2,7 @@
 <?php 
 use yii\web\View;
 use yii\helpers\Json;
+use app\components\AppHelper;
 ?>
 <div class="card">
             <div class="card-header d-flex justify-content-between">
@@ -16,6 +17,8 @@ use yii\helpers\Json;
         </div>
 <?php
 
+$date =  AppHelper::BudgetYearRange($searchModel->thai_year);
+echo $date['start'];
 $query = $searchModel->SummaryOfYear();
 try {
 $dataOrder = [

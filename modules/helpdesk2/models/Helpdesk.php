@@ -843,56 +843,41 @@ FROM (
         ];
     }
 
-    public function SummaryOfYear()
-    {
-        $where = ['and'];
-        $where[] = ['thai_year' => $this->thai_year];  // ใช้กรองถ้าค่ามี
-        $where[] = ['repair_group' => $this->repair_group];  // ใช้กรองถ้าค่ามี
-        $query = Helpdesk::find()
-            ->alias('h')
-            ->select([
-                'thai_year',
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status = "pending" AND thai_year = h.thai_year AND repair_group = h.repair_group) as m10'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m10_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 10 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m10_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 11 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m11_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 12 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m12_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 1 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m1_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m2'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m2_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 2 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 3 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m3_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 4 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m4_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 5 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m5_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 6 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m6_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 7 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m7_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 8 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m8_success'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status = "pending" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status = "cancel" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9_cancel'),
-                new Expression('(SELECT IFNULL(CONVERT(count(id), UNSIGNED),0) FROM helpdesk WHERE  MONTH(created_at) = 9 AND status = "success" AND thai_year = h.thai_year  AND repair_group = h.repair_group) as m9_success'),
-            ])
-            ->where($where)
-            ->groupBy(['thai_year'])
-            ->asArray()
-            ->one();
-        return $query;
-    }
+
+            public function SummaryOfYear()
+            {
+                $where = ['and'];
+                $where[] = ['h.thai_year' => $this->thai_year];
+                $where[] = ['h.repair_group' => $this->repair_group];
+
+                if ($this->thai_year) {
+                    $date = AppHelper::BudgetYearRange($this->thai_year);
+                    // เงื่อนไขนี้จะทำงานร่วมกับ query หลักได้ทันที
+                    $where[] = ['between', 'h.created_at', $date['start'], $date['end']];
+                }
+
+                $selectColumns = ['h.thai_year'];
+                
+                // วนลูปสร้าง SUM(CASE...) สำหรับเดือน 1-12 เพื่อลดความยาวของโค้ด
+                // เรียงเดือนตามปีงบประมาณไทย (เริ่มเดือน 10 จบเดือน 9)
+                $months = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+                $statuses = ['pending' => '', 'cancel' => '_cancel', 'success' => '_success'];
+
+                foreach ($months as $m) {
+                    foreach ($statuses as $status => $suffix) {
+                        $alias = "m{$m}{$suffix}";
+                        // ใช้ SUM(CASE...) แทน Subquery เพื่อให้ Filter ของ Query หลักใช้งานได้
+                        $selectColumns[] = new Expression("SUM(CASE WHEN MONTH(h.created_at) = $m AND h.status = '$status' THEN 1 ELSE 0 END) AS $alias");
+                    }
+                }
+
+                return Helpdesk::find()
+                    ->alias('h')
+                    ->select($selectColumns)
+                    ->where($where)
+                    ->groupBy(['h.thai_year'])
+                    ->asArray()
+                    ->one();
+            }
+
 }
