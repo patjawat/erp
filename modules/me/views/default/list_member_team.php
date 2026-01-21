@@ -15,7 +15,7 @@ $listsMemberTeam = Employees::find()
                  style="width: 48px; height: 48px;">
                 <i class="bi bi-people-fill fs-4"></i> </div>
             <div>
-                <h3 class="fw-bold mb-0" style="font-size: 1.1rem; color: #334155;"><?= $me->departmentName() ?></h3>
+                <h3 class="mb-0" style="font-size: 1.1rem; color: #334155;"><?= $me->departmentName() ?></h3>
                 <p class="text-muted mb-0" style="font-size: 0.8rem;">
                     ทีมงานทั้งหมด <span class="fw-bold text-primary"><?= count($listsMemberTeam) ?></span> คน
                 </p>

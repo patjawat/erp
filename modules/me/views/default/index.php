@@ -116,8 +116,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                 </div>
                 <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
                     style="min-width: 180px; backdrop-filter: blur(12px);">
-                    <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"
-                        style="font-size: 0.75rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                    <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" data-lucide="clock"
                             class="lucide lucide-clock">
@@ -434,23 +433,19 @@ $percenUseDay = ($leaveData['total'] > 0)
                     </div>
                 </div>
                 <div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2 align-items-center justify-content-between mb-4">
-                     <a href="<?=Url::to(['/me/document'])?>"
-                        class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border text-muted fs-11">
+                     <a href="<?=Url::to(['/me/documents'])?>"
+                        class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm border">
                         ดูทั้งหมด 
                     </a>
 
                     <button
-                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-                        style="font-size: 0.75rem;">ด่วนที่สุด</button>
+                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">ด่วนที่สุด</button>
                     <button
-                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-                        style="font-size: 0.75rem;">บันทึกข้อความ</button>
+                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">บันทึกข้อความ</button>
                     <button
-                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-                        style="font-size: 0.75rem;">หนังสือภายนอก</button>
+                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">หนังสือภายนอก</button>
                     <button
-                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-                        style="font-size: 0.75rem;">คำสั่ง</button>
+                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">คำสั่ง</button>
                 </div>
             </div>
 
