@@ -4,7 +4,9 @@ use yii\helpers\Url;
 use yii\bootstrap\Html;
 use app\modules\hr\models\Employees;
 
-$listsMemberTeam = Employees::find()->where(['department' => $me->department,'status' => 1])->all();
+$listsMemberTeam = Employees::find()
+->where(['department' => $me->department,'status' => 1])
+->andWhere(['<>','id',1])->all();
 ?>
 <section class="mt-5">
     <div class="d-flex align-items-center justify-content-between mb-4">
