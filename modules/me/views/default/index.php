@@ -258,7 +258,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
             </div>
         </div>
         <div class="col-6">
-            <a href="<?=Url::to(['/me/meeting'])?>">
+            <a href="<?=Url::to(['/me/booking-meeting/calendar'])?>">
 
                 <div
                     class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
