@@ -433,9 +433,12 @@ $percenUseDay = ($leaveData['total'] > 0)
                         </p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2">
-                    <button class="btn btn-primary rounded-pill fw-bold text-nowrap px-3 py-1 shadow-sm border-0"
-                        style="font-size: 0.75rem; padding-left: 20px; padding-right: 20px;">ทั้งหมด</button>
+                <div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2 align-items-center justify-content-between mb-4">
+                     <a href="<?=Url::to(['/me/document'])?>"
+                        class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border text-muted fs-11">
+                        ดูทั้งหมด 
+                    </a>
+
                     <button
                         class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
                         style="font-size: 0.75rem;">ด่วนที่สุด</button>
