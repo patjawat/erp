@@ -114,7 +114,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                         </div>
                     </div>
                 </div>
-                <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative"
+                <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
                     style="min-width: 180px; backdrop-filter: blur(12px);">
                     <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"
                         style="font-size: 0.75rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
