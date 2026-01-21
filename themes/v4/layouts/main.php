@@ -235,16 +235,7 @@ AppAsset::register($this);
                 <a href="#" class="text-primary text-decoration-none fw-medium hover-underline">มูลนิธิรามาธิบดี</a>
             </div>
         </div>
-        <div class="position-fixed bottom-0 end-0 p-4 d-flex flex-column gap-2 z-3">
-            <button class="btn btn-secondary rounded-circle d-flex align-items-center justify-content-center shadow border-0 p-0 header-scroll-btn" style="width: 40px; height: 40px; background-color: #6b7280;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                    <path d="m5 12 7-7 7 7"></path>
-                    <path d="M12 19V5"></path>
-                </svg></button>
-            <button class="btn btn-secondary rounded-circle d-flex align-items-center justify-content-center shadow border-0 p-0 header-scroll-btn" style="width: 40px; height: 40px; background-color: #6b7280;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                    <path d="M12 5v14"></path>
-                    <path d="m19 12-7 7-7-7"></path>
-                </svg></button>
-        </div>
+        
     </footer>
 
     <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
