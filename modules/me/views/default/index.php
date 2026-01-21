@@ -457,12 +457,9 @@ $percenUseDay = ($leaveData['total'] > 0)
 
     </div>
     <div class="col-12 col-lg-3">
-
         <?=$this->render('list_member_team',['me' => $me])?>
-
     </div>
 </div>
-
 
 <?php
 $documentUrl = Url::to(['/me/documents/show-home']);

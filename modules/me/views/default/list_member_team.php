@@ -1,7 +1,7 @@
 <?php
 use app\modules\hr\models\Employees;
 
-$listsMemberTeam = Employees::find()->where(['department' => $me->department])->all();
+$listsMemberTeam = Employees::find()->where(['department' => $me->department,'status' => 1])->all();
 ?>
 
 <section class="mt-5">
