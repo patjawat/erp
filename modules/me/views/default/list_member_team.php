@@ -1,37 +1,53 @@
 <?php
+
+use yii\helpers\Url;
+use yii\bootstrap\Html;
 use app\modules\hr\models\Employees;
 
 $listsMemberTeam = Employees::find()->where(['department' => $me->department,'status' => 1])->all();
 ?>
-
 <section class="mt-5">
-            <div class="d-flex justify-content-between">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                        style="width: 42px; height: 42px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-inbox-icon lucide-inbox">
-                            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-                            <path
-                                d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;"><?= $me->departmentName() ?></h3>
-                        <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                            จำนวนสมาชิก <?=count($listsMemberTeam)?> คน
-                        </p>
-                    </div>
-                </div>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-4 d-flex align-items-center justify-content-center"
+                 style="width: 48px; height: 48px;">
+                <i class="bi bi-people-fill fs-4"></i> </div>
+            <div>
+                <h3 class="fw-bold mb-0" style="font-size: 1.1rem; color: #334155;"><?= $me->departmentName() ?></h3>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">
+                    ทีมงานทั้งหมด <span class="fw-bold text-primary"><?= count($listsMemberTeam) ?></span> คน
+                </p>
             </div>
-<div class="d-flex flex-column g-3 gap-3 ms-2">
-
-    <?php foreach($listsMemberTeam as $item):?>
-        
-        <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-              <?=$item->getAvatar(false)?>
         </div>
-        <?php endforeach;?>
+        <button class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border text-muted" style="font-size: 0.75rem;">ดูทั้งหมด</button>
     </div>
-      </section>
+
+    <div class="overflow-auto pe-2" style="max-height: 450px; scrollbar-width: thin;">
+        <div class="d-flex flex-column gap-2">
+            <?php foreach($listsMemberTeam as $item): ?>
+            <a href="<?=Url::to(['/hr/employees/view','id' => $item->id])?>">
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-4 border border-light bg-white shadow-sm hover-shadow-md transition-all cursor-pointer">
+                    
+                    <?= $item->getAvatar(false) ?>
+<i class="bi bi-chevron-right"></i>
+        
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<style>
+/* เพิ่มความนุ่มนวลเวลา Hover */
+.transition-all { transition: all 0.2s ease-in-out; }
+.cursor-pointer { cursor: pointer; }
+.hover-shadow-md:hover { 
+    transform: translateX(5px); 
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+/* ปรับแต่ง Scrollbar ให้เข้ากับ Bootstrap 5 */
+.overflow-auto::-webkit-scrollbar { width: 4px; }
+.overflow-auto::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+</style>

@@ -410,7 +410,7 @@ $percenUseDay = ($leaveData['total'] > 0)
 </div>
 
 
-<div class="row">
+<div class="row mb-5">
     <div class="col-12 col-lg-9">
 
         <section class="mt-5">
