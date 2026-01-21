@@ -12,5 +12,8 @@
   "dependencies": {
     "@tkrotoff/bootstrap-floating-label": "^0.12.2",
     "bootstrap": "^5.3.2"
+  },
+  "devDependencies": {
+    "sass": "^1.97.2"
   }
 }

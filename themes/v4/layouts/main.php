@@ -162,6 +162,18 @@ AppAsset::register($this);
         stroke-width: 2px;
     }
 
+    .erp-icon-box-md {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+
     .erp-nav-item.active .erp-icon-box {
         background-color: var(--erp-icon-bg-active);
         color: var(--erp-primary);
@@ -175,9 +187,6 @@ AppAsset::register($this);
 
     .erp-nav-item.active .erp-nav-text {
         font-weight: 600;
-    }
-    .page-content-wrapper{
-        background-color: var(--bs-body-bg);
     }
 
     /* .page-content-wrapper .page-title-box {

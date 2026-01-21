@@ -17,92 +17,85 @@ $me = UserHelper::GetEmployee();
 
 <?php Pjax::begin(['id' => 'document-container', 'enablePushState' => false, 'timeout' => 5000]); ?>
 
-<div class="card">
-    <div class="card-body p-2 p-md-3">
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3">
-            <h6 class="mb-2 mb-sm-0">
-                <i class="bi bi-ui-checks"></i> ทะเบียนหนังสือ
-                <span class="badge rounded-pill text-bg-primary"><?php echo number_format(($dataProvider->getTotalCount()), 0) ?></span>
-                รายการ
-            </h6>
-            <?= Html::a('แสดงทั้งหมด', ['/me/documents'], ['class' => 'btn btn-sm btn-light rounded-pill w-auto', 'data' => ['pjax' => 0]]) ?>
+    <div class="d-flex flex-column gap-2">
+        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+        <div class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0"
+            style="border-radius: 16px;">
+            <div class="row g-0 align-items-center">
+                <div class="position-absolute start-0 top-0 bottom-0 bg-primary" style="width: 4px;"></div>
+                <div class="col-auto py-3 ps-4 pe-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3"
+                        style="width: 40px; height: 40px; background-color: #eff6ff; color: #2563eb;"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="mail" class="lucide lucide-mail">
+                            <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        </svg></div>
+                </div>
+                <div class="col py-3 px-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span
+                            class="badge rounded-2 fw-bold px-2 py-1"
+                            style="background-color: #eff6ff; color: #1d4ed8; font-size: 0.65rem;">บันทึกข้อความ</span>
+                        <div class="d-flex align-items-center gap-1 text-muted fw-bold"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="hash" class="lucide lucide-hash">
+                                <line x1="4" x2="20" y1="9" y2="9"></line>
+                                <line x1="4" x2="20" y1="15" y2="15"></line>
+                                <line x1="10" x2="8" y1="3" y2="21"></line>
+                                <line x1="16" x2="14" y1="3" y2="21"></line>
+                            </svg><?= isset($item->document) ? $item->document->doc_number : ''?></div>
+                    </div>
+                    <span
+                        class="mb-1 text-truncate fw-medium fs-14"><?php echo $item->document ? $item->document->topic : '' ?></span>
+                    <div class="d-flex flex-wrap gap-3 text-muted fs-12"><span
+                            class="d-flex align-items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" data-lucide="building-2"
+                                class="lucide lucide-building-2">
+                                <path d="M10 12h4"></path>
+                                <path d="M10 8h4"></path>
+                                <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path>
+                                <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2">
+                                </path>
+                                <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+                            </svg> จาก: ฝ่ายบริหารงานทั่วไป<?= $item->documentOrg->id?></span><span class="d-flex align-items-center gap-1"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="user" class="lucide lucide-user">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg> ถึง: ทุกหน่วยงาน</span></div>
+                </div>
+                <div class="col-auto py-3 pe-4 ps-2 d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-md-block"><span
+                            class="badge bg-danger text-white rounded-pill fw-bold px-2 fs-11">ด่วนที่สุด</span>
+                        <smail class="d-flex align-items-center justify-content-end gap-1 text-muted mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
+                                <path d="M12 6v6l4 2"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg> 15 นาทีที่แล้ว
+                        </smail>
+                    </div>
+                    <button class="btn btn-light rounded-circle p-2 border-0 text-muted hover-text-primary"
+                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="check-circle" class="lucide lucide-check-circle">
+                            <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                            <path d="m9 11 3 3L22 4"></path>
+                        </svg></button>
+                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-xxl']]) : '' ?>
+                </div>
+            </div>
         </div>
+        <?php endforeach; ?>
+    </div>
 
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr class="text-nowrap">
-                        <th class="text-center" style="width:50px;">ลำดับ</th>
-                        <th class="text-center" style="width:100px;">เลขที่รับ</th>
-                        <th style="min-width:300px;">เรื่อง</th>
-                        <th style="min-width:180px;">ผู้บันทึก</th>
-                        <th style="width:100px;">สถานะ</th>
-                        <th class="text-center" style="width:70px;">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="table-group-divider">
-                    <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                        <tr id="<?= $item->id ?>">
-                            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                            <td class="text-center fw-bold">
-                                <?= isset($item->document) ? $item->document->doc_regis_number : '' ?>
-                            </td>
-                            <td>
-                                <div class="d-flex flex-wrap gap-1 mb-1"> <?php if (isset($item->document) &&  $item->document->doc_speed == 'ด่วนที่สุด'): ?>
-                                        <span class="badge text-bg-danger fs-12"><i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด</span>
-                                    <?php endif; ?>
 
-                                    <?php if (isset($item->document) && $item->document->secret == 'ลับที่สุด'): ?>
-                                        <span class="badge text-bg-danger fs-12"><i class="fa-solid fa-lock"></i> ลับที่สุด</span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <a href="<?php echo Url::to(['/me/documents/view', 'id' => $item->id, 'callback' => '/me']) ?>"
-                                    class="open-modal view-document fw-bold text-decoration-none"
-                                    data-size="modal-xxl"
-                                    data-tr-id="<?= $item->id ?>"
-                                    style="display: block; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: normal;">
-                                    เรื่อง : <?php echo $item->document ? $item->document->topic : '' ?>
-                                    <?php echo  $item->document ? ($item->document->isFile() ? ' <i class="fas fa-paperclip text-muted"></i>' : '') : '' ?>
-                                </a>
-
-                                <p class="text-muted small mb-1">
-                                    <?= $item->document ? $item->data_json['des'] ?? '' : '' ?>
-                                </p>
-
-                                <div class="fs-12">
-                                    <span class="text-danger border-end pe-2 mr-2">
-                                        <?= $item->document ? $item->document->doc_number : '' ?>
-                                    </span>
-                                    <span class="text-primary ps-1">
-                                        <i class="fa-solid fa-inbox"></i>
-                                        <?php echo $item->document ? $item->documentOrg->title ?? '-' : ''; ?>
-                                        <span class="badge rounded-pill bg-light text-dark ms-1">
-                                            <i class="fa-regular fa-eye"></i>
-                                            <?php echo $item->document ? $item->document->viewCount() : '' ?>
-                                        </span>
-                                    </span>
-                                </div>
-                                <?php echo $item->document ? $item->document->StackDocumentTags('comment') : '' ?>
-                            </td>
-                            <td>
-                                <div class="small text-nowrap">
-                                    <?= $item->document ? $item->document->viewCreate()['avatar'] : ''; ?>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-info-subtle text-info">
-                                    <?= $item->document->documentStatus->title ?? '-' ?>
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <?php echo $item->document ? Html::a('<i class="fa-regular fa-pen-to-square fa-lg"></i>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-outline-primary btn-sm open-modal view-document', 'data' => ['size' => 'modal-xxl']]) : '' ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
 
         <div class="mt-4 d-flex justify-content-center">
             <nav aria-label="Page navigation">
@@ -114,8 +107,7 @@ $me = UserHelper::GetEmployee();
                 ]); ?>
             </nav>
         </div>
-    </div>
-</div>
+
 
 <?php Pjax::end() ?>
 <?php
