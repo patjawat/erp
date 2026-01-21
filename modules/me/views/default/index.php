@@ -342,7 +342,12 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                                 <?php echo $searchModel->sumLeavePermission()['total']?>
 
                                 <?php
-                                $percenUseDay = number_format(($searchModel->sumLeavePermission()['sum'] / $searchModel->sumLeavePermission()['total']) * 100, 2);
+                                $leaveData = $searchModel->sumLeavePermission();
+
+// ตรวจสอบว่า total ต้องไม่เป็น 0 หรือ null
+$percenUseDay = ($leaveData['total'] > 0) 
+    ? number_format(($leaveData['sum'] / $leaveData['total']) * 100, 2) 
+    : "0.00";
 
                                 ?>
                             </div>
@@ -445,27 +450,6 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                         style="font-size: 0.75rem;">คำสั่ง</button>
                 </div>
             </div>
-
-
-            <!-- <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 rounded-4 mt-3 border border-light mb-3"
-                style="background-color: #f8fafc; border-radius: 20px;">
-                <div class="d-flex align-items-center gap-2 mb-2 mb-sm-0">
-                    <span class="spinner-grow spinner-grow-sm text-primary"
-                        style="width: 8px; height: 8px; animation-duration: 2s;" role="status"></span>
-                    <p class="text-muted fw-bold mb-0" style="font-size: 0.75rem;">พบหนังสือใหม่ <span
-                            class="text-primary">2
-                            รายการ</span> ที่ยังไม่ได้ดำเนินการ</p>
-                </div>
-                <a href="#" class="text-decoration-none fw-bold d-flex align-items-center gap-1 hover-text-dark"
-                    style="font-size: 0.75rem; color: #2563eb;">เข้าสู่ระบบงานสารบรรณเต็มรูปแบบ <svg
-                        xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        data-lucide="arrow-right" class="lucide lucide-arrow-right">
-                        <path d="M5 12h14"></path>
-                        <path d="m12 5 7 7-7 7"></path>
-                    </svg></a>
-            </div> -->
-
 
             <div id="viewDocument"></div>
 
