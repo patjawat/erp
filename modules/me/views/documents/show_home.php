@@ -19,7 +19,7 @@ $me = UserHelper::GetEmployee();
 
     <div class="d-flex flex-column gap-2">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-        <div id="<?=$item->id?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0"
+        <div id="<?=$item->id?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0 mb-2"
             style="border-radius: 16px;">
             <div class="row g-0 align-items-center">
                 <div class="position-absolute start-0 top-0 bottom-0 bg-primary" style="width: 4px;"></div>
@@ -36,7 +36,9 @@ $me = UserHelper::GetEmployee();
                 <div class="col py-3 px-2">
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span
                             class="badge rounded-2 fw-bold px-2 py-1"
-                            style="background-color: #eff6ff; color: #1d4ed8; font-size: 0.65rem;">บันทึกข้อความ</span>
+                            style="background-color: #eff6ff; color: #1d4ed8; font-size: 0.65rem;">
+                        <?=$item->document?->documentType?->title ?? 'ไมระบุ'?>
+                        </span>
                         <div class="d-flex align-items-center gap-1 text-muted fw-bold"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -66,7 +68,7 @@ $me = UserHelper::GetEmployee();
                                 stroke-linejoin="round" data-lucide="user" class="lucide lucide-user">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
-                            </svg> ถึง: <?=$item->name == 'department' ? 'ทุกหน่วยงาน' : $me->fullname?>
+                            </svg> ถึง: <?=$item->name == 'department' ? 'หน่วยงาน' : $me->fullname?>
                         
                         </span></div>
                 </div>
