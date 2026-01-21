@@ -19,7 +19,7 @@ $me = UserHelper::GetEmployee();
 
     <div class="d-flex flex-column gap-2">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-        <div class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0"
+        <div id="<?=$item->id?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0"
             style="border-radius: 16px;">
             <div class="row g-0 align-items-center">
                 <div class="position-absolute start-0 top-0 bottom-0 bg-primary" style="width: 4px;"></div>
@@ -97,7 +97,7 @@ $me = UserHelper::GetEmployee();
                             <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
                             <path d="m9 11 3 3L22 4"></path>
                         </svg></button>
-                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-xxl']]) : '' ?>
+                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-xxl','tr-id' => $item->id]]) : '' ?>
                 </div>
             </div>
         </div>
