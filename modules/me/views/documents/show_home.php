@@ -60,25 +60,34 @@ $me = UserHelper::GetEmployee();
                                 <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2">
                                 </path>
                                 <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
-                            </svg> จาก: ฝ่ายบริหารงานทั่วไป<?= $item->documentOrg->id?></span><span class="d-flex align-items-center gap-1"><svg
+                            </svg> จาก: <?= $item->document->documentOrg->title ?? '-' ?></span><span class="d-flex align-items-center gap-1"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" data-lucide="user" class="lucide lucide-user">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
-                            </svg> ถึง: ทุกหน่วยงาน</span></div>
+                            </svg> ถึง: <?=$item->name == 'department' ? 'ทุกหน่วยงาน' : $me->fullname?>
+                        
+                        </span></div>
                 </div>
                 <div class="col-auto py-3 pe-4 ps-2 d-flex align-items-center gap-3">
-                    <div class="text-end d-none d-md-block"><span
-                            class="badge bg-danger text-white rounded-pill fw-bold px-2 fs-11">ด่วนที่สุด</span>
-                        <smail class="d-flex align-items-center justify-content-end gap-1 text-muted mt-1">
+                    <div class="text-end d-none d-md-block">
+                        <?php if ($item->document->doc_speed == 'ด่วนที่สุด'): ?>
+                            <span class="badge text-bg-danger fs-12 mb-1">ด่วนที่สุด</span>
+                            <?php endif; ?>
+                            
+                            <?php if ($item->document->secret == 'ลับที่สุด'): ?>
+                                <span class="badge text-bg-dark fs-12 mb-1">ลับที่สุด</span>
+                                <?php endif; ?>
+
+                        <!-- <smail class="d-flex align-items-center justify-content-end gap-1 text-muted mt-1">
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
                                 <path d="M12 6v6l4 2"></path>
                                 <circle cx="12" cy="12" r="10"></circle>
                             </svg> 15 นาทีที่แล้ว
-                        </smail>
+                        </smail> -->
                     </div>
                     <button class="btn btn-light rounded-circle p-2 border-0 text-muted hover-text-primary"
                         style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg

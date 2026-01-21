@@ -124,8 +124,10 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                             <path d="M12 6v6l4 2"></path>
                             <circle cx="12" cy="12" r="10"></circle>
                         </svg> บันทึกเวลาเข้างาน</p>
-                    <span class="text-white fw-black mb-4 lh-1"
-                        style="font-size: 2.25rem; letter-spacing: -0.05em;">08:30</span>
+                    <span id="current-time" class="text-white fw-black mb-4 lh-1"
+                        style="font-size: 2.25rem; letter-spacing: -0.05em;">
+                        00:00:00
+                    </span>
                     <button id="btn-clock-in"
                         class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1"
                         style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">Check-in <svg
@@ -221,11 +223,12 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
         <div class="row g-2">
             <div class="col-6">
 
+
                 <div
-                    class="hover bg-success-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                     <a href="<?=Url::to(['/me/leave'])?>">
-                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-success shadow-sm mb-2"
-                            style="width: 32px; height: 32px;">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                            style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">ระบบลา</span></div>
@@ -235,9 +238,9 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
             <div class="col-6">
                 <a href="<?=Url::to(['/me/repair-v2'])?>">
                     <div
-                        class="hover bg-primary-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-primary shadow-sm mb-2"
-                            style="width: 32px; height: 32px;">
+                        class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                            style="width: 42px; height: 42px;">
                             <i data-lucide="wrench"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">แจ้งซ่อม</span></div>
@@ -248,9 +251,9 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                 <a href="<?=Url::to(['/me/booking-vehicle/calendar'])?>">
 
                     <div
-                        class="hover bg-info-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                        <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-info shadow-sm mb-2"
-                            style="width: 32px; height: 32px;">
+                        class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                            style="width: 42px; height: 42px;">
                             <i data-lucide="car-front"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">จองรถ</span></div>
@@ -261,9 +264,9 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
             <a href="<?=Url::to(['/me/meeting'])?>">
 
                 <div
-                    class="hover bg-warning-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-warning shadow-sm mb-2"
-                        style="width: 32px; height: 32px;">
+                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                        style="width: 42px; height: 42px;">
                         <i data-lucide="calendar-days"></i>
                     </div>
                     <div><span class="text-xs text-muted fw-bold d-block">จองห้องประชุม</span></div>
@@ -273,9 +276,9 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
         <div class="col-6">
             <a href="<?=Url::to(['/me/development'])?>"></a>
             <div
-                class="hover bg-info-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-info shadow-sm mb-2"
-                    style="width: 32px; height: 32px;">
+                class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                    style="width: 42px; height: 42px;">
                     <i data-lucide="graduation-cap"></i>
                 </div>
                 <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
@@ -284,9 +287,9 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
         <div class="col-6">
             <a href="<?=Url::to(['/me/purchase'])?>">
                 <div
-                    class="hover bg-warning-subtle rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <div class="bg-white rounded-3 d-flex align-items-center justify-content-center text-warning shadow-sm mb-2"
-                        style="width: 32px; height: 32px;">
+                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
+                        style="width: 42px; height: 42px;">
                         <i data-lucide="shopping-cart"></i>
                     </div>
                     <div><span class="text-xs text-muted fw-bold d-block">ขอซื้อ/ขอจ้าง</span></div>
@@ -298,30 +301,32 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 
 <div class="row g-3">
     <div class="col-12 col-xl-12">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                    style="width: 42px; height: 42px;">
-                    <i data-lucide="calendar-range"></i>
-                </div>
-                <div class="lh-sm">
-                    <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">ภาพรวมการลา</h3>
-                    <p class="text-muted mb-0" style="font-size: 0.75rem;">สะสมคะแนนเพื่ออัปเกรดระดับและแลกรางวัล</p>
-                </div>
-            </div>
-            <a href="<?=Url::to(['/me/leave'])?>"
-                class="btn btn-primary rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale">
-                ดูทั้งหมด <i data-lucide="chevrons-right"></i>
-            </a>
-        </div>
+
         <div class="row g-3">
             <div class="col-12 col-md-6">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
+                            style="width: 42px; height: 42px;">
+                            <i data-lucide="calendar-range"></i>
+                        </div>
+                        <div class="lh-sm">
+                            <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">ภาพรวมการลา</h3>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                สะสมคะแนนเพื่ออัปเกรดระดับและแลกรางวัล</p>
+                        </div>
+                    </div>
+                    <a href="<?=Url::to(['/me/leave'])?>"
+                        class="btn btn-primary rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale">
+                        ดูทั้งหมด <i data-lucide="chevrons-right"></i>
+                    </a>
+                </div>
                 <div
                     class="card border-0 shadow-sm p-4 d-flex flex-column justify-content-between position-relative overflow-hidden">
                     <div class="d-flex flex-row justify-content-between">
                         <div class="d-flex flex-column">
                             <h6 class="mb-1 text-dark">สิทธิลาพักผ่อน</h6>
-                            <p class="text-muted mb-4">รักษาวินัยการทำงานอย่างต่อเนื่อง</p>
+                            <p class="text-muted mb-4">ภาพรวมของการลาพักผ่อน</p>
                         </div>
                         <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
                             style="width: 42px; height: 42px;">
@@ -331,60 +336,68 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                     <div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="d-flex align-items-center gap-1 fw-black text-primary"
-                                style="font-size: 0.75rem;"><svg xmlns="http://www.w3.org/2000/svg" width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" data-lucide="star"
-                                    class="lucide lucide-star fill-current">
-                                    <path
-                                        d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z">
-                                    </path>
-                                </svg>
-                                <?php echo $searchModel->sumLeavePermission()['sum']?>
+                                style="font-size: 0.75rem;">
+
+                                <?php echo $searchModel->sumLeavePermission()['sum']?> /
+                                <?php echo $searchModel->sumLeavePermission()['total']?>
+
+                                <?php
+                                $percenUseDay = number_format(($searchModel->sumLeavePermission()['sum'] / $searchModel->sumLeavePermission()['total']) * 100, 2);
+
+                                ?>
                             </div>
-                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">80%</span>
+                            <span class="text-muted fw-bold" style="font-size: 0.65rem;"><?=$percenUseDay?>%</span>
                         </div>
                         <div class="progress rounded-pill mb-4" style="height: 6px; background-color: #f1f5f9;">
-                            <div class="progress-bar rounded-pill bg-primary" role="progressbar" style="width: 80%;">
+                            <div class="progress-bar rounded-pill bg-primary" role="progressbar"
+                                style="width: <?=$percenUseDay?>%;">
                             </div>
-                        </div><button class="btn w-100 rounded-4 fw-bold py-2"
-                            style="font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: none;">เริ่มทำภารกิจ</button>
+                        </div>
+                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เริ่มการลา', ['/me/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn w-100 rounded-4 fw-bold py-2 open-modal', 'data' => ['size' => 'modal-lg'],'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: none;']) ?>
+
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-6">
-                <div
-                    class="card border-0 shadow-sm p-4 d-flex flex-column justify-content-between position-relative overflow-hidden">
-                    <div class="d-flex flex-row justify-content-between">
-                        <div class="d-flex flex-column">
-                            <h6 class="mb-1 text-dark">สิทธิลาพักผ่อน</h6>
-                            <p class="text-muted mb-4">รักษาวินัยการทำงานอย่างต่อเนื่อง</p>
-                        </div>
-                        <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                            style="width: 42px; height: 42px;">
-                            <i data-lucide="calendar-heart"></i>
+
+                <div class="mb-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-4 border border-danger-subtle shadow-sm"
+                            style="width: 48px; height: 48px; background-color: #fff1f2; color: #f43f5e;"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="heart-handshake"
+                                class="lucide lucide-heart-handshake">
+                                <path
+                                    d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762">
+                                </path>
+                            </svg></div>
+                        <div>
+                            <h3 class="fw-black text-dark mb-0" style="font-size: 1.125rem;">กำแพงแห่งคำขอบคุณ
+                                (Appreciation Wall)</h3>
+                            <p class="text-muted fst-italic fw-medium mb-0" style="font-size: 0.75rem;">
+                                ส่งพลังบวกให้เพื่อนร่วมงาน (+50 แต้มสะสมต่อคำชม)</p>
                         </div>
                     </div>
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center gap-1 fw-black text-primary"
-                                style="font-size: 0.75rem;"><svg xmlns="http://www.w3.org/2000/svg" width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" data-lucide="star"
-                                    class="lucide lucide-star fill-current">
-                                    <path
-                                        d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z">
-                                    </path>
-                                </svg>
-                                <?php echo $searchModel->sumLeavePermission()['sum']?>
-                            </div>
-                            <span class="text-muted fw-bold" style="font-size: 0.65rem;">80%</span>
-                        </div>
-                        <div class="progress rounded-pill mb-4" style="height: 6px; background-color: #f1f5f9;">
-                            <div class="progress-bar rounded-pill bg-primary" role="progressbar" style="width: 80%;">
-                            </div>
-                        </div><button class="btn w-100 rounded-4 fw-bold py-2"
-                            style="font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: none;">เริ่มทำภารกิจ</button>
-                    </div>
+                </div>
+                <div class="card border border-primary-subtle p-3 d-flex flex-column align-items-center justify-content-center text-center hover-shadow transition-all"
+                    style="background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);">
+                    <div class="bg-white rounded-4 shadow-sm d-flex align-items-center justify-content-center mb-3 transition-transform hover-scale"
+                        style="width: 56px; height: 56px; color: #3b82f6;"><svg xmlns="http://www.w3.org/2000/svg"
+                            width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="smile"
+                            class="lucide lucide-smile">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                            <line x1="9" x2="9.01" y1="9" y2="9"></line>
+                            <line x1="15" x2="15.01" y1="9" y2="9"></line>
+                        </svg></div>
+                    <h4 class="fw-black mb-1" style="color: #1e3a8a; font-size: 1.125rem;">วันนี้คุณขอบคุณใครหรือยัง?
+                    </h4>
+                    <p class="fw-medium px-2 mb-3" style="color: #64748b; font-size: 0.75rem;">คำชื่นชมเล็กๆ น้อยๆ
+                        ช่วยสร้างกำลังใจอันยิ่งใหญ่ให้เพื่อนร่วมงานของเราได้นะครับ</p>
+                    <button class="btn fw-black shadow-sm hover-scale"
+                        style="background-color: #4f46e5; color: white; border-radius: 12px; font-size: 0.75rem; padding: 10px 24px;">เริ่มส่งคำขอบคุณเลย</button>
                 </div>
             </div>
         </div>
@@ -392,74 +405,79 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 </div>
 
 
-<!-- Main Content Grid -->
+<div class="row">
+    <div class="col-12 col-lg-9">
 
-<style>
-#pr-order>.card {
-    height: 291px;
-}
-</style>
-
-
-<section class="mt-5">
-    <div class="d-flex justify-content-between">
-        <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                style="width: 42px; height: 42px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-inbox-icon lucide-inbox">
-                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-                    <path
-                        d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-                </svg>
+        <section class="mt-5">
+            <div class="d-flex justify-content-between">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
+                        style="width: 42px; height: 42px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-inbox-icon lucide-inbox">
+                            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                            <path
+                                d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">หนังสือราชการที่รอการจัดการ</h3>
+                        <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                            รายการหนังสือรับเข้าจากระบบสารบรรณที่ส่งถึงคุณ
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2">
+                    <button class="btn btn-primary rounded-pill fw-bold text-nowrap px-3 py-1 shadow-sm border-0"
+                        style="font-size: 0.75rem; padding-left: 20px; padding-right: 20px;">ทั้งหมด</button>
+                    <button
+                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
+                        style="font-size: 0.75rem;">ด่วนที่สุด</button>
+                    <button
+                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
+                        style="font-size: 0.75rem;">บันทึกข้อความ</button>
+                    <button
+                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
+                        style="font-size: 0.75rem;">หนังสือภายนอก</button>
+                    <button
+                        class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
+                        style="font-size: 0.75rem;">คำสั่ง</button>
+                </div>
             </div>
-            <div>
-                <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">หนังสือราชการที่รอการจัดการ</h3>
-                <p class="text-muted mb-0" style="font-size: 0.75rem;">รายการหนังสือรับเข้าจากระบบสารบรรณที่ส่งถึงคุณ
-                </p>
-            </div>
-        </div>
-<div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2">
-        <button class="btn btn-primary rounded-pill fw-bold text-nowrap px-3 py-1 shadow-sm border-0"
-            style="font-size: 0.75rem; padding-left: 20px; padding-right: 20px;">ทั้งหมด</button>
-        <button class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-            style="font-size: 0.75rem;">ด่วนที่สุด</button>
-        <button class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-            style="font-size: 0.75rem;">บันทึกข้อความ</button>
-        <button class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-            style="font-size: 0.75rem;">หนังสือภายนอก</button>
-        <button class="btn btn-white text-muted fw-bold text-nowrap rounded-pill px-3 py-1 border hover-bg-light"
-            style="font-size: 0.75rem;">คำสั่ง</button>
+
+
+            <!-- <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 rounded-4 mt-3 border border-light mb-3"
+                style="background-color: #f8fafc; border-radius: 20px;">
+                <div class="d-flex align-items-center gap-2 mb-2 mb-sm-0">
+                    <span class="spinner-grow spinner-grow-sm text-primary"
+                        style="width: 8px; height: 8px; animation-duration: 2s;" role="status"></span>
+                    <p class="text-muted fw-bold mb-0" style="font-size: 0.75rem;">พบหนังสือใหม่ <span
+                            class="text-primary">2
+                            รายการ</span> ที่ยังไม่ได้ดำเนินการ</p>
+                </div>
+                <a href="#" class="text-decoration-none fw-bold d-flex align-items-center gap-1 hover-text-dark"
+                    style="font-size: 0.75rem; color: #2563eb;">เข้าสู่ระบบงานสารบรรณเต็มรูปแบบ <svg
+                        xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="arrow-right" class="lucide lucide-arrow-right">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                    </svg></a>
+            </div> -->
+
+
+            <div id="viewDocument"></div>
+
+        </section>
+
     </div>
+    <div class="col-12 col-lg-3">
+
+        <?=$this->render('list_member_team',['me' => $me])?>
+
     </div>
-    
-
-        <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 rounded-4 mt-3 border border-light"
-            style="background-color: #f8fafc; border-radius: 20px;">
-            <div class="d-flex align-items-center gap-2 mb-2 mb-sm-0">
-                <span class="spinner-grow spinner-grow-sm text-primary"
-                    style="width: 8px; height: 8px; animation-duration: 2s;" role="status"></span>
-                <p class="text-muted fw-bold mb-0" style="font-size: 0.75rem;">พบหนังสือใหม่ <span
-                        class="text-primary">2 รายการ</span> ที่ยังไม่ได้ดำเนินการ</p>
-            </div>
-            <a href="#" class="text-decoration-none fw-bold d-flex align-items-center gap-1 hover-text-dark"
-                style="font-size: 0.75rem; color: #2563eb;">เข้าสู่ระบบงานสารบรรณเต็มรูปแบบ <svg
-                    xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    data-lucide="arrow-right" class="lucide lucide-arrow-right">
-                    <path d="M5 12h14"></path>
-                    <path d="m12 5 7 7-7 7"></path>
-                </svg></a>
-        </div>
-
-        
-        
-    </section>
-    
-    <div id="viewDocument"></div>
-
-
+</div>
 
 
 <?php
@@ -485,6 +503,37 @@ $js = <<< JS
             }
         });
     }
+
+
+    $(document).ready(function() {
+    function updateClock() {
+        const now = new Date();
+        
+        // ดึงค่า ชั่วโมง : นาที : วินาที
+        // .padStart(2, '0') เพื่อให้แสดงเลข 0 ข้างหน้าถ้าหลักเดียว เช่น 08:05:09
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        // แสดงผลในรูปแบบ HH:mm:ss
+        const currentTimeString = `\${hours}:\${minutes}:\${seconds}`;
+        
+        // อัปเดตลงใน HTML
+        $('#current-time').text(currentTimeString);
+    }
+
+    // เรียกใช้ฟังก์ชันทันทีที่หน้าเว็บโหลดเสร็จ
+    updateClock();
+
+    // ตั้งเวลาให้ทำงานทุกๆ 1 วินาที
+    setInterval(updateClock, 1000);
+    
+    // โบนัส: คลิกปุ่ม Check-in แล้วแสดง Alert เวลาที่กด
+    $('#btn-clock-in').on('click', function() {
+        const timeAtClick = $('#current-time').text();
+        alert('บันทึกเวลาเข้างานสำเร็จที่เวลา: ' + timeAtClick);
+    });
+    });
     
     JS;
 $this->registerJS($js);
