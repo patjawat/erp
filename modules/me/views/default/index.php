@@ -30,8 +30,6 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 
 <?php $this->endBlock(); ?>
 
-
-
 <div class="row">
     <div class="col-12 col-xl-6">
         <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-center rounded-4"
