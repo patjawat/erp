@@ -99,7 +99,7 @@ $me = UserHelper::GetEmployee();
                             <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
                             <path d="m9 11 3 3L22 4"></path>
                         </svg></button>
-                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-xxl','tr-id' => $item->id]]) : '' ?>
+                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-fullscreen','tr-id' => $item->id]]) : '' ?>
                 </div>
             </div>
         </div>
