@@ -272,15 +272,17 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
             </a>
         </div>
         <div class="col-6">
-            <a href="<?=Url::to(['/me/development'])?>"></a>
-            <div
+            <a href="<?=Url::to(['/me/development'])?>">
+
+                <div
                 class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                 <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                    style="width: 42px; height: 42px;">
-                    <i data-lucide="graduation-cap"></i>
-                </div>
-                <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
+                style="width: 42px; height: 42px;">
+                <i data-lucide="graduation-cap"></i>
             </div>
+            <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
+        </div>
+    </a>
         </div>
         <div class="col-6">
             <a href="<?=Url::to(['/me/purchase'])?>">
