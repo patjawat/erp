@@ -13,7 +13,7 @@ use yii\widgets\DetailView;
                 <div class="d-flex flex-column">
                     <div>
                         <span class="h5 text-white">
-                            <?= Html::encode($model->topic) ?>
+                        เลขรับ : <?= Html::encode($model->doc_regis_number) ?>
                         </span>
                         <span class="fw-semibold fs-6">
                                 <?php if($model->doc_speed == 'ด่วนที่สุด'):?>

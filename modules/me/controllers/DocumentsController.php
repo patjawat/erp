@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Response;
 use yii\db\Expression;
 use app\models\Uploads;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
@@ -513,6 +514,63 @@ class DocumentsController extends \yii\web\Controller
             \Yii::$app->response->headers->add('content-type', 'application/pdf');
         }
     }
+
+    public function actionListCommentTemplate()
+    {
+         Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $data  = Categorise::find()->where(['name' => 'comment_template','emp_id' => $me->id])->all();
+        return [
+            'title' => '',
+            'totalCount' => count($data),
+            'content' =>  $this->renderAjax('list_comment_template',[
+            'data' => $data
+        ])
+        ];
+       
+    }
+    //บันทึกข้อความที่ใช้บ่อย
+    public function actionSaveCommentTemplate()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $text = $this->request->post('text');
+        if($text !==""){
+
+        $checkTemplate = Categorise::find()->where(['name' => 'comment_template','title' => $text,'emp_id' => $me->id])->one();
+        if(!$checkTemplate){
+            $model = new Categorise;
+            $model->name = 'comment_template';
+            $model->title = $text;
+            $model->emp_id = $me->id;
+            $model->save(false);
+            return $model;
+        }else{
+             return $checkTemplate;
+        }
+        }
+        }
+        
+
+public function actionDeleteCommentTemplate()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $id = $this->request->post('id');
+        $model = Categorise::findOne($id);
+        if($model){
+            $model->delete(false);
+            return [
+                'status' => 'success'
+            ];
+        }else{
+              return [
+                'status' => 'error'
+            ];
+        }
+        }
+
+    
 
     /**
      * Finds the Documents model based on its primary key value.

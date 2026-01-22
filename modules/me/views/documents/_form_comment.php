@@ -47,7 +47,7 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 
 ?>
 
-<?= $form->field($model, 'data_json[comment]')->textArea()->label(false); ?>
+<?= $form->field($model, 'data_json[comment]')->textArea(['rows' => 8,'placeholder' => 'พิมพ์ข้อความเกษียนหรือเลือกจากแม่แบบด้านบน...'])->label(false); ?>
 <?php if ($model->isNewRecord): ?>
     <div class="d-flex justify-content-center">
         <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>

@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 รายการ
             </h6>
             <div class="d-flex gap-3">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/dms/documents/create', 'document_group' => $searchModel->document_group, 'document_type' => $searchModel->document_type, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-light open-modal shadow', 'data' => ['size' => 'modal-xxl']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/dms/documents/create', 'document_group' => $searchModel->document_group, 'document_type' => $searchModel->document_type, 'title' => '<i class="fa-solid fa-calendar-plus"></i> หนังสือส่ง'], ['class' => 'btn btn-light open-modal shadow', 'data' => ['size' => 'modal-fullscreen']]) ?>
                 <span class="btn btn-success shadow export-document"><i
                         class="fa-regular fa-file-excel me-1"></i>ส่งออก</span>
             </div>

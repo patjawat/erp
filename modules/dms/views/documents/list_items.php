@@ -67,7 +67,7 @@ use yii\helpers\Html;
             </td>
             <td> <?= $item->documentStatus->title ?? '-' ?></td>
             <td>
-                <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xxl']]) ?>
+                <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-fullscreen']]) ?>
             </td>
             </tr>
         <?php endforeach; ?>

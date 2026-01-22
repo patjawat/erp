@@ -288,7 +288,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-            $msg = '<i class="fa-regular fa-comment"></i> ' . $this->data_json['comment'];
+            $msg = '<i class="fa-solid fa-quote-left"></i><span="fst-italic mb-0 ps-4">' . $this->data_json['comment'].'</span><i class="fa-solid fa-quote-right"></i>';
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),

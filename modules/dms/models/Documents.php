@@ -445,9 +445,9 @@ class Documents extends \yii\db\ActiveRecord
 
         $names = [];
         foreach ($departments as $detail) {
-            $names[] = '<span class="badge text-bg-success mb-1">' . $detail->department->name . '</span>';
+            $names[] = '<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 ms-1">' . $detail->department->name . '</span>';
         }
-        return implode(',', $names);
+        return implode($names);
     }
 
     // รายการแสดงความเห็น
