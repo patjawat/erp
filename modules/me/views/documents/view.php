@@ -233,24 +233,18 @@ $("body").on("click", ".delete-comment", function (e) {
     }); 
 });
 
-$("body").on("click", ".text-template", function (e) {
+
+$("body").off("click", ".text-template").on("click", ".text-template", function (e) {
     e.preventDefault();
     var textDist = $('#documentsdetail-data_json-comment');
-    
-    // ใช้ .text() เป็น function และ .trim() เพื่อตัดช่องว่างที่อาจติดมา
     var text = $(this).text().trim(); 
     
-    console.log("Selected Text:", text);
-
-    // สมมติว่า id ของ textarea คือ #comment-text
-    // การใช้ += จะเป็นการต่อข้อความเดิมที่มีอยู่
-   textDist.val(function(i, oldVal) {
+    textDist.val(function(i, oldVal) {
         return oldVal + text;
     });
     
-    // (Optional) โฟกัสไปที่ textarea หลังกดเลือก
-   textDist.focus();
-    updateCharCount()
+    textDist.focus();
+    if (typeof updateCharCount === "function") updateCharCount();
 });
 
 
