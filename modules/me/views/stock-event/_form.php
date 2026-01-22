@@ -61,17 +61,7 @@ $resultsJs = <<< JS
 .col-form-label {
     text-align: end;
 }
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #eaecee !important;
-    color: #fff;
-}
-:not(.form-floating) > .input-lg.select2-container--krajee-bs5 .select2-selection--single, :not(.form-floating) > .input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-    height: calc(2.875rem + 12px) !important;
-}
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #eaecee !important;
-    color: #3F51B5;
-}
+
 </style>
 
 <div class="stock-event-form">

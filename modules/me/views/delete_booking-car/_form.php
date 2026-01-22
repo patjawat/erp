@@ -67,21 +67,7 @@ $resultsJs = <<< JS
 ?>
 
 <style>
-.select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
-    font-weight: 300;
-    font-size: medium;
-}
 
-.input-lg.select2-container--krajee-bs5 .select2-selection--single,
-:not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-    padding: .2rem 0.6rem !important;
-}
-
-
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #d4e1f2;
-    color: #111111;
-}
 </style>
 <?php $form = ActiveForm::begin([
             'id' => 'booking-form',

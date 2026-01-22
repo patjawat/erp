@@ -63,10 +63,7 @@ $resultsJs = <<<JS
         border-radius: .3rem;
     }
 
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #e5e5e5;
-        color: #000;
-    }
+
 </style>
 
 <?php $form = ActiveForm::begin([

@@ -52,21 +52,6 @@ $resultsJs = <<< JS
     JS;
 
 ?>
-<style>
-    :not(.form-floating)>.input-lg.select2-container--krajee-bs5 .select2-selection--single,
-    :not(.form-floating)>.input-group-lg .select2-container--krajee-bs5 .select2-selection--single {
-        height: calc(2.875rem + 2px);
-        padding: 4px;
-        font-size: 1.0rem;
-        line-height: 1.5;
-        border-radius: .3rem;
-    }
-
-    .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-        background-color: #e5e5e5;
-        color: #fff;
-    }
-</style>
 
 
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>

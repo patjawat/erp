@@ -17,10 +17,7 @@ $placeholder = $placeholder ?? 'บุคลากร';
 ?>
 
 <style>
-.select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #e5e5e5;
-    color: #000;
-}
+
 
 .avatar-form .select2-container--krajee-bs5 .select2-selection--single {
     height: calc(2.25rem + 2px);
