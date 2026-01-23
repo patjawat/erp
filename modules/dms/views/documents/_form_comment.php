@@ -104,14 +104,7 @@ $js = <<<JS
         if (result.isConfirmed) {
             // --- เริ่มต้นส่วนการทำงานเดิมของคุณหลังจากยืนยัน ---
             
-            // 1. จัดการ UI Tabs (สลับไปที่ Tab Comment ตามที่คุณต้องการ)
-            let homeTab = $('a[href="#comment"]');
-            $('.nav-link, .tab-pane').removeClass('active show');
-            homeTab.addClass('active').attr('aria-selected', 'true');
-            $('#comment').addClass('active show');
-
-            // 2. ซ่อน Form หรือแสดง Loading
-            $('#viewFormComment').hide();
+           
 
             // 3. ส่ง Ajax
             $.ajax({
@@ -119,19 +112,32 @@ $js = <<<JS
                 type: 'post',
                 data: form.serialize(),
                 dataType: 'json',
-                success: function (res) {
+                success: async function (res) {
                     if (res.status === 'success') {
                         form[0].reset();
                         
                         // ใช้ SweetAlert แสดงความสำเร็จแทนการเรียก success() แบบเดิม (ถ้าต้องการ)
-                        Swal.fire(
-                            'สำเร็จ!',
-                            'บันทึกข้อมูลของคุณเรียบร้อยแล้ว.',
-                            'success'
-                        );
+                       await Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: 'บันทึกข้อมูลของคุณเรียบร้อยแล้ว.',
+                            icon: 'success',
+                            timer: 2000, // หน่วยเป็นมิลลิวินาที (2000 = 2 วินาที)
+                            timerProgressBar: true, // แสดงแถบถอยหลัง (ใส่หรือไม่ก็ได้)
+                            showConfirmButton: false // ซ่อนปุ่ม "ตกลง" เพื่อให้ดูสวยงามขณะปิดอัตโนมัติ
+                        });
 
-                        listComment(); // โหลดรายการ comment ใหม่
-                        getComment();  // ฟังก์ชันอื่นๆ ของคุณ
+                        await listComment(); // โหลดรายการ comment ใหม่
+                        await getComment();  // ฟังก์ชันอื่นๆ ของคุณ
+
+                         // 1. จัดการ UI Tabs (สลับไปที่ Tab Comment ตามที่คุณต้องการ)
+                        let homeTab = $('a[href="#comment"]');
+                        $('.nav-link, .tab-pane').removeClass('active show');
+                        homeTab.addClass('active').attr('aria-selected', 'true');
+                        $('#comment').addClass('active show');
+
+                        // 2. ซ่อน Form หรือแสดง Loading
+                        $('#viewFormComment').hide();
+
                     } else {
                         // กรณี Error จากฝั่ง Server
                         Swal.fire('เกิดข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกได้', 'error');

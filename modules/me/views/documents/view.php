@@ -240,7 +240,7 @@ $("body").off("click", ".text-template").on("click", ".text-template", function 
     var text = $(this).text().trim(); 
     
     textDist.val(function(i, oldVal) {
-        return oldVal + text;
+        return oldVal + ' '+text;
     });
     
     textDist.focus();

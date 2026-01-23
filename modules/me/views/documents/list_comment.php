@@ -22,7 +22,7 @@ use app\components\AppHelper
                     </div>
 
                     <div class="card border-0 rounded-4 shadow-sm"
-                        style="background-color: #f8fafc; border: 1px solid #f1f5f9 !important;">
+                        style="background-color: #f8fafc;">
                         <div class="card-body p-3"> <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-center gap-2">
                                     <?php echo $item->getAvatar('xx', false)['avatar'] ?>
