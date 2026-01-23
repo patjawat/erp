@@ -262,6 +262,13 @@ class Documents extends \yii\db\ActiveRecord
         }
     }
 
+    public function viewFile($options = [])
+    {
+        // เช็กว่ามีการส่ง 'view' => true มาหรือไม่ ถ้าไม่มีให้ default เป็น false
+        $view =  true;
+        return FileManagerHelper::FileUpload($this->ref, 'document_clip', $view);
+    }
+
     public function viewHistory()
     {
         return  DocumentsDetail::find()
@@ -343,21 +350,14 @@ class Documents extends \yii\db\ActiveRecord
     public function isFile()
     {
         $ref = $this->ref;
-        $directory = Yii::getAlias('@app/modules/filemanager/fileupload/' . $ref . '/');
-        $checkFileUpload = Uploads::findOne(['ref' => $ref]);
-        if ($checkFileUpload) {
-            $fileName = $checkFileUpload->real_filename;
-            $filePath = $directory . $fileName;
-
-            // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-            if (file_exists($filePath) && is_file($filePath)) {
-                return true;
+        $query = Uploads::find(['ref' => $ref,'name' => 'document_clip'])->count();
+        $query = Uploads::find()->where(['ref' => $ref, 'name' => 'document_clip']);
+        $count = $query->count();
+        if ($count > 0) {
+                return '<i class="fas fa-paperclip ms-1 text-muted fs-12"></i>';
             } else {
-                return false;
+                return '';
             }
-        } else {
-            return false;
-        }
     }
 
     public function listEmployee()

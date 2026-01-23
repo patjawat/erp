@@ -51,6 +51,12 @@ $this->title = $model->topic;
                                 <i class="fa-regular fa-eye me-1"></i> ประวัติการอ่าน
                             </a>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="viewFile-tab" data-bs-toggle="pill" href="#viewFile"
+                                role="tab" aria-controls="viewFile" aria-selected="false">
+                                <i class="fa-solid fa-paperclip me-1"></i> ไฟล์แนบ
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -125,6 +131,11 @@ $this->title = $model->topic;
                     <div id="viewHistory" class="tab-pane fade h-100">
                         <div class="py-2">
                             <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model]) ?>
+                        </div>
+                    </div>
+                    <div id="viewFile" class="tab-pane fade h-100">
+                        <div class="py-2">
+                            <?php echo $model->viewFile() ?>
                         </div>
                     </div>
                 </div>

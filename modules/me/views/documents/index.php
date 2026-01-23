@@ -94,7 +94,7 @@ $this->params['breadcrumbs'][] = ['label' => 'หนังสือ', 'url' => [
                                            class="open-modal fw-medium d-block text-primary text-decoration-none fs-15" 
                                            data-size="modal-fullscreen">
                                             <?= $item->topic ?>
-                                            <?= $item->isFile() ? '<i class="fas fa-paperclip ms-1 text-muted fs-12"></i>' : '' ?>
+                                            <?= $item->isFile()?>
                                         </a>
                                     <?php endif; ?>
                                 </div>

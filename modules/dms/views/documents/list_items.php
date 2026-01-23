@@ -39,7 +39,7 @@ use yii\helpers\Html;
                             เรื่อง : <?php echo $item->topic ?>
                         </a>
 
-                        <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : '' ?>
+                        <?php echo $item->isFile()?>
                     </h6>
                 </div>
                 <p class="fw-normal fs-13 mb-0">

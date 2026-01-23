@@ -197,7 +197,7 @@ if (file_exists($dataFile)) {
 
                     <span>
                         เรื่อง : <?=Html::a($item->topic,['/dms/documents/view','id' => $item->id])?>
-                        <?php echo $item->isFile() ? '<i class="fas fa-paperclip"></i>' : ''?>
+                        <?php echo $item->isFile()?>
 
                     </span>
 

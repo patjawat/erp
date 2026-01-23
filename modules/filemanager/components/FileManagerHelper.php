@@ -34,7 +34,7 @@ class FileManagerHelper extends Component
             'pluginOptions' => [
                 'showPreview' => true,
                 'overwriteInitial' => true,
-                'initialPreviewShowDelete' => true,
+                'initialPreviewShowDelete' => !$view,
                 'initialPreviewAsData' => true,
                 'initialPreview' => $initialPreview,
                 'initialPreviewConfig' => $initialPreviewConfig,
@@ -49,11 +49,11 @@ class FileManagerHelper extends Component
                 'showBrowse' => !$view, // ถ้า $view เป็น true จะกลายเป็น false (ซ่อน)
                 'showUpload' => !$view, // ถ้า $view เป็น true จะกลายเป็น false (ซ่อน)
                 'showRemove' => !$view, // ซ่อนปุ่มลบทั้งหมด
-                'showCaption' => !$view, // ซ่อนแถบชื่อไฟล์
+                'showCaption' => true, // ซ่อนแถบชื่อไฟล์
 
                 'fileActionSettings' => [
-                    'showDelete' =>true,
-                    'showRemove' => true, // ซ่อนปุ่มถังขยะรายไฟล์
+                    'showDelete' =>!$view,
+                    'showRemove' => !$view, // ซ่อนปุ่มถังขยะรายไฟล์
                     'showDrag'   => true, // ซ่อนปุ่มลากสลับตำแหน่ง
                     'showZoom'   => true,   // ปุ่มแว่นขยายให้เปิดไว้เสมอแม้จะ view อย่างเดียว
                     'showDownload' => true, // ปุ่มดาวน์โหลดเปิดไว้เสมอ
