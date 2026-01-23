@@ -90,7 +90,7 @@ use yii\helpers\Html;
                                         id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                         จัดการ
                                     </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 
                                         <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['/booking/vehicle/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                         <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i> แก้ไข', ['/booking/vehicle/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการจงรถ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>

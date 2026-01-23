@@ -82,14 +82,6 @@ $me = UserHelper::GetEmployee();
                                 <span class="badge text-bg-dark fs-12 mb-1">ลับที่สุด</span>
                                 <?php endif; ?>
 
-                        <!-- <smail class="d-flex align-items-center justify-content-end gap-1 text-muted mt-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
-                                <path d="M12 6v6l4 2"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg> 15 นาทีที่แล้ว
-                        </smail> -->
                     </div>
                     <button class="btn btn-light rounded-circle p-2 border-0 text-muted hover-text-primary"
                         style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg

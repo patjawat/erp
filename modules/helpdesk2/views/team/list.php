@@ -25,7 +25,7 @@ use yii\web\View;
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><?=Html::a('<i class="bi bi-eye me-2"></i>ลบ',['/helpdesk2/team/delete','id' => $item->id],['class' => 'dropdown-item delete-team'])?></li>
 
                                 </ul>

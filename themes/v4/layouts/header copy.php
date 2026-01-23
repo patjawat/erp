@@ -73,7 +73,7 @@ $totalAssetMove = $notify['assetMove']['total'];
                 <?php endif; ?>
                 </button>
 
-                <ul class="dropdown-menu pe-4" aria-labelledby="dropdownMenuButton1" style="">
+                <ul class="dropdown-menu pe-4" aria-labelledby="dropdownMenuButton1">
                     <li>
                         <a href="<?= Url::to(['/approve-v2/leave']) ?>"class="dropdown-item">
                             <i data-lucide="calendar" class="me-1"></i> ขออนุมัติการลา

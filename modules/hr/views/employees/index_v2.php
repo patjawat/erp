@@ -220,7 +220,7 @@
                                 </div>
                                 <div class="dropdown">
                                     <i class="fas fa-ellipsis-v action-icon" data-bs-toggle="dropdown" aria-expanded="false"></i>
-                                    <ul class="dropdown-menu" style="">
+                                    <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i> View Details</a></li>
                                         <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i> Edit</a></li>
                                         <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i> Print Info</a></li>

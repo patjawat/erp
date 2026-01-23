@@ -42,7 +42,7 @@ use yii\helpers\Html;
                             id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                             จัดการ
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                             <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', [$url . 'view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                             <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-2"></i>แก้ไข', [$url . 'view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                             <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-2"></i> ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'dropdown-item', 'data' => ['size' => 'modal-lg']]) ?></li>

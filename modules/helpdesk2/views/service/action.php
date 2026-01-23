@@ -6,7 +6,7 @@ use yii\helpers\Html;
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><?=Html::a('<i class="bi bi-eye me-2"></i> บันทึกงานซ่อม',['/helpdesk/service/view','id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
                                     <li><?=Html::a('<i class="fa-regular fa-file-lines me-2"></i>เบิกอะไหล่',['/helpdesk/repair-parts/create','helpdesk_id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item','data' => ['size' => 'modal-xl']])?></li>
                                     <li><?=Html::a('<i class="fa-solid fa-print me-2"></i>พิมพ์ใบส่งซ่อม',['/helpdesk/service/print','id' => $item->id,'title' => 'รายละเอียดการแจ้งซ่อม #'.$item->repair_number],['class' => 'dropdown-item','target' => '_blank',])?></li>

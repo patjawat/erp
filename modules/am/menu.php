@@ -56,7 +56,7 @@ use yii\helpers\Url;
             <span class="d-none d-sm-inline">ตั้งค่า</span>
         </button>
 
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
                 <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม', ['/am/asset-group'], ['class' => 'dropdown-item']) ?>
             </li>

@@ -110,6 +110,8 @@ $this->params['breadcrumbs'][] = ['label' => 'หนังสือ', 'url' => [
                                     <span class="badge rounded-pill bg-light text-primary border fw-light fs-11">
                                         <i class="fa-regular fa-eye"></i> <?= $item->viewCount() ?>
                                     </span>
+
+                                    <?=$item->StackDocumentTags('comment')?>
                                 </div>
                             </div>
                         </td>

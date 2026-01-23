@@ -1,6 +1,6 @@
 <!-- https://www.canva.com/ai/code/thread/e431715f-f484-472f-986d-fd94504c9f98 -->
 
-<div id="receiveFormView" style="" data-select2-id="select2-data-receiveFormView">
+<div id="receiveFormView" data-select2-id="select2-data-receiveFormView">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">ใบรับเข้าสินค้าคงคลัง</h2>
                 <div>

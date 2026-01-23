@@ -8,23 +8,22 @@ use yii\grid\ActionColumn;
 use kartik\color\ColorInput;
 use app\modules\hr\models\LeavePolicies;
 
-/** @var yii\web\View $this */
-/** @var app\modules\hr\models\LeavePoliciesSearch $searchModel */
-/** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = 'ประเภทการลา';
+$this->title = 'สถานะการจองรถ';
+$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-box-seam"></i> <?=$this->title; ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="settings"></i> 
+        <?= $this->title; ?>
+    </h4>
+</div>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/hr/views/leave/menu_settings') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/leave/menu',['active' => 'setting'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/vehicle_menu',['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -81,6 +80,7 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                             success: function(res) {
                                             console.log(res.data.data_json.color)
                                                 $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);
+                                                success();
                                             }
                                         });
                                     }"

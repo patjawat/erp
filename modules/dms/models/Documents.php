@@ -470,7 +470,109 @@ class Documents extends \yii\db\ActiveRecord
         return DocumentsDetail::find()->where(['document_id' => $this->id, 'name' => 'comment'])->count();
     }
 
-    public function StackDocumentTags($tag_name)
+    
+   public function StackDocumentTags($tag_name)
+{
+    try {
+        $querys = DocumentsDetail::find()
+            ->where(['document_id' => $this->id, 'name' => $tag_name])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $toIds = array_column($querys, 'to_id');
+        $emps = Employees::find()->where(['id' => $toIds])->indexBy('id')->all();
+
+        $data = '<div class="avatar-stack d-flex align-items-center">';
+        
+        foreach ($querys as $key => $item) {
+            $emp = $emps[$item->to_id] ?? null;
+            if (!$emp) continue;
+
+            // ตกแต่งเนื้อหาใน Popover
+            $popoverContent = "<strong>{$emp->fullname}</strong><br><p class='mb-0 small'>{$item->comment}</p>";
+
+            $data .= Html::a(
+                Html::img($emp->showAvatar(), [
+                    'class' => 'avatar-sm rounded-circle border border-2 border-white shadow-sm',
+                    'style' => 'margin-left:-10px; cursor:pointer; object-fit:cover;',
+                    'data' => [
+                        'bs-toggle' => 'popover',
+                        'bs-trigger' => 'hover',
+                        'bs-placement' => 'top',
+                        'bs-html' => 'true',
+                        'bs-content' => $popoverContent,
+                        'bs-container' => 'body', // สำคัญมาก: เพื่อไม่ให้ popover เด้งไปมาใน stack
+                    ]
+                ]),
+                'javascript:void(0);',
+                [
+                    'class' => 'avatar-item-link',
+                    'data-target-tab' => '#comment-tab', // ID ของปุ่ม Tab
+                    'data-target-pane' => '#comment'     // ID ของเนื้อหา Tab
+                ]
+            );
+        }
+
+        $data .= '</div>';
+        return $data;
+    } catch (\Throwable $th) {
+        return '';
+    }
+}
+
+//     public function StackDocumentTags($tag_name)
+//         {
+//         try {
+//         $querys = DocumentsDetail::find()
+//             ->where(['document_id' => $this->id, 'name' => $tag_name])
+//              ->orderBy(['id' => SORT_DESC])
+//             ->all();
+
+//         $count = count($querys) - 2;
+
+//         $data = '<div class="avatar-stack">';
+//         // preload employees
+//         $toIds = array_column($querys, 'to_id');
+//         $emps = Employees::find()
+//         ->where(['id' => $toIds])
+//         ->indexBy('id')
+       
+//         ->all();
+
+//         foreach ($querys as $key => $item) {
+
+//             $emp = $emps[$item->to_id] ?? null;
+//             if (!$emp) continue;
+
+//             $data .= Html::a(
+//                 Html::img('@web/img/loading.gif', [
+//                     'class' => 'avatar-sm rounded-circle shadow lazyload',
+//                     'data' => [
+//                         'expand' => '-20',
+//                         'sizes' => 'auto',
+//                         'src' => $emp->showAvatar()
+//                     ]
+//                 ]),
+//                 ['/dms/documents/list-comment', 'id' => $item->document_id, 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น'],
+//                 [
+//                     'class' => 'open-modal',
+//                     'data' => [
+//                         'size' => 'modal-md',
+//                         'bs-content' => $emp->fullname . '<br>' . $item->comment
+//                     ]
+//                 ]
+//             );
+//         }
+
+//         $data .= '</div>';
+//         return $data;
+//     } catch (\Throwable $th) {
+//         return '';
+//     }
+// }
+
+
+public function StackDocumentTagsLimit($tag_name)
 {
     try {
         $querys = DocumentsDetail::find()
@@ -532,7 +634,6 @@ class Documents extends \yii\db\ActiveRecord
         return '';
     }
 }
-
 
 
     // แสดงข้อมูลผู้รับเข้า

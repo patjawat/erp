@@ -91,7 +91,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                     จัดการ
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><?=Html::a('<i class="bi bi-eye me-2"></i>ดูรายละเอียด',['/me/repair-v2/view','id' => $item->id,'title' => 'รายละเอียดงานซ่อม #'.$item->repair_number],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']])?></li>
                                     <li><?=Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข',['/me/repair-v2/update','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-lg']])?></li>
                                     <li><?=Html::a('<i class="fa-solid fa-ban me-2"></i>ยกเลิก',['/me/repair-v2/cancel','id' => $item->id,'title' => '<i class="bi bi-pencil me-2"></i>แก้ไข'],['class' => 'dropdown-item cancel-order'])?></li>

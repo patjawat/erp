@@ -35,7 +35,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <span class="d-none d-sm-inline">ตั้งค่า</span>
         </button>
 
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="">
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 
             <li>
                 <?= Html::a('<i data-lucide="file-text"></i> ฟอร์มใบขอไปราชการ', ['/hr/development/pdf-editor'], ['class' => 'btn btn-outline-primary open-modal dropdown-item', 'data' => ['size' => 'modal-md']]) ?>
