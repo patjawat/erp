@@ -58,6 +58,7 @@ $this->params['breadcrumbs'][] = ['label' => 'หนังสือ', 'url' => [
                         <th class="text-center d-none d-md-table-cell" style="width:70px;">ลำดับ</th>
                         <th class="text-center" style="width:120px;">เลขรับ/หนังสือ</th>
                         <th style="min-width:300px;">เรื่อง/รายละเอียด</th>
+                        <th style="width:90px;">ไฟล์แนบ</th>
                         <th class="d-none d-lg-table-cell" style="width:200px;">ผู้บันทึก</th>
                         <th class="text-center" style="width:100px;">สถานะ</th>
                         <th class="text-center" style="width:80px;">จัดการ</th>
@@ -94,7 +95,7 @@ $this->params['breadcrumbs'][] = ['label' => 'หนังสือ', 'url' => [
                                            class="open-modal fw-medium d-block text-primary text-decoration-none fs-15" 
                                            data-size="modal-fullscreen">
                                             <?= $item->topic ?>
-                                            <?= $item->isFile()?>
+                                           
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -116,6 +117,9 @@ $this->params['breadcrumbs'][] = ['label' => 'หนังสือ', 'url' => [
                             </div>
                         </td>
 
+                        <td>
+ <?= $item->isFile()?>
+                        </td>
                         <td class="d-none d-lg-table-cell">
                             <div class="fs-13">
                                 <?= $item->viewCreate()['avatar']; ?>
