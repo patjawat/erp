@@ -248,16 +248,6 @@ INSERT INTO categorise
         ('asset_category','OFF','สำนักงาน','OFF',JSON_OBJECT('title_en', 'Office')),
         ('asset_category','OFF','เครื่องปรับอากาศและฟอกอากาศ','AIR',JSON_OBJECT('title_en', 'Air condition'));
 
-## update asset
-ALTER TABLE `asset` CHANGE `asset_group` `asset_group_id` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'แยกประเภทพัสดุ/ครุภัณฑ์';
-
-ALTER TABLE `asset` CHANGE `asset_item` `asset_item_id` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL;
-
-ALTER TABLE `asset` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ประเภทครุภัฯฑ์' AFTER `asset_group_id`;
-
-ALTER TABLE `asset` ADD `asset_category_id` VARCHAR(255) NULL COMMENT 'หมวดหมู่ของประเภททรัพสินย์' AFTER `asset_type_id`;
-
-
 ## update ประเภ ทรรัพสินย์
 UPDATE `asset` a
 INNER JOIN `categorise` c 
@@ -266,6 +256,18 @@ INNER JOIN `categorise` c
   AND c.group_id = 'EQUIP'
 SET a.asset_type_id = c.code
 WHERE a.asset_group_id = 4;
+
+
+## update asset
+<!-- ALTER TABLE `asset` CHANGE `asset_group` `asset_group_id` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'แยกประเภทพัสดุ/ครุภัณฑ์';
+
+ALTER TABLE `asset` CHANGE `asset_item` `asset_item_id` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL;
+
+ALTER TABLE `asset` ADD `asset_type_id` VARCHAR(255) NULL COMMENT 'ประเภทครุภัฯฑ์' AFTER `asset_group_id`;
+
+ALTER TABLE `asset` ADD `asset_category_id` VARCHAR(255) NULL COMMENT 'หมวดหมู่ของประเภททรัพสินย์' AFTER `asset_type_id`; -->
+
+
 
 
 ALTER TABLE `categorise` ADD `sort` VARCHAR(255) NULL AFTER `id`;
