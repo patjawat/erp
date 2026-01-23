@@ -45,8 +45,8 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 
 
 <?php
-$urlEventToDays = Url::to(['/booking/vehicle/list-event-todays', 'vehicle_type' => 'official']);
-$urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow', 'vehicle_type' => 'official']);
+$urlEventToDays = Url::to(['/booking/vehicle/list-event-todays', 'vehicle_type' => $vehicle_type]);
+$urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow', 'vehicle_type' => $vehicle_type]);
 
 $js = <<<JS
             listEventTomorrow()

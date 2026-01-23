@@ -34,8 +34,8 @@ use yii\widgets\Pjax;
                     </a>
                     </td>
                     <td>
-                <?=Html::img('@web/img/placeholder-img.jpg', [
-                    'class' => 'avatar-sm rounded-circle shadow lazyload blur-up',
+                <?=Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
