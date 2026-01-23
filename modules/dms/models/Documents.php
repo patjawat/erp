@@ -256,7 +256,7 @@ class Documents extends \yii\db\ActiveRecord
     public function viewCount()
     {
         try {
-            return count($this->view_json);
+            return count($this->viewHistory());
         } catch (\Throwable $th) {
             return 0;
         }
