@@ -522,9 +522,9 @@ class DocumentsController extends Controller
                     // throw $th;
                 }
 
-                if (!is_numeric($model->document_org)) {
-                    $model->document_org = $this->UpdateDocOrg($model);
-                }
+                // if (!is_numeric($model->document_org)) {
+                //     $model->document_org = $this->UpdateDocOrg($model);
+                // }
 
                 if ($model->save(false)) {
 
