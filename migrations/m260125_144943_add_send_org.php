@@ -9,7 +9,7 @@ class m260125_144943_add_send_org extends Migration
      */
     public function safeUp()
     {
-        $this->addColumn('{{%documents}}', 'send_org', $this->integer()->after('data_json'));
+        $this->addColumn('{{%documents}}', 'send_org', $this->integer()->comment('ส่งหน่วยงานภายนอก')->after('data_json'));
     }
 
     /**
