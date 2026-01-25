@@ -15,6 +15,7 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\filemanager\models\Uploads;
+use app\modules\dms\components\WebhookSender;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -69,7 +70,7 @@ class Documents extends \yii\db\ActiveRecord
             // ['doc_time', 'match', 'pattern' => '/^([01][0-9]|2[0-3]):([0-5][0-9])$/', 'message' => 'กรุณากรอกเวลาในรูปแบบ HH:mm'],
             [['thai_year', 'topic', 'doc_number', 'secret', 'doc_speed', 'document_type', 'document_org', 'document_group', 'doc_regis_number', 'doc_time'], 'required'],
             [['topic'], 'string'],
-            [['date_start','date_end','date_filter', 'file', 'reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref', 'q_status'], 'safe'],
+            [['date_start','date_end','date_filter', 'file', 'reading', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'view_json', 'q', 'document_group', 'department_tag', 'employee_tag', 'req_approve', 'doc_transactions_date', 'status', 'ref', 'q_status','send_org'], 'safe'],
             [['doc_number', 'document_type', 'thai_year', 'doc_regis_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time'], 'string', 'max' => 255],
         ];
     }
@@ -518,6 +519,13 @@ class Documents extends \yii\db\ActiveRecord
     } catch (\Throwable $th) {
         return '';
     }
+}
+
+//นับจำนวนหนังสือที่ส่งมา
+public function isReceive()
+{
+    $count = WebhookSender::countReceivedDocuments();
+    return $count;
 }
 
 //     public function StackDocumentTags($tag_name)

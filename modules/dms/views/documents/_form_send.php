@@ -19,11 +19,6 @@ if($model->document_group == 'send')
 }
 $this->params['breadcrumbs'][] = $this->title;
 
-// use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
-
-/** @var yii\web\View $this */
-/** @var app\modules\dms\models\Documents $model */
-/** @var yii\widgets\ActiveForm $form */
 ?>
 
 <style>
@@ -171,12 +166,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                             <div class="col-12">
-                                <?php
+            <?php
             echo $form->field($model, 'document_org')->widget(Select2::classname(), [
                 'data' => $model->ListDocumentOrg(),
                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                 'pluginOptions' => [
                     'allowClear' => true,
+                      'dropdownParent' => '#main-modal',
+                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                    // 'width' => '370px',
+                ],
+                'pluginEvents' => [
+                    'select2:select' => 'function(result) { 
+                                }',
+                    'select2:unselecting' => 'function() {
+
+                                }',
+                ]
+            ])->label('ส่งถึงหน่วยงาน');
+            ?>
+            <?php
+            echo $form->field($model, 'send_org')->widget(Select2::classname(), [
+                'data' => $model->ListDocumentOrg(),
+                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                     'multiple' => true,
                       'dropdownParent' => '#main-modal',
                     'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                     // 'width' => '370px',

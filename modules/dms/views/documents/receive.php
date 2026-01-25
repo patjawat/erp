@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\modules\dms\components\WebhookSender;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $searchModel */
@@ -40,11 +41,11 @@ if (file_exists($dataFile)) {
 <?php $this->endBlock(); ?>
 
 
-<?php if ($jsonCount > 0): ?>
+<?php  if ($jsonCount > 0): ?>
     <?php $this->beginBlock('action'); ?>
     <?= Html::a('<i class="fa-regular fa-circle-down"></i> หนังสือรอรับ <span class="badge text-bg-primary">' . $jsonCount . '</span>', ['/dms/doc-receive'], ['class' => 'btn btn-primary shadow rounded-pill', 'class' => 'btn btn-warning shadow rounded-pill animate__animated animate__headShake animate__infinite']); ?>
     <?php $this->endBlock(); ?>
-<?php endif; ?>
+<?php  endif; ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>
 <?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel, 'active' => $action]) ?>
@@ -60,6 +61,30 @@ if (file_exists($dataFile)) {
         <?= $this->render('@app/modules/dms/views/documents/_search', ['model' => $searchModel]); ?>
     </div>
 </div>
+
+
+<style>
+  .alert-gradient {
+    background: linear-gradient(45deg, #eaecf0, #d9e2ff);
+    border: none;
+    color: #1451ac;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+</style>
+<?php 
+$isReceive = WebhookSender::countReceivedDocuments();
+
+if($isReceive > 0):?>
+<div class="alert alert-gradient alert-dismissible fade show rounded-3" role="alert">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            ✨ <strong>มีหนังสือรอรับจำนวน!</strong>  <?= $isReceive ?> ฉบับ
+        </div>
+        <?= Html::a('คลิกดูรายการ',['/dms/doc-receive'],['class' => 'btn btn-primary open-modal','data' => ['size' => 'modal-lg']])?>
+    </div>
+</div>
+<?php endif;?>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">

@@ -149,8 +149,10 @@ $config = [
             ],
         ],
         'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'UDNVjHYuFN4F2HiYRvQjPXW-kbcki6C8',
+            'parsers' => [
+            'application/json' => 'yii\web\JsonParser',
+        ]
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -214,7 +216,10 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
-            'rules' => [],
+            'rules' => [
+                // กฎสำหรับ Webhook โดยเฉพาะ
+                'POST webhook/receive' => 'dms/webhook/receive',
+            ],
         ],
     ],
     'modules' => $modules,
@@ -226,6 +231,7 @@ $config = [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
             'telegrambot/*',
+            'dms/webhook/receive',
             // '*',
             'line/*',
             // 'me/*',

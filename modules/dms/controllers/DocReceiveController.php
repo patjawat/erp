@@ -1,23 +1,32 @@
 <?php
 
 namespace app\modules\dms\controllers;
+
 use Yii;
 use yii\web\Response;
+use app\modules\dms\components\WebhookSender;
 
 class DocReceiveController extends \yii\web\Controller
 {
     // READ
     public function actionIndex()
     {
-        // Yii::$app->response->format = Response::FORMAT_JSON;
+        $countReceive = WebhookSender::countReceivedDocuments();
         $documentTemps =  $this->readData();
-        return $this->render('index',['documentTemps' => $documentTemps]);
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'รายการหนังสือเข้าใหม่ '.$countReceive.' ฉบับ',
+                'content' => $this->renderAjax('index', ['documentTemps' => $documentTemps])
+            ];
+        }
+         return $this->render('index',['documentTemps' => $documentTemps]);
     }
 
 
     private function getFilePath()
     {
-        return Yii::getAlias('@app/doc_receive/data.json');
+        return Yii::getAlias('@runtime/webhooks/document_receive.json');
     }
 
     private function readData()
@@ -92,5 +101,4 @@ class DocReceiveController extends \yii\web\Controller
         // Yii::$app->response->format = Response::FORMAT_JSON;
         // return ['success' => 'success'];
     }
-
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e45ed2ecacee0df107d5df9ff3efd320",
+    "content-hash": "cedec75fd57d5d224223f35f9d26cedc",
     "packages": [
         {
             "name": "2amigos/yii2-qrcode-helper",
@@ -15362,6 +15362,7 @@
         "creocoder/yii2-nested-sets": 20,
         "dektrium/yii2-rbac": 20,
         "google/apiclient": 20,
+        "guzzlehttp/guzzle": 20,
         "iamsaint/yii2-datetimepicker": 20,
         "idk/yii2-google-apiclient": 20,
         "kartik-v/php-date-formatter": 20,

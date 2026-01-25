@@ -14,6 +14,7 @@ use app\components\AppHelper;
 use app\components\PdfHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
+use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
@@ -21,10 +22,10 @@ use app\modules\dms\models\Documents;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\dms\models\DocumentSearch;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\dms\models\DocumentsDetail;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
 use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
 
@@ -51,6 +52,28 @@ class DocumentsController extends Controller
         );
     }
 
+
+    public function actionHook()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $docId = 67365;
+
+        $model = Documents::findOne($docId);
+
+        if ($model) {
+            // เรียกส่งข้อมูลทีละหน่วยงาน
+            $result = WebhookSender::sendToAgencies($model);
+
+            if ($result) {
+
+                return "ส่งข้อมูลหนังสือเลขที่ {$model->doc_number} สำเร็จ";
+            } else {
+                return "การส่งล้มเหลว ตรวจสอบ Log สำหรับรายละเอียด";
+            }
+        }
+
+        return "ไม่พบข้อมูลหนังสือ ID: $docId";
+    }
 
     public function actionListTopic()
     {
@@ -383,7 +406,7 @@ class DocumentsController extends Controller
             $dataProvider->query->andFilterWhere(['document_group' => $group]);
         }
 
-         $q = trim($searchModel->q ?? '');
+        $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $q],
@@ -528,6 +551,10 @@ class DocumentsController extends Controller
                     if ($model->document_group == "receive") {
                         PdfHelper::Stamp($model);
                     }
+                    // ถ้าเป็นการส่งหนังสือภายนอกให้ส่ง webhook
+                    if ($model->document_group == "send") {
+                        WebhookSender::sendToAgencies($model);
+                    }
                 } else {
                     return $model->getErrors();
                 }
@@ -613,9 +640,12 @@ class DocumentsController extends Controller
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-
                 $model->UpdateDocumentTags();
-                // return $this->redirect([$model->document_group]);
+                //ถ้าเป็นหนังสือส่ง
+                if ($model->document_group == "send") {
+                    $result = WebhookSender::sendToAgencies($model);
+                }
+
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'status' => 'success',
@@ -705,7 +735,7 @@ class DocumentsController extends Controller
         $newUpload->save(false);
         FileManagerHelper::CreateDir($model->ref);
 
-        $sourcePath = Yii::getAlias('@app/doc_receive/' . $filename);
+        $sourcePath = Yii::getAlias('@runtime/webhooks/files/') . $filename;
         $targetDir = Yii::getAlias('@app/modules/filemanager/fileupload/' . $model->ref . '/');
         $targetPath = $targetDir . $filename;
 
@@ -1003,7 +1033,7 @@ class DocumentsController extends Controller
             $type = 'pdf';
 
             if ($file_name) {
-                $filepath = Yii::getAlias('@app') . '/doc_receive/' . $file_name;
+                $filepath = Yii::getAlias('@runtime/webhooks/files/') . $file_name;
             } else if (!$fileUpload) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             } else if (!$fileUpload && !file_exists($filepath)) {
@@ -1092,7 +1122,7 @@ class DocumentsController extends Controller
     {
         return $this->render('tags');
     }
-        public function actionInfo()
+    public function actionInfo()
     {
         return $this->render('info');
     }
