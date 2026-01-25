@@ -621,9 +621,9 @@ class DocumentsController extends Controller
                 // throw $th;
             }
 
-            if (!is_numeric($model->document_org)) {
-                $model->document_org = $this->UpdateDocOrg($model);
-            }
+            // if (!is_numeric($model->document_org)) {
+            //     $model->document_org = $this->UpdateDocOrg($model);
+            // }
 
             //ถ้ามีการแก้ไขส่งต่อหน่วยงาน
             if ($model->status !== "DS3" && $model->status !== "DS4" && $model->tags_department !== "") {
@@ -640,7 +640,7 @@ class DocumentsController extends Controller
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-                $model->UpdateDocumentTags();
+                // $model->UpdateDocumentTags();
                 //ถ้าเป็นหนังสือส่ง
                 if ($model->document_group == "send") {
                     $result = WebhookSender::sendToAgencies($model);

@@ -2,14 +2,14 @@
 
 use yii\db\Migration;
 
-class m260125_144943_add_send_org extends Migration
+class m260125_150758_change_document_org_to_json_in_documents_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->addColumn('{{%documents}}', 'send_org', $this->integer()->comment('ส่งหน่วยงานภายนอก')->after('data_json'));
+        $this->alterColumn('{{%documents}}', 'document_org', $this->json());
     }
 
     /**
@@ -17,8 +17,7 @@ class m260125_144943_add_send_org extends Migration
      */
     public function safeDown()
     {
-
-        return true;
+        $this->alterColumn('{{%documents}}', 'document_org', $this->string());
     }
 
     /*
@@ -30,7 +29,7 @@ class m260125_144943_add_send_org extends Migration
 
     public function down()
     {
-        echo "m260125_144943_add_send_org cannot be reverted.\n";
+        echo "m260125_150758_change_document_org_to_json_in_documents_table cannot be reverted.\n";
 
         return false;
     }

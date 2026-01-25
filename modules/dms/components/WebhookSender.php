@@ -22,7 +22,7 @@ class WebhookSender extends Component
 
     public static function sendToAgencies($documentData)
     {
-        $orgIds = $documentData->send_org;
+        $orgIds = $documentData->document_org;
         if (is_string($orgIds)) {
             $orgIds = \yii\helpers\Json::decode($orgIds);
         }
@@ -40,68 +40,74 @@ class WebhookSender extends Component
 
         foreach ($agencies as $agency) {
 
-            $dataJson = is_string($agency->data_json) ? \yii\helpers\Json::decode($agency->data_json) : $agency->data_json;
-            $url = rtrim($dataJson['url'] ?? '', '/') . '/dms/webhook/receive';
-
-            $ref = $documentData->ref;
-            $fileUpload = Uploads::find()->where(['name' => 'document', 'ref' => $ref])->one();
-            $filename = $fileUpload->real_filename;
-            $filepath = FileManagerHelper::getUploadPath() . $ref . '/' . $filename;
-            $fullPathToFile = $filepath; // เช่น 'uploads/doc1.pdf'
-            // 1. เตรียมข้อมูล JSON ที่ต้องการส่ง
-            $payload = [
-               "request_id" => $documentData->ref . '_' . $agency->id, // สร้าง ID เฉพาะตัว
-                "hos_code" => "",
-                "form_org_name" => $documentData->documentOrg->title,
-                "topic" => $documentData->topic,
-                "doc_regis_number" => $documentData->doc_regis_number,
-                "doc_number" => $documentData->doc_number,
-                "doc_date" => $documentData->doc_date,
-                "sender_app" => Yii::$app->name,
-                "timestamp" => date('Y-m-d H:i:s')
-            ];
-
-            $multipart = [
-                [
-                    'name'     => 'document_data', // ส่งข้อมูล JSON
-                    'contents' => json_encode($payload),
-                ],
-                [
-                    'name'     => 'attachment',    // ส่งไฟล์จริง
-                    'contents' => fopen($fullPathToFile, 'r'), // ต้องมีบรรทัดนี้!
-                    'filename' => 'document.pdf'
-                ],
-            ];
-
-            $response = $client->post($url, [
-                'multipart' => $multipart // ต้องใช้ key 'multipart' ห้ามใช้ 'json'
-            ]);
-
-            if (!empty($relativeFilePath) && file_exists($fullPathToFile)) {
-                $multipart[] = [
-                    'name'     => 'attachment', // ชื่อ Field สำหรับไฟล์
-                    'contents' => fopen($fullPathToFile, 'r'),
-                    'filename' => basename($fullPathToFile)
-                ];
-            }
-
             try {
-                $response = $client->post($url, [
-                    'headers' => [
-                        'X-Webhook-Secret' => Yii::$app->params['webhook_secret'] ?? 'default_secret',
+
+                $dataJson = is_string($agency->data_json) ? \yii\helpers\Json::decode($agency->data_json) : $agency->data_json;
+                $url = rtrim($dataJson['url'] ?? '', '/') . '/dms/webhook/receive';
+
+                $ref = $documentData->ref;
+                $fileUpload = Uploads::find()->where(['name' => 'document', 'ref' => $ref])->one();
+                $filename = $fileUpload->real_filename;
+                $filepath = FileManagerHelper::getUploadPath() . $ref . '/' . $filename;
+                $fullPathToFile = $filepath; // เช่น 'uploads/doc1.pdf'
+                // 1. เตรียมข้อมูล JSON ที่ต้องการส่ง
+                $payload = [
+                    "request_id" => $documentData->ref . '_' . $agency->id, // สร้าง ID เฉพาะตัว
+                    "hos_code" => "",
+                    "form_org_name" => $documentData->documentOrg->title,
+                    "topic" => $documentData->topic,
+                    "doc_regis_number" => $documentData->doc_regis_number,
+                    "doc_number" => $documentData->doc_number,
+                    "doc_date" => $documentData->doc_date,
+                    "sender_app" => Yii::$app->name,
+                    "timestamp" => date('Y-m-d H:i:s')
+                ];
+
+                $multipart = [
+                    [
+                        'name'     => 'document_data', // ส่งข้อมูล JSON
+                        'contents' => json_encode($payload),
                     ],
-                    'multipart' => $multipart // ส่งแบบ Multipart
+                    [
+                        'name'     => 'attachment',    // ส่งไฟล์จริง
+                        'contents' => fopen($fullPathToFile, 'r'), // ต้องมีบรรทัดนี้!
+                        'filename' => 'document.pdf'
+                    ],
+                ];
+
+                $response = $client->post($url, [
+                    'multipart' => $multipart // ต้องใช้ key 'multipart' ห้ามใช้ 'json'
                 ]);
 
-                $results[$agency->id] = [
-                    'status' => $response->getStatusCode(),
-                    'body'   => \yii\helpers\Json::decode($response->getBody()->getContents())
-                ];
-            } catch (\Exception $e) {
-                Yii::error("Webhook Error: " . $e->getMessage());
-                $results[$agency->id] = "Exception: " . $e->getMessage();
+                if (!empty($relativeFilePath) && file_exists($fullPathToFile)) {
+                    $multipart[] = [
+                        'name'     => 'attachment', // ชื่อ Field สำหรับไฟล์
+                        'contents' => fopen($fullPathToFile, 'r'),
+                        'filename' => basename($fullPathToFile)
+                    ];
+                }
+
+                try {
+                    $response = $client->post($url, [
+                        'headers' => [
+                            'X-Webhook-Secret' => Yii::$app->params['webhook_secret'] ?? 'default_secret',
+                        ],
+                        'multipart' => $multipart // ส่งแบบ Multipart
+                    ]);
+
+                    $results[$agency->id] = [
+                        'status' => $response->getStatusCode(),
+                        'body'   => \yii\helpers\Json::decode($response->getBody()->getContents())
+                    ];
+                } catch (\Exception $e) {
+                    Yii::error("Webhook Error: " . $e->getMessage());
+                    $results[$agency->id] = "Exception: " . $e->getMessage();
+                }
+            } catch (\Throwable $th) {
+                //throw $th;
             }
         }
+
         return $results;
     }
 
@@ -131,7 +137,7 @@ class WebhookSender extends Component
         // 2. จัดการไฟล์ที่แนบมา (Field name: 'attachment')
         $fileInfo = null;
         $uploadedFile = \yii\web\UploadedFile::getInstanceByName('attachment');
-if ($uploadedFile) {
+        if ($uploadedFile) {
             $savePath = \Yii::getAlias('@runtime/webhooks/files/');
             if (!is_dir($savePath)) {
                 mkdir($savePath, 0777, true);
@@ -146,7 +152,7 @@ if ($uploadedFile) {
 
             // 2. ตรวจสอบว่ามีไฟล์เดิมอยู่แล้วหรือไม่ (กรณีส่งซ้ำเพื่อแก้ไข)
             $isUpdate = file_exists($fullPath);
-            
+
             if ($uploadedFile->saveAs($fullPath)) {
                 $fileInfo = [
                     'original_name' => $uploadedFile->name,
@@ -187,7 +193,7 @@ if ($uploadedFile) {
                     }
                 }
             }
-    // ------------------------------------------
+            // ------------------------------------------
             // 4. รวมข้อมูล JSON และข้อมูลไฟล์เข้าด้วยกัน
             $newData = [
                 'received_at' => date('Y-m-d H:i:s'),

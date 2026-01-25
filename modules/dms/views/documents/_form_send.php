@@ -172,6 +172,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'options' => ['placeholder' => 'เลือกหน่วยงาน'],
                 'pluginOptions' => [
                     'allowClear' => true,
+                    'multiple' => true,
                       'dropdownParent' => '#main-modal',
                     'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                     // 'width' => '370px',
@@ -185,26 +186,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]
             ])->label('ส่งถึงหน่วยงาน');
             ?>
-            <?php
-            echo $form->field($model, 'send_org')->widget(Select2::classname(), [
-                'data' => $model->ListDocumentOrg(),
-                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                     'multiple' => true,
-                      'dropdownParent' => '#main-modal',
-                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                    // 'width' => '370px',
-                ],
-                'pluginEvents' => [
-                    'select2:select' => 'function(result) { 
-                                }',
-                    'select2:unselecting' => 'function() {
-
-                                }',
-                ]
-            ])->label('ส่งถึงหน่วยงาน');
-            ?>
+          
                             </div>
 
                      <div class="col-12">
