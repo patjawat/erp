@@ -9,7 +9,6 @@ use app\models\Uploads;
 use yii\base\Component;
 use app\models\Categorise;
 use app\components\SiteHelper;
-use app\modules\dms\models\Documents;
 use app\modules\filemanager\components\FileManagerHelper;
 
 class WebhookSender extends Component
@@ -115,140 +114,119 @@ class WebhookSender extends Component
     }
 
 
-public static function receive($payload = null)
-{
-    $request = \Yii::$app->request;
 
-    // 1. ดึงข้อมูล JSON
-    $jsonRaw = $request->post('document_data');
+    public static function receive($payload = null)
+    {
+        $request = \Yii::$app->request;
+
+        // 1. ตรวจสอบข้อมูล JSON (กรณีส่งมาในฟิลด์ 'document_data' แบบ Multipart)
+        $jsonRaw = $request->post('document_data');
+        $jsonRaw = $request->post('document_data');
     if (!empty($jsonRaw)) {
         $payload = \yii\helpers\Json::decode($jsonRaw);
     } elseif (empty($payload)) {
         $rawBody = $request->getRawBody();
         $payload = !empty($rawBody) ? \yii\helpers\Json::decode($rawBody) : null;
     }
+        if (!empty($jsonRaw)) {
+            $payload = \yii\helpers\Json::decode($jsonRaw);
+        }
+        // กรณีเผื่อไว้สำหรับ legacy หรือการเทสแบบ Raw JSON ทั่วไป
+        elseif (empty($payload)) {
+            $rawBody = $request->getRawBody();
+            $payload = !empty($rawBody) ? \yii\helpers\Json::decode($rawBody) : null;
+        }
 
-    if (empty($payload)) {
-        return ['status' => 'error', 'message' => 'No data received'];
-    }
+        if (empty($payload)) {
+            \Yii::error("Payload is empty");
+            return ['status' => 'error', 'message' => 'No data received'];
+        }
 
-    $currentRequestId = $payload['request_id'] ?? null;
-    if (!$currentRequestId) {
-        return ['status' => 'error', 'message' => 'Missing Request ID'];
-    }
+        // 2. จัดการไฟล์ที่แนบมา (Field name: 'attachment')
+        $fileInfo = null;
+        $uploadedFile = \yii\web\UploadedFile::getInstanceByName('attachment');
+        if ($uploadedFile) {
+            $savePath = \Yii::getAlias('@runtime/webhooks/files/');
+            if (!is_dir($savePath)) {
+                mkdir($savePath, 0777, true);
+            }
 
-    // --- ส่วนที่ 1: ตรวจสอบใน DB (ค้นหาในฟิลด์ data_json) ---
-    // หมายเหตุ: ชื่อคอลัมน์ต้องตรงกับในตารางของคุณ (ในที่นี้คือ data_json)
-    $isExistInDb = Documents::find()
-        ->where(["JSON_EXTRACT(data_json, '$.request_id')" => $currentRequestId])
-        ->exists();
+            // 1. ใช้ request_id หรือค่า Unique จาก Payload มาตั้งชื่อไฟล์แทน timestamp
+            // เพื่อให้ไฟล์ของเอกสารฉบับนี้มีชื่อเดิมเสมอ แม้จะส่งใหม่
+            $requestId = $payload['request_id'] ?? ($payload['doc_regis_number'] ?? time());
+            $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $uploadedFile->name); // ล้างอักขระพิเศษ
+            $fileName = $requestId . '_' . $safeName;
+            $fullPath = $savePath . $fileName;
 
-    if ($isExistInDb) {
-        return [
-            'status' => 'duplicate_db', 
-            'message' => "Request ID: $currentRequestId exists in database records."
-        ];
-    }
+            // 2. ตรวจสอบว่ามีไฟล์เดิมอยู่แล้วหรือไม่ (กรณีส่งซ้ำเพื่อแก้ไข)
+            $isUpdate = file_exists($fullPath);
 
-    // --- ส่วนที่ 2: ตรวจสอบในไฟล์ JSON (Temp Log) ---
-    $filePath = \Yii::getAlias('@runtime/webhooks/document_receive.json');
-    if (file_exists($filePath)) {
-        $existingData = \yii\helpers\Json::decode(file_get_contents($filePath)) ?? [];
-        foreach ($existingData as $item) {
-            if (isset($item['request_id']) && $item['request_id'] === $currentRequestId) {
-                return [
-                    'status' => 'duplicate_log',
-                    'message' => "Request ID: $currentRequestId is already in temp log."
+            if ($uploadedFile->saveAs($fullPath)) {
+                $fileInfo = [
+                    'original_name' => $uploadedFile->name,
+                    'saved_path' => $fullPath,
+                    'filename' => $fileName,
+                    'size' => $uploadedFile->size,
+                    'type' => $uploadedFile->type,
+                    'updated' => $isUpdate // บอกให้รู้ว่าเป็นไฟล์ที่มาทับของเดิม
                 ];
+            } else {
+                \Yii::error("Failed to save uploaded file.");
             }
         }
-    }
 
-    // 2. จัดการไฟล์แนบ (ถ้าไม่ซ้ำ)
-    $fileInfo = null;
-    $uploadedFile = \yii\web\UploadedFile::getInstanceByName('attachment');
-    if ($uploadedFile) {
-        $savePath = \Yii::getAlias('@runtime/webhooks/files/');
-        if (!is_dir($savePath)) mkdir($savePath, 0777, true);
-
-        $fileName = $currentRequestId . '_' . preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $uploadedFile->name);
-        $fullPath = $savePath . $fileName;
-
-        if ($uploadedFile->saveAs($fullPath)) {
-            $fileInfo = [
-                'saved_path' => $fullPath,
-                'filename' => $fileName,
-            ];
-        }
-    }
-
-    // 3. บันทึก Temp Log
-    try {
-        $existingData = file_exists($filePath) ? \yii\helpers\Json::decode(file_get_contents($filePath)) : [];
-        $newData = [
-            'received_at' => date('Y-m-d H:i:s'),
-            'request_id' => $currentRequestId,
-            'content' => $payload,
-            'attachment_info' => $fileInfo
-        ];
-        array_unshift($existingData, $newData);
-        file_put_contents($filePath, \yii\helpers\Json::encode($existingData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
-
-        return ['status' => 'success', 'message' => 'Logged successfully'];
-    } catch (\Exception $e) {
-        return ['status' => 'error', 'message' => $e->getMessage()];
-    }
-}
-
-
-    /**
-     * ลบข้อมูล Webhook และไฟล์แนบที่เกี่ยวข้องออกจากระบบชั่วคราว
-     * @param string $requestId รหัสอ้างอิงที่ต้องการลบ
-     * @return array ผลลัพธ์การดำเนินการ
-     */
-    public static function clearWebhookTempData($requestId)
-    {
-        $logPath = \Yii::getAlias('@runtime/webhooks/document_receive.json');
-
-        if (!file_exists($logPath)) {
-            return ['status' => 'error', 'message' => 'Log file not found.'];
+        // 3. กำหนด Path สำหรับบันทึก Log JSON
+        $filePath = \Yii::getAlias('@runtime/webhooks/document_receive.json');
+        if (!is_dir(dirname($filePath))) {
+            mkdir(dirname($filePath), 0777, true);
         }
 
         try {
-            $content = file_get_contents($logPath);
-            $data = \yii\helpers\Json::decode($content) ?? [];
-            $found = false;
-            $updatedData = [];
+            $existingData = [];
+            if (file_exists($filePath)) {
+                $content = file_get_contents($filePath);
+                $existingData = \yii\helpers\Json::decode($content) ?? [];
+            }
 
-            foreach ($data as $item) {
-                if (isset($item['request_id']) && $item['request_id'] === $requestId) {
-                    // 1. ลบไฟล์จริงที่อยู่ใน Server (ถ้ามี)
-                    if (isset($item['attachment_info']['saved_path'])) {
-                        $actualFilePath = $item['attachment_info']['saved_path'];
-                        if (file_exists($actualFilePath)) {
-                            unlink($actualFilePath);
-                        }
+            // --- ส่วนที่เพิ่มเข้าไปเพื่อตรวจสอบการส่งซ้ำ ---
+            $currentRequestId = $payload['request_id'] ?? null; // สมมติว่าฝั่งส่งระบุ request_id มาให้
+            if ($currentRequestId) {
+                foreach ($existingData as $item) {
+                    if (isset($item['content']['request_id']) && $item['content']['request_id'] === $currentRequestId) {
+                        // หากพบ ID ซ้ำ ให้หยุดทำงานและแจ้งกลับฝั่งส่งทันที
+                        return [
+                            'status' => 'duplicate',
+                            'message' => 'Request ID: ' . $currentRequestId . ' has already been processed.'
+                        ];
                     }
-                    $found = true;
-                    continue; // ข้ามรายการนี้ไป (ไม่เก็บลง $updatedData)
                 }
-                $updatedData[] = $item;
             }
+            // ------------------------------------------
+            // 4. รวมข้อมูล JSON และข้อมูลไฟล์เข้าด้วยกัน
+            $newData = [
+                'received_at' => date('Y-m-d H:i:s'),
+                'sender_ip' => $request->userIP,
+                'content' => $payload,
+                'attachment_info' => $fileInfo // เก็บข้อมูลไฟล์ไว้ใน log ด้วย
+            ];
 
-            if ($found) {
-                // 2. บันทึกข้อมูลที่เหลือกลับลงไฟล์ JSON
-                file_put_contents(
-                    $logPath,
-                    \yii\helpers\Json::encode($updatedData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-                    LOCK_EX
-                );
-                return ['status' => 'success', 'message' => "Request ID: $requestId has been cleared."];
-            }
+            array_unshift($existingData, $newData);
 
-            return ['status' => 'warning', 'message' => 'Request ID not found in logs.'];
+            file_put_contents(
+                $filePath,
+                \yii\helpers\Json::encode($existingData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                LOCK_EX
+            );
+
+            return [
+                'status' => 'success',
+                'message' => 'Data and file logged successfully',
+                'file_received' => ($fileInfo !== null),
+                'log_path' => $filePath
+            ];
         } catch (\Exception $e) {
-            \Yii::error("Clear Webhook Error: " . $e->getMessage());
-            return ['status' => 'error', 'message' => $e->getMessage()];
+            \Yii::error("File Write Error: " . $e->getMessage());
+            return ['status' => 'error', 'message' => 'Failed to write file'];
         }
     }
 

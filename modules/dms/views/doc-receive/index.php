@@ -87,12 +87,16 @@ $waitingList = $documentTemps;
     <a href="<?= Url::to(['/dms/documents/create',
                 'document_type' => 'DT1',
                 'document_group' => 'receive',
+                'document_org' => $content['hoscode'],
                 'doc_number' => $content['doc_number'],
+                'doc_date' => $content['doc_date'],
                 'doc_speed' => 'ปกติ',
                 'secret' => 'ปกติ',
-                'document_org' => $content['form_org_name'],
                 'topic' => $content['topic'],
                 'file_name' => $file['filename'],
+                'request_id' => $content['request_id'],
+                'hosname' => $content['hosname'],
+                'hoscode' => $content['hoscode']
 ])?>" class="list-group-item doc-item-link d-flex align-items-center p-3 open-modal" data-size="modal-fullscreen">
 
         <div class="doc-icon me-3">

@@ -480,13 +480,18 @@ class DocumentsController extends Controller
             'thai_year' => (Date('Y') + 543),
             'document_group' => $this->request->get('document_group'),
             'document_type' => $document_type,
+            'document_org' => $this->request->get('document_org'),
             'doc_number' => $this->request->get('doc_number'),
             'doc_speed' => $this->request->get('doc_speed'),
+            'doc_date' => AppHelper::convertToThai($this->request->get('doc_date')) ??  '',
             'secret' => $this->request->get('secret'),
             'document_org' => $this->request->get('document_org'),
             'topic' => $this->request->get('topic'),
             'data_json' => [
-                'file_name' => $this->request->get('file_name')
+                'request_id' => $this->request->get('request_id'),
+                'file_name' => $this->request->get('file_name'),
+                'hoscode' => $this->request->get('hoscode'),
+                'hosname' => $this->request->get('hosname'),
             ]
         ]);
         //set Default
@@ -550,6 +555,13 @@ class DocumentsController extends Controller
                     //ถ้าเป็นหนังสือรับต้องประทับตรา
                     if ($model->document_group == "receive") {
                         PdfHelper::Stamp($model);
+
+                        $requestId = $model->data_json['request_id'] ?? null;
+                        $tempFile = $model->data_json['temp_path'] ?? null;
+
+                       if ($requestId) {
+                             WebhookSender::clearWebhookTempData($requestId);
+                        }
                     }
                     // ถ้าเป็นการส่งหนังสือภายนอกให้ส่ง webhook
                     if ($model->document_group == "send") {
@@ -643,7 +655,7 @@ class DocumentsController extends Controller
                 // $model->UpdateDocumentTags();
                 //ถ้าเป็นหนังสือส่ง
                 if ($model->document_group == "send") {
-                    $result = WebhookSender::sendToAgencies($model);
+                    WebhookSender::sendToAgencies($model);
                 }
 
                 Yii::$app->response->format = Response::FORMAT_JSON;

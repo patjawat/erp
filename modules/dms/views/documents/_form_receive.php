@@ -44,6 +44,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?= $form->field($model, 'document_group')->hiddenInput(['maxlength' => 50])->label(false); ?>
 <?= $form->field($model, 'data_json[file_name]')->hiddenInput(['maxlength' => 50])->label(false); ?>
+<?= $form->field($model, 'data_json[form_org_code]')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[form_org_name]')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'data_json[request_id]')->hiddenInput()->label(false); ?>
 <div class="card">
     <div class="card-body">
 

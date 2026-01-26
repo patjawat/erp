@@ -26,7 +26,6 @@ class SiteHelper extends Component
                 
                 }
 
-                
                 try {
                         $layout = Categorise::findOne(['name' => 'layout']);
                         $_layout = isset($layout->data_json['layout']) ? $layout->data_json['layout'] : 'horizontal';
@@ -42,6 +41,7 @@ class SiteHelper extends Component
                         'director' => $director,
                         'logo' => $model->logo() ?? null,
                         'company_name' => isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null,
+                        'hoscode' => isset($model->data_json['hoscode']) ? $model->data_json['hoscode'] : null,
                         'doc_number' => isset($model->data_json['doc_number']) ? $model->data_json['doc_number'] : null, //เลขที่หนังสือ
                         'director_name' => isset($model->data_json['director_name']) ? $model->data_json['director_name'] : null,
                         'director_position' => isset($model->data_json['director_position']) ? $model->data_json['director_position'] : null,

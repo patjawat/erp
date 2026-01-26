@@ -21,6 +21,7 @@ use kartik\select2\Select2;
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
+    <?= $form->field($model, 'code')->textInput()->label('รหัสชื่อหน่วยงาน') ?>
     <?= $form->field($model, 'title')->textInput()->label('ชื่อหน่วยงาน') ?>
     <?= $form->field($model, 'data_json[url]')->textInput()->label('WebHook URL') ?>
 
