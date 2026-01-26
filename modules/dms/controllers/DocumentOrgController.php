@@ -36,23 +36,49 @@ class DocumentOrgController extends Controller
     }
 
         // ตรวจสอบความถูกต้อง
-    public function actionValidator()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new DocumentOrg();
-        $requiredName = 'ต้องระบุ';
-        if ($this->request->isPost && $model->load($this->request->post())) {
+public function actionValidator()
+{
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    $model = new DocumentOrg();
+    $result = [];
 
-            $model->title == '' ? $model->addError('title', $requiredName) : null;
-
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-            }
-            if (!empty($result)) {
-                return $this->asJson($result);
-            }
+    if ($this->request->isPost && $model->load($this->request->post())) {
+        
+        // 1. ตรวจสอบค่าว่าง (Required)
+        if (empty($model->title)) {
+            $model->addError('title', 'ต้องระบุชื่อเรื่อง');
         }
+        if (empty($model->code)) {
+            $model->addError('code', 'ต้องระบุรหัส');
+        }
+
+        // 2. ตรวจสอบความซ้ำ (Unique Check)
+        // ตรวจสอบ title ซ้ำ
+        $existsTitle = DocumentOrg::find()
+            ->where(['title' => $model->title])
+            ->andFilterWhere(['not', ['id' => $model->id]]) // กันกรณีแก้ไข record เดิม
+            ->exists();
+        if ($existsTitle) {
+            $model->addError('title', 'ชื่อเรื่องนี้มีอยู่ในระบบแล้ว');
+        }
+
+        // ตรวจสอบ code ซ้ำ
+        $existsCode = DocumentOrg::find()
+            ->where(['code' => $model->code])
+            ->andFilterWhere(['not', ['id' => $model->id]])
+            ->exists();
+        if ($existsCode) {
+            $model->addError('code', 'รหัสนี้มีอยู่ในระบบแล้ว');
+        }
+
+        // สรุป Error ทั้งหมดส่งกลับ
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+
+        return $result; // ถ้าว่างจะเป็น [] หมายถึงผ่านการตรวจสอบ
     }
+}
 
     /**
      * Lists all DocumentOrg models.
@@ -96,13 +122,12 @@ class DocumentOrgController extends Controller
     {
         $model = new DocumentOrg([
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'name' => 'document_org'
+            'name' => 'document_org',
+            'code' => $this->NextOrgCode()
         ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
-                $model->code = $maxCode;
                 $model->save(false);
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ['status' => 'success'];
@@ -155,6 +180,14 @@ class DocumentOrgController extends Controller
             ]);
         }
     }
+
+         protected function NextOrgCode()
+    {
+           $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED)+1)')])->where(['=', 'name', 'document_org'])->scalar();
+           return $maxCode;
+
+    }
+
         protected function UpdateDocOrg($model)
     {
         // try {
@@ -174,6 +207,24 @@ class DocumentOrgController extends Controller
         // }
     }
     
+
+
+    public function actionSetActive()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $id = Yii::$app->request->post('id');
+        $active = Yii::$app->request->post('active');
+
+        $model = Categorise::findOne($id);
+        if ($model) {
+            $model->active = $active;
+            if ($model->save(false)) {
+                return ['success' => true];
+            }
+        }
+        return ['success' => false];
+    }
+
 
     /**
      * Deletes an existing DocumentOrg model.

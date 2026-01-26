@@ -319,7 +319,7 @@ class Documents extends \yii\db\ActiveRecord
     public function ListDocumentOrg()
     {
         $model = Categorise::find()
-            ->where(['name' => 'document_org'])
+            ->where(['name' => 'document_org','active' => 1])
             ->asArray()
             ->all();
         return ArrayHelper::map($model, 'code', 'title');

@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use yii\web\View;
 
 $this->title = 'หน่วยงาน';
 
@@ -58,6 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center" style="width:30px;">ลำดับ</th>
                     <th class="text-start">ชื่อหน่วยงาน</th>
                     <th class="text-start">WebHook URL</th>
+                    <th class="text-start">ใช้งาน</th>
                     <th style="width:70px;">แก้ไข</th>
                 </tr>
             </thead>
@@ -67,6 +69,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td>
                 <td> <?= $item->title ?? '-' ?></td>
                 <td> <?= $item->data_json['url'] ?? '-' ?></td>
+                <td class="text-center">
+                            <div class="form-check form-switch">
+                                <?= Html::checkbox('active', $item->active == 1, [
+                                    'class' => 'form-check-input set-active',
+                                    'data' => ['id' => $item->id],
+                                ]) ?>
+                            </div>
+
+                        </td>
                 <td>
                     <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </td>
@@ -91,3 +102,38 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 <?php Pjax::end(); ?>
+
+
+<?php
+$js = <<< JS
+
+$("body").on("change", ".set-active", function () {
+    let checkbox = $(this);
+    let id = checkbox.data("id");
+    let value = checkbox.is(":checked") ? "shift" : "normal";
+    console.log(id);
+    
+
+    $.ajax({
+        url: "/dms/document-org/set-active", // <-- route ไปยัง action
+        type: "POST",
+        data: {
+            id: id,
+            active: value,
+        },
+        success: function (response) {
+            success("บันทึกสำเร็จ");
+        },
+        error: function () {
+            error("เกิดข้อผิดพลาดในการบันทึก");
+        }
+    });
+});
+
+
+
+
+
+JS;
+$this->registerJS($js, View::POS_END);
+?>
