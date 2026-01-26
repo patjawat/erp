@@ -109,12 +109,17 @@ $group = Yii::$app->request->get('group');
 
 
                         <div class="col-md-6">
-                            <?php
+                           <?php
                             $url = \yii\helpers\Url::to(['/depdrop/employee']);
-                            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
+
+                            // 1. หาข้อมูลพนักงานก่อน
+                            $employee = !empty($model->owner) ? Employees::findOne($model->owner) : null;
+
+                            // 2. เช็กว่าเจอตัวแปร $employee ไหม ถ้าเจอค่อยดึง fullname ถ้าไม่เจอให้เป็นค่าว่าง
+                            $ownerName = $employee ? $employee->fullname : '';
+
                             echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                                // 'data' => $model->ListEmployees(),
-                                'initValueText' => $owner,
+                                'initValueText' => $ownerName, // ใช้ตัวแปรที่เช็กแล้ว
                                 'options' => ['placeholder' => 'กรุณาเลือก'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
