@@ -35,6 +35,53 @@ class AssetTypeController extends Controller
         );
     }
 
+        public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetType();
+        $requiredName = 'ต้องระบุ';
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->title == '' ? $model->addError('title', $requiredName) : null;
+            $model->code == '' ? $model->addError('code', $requiredName) : null;
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidatorxx()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Categorise();
+        $requiredName = "ต้องระบุ";
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            
+            if (isset($model->title)) {
+                $model->title  == "" ? $model->addError('title', $requiredName) : null;
+            }
+            
+            if (isset($model->code) && $model->auto == 0) {
+                $model->code  == "" ? $model->addError('code', $requiredName) : null;
+                $checkCode = Categorise::findOne(['name' => 'asset_type','code' => $model->code]);
+                if($checkCode){
+                    $model->addError('code', 'รหัสซ้ำ');
+                }
+            }
+
+        }
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        }
+        if (!empty($result)) {
+            return $this->asJson($result);
+        }
+    }
+
     /**
      * Lists all AssetType models.
      *
@@ -106,7 +153,8 @@ class AssetTypeController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new AssetType([
-            'name' => 'asset_type'
+            'name' => 'asset_type',
+            'group_id' => 'EQUIP'
         ]);
 
         if ($this->request->isPost) {

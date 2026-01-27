@@ -30,8 +30,9 @@ class DefaultController extends Controller
         }
 
         $info = $model->getInfo();
+    //  return $model;
+        if (empty(trim($model->position_name ?? ''))) {
 
-        if (isset($model->positionName->title)) {
             return $this->render('warning');
         }
         $searchModel = new LeaveSearch([

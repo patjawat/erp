@@ -36,8 +36,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock() ?>
 
 <div class="card">
-    <div class="card-header bg-primary-gradient text-white">
+    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
         <h6 class="text-white mt-2"><i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
     </div>
     <div class="card-body">
         <table class="table">
@@ -46,6 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center" scope="col" style="width: 5%">#ลำดับ</th>
                     <th scope="col" style="width: 15%">รหัส</th>
                     <th scope="col" style="width: 70%">ชื่อรายการ</th>
+                    <th scope="col" style="width: 120px">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
@@ -54,6 +56,16 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="fw-semibold text-primary"><?= $item->code ?></td>
                         <td><?= $item->title ?></td>
+                        <td class="text-center py-2">
+                            <div class="d-flex justify-content-center">
+                                    <a href="<?= Url::to(['update', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" title="ดูรายละเอียด">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                <a href="<?= Url::to(['delete', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary delete-item" title="ดูรายละเอียด" data-size="modal-md">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
 
                     </tr>
                 <?php endforeach; ?>
