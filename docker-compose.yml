@@ -86,7 +86,7 @@ services:
       MYSQL_USERNAME: root
       MYSQL_ROOT_PASSWORD: docker
       PMA_HOST: mysqlDB
-      UPLOAD_LIMIT: 300M
+      UPLOAD_LIMIT: 900M
   databasus:
     container_name: databasus
     image: databasus/databasus:latest  # ลบ ./docker/ ออก

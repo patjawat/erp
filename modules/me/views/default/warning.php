@@ -29,12 +29,6 @@
     }
 </style>
 <div class="container">
-<?php
-
-use app\components\UserHelper;
-$model = UserHelper::GetEmployee();
-echo $model->positions->title ?? '-'
-?>
 
     <div class="card maintenance-card mx-auto p-4 p-md-5 text-center">
         <div class="card-body">

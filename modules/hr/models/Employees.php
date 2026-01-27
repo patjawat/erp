@@ -1253,8 +1253,6 @@ public function generalMenu()
                 new Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"),
                 'id' => SORT_DESC,
             ])
-            // ->orderBy(
-            // )
             ->andOnCondition(['name' => 'position']);
     }
 

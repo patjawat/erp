@@ -31,7 +31,7 @@ class DefaultController extends Controller
 
         $info = $model->getInfo();
 
-        if (empty($info['position']) || $info['position'] === '-') {
+        if (isset($model->positionName->title)) {
             return $this->render('warning');
         }
         $searchModel = new LeaveSearch([
