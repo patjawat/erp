@@ -88,6 +88,7 @@ class EquipController extends Controller
         $dataProvider->query->andFilterWhere([
             'or',
             ['LIKE', 'asset.code', $searchModel->q],
+            ['LIKE', 'asset.asset_name', $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
         ]);
 
