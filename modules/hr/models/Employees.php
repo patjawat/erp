@@ -390,7 +390,7 @@ class Employees extends Yii\db\ActiveRecord
         $age = $showAge ? '<p class="text-muted">อายุ ' . Html::encode($this->age) . '</p>' : '';
 
         return <<<HTML
-    <div class="d-flex align-items-center" style="margin-top: -5px;">
+    <div class="d-flex align-items-center">
         {$img}
         <div class="avatar-detail">
             <h6 class="mb-0 fs-14"  
