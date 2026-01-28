@@ -44,7 +44,7 @@ class EmployeesController extends Controller
                 'verbs' => [
                     'class' => VerbFilter::className(),
                     'actions' => [
-                        'delete' => ['POST'],
+                        'cancel' => ['POST'],
                     ],
                 ],
             ]
@@ -390,7 +390,7 @@ class EmployeesController extends Controller
             if ($model->join_date) {
                 $model->join_date = AppHelper::DateToDb($model->join_date);
             }
-          // ป้องกันข้อมูลใน JSON เดิมถูกลบ
+            // ป้องกันข้อมูลใน JSON เดิมถูกลบ
             $newData = array_filter($model->data_json ?? [], fn($v) => $v !== null && $v !== '');
             $model->data_json = array_replace_recursive($model_old_data_json ?? [], $newData);
 
@@ -425,12 +425,36 @@ class EmployeesController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
-    {
-        $this->findModel($id)->delete();
+    //เพิ่มสถานะยกเลิกให้กับบุคลากร
+   public function actionCancel($id)
+{
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    
+    if ($this->request->isPost) {
+        $model = $this->findModel($id);
 
-        return $this->redirect(['index']);
+        // ตรวจสอบว่าถ้าหา model ไม่เจอจะให้ทำอย่างไร (findModel ปกติจะ throw exception อยู่แล้ว)
+        
+        // Logic การสลับค่า (Toggle)
+        if ($model->status === 'CANCEL') {
+            $model->status = '0';
+        } else {
+            $model->status = 'CANCEL';
+        }
+
+        if ($model->save(false)) { // ใช้ false เพื่อข้ามการ validate ถ้ามั่นใจในค่าที่ส่ง
+            return [
+                'status' => 'success',
+                'new_status' => $model->status // ส่งค่าใหม่กลับไปเช็คด้วยก็ดีครับ
+            ];
+        }
     }
+
+    return [
+        'status' => 'error',
+        'message' => 'Invalid request'
+    ];
+}
 
     public function actionGetPositionName()
     { {
@@ -521,48 +545,48 @@ class EmployeesController extends Controller
     public function actionImportCsv()
     {
 
-        if($this->request->isPost){
-             Yii::$app->response->format = Response::FORMAT_JSON;
-        $filePath = Yii::$app->request->post('filePath');
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $filePath = Yii::$app->request->post('filePath');
 
-        if (!$filePath || !file_exists($filePath)) {
-            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
-        }
-
-        $imported = 0;
-        $demo = [];
-        if (($handle = fopen($filePath, "r")) !== false) {
-            $row = 0;
-            $error = 0;
-
-            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                $row++;
-                if ($row == 1) continue; // ข้าม header
-                $demo[] = $data[1];
-                $result = $this->importEmployee($data);
-                if ($result['status'] == 'success') {
-                    $imported++;
-                } else {
-                    $error++;
-                    // คุณอาจเก็บ log ของ error แถวนี้ได้
-                }
+            if (!$filePath || !file_exists($filePath)) {
+                return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
             }
-            fclose($handle);
-            if ($error >= 1) {
+
+            $imported = 0;
+            $demo = [];
+            if (($handle = fopen($filePath, "r")) !== false) {
+                $row = 0;
+                $error = 0;
+
+                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+                    $row++;
+                    if ($row == 1) continue; // ข้าม header
+                    $demo[] = $data[1];
+                    $result = $this->importEmployee($data);
+                    if ($result['status'] == 'success') {
+                        $imported++;
+                    } else {
+                        $error++;
+                        // คุณอาจเก็บ log ของ error แถวนี้ได้
+                    }
+                }
+                fclose($handle);
+                if ($error >= 1) {
+                    return [
+                        'status' => 'error',
+                        'message' => "xx",
+                        'demo' => $demo
+                    ];
+                }
                 return [
-                    'status' => 'error',
-                    'message' => "xx",
+                    'status' => 'success',
+                    'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
                     'demo' => $demo
                 ];
             }
-            return [
-                'status' => 'success',
-                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
-                'demo' => $demo
-            ];
         }
-        }
-        
+
         $model = new Employees;
         if ($this->request->isAjax) {
 
@@ -580,41 +604,40 @@ class EmployeesController extends Controller
         }
     }
 
-     protected function importEmployee($data)
+    protected function importEmployee($data)
     {
         $employee = Employees::find()->where(['cid' => $data[0]])->one();
         if ($employee) {
             return [
                 'status' => 'success',
-                'msg' => 'ตรวจพบที่มี'.$data[0].'อยู่แล้ว',
+                'msg' => 'ตรวจพบที่มี' . $data[0] . 'อยู่แล้ว',
                 'data' => $employee
             ];
         } else {
             // ถ้าไม่มีทำการสร้างใหม่
-                //ถ้าไม่ซ้ำให้สาร้างใหม่
-                $newEmployee = new Employees;
-                $newEmployee->user_id = 0;
-                $newEmployee->cid = $data[0];
-                $newEmployee->gender = $data[1];
-                $newEmployee->prefix = $data[2];
-                $newEmployee->fname = $data[3];
-                $newEmployee->lname = $data[4];
-                $newEmployee->birthday = $data[5];
-                $newEmployee->phone = $data[6];
-                $newEmployee->email = $data[7];
-                $newEmployee->address = $data[8];
-                $newEmployee->zipcode = $data[9];
-                $newEmployee->save(false);
-                return [
-                    'status' => 'success',
-                    'msg' => 'Yes',
-                    'data' => $newEmployee
-                ];
-
+            //ถ้าไม่ซ้ำให้สาร้างใหม่
+            $newEmployee = new Employees;
+            $newEmployee->user_id = 0;
+            $newEmployee->cid = $data[0];
+            $newEmployee->gender = $data[1];
+            $newEmployee->prefix = $data[2];
+            $newEmployee->fname = $data[3];
+            $newEmployee->lname = $data[4];
+            $newEmployee->birthday = $data[5];
+            $newEmployee->phone = $data[6];
+            $newEmployee->email = $data[7];
+            $newEmployee->address = $data[8];
+            $newEmployee->zipcode = $data[9];
+            $newEmployee->save(false);
+            return [
+                'status' => 'success',
+                'msg' => 'Yes',
+                'data' => $newEmployee
+            ];
         }
     }
 
-     public function actionImportPreview()
+    public function actionImportPreview()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -650,7 +673,7 @@ class EmployeesController extends Controller
             'errors' => $model->getErrors(),
         ];
     }
-    
+
 
     public function actionImportCsvOld()
     {
@@ -711,63 +734,63 @@ class EmployeesController extends Controller
                             'attribute' => 'cid',
                             'allowEmptyValues' => false,
                             'value' => function ($data) {
-                                
+
                                 return $data[0];
                             },
                         ],
                         [
                             'attribute' => 'gender',
                             'value' => function ($data) {
-                                
+
                                 return $data[1];
                             },
                         ],
                         [
                             'attribute' => 'prefix',
                             'value' => function ($data) {
-                                
+
                                 return $data[2];
                             },
                         ],
                         [
                             'attribute' => 'fname',
                             'value' => function ($data) {
-                                
+
                                 return $data[3];
                             },
                         ],
                         [
                             'attribute' => 'lname',
                             'value' => function ($data) {
-                                
+
                                 return $data[4];
                             },
                         ],
                         [
                             'attribute' => 'birthday',
                             'value' => function ($data) {
-                                
+
                                 return $data[5];
                             },
                         ],
                         [
                             'attribute' => 'phone',
                             'value' => function ($data) {
-                                
+
                                 return $data[6];
                             },
                         ],
                         [
                             'attribute' => 'email',
                             'value' => function ($data) {
-                                
+
                                 return $data[7];
                             },
                         ],
                         [
                             'attribute' => 'address',
                             'value' => function ($data) {
-                                
+
                                 return $data[8];
                             },
                         ],
@@ -775,7 +798,7 @@ class EmployeesController extends Controller
                             'attribute' => 'zipcode',
                             'value' => function ($data) {
                                 try {
-                                    
+
                                     return (int) $data[9];
                                 } catch (\Throwable $th) {
                                     return 0;

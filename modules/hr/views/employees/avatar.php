@@ -51,6 +51,7 @@ $avatar = $model->showAvatar();
                                     'class' => 'dropdown-item',
                                 ]) ?>
 
+                                <?= Html::a(($model->status == 'CANCEL' ? '<i class="fa-solid fa-arrow-rotate-left me-1"></i> ใช้งาน':'<i class="fa-solid fa-user-xmark me-1"></i> ยกเลิก'), ['/hr/employees/cancel', 'id' => $model->id], ['class' => 'dropdown-item a-action', 'data' => ['size' => 'modal-md']]) ?>
                                 <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) 
                                 ?>
@@ -116,7 +117,7 @@ $avatar = $model->showAvatar();
                     </label>
                 <?php else: ?>
                     <label class="badge rounded-pill text-primary-emphasis bg-warning-subtle p-2 text-truncate float-end">
-                        <i class="fa-solid fa-circle-exclamation text-warning"></i> ไม่ระบุสถานะ
+                        <i class="fa-solid fa-circle-exclamation text-warning"></i> <?= $model->statusName() ?>
                     </label>
                 <?php endif ?>
             </div>

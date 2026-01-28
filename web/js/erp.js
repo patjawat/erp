@@ -610,6 +610,64 @@ $(document).on("click", ".cancel-order", function (e) {
   });
 });
 
+//เพิ่ม function a-action สำหรับทำงานร้วมกัน
+$(document).on("click", ".a-action", function (e) {
+    e.preventDefault();
+    const url = $(this).attr('href');
+
+    // 1. ถามยืนยันก่อนดำเนินการ
+    Swal.fire({
+        title: 'คุณแน่ใจยกเลิกหรือไม่?',
+        text: "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ตกลง',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            // แสดง Loading ระหว่างรอ AJAX
+            Swal.fire({
+                title: 'กำลังประมวลผล...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // 2. ส่ง AJAX
+            $.ajax({
+                type: "post",
+                url: url,
+                dataType: "json",
+                success: function (res) {
+                    if (res.status === 'success') {
+                        // 3. แจ้งเตือนสำเร็จแล้วค่อย Reload
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        // กรณี Server ตอบกลับแต่สถานะไม่ใช่ success
+                        Swal.fire('เกิดข้อผิดพลาด', res.message || 'กรุณาลองใหม่อีกครั้ง', 'error');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // กรณี Server Error หรือ Connection มีปัญหา
+                    Swal.fire('ผิดพลาด!', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ (' + error + ')', 'error');
+                }
+            });
+        }
+    });
+});
+
 $(".show-setting").on("click", function () {
   $(".right-setting").addClass("show");
 });

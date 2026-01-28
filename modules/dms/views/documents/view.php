@@ -65,18 +65,18 @@ $this->title = $model->topic;
                     <div>
                         <div class="d-flex justify-content-between">
 
-                            <strong class="text-primary d-block mb-1"><?=$model->documentOrg->title?></strong>
+                            <strong class="text-primary d-block mb-1"><?= $model->documentOrg->title ?></strong>
 
                         </div>
-                        <span class="fs-6 text-dark"><?= $model->topic?></span>
+                        <span class="fs-6 text-dark"><?= $model->topic ?></span>
                     </div>
                     <div class="mt-2">
                         <?php if ($model->doc_speed == 'ด่วนที่สุด'): ?>
-                        <span class="badge bg-danger mb-1"><i
-                                class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
+                            <span class="badge bg-danger mb-1"><i
+                                    class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
                         <?php endif; ?>
                         <?php if ($model->secret == 'ลับที่สุด'): ?>
-                        <span class="badge bg-danger mb-1"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
+                            <span class="badge bg-danger mb-1"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
                         <?php endif; ?>
                     </div>
 
@@ -110,7 +110,7 @@ $this->title = $model->topic;
                         </div>
                         <div class="d-flex align-items-center gap-3">
                             <span class="text-muted fw-bold">การลงความเห็น >> </span>
-                            <?=$model->StackDocumentTags('comment')?>
+                            <?= $model->StackDocumentTags('comment') ?>
                         </div>
                         <div class="viewFormComment border-top pt-3 mt-3">
                         </div>
@@ -145,33 +145,33 @@ $this->title = $model->topic;
 </div>
 
 <style>
-/* ปรับแต่งความสวยงามของหน้าจอเล็ก */
-@media (max-width: 991.98px) {
-    #iframeWrapper {
-        height: 60vh !important;
-        /* บนมือถือให้ Iframe เตี้ยลงหน่อยเพื่อให้เห็นฟอร์มข้างล่าง */
-        min-height: 400px !important;
+    /* ปรับแต่งความสวยงามของหน้าจอเล็ก */
+    @media (max-width: 991.98px) {
+        #iframeWrapper {
+            height: 60vh !important;
+            /* บนมือถือให้ Iframe เตี้ยลงหน่อยเพื่อให้เห็นฟอร์มข้างล่าง */
+            min-height: 400px !important;
+        }
+
+        .border-start {
+            border-left: none !important;
+            border-top: 1px solid #dee2e6 !important;
+        }
     }
 
-    .border-start {
-        border-left: none !important;
-        border-top: 1px solid #dee2e6 !important;
+    /* สไตล์ Scrollbar สำหรับความเห็น */
+    .listComment::-webkit-scrollbar {
+        width: 5px;
     }
-}
 
-/* สไตล์ Scrollbar สำหรับความเห็น */
-.listComment::-webkit-scrollbar {
-    width: 5px;
-}
+    .listComment::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
 
-.listComment::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.listComment::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 10px;
-}
+    .listComment::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
 </style>
 
 
@@ -186,8 +186,8 @@ $js = <<<JS
 
     // เลือกเปิดใช้งานผ่าน attribute data-toggle หรือ data-bs-toggle
  
-   $('[data-toggle="popover"]').popover(); 
-    $('[data-bs-toggle="popover"]').popover(); // สำหรับ Bootstrap 5
+$('[data-toggle="popover"]').popover(); 
+$('[data-bs-toggle="popover"]').popover(); // สำหรับ Bootstrap 5
 listCommentTemplate()
  updateCharCount()
 
@@ -470,84 +470,83 @@ $this->registerJS($js, View::POS_END);
 ?>
 
 <style>
+    .avatar-stack .avatar-item-link:hover .avatar-sm {
+        transform: translateY(-5px);
+        /* เลื่อนขึ้นเล็กน้อยเมื่อชี้ */
+        z-index: 10;
+        position: relative;
+    }
 
-.avatar-stack .avatar-item-link:hover .avatar-sm {
-    transform: translateY(-5px);
-    /* เลื่อนขึ้นเล็กน้อยเมื่อชี้ */
-    z-index: 10;
-    position: relative;
-}
+    /* ปรับแต่งหน้าตาของ Popover */
+    .popover {
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
 
-/* ปรับแต่งหน้าตาของ Popover */
-.popover {
-    border: none;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
+    .popover-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
 
-.popover-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #eee;
-}
+    /* คอนเทนเนอร์สำหรับจัดการการ Scroll แนวนอนในมือถือ */
+    .tabs-container {
+        border-bottom: 1px solid #e9ecef;
+    }
 
-/* คอนเทนเนอร์สำหรับจัดการการ Scroll แนวนอนในมือถือ */
-.tabs-container {
-    border-bottom: 1px solid #e9ecef;
-}
+    .nav-tabs-minimal {
+        gap: 1.5rem;
+        /* ระยะห่างระหว่าง Tab */
+        border-bottom: none;
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
 
-.nav-tabs-minimal {
-    gap: 1.5rem;
-    /* ระยะห่างระหว่าง Tab */
-    border-bottom: none;
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+    .nav-tabs-minimal .nav-link {
+        color: #6c757d;
+        background: none;
+        border: none;
+        padding: 0.75rem 0.25rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        position: relative;
+        transition: all 0.2s ease;
+    }
 
-.nav-tabs-minimal .nav-link {
-    color: #6c757d;
-    background: none;
-    border: none;
-    padding: 0.75rem 0.25rem;
-    font-weight: 500;
-    font-size: 0.95rem;
-    position: relative;
-    transition: all 0.2s ease;
-}
+    /* เอฟเฟกต์เมื่อ Hover */
+    .nav-tabs-minimal .nav-link:hover {
+        color: #0d6efd;
+    }
 
-/* เอฟเฟกต์เมื่อ Hover */
-.nav-tabs-minimal .nav-link:hover {
-    color: #0d6efd;
-}
+    /* เส้นขีดใต้เมื่อ Active */
+    .nav-tabs-minimal .nav-link.active {
+        color: #0d6efd;
+        background: none;
+    }
 
-/* เส้นขีดใต้เมื่อ Active */
-.nav-tabs-minimal .nav-link.active {
-    color: #0d6efd;
-    background: none;
-}
+    .nav-tabs-minimal .nav-link.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        /* วางทับเส้น border-bottom ของ container */
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: #0d6efd;
+        border-radius: 10px 10px 0 0;
+    }
 
-.nav-tabs-minimal .nav-link.active::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    /* วางทับเส้น border-bottom ของ container */
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #0d6efd;
-    border-radius: 10px 10px 0 0;
-}
+    /* ซ่อน Scrollbar สำหรับ Chrome, Safari และ Opera */
+    .nav-tabs-minimal::-webkit-scrollbar {
+        display: none;
+    }
 
-/* ซ่อน Scrollbar สำหรับ Chrome, Safari และ Opera */
-.nav-tabs-minimal::-webkit-scrollbar {
-    display: none;
-}
-
-/* ซ่อน Scrollbar สำหรับ IE, Edge และ Firefox */
-.nav-tabs-minimal {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
-}
+    /* ซ่อน Scrollbar สำหรับ IE, Edge และ Firefox */
+    .nav-tabs-minimal {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
 </style>
