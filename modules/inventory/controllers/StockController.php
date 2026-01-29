@@ -3,14 +3,17 @@
 namespace app\modules\inventory\controllers;
 
 use Yii;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\components\ModalHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
-use app\modules\inventory\models\StockOut;;
 
+use app\modules\inventory\models\StockOut;;
+use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\StockEventSearch;
 
@@ -202,11 +205,68 @@ class StockController extends Controller
             ])
             ->orderBy(['t.movement_date' => SORT_ASC, 't.id' => SORT_ASC]);
 
-        return $this->render('view_stock_card', [
-            'model' => $model,
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+    
+          if ($this->request->isAjax) {
+    // เตรียม Content ที่จะใช้ทั้งสองกรณี
+    $content = $this->renderAjax('view_stock_card-v2', [
+        'model' => $model,
+        'searchModel' => $searchModel,
+        'dataProvider' => $dataProvider,
+    ]);
+
+    // กรณีที่ 1: ถ้าเรียกผ่าน Pjax (เช่น ตอนบันทึกฟอร์มเสร็จแล้วสั่ง reload)
+    if ($this->request->isPjax) {
+        return $content; // ส่ง HTML ออกไปตรงๆ
+    }
+
+    // กรณีที่ 2: ถ้าเรียกผ่าน AJAX ปกติ (ตอนคลิกเมนูทางซ้าย)
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    return [
+        'title' => $this->request->get('title'),
+        'count' => $dataProvider->getTotalCount(),
+        'content' => $content
+    ];
+} else {
+    // กรณีเข้าผ่าน URL ตรงๆ
+    return $this->render('view_stock_card-v2', [
+        'model' => $model,
+        'searchModel' => $searchModel,
+        'dataProvider' => $dataProvider,
+    ]);
+}
+
+    }
+
+    public function actionUpdateStockCard($id)
+    {
+        $model= StockEvent::findOne($id);
+
+         if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save(false)) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'url' => Url::to(['/inventory/stock/view-stock-card', 'id' => $model->product->id])
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+          if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_update_stock_card', [
+                    'model' => $model,
+                ]),
+                'footer' => ModalHelper::modalFooterSaveClose()
+            ];
+        } else {
+            return $this->render('_form_update_stock_card', [
+                'model' => $model,
+            ]);
+        }
     }
 
 
@@ -250,6 +310,43 @@ class StockController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
+    }
+
+    public function actionStockCard()
+    {
+         $warehouse = Yii::$app->session->get('warehouse');
+        if (!$warehouse) {
+            return $this->redirect(['/inventory']);
+        }
+        $searchModel = new StockSearch([
+            'warehouse_id' => $warehouse->id
+        ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'asset_item', $searchModel->q],
+            ['like', 'title', $searchModel->q],
+        ]);
+        $dataProvider->query->groupBy('asset_item');
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'count' => $dataProvider->getTotalCount(),
+                'content' => $this->renderAjax('stock_card', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ])
+            ];
+        } else {
+            return $this->render('stock_card', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
     }
 
     /**

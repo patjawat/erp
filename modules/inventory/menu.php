@@ -9,10 +9,15 @@ use yii\helpers\Url;
         ภาพรวม
     </a>
 
-    <a href="<?= Url::to(['/inventory/stock/in-stock']) ?>" class="btn <?= $active !== 'stock' ? 'btn-outline-primary' : 'btn-primary' ?>">
+    <!-- <a href="<?= Url::to(['/inventory/stock/in-stock']) ?>" class="btn <?= $active !== 'stock' ? 'btn-outline-primary' : 'btn-primary' ?>">
+      <i data-lucide="blocks"></i>  
+        สตอ๊ก(ตัวเดิม)
+    </a> -->
+     <a href="<?= Url::to(['/inventory/stock/stock-card']) ?>" class="btn <?= $active !== 'stock' ? 'btn-outline-primary' : 'btn-primary' ?>">
       <i data-lucide="blocks"></i>  
         สตอ๊ก
     </a>
+
 
     <a href="<?= Url::to(['/inventory/stock-in']) ?>" class="btn <?= $active !== 'stock-in' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-corner-icon lucide-file-plus-corner">
