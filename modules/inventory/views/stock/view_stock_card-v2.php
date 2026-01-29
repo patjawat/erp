@@ -49,7 +49,9 @@ $balanceQty = 0;
                     <?= Html::img($model->product->ShowImg(), ['class' => 'object-fit-cover rounded-3', 'width' => '50']) ?>
                     <div>
                         <h5 class="fw-bold mb-1"> <?= $model->product->title ?></h5>
-                        <p class="text-muted small mb-0">หมวดหมู่: <?= $model->product->ViewTypeName()['title'] ?> | รหัส: <?= $model->product->code ?> | มูลค่าคงเหลือ: <?= $model->SumPriceByItem() ?> </p>
+                        <p class="text-muted small mb-0">
+                            หมวดหมู่:<span class="mx-2 badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= $model->product->ViewTypeName()['title'] ?></span> | 
+                            รหัส: <?= $model->product->code ?> | มูลค่าคงเหลือ: <?= $model->SumPriceByItem() ?> </p>
                     </div>
                 </div>
 
