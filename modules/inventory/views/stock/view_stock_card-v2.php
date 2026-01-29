@@ -103,8 +103,8 @@ $balanceQty = 0;
                             
                             <td class="text-center <?= $item2['transaction_type'] == 'IN' ? "text-success" : "text-danger" ?> fw-bold"><?= $item2['lot_number'] ?></td>
                             <td class="text-center fw-bold"> <?= (isset($this->data_json['exp_date']) && $item2['exp_date'] !== '') ? AppHelper::convertToThai($item2['exp_date']) : '-' ?></td>
-                            <td class="text-center text-success fw-bold"><?= $item2['transaction_type'] == 'IN' ? '+' . $item2['qty'] : '' ?></td>
-                            <td class="text-center text-danger fw-bold"><?= $item2['transaction_type'] == 'OUT' ? -ABS($item2['qty']) : '' ?></td>
+                            <td class="text-center text-success fw-bold"><?= $item2['transaction_type'] == 'IN' ? '+' . (float)$item2['qty'] : '' ?></td>
+                            <td class="text-center text-danger fw-bold"><?= $item2['transaction_type'] == 'OUT' ? -ABS((float)$item2['qty']) : '' ?></td>
                             <td class="fw-semibold text-end"><?= $item2['unit_price'] !== null ? number_format($item2['unit_price'], 2) : '-' ?></td>
                             <td class="text-end px-3">
                                 <?= number_format($balance, 2) ?>
