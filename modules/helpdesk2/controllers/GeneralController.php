@@ -25,10 +25,12 @@ class GeneralController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
         $dataProvider->query
             ->andFilterWhere(['name' => 'repair'])
-            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.urgency')"), $searchModel->urgency])
+            ->andFilterWhere(['=', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.urgency')"), $searchModel->urgency])
             ->andFilterWhere([
                 'between',
                 new Expression('DATE(created_at)'),
@@ -43,8 +45,9 @@ class GeneralController extends \yii\web\Controller
                 'or',
                 ['like', 'repair_number', $q],
                 ['like', 'title', $q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.repair_note')"), $q],
-                ['like', new Expression("JSON_EXTRACT(data_json, '$.note')"), $q],
+                ['like', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.repair_note')"), $q],
+                ['like', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.note')"), $q],
+                ['like', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.location')"), $q],
             ]);
         }
 

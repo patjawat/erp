@@ -58,6 +58,7 @@ class Helpdesk extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public $q;
+    public $q_department;
     public $asset_name;
     public $date_between;
     public $urgency;
@@ -78,7 +79,7 @@ class Helpdesk extends \yii\db\ActiveRecord
         return [
             [['repair_number', 'device_type_id', 'asset_number', 'request_repair_date', 'repair_result', 'repair_type', 'emp_id', 'ref', 'code', 'receive_date', 'date_start', 'date_end', 'name', 'title', 'data_json', 'status', 'rating', 'move_out', 'repair_group', 'thai_year', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'default', 'value' => null],
             [['category_id'], 'default', 'value' => 0],
-            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'q'], 'safe'],
+            [['request_repair_date', 'receive_date', 'date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'q','q_department'], 'safe'],
             [['category_id', 'emp_id', 'move_out', 'thai_year', 'created_by', 'updated_by'], 'integer'],
             [['repair_number', 'device_type_id', 'asset_number', 'repair_result', 'repair_type'], 'string', 'max' => 100],
             [['ref', 'code', 'name', 'title', 'status', 'rating', 'repair_group'], 'string', 'max' => 255],
@@ -232,7 +233,7 @@ class Helpdesk extends \yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['helpdesk_id' => 'id']);
     }
 
-    public function getEmp()
+    public function getEmployee()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
@@ -313,7 +314,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function getUserReq()
     {
         try {
-            $emp = $this->emp;
+            $emp = $this->employee;
             $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
             return [
                 'avatar' => $emp->getAvatar(false, $createDate),

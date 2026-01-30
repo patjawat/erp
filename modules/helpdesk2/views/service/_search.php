@@ -37,8 +37,25 @@ use iamsaint\datetimepicker\Datetimepicker;
 ])
 ?>
 <div class="row mt-2">
-    <div class="col-12">
+    <div class="col-8">
         <?php echo $form->field($model, 'q')->textInput(['class' => 'form-control','placeholder' => 'ค้นหา'])->label(false);?>
+    </div>
+    <div class="col-4">
+         <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+            'name' => 'department',
+            'id' => 'treeID',
+            'query' => Organization::find()->addOrderBy('root, lft'),
+            'value' => 1,
+            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+            'fontAwesome' => true,
+            'asDropdown' => true,
+            'multiple' => false,
+            'options' => ['disabled' => false, 'allowClear' => true, 'class' => 'close'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false); ?>
     </div>
 </div>
 
