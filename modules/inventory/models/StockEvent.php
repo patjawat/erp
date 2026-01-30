@@ -364,7 +364,7 @@ class StockEvent extends Yii\db\ActiveRecord
         $sql = "
         SELECT 
             IFNULL(
-                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5))
+                CAST(SUM(qty*unit_price) AS DECIMAL(19, 4))
             , 0) AS total 
         FROM `stock_events` 
         WHERE name = 'order_item' 
@@ -385,7 +385,7 @@ class StockEvent extends Yii\db\ActiveRecord
         $sql = "
         SELECT 
             IFNULL(
-                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5))
+                CAST(SUM(qty*unit_price) AS DECIMAL(19, 4))
             , 0) AS total 
         FROM `stock_events` 
         WHERE name = 'order_item' 
