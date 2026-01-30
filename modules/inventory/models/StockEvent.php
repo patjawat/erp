@@ -405,7 +405,7 @@ class StockEvent extends Yii\db\ActiveRecord
     public function getTotalOrderPriceSuccess()
     {
         $sql = "SELECT IFNULL(
-                CAST(SUM(qty*unit_price) AS DECIMAL(10, 5)), 0) as total FROM `stock_events` WHERE name = 'order_item' AND order_status = 'success' AND `category_id` = :category_id;";
+                CAST(SUM(qty*unit_price) AS DECIMAL(19, 4)), 0) as total FROM `stock_events` WHERE name = 'order_item' AND order_status = 'success' AND `category_id` = :category_id;";
         $query = \Yii::$app
             ->db
             ->createCommand($sql)
