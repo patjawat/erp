@@ -161,11 +161,8 @@ class WarehouseController extends Controller
              * 3) เงื่อนไขวันที่
              * ---------------------------------------------------------
              */
-            $query->andFilterWhere(['>=', 'e.movement_date', AppHelper::convertToGregorian($searchModel->date_start)])
-                ->andFilterWhere(['<=', 'e.movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
-
-            $query->andFilterWhere(['>=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_start)])
-                ->andFilterWhere(['<=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_end)]);
+           $query->andFilterWhere(['>=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_start) . ' 00:00:00'])
+                ->andFilterWhere(['<=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_end) . ' 23:59:59']);
 
             if ($all) {
                 $dataProvider->pagination = false;

@@ -23,8 +23,8 @@ class MainStockController extends \yii\web\Controller
          $dataProvider->query->andFilterWhere(['approve.name' => 'main_stock', 'approve.emp_id' => $me->id]);
         $dataProvider->query->andWhere(['<>','approve.status','None']);
          $dataProvider->query->andFilterWhere(['stock_events.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['>=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_start)]);
-         $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['>=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_start). ' 00:00:00']);
+         $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_end). ' 23:59:59']);
         
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 

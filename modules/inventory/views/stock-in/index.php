@@ -127,7 +127,16 @@ if (isset($warehouseModel->data_json['item_type'])) {
                         <td><?= $item->CreateBy($item->viewMoveMentDate())['avatar']; ?></td>
                         </td>
                         <td class="text-end">
-                            <span class="fw-semibold "><?=$item->getTotalOrderPrice(); ?>
+                            <span class="fw-semibold ">
+                            <?php 
+                                    $price = $item->getTotalOrderPrice();
+                                    // ตรวจสอบว่าเป็นตัวเลขหรือไม่ และไม่เป็นค่าว่าง
+                                    if (is_numeric($price)) {
+                                        echo number_format($price, 2);
+                                    } else {
+                                        echo "0.00";
+                                    }
+                                ?>    
                             </span>
                         </td>
                         <td class="text-center"><?= $item->viewStatus(); ?></td>
