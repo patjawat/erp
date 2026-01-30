@@ -234,6 +234,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 
 $js = <<< JS
+
+
+
 $('.cancel-stock-order').click(function (e) {
   e.preventDefault();
   const el = $(this);

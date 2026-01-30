@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\bootstrap5\LinkPager;
+use yii\widgets\LinkPager;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\ProductSearch $searchModel */
@@ -16,14 +16,10 @@ $pjaxId = 'product-pjax-container';
     'id' => $pjaxId,
     'enablePushState' => false, // สำคัญ: ห้ามเปลี่ยน URL บน Browser
     'timeout' => 5000,
-    'linkSelector' => '#' . $pjaxId . ' a', // บังคับให้ดักจับ Link ใน ID นี้เท่านั้น
 ]); ?>
 
 <?php echo $this->render('_search_product', ['searchModel' => $searchModel, 'model' => $model]); 
 ?>
-
-
-
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -37,7 +33,7 @@ $pjaxId = 'product-pjax-container';
             <?php foreach ($dataProvider->getModels() as $item): ?>
                 <tr class="">
                     <td scope="row">
-                        <?= $item->Avatar() ?>
+                        <?=$item->Avatar() ?>
                     </td>
                     <td><?= (isset($item->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">' . $item->data_json['unit'] . '</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>') ?></td>
                     <td class="align-middle">

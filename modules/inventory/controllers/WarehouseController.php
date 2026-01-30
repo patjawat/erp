@@ -103,99 +103,102 @@ class WarehouseController extends Controller
         $warehouse = \Yii::$app->session->get('warehouse');
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         // if ($warehouse) {
-            $searchModel = new StockEventSearch([
-                'order_status' =>   ['pending'],
-                'warehouse_id' => $warehouse->id,
-                'transaction_type' => 'OUT'
-            ]);
+        $searchModel = new StockEventSearch([
+            'order_status' =>   ['pending'],
+            'warehouse_id' => $warehouse->id,
+            'transaction_type' => 'OUT'
+        ]);
 
-            $dataProvider = $searchModel->search($this->request->queryParams);
-            /**
-             * ---------------------------------------------------------
-             * 1) บังคับ alias e และลบ ambiguous warehouse_id
-             * ---------------------------------------------------------
-             */
-            $query = $dataProvider->query;
-            $query->from(['e' => 'stock_events']);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        /**
+         * ---------------------------------------------------------
+         * 1) บังคับ alias e และลบ ambiguous warehouse_id
+         * ---------------------------------------------------------
+         */
+        $query = $dataProvider->query;
+        $query->from(['e' => 'stock_events']);
 
-            // ลบเงื่อนไข warehouse_id ที่ searchModel ใส่มาแบบไม่มี alias
-            $query->where([]); // reset เฉพาะ WHERE ทั้งหมดให้สะอาด
+        // ลบเงื่อนไข warehouse_id ที่ searchModel ใส่มาแบบไม่มี alias
+        $query->where([]); // reset เฉพาะ WHERE ทั้งหมดให้สะอาด
 
-            // ใส่เงื่อนไขใหม่แบบกำหนด alias ถูกต้อง
-            $query->andFilterWhere(['e.warehouse_id' => $searchModel->warehouse_id])
-                ->andFilterWhere(['e.transaction_type' => 'OUT'])
-                ->andFilterWhere(['e.order_status' => $searchModel->order_status]);
-                  // ค้นหาตาม keyword q
-            if (!empty($searchModel->q)) {
-                $query->andFilterWhere([
-                    'or',
-                    ['like', 'e.code', $searchModel->q],
-                    ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
-                ]);
-            }
-
-
-            /**
-             * ---------------------------------------------------------
-             * 2) JOIN ตามที่ต้องการ
-             * ---------------------------------------------------------
-             */
-            $query->joinWith(['fromWarehouse as from_warehouse']);
-
-            $query->andFilterWhere(['e.name' => 'order']);
-
-            if ($searchModel->q_warehouse_type) {
-                $query->andFilterWhere(['from_warehouse.warehouse_type' => $searchModel->q_warehouse_type]);
-            }
-
+        // ใส่เงื่อนไขใหม่แบบกำหนด alias ถูกต้อง
+        $query->andFilterWhere(['e.warehouse_id' => $searchModel->warehouse_id])
+            ->andFilterWhere(['e.transaction_type' => 'OUT'])
+            ->andFilterWhere(['e.order_status' => $searchModel->order_status]);
+        // ค้นหาตาม keyword q
+        if (!empty($searchModel->q)) {
             $query->andFilterWhere([
                 'or',
                 ['like', 'e.code', $searchModel->q],
-                ['like', 'e.thai_year', $searchModel->q],
                 ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
             ]);
+        }
 
 
-            /**
-             * ---------------------------------------------------------
-             * 3) เงื่อนไขวันที่
-             * ---------------------------------------------------------
-             */
-           $query->andFilterWhere(['>=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_start) . ' 00:00:00'])
-                ->andFilterWhere(['<=', 'e.created_at', AppHelper::convertToGregorian($searchModel->req_date_end) . ' 23:59:59']);
+        /**
+         * ---------------------------------------------------------
+         * 2) JOIN ตามที่ต้องการ
+         * ---------------------------------------------------------
+         */
+        $query->joinWith(['fromWarehouse as from_warehouse']);
 
-            if ($all) {
-                $dataProvider->pagination = false;
-            }
+        $query->andFilterWhere(['e.name' => 'order']);
 
+        if ($searchModel->q_warehouse_type) {
+            $query->andFilterWhere(['from_warehouse.warehouse_type' => $searchModel->q_warehouse_type]);
+        }
 
-            /**
-             * ---------------------------------------------------------
-             * 4) SUM ORDER ITEM (i) แบบถูกต้อง — ไม่ ambiguous
-             * ---------------------------------------------------------
-             */
-            $sumQuery = clone $query;
-
-            $sumQuery->select(null);    // ★ เคลียร์ select เดิม
-            $sumQuery->addSelect(['totalprice' => new Expression('SUM(i.qty * i.unit_price)')]);
-
-            $sumQuery->leftJoin('stock_events i', 'i.name = "order_item" AND i.category_id = e.id');
-
-            $sumQuery->andWhere(['i.order_status' => 'success']);
-
-            $totalPrice = $sumQuery->scalar() ?: 0;
+        $query->andFilterWhere([
+            'or',
+            ['like', 'e.code', $searchModel->q],
+            ['like', 'e.thai_year', $searchModel->q],
+            ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
+        ]);
 
 
-            /**
-             * ---------------------------------------------------------
-             * 5) Render
-             * ---------------------------------------------------------
-             */
-            return $this->render('_order_request', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                'totalPrice' => $totalPrice,
-            ]);
+        /**
+         * ---------------------------------------------------------
+         * 3) เงื่อนไขวันที่
+         * ---------------------------------------------------------
+         */
+        $start = $searchModel->req_date_start ? AppHelper::convertToGregorian($searchModel->req_date_start) . ' 00:00:00' : null;
+        $end = $searchModel->req_date_end ? AppHelper::convertToGregorian($searchModel->req_date_end) . ' 23:59:59' : null;
+
+        $query->andFilterWhere(['>=', 'e.created_at', $start])
+            ->andFilterWhere(['<=', 'e.created_at', $end]);
+
+        if ($all) {
+            $dataProvider->pagination = false;
+        }
+
+
+        /**
+         * ---------------------------------------------------------
+         * 4) SUM ORDER ITEM (i) แบบถูกต้อง — ไม่ ambiguous
+         * ---------------------------------------------------------
+         */
+        $sumQuery = clone $query;
+
+        $sumQuery->select(null);    // ★ เคลียร์ select เดิม
+        $sumQuery->addSelect(['totalprice' => new Expression('SUM(i.qty * i.unit_price)')]);
+
+        $sumQuery->leftJoin('stock_events i', 'i.name = "order_item" AND i.category_id = e.id');
+
+        $sumQuery->andWhere(['i.order_status' => 'success']);
+
+        $totalPrice = $sumQuery->scalar() ?: 0;
+
+
+        /**
+         * ---------------------------------------------------------
+         * 5) Render
+         * ---------------------------------------------------------
+         */
+        return $this->render('_order_request', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'totalPrice' => $totalPrice,
+        ]);
         // } else {
         // }
     }

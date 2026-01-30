@@ -90,7 +90,7 @@ class StockInController extends Controller
             $dataProvider = $searchModel->search($this->request->queryParams);
             $dataProvider->query->andWhere(['name' => 'order']);
             $dataProvider->query->andWhere(['status' => 5]);
-            $dataProvider->query->andWhere(['IN', 'category_id',$item]);
+            $dataProvider->query->andWhere(['IN', 'category_id', $item]);
             $dataProvider->query->andFilterWhere([
                 'or',
                 ['like', 'pr_number', $searchModel->q],
@@ -479,11 +479,24 @@ class StockInController extends Controller
     public function actionConfirmOrder($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-
-        StockEvent::updateAll(['order_status' => 'success'], ['category_id' => $id]);
-        $this->updateStock($id);
-
-        return $this->redirect(['/inventory/stock-in']);
+        $count = StockEvent::find()
+            ->where(['category_id' => $id])
+            ->andWhere([
+                'or',
+                ['lot_number' => null],
+                ['lot_number' => '']
+            ])
+            ->count();
+        if ($count > 0) {
+            return [
+                'status' => 'error',
+                'msg' => 'หมายเลขล๊อตไม่ครบ'
+            ];
+        } else {
+            StockEvent::updateAll(['order_status' => 'success'], ['category_id' => $id]);
+            $this->updateStock($id);
+            return $this->redirect(['/inventory/stock-in']);
+        }
     }
 
     protected function updateStock($id)
@@ -574,7 +587,6 @@ class StockInController extends Controller
     public function actionProductList()
     {
         $id = $this->request->get('id');
-        \Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = StockEvent::findOne($id);
         $searchModel = new ProductSearch([
@@ -588,7 +600,7 @@ class StockInController extends Controller
             ['like', 'code', $searchModel->q],
             ['like', 'title', $searchModel->q]
         ]);
-        $dataProvider->pagination->pageSize = false;
+        // $dataProvider->pagination->pageSize = false;
 
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;

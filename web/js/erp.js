@@ -1,20 +1,15 @@
 window.onbeforeunload = function () {
   showTableLoading();
-  // NProgress.start();
 };
 
+
 jQuery(document).on("pjax:start", function () {
-  NProgress.start();
-  showTableLoading();
-  //  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasRight'));
-  //     offcanvas.hide();
   const el = document.getElementById("offcanvasRight");
   if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
   console.log("pjax start");
 });
 
 jQuery(document).on("pjax:end", function () {
-  NProgress.done();
   tableLoading1.style.display = "none";
   // ตัวอย่าง: รีโหลด Offcanvas
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
@@ -29,6 +24,7 @@ jQuery(document).on("pjax:end", function () {
 document.getElementById("btnScrollTop").addEventListener("click", function () {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
+
 
 // ฟังก์ชันเลื่อนลงล่างสุด
 document
@@ -142,6 +138,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
     return false;
   });
 }
+
 
 // #### การอัพโหลดรูปภาพ ####
 
@@ -310,6 +307,7 @@ function success($msg = "") {
   // $('#main-modal').modal('toggle');
 }
 
+
 function warning($msg = "") {
   const Toast = Swal.mixin({
     toast: true,
@@ -384,37 +382,6 @@ $("body").on("click", ".open-modal", function (e) {
     });
 });
 
-// ส่วนสำคัญ: บังคับให้ Pjax ทำงานใหม่เมื่อเนื้อหาใน Modal ถูกเปลี่ยนหน้า
-$(document).on('pjax:complete', '#product-pjax-container', function() {
-    console.log("Pjax ใน Modal ทำงานเสร็จสมบูรณ์");
-});
-$("body").on("click", ".open-sub-modal", function (e) {
-  e.preventDefault();
-  var url = $(this).attr("href");
-  var size = $(this).data("size");
-  // beforLoadModal();
-
-  $.ajax({
-    type: "get",
-    url: url,
-    dataType: "json",
-    success: function (response) {
-      $("#sub-modal").modal("show");
-      // $("#sub-modal-label").html(response.title);
-      $("#sub-modal .modal-body").html(response.content);
-      // $(".modal-footer").html(response.footer);
-      // $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-      // $(".modal-dialog").addClass(size);
-      // $(".modal-content").addClass("card-outline card-primary");
-    },
-    error: function (xhr) {
-      // $("#sub-modal-label").html('เกิดข้อผิดพลาด');
-      // $(".modal-body").html('<h5 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger"></i> ไม่อนุญาต</h5>');
-      // $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
-      // $(".modal-dialog").addClass("modal-md");
-    },
-  });
-});
 
 $("body").on("click", ".open-modal-fullscreen", function (e) {
   e.preventDefault();
@@ -465,16 +432,24 @@ $("body").on("click", ".confirm-order", async function (e) {
         url: $(this).attr("href"),
         dataType: "json",
         success: async function (response) {
+
+        
+          if (response.status == "error") {
+                    Swal.fire(
+                    'ผิดพลาด!',
+                    response.msg,
+                    'error'
+                );
+          }
           if (response.status == "success") {
             location.reload();
-            // await  $.pjax.reload({container:response.container, history:false,url:response.url});
-            success(text + "บัำเร็จ!.");
+            success(text + "สำเร็จ!.");
           }
         },
       });
     }
   });
-});
+}); 
 
 $("body").on("click", ".delete-item", async function (e) {
   e.preventDefault();
@@ -516,6 +491,7 @@ $("body").on("click", ".delete-item", async function (e) {
     }
   });
 });
+
 
 $(".edit-avatar").change(function (e) {
   e.preventDefault();
@@ -609,6 +585,7 @@ $(document).on("click", ".cancel-order", function (e) {
     }
   });
 });
+
 
 //เพิ่ม function a-action สำหรับทำงานร้วมกัน
 $(document).on("click", ".a-action", function (e) {
