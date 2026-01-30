@@ -196,7 +196,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?= $item->expDate ?></td>
                                 <td class="align-middle text-end">
                                   <span class="fw-semibold">
-                                      <?php echo $item->itemSumTotalPrice() ?>
+                                     <?php 
+                                            $price = $item->itemSumTotalPrice();
+                                            // ตรวจสอบว่าเป็นตัวเลขหรือไม่ และไม่เป็นค่าว่าง
+                                            if (is_numeric($price)) {
+                                                echo number_format($price, 2);
+                                            } else {
+                                                echo "0.00";
+                                            }
+                                        ?>
                                     </span>
                                 </td>
                                 <td class="align-middle">

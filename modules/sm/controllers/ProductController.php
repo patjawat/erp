@@ -313,50 +313,59 @@ class ProductController extends Controller
 
 
 
-    // ตรวจสอบความถูกต้อง
-    public function actionCreatevalidator()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Product();
-        $requiredName = "ต้องระบุ";
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            
-            if (isset($model->title)) {
-                $model->title  == "" ? $model->addError('title', $requiredName) : null;
-                // $checkTitle = Product::findOne(['name' => 'asset_item','title' => $model->title]);
-                // if($checkTitle){
-                //     $model->addError('title', 'ชื่อซ้ำ');
-                // }
-            }
-            
-            if (isset($model->code) && $model->auto == 0) {
-                $model->code  == "" ? $model->addError('code', $requiredName) : null;
-                $checkCode = Product::findOne(['name' => 'asset_item','code' => $model->code]);
-                if($checkCode){
-                    $model->addError('code', 'รหัสซ้ำ');
-                }
+   public function actionCreatevalidator()
+{
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    $model = new Product();
+    $requiredName = "ต้องระบุ";
+    $result = []; // ประกาศตัวแปรไว้ก่อนเพื่อป้องกัน error
 
-            }
-
-
-            if (isset($model->category_id)) {
-                $model->category_id  == "" ? $model->addError('category_id', $requiredName) : null;
-            }
-
-            if (isset($model->data_json['unit'])) {
-                $model->data_json['unit'] == "" ? $model->addError('data_json[unit]', $requiredName) : null;
-            }
-
-
-
+    if ($this->request->isPost && $model->load($this->request->post())) {
+        
+        // --- การตรวจสอบเดิมของคุณ ---
+        if (isset($model->title)) {
+            $model->title == "" ? $model->addError('title', $requiredName) : null;
         }
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+        
+        if (isset($model->code) && $model->auto == 0) {
+            $model->code == "" ? $model->addError('code', $requiredName) : null;
+            $checkCode = Product::findOne(['name' => 'asset_item', 'code' => $model->code]);
+            if ($checkCode) {
+                $model->addError('code', 'รหัสซ้ำ');
+            }
         }
-        if (!empty($result)) {
-            return $this->asJson($result);
+
+        if (isset($model->category_id)) {
+            $model->category_id == "" ? $model->addError('category_id', $requiredName) : null;
+        }
+
+        // --- เพิ่มการตรวจสอบ qty_min และ qty_max ---
+        $qtyMin = (float)$model->qty_min;
+        $qtyMax = (float)$model->qty_max;
+
+        if ($qtyMin > $qtyMax) {
+            $model->addError('qty_min', 'ค่าขั้นต่ำต้องไม่มากกว่าค่าสูงสุด');
+            $model->addError('qty_max', 'ค่าสูงสุดต้องไม่น้อยกว่าค่าขั้นต่ำ');
+        }
+
+        // กรณีตรวจสอบ data_json
+        if (isset($model->data_json['unit'])) {
+            $model->data_json['unit'] == "" ? $model->addError('data_json[unit]', $requiredName) : null;
         }
     }
+
+    // รวบรวม Error
+    foreach ($model->getErrors() as $attribute => $errors) {
+        // สำหรับฟิลด์ปกติ
+        $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+    }
+
+    if (!empty($result)) {
+        return $result; // Yii2 จะแปลงเป็น JSON ให้อัตโนมัติเพราะ set format ไว้แล้ว
+    }
+    
+    return []; // ส่งค่าว่างกลับถ้าไม่มี error
+}
 
 
     /**

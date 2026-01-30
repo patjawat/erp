@@ -72,7 +72,7 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account'], 'safe'],
+            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account','qty_min','qty_max'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
             [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],

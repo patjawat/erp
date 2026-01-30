@@ -59,6 +59,8 @@ class ProductSearch extends Product
             'id' => $this->id,
             'active' => $this->active,
             'group_id' => $this->group_id,
+            'qty_min' => $this->qty_min,
+            'qty_max' => $this->qty_max,
         ]);
         $query
             ->andFilterWhere(['like', 'ref', $this->ref])
