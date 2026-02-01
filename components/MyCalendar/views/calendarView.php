@@ -87,7 +87,7 @@
     /* ปรับแต่งในส่วน CSS ของปฏิทิน */
     .event-tag {
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 400;
         padding: 2px 6px;
         margin-bottom: 2px;
         border-radius: 4px;
