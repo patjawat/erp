@@ -151,7 +151,7 @@ class VehicleDetail extends \yii\db\ActiveRecord
             return [
                 'avatar' => '',
                 'fullname' => '',
-                'photo' => '',
+                'photo' => \Yii::getAlias('@web') . '/img/placeholder_cid.png'
             ];
         }
     }
