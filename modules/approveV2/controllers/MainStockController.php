@@ -16,16 +16,19 @@ class MainStockController extends \yii\web\Controller
     {
         $me = UserHelper::GetEmployee();
         $searchModel = new ApproveSearch([
-              'status' => 'Pending'
+            'status' => 'Pending'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith(['stock'], true, 'INNER JOIN');
-         $dataProvider->query->andFilterWhere(['approve.name' => 'main_stock', 'approve.emp_id' => $me->id]);
-        $dataProvider->query->andWhere(['<>','approve.status','None']);
-         $dataProvider->query->andFilterWhere(['stock_events.emp_id' => $searchModel->emp_id]);
-        $dataProvider->query->andFilterWhere(['>=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_start). ' 00:00:00']);
-         $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', AppHelper::convertToGregorian($searchModel->date_end). ' 23:59:59']);
-        
+        $dataProvider->query->andFilterWhere(['approve.name' => 'main_stock', 'approve.emp_id' => $me->id]);
+        $dataProvider->query->andWhere(['<>', 'approve.status', 'None']);
+        $dataProvider->query->andFilterWhere(['stock_events.emp_id' => $searchModel->emp_id]);
+        $startDate = $searchModel->date_start ? AppHelper::convertToGregorian($searchModel->date_start) . ' 00:00:00' : null;
+$endDate = $searchModel->date_end ? AppHelper::convertToGregorian($searchModel->date_end) . ' 23:59:59' : null;
+
+$dataProvider->query->andFilterWhere(['>=', 'stock_events.created_at', $startDate]);
+$dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]);
+
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         return $this->render('index', [
@@ -37,18 +40,17 @@ class MainStockController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         $me = UserHelper::GetEmployee();
-        $model = Approve::findOne(['id' => $id,  'name' => 'main_stock','emp_id' => $me->id]);
+        $model = Approve::findOne(['id' => $id,  'name' => 'main_stock', 'emp_id' => $me->id]);
         \Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
             $status = $this->request->post('status');
-             // ระบบอนุมัติเบิกคลัง
-             $old = $model->data_json;
-             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
-             $model->status = $status;
-             //ถ้าบันทุกเรียบร้อย
-             if($model->save(false))
-             {
+            // ระบบอนุมัติเบิกคลัง
+            $old = $model->data_json;
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+            $model->status = $status;
+            //ถ้าบันทุกเรียบร้อย
+            if ($model->save(false)) {
                 // update ส่วน stock
                 $oldStockObj = $model->stock->data_json;
                 $checkData = $model->stock->empChecker;
@@ -58,7 +60,7 @@ class MainStockController extends \yii\web\Controller
                     'checker_position' => $checkData->positionName(),
                     'checker_confirm' => ($model->status == 'Pass' ? 'Y' : 'N')
                 ];
-                
+
                 if ($model->status == 'Pass') {
                     $model->stock->order_status = 'pending';
                 }
@@ -68,15 +70,13 @@ class MainStockController extends \yii\web\Controller
                 }
                 $model->stock->data_json = ArrayHelper::merge($oldStockObj, $model->stock->data_json, $checkerData);
                 $model->stock->save(false);
+            }
 
-                }
-                
-                return [
-                    'status' => 'success'
-                ];
-                
+            return [
+                'status' => 'success'
+            ];
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -92,21 +92,20 @@ class MainStockController extends \yii\web\Controller
         }
     }
 
-     public function actionUpdateFormStore($id)
+    public function actionUpdateFormStore($id)
     {
         $me = UserHelper::GetEmployee();
         $model = Approve::findOne(['id' => $id, 'name' => 'main_stock']);
         \Yii::$app->response->format = Response::FORMAT_JSON;
         if ($this->request->isPost) {
             $status = $this->request->post('status');
-             // ระบบอนุมัติเบิกคลัง
-             $old = $model->data_json;
-             $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-             $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
-             $model->status = $status;
-             //ถ้าบันทุกเรียบร้อย
-             if($model->save(false))
-             {
+            // ระบบอนุมัติเบิกคลัง
+            $old = $model->data_json;
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+            $model->status = $status;
+            //ถ้าบันทุกเรียบร้อย
+            if ($model->save(false)) {
                 // update ส่วน stock
                 $oldStockObj = $model->stock->data_json;
                 $checkData = $model->stock->empChecker;
@@ -116,7 +115,7 @@ class MainStockController extends \yii\web\Controller
                     'checker_position' => $checkData->positionName(),
                     'checker_confirm' => ($model->status == 'Pass' ? 'Y' : 'N')
                 ];
-                
+
                 if ($model->status == 'Pass') {
                     $model->stock->order_status = 'pending';
                 }
@@ -126,15 +125,13 @@ class MainStockController extends \yii\web\Controller
                 }
                 $model->stock->data_json = ArrayHelper::merge($oldStockObj, $model->stock->data_json, $checkerData);
                 $model->stock->save(false);
+            }
 
-                }
-                
-                return [
-                    'status' => 'success'
-                ];
-                
+            return [
+                'status' => 'success'
+            ];
         }
-        
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -149,6 +146,4 @@ class MainStockController extends \yii\web\Controller
             ]);
         }
     }
-
-
 }

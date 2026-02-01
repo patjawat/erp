@@ -31,7 +31,7 @@ class ComputerController extends \yii\web\Controller
             ->andFilterWhere(['=', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.urgency')"), $searchModel->urgency])
             ->andFilterWhere([
                 'between',
-                new Expression('DATE(created_at)'),
+                new Expression('DATE(helpdesk.created_at)'),
                 AppHelper::convertToGregorian($searchModel->date_start),
                 AppHelper::convertToGregorian($searchModel->date_end)
             ]);

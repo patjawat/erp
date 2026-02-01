@@ -467,10 +467,13 @@ class VehicleController extends Controller
 public function actionCreate()
     {
         $me = UserHelper::GetEmployee();
+        $vehicleType = $this->request->get('vehicle_type');
         $dateStart = $this->request->get('date_start');
         $dateEnd = $this->request->get('date_end');
         // กำหนดค่า Default ไว้ที่นี่
         $model = new Vehicle([
+            'vehicle_type_id' => $vehicleType,
+            'go_type' => $vehicleType ? 1 : '',
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
             'data_json' => [

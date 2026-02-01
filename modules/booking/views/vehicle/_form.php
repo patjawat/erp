@@ -59,10 +59,9 @@ $resultsJs = <<<JS
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<?php $form = ActiveForm::begin(['id' => 'vehicle-form']); ?>
+<?php $form = ActiveForm::begin(['id' => 'form']); ?>
 
 <div class="row g-4">
-
     <div class="col-md-8">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
@@ -104,22 +103,22 @@ $resultsJs = <<<JS
                         </div>
                     </div>
                     <div class="col-md-6 text-center">
-                          <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
-                        'data' => $model->listReferType(),
-                        'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
-                        'pluginOptions' => [
-                            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
-                        ],
-                        'pluginEvents' => [
-                            'select2:select' => 'function(result) { 
+                        <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
+                            'data' => $model->listReferType(),
+                            'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
+                            'pluginOptions' => [
+                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => 'function(result) { 
                                             }',
-                            'select2:unselecting' => 'function() {
+                                'select2:unselecting' => 'function() {
 
                                             }',
-                        ],
-                    ])->label('ประเภท REFER'); ?>
+                            ],
+                        ])->label('ประเภท REFER'); ?>
 
                         <?= $form->field($model, 'go_type')->radioList(
                             [
@@ -167,7 +166,7 @@ $resultsJs = <<<JS
                 <div class="mb-3">
                     <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
                 </div>
-                 <div class="mb-3">
+                <div class="mb-3">
                     <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                 </div>
                 <div class="mb-3">
@@ -225,7 +224,7 @@ $resultsJs = <<<JS
                         ],
                     ])->label('ประเภทรถที่ต้องการใช้') ?>
 
-                  
+
 
                 </div>
 
@@ -360,19 +359,19 @@ $resultsJs = <<<JS
             ]
         ])->label('พนักงานขับรถ');
         ?>
-<?php if (Yii::$app->user->can('driver')): ?>
-                <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
-<?php endif;?>
-<!-- <?php if(!$model->isNewRecord):?>
+        <?php if (Yii::$app->user->can('driver')): ?>
+            <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+        <?php endif; ?>
+        <!-- <?php if (!$model->isNewRecord): ?>
 <?= $form->field($model, 'status')->widget(Select2::classname(), [
                         'data' => $model->ListStatus(),
                         'options' => ['placeholder' => 'เลือกสถานะ'],
                         'pluginOptions' => [
                             'allowClear' => true,
-                             'dropdownParent' => '#main-modal',
+                            'dropdownParent' => '#main-modal',
                         ],
                     ]) ?>
-                    <?php endif;?> -->
+                    <?php endif; ?> -->
 
     </div>
 
@@ -470,6 +469,11 @@ $js = <<<JS
 
     thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
 
+    handleFormSubmit('#form', null, async function(response) {
+        await location.reload();
+    });
+
+
     \$(document).ready(function () {
     if(\$('#vehicle-vehicle_type_id').val() == ''){
             \$('.field-vehicle-refer_type').hide();
@@ -482,59 +486,6 @@ $js = <<<JS
         }
     });
 
-      \$('#vehicle-form').on('beforeSubmit', function (e) {
-        var form = \$(this);
-
-        Swal.fire({
-        title: "ยืนยัน?",
-        text: "บันทึกขอใช้ยานพาหนะ!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        cancelButtonText: "ยกเลิก!",
-        confirmButtonText: "ใช่, ยืนยัน!"
-        }).then((result) => {
-        if (result.isConfirmed) {
-            
-            \$.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                boforeSubmit: function(){
-                    beforLoadModal()
-                },
-                success: function (response) {
-                    if(response.status == 'success') {
-                        closeModal()
-
-                        Swal.fire({
-                            title: "สำเร็จ!",
-                            text: "บันทึกข้อมูลเรียบร้อยแล้ว",
-                            icon: "success",
-                            timer: 1000,
-                            showConfirmButton: false
-                        }).then(async () => {
-                            try {
-                                await calendar.refetchEvents(); // สำหรับ FullCalendar v5+
-                                await $("#main-modal").modal("hide");
-                                
-                            } catch (error) {
-                                
-                            }
-                            if(response.reload)
-                                {
-                                    location.reload();
-                                }
-                            });
-                    }
-                }
-            });
-        }
-        });
-        return false;
-    });
 
     function loadEmployee()
     {

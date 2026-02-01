@@ -183,6 +183,7 @@ $js = <<<JS
                         type: "get",
                         url: '/booking/vehicle/create',
                         data: {
+                            vehicle_type:$vehicleType,
                             date_start: dateStart,
                             date_end: dateEnd,
                             title:'<i class="fa-regular fa-file-lines"></i> แบบฟอร์มการขอใช้รถยนต์',
