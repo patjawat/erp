@@ -669,6 +669,8 @@ class ImportHosOfficeController extends Controller
         } else if ($status == 'REQUEST') {
             return 'Pending';
         } else if ($status == 'SUCCESS') {
+            return 'Success';
+        } else if ($status == 'ALLOCATE') {
             return 'Pass';
         } else {
             return $status;
@@ -895,7 +897,7 @@ class ImportHosOfficeController extends Controller
                     LEFT JOIN leave_status ON leave_register.LEAVE_STATUS_CODE = leave_status.STATUS_CODE
                     LEFT JOIN leave_location ON leave_register.LOCATION_ID = leave_location.LOCATION_ID
                     LEFT JOIN leave_day_type ON leave_day_type.DAY_TYPE_ID = leave_register.DAY_TYPE_ID
-                    ORDER BY leave_register.ID DESC;')
+                    WHERE LEAVE_STATUS_CODE = "Z" ORDER BY leave_register.ID DESC;')
             ->queryAll();
         $num = 1;
         $total = count($querys);
