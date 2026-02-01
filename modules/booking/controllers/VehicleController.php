@@ -84,7 +84,7 @@ class VehicleController extends Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
-       $dataProvider->query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         $dataProvider->query->orderBy([
             'date_start' => SORT_DESC,
             'location' =>  SORT_DESC,
@@ -96,7 +96,7 @@ class VehicleController extends Controller
             'icon' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-             'action' => ''
+            'action' => ''
         ]);
     }
 
@@ -209,20 +209,17 @@ class VehicleController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
-            
+
             // if ($model->status == 'Success') {
-              
+
             // }
-            if($model->save()){
+            if ($model->save()) {
                 $model->vehicle->status = $model->status;
                 $model->vehicle->save();
-                 return ['status' => 'success',];
-                }else{
+                return ['status' => 'success',];
+            } else {
                 return ['status' => 'error',];
-
             }
-
-           
         }
 
         if ($this->request->isAJax) {
@@ -324,6 +321,14 @@ class VehicleController extends Controller
 
 
 
+    public function actionCalendarDev()
+    {
+        return $this->render('calendar_dev', [
+            'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-car-icon lucide-car"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>',
+            'title' => 'รถยนต์ทั้วไป',
+            'vehicle_type' => 'official'
+        ]);
+    }
 
 
     //ปฎิทินการขอใช้รถยนต์ราชการ
@@ -347,6 +352,70 @@ class VehicleController extends Controller
     }
 
 
+    public function actionGetEvents($start, $end)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // ดึงข้อมูลการใช้รถในช่วงวันที่กำหนด
+        $models = Vehicle::find()
+            ->andWhere(['<>', 'status', 'Cancel'])
+            // ใช้การเช็คแบบคาบเกี่ยว (Overlap) เพื่อความแม่นยำ
+            ->andWhere(['<=', 'date_start', $end])
+            ->andWhere(['>=', 'date_end', $start])
+            ->orderBy(['date_start' => SORT_ASC])
+            ->all();
+
+        $events = [];
+        foreach ($models as $model) {
+            // แปลงวันที่เริ่มและจบเป็นก้อน Object เพื่อวนลูป
+            $begin = new \DateTime($model->date_start);
+            $terminate = new \DateTime($model->date_end);
+
+            // วนลูปเพื่อนำกิจกรรมไปใส่ในทุกวันที่ที่จองรถ (กรณีจองข้ามวัน)
+            // หากต้องการโชว์แค่ "วันเริ่ม" ให้ลบส่วน loop นี้แล้วใช้ $events[$model->date_start][] แทน
+            $interval = new \DateInterval('P1D');
+            $period = new \DatePeriod($begin, $interval, $terminate->modify('+1 day'));
+
+            foreach ($period as $dt) {
+                $currentDate = $dt->format("Y-m-d");
+                // ป้องกันไม่ให้กิจกรรมไปโชว์นอกช่วงเดือนที่เลือก (เพื่อความสะอาดของข้อมูล)
+                if ($currentDate >= $start && $currentDate <= $end) {
+                    // กำหนดสีตามสถานะที่นี่ (หรือดึงจากฐานข้อมูล)
+                    $color = '#050505';
+                    $bgColor = $model->vehicleStatus->data_json['color'] ?? '';
+
+
+                    // เก็บข้อความที่จะโชว์ เช่น ทะเบียนรถ หรือ เหตุผลการใช้รถ
+                    $events[$currentDate][] = [
+                        'title' => $model->locationOrg?->title ?? '-',
+                        'color' => $color,
+                        'bg_color' => $bgColor
+                    ];
+                }
+            }
+        }
+
+        return $events;
+    }
+
+    public function actionViewDetail($date)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // ดึงข้อมูลกิจกรรมทั้งหมดของวันนั้นๆ
+        $models = Vehicle::find()
+            ->where(['<=', 'date_start', $date])
+            ->andWhere(['>=', 'date_end', $date])
+            ->andWhere(['<>', 'status', 'Cancel'])
+            ->all();
+
+        // Render เป็นไฟล์ View เพื่อส่งเป็น HTML content
+        return [
+            'title' => 'รายละเอียดกิจกรรมวันที่ ' . \Yii::$app->formatter->asDate($date, 'medium'),
+            'content' => $this->renderPartial('_view_event_list', ['models' => $models]),
+            'footer' => '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>'
+        ];
+    }
 
     public function actionEvents()
     {
@@ -464,7 +533,7 @@ class VehicleController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-public function actionCreate()
+    public function actionCreate()
     {
         $me = UserHelper::GetEmployee();
         $vehicleType = $this->request->get('vehicle_type');
@@ -477,8 +546,8 @@ public function actionCreate()
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
             'date_end' => $dateStart ? AppHelper::convertToThai($dateEnd) : '',
             'data_json' => [
-            'phone' => $me->phone
-        ]
+                'phone' => $me->phone
+            ]
         ]);
         $model->leader_id = isset($model->Approve()['approve_1']['id']) ? $model->Approve()['approve_1']['id'] : '';
 
@@ -684,7 +753,7 @@ public function actionCreate()
             $newApproval->save(false);
         }
     }
-    
+
     public function actionCancel($id)
     {
         $model = $this->findModel($id);
@@ -876,7 +945,7 @@ public function actionCreate()
         }
     }
 
-    
+
 
     // ตรวจสอบหากมีการเพิ่มสถานที่ไปแห่งใหม่ให้สร้าง
 
@@ -896,7 +965,7 @@ public function actionCreate()
         }
     }
 
-    
+
     /**
      * Finds the Vehicle model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

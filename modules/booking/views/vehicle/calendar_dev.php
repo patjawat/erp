@@ -1,42 +1,21 @@
 <?php
 
-use yii\web\View;
 use yii\helpers\Url;
-use yii\helpers\Html;
-use app\models\Categorise;
-
-$this->title = $title;
-$this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];
-$this->params['breadcrumbs'][] = $this->title;
-$vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
+use app\components\MyCalendar\MyCalendar;
+use yii\web\View;
 ?>
-<?php $this->beginBlock('page-title'); ?>
-<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <?= $icon ?>
-        <?= $this->title; ?>
-    </h4>
-</div>
-<?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/booking/vehicle_menu',['active' => $vehicle_type]) ?>
-<?php $this->endBlock(); ?>
-
-<style>
-    .status-indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
-    }
-</style>
 
 <div class="row">
     <div class="col-lg-8 col-md-12 col-sm-12" id="calender-container">
 
-        <?= $this->render('carlendar_item', ['vehicle_type' => $vehicle_type]) ?>
+        <?php
+        $myUrl = Url::to(['/booking/vehicle/get-events', 'start' => '2026-01-01', 'end' => '2026-01-01']);
+        echo MyCalendar::widget([
+            'apiUrl' => $myUrl // ชื่อ Controller/Action ที่คุณสร้างไว้
+
+        ]);
+        ?>
     </div>
     <div class="col-lg-4 col-md-12 col-sm-12" id="manual-container">
         <div id="showEventToDays"></div>
