@@ -726,7 +726,7 @@ class ImportHosOfficeController extends Controller
                 LEFT JOIN record_vehicle v ON v.RECORD_VEHICLE_ID = i.RECORD_VEHICLE_ID
                 LEFT JOIN record_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID
                 LEFT JOIN record_car car ON car.CAR_ID = i.CAR
-                LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID WHERE ID = 210;';
+                LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID;';
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
 
