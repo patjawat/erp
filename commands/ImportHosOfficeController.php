@@ -713,6 +713,7 @@ class ImportHosOfficeController extends Controller
     public function actionDevelopment()
     {
         $sql = 'SELECT 
+rl.RECORD_LEVEL_NAME,
                 car.CAR_NAME,
                 org.RECORD_ORG_NAME,
                 go.RECORD_GO_NAME,l.LOCATION_NAME,
@@ -726,7 +727,8 @@ class ImportHosOfficeController extends Controller
                 LEFT JOIN record_vehicle v ON v.RECORD_VEHICLE_ID = i.RECORD_VEHICLE_ID
                 LEFT JOIN record_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID
                 LEFT JOIN record_car car ON car.CAR_ID = i.CAR
-                LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID;';
+                LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID
+                LEFT JOIN record_level rl ON rl.ID = i.RECORD_LEVEL_ID;;';
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
 
@@ -767,6 +769,8 @@ class ImportHosOfficeController extends Controller
                     'location_org_type' => ($item['LOCATION_PROV_NAME'] == 'นอกจังหวัด' ? 'ต่างจังหวัด' : $item['LOCATION_PROV_NAME']),
                     'vehicle_time_start' => $item['TIME_GO'],
                     'vehicle_time_end' => $item['TIME_BACK'],
+                    'development_level_name' => $item['RECORD_LEVEL_NAME'],
+                    'time_slot' => $this->getDayTypeKey($item['DAY_TYPE_ID'])
                 ];
                 $model->data_json = ArrayHelper::merge($dataJson,$item);
                 $model->vehicle_type_id = $this->mapVehicleType($item['CAR_NAME'])['code'] ?? '';
@@ -779,6 +783,22 @@ class ImportHosOfficeController extends Controller
             $num++;
         }
     }
+
+//ประเภทวัน
+private function getDayTypeKey($input) {
+    // กำหนดโครงสร้างการ Map ข้อมูล
+    $map = [
+        '01' => 'เต็มวัน',
+        '02' => 'ครึ่งวันเช้า',
+        '03' => 'ครึ่งวันบ่าย',
+        'เต็มวัน' => 'เต็มวัน',
+        'ครึ่งวัน(เช้า)' => 'ครึ่งวันเช้า',
+        'ครึ่งวัน(บ่าย)' => 'ครึ่งวันบ่าย'
+    ];
+
+    // คืนค่าตาม Key ที่พบ ถ้าไม่พบให้คืนค่าว่าง หรือตาม Input เดิม
+    return $map[$input] ?? $input;
+}
 
 /**
  * ฟังก์ชันสำหรับแปลงประเภทรถข้ามระบบ
