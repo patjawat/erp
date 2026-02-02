@@ -25,7 +25,7 @@ class GeneralController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->joinWith('emp');
         $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
         $dataProvider->query

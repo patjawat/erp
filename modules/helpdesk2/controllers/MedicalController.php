@@ -23,7 +23,7 @@ class MedicalController extends \yii\web\Controller
             'repair_group' => 3,
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
+        $dataProvider->query->joinWith('emp');
         $dataProvider->query->andFilterWhere(['department' => $searchModel->q_department]);
         // รวม andFilterWhere เข้าด้วยกันเพื่อลด query building overhead
         $dataProvider->query

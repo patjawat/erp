@@ -233,7 +233,7 @@ class Helpdesk extends \yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['helpdesk_id' => 'id']);
     }
 
-    public function getEmployee()
+    public function getEmp()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
