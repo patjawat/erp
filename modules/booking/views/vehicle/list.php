@@ -23,10 +23,9 @@ use yii\helpers\Html;
         <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th class="text-center" style="width:30px">ลำดับ</th>
-                        <th class="ps-4" style="width: 300px">รหัส/ผู้จอง</th>
                         <th style="width:200px">วันที่และเวลา</th>
-                        <th>วัตถุประสงค์</th>
-                        <th style="width: 25%;">สถานที่ไป</th>
+                        <th style="width: 25%;">สถานที่ไป/วัตถุประสงค์</th>
+                        <th class="ps-4" style="width: 300px">รหัส/ผู้จอง</th>
                         <th class="text-center">พขร</th>
                         <th class="text-center" style="width:100px">ความเร่งด่วน</th>
                         <th class="text-center">สถานะ</th>
@@ -37,6 +36,22 @@ use yii\helpers\Html;
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <tr>
                             <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                            <td>
+                                <div class="fw-medium text-dark"><?= $item->showDateRange() ?></div>
+                                <div class="badge bg-light text-dark fw-normal border">
+                                    <i class="bi bi-clock me-1"></i> <?= $item->viewTime()['full'] ?>
+                                </div>
+                            </td>
+                             <td>
+                                <div class="d-flex flex-column">
+                                    <div class="text-truncate fw-bold" style="max-width: 300px;">
+                                        <i class="bi bi-geo-alt text-danger me-1"></i><?= $item->locationOrg?->title ?? '-' ?>
+                                    </div>
+                                    <small>
+                                        <?= $item->reason ?>
+                                    </small>
+                                </div>
+                            </td>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     <?php
@@ -57,29 +72,13 @@ use yii\helpers\Html;
                                 </div>
                             </td>
 
-                            <td>
-                                <div class="fw-medium text-dark"><?= $item->showDateRange() ?></div>
-                                <div class="badge bg-light text-dark fw-normal border">
-                                    <i class="bi bi-clock me-1"></i> <?= $item->viewTime()['full'] ?>
-                                </div>
-                            </td>
-                            <td class="fw-bold"><?= $item->reason ?></td>
-
-                            <td>
-                                <div class="text-truncate" style="max-width: 200px;">
-                                    <i class="bi bi-geo-alt text-danger me-1"></i><?= $item->locationOrg?->title ?? '-' ?>
-                                </div>
-                            </td>
-
+                            
                             <td class="text-center"><?php echo $item->StackDriver() ?></td>
                             <td class="text-center"><?php echo $item->viewUrgent() ?></td>
                             <td class="text-center">
                                 <?php if ($item->is_shared == 1): ?>
                                     <i class="fa-solid fa-user-group"></i> จัดสรรร่วม
                                 <?php else: ?>
-                                    <?php
-                                        echo $item->status;
-                                        ?>
                                     <?= $item->viewStatus()['view'] ?? '-' ?>
                                 <?php endif; ?>
                             </td>

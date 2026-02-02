@@ -26,7 +26,8 @@ use app\components\DateFilterHelper;
     'form' => $form,
     'model' => $model,
     'label' => false,
-    'status' => $model->listStatus()
+    'status' => $model->listStatus(),
+    'placeholder' => 'ผู้ขอใช้รถยนต์'
 ])
 ?>
 

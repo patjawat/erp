@@ -2,7 +2,7 @@
 <?php
 use yii\bootstrap5\Html;
 use kartik\widgets\Select2;
-$placeholder = isset($placeholder) ? $placeholder : 'ท';
+$placeholder = isset($placeholder) ? $placeholder : 'บุคลากร';
 ?>
 <div class="row mb-2">
     <div class="col-2">

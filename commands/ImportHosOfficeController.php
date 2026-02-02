@@ -207,7 +207,7 @@ class ImportHosOfficeController extends Controller
                 // 2. ลบเฉพาะ key 'image' ออก
                 unset($old_person_data['image']);
 
-                 $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($person));
+                $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($person));
 
                 $this->Family($model->id, $model->cid);
 
@@ -229,13 +229,13 @@ class ImportHosOfficeController extends Controller
 
     public function MapEmployeeStatus($data)
     {
-        if($data['status_name'] == 'ทำงานปกติ'){
+        if ($data['status_name'] == 'ทำงานปกติ') {
             return 1;
-        }else{
-            $data = Categorise::findOne(['name' => 'emp_status','title' => $data['status_name']]);
-            if($data){
+        } else {
+            $data = Categorise::findOne(['name' => 'emp_status', 'title' => $data['status_name']]);
+            if ($data) {
                 return $data->code;
-            }else{
+            } else {
                 return 0;
             }
         }
@@ -403,7 +403,7 @@ class ImportHosOfficeController extends Controller
             LEFT JOIN 
                 car_driver d  ON d.PERSON_ID = v.CAR_DRIVER_SET_ID
             LEFT JOIN 
-                record_org_location l ON l.LOCATION_ID = v.RESERVE_LOCATION_ID
+                car_location l ON l.LOCATION_ID = v.RESERVE_LOCATION_ID
             LEFT JOIN 
                 car_priority pr ON CAST(pr.PRIORITY_ID AS UNSIGNED) = v.PRIORITY_ID ORDER BY v.RESERVE_END_DATE ASC;')
             ->queryAll();
@@ -447,6 +447,7 @@ class ImportHosOfficeController extends Controller
                 }
 
                 $model->save(false);
+                $this->createDetail($model, $item);
             }
             BaseConsole::updateProgress($num, $total);
             $num++;
@@ -466,44 +467,43 @@ class ImportHosOfficeController extends Controller
 
             $interval = new DateInterval('P1D');  // ระยะห่าง 1 วัน
             $period = new DatePeriod($startDate, $interval, $endDate);
+            $driverIdSet = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
             //ถ้าเป็นรถยนต์ส่วนตัว
             if ($model->vehicle_type_id == "personal") {
-                $me = UserHelper::GetEmployee();
                 if ($model->go_type == "1") {
                     $dates = [];
                     foreach ($period as $date) {
-                        $check1 = VehicleDetail::find()->where(['vehicle_id' => $model->id])->one();
+                        $check1 = VehicleDetail::find()->where(['vehicle_id' => $model->id, 'driver_id' => $driverIdSet])->one();
                         if (!$check1) {
                             $newDetail = new VehicleDetail;
                             $newDetail->date_start = $date->format('Y-m-d');
                             $newDetail->date_end = $date->format('Y-m-d');
                             $newDetail->vehicle_id = $model->id;
-                            $newDetail->driver_id = $me->id;
                             $newDetail->license_plate = $model->license_plate;
                             $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
                             $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
                             $newDetail->oil_price = $item['OIL_IN_BATH'];
                             $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                            $newDetail->driver_id = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
+                            $newDetail->driver_id = $driverIdSet;
                             $newDetail->status = $this->BookingStatus($model->status);
                             $newDetail->save(false);
                         }
                     }
                 } else {
-                    $check2 = VehicleDetail::find()->where(['vehicle_id' => $model->id])->one();
+
+                    $check2 = VehicleDetail::find()->where(['vehicle_id' => $model->id, 'driver_id' => $driverIdSet])->one();
                     if (!$check2) {
                         $newDetail = new VehicleDetail;
                         $newDetail->date_start = $model->date_start;
                         $newDetail->date_end = $model->date_end;
                         $newDetail->vehicle_id = $model->id;
-                        $newDetail->driver_id = $me->id;
                         $newDetail->license_plate = $model->license_plate;
                         $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
                         $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
                         $newDetail->oil_price = $item['CAR_NUMBER_BACK'];
                         $newDetail->oil_price = $item['OIL_IN_BATH'];
                         $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                        $newDetail->driver_id = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
+                        $newDetail->driver_id = $driverIdSet;
                         $newDetail->status = $this->BookingStatus($model->status);
                         $newDetail->save(false);
                     }
@@ -539,7 +539,7 @@ class ImportHosOfficeController extends Controller
                             $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
                             $newDetail->oil_price = $item['OIL_IN_BATH'];
                             $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                            $newDetail->driver_id = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
+                            $newDetail->driver_id = $driverIdSet;
                             $newDetail->status = $this->BookingStatus($model->status);
                             $newDetail->save(false);
                         }
@@ -555,7 +555,7 @@ class ImportHosOfficeController extends Controller
                         $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
                         $newDetail->oil_price = $item['OIL_IN_BATH'];
                         $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                        $newDetail->driver_id = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
+                        $newDetail->driver_id = $driverIdSet;
                         $newDetail->status = $this->BookingStatus($model->status);
                         $newDetail->save(false);
                     }
@@ -608,8 +608,8 @@ class ImportHosOfficeController extends Controller
                 $model->license_plate = $item['CAR_REG'];
 
                 // if($emp){
-                    $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($item));
-                
+                $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($item));
+
                 // }
                 $model->save(false);
                 //code...
@@ -712,14 +712,22 @@ class ImportHosOfficeController extends Controller
     // อบรม/ศึกษา/ดูงาน
     public function actionDevelopment()
     {
-        $sql = 'SELECT go.RECORD_GO_NAME,l.LOCATION_NAME,
+        $sql = 'SELECT 
+                car.CAR_NAME,
+                org.RECORD_ORG_NAME,
+                go.RECORD_GO_NAME,l.LOCATION_NAME,
                 v.RECORD_VEHICLE_NAME,
+                lp.*,
                 i.*
                 FROM `record_index` i
                 LEFT JOIN record_go go ON go.RECORD_GO_ID = i.RECORD_GO_ID
                 LEFT JOIN record_org_location l ON l.LOCATION_ID = i.RECORD_LOCATION_ID
+                LEFT JOIN record_org org ON org.RECORD_ORG_ID = i.RECORD_ORG_ID
                 LEFT JOIN record_vehicle v ON v.RECORD_VEHICLE_ID = i.RECORD_VEHICLE_ID
-                LEFT JOIN record_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID;;';
+                LEFT JOIN record_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID
+                LEFT JOIN record_car car ON car.CAR_ID = i.CAR
+                LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID WHERE ID = 210;';
+
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
 
         // if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
@@ -748,7 +756,20 @@ class ImportHosOfficeController extends Controller
 
                 $model->leader_id = $this->Person($item['LEADER_HR_ID'])?->id ?? 0;
                 $model->leader_group_id = $this->Person($item['HR_DEPART_ID'])?->id ?? 0;
-                $model->data_json = $item;
+                $this->checkLocation($item['LOCATION_NAME']);
+                $this->checkLocation($item['RECORD_ORG_NAME']);
+                $dataJson = [
+                    'license_plate' => $item['PRIVATE_CAR_REG'],
+                    'development_go_type_name' => $item['RECORD_GO_NAME'],
+                    'location_org' => $item['RECORD_ORG_NAME'],
+                    'location' => $item['LOCATION_NAME'],
+                    'province_name' => $item['PROVINCE_NAME'],
+                    'location_org_type' => ($item['LOCATION_PROV_NAME'] == 'นอกจังหวัด' ? 'ต่างจังหวัด' : $item['LOCATION_PROV_NAME']),
+                    'vehicle_time_start' => $item['TIME_GO'],
+                    'vehicle_time_end' => $item['TIME_BACK'],
+                ];
+                $model->data_json = ArrayHelper::merge($dataJson,$item);
+                $model->vehicle_type_id = $this->mapVehicleType($item['CAR_NAME'])['code'] ?? '';
                 if ($model->save(false)) {
                     $this->creteDetailMember($model);
                     $this->creteDevApprove($model);
@@ -759,20 +780,62 @@ class ImportHosOfficeController extends Controller
         }
     }
 
+/**
+ * ฟังก์ชันสำหรับแปลงประเภทรถข้ามระบบ
+ * @param string $input ข้อมูลขาเข้า (ID, ชื่อไทย, หรือ Code)
+ * @return array|null คืนค่าเป็น Array ของข้อมูลที่เกี่ยวข้องทั้งหมด
+ */
+private function mapVehicleType($input) {
+    // กำหนด Master Data สำหรับการ Mapping
+    // [CAR_ID, CAR_NAME (กลุ่มใหญ่), Title (ชื่อเต็ม), Code (ระบบหลัก)]
+    $masterData = [
+        ['id' => '01', 'group' => 'รถราชการ', 'title' => 'รถยนต์ราชการ', 'code' => 'official'],
+        ['id' => '02', 'group' => 'รถส่วนตัว', 'title' => 'รถยนต์ส่วนตัว', 'code' => 'personal'],
+        ['id' => '03', 'group' => 'รถประจำทาง', 'title' => 'รถไฟ/เครื่องบิน/เรือ', 'code' => 'transport'], 
+        ['id' => '04', 'group' => 'อื่นๆ', 'title' => 'อื่นๆ', 'code' => 'other']
+    ];
+
+    foreach ($masterData as $item) {
+        if ($input === $item['id'] || $input === $item['group'] || $input === $item['title'] || $input === $item['code']) {
+            return $item;
+        }
+    }
+
+    return null; // กรณีไม่พบข้อมูล
+}
+
 
     // นำเข้าส่วนของคณะที่ไปด้วยกัน
     protected function creteDetailMember($data)
     {
-        $check = DevelopmentDetail::findOne(['development_id' => $data->id]);
-        if (!$check) {
-            $model = new DevelopmentDetail();
-        } else {
-            $model = $check;
+
+        $sql = "SELECT * FROM `record_index` i 
+            LEFT JOIN record_index_person p ON p.RECORD_ID = i.ID 
+            WHERE p.RECORD_ID = :record_id";
+
+        $querys = Yii::$app->db2->createCommand($sql)
+            ->bindValue(':record_id', $data->data_json['ID'])
+            ->queryAll();
+        foreach ($querys as $item) {
+            try {
+
+
+                $empId = $this->Person($item['HR_PERSON_ID'])->id;
+                $check = DevelopmentDetail::findOne(['development_id' => $data->id, 'name' => 'member', 'emp_id' => $empId]);
+
+                if (!$check) {
+                    $model = new DevelopmentDetail();
+                } else {
+                    $model = $check;
+                }
+                $model->development_id = $data->id;
+                $model->name = 'member';
+                $model->emp_id = $empId;
+                $model->save(false);
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
-        $model->development_id = $data->id;
-        $model->name = 'member';
-        $model->emp_id = $data->emp_id;
-        $model->save(false);
     }
 
     protected function creteDevApprove($model)
@@ -1160,7 +1223,7 @@ class ImportHosOfficeController extends Controller
                     'phone' => $item['PERSON_REQUEST_PHONE'],
                     'meeting_details' => $item['SERVICE_FOR_DETAIL'],
                 ];
-                $model->data_json = ArrayHelper::merge($model->data_json,$dataJson,  $this->cleanUtf8($item));
+                $model->data_json = ArrayHelper::merge($model->data_json, $dataJson,  $this->cleanUtf8($item));
                 if ($model->save(false)) {
                 }
             } catch (\Throwable $th) {
@@ -1277,7 +1340,7 @@ class ImportHosOfficeController extends Controller
                 'technician_req' => '0',
                 'technician_name' => '',
             ];
-            $model->data_json = ArrayHelper::merge($model->data_json,$dataJson, $cleanItem);
+            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson, $cleanItem);
 
             if ($model->save(false)) {
 
@@ -1422,7 +1485,7 @@ class ImportHosOfficeController extends Controller
                 'technician_req' => '0',
                 'technician_name' => '',
             ];
-             $model->data_json = ArrayHelper::merge($model->data_json,$dataJson,  $this->cleanUtf8($item));
+            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson,  $this->cleanUtf8($item));
             if ($model->save(false)) {
                 $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
                 // $this->serviceItems($model, $item);

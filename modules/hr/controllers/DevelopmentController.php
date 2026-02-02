@@ -173,7 +173,6 @@ class DevelopmentController extends Controller
             }
 
             $model->save();
-            return $model->status;
 
             return $this->redirect('index');
         }
