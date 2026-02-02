@@ -71,6 +71,7 @@ class m250418_051009_create_development_table extends Migration
             $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type2','title'=>'เบิกจากเงินงบประมาณ','active' => 1]);
             $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type3','title'=>'เบิกจากผู้จัด','active' => 1]);
             $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type4','title'=>'เบิกจากเงินบำรุง','active' => 1]);
+            $this->insert('categorise',['name'=>'development_claim_type','code' =>'dev_claim_type5','title'=>'จากต้นสังกัด','active' => 1]);
 
         }
 

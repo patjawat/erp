@@ -713,6 +713,7 @@ class ImportHosOfficeController extends Controller
     public function actionDevelopment()
     {
         $sql = 'SELECT 
+m.RECORD_MONEY_NAME,
 rl.RECORD_LEVEL_NAME,
                 car.CAR_NAME,
                 org.RECORD_ORG_NAME,
@@ -728,7 +729,8 @@ rl.RECORD_LEVEL_NAME,
                 LEFT JOIN record_type t ON t.RECORD_TYPE_ID = i.RECORD_TYPE_ID
                 LEFT JOIN record_car car ON car.CAR_ID = i.CAR
                 LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID
-                LEFT JOIN record_level rl ON rl.ID = i.RECORD_LEVEL_ID;;';
+                LEFT JOIN record_level rl ON rl.ID = i.RECORD_LEVEL_ID
+                LEFT JOIN record_money m ON m.RECORD_MONEY_ID = i.RECORD_MONEY_ID;';
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
 
@@ -770,7 +772,8 @@ rl.RECORD_LEVEL_NAME,
                     'vehicle_time_start' => $item['TIME_GO'],
                     'vehicle_time_end' => $item['TIME_BACK'],
                     'development_level_name' => $item['RECORD_LEVEL_NAME'],
-                    'time_slot' => $this->getDayTypeKey($item['DAY_TYPE_ID'])
+                    'time_slot' => $this->getDayTypeKey($item['DAY_TYPE_ID']),
+                    'claim_type_name' => $item['RECORD_MONEY_NAME'],
                 ];
                 $model->data_json = ArrayHelper::merge($dataJson,$item);
                 $model->vehicle_type_id = $this->mapVehicleType($item['CAR_NAME'])['code'] ?? '';
@@ -990,8 +993,8 @@ private function mapVehicleType($input) {
             try {
                 $emp = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
                 $sendwork = $this->Person($item['LEAVE_WORK_SEND_ID']);
-                $leaderLevel1 = $this->Person($item['LEADER_PERSON_ID']);
-                $leaderLevel2 = $this->Person($item['LEADER_DEP_PERSON_ID']);
+                $leaderLevel1 = $this->Person($item['LEADER_DEP_PERSON_ID']);
+                $leaderLevel2 = $this->Person($item['LEADER_PERSON_ID']);
                 $userCheckId = $this->Person($item['USER_CONFIRM_CHECK_ID']);
                 $ApproveDirector = $this->Person($item['TOP_LEADER_AC_ID']);
 
@@ -1134,6 +1137,11 @@ private function mapVehicleType($input) {
                 $level = 0;
                 $approve_status = '';
                 $status = 'Reject';
+                break;
+            case 'Z':
+                $level = 0;
+                $approve_status = '';
+                $status = 'Approve';
                 break;
 
             default:
