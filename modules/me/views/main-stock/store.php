@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 <?php $this->endBlock(); ?>
 
 
-
+<?php Pjax::begin(['id' => 'store']); ?>
 <?php
 
 $cart = Yii::$app->cartMain;
@@ -286,3 +286,5 @@ $("body").on("click", ".checkout", async function (e) {
 
 JS;
 $this->registerJS($js, View::POS_END);
+?>
+<?php Pjax::end(); ?>

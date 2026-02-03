@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
@@ -36,6 +37,7 @@ $products = $cart->getItems();
 </div>
 <?php $this->endBlock(); ?>
 
+<?php Pjax::begin(['id' => 'store']); ?>
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
@@ -50,20 +52,20 @@ $products = $cart->getItems();
 
 <div class="stock-event-index">
 
-    <?php Pjax::begin(); ?>
+
 
     <div class="card">
-            <div class="card-header bg-primary-gradient text-white">
-                <div class="d-flex justify-content-between">
-         <h6>
-            <i class="bi bi-ui-checks"></i>ทะเบียนเบิกวัสดุคลังหลัก <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?></span> รายการ
-        </h6>
-            <a href="<?= Url::to(['/me/main-stock/store']) ?>" class="btn btn-light">
-<i data-lucide="circle-plus"></i>  
-       เลือกเบิกวัสดุ
-    </a>
-    </div>
-    </div>
+        <div class="card-header bg-primary-gradient text-white">
+            <div class="d-flex justify-content-between">
+                <h6>
+                    <i class="bi bi-ui-checks"></i>ทะเบียนเบิกวัสดุคลังหลัก <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?></span> รายการ
+                </h6>
+                <a href="<?= Url::to(['/me/main-stock/store']) ?>" class="btn btn-light">
+                    <i data-lucide="circle-plus"></i>
+                    เลือกเบิกวัสดุ
+                </a>
+            </div>
+        </div>
         <div class="card-body">
             <table class="table table-striped table-sm">
                 <thead>
@@ -145,7 +147,5 @@ $products = $cart->getItems();
             </div>
         </div>
     </div>
-
-    <?php Pjax::end(); ?>
-
 </div>
+<?php Pjax::end(); ?>

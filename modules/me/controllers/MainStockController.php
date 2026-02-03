@@ -343,6 +343,7 @@ class MainStockController extends Controller
         }
         //หา ID ที่สามารถจ่ายได้จาก stock
         $firstOut = StockHelper::firstOut($model->asset_item, $model->warehouse_id);
+        return $firstOut;
         //นำ id ที่หาได้ไปค้นหาเพื่อจะใส่ตีะกร้า
         $product = Stock::findOne($firstOut['id']);
 

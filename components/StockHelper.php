@@ -4,9 +4,6 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\bootstrap5\Html;
-use app\models\Categorise;
-use app\modules\hr\models\Employees;
 
 class StockHelper extends Component
 {
