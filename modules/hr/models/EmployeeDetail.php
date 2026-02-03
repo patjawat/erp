@@ -4,6 +4,7 @@ namespace app\modules\hr\models;
 
 use app\components\AppHelper;
 use app\components\CategoriseHelper;
+use app\models\Categorise;
 use app\modules\filemanager\components\FileManagerHelper;
 use dstotijn\yii2jsv\JsonSchemaValidator;
 use Yii;
@@ -210,6 +211,11 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     public function GetInstituteItems()
     {
         return CategoriseHelper::Institute();
+    }
+//โรคประจำตัว
+    public function getChronicDiseasesList()
+    {
+       return Categorise::find()->where(['name' => 'chronic_diseases'])->all();
     }
 
     // แสดงรายการตำแหน่งบริหาร

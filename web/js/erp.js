@@ -451,7 +451,8 @@ $("body").on("click", ".confirm-order", async function (e) {
   });
 }); 
 
-$("body").on("click", ".delete-item", async function (e) {
+// ใช้ .off("click") เพื่อเคลียร์ Event เก่าทิ้งก่อน
+$("body").off("click", ".delete-item").on("click", ".delete-item", async function (e) {
   e.preventDefault();
   var url = $(this).attr("href");
 

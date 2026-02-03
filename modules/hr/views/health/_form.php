@@ -202,11 +202,11 @@ $this->registerCss("
                     <div class="p-4 border rounded-4 d-flex justify-content-between align-items-center bg-light shadow-sm">
                         <div>
                             <p class="small text-muted mb-1">ค่าดัชนีมวลกาย (BMI)</p>
-                            <h2 class="mb-0" id="bmi-val"><?= $model->data_json['bmi'] ?? 0.0?></h2>
+                            <h2 class="mb-0" id="bmi-val"><?= $model->data_json['bmi'] ?? 0.0 ?></h2>
                         </div>
                         <div class="text-end">
                             <p class="small text-muted mb-1">ผลการประเมิน</p>
-                            <h4 class="text-primary mb-0" id="bmi-status"><?=$model->getBmiResult()['label']?></h4>
+                            <h4 class="text-primary mb-0" id="bmi-status"><?= $model->getBmiResult()['label'] ?></h4>
                         </div>
                     </div>
                 </div>
@@ -222,19 +222,24 @@ $this->registerCss("
                         }
                         ?>
 
-                        <?php foreach (['เบาหวาน', 'ความดันโลหิตสูง', 'ไขมันในเลือดสูง', 'โรคหัวใจ', 'โรคไต', 'มะเร็ง'] as $d): ?>
-                            <div class="col-md-6">
+                        <!-- <?php //foreach (['เบาหวาน', 'ความดันโลหิตสูง', 'ไขมันในเลือดสูง', 'โรคหัวใจ', 'โรคไต', 'มะเร็ง'] as $d): 
+                                ?> -->
+                        <?php foreach ($model->getChronicDiseasesList() as $item): ?>
+                            <div class="col-md-6 mb-2">
                                 <label class="d-flex align-items-center p-3 border rounded-3 hover-bg-light w-100 cursor-pointer">
                                     <?php
-                                    // เช็คว่าโรคนี้ ($d) อยู่ในรายการที่บันทึกไว้หรือไม่
-                                    $isChecked = in_array($d, $savedDiseases);
+                                    // สมมติว่าในตาราง Categorise มีคอลัมน์ชื่อ 'item_name' เก็บชื่อโรค
+                                    $diseaseValue = $item->title;
+
+                                    // ตรวจสอบว่าค่านี้นี้เคยถูกบันทึกไว้ใน JSON หรือไม่
+                                    $isChecked = in_array($diseaseValue, $savedDiseases);
 
                                     echo Html::checkbox("EmployeeDetail[data_json][chronic_diseases][]", $isChecked, [
-                                        'value' => $d,
+                                        'value' => $diseaseValue, // ส่งค่านี้ไปบันทึก
                                         'class' => 'form-check-input me-3'
                                     ]);
                                     ?>
-                                    <span class="fw-medium"><?= $d ?></span>
+                                    <span class="fw-medium"><?= $diseaseValue ?></span>
                                 </label>
                             </div>
                         <?php endforeach; ?>
@@ -331,38 +336,38 @@ $this->registerCss("
                     </div>
                 </div>
 
-               <div class="step-content" data-step="7">
-    <h5 class="mb-4 d-flex align-items-center"><i class="fas fa-smile text-success me-2"></i> หมวดที่ 7: การประเมินตนเอง</h5>
-    <?php
-    $ratings = [
-        'stress_level' => '1. ระดับความเครียดในช่วง 1 เดือนที่ผ่านมา (1-5)',
-        'happiness_level' => '2. ระดับความสุขโดยรวม (1-5)'
-    ];
-    foreach ($ratings as $key => $label):
-        // ดึงค่าคะแนนที่เคยบันทึกไว้ (1-5)
-        $currentRating = $model->data_json[$key] ?? null;
-    ?>
-        <div class="mb-5 rating-group">
-            <p class="text-slate-700 mb-4 fw-bold"><?= $label ?></p>
-            <div class="d-flex justify-content-around px-md-5">
-                <?php for ($i = 1; $i <= 5; $i++): ?>
-                    <?php 
-                        // เช็คว่าคะแนนรอบลูปตรงกับที่บันทึกไว้หรือไม่
-                        // ใช้ == เพราะบางทีค่าจาก DB อาจเป็น String หรือ Integer
-                        $isRatingActive = ($currentRating == $i); 
+                <div class="step-content" data-step="7">
+                    <h5 class="mb-4 d-flex align-items-center"><i class="fas fa-smile text-success me-2"></i> หมวดที่ 7: การประเมินตนเอง</h5>
+                    <?php
+                    $ratings = [
+                        'stress_level' => '1. ระดับความเครียดในช่วง 1 เดือนที่ผ่านมา (1-5)',
+                        'happiness_level' => '2. ระดับความสุขโดยรวม (1-5)'
+                    ];
+                    foreach ($ratings as $key => $label):
+                        // ดึงค่าคะแนนที่เคยบันทึกไว้ (1-5)
+                        $currentRating = $model->data_json[$key] ?? null;
                     ?>
-                    <label class="rating-circle <?= $isRatingActive ? 'active' : '' ?>">
-                        <?= Html::radio("EmployeeDetail[data_json][$key]", $isRatingActive, [
-                            'value' => $i, 
-                            'class' => 'd-none'
-                        ]) ?> 
-                        <span><?= $i ?></span>
-                    </label>
-                <?php endfor; ?>
-            </div>
-        </div>
-    <?php endforeach; ?>
-</div>
+                        <div class="mb-5 rating-group">
+                            <p class="text-slate-700 mb-4 fw-bold"><?= $label ?></p>
+                            <div class="d-flex justify-content-around px-md-5">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <?php
+                                    // เช็คว่าคะแนนรอบลูปตรงกับที่บันทึกไว้หรือไม่
+                                    // ใช้ == เพราะบางทีค่าจาก DB อาจเป็น String หรือ Integer
+                                    $isRatingActive = ($currentRating == $i);
+                                    ?>
+                                    <label class="rating-circle <?= $isRatingActive ? 'active' : '' ?>">
+                                        <?= Html::radio("EmployeeDetail[data_json][$key]", $isRatingActive, [
+                                            'value' => $i,
+                                            'class' => 'd-none'
+                                        ]) ?>
+                                        <span><?= $i ?></span>
+                                    </label>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
 
                 <div class="step-content" data-step="8">
                     <h5 class="mb-4 text-primary"><i class="fas fa-user-md me-2"></i> หมวดที่ 8: ผลการตรวจและวินิจฉัยของแพทย์</h5>
@@ -407,7 +412,7 @@ $this->registerCss("
                             <i class="fas fa-check fa-2x"></i>
                         </div>
                         <h3 class="mb-1">รายงานสรุปผลการตรวจสุขภาพประจำปี</h3>
-                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['checkup_year'] ?? ''?></p>
+                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['checkup_year'] ?? '' ?></p>
                     </div>
 
                     <div class="row g-2 mb-4 px-md-4">
