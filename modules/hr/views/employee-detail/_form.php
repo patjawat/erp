@@ -30,9 +30,12 @@ use yii\web\View;
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
     <?= $this->render($model->name, ['form' => $form, 'model' => $model]); ?>
+
+    <?php if($model->name !=='health'):?>
     <div class="form-group mt-4 d-flex justify-content-center">
         <?= AppHelper::BtnSave(); ?>
     </div>
+    <?php endif;?>
     <?php ActiveForm::end(); ?>
 </div>
 

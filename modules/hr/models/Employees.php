@@ -305,7 +305,7 @@ class Employees extends Yii\db\ActiveRecord
                 $workTypename = '';
                 break;
         }
-    return $workTypename;
+        return $workTypename;
     }
     // ข้อมูลเบื้องต้นของบุคลากร
     public function getInfo()
@@ -323,6 +323,7 @@ class Employees extends Yii\db\ActiveRecord
                 'department_name' => $this->departmentName(),
                 'signature' => $this->signature(),
                 'phone' => $this->phone,
+                'healthData' => $this->healthData()
             ];
         } catch (\Throwable $th) {
             return [
@@ -333,7 +334,8 @@ class Employees extends Yii\db\ActiveRecord
                 'position' => '',
                 'position_type' => '',
                 'department' => '',
-                'department_name' => ''
+                'department_name' => '',
+                'healthData' => ''
             ];
         }
         return [
@@ -601,109 +603,116 @@ class Employees extends Yii\db\ActiveRecord
             ];
         }
     }
-public function generalMenu()
-{
-    return [
-        [
-            'title' => 'ข้อมูลพื้นฐาน',
-            'icon' => '<i data-lucide="user-round" class="lucide-icon text-primary"></i>',
-            'name' => '',
-            'subtitle' => 'ข้อมูลพื้นฐานตามบัตรประชาชน',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
-            'icon' => '<i data-lucide="briefcase" class="lucide-icon text-primary"></i>',
-            'name' => 'position',
-            'subtitle' => 'ข้อมูลการบรรจุ/ต่อสัญญาจ้าง/เลื่อนขั้น',
-            'count' => count($this->positions),
-        ],
-        [
-            'title' => 'ข้อมูลการศึกษา',
-            'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
-            'name' => 'education',
-            'subtitle' => 'ประวัติการศึกษา/คุณวุฒิต่างๆ',
-            'count' => count($this->educations),
-        ],
-        [
-            'title' => 'ข้อมูลครอบครัว',
-            'icon' => '<i data-lucide="users-2" class="lucide-icon text-primary"></i>',
-            'name' => 'family',
-            'subtitle' => 'ประวัติสมาชิกในครอบครัว',
-            'count' => 0,
-        ],
-        [
-            'title' => 'รางวัลเชิดชูเกียรติ',
-            'icon' => '<i data-lucide="trophy" class="lucide-icon text-primary"></i>',
-            'name' => 'award',
-            'subtitle' => 'ประวัติการรับรางวัลต่างๆ',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลประวัติเครื่องราชอิสริยาภรณ์',
-            'icon' => '<i data-lucide="medal" class="lucide-icon text-primary"></i>',
-            'name' => 'insignia',
-            'subtitle' => 'เหรียญ และตรา อันเป็นเครื่องประดับยศ',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลการเปลี่ยนชื่อและสกุล',
-            'icon' => '<i data-lucide="file-signature" class="lucide-icon text-primary"></i>',
-            'name' => 'rename',
-            'subtitle' => 'ประวัติการเปลี่ยนชื่อ นามสกุล',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลใบประกอบวิชาชีพ',
-            'icon' => '<i data-lucide="id-card" class="lucide-icon text-primary"></i>',
-            'name' => 'license',
-            'subtitle' => 'ใบอนุญาตต่างๆ/ใบประกอบวิชาชีพ',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลการอบรมดูงาน',
-            'icon' => '<i data-lucide="plane-landing" class="lucide-icon text-primary"></i>',
-            'name' => 'develop',
-            'subtitle' => 'ประวัติการสัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ',
-            'count' => 0,
-        ],
-        [
-            'title' => 'การรับทุน',
-            'icon' => '<i data-lucide="hand-coins" class="lucide-icon text-primary"></i>',
-            'name' => 'scholarships',
-            'subtitle' => 'ประวัติการรับทุน',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลการรับโทษทางวินัย',
-            'icon' => '<i data-lucide="gavel" class="lucide-icon text-primary"></i>',
-            'name' => 'blame',
-            'subtitle' => 'ประวัติการรับโทษทางวินัย',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลสวัสดิการ',
-            'icon' => '<i data-lucide="heart-handshake" class="lucide-icon text-primary"></i>',
-            'name' => 'benefit',
-            'subtitle' => 'สิทธิประโยชน์ สวัสดิการที่ได้รับ',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ข้อมูลปฏิบัติหน้าที่/ราชการ',
-            'icon' => '<i data-lucide="cog" class="lucide-icon text-primary"></i>',
-            'name' => 'position_manage',
-            'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
-            'count' => 0,
-        ],
-        [
-            'title' => 'ลายเซ็น',
-            'icon' => '<i data-lucide="pen-tool" class="lucide-icon text-primary"></i>',
-            'name' => 'signature',
-            'subtitle' => 'ลายเซ็น',
-            'count' => 0,
-        ],
-    ];
-}
+    public function generalMenu()
+    {
+        return [
+            [
+                'title' => 'ข้อมูลพื้นฐาน',
+                'icon' => '<i data-lucide="user-round" class="lucide-icon text-primary"></i>',
+                'name' => '',
+                'subtitle' => 'ข้อมูลพื้นฐานตามบัตรประชาชน',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลตรวจสุขภาพประจำปี',
+                'icon' => '<i data-lucide="heart-pulse" class="lucide-icon text-primary"></i>',
+                'name' => 'health',
+                'subtitle' => 'ข้อมูลตรวจสุขภาพประจำปี',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
+                'icon' => '<i data-lucide="briefcase" class="lucide-icon text-primary"></i>',
+                'name' => 'position',
+                'subtitle' => 'ข้อมูลการบรรจุ/ต่อสัญญาจ้าง/เลื่อนขั้น',
+                'count' => count($this->positions),
+            ],
+            [
+                'title' => 'ข้อมูลการศึกษา',
+                'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
+                'name' => 'education',
+                'subtitle' => 'ประวัติการศึกษา/คุณวุฒิต่างๆ',
+                'count' => count($this->educations),
+            ],
+            [
+                'title' => 'ข้อมูลครอบครัว',
+                'icon' => '<i data-lucide="users-2" class="lucide-icon text-primary"></i>',
+                'name' => 'family',
+                'subtitle' => 'ประวัติสมาชิกในครอบครัว',
+                'count' => 0,
+            ],
+            [
+                'title' => 'รางวัลเชิดชูเกียรติ',
+                'icon' => '<i data-lucide="trophy" class="lucide-icon text-primary"></i>',
+                'name' => 'award',
+                'subtitle' => 'ประวัติการรับรางวัลต่างๆ',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลประวัติเครื่องราชอิสริยาภรณ์',
+                'icon' => '<i data-lucide="medal" class="lucide-icon text-primary"></i>',
+                'name' => 'insignia',
+                'subtitle' => 'เหรียญ และตรา อันเป็นเครื่องประดับยศ',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลการเปลี่ยนชื่อและสกุล',
+                'icon' => '<i data-lucide="file-signature" class="lucide-icon text-primary"></i>',
+                'name' => 'rename',
+                'subtitle' => 'ประวัติการเปลี่ยนชื่อ นามสกุล',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลใบประกอบวิชาชีพ',
+                'icon' => '<i data-lucide="id-card" class="lucide-icon text-primary"></i>',
+                'name' => 'license',
+                'subtitle' => 'ใบอนุญาตต่างๆ/ใบประกอบวิชาชีพ',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลการอบรมดูงาน',
+                'icon' => '<i data-lucide="plane-landing" class="lucide-icon text-primary"></i>',
+                'name' => 'develop',
+                'subtitle' => 'ประวัติการสัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ',
+                'count' => 0,
+            ],
+            [
+                'title' => 'การรับทุน',
+                'icon' => '<i data-lucide="hand-coins" class="lucide-icon text-primary"></i>',
+                'name' => 'scholarships',
+                'subtitle' => 'ประวัติการรับทุน',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลการรับโทษทางวินัย',
+                'icon' => '<i data-lucide="gavel" class="lucide-icon text-primary"></i>',
+                'name' => 'blame',
+                'subtitle' => 'ประวัติการรับโทษทางวินัย',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลสวัสดิการ',
+                'icon' => '<i data-lucide="heart-handshake" class="lucide-icon text-primary"></i>',
+                'name' => 'benefit',
+                'subtitle' => 'สิทธิประโยชน์ สวัสดิการที่ได้รับ',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ข้อมูลปฏิบัติหน้าที่/ราชการ',
+                'icon' => '<i data-lucide="cog" class="lucide-icon text-primary"></i>',
+                'name' => 'position_manage',
+                'subtitle' => 'ประวัติการแต่งตั้งตำแหน่งบริหาร',
+                'count' => 0,
+            ],
+            [
+                'title' => 'ลายเซ็น',
+                'icon' => '<i data-lucide="pen-tool" class="lucide-icon text-primary"></i>',
+                'name' => 'signature',
+                'subtitle' => 'ลายเซ็น',
+                'count' => 0,
+            ],
+        ];
+    }
 
     // คำนำหน้า
     public function ListPrefixTh()
@@ -1079,19 +1088,18 @@ public function generalMenu()
     {
         try {
 
-        $level = $this->positionLevelName() ? $this->positionLevelName() : '';
+            $level = $this->positionLevelName() ? $this->positionLevelName() : '';
 
-        if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
-            $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
-        } else {
-            $isIcon = null;
-        }
-        return (isset($this->status) && isset($this->positionName->title) && $this->positionName->title != '') ? $isIcon . $this->positionName->title . ' ' . $level : '-';
+            if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
+                $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
+            } else {
+                $isIcon = null;
+            }
+            return (isset($this->status) && isset($this->positionName->title) && $this->positionName->title != '') ? $isIcon . $this->positionName->title . ' ' . $level : '-';
             //code...
         } catch (\Throwable $th) {
-           return '-';
+            return '-';
         }
-      
     }
 
     // แสดงประเภทตำแหน่ง
@@ -1262,6 +1270,12 @@ public function generalMenu()
         return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'rename']);
     }
 
+    //  ข้อมูลประวัติการตรวจสุขภาพ
+    public function getHealth()
+    {
+        return $this->hasMany(EmployeeDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'health']);
+    }
+
     // ใบอนุญาต
     public function getLicenses()
     {
@@ -1366,8 +1380,8 @@ public function generalMenu()
             return null;
         }
     }
-// การดึง File จาก Path โดยตรง
-        public function SignatureFilePath()
+    // การดึง File จาก Path โดยตรง
+    public function SignatureFilePath()
     {
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => 'signature'])->one();
@@ -1477,5 +1491,32 @@ public function generalMenu()
             ->bindValue(':emp', $emp)
             ->queryAll();
         return $querys;
+    }
+
+    //ห้อมูลการตรวจสุขภาพ
+    public function healthData()
+    {
+        $latestHealth = EmployeeDetail::find()
+            ->where([
+                'name' => 'health',
+                'emp_id' => $this->id
+            ])
+            // ใช้คำสั่ง JSON_EXTRACT หรือเครื่องหมาย -> เพื่อเข้าถึงค่าใน JSON
+            // 'DESC' เพื่อเอาวันที่ล่าสุดขึ้นก่อน
+            ->orderBy(['JSON_EXTRACT(data_json, "$.screeningDate")' => SORT_DESC])
+            ->one(); // ดึงมาแค่รายการเดียว
+
+        // การเรียกใช้งาน
+        if ($latestHealth) {
+            return [
+            'id' => $latestHealth->id,    
+            'result' => $latestHealth->getBmiResult()
+            ];
+        }else{
+            return [
+                'id' => '',
+                'result' => []
+            ];
+        }
     }
 }

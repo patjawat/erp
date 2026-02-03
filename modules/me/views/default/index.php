@@ -4,6 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\UserHelper;
+
 $me = UserHelper::GetEmployee();
 
 $this->title = 'ภาพรวมของ' . $me->fullname();
@@ -35,104 +36,146 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 <div class="row">
     <div class="col-12 col-xl-6">
         <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-center rounded-4"
-    style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
-    <div class="position-absolute bottom-0 start-0 bg-info opacity-25 rounded-circle"
-        style="width: 200px; height: 200px; filter: blur(50px); transform: translate(-30%, 30%);"></div>
-    
-    <div class="d-flex flex-column flex-md-row align-items-center gap-4 position-relative z-1">
-        
-        <div class="position-relative group" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click();">
-            <div class="position-absolute top-0 start-0 translate-middle p-1 rounded-3 shadow-lg border border-2 border-white"
-                style="background: linear-gradient(to top right, #fbbf24, #fef08a); transform: rotate(-12deg) !important; z-index: 10;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    data-lucide="trophy" style="color: #92400e;" class="lucide lucide-trophy">
-                    <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path>
-                    <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path>
-                    <path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path>
-                    <path d="M4 22h16"></path>
-                    <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path>
-                    <path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                </svg>
-            </div>
+            style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
+            <div class="position-absolute bottom-0 start-0 bg-info opacity-25 rounded-circle"
+                style="width: 200px; height: 200px; filter: blur(50px); transform: translate(-30%, 30%);"></div>
 
-            <div class="position-relative overflow-hidden rounded-5 shadow-lg border border-4 border-white border-opacity-25" style="width: 128px; height: 128px;">
-                <?= Html::img($me->showAvatar(), [
-                    "id" => "avatar-preview",
-                    "class" => "object-fit-cover w-100 h-100 transition-all",
-                ]) ?>
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-black bg-opacity-40 opacity-0 hover-opacity-100 transition-all shadow-inner">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <div class="d-flex flex-column flex-md-row align-items-center gap-4 position-relative z-1">
+
+                <div class="position-relative group" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click();">
+                    <div class="position-absolute top-0 start-0 translate-middle p-1 rounded-3 shadow-lg border border-2 border-white"
+                        style="background: linear-gradient(to top right, #fbbf24, #fef08a); transform: rotate(-12deg) !important; z-index: 10;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="trophy" style="color: #92400e;" class="lucide lucide-trophy">
+                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path>
+                            <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path>
+                            <path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path>
+                            <path d="M4 22h16"></path>
+                            <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path>
+                            <path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
+                        </svg>
+                    </div>
+
+                    <div class="position-relative overflow-hidden rounded-5 shadow-lg border border-4 border-white border-opacity-25" style="width: 128px; height: 128px;">
+                        <?= Html::img($me->showAvatar(), [
+                            "id" => "avatar-preview",
+                            "class" => "object-fit-cover w-100 h-100 transition-all",
+                        ]) ?>
+                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-black bg-opacity-40 opacity-0 hover-opacity-100 transition-all shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera">
+                                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                                <circle cx="12" cy="13" r="3" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <input type="file" id="avatar-upload" class="d-none" accept="image/*" onchange="previewImage(this)">
+
+                    <div class="position-absolute bottom-0 end-0 bg-success border border-4 border-primary rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 32px; height: 32px; border-color: #1e40af !important;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            data-lucide="check-circle" class="lucide lucide-check-circle text-white">
+                            <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                            <path d="m9 11 3 3L22 4"></path>
+                        </svg>
+                    </div>
                 </div>
-            </div>
 
-            <input type="file" id="avatar-upload" class="d-none" accept="image/*" onchange="previewImage(this)">
+                <div class="flex-grow-1 text-center text-md-start">
+                    <div class="d-flex flex-column flex-md-row align-items-center gap-3 mb-2">
+                        <h2 class="fw-black m-0 tracking-tight text-white" style="font-size: 1.875rem;">
+                            <?= $me->fullname ?></h2>
+                        <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill shadow-sm"
+                            style="background: linear-gradient(to right, #f59e0b, #fb923c);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="star"
+                                class="lucide lucide-star text-white fill-white">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-white text-opacity-75 text-sm fw-medium mb-4"><?= $me->positionName() ?> • <span
+                            class="text-white fw-bold text-uppercase" style="letter-spacing: 0.05em;">Rank: Gold</span>
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" class="lucide lucide-map-pin">
+                                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg><span><?= $me->departmentName() ?></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="heart" style="color: #fca5a5; fill: #fca5a5;" class="lucide lucide-heart">
+                                <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>
+                            </svg><span>ได้รับคำชมแล้ว: <span class="fw-black">0 ครั้ง</span></span>
+                        </div>
+                        <?php if($me->healthData()['result']):?>
+                        <div class="d-flex align-items-center px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
+                            <i class="fas fa-weight text-white me-2" style="font-size: 14px;"></i>
+                            <span class="text-white small fw-medium">BMI: </span>
+                            <span class="text-white fw-bold ms-1"> <?= $me->healthData()['result']['bmi'] ?? '-' ?></span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
+                            <div class="rounded-circle me-2 shadow-sm bg-<?= $me->healthData()['result']['color'] ?>" style="width: 10px; height: 10px;"></div> <span class="text-white small fw-bold">
+                                <?php
+                                echo $me->healthData()['result']['label']
+                                ?>
+                            </span>
+                        </div>
+                        <a href="<?= Url::to(['/me/health/view','id' => $me->healthData()['id']])?>" class="open-modal d-flex align-items-center px-3 py-2 rounded-pill text-decoration-none shadow-sm" data-size="modal-lg" style="background: #ffffff; color: #2563eb;">
+                            <i class="fas fa-file-medical-alt me-2"></i>
+                            <span class="small fw-bold">ดูประวัติสุขภาพ</span>
+                        </a>
+                        <?php endif;?>
+                    </div>
+                </div>
 
-            <div class="position-absolute bottom-0 end-0 bg-success border border-4 border-primary rounded-circle d-flex align-items-center justify-content-center"
-                style="width: 32px; height: 32px; border-color: #1e40af !important;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    data-lucide="check-circle" class="lucide lucide-check-circle text-white">
-                    <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
-                    <path d="m9 11 3 3L22 4"></path>
-                </svg>
+                <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
+                    style="min-width: 180px; backdrop-filter: blur(12px);">
+                    <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
+                            <path d="M12 6v6l4 2"></path>
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </svg> บันทึกเวลาเข้างาน</p>
+                    <span id="current-time" class="text-white fw-black mb-4 lh-1" style="font-size: 2.25rem; letter-spacing: -0.05em;">00:00:00</span>
+                    <button id="btn-clock-in" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">Check-in <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
+                            <path d="M7 7h10v10"></path>
+                            <path d="M7 17 17 7"></path>
+                        </svg></button>
+                </div>
             </div>
         </div>
 
-        <div class="flex-grow-1 text-center text-md-start">
-            <div class="d-flex flex-column flex-md-row align-items-center gap-3 mb-2">
-                <h2 class="fw-black m-0 tracking-tight text-white" style="font-size: 1.875rem;">
-                    <?= $me->fullname ?></h2>
-                <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill shadow-sm"
-                    style="background: linear-gradient(to right, #f59e0b, #fb923c);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" data-lucide="star"
-                        class="lucide lucide-star text-white fill-white">
-                        <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
-                    </svg>
-                </div>
-            </div>
-            <p class="text-white text-opacity-75 text-sm fw-medium mb-4"><?= $me->positionName() ?> • <span
-                    class="text-white fw-bold text-uppercase" style="letter-spacing: 0.05em;">Rank: Gold</span>
-            </p>
-            <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
-                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span><?= $me->departmentName() ?></span>
-                </div>
-                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="heart" style="color: #fca5a5; fill: #fca5a5;" class="lucide lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg><span>ได้รับคำชมแล้ว: <span class="fw-black">0 ครั้ง</span></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
-            style="min-width: 180px; backdrop-filter: blur(12px);">
-            <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock"><path d="M12 6v6l4 2"></path><circle cx="12" cy="12" r="10"></circle></svg> บันทึกเวลาเข้างาน</p>
-            <span id="current-time" class="text-white fw-black mb-4 lh-1" style="font-size: 2.25rem; letter-spacing: -0.05em;">00:00:00</span>
-            <button id="btn-clock-in" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">Check-in <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></button>
-        </div>
-    </div>
-</div>
-
-<style>
-    .transition-all { transition: all 0.3s ease; }
-    .hover-opacity-100:hover { opacity: 1 !important; }
-    .group:hover #avatar-preview { transform: scale(1.1); filter: blur(2px); }
-</style>
-
-<script>
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('avatar-preview').src = e.target.result;
+        <style>
+            .transition-all {
+                transition: all 0.3s ease;
             }
-            reader.readAsDataURL(input.files[0]);
-            // คุณสามารถเพิ่ม Code AJAX เพื่อส่งรูปไปบันทึกที่ Server ตรงนี้ได้เลย
-        }
-    }
-</script>
+
+            .hover-opacity-100:hover {
+                opacity: 1 !important;
+            }
+
+            .group:hover #avatar-preview {
+                transform: scale(1.1);
+                filter: blur(2px);
+            }
+        </style>
+
+        <script>
+            function previewImage(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('avatar-preview').src = e.target.result;
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                    // คุณสามารถเพิ่ม Code AJAX เพื่อส่งรูปไปบันทึกที่ Server ตรงนี้ได้เลย
+                }
+            }
+        </script>
     </div>
 
     <div class="col-12 col-xl-3">
@@ -458,7 +501,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 <?php
 
 $documentUrl = Url::to(['/me/documents/show-home']);
-$urlUpload = Url::to(["/filemanager/uploads/single"]); 
+$urlUpload = Url::to(["/filemanager/uploads/single"]);
 $ref = $me->ref;
 $userId = $me->id;
 

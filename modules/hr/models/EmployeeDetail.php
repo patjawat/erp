@@ -41,6 +41,8 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     public $salary;  // เงินเดือน
     public $date_start;  // วันเริ่มต้น
     public $date_end;  // วันสิ้นสุด
+    public $bmi;  // ดัชนีมวลกาย
+    public $bloodPressure;  // ความดันโลหิต
 
     /**
      * {@inheritdoc}
@@ -57,7 +59,7 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     {
         return [
             [['emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['data_json', 'updated_at', 'created_at', 'ref', 'status_name', 'status'], 'safe'],
+            [['data_json', 'updated_at', 'created_at', 'ref', 'status_name', 'status','bmi'], 'safe'],
             [['name'], 'string', 'max' => 255],
         ];
     }
@@ -81,6 +83,8 @@ class EmployeeDetail extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
+        $this->bmi = isset($this->data_json['bmi']) ? $this->data_json['bmi'] : null;  // ดัชนีมวลกาย
+        $this->bloodPressure = isset($this->data_json['bloodPressure']) ? $this->data_json['bloodPressure'] : null;  // ดัชนีมวลกาย
         // try {
         // ประวัติการศึกษา
         $this->education = isset($this->data_json['education']) ? $this->data_json['education'] : null;  // การศึกษา
@@ -230,5 +234,16 @@ class EmployeeDetail extends \yii\db\ActiveRecord
             ->bindValue(':name', 'บริหาร')
             ->queryAll();
         return $query;
+    }
+
+
+    public function getBmiResult()
+    {
+        try {
+        $bmi = $this->data_json['bmi'] ?? 0;
+        return AppHelper::getBmiResult($bmi);
+         } catch (\Throwable $th) {
+            return NULL;
+        }
     }
 }

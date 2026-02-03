@@ -560,69 +560,76 @@ class AppHelper extends Component
 
     // หาค่า BMI
 
-    public static function getBMI($weight, $height)
+    /**
+     * คำนวณค่า BMI และประเมินระดับสุขภาพ
+     * @param float $weight น้ำหนัก (กก.)
+     * @param float $height ส่วนสูง (ซม.)
+     * @return array [bmi, label, color_class]
+     */
+    function calculateBMI($weight, $height)
     {
-        if (!empty($weight) && !empty($height)) {
-            $cal = $weight / (($height / 100) ** 2);
-            $bmi = number_format($cal, 2);
-
-            if ($bmi <= 18.5) {
-                return [
-                    'bmi' => $bmi,
-                    'criterion' => '< 18.50',
-                    'point' => 'น้ำหนักน้อย / ผอม',
-                    'risk' => 'มากกว่าคนปกติ',
-                    'progress' => 20,
-                    'color' => 'bg-info'
-                ];
-            } else if ($bmi > 18.5 && $bmi < 22.9) {
-                return [
-                    'bmi' => $bmi,
-                    'criterion' => 'ระหว่าง 18.50 - 22.90',
-                    'point' => 'ปกติ (สุขภาพดี)',
-                    'risk' => 'เท่าคนปกติ',
-                    'progress' => 40,
-                    'color' => 'bg-primary'
-                ];
-            } else if ($bmi > 23 && $bmi < 24.9) {
-                return [
-                    'bmi' => $bmi,
-                    'criterion' => 'ระหว่าง 23 - 24.90',
-                    'point' => 'ท้วม / โรคอ้วนระดับ 1',
-                    'risk' => 'อันตรายระดับ 1',
-                    'progress' => 60,
-                    'color' => 'bg-warning'
-                ];
-            } else if ($bmi > 25 && $bmi < 29.9) {
-                return [
-                    'bmi' => $bmi,
-                    'criterion' => 'ระหว่าง 25 - 25.90',
-                    'point' => 'อ้วน / โรคอ้วนระดับ 2',
-                    'risk' => 'อันตรายระดับ 2',
-                    'progress' => 80,
-                    'color' => 'bg-danger'
-                ];
-            } else if ($bmi > 30) {
-                return [
-                    'bmi' => $bmi,
-                    'criterion' => '> 30',
-                    'point' => 'อ้วนมาก / โรคอ้วนระดับ 3',
-                    'risk' => 'อันตรายระดับ 3',
-                    'progress' => 100,
-                    'color' => 'bg-danger'
-                ];
-            }
-        } else {
-            return [
-                'bmi' => 0,
-                'criterion' => '',
-                'point' => '',
-                'risk' => '',
-                'progress' => 0,
-                'color' => ''
-            ];
+        if ($height <= 0 || $weight <= 0) {
+            return ['bmi' => 0, 'label' => 'ข้อมูลไม่ถูกต้อง', 'color' => 'text-muted'];
         }
+
+        // แปลงส่วนสูงจาก ซม. เป็น เมตร และคำนวณ
+        $heightInMeters = $height / 100;
+        $bmi = $weight / ($heightInMeters * $heightInMeters);
+        $bmi = round($bmi, 1); // ปัดเศษทศนิยม 1 ตำแหน่ง
+
+        // เกณฑ์การวัดระดับ BMI (มาตรฐานเอเชีย)
+        if ($bmi < 18.5) {
+            $label = "น้ำหนักน้อย / ผอม";
+            $color = "text-info";
+        } elseif ($bmi >= 18.5 && $bmi < 23) {
+            $label = "ปกติ (สุขภาพดี)";
+            $color = "text-success";
+        } elseif ($bmi >= 23 && $bmi < 25) {
+            $label = "ท้วม / เริ่มอ้วน";
+            $color = "text-warning";
+        } elseif ($bmi >= 25 && $bmi < 30) {
+            $label = "อ้วนระดับ 1";
+            $color = "text-danger";
+        } else {
+            $label = "อ้วนระดับ 2 (อ้วนมาก)";
+            $color = "text-dark fw-bold";
+        }
+
+        return [
+            'bmi' => $bmi,
+            'label' => $label,
+            'color' => $color
+        ];
     }
+
+    public static function getBmiResult($bmi)
+    {
+
+        // เกณฑ์การวัดระดับ BMI (มาตรฐานเอเชีย)
+        if ($bmi < 18.5) {
+            $label = "น้ำหนักน้อย / ผอม";
+            $color = "info";
+        } elseif ($bmi >= 18.5 && $bmi < 23) {
+            $label = "ปกติ (สุขภาพดี)";
+            $color = "success";
+        } elseif ($bmi >= 23 && $bmi < 25) {
+            $label = "ท้วม / เริ่มอ้วน";
+            $color = "warning";
+        } elseif ($bmi >= 25 && $bmi < 30) {
+            $label = "อ้วนระดับ 1";
+            $color = "danger";
+        } else {
+            $label = "อ้วนระดับ 2 (อ้วนมาก)";
+            $color = "dark fw-bold";
+        }
+
+        return [
+            'bmi' => $bmi,
+            'label' => $label,
+            'color' => $color
+        ];
+    }
+
 
     // Button Helper
 
@@ -808,7 +815,7 @@ class AppHelper extends Component
                 $title =  $statusName ? $statusName : 'หน.เห็นชอบ';
                 $view = '<span class="badge rounded-pill badge-soft-' . $color . ' fs-13 ">' . $icon . $title . '</span>';
                 break;
-                
+
             case 'Checking2_pass':
                 $color = 'primary';
                 $icon = '<i class="fa-solid fa-circle-check  me-1 text-' . $color . '"></i>';

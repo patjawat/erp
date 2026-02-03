@@ -92,6 +92,7 @@ class EmployeeDetailController extends Controller
         $id = $this->request->get('id');
         $emp_id = $this->request->get('emp_id');
         $name = $this->request->get('name');
+
         // ดึงตำแหน่งล่าสุกมา ปิดไว้ก่อนยังไม่ได้ใช้
         if($name == "position"){
             $last = EmployeeDetail::find()->where(['emp_id' => $emp_id])
@@ -150,6 +151,60 @@ class EmployeeDetailController extends Controller
             ];
         } else {
             return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    public function actionCreateHealth()
+    {
+  
+    $id = $this->request->get('id');
+        $emp_id = $this->request->get('emp_id');
+        $name = $this->request->get('name');
+        // ดึงตำแหน่งล่าสุกมา ปิดไว้ก่อนยังไม่ได้ใช้
+        if($name == "position"){
+            $last = EmployeeDetail::find()->where(['emp_id' => $emp_id])
+            ->orderBy(
+                new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc")
+            )->one();
+        }else{
+            $last=false;
+        }
+
+        $model = new EmployeeDetail([
+            'emp_id' => $emp_id,
+            'name' => $name,
+        ]);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                if($model->save(false)){
+                    return $this->redirect('view_health',['model' => $model]);
+                }
+
+                return [
+                    'status' => 'success',
+                    'data' => $model,
+                    'container' => '#hr-container',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+            $model->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('health', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('health', [
                 'model' => $model,
             ]);
         }
