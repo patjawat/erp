@@ -164,9 +164,6 @@ public function listLotNumber()
 }
     public function SumQty()
     {
-        // $warehouse = \Yii::$app->session->get('warehouse');
-        // return self::find()->where(['warehouse_id' => $warehouse['warehouse_id'], 'asset_item' => $this->asset_item])->sum('qty');
-        
         $totalQty = self::find()->where(['warehouse_id' => $this->warehouse_id, 'asset_item' => $this->asset_item])->sum('qty');
         return round($totalQty ?? 0, 2);
     }

@@ -140,7 +140,7 @@ $products = $cart->getItems();
 $js = <<< JS
 
 
-    $("body").on("click", ".add-cart", function (e) {
+   $("body").off("click", ".add-cart").on("click", ".add-cart", function (e) {
     e.preventDefault();
     $.ajax({
         type: "get",
@@ -157,7 +157,6 @@ $js = <<< JS
             }else{
                 $('#stocksearch-warehouse_id').val(res.mainWarehouse.id);
                 $('#stocksearch-asset_type').val(res.asset_type);
-                // $('#stocksearch-warehouse_id').prop('disabled', true).trigger('change');
                 $('#totalCount').text(res.totalCount)
                 
                 if(res.totalCount >= 1){

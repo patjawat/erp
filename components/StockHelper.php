@@ -10,6 +10,7 @@ class StockHelper extends Component
         //หาล๊อตที่ต้องจ่าย 
         public static function firstOut($assetItem, $warehouseId)
         {
+                //เชื่อมกับใบรับเข้าเพื่อจาก lot ตามลำดับวันที่ก่อนหลัง
                 $data = Yii::$app->db->createCommand("
                 SELECT s.id,s.asset_item, e.movement_date, s.lot_number, s.qty, s.unit_price
                 FROM stock s
