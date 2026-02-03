@@ -1497,14 +1497,13 @@ class Employees extends Yii\db\ActiveRecord
     public function healthData()
     {
         $latestHealth = EmployeeDetail::find()
-            ->where([
-                'name' => 'health',
-                'emp_id' => $this->id
-            ])
-            // ใช้คำสั่ง JSON_EXTRACT หรือเครื่องหมาย -> เพื่อเข้าถึงค่าใน JSON
-            // 'DESC' เพื่อเอาวันที่ล่าสุดขึ้นก่อน
-            ->orderBy(['JSON_EXTRACT(data_json, "$.screeningDate")' => SORT_DESC])
-            ->one(); // ดึงมาแค่รายการเดียว
+    ->where([
+        'name' => 'health',
+        'emp_id' => $this->id
+    ])
+    // แก้ไขจาก $.screeningDate เป็น $.screening_date ให้ตรงกับข้อมูลจริง
+    ->orderBy([new \yii\db\Expression('JSON_EXTRACT(data_json, "$.screening_date") DESC')])
+    ->one();
 
         // การเรียกใช้งาน
         if ($latestHealth) {
