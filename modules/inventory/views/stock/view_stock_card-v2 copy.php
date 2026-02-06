@@ -1,7 +1,11 @@
 <?php
 
 use yii\helpers\Html;
+use yii\db\Expression;
+use yii\widgets\DetailView;
 use app\components\AppHelper;
+use app\modules\inventory\models\StockEvent;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventory\models\Stock $model */
@@ -11,9 +15,10 @@ $this->title = $warehouse['warehouse_name'];
 $this->params['breadcrumbs'][] = ['label' => 'Stocks', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
-
+?>
+<?php // Pjax::begin(['id' => 'viewStock'])?>
+<?php
 $asset_item = $model->asset_item;
-// ปรับ SQL เรียงลำดับความสำคัญ: วันที่ก่อน แล้วตามด้วย ID เพื่อให้ Running Balance แม่นยำ
 $sql = "SELECT 
 i.id,
 e.code,
@@ -25,15 +30,15 @@ WHERE i.asset_item = :asset_item
 AND e.warehouse_id = :warehouse_id
 AND e.order_status = 'success'
 GROUP BY i.id
-ORDER BY e.movement_date ASC, i.id ASC";
-
+ORDER BY e.movement_date ASC";
 $stockEvents = Yii::$app->db->createCommand($sql)
     ->bindValue(':asset_item', $asset_item)
     ->bindValue(':warehouse_id', $warehouse->id)
     ->queryAll();
 
-$balanceValue = 0; // สำหรับคำนวณมูลค่าคงเหลือ
-$balanceQty = 0;   // สำหรับคำนวณจำนวนคงเหลือ
+
+$balance = 0;
+$balanceQty = 0;
 ?>
 
 <div class="card border-0 shadow-sm">
@@ -46,18 +51,19 @@ $balanceQty = 0;   // สำหรับคำนวณจำนวนคงเ�
                         <h5 class="fw-bold mb-1"> <?= $model->product->title ?></h5>
                         <p class="text-muted small mb-0">
                             หมวดหมู่:<span class="mx-2 badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= $model->product->ViewTypeName()['title'] ?></span> | 
-                            รหัส: <?= $model->product->code ?> | มูลค่าคงเหลือ: <?= number_format((float)($model->SumPriceByItem() ?? 0), 2) ?> </p>
+                            รหัส: <?= $model->product->code ?> | มูลค่าคงเหลือ: <?= $model->SumPriceByItem() ?> </p>
                     </div>
                 </div>
+
             </div>
             <div class="col-md-4 text-md-end">
-                <small class="text-muted">ยอดคงเหลือรวม</small>
-                <h3 class="fw-bold text-primary"><?= number_format($model->SumQty()) ?> <small class="fs-6 text-muted"><?= $model->product->data_json['unit'] ?? '-' ?></small></h3>
+                <small class="text-muted">ยอดคงเหลือ</small>
+                <h3 class="fw-bold text-primary"><?= $model->SumQty() ?> <small class="fs-6 text-muted"><?= $model->product->data_json['unit'] ?? '-' ?></small></h3>
             </div>
         </div>
 
         <h6 class="fw-bold mb-3"><i class="bi bi-ui-checks"></i> ประวัติ <span class="badge rounded-pill text-bg-primary">
-                <?= count($stockEvents) ?> </span> รายการ</h6>
+                <?= count($dataProvider->getModels()) ?> </span> รายการ</h6>
         <div class="table-responsive">
             <table class="table table-bordered align-middle stock-card-table table-striped">
                 <thead>
@@ -69,60 +75,46 @@ $balanceQty = 0;   // สำหรับคำนวณจำนวนคงเ�
                         <th style="width: 100px;">รับเข้า</th>
                         <th style="width: 100px;">จ่ายออก</th>
                         <th style="width: 100px;">ราคาต่อหน่วย</th>
-                        <th style="width: 110px;" class="table-light">คงเหลือ (จำนวน)</th>
-                        <th style="width: 120px;" class="table-light">คงเหลือ (มูลค่า)</th>
+                        <th style="width: 120px;">คงเหลือ</th>
                         <th style="width: 80px;">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody class="align-middle">
+                <tbody class="align-middle table-group-divider">
                     <?php foreach ($stockEvents as $item2): ?>
                         <?php
-                        $qty = (float)$item2['qty'];
-                        $total = (float)$item2['total'];
-
                         if ($item2['transaction_type'] == 'IN') {
-                            $balanceValue += $total;
-                            $balanceQty += $qty;
+                            $balance += $item2['total'];
+                            $balanceQty += $item2['qty'];
                         } elseif ($item2['transaction_type'] == 'OUT') {
-                            $balanceValue -= $total;
-                            $balanceQty -= $qty;
+                            $balance -= $item2['total'];
+                            $balanceQty -= $item2['qty'];
                         }
                         ?>
                         <tr>
-                            <td class="text-center small"><?= Yii::$app->thaiDate->toThaiDate($item2['movement_date'], false, 'short'); ?></td>
+                            <td class="text-center"><?= Yii::$app->thaiDate->toThaiDate($item2['movement_date'], false, 'short'); ?></td>
                             
                             <td>
                                 <?php if ($item2['transaction_type'] == 'IN'): ?>
                                     รับเข้า #<span class="fw-bold"><?= $item2['code'] ?></span>
+
                                 <?php else: ?>
-                                    ใบเบิก #<span class="fw-bold"><?= $item2['code'] ?></span> 
-                                    <?= !empty($item2['note']) ? '<span class="text-muted small">(' . Html::encode($item2['note']) . ')</span>' : '' ?>
+                                    ใบเบิก #<span class="fw-bold"><?= $item2['code'] ?></span> (<?= $item2['note'] ?>)
                                 <?php endif; ?>
+
                             </td>
                             
-                            <td class="text-center <?= $item2['transaction_type'] == 'IN' ? 'text-success' : 'text-danger' ?> fw-bold small">
-                                <?= $item2['lot_number'] ?>
-                            </td>
-                            <td class="text-center fw-bold small"> 
-                                <?= (!empty($item2['exp_date'])) ? AppHelper::convertToThai($item2['exp_date']) : '-' ?>
-                            </td>
-                            <td class="text-center text-success fw-bold"><?= $item2['transaction_type'] == 'IN' ? '+' . number_format($qty) : '' ?></td>
-                            <td class="text-center text-danger fw-bold"><?= $item2['transaction_type'] == 'OUT' ? '-' . number_format($qty) : '' ?></td>
+                            <td class="text-center <?= $item2['transaction_type'] == 'IN' ? "text-success" : "text-danger" ?> fw-bold"><?= $item2['lot_number'] ?></td>
+                            <td class="text-center fw-bold"> <?= (isset($this->data_json['exp_date']) && $item2['exp_date'] !== '') ? AppHelper::convertToThai($item2['exp_date']) : '-' ?></td>
+                            <td class="text-center text-success fw-bold"><?= $item2['transaction_type'] == 'IN' ? '+' . (float)$item2['qty'] : '' ?></td>
+                            <td class="text-center text-danger fw-bold"><?= $item2['transaction_type'] == 'OUT' ? -ABS((float)$item2['qty']) : '' ?></td>
                             <td class="fw-semibold text-end"><?= $item2['unit_price'] !== null ? number_format($item2['unit_price'], 2) : '-' ?></td>
-                            
-                            <td class="text-center fw-bold table-light text-primary">
-                                <?= number_format($balanceQty) ?>
+                            <td class="text-end px-3">
+                                <?= number_format($balance, 2) ?>
                             </td>
-                            
-                            <td class="text-end px-3 table-light fw-bold">
-                                <?= number_format($balanceValue, 2) ?>
-                            </td>
-                            
                             <td class="text-center">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/inventory/stock/update-stock-card', 'id' => $item2['id'], 'title' => 'แก้ไขราการที่# ' . $item2['code']], [
-                                    'class' => 'open-modal',
-                                    'data' => ['size' => 'modal-md']
-                                ]) ?>
+                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>',['/inventory/stock/update-stock-card','id' => $item2['id'],'title' => 'แก้ไขราการที่# '.$item2['code']],
+                                        ['class' => 'open-modal',
+                                        'data' => ['size'=> 'modal-md']]) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -131,3 +123,4 @@ $balanceQty = 0;   // สำหรับคำนวณจำนวนคงเ�
         </div>
     </div>
 </div>
+<?php // Pjax::end()?>
