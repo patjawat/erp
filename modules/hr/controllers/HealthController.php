@@ -8,7 +8,6 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeeDetail;
@@ -52,6 +51,18 @@ class HealthController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+        public function actionDashboard()
+    {
+        $searchModel = new EmployeeDetailSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('dashboard', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
 
     /**
      * Displays a single EmployeeDetail model.

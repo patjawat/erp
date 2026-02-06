@@ -188,7 +188,7 @@ $this->registerCss("
                         <div class="col-md-6"><?= $form->field($model, 'data_json[fullname]')->textInput(['readonly' => true, 'class' => 'form-control bg-light'])->label('ชื่อ-นามสกุล (Full Name)') ?></div>
                         <div class="col-md-6"><?= $form->field($model, 'data_json[age]')->textInput(['readonly' => true, 'class' => 'form-control bg-light'])->label('อายุ (Age)') ?></div>
                         <div class="col-md-6"><?= $form->field($model, 'data_json[gender]')->textInput(['readonly' => true, 'class' => 'form-control bg-light'])->label('เพศ (Gender)') ?></div>
-                        <div class="col-md-6"><?= $form->field($model, 'data_json[checkup_year]')->textInput(['placeholder' => 'ระบุปีที่ตรวจ'])->label('ปีที่ตรวจสุขภาพ (Checkup Year)') ?></div>
+                        <div class="col-md-6"><?= $form->field($model, 'data_json[thai_year]')->textInput(['placeholder' => 'ระบุปีที่ตรวจ'])->label('ปีที่ตรวจสุขภาพ (Checkup Year)') ?></div>
                         <div class="col-md-6"><?= $form->field($model, 'data_json[screening_date]')->textInput(['readonly' => true, 'class' => 'form-control bg-light'])->label('วันที่ทำแบบคัดกรอง (Screening Date)') ?></div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@ $this->registerCss("
                             <i class="fas fa-check fa-2x"></i>
                         </div>
                         <h3 class="mb-1">รายงานสรุปผลการตรวจสุขภาพประจำปี</h3>
-                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['checkup_year'] ?? '' ?></p>
+                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['thai_year'] ?? '' ?></p>
                     </div>
 
                     <div class="row g-2 mb-4 px-md-4">

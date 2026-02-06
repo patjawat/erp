@@ -18,7 +18,7 @@ class EmployeeDetailSearch extends EmployeeDetail
     {
         return [
             [['id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
-            [['name', 'data_json', 'updated_at', 'created_at'], 'safe'],
+            [['name', 'data_json', 'updated_at', 'created_at','thai_year'], 'safe'],
         ];
     }
 

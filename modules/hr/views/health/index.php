@@ -34,7 +34,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'ref',
             'emp_id',
             'name',
-            'data_json',
             //'updated_at',
             //'created_at',
             //'created_by',

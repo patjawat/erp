@@ -19,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="fas fa-check fa-2x"></i>
                         </div>
                         <h3 class="fw-bold mb-1">รายงานสรุปผลการตรวจสุขภาพประจำปี</h3>
-                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['checkup_year'] ?? ''?></p>
+                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['thai_year'] ?? ''?></p>
                     </div>
 
                     <div class="row g-2 mb-4 px-md-4">

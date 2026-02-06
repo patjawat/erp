@@ -48,7 +48,7 @@ $title = '<i data-lucide="heart-pulse"></i> ข้อมูลประวัต
                     <tbody class="border-top-0">
                         <?php foreach ($model->health as $key => $item): ?>
                             <tr>
-                                <td class="fw-bold text-dark"><?= $item->data_json['checkup_year'] ?? '-' ?></td>
+                                <td class="fw-bold text-dark"><?= $item->data_json['thai_year'] ?? '-' ?></td>
                                 <td class="px-4 py-4">
                                     <?php
                                     $color = $item->getBmiResult()['color'];

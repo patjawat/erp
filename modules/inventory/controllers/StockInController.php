@@ -480,7 +480,7 @@ class StockInController extends Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $count = StockEvent::find()
-            ->where(['category_id' => $id])
+            ->where(['category_id' => $id,'name' => 'order_item'])
             ->andWhere([
                 'or',
                 ['lot_number' => null],
