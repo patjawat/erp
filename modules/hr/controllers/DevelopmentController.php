@@ -67,12 +67,12 @@ class DevelopmentController extends Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-       $dataProvider->query->joinWith([
-    'developmentDetail', 
-    'createdByEmp' => function($q) {
-        $q->alias('created_by_emp');
-    }
-]);
+        $dataProvider->query->joinWith([
+            'developmentDetail',
+            'createdByEmp' => function ($q) {
+                $q->alias('created_by_emp');
+            }
+        ]);
         $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -86,7 +86,7 @@ class DevelopmentController extends Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
-$org1 = Organization::findOne($searchModel->q_department);
+        $org1 = Organization::findOne($searchModel->q_department);
         // ถ้ามีกลุ่มย่อย
         if (isset($org1) && $org1->lvl == 1) {
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
@@ -587,15 +587,20 @@ $org1 = Organization::findOne($searchModel->q_department);
     // ส่งออกรายการวันลา
     public function actionExportExcel()
     {
-        $me = UserHelper::GetEmployee();
+         $me = UserHelper::GetEmployee();
         $leaveFilterStatusModel = Categorise::findOne(['name' => 'hr_development_filter_status', 'emp_id' => $me->id]);
         $searchModel = new DevelopmentSearch([
             'q_status' => $leaveFilterStatusModel->data_json ?? [],
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('developmentDetail');
-        $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
+        $dataProvider->query->joinWith([
+            'developmentDetail',
+            'createdByEmp' => function ($q) {
+                $q->alias('created_by_emp');
+            }
+        ]);
+        $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
@@ -607,6 +612,33 @@ $org1 = Organization::findOne($searchModel->q_department);
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        $org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+             FROM tree t1
+             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+             WHERE t2.name = :name;';
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'created_by_emp.department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['created_by_emp.department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['created_by_emp.department' => $searchModel->q_department]);
+        }
+
+
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
 
@@ -707,7 +739,7 @@ $org1 = Organization::findOne($searchModel->q_department);
             $sheet->setCellValue('H' . $numRow, isset($item->data_json['province_name']) ? $item->data_json['province_name'] : 'ไม่ระบุ');
             $sheet->setCellValue('I' . $numRow, AppHelper::convertToThai($item->date_start));
             $sheet->setCellValue('J' . $numRow, AppHelper::convertToThai($item->date_end));
-            $sheet->setCellValue('K' . $numRow, isset($item->data_json['development_type_name']) ? $item->data_json['development_type_name'] : 'ไม่ระบุ' );
+            $sheet->setCellValue('K' . $numRow, isset($item->data_json['development_type_name']) ? $item->data_json['development_type_name'] : 'ไม่ระบุ');
             $sheet->setCellValue('L' . $numRow, $item->topic);
             $numRow++; // เลื่อนไปแถวถัดไป
         }
