@@ -7,18 +7,27 @@ use DateTime;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\web\Response;
+use yii\db\Expression;
 use setasign\Fpdi\Fpdi;
 use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
+use yii\helpers\FileHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\hr\models\Development;
 use app\modules\approve\models\Approve;
+use app\modules\hr\models\Organization;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\hr\models\DevelopmentSearch;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
 
 /**
@@ -58,8 +67,13 @@ class DevelopmentController extends Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('developmentDetail');
-        $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
+       $dataProvider->query->joinWith([
+    'developmentDetail', 
+    'createdByEmp' => function($q) {
+        $q->alias('created_by_emp');
+    }
+]);
+        $dataProvider->query->andFilterWhere(['development.status' => $searchModel->q_status]);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'topic', $searchModel->q],
@@ -71,6 +85,33 @@ class DevelopmentController extends Controller
 
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+$org1 = Organization::findOne($searchModel->q_department);
+        // ถ้ามีกลุ่มย่อย
+        if (isset($org1) && $org1->lvl == 1) {
+            $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
+             FROM tree t1
+             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+             WHERE t2.name = :name;';
+            $querys = Yii::$app
+                ->db
+                ->createCommand($sql)
+                ->bindValue(':name', $org1->name)
+                ->queryAll();
+            $arrDepartment = [];
+            foreach ($querys as $tree) {
+                $arrDepartment[] = $tree['id'];
+            }
+            if (count($arrDepartment) > 0) {
+                $dataProvider->query->andWhere(['in', 'created_by_emp.department', $arrDepartment]);
+            } else {
+                $dataProvider->query->andFilterWhere(['created_by_emp.department' => $searchModel->q_department]);
+            }
+        } else {
+            $dataProvider->query->andFilterWhere(['created_by_emp.department' => $searchModel->q_department]);
+        }
+
+
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
 
@@ -375,7 +416,7 @@ class DevelopmentController extends Controller
         $info = $this->GetInfo();
         $dataJson = $layout->data_json ?? [];
 
-        $leader = Approve::findOne(['name' => 'development','from_id' => $model->id,'level' => 3,'status' => 'Pass']);
+        $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3, 'status' => 'Pass']);
 
         // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด
         $writeText = function ($key, $text, $fontSize = 13, $style = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
@@ -398,7 +439,7 @@ class DevelopmentController extends Controller
 
         // --- ลายเซ็นต์ผู้ขอ ---
         // try {
-  
+
         // $createdSig = $model->createdByEmp?->SignatureFilePath();
         // if ($createdSig) {
         //     // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
@@ -491,7 +532,7 @@ class DevelopmentController extends Controller
         $writeText('assigned_to_position', ($model->assignedTo?->positionName() ?? '-'));
         $writeText('assigned_to_signature', ($model->assignedTo?->fullname ?? '-'));
         $writeText('leader_fullname', ($leader->employee->fullname ?? '-'));
-        $writeText('leader_date', (isset($leader->data_json['approve_date']) ? (ThaiDateHelper::formatThaiDate($leader->data_json['approve_date'], 'medium') ?? '-') : '') );
+        $writeText('leader_date', (isset($leader->data_json['approve_date']) ? (ThaiDateHelper::formatThaiDate($leader->data_json['approve_date'], 'medium') ?? '-') : ''));
 
 
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
@@ -541,6 +582,208 @@ class DevelopmentController extends Controller
         $e = new \DateTime($endDate);
         return $s->diff($e)->days + 1;
     }
+
+
+    // ส่งออกรายการวันลา
+    public function actionExportExcel()
+    {
+        $me = UserHelper::GetEmployee();
+        $leaveFilterStatusModel = Categorise::findOne(['name' => 'hr_development_filter_status', 'emp_id' => $me->id]);
+        $searchModel = new DevelopmentSearch([
+            'q_status' => $leaveFilterStatusModel->data_json ?? [],
+        ]);
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('developmentDetail');
+        $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'topic', $searchModel->q],
+            ['like', 'development.emp_id', $searchModel->emp_id],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(development.data_json, '$.location'))"), $searchModel->q],
+        ]);
+
+        $dataProvider->query->andFilterWhere(['development_detail.emp_id' => $searchModel->emp_id]);
+
+
+        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
+        $dataProvider->query->groupBy('development_detail.id');
+
+        $dataProvider->pagination = false;
+
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // --- 1. จัดการส่วนหัวรายงาน (A1) ---
+        $sheet->mergeCells('A1:M1'); // ขยาย Merge Cells เป็น I1 -> J1 เพื่อให้ครอบคลุมคอลัมน์ "จำนวนวันลา"
+        $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
+        $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
+        $dateReport = ThaiDateHelper::formatThaiDateRange($dateStart, $dateEnd, 'long', 'short');
+
+        $reportTitle = 'ทะเบียนอบรม/ประชุม/ดูงาน วันที่ ' . $dateReport;
+        $sheet->setCellValue('A1', $reportTitle);
+
+        $sheet->getStyle('A1')->applyFromArray([
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'name' => 'TH Sarabun New',
+                'size' => 16,
+                'bold' => true,
+            ],
+        ]);
+
+        // --- 2. จัดการหัวตาราง (Row 2) โดยใช้ Array Map และ Loop ---
+
+        // กำหนดคอลัมน์, ชื่อหัวตาราง, และความกว้าง
+        $headerConfig = [
+            'A' => ['title' => 'ลำดับ', 'width' => 6],
+            'B' => ['title' => 'เลขบัตรประชาชน', 'width' => 13],
+            'C' => ['title' => 'จำนวนวัน', 'width' => 10],
+            'D' => ['title' => 'ชื่อ-นามสกุล', 'width' => 30],
+            'E' => ['title' => 'หน่วยงานผู้ขอ', 'width' => 30],
+            'F' => ['title' => 'หน่วยงานที่จัด', 'width' => 30],
+            'G' => ['title' => 'สถานที่จัด', 'width' => 30],
+            'H' => ['title' => 'จังหวัด', 'width' => 30],
+            'I' => ['title' => 'ตั้งแต่วันที่', 'width' => 20], // เพิ่มใหม่
+            'J' => ['title' => 'ถึงวันที่', 'width' => 15],
+            'K' => ['title' => 'ประเภทการพัฒนา', 'width' => 35],
+            'L' => ['title' => 'หัวข้อการไป', 'width' => 200],
+        ];
+
+        // กำหนด Style สำหรับหัวตารางทั้งหมด (เพื่อให้โค้ดสั้นลง)
+        $headerStyle = [
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'name' => 'TH Sarabun New',
+                'size' => 16,
+                'bold' => true,
+                'italic' => false,
+            ],
+            // เพิ่ม Border ให้ส่วนหัวตาราง เพื่อให้สอดคล้องกับข้อมูลที่คุณทำในลูปก่อนหน้า
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => Color::COLOR_BLACK],
+                ],
+            ],
+            // เพิ่ม Fill สีพื้นหลัง หากต้องการ
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9E1F2'], // สีพื้นหลังหัวตารางที่แตกต่างจากข้อมูล
+            ],
+        ];
+
+        // Loop เพื่อใส่ค่าและกำหนดความกว้าง
+        foreach ($headerConfig as $col => $config) {
+            $cell = $col . '2';
+            $sheet->setCellValue($cell, $config['title']);
+            $sheet->getColumnDimension($col)->setWidth($config['width']);
+        }
+
+        // Apply Style ทีเดียวทั้งช่วง A2:J2
+        $sheet->getStyle('A2:L2')->applyFromArray($headerStyle);
+
+        $StartRowSheet = 3;
+        $numRow = $StartRowSheet; // เริ่มนับแถวที่ 3
+
+        // --- 1. ใส่ข้อมูล (ให้เร็วที่สุด) ---
+        foreach ($dataProvider->getModels() as $key => $item) {
+            // ใส่ข้อมูลอย่างเดียว ห้ามจัดรูปแบบในลูปนี้!
+            $sheet->setCellValue('A' . $numRow, ($key + 1));
+            $sheet->setCellValue('B' . $numRow, $item->createdByEmp->cid);
+            $sheet->setCellValue('C' . $numRow, $this->getTotalDays($item->date_start, $item->date_end));
+            $sheet->setCellValue('D' . $numRow, $item->createdByEmp->fullname());
+            $sheet->setCellValue('E' . $numRow, $item->createdByEmp->departmentName());
+            $sheet->setCellValue('F' . $numRow, isset($item->data_json['location_org']) ? $item->data_json['location_org'] : 'ไม่ระบุ');
+            $sheet->setCellValue('G' . $numRow, isset($item->data_json['location']) ? $item->data_json['location'] : 'ไม่ระบุ');
+            $sheet->setCellValue('H' . $numRow, isset($item->data_json['province_name']) ? $item->data_json['province_name'] : 'ไม่ระบุ');
+            $sheet->setCellValue('I' . $numRow, AppHelper::convertToThai($item->date_start));
+            $sheet->setCellValue('J' . $numRow, AppHelper::convertToThai($item->date_end));
+            $sheet->setCellValue('K' . $numRow, isset($item->data_json['development_type_name']) ? $item->data_json['development_type_name'] : 'ไม่ระบุ' );
+            $sheet->setCellValue('L' . $numRow, $item->topic);
+            $numRow++; // เลื่อนไปแถวถัดไป
+        }
+
+        // กำหนดแถวสุดท้ายที่เขียนข้อมูล
+        $lastRow = $numRow - 1;
+        $dataRange = 'A' . $StartRowSheet . ':M' . $lastRow;
+
+        // --- 2. จัดรูปแบบทีละมากๆ (หลังจบลูป) ---
+        if ($lastRow >= $StartRowSheet) {
+
+            // **จัดรูปแบบพื้นฐาน (ฟอนต์, ขอบ, สีพื้นหลัง) ทั้งหมดในครั้งเดียว**
+            $sheet->getStyle($dataRange)->applyFromArray([
+                'font' => [
+                    'name' => 'TH Sarabun New',
+                    'size' => 14,
+                    'bold' => false,
+                    'italic' => false,
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => Color::COLOR_BLACK],
+                    ],
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '8DB4E2'],
+                ],
+            ]);
+
+            // **จัดตำแหน่งกึ่งกลาง (Horizontal Center)**
+            $centerColumns = ['A', 'C', 'I', 'J', 'K'];
+            foreach ($centerColumns as $col) {
+                $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // **จัดตำแหน่งชิดซ้าย (Horizontal Left)**
+            $leftColumns = ['B', 'D'];
+            foreach ($leftColumns as $col) {
+                $sheet->getStyle($col . $StartRowSheet . ':' . $col . $lastRow)
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            }
+        }
+
+        $writer = new Xlsx($spreadsheet);
+
+        // 1. กำหนด Alias ไปที่ runtime และสร้างโฟลเดอร์ย่อยถ้าจำเป็น
+        $runtimePath = Yii::getAlias('@runtime/export');
+        if (!is_dir($runtimePath)) {
+            FileHelper::createDirectory($runtimePath, 0775, true);
+        }
+
+        // 2. ตั้งชื่อไฟล์ (แนะนำให้เติม timestamp เพื่อป้องกันไฟล์ซ้ำกรณีโหลดพร้อมกันหลายคน)
+        $fileName = 'export-development-' . date('Ymd-His') . '.xlsx';
+        $filePath = $runtimePath . '/' . $fileName;
+
+        // 3. บันทึกไฟล์ลงใน runtime
+        $writer->save($filePath);
+
+        // 4. ตรวจสอบและส่งไฟล์
+        if (file_exists($filePath)) {
+            // ใช้ส่งไฟล์และตั้งชื่อที่จะให้ User เห็นตอนเซฟ
+            return Yii::$app->response->sendFile($filePath, $fileName)
+                ->on(\yii\web\Response::EVENT_AFTER_SEND, function ($event) use ($filePath) {
+                    // ลบไฟล์ทิ้งทันทีหลังจากส่งเสร็จ เพื่อไม่ให้หนักเครื่อง (Optional)
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                });
+        } else {
+            throw new \yii\web\NotFoundHttpException('ไม่พบไฟล์ที่ต้องการดาวน์โหลด');
+        }
+    }
+
 
     /**
      * Finds the Development model based on its primary key value.

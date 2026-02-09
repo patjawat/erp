@@ -91,12 +91,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 
-echo "<pre>";
-print_r($searchModel->position_type_id);
-echo "</pre>";
-?>
-<?php
-
 $urlExportLeave = Url::to(array_merge(
     ['/hr/leave/export-leave'],
     Yii::$app->request->queryParams
