@@ -20,20 +20,20 @@ jQuery(document).on("pjax:end", function () {
   }
 });
 
-// ฟังก์ชันเลื่อนขึ้นบนสุด
+// // ฟังก์ชันเลื่อนขึ้นบนสุด
 document.getElementById("btnScrollTop").addEventListener("click", function () {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 
-// ฟังก์ชันเลื่อนลงล่างสุด
+// // ฟังก์ชันเลื่อนลงล่างสุด
 document
   .getElementById("btnScrollBottom")
   .addEventListener("click", function () {
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   });
 
-// แสดงปุ่มเมื่อ scroll ลงมา
+// // แสดงปุ่มเมื่อ scroll ลงมา
 window.addEventListener("scroll", function () {
   const buttons = document.getElementById("scroll-buttons");
   if (window.scrollY > 100) {
@@ -43,7 +43,7 @@ window.addEventListener("scroll", function () {
   }
 });
 
-//แก้ treeview ไม่ปิดเวลาเลือก
+// //แก้ treeview ไม่ปิดเวลาเลือก
 $("#treeID").on("treeview:change", function (event, key, name) {
   $("body").find(".kv-tree-input").removeClass("show");
   $("body").find(".kv-tree-dropdown").removeClass("show");
@@ -140,7 +140,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
 }
 
 
-// #### การอัพโหลดรูปภาพ ####
+// // #### การอัพโหลดรูปภาพ ####
 
 function isFile() {
   var isFile = $("#editImagePreview").data("isfile");
@@ -326,20 +326,7 @@ function warning($msg = "") {
   });
 }
 
-function confirm(text) {
-  Swal.fire({
-    title: "ยืนยัน",
-    text: text,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "ใช่, ยืนยัน!",
-    cancelButtonText: "ยกเลิก",
-  }).then(async (result) => {
-    return result.value;
-  });
-}
+
 $("body").on("click", ".setview", function (e) {
   var url = $(this).attr("href");
   e.preventDefault();

@@ -69,7 +69,9 @@ class StockInController extends Controller
         $dataProvider->query
             ->andFilterWhere(['>=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_start)])
             ->andFilterWhere(['<=', 'movement_date', AppHelper::convertToGregorian($searchModel->date_end)]);
+        
 
+// นำมารวมกันเป็น Raw SQL
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
