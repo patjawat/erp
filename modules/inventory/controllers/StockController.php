@@ -11,8 +11,6 @@ use yii\filters\VerbFilter;
 use app\components\ModalHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
-
-use app\modules\inventory\models\StockOut;;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\StockEventSearch;

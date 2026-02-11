@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\ModalHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeeDetail;
@@ -52,7 +53,7 @@ class HealthController extends Controller
         ]);
     }
 
-        public function actionDashboard()
+    public function actionDashboard()
     {
         $searchModel = new EmployeeDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -86,8 +87,7 @@ class HealthController extends Controller
      */
     public function actionCreate()
     {
-        //  Yii::$app->response->format = Response::FORMAT_JSON;
-        $this->layout = '@app/views/layouts/none';
+
         $id = $this->request->get('id');
         $emp_id = $this->request->get('emp_id');
         $name = $this->request->get('name');
@@ -107,6 +107,8 @@ class HealthController extends Controller
 
         if ($this->request->isPost) {
             if ($this->request->isPost && $model->load($this->request->post())) {
+ Yii::$app->response->format = Response::FORMAT_JSON;
+
                 $array2 = [
                     'screening_date' => isset($model->data_json['screening_date']) ? AppHelper::DateToDb($model->data_json['screening_date']) : '',
                 ];
@@ -119,9 +121,20 @@ class HealthController extends Controller
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if (Yii::$app->request->isAjax) {
+ Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'สร้างข้อมูลประวัติการตรวจสุขภาพ',
+                'content' => $this->renderAjax('create', [
+                    'model' => $model,
+                ]),
+                'footer' => ModalHelper::modalFooterSaveClose()
+            ];
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**
@@ -133,7 +146,7 @@ class HealthController extends Controller
      */
     public function actionUpdate($id)
     {
-         $this->layout = '@app/views/layouts/none';
+        $this->layout = '@app/views/layouts/none';
         $model = $this->findModel($id);
         $arrayUpdate = [
             'screening_date' => isset($model->data_json['screening_date']) ? AppHelper::convertToThai($model->data_json['screening_date']) : '',

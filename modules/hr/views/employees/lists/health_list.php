@@ -14,7 +14,7 @@ $title = '<i data-lucide="heart-pulse"></i> ข้อมูลประวัต
         <div class="d-flex justify-content-between">
             <h5 class="card-title"><?= $title; ?></h5>
             <div class="d-flex gap-2">
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ทำแบบคัดกรองใหม่', ['/hr/health/create', 'emp_id' => $model->id, 'name' => 'health', 'title' => $title], ['class' => 'btn btn-outline-primary open-modal-xx', 'data' => ['size' => 'modal-xl', 'pjax' => '0']]) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ทำแบบคัดกรองใหม่', ['/hr/health/create', 'emp_id' => $model->id, 'name' => 'health', 'title' => $title], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg', 'pjax' => '0']]) ?>
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">

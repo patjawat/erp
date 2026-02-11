@@ -63,6 +63,7 @@ $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานแ
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
 $modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คลัง
+$modules['inventory-v2'] = ['class' => 'app\modules\inventoryV2\Module'];  // คลัง
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋
 $modules['helpdesk'] = ['class' => 'app\modules\helpdesk2\Module'];  // บริการช่วยเหลือ (งานซ่อม)
 $modules['purchase'] = ['class' => 'app\modules\purchase\Module'];  // ระบบจัดซื้อ
