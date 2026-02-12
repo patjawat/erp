@@ -5,6 +5,22 @@ use kartik\widgets\Select2;
 
 $labList = ['CBC' => 'Complete Blood Count', 'UA' => 'Urinalysis', 'FBS' => 'Fasting Blood Sugar']; // ตัวอย่าง
 ?>
+
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="scan-heart"></i>
+        <?= $this->title ?>
+    </h4>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/health/menu', ['active' => 'list'])
+?>
+<?php $this->endBlock(); ?>
+
+
 <?= $this->render('patient_profile', ['model' => $model]) ?>
 <div class="card shadow-sm border-0">
     <div class="card-header text-white d-flex justify-content-between">
