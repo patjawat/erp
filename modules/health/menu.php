@@ -24,10 +24,7 @@ use yii\helpers\Url;
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
-                <?= Html::a('<i class="fa-solid fa-user-tag me-1"></i> การตั้งค่าบุคลากร', ['/hr/categorise', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal dropdown-item', 'data' => ['size' => 'modal-md']]) ?>
-            </li>
-            <li>
-                <?= Html::a('<i class="fa-solid fa-user-tag me-1"></i> การกำหนดตำแหน่ง', ['/hr/position', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal-x dropdown-item', 'data' => ['size' => 'modal-md']]) ?>
+                <?= Html::a('<i class="fa-solid fa-microscope me-1"></i>Lab', ['/health/health-lab', 'title' => 'Lab'], ['class' => 'btn btn-outline-primary dropdown-item']) ?>
             </li>
 
         </ul>

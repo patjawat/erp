@@ -10,7 +10,8 @@ class m260211_125543_health_lab_table extends Migration
     public function safeUp()
     {
         $this->createTable('{{%health_lab}}', [
-            'lab_code' => $this->primaryKey(),
+             'id' => $this->primaryKey(),
+            'lab_code' => $this->string(255)->notNull()->unique()->comment('รหัสห้องปฏิบัติการ'),
             'lab_name' => $this->string(255)->notNull()->comment('ชื่อห้องปฏิบัติการ'),
             'lab_price' => $this->decimal(10,2)->notNull()->comment('ราคาห้องปฏิบัติการ'),
             'lab_type' => $this->string(255)->comment('ประเภทห้องปฏิบัติการ'),

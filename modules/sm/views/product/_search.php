@@ -103,7 +103,7 @@ use kartik\widgets\ActiveForm;
                     </li>
                     <li><?= Html::a(
                             '<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า',
-                            'https://docs.google.com/spreadsheets/d/.../edit?usp=sharing',
+                            'https://docs.google.com/spreadsheets/d/1Z6I-Y7rTwiy_qF68xIgyZEKPthmTnkkezqMfomLfpyQ/edit?usp=sharing',
                             ['class' => 'dropdown-item', 'target' => '_blank']
                         ) ?>
                     </li>

@@ -5,6 +5,22 @@ use yii\bootstrap5\LinkPager;
 
 $this->title = 'จัดการข้อมูลตรวจสุขภาพพนักงาน';
 ?>
+
+
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="scan-heart"></i>
+        <?= $this->title ?>
+    </h4>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/health/menu', ['active' => 'list'])
+?>
+<?php $this->endBlock(); ?>
+
     <?= $this->render('_search', ['model' => $searchModel]); ?>
 
 <div class="container-fluid py-4">

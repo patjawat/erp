@@ -7,8 +7,7 @@ use Yii;
 /**
  * This is the model class for table "health_lab".
  *
- * @property int $id
- * @property string $lab_code รหัสห้องปฏิบัติการ
+ * @property int $lab_code
  * @property string $lab_name ชื่อห้องปฏิบัติการ
  * @property float $lab_price ราคาห้องปฏิบัติการ
  * @property string|null $lab_type ประเภทห้องปฏิบัติการ
@@ -39,11 +38,11 @@ class HealthLab extends \yii\db\ActiveRecord
     {
         return [
             [['lab_type', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
-            [['lab_code', 'lab_name', 'lab_price'], 'required'],
+            [['lab_name', 'lab_price','lab_code'], 'required'],
             [['lab_price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at','lab_code'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['lab_code', 'lab_name', 'lab_type'], 'string', 'max' => 255],
+            [['lab_name', 'lab_type'], 'string', 'max' => 255],
             [['lab_code'], 'unique'],
         ];
     }
@@ -54,7 +53,6 @@ class HealthLab extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
             'lab_code' => 'Lab Code',
             'lab_name' => 'Lab Name',
             'lab_price' => 'Lab Price',
