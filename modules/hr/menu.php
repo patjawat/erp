@@ -8,10 +8,6 @@ use yii\helpers\Url;
 <i data-lucide="layout-grid"></i>  
         ภาพรวม
     </a>
-    <a href="<?= Url::to(['/hr/health/dashboard']) ?>" class="btn <?= $active !== 'health' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i data-lucide="scan-heart"></i> 
-        ข้อมูลสุขภาพ
-    </a>
     <a href="<?= Url::to(['/hr/employees']) ?>" class="btn <?= $active !== 'employees' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i data-lucide="users"></i> 
         ทะเบียนบุคลากร
