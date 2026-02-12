@@ -416,7 +416,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                                 </path>
                             </svg></div>
                         <div>
-                            <h3 class="fw-black text-dark mb-0" style="font-size: 1.125rem;">กำแพงแห่งคำขอบคุณ
+                            <h3 class="fw-black text-dark mb-0" style="font-size: 1.125rem;">พลังแห่งคำขอบคุณ
                                 (Appreciation Wall)</h3>
                             <p class="text-muted fst-italic fw-medium mb-0" style="font-size: 0.75rem;">
                                 ส่งพลังบวกให้เพื่อนร่วมงาน (+50 แต้มสะสมต่อคำชม)</p>

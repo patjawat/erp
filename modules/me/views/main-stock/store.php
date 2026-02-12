@@ -172,8 +172,7 @@ $js = <<< JS
 });
 
 
-
-$("body").on("keypress", ".update-qty", function (e) {
+  $("body").off("keypress", ".update-qty").on("keypress", ".update-qty", function (e) {
     var keycode = e.keyCode ? e.keyCode : e.which;
     if (keycode == 13) {
         let qty = $(this).val()

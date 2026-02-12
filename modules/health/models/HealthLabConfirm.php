@@ -1,0 +1,78 @@
+<?php
+
+namespace app\modules\health\models;
+
+use Yii;
+
+/**
+ * This is the model class for table "health_lab_confirm".
+ *
+ * @property int $id
+ * @property string|null $ref
+ * @property int $lab_screen_id รหัสการตรวจสุขภาพ
+ * @property string|null $lab_code รหัสห้องปฏิบัติการ
+ * @property float|null $lab_price ราคาห้องปฏิบัติการ
+ * @property int|null $qty จำนวน
+ * @property string|null $lab_result ผลการตรวจห้องปฏิบัติการ
+ * @property string|null $lab_status สถานะห้องปฏิบัติการ
+ * @property string|null $data_json data_json
+ * @property string|null $created_at วันที่สร้าง
+ * @property string|null $updated_at วันที่แก้ไข
+ * @property int|null $created_by ผู้สร้าง
+ * @property int|null $updated_by ผู้แก้ไข
+ * @property string|null $deleted_at วันที่ลบ
+ * @property int|null $deleted_by ผู้ลบ
+ */
+class HealthLabConfirm extends \yii\db\ActiveRecord
+{
+
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'health_lab_confirm';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['ref', 'lab_code', 'lab_price', 'qty', 'lab_result', 'lab_status', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
+            [['lab_screen_id'], 'required'],
+            [['lab_screen_id', 'qty', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['lab_price'], 'number'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['ref', 'lab_code', 'lab_result'], 'string', 'max' => 255],
+            [['lab_status'], 'string', 'max' => 50],
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'ref' => 'Ref',
+            'lab_screen_id' => 'Lab Screen ID',
+            'lab_code' => 'Lab Code',
+            'lab_price' => 'Lab Price',
+            'qty' => 'Qty',
+            'lab_result' => 'Lab Result',
+            'lab_status' => 'Lab Status',
+            'data_json' => 'Data Json',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
+            'created_by' => 'Created By',
+            'updated_by' => 'Updated By',
+            'deleted_at' => 'Deleted At',
+            'deleted_by' => 'Deleted By',
+        ];
+    }
+
+}

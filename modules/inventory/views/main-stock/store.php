@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
 use app\modules\inventory\models\Warehouse;
+
 $warehouse = Yii::$app->session->get('warehouse');
 $this->title = $warehouse['warehouse_name'];
 ?>
@@ -34,7 +35,7 @@ $products = $cart->getItems();
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
         <div>
             <?php echo Html::a('<button type="button" class="btn btn-primary rounded-pill">
-                    <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">'.$cart->getCount().'</span> รายการ
+                    <i class="fa-solid fa-cart-plus"></i> เลือกเบิก <span class="badge text-bg-danger" id="totalCount">' . $cart->getCount() . '</span> รายการ
                     </button>', ['/inventory/main-stock/show-cart'], ['class' => 'brn btn-primary rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]); ?>
         </div>
     </div>
@@ -42,40 +43,40 @@ $products = $cart->getItems();
 
 <div class="d-flex flex-wrap">
     <?php foreach ($dataProvider->getModels() as $model) { ?>
-    <div class="p-2 col-2">
-        <div class="card position-relative">
-        <p class="position-absolute top-0 end-0 p-2">
-                        <i class="fa-solid fa-circle-info fs-4"></i>
-                    </p>
-            <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover','style' => 'max-height: 155px;']); ?>
-            <div class="card-body w-100">
-            <div class="d-flex justify-content-start align-items-center">
-                            <?php if($model->SumQty() >= 1):?>
+        <div class="p-2 col-2">
+            <div class="card position-relative">
+                <p class="position-absolute top-0 end-0 p-2">
+                    <i class="fa-solid fa-circle-info fs-4"></i>
+                </p>
+                <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover', 'style' => 'max-height: 155px;']); ?>
+                <div class="card-body w-100">
+                    <div class="d-flex justify-content-start align-items-center">
+                        <?php if ($model->SumQty() >= 1): ?>
                             <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
                                 <?php echo $model->product->unit_name; ?></span>
-                            <?php else:?>
+                        <?php else: ?>
                             <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
-                            <?php endif;?>
-                        </div>
-                        <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
-                        
-                        <div class="d-flex justify-content-between">
-                            <div class="fw-semibold text-danger">
-                            <?php echo number_format($model->unit_price,2); ?>
-                            </div>
-                                <?php
-                                                try {
-                                                    echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
-                                                } catch (Throwable $th) {
-                                                    // throw $th;
-                                                }
-                                ?>
-                        </div>
-            </div>
-        </div>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-truncate mb-0"><?php echo $model->product->title; ?></p>
 
-    </div>
-    <?php }?>
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-semibold text-danger">
+                            <?php echo number_format($model->unit_price, 2); ?>
+                        </div>
+                        <?php
+                        try {
+                            echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/inventory/main-stock/add-to-cart', 'id' => $model->getLotQty()['id']], ['class' => 'add-cart btn btn-sm btn-primary rounded-pill']);
+                        } catch (Throwable $th) {
+                            // throw $th;
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    <?php } ?>
 </div>
 
 <div class="d-flex justify-content-center">
@@ -98,8 +99,7 @@ $products = $cart->getItems();
 <?php
 $js = <<< JS
 
-
-    $("body").on("click", ".add-cart", function (e) {
+ $("body").off("click", ".add-cart").on("click", ".add-cart", function (e) {
     e.preventDefault();
     $.ajax({
         type: "get",
@@ -123,8 +123,7 @@ $js = <<< JS
 });
 
 
-
-$("body").on("keypress", ".update-qty", function (e) {
+ $("body").off("click", ".update-qty").on("click", ".update-qty", function (e) {
     var keycode = e.keyCode ? e.keyCode : e.which;
     if (keycode == 13) {
         let qty = $(this).val()
@@ -155,8 +154,7 @@ $("body").on("keypress", ".update-qty", function (e) {
     }
 });
 
-
-        $("body").on("click", ".update-cart", function (e) {
+ $("body").off("click", ".update-cart").on("click", ".update-cart", function (e) {
         e.preventDefault();
         $.ajax({
             type: "get",
@@ -179,7 +177,7 @@ $("body").on("keypress", ".update-qty", function (e) {
         });
     });
 
-    $("body").on("click", ".delete-item-cart", function (e) {
+        $("body").off("click", ".delete-item-cart").on("click", ".delete-item-cart", function (e) {
     e.preventDefault();
     $.ajax({
         type: "get",

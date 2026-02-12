@@ -9,6 +9,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ModalHelper;
+use app\modules\health\models\HealthScreenSearch;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeeDetail;
@@ -44,7 +45,7 @@ class HealthController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new EmployeeDetailSearch();
+        $searchModel = new HealthScreenSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -107,7 +108,7 @@ class HealthController extends Controller
 
         if ($this->request->isPost) {
             if ($this->request->isPost && $model->load($this->request->post())) {
- Yii::$app->response->format = Response::FORMAT_JSON;
+                Yii::$app->response->format = Response::FORMAT_JSON;
 
                 $array2 = [
                     'screening_date' => isset($model->data_json['screening_date']) ? AppHelper::DateToDb($model->data_json['screening_date']) : '',
@@ -115,14 +116,17 @@ class HealthController extends Controller
                 $model->data_json = ArrayHelper::merge($model->data_json, $array2);
                 $model->save(false);
 
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'message' => 'บันทึกข้อมูลสำเร็จ',
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
 
         if (Yii::$app->request->isAjax) {
- Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => 'สร้างข้อมูลประวัติการตรวจสุขภาพ',
                 'content' => $this->renderAjax('create', [
@@ -155,18 +159,33 @@ class HealthController extends Controller
         $model->data_json = ArrayHelper::merge($model->data_json, $arrayUpdate);
         if ($this->request->isPost) {
             if ($this->request->isPost && $model->load($this->request->post())) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
                 $array2 = [
                     'screening_date' => isset($model->data_json['screening_date']) ? AppHelper::DateToDb($model->data_json['screening_date']) : '',
                 ];
                 $model->data_json = ArrayHelper::merge($model->data_json, $array2);
                 $model->save(false);
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'message' => 'บันทึกข้อมูลสำเร็จ',
+                ];
             }
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'สร้างข้อมูลประวัติการตรวจสุขภาพ',
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+                'footer' => ModalHelper::modalFooterSaveClose()
+            ];
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

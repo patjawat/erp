@@ -1,0 +1,53 @@
+<?php
+
+use yii\db\Migration;
+
+class m260211_125554_health_lab_confirm_table extends Migration
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function safeUp()
+    {
+        $this->createTable('{{%health_lab_confirm}}', [
+            'id' => $this->primaryKey(),
+             'ref' => $this->string(255),
+            'lab_screen_id' => $this->integer(4)->notNull()->comment('รหัสการตรวจสุขภาพ'),
+            'lab_code' => $this->string(255)->comment('รหัสห้องปฏิบัติการ'),
+            'lab_price' => $this->decimal(10,2)->comment('ราคาห้องปฏิบัติการ'),
+            'qty' => $this->integer(11)->comment('จำนวน'),
+            'lab_result' => $this->string(255)->comment('ผลการตรวจห้องปฏิบัติการ'),
+            'lab_status' => $this->string(50)->comment('สถานะห้องปฏิบัติการ'),
+            'data_json' => $this->json()->comment('data_json'),
+            'created_at' => $this->dateTime()->comment('วันที่สร้าง'),
+            'updated_at' => $this->dateTime()->comment('วันที่แก้ไข'),
+            'created_by' => $this->integer()->comment('ผู้สร้าง'),
+            'updated_by' => $this->integer()->comment('ผู้แก้ไข'),
+            'deleted_at' => $this->dateTime()->comment('วันที่ลบ'),
+            'deleted_by' => $this->integer()->comment('ผู้ลบ')
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function safeDown()
+    {
+       $this->dropTable('{{%health_lab_confirm}}');
+    }
+
+    /*
+    // Use up()/down() to run migration code without a transaction.
+    public function up()
+    {
+
+    }
+
+    public function down()
+    {
+        echo "m260211_125554_health_lab_confirm_table cannot be reverted.\n";
+
+        return false;
+    }
+    */
+}
