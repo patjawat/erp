@@ -11,7 +11,7 @@ $title = '<i data-lucide="heart-pulse"></i> ข้อมูลประวัต
 
 <div id="health-list"></div>
 <?php
-$url = \yii\helpers\Url::to(['/health/health-screen/list-me']);
+$url = \yii\helpers\Url::to(['/me/health']);
 $js = <<<JS
 loadHealthList();
     function loadHealthList() {

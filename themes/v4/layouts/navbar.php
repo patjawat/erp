@@ -31,8 +31,7 @@ $menuItems = [
     ],
     [
         'label' => 'ข้อมูลสุขภาพ', 
-        // 'show' => Yii::$app->user->can('health') ? true : false,
-        'show' => true,
+        'show' => Yii::$app->user->can('health') ? true : false,
          'url' => ['/health/default/index'], 
         'active' => ['health'],
         'icon' => '<i data-lucide="heart-plus"></i>'

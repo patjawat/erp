@@ -39,11 +39,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="list-group">
             <?php foreach($model->generalMenu() as $list):?>
             <a href="<?=Url::to(['/hr/employees/view','id' => $model->id,'name' => $list['name']])?>"
-                class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+                class="list-group-item list-group-item-action d-flex gap-3 py-2" aria-current="true">
                 <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><?=$list['icon']?></div>
                 <div class="d-flex gap-2 w-100 justify-content-between">
                     <div>
-                        <h6 class="mb-0 text-primary"><?=$list['title']?></h6>
+                        <p class="fw-bold mb-0 text-primary"><?=$list['title']?></p>
                         <p class="mb-0 opacity-75 fw-light"><?=$list['subtitle']?></p>
                     </div>
                     <small class="opacity-50 text-nowrap"><?=$list['count']?></small>
@@ -56,7 +56,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
         <?php echo $this->render('box_summary',['model' => $model])?>
         <?php if($name):?>
-        <!-- <div data-aos="fade-up" data-aos-delay="400"> -->
         <div>
             <?php echo $this->render('./lists/'.$name.'_list',['model' => $model,'name' => $name, 'dataProvider' => $dataProvider])?>
         </div>
@@ -66,11 +65,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php // echo $this->render('@app/views/profile/estimate_chart')?>
         <div class="card">
             <div class="card-body">
-
-
                 <div class="d-flex flex-column flex-sm-row justify-content-between mb-4 text-center text-sm-left">
                     <h5>หน้าที่รับมอบหมาย</h5>
-
                     <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill"
@@ -101,16 +97,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
         </div>
-
-
-
-
         <!-- <br> -->
         <?php // $this->render('company',['model' => $model])?>
         <?php endif;?>
-
     </div>
-
 </div>
 
 <?php Pjax::end(); ?>

@@ -1,4 +1,6 @@
 
+
+// $primary: #255fad;
 $primary: #255fad;
 $dark: #343a40;
 $purple:#6e81d9;
@@ -6,6 +8,11 @@ $indigo:#6610f2;
 $pink:#f78fc3;
 $orange:#fd7e14;
 $yellow:#ffc107;
+
+// วางต่อจาก $primary: #255fad;
+$header-gradient-start: #1d3a8a; // น้ำเงินสว่างกว่าเล็กน้อย
+$header-gradient-end: #0f172a;   // น้ำเงินเข้มเกือบดำ (Deep Navy)
+
 
 
 $font-size-root: 0.875rem; // ปรับ <html> เป็น 0.8rem
@@ -56,6 +63,8 @@ $input-border-radius:              0.5rem;  // เทียบเท่า round
 $input-padding-y:                  0.5rem;  // เทียบเท่า py-2
 $input-font-weight:                500;     // เทียบเท่า fw-bold
 
+
+
 // ปรับแต่ง Select2 Container ให้เหมือน Input ที่เราทำไว้
 .select2-container--krajee-bs5 {
     .select2-selection {
@@ -63,18 +72,6 @@ $input-font-weight:                500;     // เทียบเท่า fw-bo
         border: 0 !important;                // border-0
         border-radius: 0.5rem !important;    // rounded-3
         box-shadow: inset 0 1px 1px rgb(0 0 0 / 0%);
-        // height: auto !important;             // ให้ขยายตาม padding                 // ปรับให้ใกล้เคียง py-2
-        // font-weight: 700;                    // fw-bold
-        
-        // จัดการเรื่องกึ่งกลางตัวอักษร
-        // .select2-selection__rendered {
-        //     line-height: 1.5;
-        //     padding: 0.5rem 0.75rem;         // py-2 สอดคล้องกับ Input
-        // }
-
-        // .select2-selection__arrow {
-        //     height: 100%;                    // ให้ลูกศรอยู่ตรงกลาง
-        // }
     }
     
     // เมื่อมีการ Focus
@@ -83,4 +80,6 @@ $input-font-weight:                500;     // เทียบเท่า fw-bo
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); // จำลอง Focus Ring
         }
     }
+
+    
 }

@@ -41,7 +41,7 @@ class HealthLab extends \yii\db\ActiveRecord
             [['lab_type', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['lab_code', 'lab_name', 'lab_price'], 'required'],
             [['lab_price'], 'number'],
-            [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['data_json', 'created_at', 'updated_at', 'deleted_at', 'health_status'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['lab_code', 'lab_name', 'lab_type'], 'string', 'max' => 255],
             [['lab_code'], 'unique'],

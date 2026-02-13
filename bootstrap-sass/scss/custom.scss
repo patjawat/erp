@@ -1,17 +1,37 @@
+// ปรับ path ตามโครงสร้างโฟลเดอร์ของคุณ
+
+@import "../node_modules/bootstrap/scss/functions";
 @import "./variables";
+// ปรับขนาดฟอนต์เริ่มต้น (Bootstrap default คือ 1rem หรือ 16px)
+$font-size-base: 0.9375rem; // ลดเหลือประมาณ 15px
+
+// ปรับลดขนาดตระกูล Header (h1 - h6) ให้ดูเพรียวขึ้นแบบ Tailwind
+$h1-font-size: $font-size-base * 2.25; // ประมาณ 33px
+$h2-font-size: $font-size-base * 1.875;
+$h3-font-size: $font-size-base * 1.5;
+$h4-font-size: $font-size-base * 1.25;
+$h5-font-size: $font-size-base * 1.125;
+$h6-font-size: $font-size-base;
+
+
+@import "../node_modules/bootstrap/scss/bootstrap";
+@import "../node_modules/bootstrap/scss/variables";
+@import "../node_modules/bootstrap/scss/maps";
+@import "../node_modules/bootstrap/scss/mixins";
+
 @import "./_utilities";
 @import "./card";
 // @import "./_calenda";
-@import "../node_modules/bootstrap/scss/bootstrap";
-// @import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@100;200;300;400;500;600;700&family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Krub:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Mitr:wght@200;300;400;500;600;700&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;1,100;1,200;1,300;1,400&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,800;1,900&display=swap');
-// @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&family=Noto+Sans+Thai:wght@100..900&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap');
+
+
+
 
 :root {
   --bg-primary: var(--bg-primary) --bs-gray-100: #f6f6f7;
   --bs-secondary-color:
-  --bs-gray-200: #f3f7f9;
+    --bs-gray-200: #f3f7f9;
   --bs-gray-300: #e2e7f1;
   --bs-gray-300-rgb: 226, 231, 241;
   --bs-gray-400: #ced4da;
@@ -27,10 +47,162 @@
 
 }
 
+
+
+
+// 2. สร้าง Loop เพื่อสร้างเงาตามสีของแต่ละ Button
+@each $color, $value in $theme-colors {
+  .btn-#{$color} {
+    transition: all 0.2s ease-in-out;
+    // ใช้ rgba() สร้างเงาจากค่าสีแบรนด์
+    box-shadow: 0 4px 6px -1px rgba($value, 0.25), 0 2px 4px -2px rgba($value, 0.1);
+    border: none;
+
+    &:hover {
+      transform: translateY(-2px);
+      // ใช้ฟังก์ชัน tint-color หรือ shade-color ของ Bootstrap เพื่อปรับสีตอน hover
+      background-color: shade-color($value, 10%);
+      box-shadow: 0 10px 15px -3px rgba($value, 0.4), 0 4px 6px -4px rgba($value, 0.2);
+    }
+  }
+}
+
+@each $color, $value in $theme-colors {
+
+  // --- ปุ่มแบบปกติ (Solid) ---
+  .btn-#{$color} {
+    box-shadow: 0 4px 6px -1px rgba($value, 0.25), 0 2px 4px -2px rgba($value, 0.1);
+    transition: all 0.2s ease-in-out;
+    border: none;
+
+    &:hover {
+      transform: translateY(-2px);
+      background-color: shade-color($value, 10%);
+      box-shadow: 0 10px 15px -3px rgba($value, 0.4), 0 4px 6px -4px rgba($value, 0.2);
+    }
+  }
+
+  // --- ปุ่มแบบ Outline (ใหม่!) ---
+  .btn-outline-#{$color} {
+    transition: all 0.2s ease-in-out;
+    // เงาเริ่มต้นจะบางมากจนเกือบมองไม่เห็น (Soft look)
+    box-shadow: 0 2px 4px 0 rgba($value, 0.05);
+
+    &:hover {
+      transform: translateY(-2px);
+      // เมื่อ hover ให้พื้นหลังมีสีจางๆ (สไตล์ Tailwind จะไม่เป็นสีทึบไปเลยทันที)
+      background-color: rgba($value, 0.1);
+      color: $value; // รักษาความเข้มของตัวหนังสือ
+      border-color: $value;
+      box-shadow: 0 8px 12px -3px rgba($value, 0.2), 0 4px 6px -2px rgba($value, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      background-color: $value; // เมื่อกดค่อยให้เป็นสีเต็ม
+      color: #fff;
+    }
+  }
+}
+
+@each $color, $value in $theme-colors {
+
+  // --- ปุ่มปกติ (Tailwind Flat Style with Soft Glow) ---
+  .btn-#{$color} {
+    background-color: $value;
+    border: 1px solid transparent;
+    color: color-contrast($value);
+    font-weight: 500; // Tailwind มักใช้ Font Medium
+    border-radius: 0.5rem; // ปรับให้โค้งมนแบบ rounded-lg
+    
+    // เงาพื้นฐานแบบแบน
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background-color: shade-color($value, 10%); // เข้มขึ้นนิดเดียว
+      
+      // --- จุดเด่น: แสงฟุ้งตามสีของปุ่ม (Colored Ring/Shadow) ---
+      // ปรับค่า rgba($value, 0.4) เพื่อให้ฟุ้งมากหรือน้อยตามใจชอบ
+      box-shadow: 0 10px 15px -3px rgba($value, 0.3), 
+                  0 4px 6px -4px rgba($value, 0.3);
+      
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      background-color: shade-color($value, 20%);
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    
+    // โฟกัสแบบ Ring (Tailwind Style)
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba($value, 0.5);
+    }
+  }
+
+  // --- ปุ่ม Outline (Tailwind Style) ---
+  .btn-outline-#{$color} {
+    border: 1.5px solid $value;
+    background-color: transparent;
+    color: $value;
+    border-radius: 0.5rem;
+
+    &:hover {
+      background-color: rgba($value, 0.05); // ฟุ้งๆ ใสๆ พื้นหลัง
+      color: shade-color($value, 15%);
+      border-color: shade-color($value, 15%);
+      
+      // เงาสีจางๆ ตามสีปุ่ม
+      box-shadow: 0 4px 12px rgba($value, 0.15);
+    }
+  }
+}
+
+
 body {
   background-color: #eff6ff;
   color: var(--bs-gray-900);
   font-style: normal;
+}
+
+
+.erp-header {
+  // การไล่เฉดสีแบบ Linear Gradient 135องศา หรือจากซ้ายไปขวา
+  background: linear-gradient(135deg, $header-gradient-start 0%, $header-gradient-end 100%);
+
+  // เพิ่มเงาด้านล่างเล็กน้อยเพื่อให้ดูมีมิติแยกจากส่วนเนื้อหา
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  // กำหนดความสูงและระยะห่างตามแบบในรูป
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); // เส้นขอบล่างจางๆ เพิ่มความคม
+
+  // สีตัวอักษรและไอคอนภายในต้องเป็นสีขาว
+  color: #ffffff;
+
+  .nav-link,
+  .btn-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+
+    &:hover {
+      color: #ffffff !important;
+    }
+  }
+}
+
+// ปรับแต่ง Search Box ภายใน Header ให้ดูเหมือนในรูป
+.header-search {
+  background: rgba(255, 255, 255, 0.1); // พื้นหลังโปร่งแสง
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
 }
 
 .calendar-bg-primary {
@@ -38,10 +210,6 @@ body {
   color: '#fffff';
 }
 
-
-.btn {
-  font-family: var(--bs-header-font-family);
-}
 
 .mitr-extralight {
   font-family: "Mitr", sans-serif;
@@ -267,8 +435,8 @@ body {
 
 
 .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #eee !important;
-    color: #414040 !important;
+  background-color: #eee !important;
+  color: #414040 !important;
 }
 
 
@@ -1108,7 +1276,7 @@ textarea:focus {
     background: linear-gradient(153deg, #6e81d9 0%, #9173ec 100%) !important;
   }
 
-    .bg-primary-gradient h1,
+  .bg-primary-gradient h1,
   .bg-primary-gradient h2,
   .bg-primary-gradient h3,
   .bg-primary-gradient h4,
@@ -1116,6 +1284,7 @@ textarea:focus {
   .bg-primary-gradient h6 {
     color: #fff;
   }
+
   .text-primary {
     color: #6e81d9 !important;
   }
@@ -1124,9 +1293,6 @@ textarea:focus {
     color: #6e81d9;
   }
 
-  .btn:hover {
-    background-color: #596cc1;
-  }
 
   .form-label {
     margin-bottom: 0.5rem;
@@ -1159,7 +1325,7 @@ textarea:focus {
     background: linear-gradient(153deg, #078da9 0%, #0e6e7e 100%) !important;
   }
 
-    .bg-primary-gradient h1,
+  .bg-primary-gradient h1,
   .bg-primary-gradient h2,
   .bg-primary-gradient h3,
   .bg-primary-gradient h4,
@@ -1167,6 +1333,7 @@ textarea:focus {
   .bg-primary-gradient h6 {
     color: #fff;
   }
+
   .navbar-brand-box .logo {
     color: #078da9;
   }
@@ -1206,9 +1373,6 @@ textarea:focus {
     color: #fff;
   }
 
-  .btn-primary {
-    color: #fff;
-  }
 
   .btn .btn-light:hover {
     background-color: #cacaca;
@@ -1266,51 +1430,12 @@ textarea:focus {
   }
 }
 
-
-
-
-
-.btn-primary {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: var(--bs-blue);
-  --bs-btn-border-color: var(--bs-blue);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #057890;
-  --bs-btn-hover-border-color: #057187;
-  --bs-btn-focus-shadow-rgb: 43, 158, 182;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #057187;
-  --bs-btn-active-border-color: #056a7f;
-  --bs-btn-active-shadow: inset 0 3px 5px rgba(48, 48, 48, 0.125);
-  --bs-btn-disabled-color: #fff;
-  --bs-btn-disabled-bg: var(--bs-blue);
-  --bs-btn-disabled-border-color: var(--bs-blue);
-}
-
-.btn-outline-primary {
-  --bs-btn-color: var(--bs-primary);
-  --bs-btn-border-color: var(--bs-primary);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: var(--bs-primary);
-  --bs-btn-hover-border-color: var(--bs-primary);
-  --bs-btn-focus-shadow-rgb: 6, 141, 169;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: var(--bs-primary);
-  --bs-btn-active-border-color: var(--bs-primary);
-  --bs-btn-active-shadow: inset 0 3px 5px rgba(48, 48, 48, 0.125);
-  --bs-btn-disabled-color: var(--bs-primary);
-  --bs-btn-disabled-bg: transparent;
-  --bs-btn-disabled-border-color: var(--bs-primary);
-  --bs-gradient: none;
-}
-
 a.active,
 a:focus,
 a:hover {
   text-decoration: none;
   color: var(--bs-gray-800);
 }
-
 
 
 //Upload images Preview Container 
@@ -1479,22 +1604,12 @@ a:hover {
 }
 
 .card {
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, .03);
   border-width: 0;
 }
 
-.card .card-header {
-  background: 0 0;
-}
 
-.card-header {
-  padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
-  margin-bottom: 0;
-  color: $headings-color !important;
-  background-color: var(--bs-card-cap-bg);
-  border-bottom: var(--bs-card-border-width) solid var(--bs-card-border-color);
-}
 
 .card .card-title {
   font-weight: 300 !important;

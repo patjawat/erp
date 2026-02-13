@@ -1,0 +1,18 @@
+INSERT INTO `health_lab` (`id`, `lab_code`, `lab_name`, `lab_price`, `lab_type`) VALUES
+(1, '41001', 'Film Chest', '170', '1'),
+(2, '41301', 'Mass Chest', '52', '1'),
+(3, '31001', 'Unne Examination-Urine Analysis', '50', '1'),
+(4, '31201', 'Stool Examination-Routine direct amear', '70', '1'),
+(5, '31203', 'Occult blood', '0', '1'),
+(6, '30101', 'Complete Blood Count CBC', '90', '1'),
+(7, '55620', 'ตรวจภายใน', '100', '2'),
+(8, '38302', 'Pap smear', '100', '2'),
+(9, '32203', 'Glucose', '40', '3'),
+(10, '32501', 'Cholesteral', '60', '3'),
+(11, '32502', 'Triglyceride', '60', '3'),
+(12, '32201', 'Blood Urea Nitrogen :BUN', '50', '3'),
+(13, '32202', 'Creatinine', '50', '3'),
+(14, '32310', 'SGOT (AST)', '50', '3'),
+(15, '32311', 'SGPT (ALT)', '50', '3'),
+(16, '32309', 'Alkaline Phosphatase', '50', '3'),
+(17, '32205', 'Uric Acid', '60', '3');

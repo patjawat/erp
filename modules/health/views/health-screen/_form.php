@@ -49,11 +49,12 @@ $diseasesYear = [
     'type' => ActiveForm::TYPE_VERTICAL,
     'enableClientValidation' => true,
     'enableAjaxValidation' => true, // ** ต้องเพิ่มบรรทัดนี้ **
-    'validationUrl' => ['/health/health-screen/validator'],
+    'validationUrl' => ['/me/health/validator'],
 ]); ?>
 
 <div class="health-form-container p-3">
     <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+    <?= $form->field($model, 'bmi')->hiddenInput()->label(false) ?>
 
     <div class="d-flex align-items-center gap-3 mb-3">
         <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-id-card me-2"></i>หมวดที่ 1: ข้อมูลทั่วไป</h5>
@@ -209,10 +210,10 @@ $diseasesYear = [
     <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
         <div class="card-header bg-white d-flex justify-content-between">
             <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: ประวัติเจ็บป่วยปีก่อน</h5>
-            <div class="small">
-                <span class="badge border border-success text-success me-1">○ ไม่มี</span>
-                <span class="badge border border-danger text-danger me-1">○ มี</span>
-                <span class="badge border border-secondary text-secondary">○ ไม่เคยตรวจ</span>
+            <div class="d-flex align-items-center gap-2">
+                <label class="btn btn-xs rounded-circle p-0 ms-2 btn-outline-success" style="width:15px; height:15px;"></label> ไม่มี
+                <label class="btn btn-xs rounded-circle p-0 ms-2 btn-outline-danger" style="width:15px; height:15px;"></label> มี
+                <label class="btn btn-xs rounded-circle p-0 ms-2 btn-outline-secondary" style="width:15px; height:15px;"></label> ไม่เคยตรวจ
             </div>
         </div>
         <div class="card-body p-0">
@@ -321,16 +322,40 @@ $this->registerJs(
         $('#total-price-display').text(total.toLocaleString(undefined, {minimumFractionDigits: 2}));
     });
 
-        $('#w-in, #h-in').on('input', function(){
-        let w = parseFloat($('#w-in').val());
-        let h = parseFloat($('#h-in').val())/100;
-        if(w && h) {
-            let bmi = (w/(h*h)).toFixed(1);
-            $('#bmi-val').text(bmi);
-            $('#employeedetail-data_json-bmi').val(bmi);
-            $('#bmi-status').text(bmi < 23 ? 'ปกติ' : 'เริ่มอ้วน').css('color', bmi < 23 ? '#2563eb' : '#ef4444');
+$('#w-in, #h-in').on('input', function() {
+    let w = parseFloat($('#w-in').val());
+    let h = parseFloat($('#h-in').val());
+
+    if (w > 0 && h > 0) {
+        let hMeter = h / 100;
+        let bmi = (w / (hMeter * hMeter)).toFixed(1);
+        
+        // จำลองเกณฑ์จาก AppHelper
+        let label = "";
+        let color = "";
+
+        if (bmi < 18.5) {
+            label = "น้ำหนักน้อย / ผอม";
+            color = "#0dcaf0"; // info
+        } else if (bmi < 23) {
+            label = "ปกติ (สุขภาพดี)";
+            color = "#198754"; // success
+        } else if (bmi < 25) {
+            label = "ท้วม / เริ่มอ้วน";
+            color = "#ffc107"; // warning
+        } else if (bmi < 30) {
+            label = "อ้วนระดับ 1";
+            color = "#dc3545"; // danger
+        } else {
+            label = "อ้วนระดับ 2 (อ้วนมาก)";
+            color = "#212529"; // dark
         }
-    });
+
+        $('#bmi-val').text(bmi);
+        $('#healthscreen-bmi').val(bmi);
+        $('#bmi-status').text(label).css('color', color);
+    }
+});
 
         function syncSummary() {
         $('#out-bmi').text($('#bmi-val').text());

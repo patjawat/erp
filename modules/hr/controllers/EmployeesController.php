@@ -2,31 +2,33 @@
 
 namespace app\modules\hr\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\web\Controller;
-use yii\web\UploadedFile;
-use app\components\LineMsg;
-use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\components\EmployeeHelper;
+use app\components\LineMsg;
+use app\components\UserHelper;
 use app\models\UploadCsvForm;
-use ruskid\csvimporter\CSVReader;
-use yii\validators\DateValidator;
-use yii\web\NotFoundHttpException;
-use ruskid\csvimporter\CSVImporter;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\UploadCsv;
-use app\modules\hr\models\Organization;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Color;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use app\modules\hr\models\EmployeesSearch;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\dms\models\DocumentsDetail;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use ruskid\csvimporter\MultipleImportStrategy;
 use app\modules\hr\models\EmployeeDetailSearch;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\EmployeesSearch;
+use app\modules\hr\models\Organization;
+use app\modules\hr\models\UploadCsv;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use ruskid\csvimporter\CSVImporter;
+use ruskid\csvimporter\CSVReader;
+use ruskid\csvimporter\MultipleImportStrategy;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\validators\DateValidator;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
+use yii\web\UploadedFile;
 
 /**
  * EmployeesController implements the CRUD actions for Employees model.
@@ -270,6 +272,11 @@ class EmployeesController extends Controller
     {
         $name = $this->request->get('name');
         $model = $this->findModel($id);
+         $me = UserHelper::GetEmployee();
+         
+        if($model->id != $me->id && !Yii::$app->user->can('hr')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
 
         $searchModel = new EmployeeDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);

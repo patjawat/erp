@@ -83,7 +83,12 @@ class UpdateTableController extends Controller
             ['name' => 'driver', 'type' => 1, 'description' => 'พนักงานขับรถ'],
             ['name' => 'meeting', 'type' => 1, 'description' => 'ระบบห้องประชุม'],
             ['name' => 'plan', 'type' => 1, 'description' => 'แผนงานและโครงการ'],
+            ['name' => 'health', 'type' => 1, 'description' => 'ตรวจสุขภาพ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
+
+            // การตรวจสุขภาพ
+            ['name' => '/health/*', 'type' => 2, 'description' => ''],
+            ['name' => '/health/me/*', 'type' => 2, 'description' => ''],
 
             //การอนุมัติ
             ['name' => '/approve-v2/*', 'type' => 2, 'description' => ''],
@@ -239,7 +244,7 @@ class UpdateTableController extends Controller
             ['child' => 'technician_ma', 'parent' => 'admin'],
             ['child' => 'user', 'parent' => 'admin'],
             ['child' => 'warehouse', 'parent'  => 'admin'],
-            // ['child' => 'branch', 'parent'  => 'admin'],
+            ['child' => 'health', 'parent'  => 'admin'],
             ['child' => 'inventory', 'parent'  => 'admin'],
             ['child' => 'sm', 'parent'  => 'admin'],
             ['child' => 'leave', 'parent'  => 'admin'],
@@ -419,6 +424,7 @@ class UpdateTableController extends Controller
             ['child' => '/purchase/po-order/index', 'parent' => 'purchase'],
 
             ['child' => '/plan/*', 'parent' => 'user'],
+            ['child' => '/health/*', 'parent' => 'health'],
         ];
     }
 

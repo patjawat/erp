@@ -42,12 +42,8 @@ use kartik\widgets\Select2;
                 </div>
 
                 <div class="col-md-3">
-                    <?= $form->field($model, 'checkup_status', ['showLabels' => false])->widget(Select2::classname(), [
-                        'data' => [
-                            'pending' => 'รอดำเนินการ',
-                            'wait_doctor' => 'รอพบแพทย์',
-                            'complete' => 'เสร็จสมบูรณ์'
-                        ],
+                    <?= $form->field($model, 'health_status', ['showLabels' => false])->widget(Select2::classname(), [
+                        'data' => $model->getHealthStatusList(),
                         'options' => ['placeholder' => 'สถานะทั้งหมด...'],
                         'pluginOptions' => ['allowClear' => true],
                     ]) ?>

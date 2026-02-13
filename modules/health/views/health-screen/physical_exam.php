@@ -2,6 +2,10 @@
 use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 
+
+$this->title = 'การตรวจร่างกาย';
+$this->params['breadcrumbs'][] = ['label' => 'ข้อมูลสุขภาพ', 'url' => ['/health']];
+$this->params['breadcrumbs'][] = $this->title;
 /* @var $this yii\web\View */
 /* @var $model app\models\HealthScreen */
 ?>

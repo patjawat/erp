@@ -255,68 +255,68 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     }
 
     //สรุปภาพรวมการคัดการองสุขภาพพนักงาน
-    public function healthSummary()
-    {
-        $totalEmp = Employees::find()->where(['status' => 1])
-            ->andWhere(['<>', 'id', 1])->count();
+    // public function healthSummary()
+    // {
+    //     $totalEmp = Employees::find()->where(['status' => 1])
+    //         ->andWhere(['<>', 'id', 1])->count();
 
-        $stats = EmployeeDetail::find()
-            ->select([
-                'screened' => "COUNT(*)",
-                'thin' => "SUM(CASE WHEN data_json->'$.bmi' < 18.5 THEN 1 ELSE 0 END)",
-                'normal' => "SUM(CASE WHEN data_json->'$.bmi' >= 18.5 AND data_json->'$.bmi' < 23 THEN 1 ELSE 0 END)",
-                'overweight' => "SUM(CASE WHEN data_json->'$.bmi' >= 23 AND data_json->'$.bmi' < 25 THEN 1 ELSE 0 END)",
-                'obese1' => "SUM(CASE WHEN data_json->'$.bmi' >= 25 AND data_json->'$.bmi' < 30 THEN 1 ELSE 0 END)",
-                'obese2' => "SUM(CASE WHEN data_json->'$.bmi' >= 30 THEN 1 ELSE 0 END)",
-            ])
-            ->where(['name' => 'health'])
-            ->andWhere(new \yii\db\Expression("data_json->'$.thai_year' = :year", [':year' => $this->thai_year]))
-            ->asArray()
-            ->one();
+    //     $stats = EmployeeDetail::find()
+    //         ->select([
+    //             'screened' => "COUNT(*)",
+    //             'thin' => "SUM(CASE WHEN data_json->'$.bmi' < 18.5 THEN 1 ELSE 0 END)",
+    //             'normal' => "SUM(CASE WHEN data_json->'$.bmi' >= 18.5 AND data_json->'$.bmi' < 23 THEN 1 ELSE 0 END)",
+    //             'overweight' => "SUM(CASE WHEN data_json->'$.bmi' >= 23 AND data_json->'$.bmi' < 25 THEN 1 ELSE 0 END)",
+    //             'obese1' => "SUM(CASE WHEN data_json->'$.bmi' >= 25 AND data_json->'$.bmi' < 30 THEN 1 ELSE 0 END)",
+    //             'obese2' => "SUM(CASE WHEN data_json->'$.bmi' >= 30 THEN 1 ELSE 0 END)",
+    //         ])
+    //         ->where(['name' => 'health'])
+    //         ->andWhere(new \yii\db\Expression("data_json->'$.thai_year' = :year", [':year' => $this->thai_year]))
+    //         ->asArray()
+    //         ->one();
 
-        $screened = (int)$stats['screened'];
+    //     $screened = (int)$stats['screened'];
 
-        // ฟังก์ชันช่วยคำนวณ %
-        $getPercent = function ($value, $total) {
-            return ($total > 0) ? number_format(($value / $total) * 100, 1) : "0.0";
-        };
+    //     // ฟังก์ชันช่วยคำนวณ %
+    //     $getPercent = function ($value, $total) {
+    //         return ($total > 0) ? number_format(($value / $total) * 100, 1) : "0.0";
+    //     };
 
-        return [
-            'total_emp' => $totalEmp,
-            'screened' => $screened,
-            'percent_screened' => $getPercent($screened, $totalEmp),
-            'details' => [
-                [
-                    'label' => 'น้ำหนักน้อย / ผอม',
-                    'count' => (int)$stats['thin'],
-                    'percent' => $getPercent($stats['thin'], $screened),
-                    'color' => 'info'
-                ],
-                [
-                    'label' => 'ปกติ (สุขภาพดี)',
-                    'count' => (int)$stats['normal'],
-                    'percent' => $getPercent($stats['normal'], $screened),
-                    'color' => 'success'
-                ],
-                [
-                    'label' => 'ท้วม / เริ่มอ้วน',
-                    'count' => (int)$stats['overweight'],
-                    'percent' => $getPercent($stats['overweight'], $screened),
-                    'color' => 'warning'
-                ],
-                [
-                    'label' => 'อ้วนระดับ 1',
-                    'count' => (int)$stats['obese1'],
-                    'percent' => $getPercent($stats['obese1'], $screened),
-                    'color' => 'danger'
-                ],
-                [
-                    'label' => 'อ้วนระดับ 2 (อ้วนมาก)',
-                    'count' => (int)$stats['obese2'],
-                    'percent' => $getPercent($stats['obese2'], $screened),
-                    'color' => 'dark'
-                ],
-            ]
-        ];
-    }
+    //     return [
+    //         'total_emp' => $totalEmp,
+    //         'screened' => $screened,
+    //         'percent_screened' => $getPercent($screened, $totalEmp),
+    //         'details' => [
+    //             [
+    //                 'label' => 'น้ำหนักน้อย / ผอม',
+    //                 'count' => (int)$stats['thin'],
+    //                 'percent' => $getPercent($stats['thin'], $screened),
+    //                 'color' => 'info'
+    //             ],
+    //             [
+    //                 'label' => 'ปกติ (สุขภาพดี)',
+    //                 'count' => (int)$stats['normal'],
+    //                 'percent' => $getPercent($stats['normal'], $screened),
+    //                 'color' => 'success'
+    //             ],
+    //             [
+    //                 'label' => 'ท้วม / เริ่มอ้วน',
+    //                 'count' => (int)$stats['overweight'],
+    //                 'percent' => $getPercent($stats['overweight'], $screened),
+    //                 'color' => 'warning'
+    //             ],
+    //             [
+    //                 'label' => 'อ้วนระดับ 1',
+    //                 'count' => (int)$stats['obese1'],
+    //                 'percent' => $getPercent($stats['obese1'], $screened),
+    //                 'color' => 'danger'
+    //             ],
+    //             [
+    //                 'label' => 'อ้วนระดับ 2 (อ้วนมาก)',
+    //                 'count' => (int)$stats['obese2'],
+    //                 'percent' => $getPercent($stats['obese2'], $screened),
+    //                 'color' => 'dark'
+    //             ],
+    //         ]
+    //     ];
+    // }
 }

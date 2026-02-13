@@ -2,20 +2,16 @@
 
 namespace app\modules\health\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\web\Controller;
-use yii\filters\VerbFilter;
 use app\components\AppHelper;
-use app\components\UserHelper;
-use app\components\ModalHelper;
-use app\components\EmployeeHelper;
-use yii\web\NotFoundHttpException;
-use app\modules\hr\models\Employees;
 use app\modules\health\models\HealthLab;
-use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthLabConfirm;
+use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthScreenSearch;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * HealthScreenController implements the CRUD actions for HealthScreen model.
@@ -57,30 +53,6 @@ class HealthScreenController extends Controller
     }
 
 
-    public function actionListMe()
-    {
-        $me = UserHelper::GetEmployee();
-        $searchModel = new HealthScreenSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['emp_id' => $me->id]);
-
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'ข้อมูลประวัติการตรวจสุขภาพ',
-                'content' => $this->renderAjax('list_me', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ]),
-            ];
-        } else {
-            return $this->render('list_me', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
-
 
     /**
      * Displays a single HealthScreen model.
@@ -100,45 +72,7 @@ class HealthScreenController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
-    {
-        $emp_id = $this->request->get('emp_id');
-         $me = UserHelper::GetEmployee();
-        $model = new HealthScreen([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-            'emp_id' => $me->id,
-        ]);
-
-        if ($this->request->isPost) {
-            if ($this->request->isPost && $model->load($this->request->post())) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->date_checkup = isset($model->date_checkup) ? AppHelper::DateToDb($model->date_checkup) : '';
-
-                $model->save(false);
-
-                return [
-                    'status' => 'success',
-                    'message' => 'บันทึกข้อมูลสำเร็จ',
-                ];
-            }
-        } else {
-            $model->loadDefaultValues();
-        }
-
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'title' => 'สร้างข้อมูลประวัติการตรวจสุขภาพ',
-                'content' => $this->renderAjax('create', [
-                    'model' => $model,
-                ]),
-            ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }
+   
 
     /**
      * Updates an existing HealthScreen model.
@@ -162,20 +96,31 @@ class HealthScreenController extends Controller
 
 
     public function actionLabConfirm($id)
-{
-    $model = $this->findModel($id); // ข้อมูลหลัก (HealthScreen)
-    $labItems = HealthLabConfirm::find()->where(['lab_screen_id' => $id])->all();
+    {
+        $model = $this->findModel($id); // ข้อมูลหลัก (HealthScreen)
+        $labItems = HealthLabConfirm::find()->where(['lab_screen_id' => $id])->all();
 
-    if (empty($labItems)) {
-        $labItems = [new HealthLabConfirm()];
-    }
+        if (empty($labItems)) {
+            $listLabItems = HealthLab::find()->all();
+            if (!empty($listLabItems)) {
+                foreach ($listLabItems as $lab) {
+                    $labConfirm = new HealthLabConfirm();
+                    $labConfirm->lab_screen_id = $id;
+                    $labConfirm->lab_code = $lab->lab_code;
+                    $labConfirm->lab_price = $lab->lab_price;
+                    $labConfirm->qty = 1;
+                    $labItems[] = $labConfirm;
+                }
+            } else {
+                $labItems = [new HealthLabConfirm()];
+            }
+        }
 
-    if (Yii::$app->request->isPost) {
-        $postData = Yii::$app->request->post('HealthLabConfirm', []);
-        
-        // ใช้ Transaction เพื่อความปลอดภัยของข้อมูล
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
+        if (Yii::$app->request->isPost) {
+            $postData = Yii::$app->request->post('HealthLabConfirm', []);
+            // ใช้ Transaction เพื่อความปลอดภัยของข้อมูล
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
             // เคลียร์ข้อมูลเก่าเฉพาะของเคสนี้
             HealthLabConfirm::deleteAll(['lab_screen_id' => $id]);
 
@@ -185,45 +130,54 @@ class HealthScreenController extends Controller
                     $entry->load($data, '');
                     $entry->lab_screen_id = $id;
                     $entry->qty = $entry->qty ?? 1;
-                    $entry->lab_status = $entry->lab_status ?? 'Pending';
-                    if (!$entry->save()) {
+                    if (!$entry->save(false)) {
                         throw new \Exception("บันทึกข้อมูลไม่สำเร็จ");
                     }
                 }
             }
+            if($model->health_status == 'SCREEN'){
+                $model->health_status = 'CONFIRM';
+                $model->save();
+            }
+
             $transaction->commit();
             Yii::$app->session->setFlash('success', 'ยืนยันผล LAB เรียบร้อยแล้ว');
             return $this->redirect(['index']);
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            }
         }
+
+        return $this->render('lab_confirm', [
+            'model' => $model,
+            'labItems' => $labItems,
+        ]);
     }
 
-    return $this->render('lab_confirm', [
-        'model' => $model,
-        'labItems' => $labItems,
-    ]);
-}
 
+    public function actionPhysicalExam($id)
+    {
+        $model = $this->findModel($id);
 
-public function actionPhysicalExam($id)
-{
-    $model = $this->findModel($id);
+        if ($model->load(Yii::$app->request->post())) {
+            // ข้อมูล data_json จะถูกส่งมาเป็น Array จากฟอร์ม
+            // หากต้องการบันทึกลง MySQL คอลัมน์ JSON ตรงๆ Yii2 จะจัดการให้
+            if($model->health_status == 'CONFIRM'){
+                $model->health_status = 'SUCCESS';
+                $model->save();
+            }
 
-    if ($model->load(Yii::$app->request->post())) {
-        // ข้อมูล data_json จะถูกส่งมาเป็น Array จากฟอร์ม
-        // หากต้องการบันทึกลง MySQL คอลัมน์ JSON ตรงๆ Yii2 จะจัดการให้
-        if ($model->save()) {
-            Yii::$app->session->setFlash('success', 'บันทึกผลการตรวจร่างกายเรียบร้อยแล้ว');
-            return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'บันทึกผลการตรวจร่างกายเรียบร้อยแล้ว');
+                return $this->redirect(['index']);
+            }
         }
-    }
 
-    return $this->render('physical_exam', [
-        'model' => $model,
-    ]);
-}
+        return $this->render('physical_exam', [
+            'model' => $model,
+        ]);
+    }
 
 
     /**

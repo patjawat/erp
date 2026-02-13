@@ -46,6 +46,7 @@ AppAsset::register($this);
         z-index: 1050;
         height: 64px;
         background-color: var(--bs-primary);
+        /* background: linear-gradient(118deg, var(--bs-primary) 0%, #6a7eaf 100%); */
         color: white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }

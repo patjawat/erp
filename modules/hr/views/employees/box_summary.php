@@ -8,7 +8,7 @@ use app\components\AgeProcessHelper;
 ?>
 
 
-<div class="row">
+<div class="row mb-3">
             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12">
                 <div class="card card-body">
                     <div class="d-flex">
