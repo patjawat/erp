@@ -72,8 +72,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="btn-group shadow-sm rounded-pill p-1 bg-white border">
                                         <?= Html::a(
                                             '<i class="fas fa-eye"></i> ดูผลตรวจ',
-                                            ['lab-confirm', 'id' => $item->id],
-                                            ['class' => 'btn btn-sm btn-outline-info border-0 rounded-pill px-3', 'title' => 'ลงผล LAB']
+                                            ['/me/health/view', 'id' => $item->id],
+                                            ['class' => 'btn btn-sm btn-outline-info border-0 rounded-pill px-3 open-modal', 'title' => 'ดูผลตรวจ','data' => ['size' => 'modal-xl']]
                                         )
                                         ?>
 

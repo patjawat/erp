@@ -7,7 +7,7 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeeDetail $model */
 
-$this->title = $model->name;
+$this->title = $model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Employee Details', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
@@ -19,16 +19,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="fas fa-check fa-2x"></i>
                         </div>
                         <h3 class="fw-bold mb-1">รายงานสรุปผลการตรวจสุขภาพประจำปี</h3>
-                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->data_json['thai_year'] ?? ''?></p>
+                        <p class="text-muted fw-medium">ประจำปีงบประมาณ <?= $model->thai_year?></p>
                     </div>
 
                     <div class="row g-2 mb-4 px-md-4">
                        
                         <?php
                         $summary = [
-                            ['BMI', 'out-bmi', $model->data_json['bmi'] ?? '-'],
-                            ['รอบเอว', 'out-waist', $model->data_json['waistCircumference'] ?? '-'],
-                            ['ความดัน', 'out-bp', $model->data_json['bloodPressure'] ?? '-'],
+                            ['BMI', 'out-bmi', $model->bmi],
+                            ['รอบเอว', 'out-waist', $model->data_json['waistline'] ?? '-'],
+                            ['ความดัน', 'out-bp', $model->data_json['bp_2_sys'] ?? '-'],
                             ['น้ำตาล', 'out-fbs', $model->data_json['bloodSugar'] ?? '-'],
                             ['ไขมัน', 'out-chol', $model->data_json['cholesterol'] ?? '-'],
                             ['ภาวะซีด', 'out-anemia', $model->data_json['anemiaStatus'] ?? '-']
