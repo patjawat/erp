@@ -18,7 +18,7 @@ class HealthScreenSearch extends HealthScreen
     {
         return [
             [['id', 'thai_year', 'emp_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at','weight','height'], 'safe'],
+            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at','weight','height','health_status'], 'safe'],
         ];
     }
 
@@ -64,6 +64,7 @@ class HealthScreenSearch extends HealthScreen
             'emp_id' => $this->emp_id,
             'weight' => $this->weight,
             'height' => $this->height,
+            'health_status' => $this->health_status,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'created_by' => $this->created_by,
