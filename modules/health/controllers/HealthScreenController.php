@@ -7,6 +7,8 @@ use app\modules\health\models\HealthLab;
 use app\modules\health\models\HealthLabConfirm;
 use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthScreenSearch;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -45,7 +47,39 @@ class HealthScreenController extends Controller
     {
         $searchModel = new HealthScreenSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
 
+        if ($searchModel->q_department) {
+            $org1 = Organization::findOne($searchModel->q_department);
+
+            if ($org1 && $org1->lvl == 1) {
+                $cacheKey = 'org_child_' . $org1->id;
+                $arrDepartment = Yii::$app->cache->get($cacheKey);
+                if ($arrDepartment === false) {
+                    $arrDepartment = Organization::find()
+                        ->select('id')
+                        ->where(['between', 'lft', $org1->lft, $org1->rgt])
+                        ->column();
+                    Yii::$app->cache->set($cacheKey, $arrDepartment, 3600);
+                }
+
+                // ✅ ใช้ emp_id จาก employees ที่อยู่ใน department เหล่านั้น
+                $empIds = Employees::find()
+                    ->select('id')
+                    ->andWhere(['department' => $arrDepartment])
+                    ->column();
+
+                $dataProvider->query->andWhere(['in', 'emp_id', $empIds]);
+            } else {
+                $empIds = Employees::find()
+                    ->select('id')
+                    ->andWhere(['department' => $searchModel->q_department])
+                    ->column();
+
+                $dataProvider->query->andWhere(['in', 'emp_id', $empIds]);
+            }
+        }
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

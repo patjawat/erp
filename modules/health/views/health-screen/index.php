@@ -55,6 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th>ปีที่ตรวจ</th>
                         <th>วันที่คัดกรอง</th>
                         <th class="ps-4">พนักงาน</th>
+                        <th class="text-start" scope="col">หน่วยงาน</th>
                         <th class="text-center">สรุปผลสุขภาพ</th>
                         <th class="text-center">สถานะการตรวจ</th>
                         <th class="text-center" style="width: 350px;">จัดการ</th>
@@ -72,6 +73,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?= $item->thai_year ?></td>
                             <td> <?= AppHelper::convertToThai($item->date_checkup) ??  ''; ?></td>
                             <td class="ps-4"><?= $item->employee->getAvatar(false) ?></td>
+                            <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee->departmentName() ?></td>
                             <td class="text-center">
                                 <?php
                                 $sumKey   = $item->data_json['final_summary'] ?? 'healthy';

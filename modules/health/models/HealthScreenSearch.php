@@ -18,7 +18,7 @@ class HealthScreenSearch extends HealthScreen
     {
         return [
             [['id', 'thai_year', 'emp_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at','weight','height','health_status'], 'safe'],
+            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at','weight','height','health_status','q_department'], 'safe'],
         ];
     }
 

@@ -25,6 +25,7 @@ class HealthScreen extends \yii\db\ActiveRecord
 {
 
 
+public $q_department;
     /**
      * {@inheritdoc}
      */
@@ -42,7 +43,7 @@ class HealthScreen extends \yii\db\ActiveRecord
             [['date_checkup', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['thai_year', 'emp_id', 'date_checkup', 'weight', 'height'], 'required'],
             [['thai_year', 'emp_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'ref', 'bmi','health_status'], 'safe'],
+            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'ref', 'bmi','health_status','q_department'], 'safe'],
         ];
     }
 
