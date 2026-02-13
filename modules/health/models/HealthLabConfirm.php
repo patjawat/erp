@@ -75,4 +75,9 @@ class HealthLabConfirm extends \yii\db\ActiveRecord
         ];
     }
 
+       public function getLab()
+    {
+        return $this->hasOne(HealthLab::class, ['lab_code' => 'lab_code']);
+    }
+
 }

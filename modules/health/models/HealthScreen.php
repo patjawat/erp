@@ -75,6 +75,12 @@ public $q_department;
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 
+        public function getLabs()
+    {
+        return $this->hasMany(HealthLabConfirm::class, ['lab_screen_id' => 'id']);
+    }
+
+
 
 
     public function getBmiResult()
@@ -101,7 +107,16 @@ public $q_department;
         return array_combine($years, $years);
     }
 
-
+public function labTotalPrice()
+{
+    $total = 0;
+    // ดึงรายการ labs ผ่าน Relation getLabs()
+    foreach ($this->labs as $lab) {
+        // เปลี่ยน 'price' เป็นชื่อคอลัมน์ราคาในตาราง health_lab_confirm ของคุณ
+        $total += ($lab->qty*$lab->lab_price); 
+    }
+    return $total;
+}
 
     /**
      * คืนค่ารายการสถานะทั้งหมดสำหรับ Dropdown / Select2

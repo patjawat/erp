@@ -104,7 +104,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                     <?= Html::a(
                                         '<i class="fas fa-print"></i>',
-                                        ['print-report', 'id' => $item->id],
+                                        ['print', 'id' => $item->id],
                                         ['class' => 'btn btn-sm btn-outline-secondary border-0 rounded-pill px-2', 'target' => '_blank']
                                     )
                                     ?>

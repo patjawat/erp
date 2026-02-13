@@ -14,6 +14,7 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use kartik\mpdf\Pdf;
 
 /**
  * HealthScreenController implements the CRUD actions for HealthScreen model.
@@ -101,12 +102,7 @@ class HealthScreenController extends Controller
         ]);
     }
 
-    /**
-     * Creates a new HealthScreen model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
-     */
-   
+
 
     /**
      * Updates an existing HealthScreen model.
@@ -212,6 +208,45 @@ class HealthScreenController extends Controller
             'model' => $model,
         ]);
     }
+
+
+
+public function actionPrint($id)
+
+{
+    $model = $this->findModel($id);
+    
+    // 1. เตรียม Path ของฟอนต์
+    $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+
+    $pdf = new Pdf([
+        'mode' => Pdf::MODE_UTF8,
+        'format' => Pdf::FORMAT_A4,
+        'orientation' => Pdf::ORIENT_PORTRAIT,
+        'destination' => Pdf::DEST_BROWSER,
+        'content' => $this->renderPartial('_print_pdf', ['model' => $model]),
+        'cssFile' => '@webroot/css/kv-mpdf-bootstrap.css',
+        'cssInline' => 'body { font-family: "thsarabunnew"; font-size: 16pt; }', 
+        'options' => [
+            'title' => 'ใบรับรองการตรวจสุขภาพ',
+            // 2. ตั้งค่า Font ผ่าน Config Array
+            'fontDir' => array_merge((new \Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'], [
+                $fontPath,
+            ]),
+            'fontdata' => array_merge((new \Mpdf\Config\FontVariables())->getDefaults()['fontdata'], [
+                'thsarabunnew' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                    'I' => 'THSarabunNew-Italic.ttf',
+                ]
+            ]),
+            'default_font' => 'thsarabunnew', // กำหนดเป็นฟอนต์หลัก
+            'tempDir' => Yii::getAlias('@runtime/mpdf'),
+        ],
+    ]);
+
+    return $pdf->render();
+}
 
 
     /**
