@@ -161,6 +161,7 @@ AppAsset::register($this);
         width: 20px;
         height: 20px;
         stroke-width: 2px;
+        color:var(--bs-primary)
     }
 
     .erp-icon-box-md {

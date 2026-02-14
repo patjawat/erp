@@ -232,13 +232,11 @@ public function labTotalPrice()
      * คำนวณจำนวนพนักงานแยกตามกลุ่ม BMI สำหรับ ApexCharts
      * @param integer $year ปีงบประมาณที่ต้องการกรอง (ถ้ามี)
      */
-    public static function getBmiChartData($year = null)
+    public function getBmiChartData()
     {
         $query = self::find();
 
-        if ($year) {
-            $query->andWhere(['thai_year' => $year]);
-        }
+        $query->andWhere(['thai_year' => $this->thai_year]);
 
         $allData = $query->all();
 
@@ -278,7 +276,7 @@ public function labTotalPrice()
  * @param string $year ปีงบประมาณ (thai_year)
  * @return array
  */
-public static function getDeptExamStats($year)
+public function getDeptExamStats()
 {
     // 1. ดึงหน่วยงานทั้งหมดที่มีพนักงานสถานะ 1 และไม่ใช่ id 1
     // สมมติว่าความสัมพันธ์ใน Employee คือ 'department' และมีฟิลด์ 'name'
@@ -309,7 +307,7 @@ public static function getDeptExamStats($year)
             ->innerJoinWith('employee') // ใช้ relation ที่คุณทำไว้
             ->where([
                 'employees.department' => $dept->department,
-                'health_screen.thai_year' => $year,
+                'health_screen.thai_year' => $this->thai_year,
                 'health_screen.health_status' => 'SUCCESS'
             ])
             ->count();

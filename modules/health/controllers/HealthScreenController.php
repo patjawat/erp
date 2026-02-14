@@ -9,12 +9,11 @@ use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthScreenSearch;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use kartik\mpdf\Pdf;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\Response;
-use kartik\mpdf\Pdf;
 
 /**
  * HealthScreenController implements the CRUD actions for HealthScreen model.
@@ -46,7 +45,7 @@ class HealthScreenController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new HealthScreenSearch();
+        $searchModel = new HealthScreenSearch(['thai_year' => AppHelper::YearBudget(date('Y-m-d'))]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->joinWith('employee');
 

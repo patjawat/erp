@@ -27,11 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 shadow-sm border mb-4">
     <h2 class="h5 mb-0 text-dark">Executive Health Dashboard</h2>
-    <div class="d-flex align-items-center gap-1">
-        <div class="small text-muted">อัปเดตล่าสุด: 12 ต.ค. 2566</div>
         <?php echo $this->render('_search_dashboard', ['model' => $searchModel]); ?>
-
-    </div>
 </div>
 
 <div class="row">

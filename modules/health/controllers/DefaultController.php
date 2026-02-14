@@ -22,8 +22,8 @@ class DefaultController extends Controller
         $searchModel = new HealthScreenSearch(['thai_year' => AppHelper::YearBudget(date('Y-m-d'))]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        $bmiData = HealthScreen::getBmiChartData($searchModel->thai_year);
-        $stats = HealthScreen::getDeptExamStats($searchModel->thai_year);
+        $bmiData = $searchModel->getBmiChartData();
+        $stats = $searchModel->getDeptExamStats();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
