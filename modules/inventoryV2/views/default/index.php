@@ -3,8 +3,27 @@ use yii\web\View;
 use yii\helpers\Url;
 
 $this->title = 'WMS Portal | ระบบบริหารจัดการคลังสินค้า';
+// $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+        </svg>
+        <?=$this->title?>
+    </h4>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?php echo $this->render('@app/modules/inventoryV2/menu',['active' => 'index']) ?>
+<?php $this->endBlock(); ?>
 <div class="container-fluid py-5" style="font-family: 'Sarabun', sans-serif; min-height: 100vh;">
     
     <div class="text-center mb-5">

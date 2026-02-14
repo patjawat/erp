@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\helpdesk\models\Helpdesk $model */
+/** @var app\modules\inventoryV2\models\StockOrder $model */
 
-$this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'Helpdesks', 'url' => ['index']];
+$this->title = $model->id;
+$this->params['breadcrumbs'][] = ['label' => 'Stock Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="helpdesk-view">
+<div class="stock-order-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -30,23 +30,18 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'category_id',
-            'emp_id',
-            'ref',
-            'code',
-            'date_start',
-            'date_end',
-            'name',
-            'title',
-            'data_json',
+            'order_no',
+            'order_type',
+            'order_date',
+            'warehouse_id',
+            'to_warehouse_id',
+            'contact_id',
             'status',
-            'rating',
-            'move_out',
-            'repair_group',
-            'thai_year',
+            'ref',
+            'data_json',
             'created_at',
-            'updated_at',
             'created_by',
+            'updated_at',
             'updated_by',
         ],
     ]) ?>

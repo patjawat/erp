@@ -4,11 +4,11 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
-/** @var app\modules\helpdesk\models\HelpdeskSearch $model */
+/** @var app\modules\inventoryV2\models\StockItemSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="helpdesk-search">
+<div class="stock-item-search">
 
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
@@ -20,39 +20,27 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'id') ?>
 
+    <?= $form->field($model, 'item_code') ?>
+
+    <?= $form->field($model, 'item_name') ?>
+
+    <?= $form->field($model, 'unit_id') ?>
+
     <?= $form->field($model, 'category_id') ?>
 
-    <?= $form->field($model, 'emp_id') ?>
+    <?php // echo $form->field($model, 'min_qty') ?>
 
-    <?= $form->field($model, 'ref') ?>
+    <?php // echo $form->field($model, 'is_asset') ?>
 
-    <?= $form->field($model, 'code') ?>
-
-    <?php // echo $form->field($model, 'date_start') ?>
-
-    <?php // echo $form->field($model, 'date_end') ?>
-
-    <?php // echo $form->field($model, 'name') ?>
-
-    <?php // echo $form->field($model, 'title') ?>
+    <?php // echo $form->field($model, 'ref') ?>
 
     <?php // echo $form->field($model, 'data_json') ?>
 
-    <?php // echo $form->field($model, 'status') ?>
-
-    <?php // echo $form->field($model, 'rating') ?>
-
-    <?php // echo $form->field($model, 'move_out') ?>
-
-    <?php // echo $form->field($model, 'repair_group') ?>
-
-    <?php // echo $form->field($model, 'thai_year') ?>
-
     <?php // echo $form->field($model, 'created_at') ?>
 
-    <?php // echo $form->field($model, 'updated_at') ?>
-
     <?php // echo $form->field($model, 'created_by') ?>
+
+    <?php // echo $form->field($model, 'updated_at') ?>
 
     <?php // echo $form->field($model, 'updated_by') ?>
 

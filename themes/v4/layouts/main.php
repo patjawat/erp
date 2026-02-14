@@ -176,6 +176,18 @@ AppAsset::register($this);
         color: #64748b;
     }
 
+        .erp-icon-box-xl {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+
     .erp-nav-item.active .erp-icon-box {
         background-color: var(--erp-icon-bg-active);
         color: var(--erp-primary);
