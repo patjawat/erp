@@ -5,9 +5,15 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
 
 <div class="container-fluid py-4">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-box-seam"></i> บันทึกการจ่ายพัสดุ: REQ67-0045</h5>
-            <span class="badge bg-primary">คลังต้นทาง: คลังพัสดุกลาง</span>
+        <div class="card-header text-white py-3 d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+            <div class="erp-icon-box">
+                <i class="bi bi-box-seam"></i>
+                </div>
+                <h5 class="mb-0">บันทึกการจ่ายพัสดุ: REQ67-0045</h5>
+            </div>
+                
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">คลังต้นทาง: คลังพัสดุกลาง</span>
         </div>
         <div class="card-body">
             <div class="row mb-4 bg-light p-3 rounded mx-0">
@@ -30,11 +36,11 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                     <thead class="table-secondary">
                         <tr class="text-center">
                             <th width="5%">#</th>
-                            <th width="30%" class="text-start">รายการพัสดุ</th>
-                            <th width="12%">จำนวนที่ขอ</th>
-                            <th width="15%">จำนวนที่จ่ายจริง</th>
-                            <th width="25%">ตัดจาก Lot (คลังหลัก)</th>
-                            <th width="13%">จัดการ</th>
+                            <th width="25%" class="text-start">รายการพัสดุ</th>
+                            <th width="10%">จำนวนที่ขอ</th>
+                            <th width="12%">จำนวนที่จ่ายจริง</th>
+                            <th width="23%">ตัดจาก Lot (คลังหลัก)</th>
+                            <th width="12%">ราคารวม</th> <th width="13%">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,9 +57,12 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                             </td>
                             <td>
                                 <select class="form-select border-warning lot-selector">
-                                    <option value="L67-01" data-stock="10">LOT: 67-01 (คงเหลือ 10) [FEFO]</option>
-                                    <option value="L67-05" data-stock="50">LOT: 67-05 (คงเหลือ 50)</option>
+                                    <option value="L67-01" data-stock="10" data-price="1550">LOT: 67-01 (คงเหลือ 10) [1,550.-]</option>
+                                    <option value="L67-05" data-stock="50" data-price="1490">LOT: 67-05 (คงเหลือ 50) [1,490.-]</option>
                                 </select>
+                            </td>
+                            <td class="text-end fw-bold text-primary">
+                                <span class="row-total">0.00</span>
                             </td>
                             <td class="text-center">
                                 <button class="btn btn-outline-danger btn-sm btn-cancel-item" title="ยกเลิกรายการนี้">
@@ -74,8 +83,11 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                             </td>
                             <td>
                                 <select class="form-select border-warning lot-selector">
-                                    <option value="L-CAB-99">LOT: CAB-99 (เหลือ 1)</option>
+                                    <option value="L-CAB-99" data-stock="1" data-price="3200">LOT: CAB-99 (เหลือ 1) [3,200.-]</option>
                                 </select>
+                            </td>
+                            <td class="text-end fw-bold text-primary">
+                                <span class="row-total">0.00</span>
                             </td>
                             <td class="text-center">
                                 <button class="btn btn-outline-danger btn-sm btn-cancel-item"><i class="bi bi-x-lg"></i> ยกเลิก</button>
@@ -83,6 +95,13 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                             </td>
                         </tr>
                     </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="5" class="text-end fw-bold">รวมมูลค่าการจ่ายทั้งสิ้น:</td>
+                            <td class="text-end fw-bold text-danger h5" id="grand-total">0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
 
@@ -107,6 +126,34 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
 $js = <<< JS
 $(document).ready(function() {
 
+    // --- ฟังก์ชันคำนวนราคา ---
+    function calculateTotal() {
+        let grandTotal = 0;
+        $('.item-row').each(function() {
+            let row = $(this);
+            let qtyInput = row.find('.qty-issued');
+            
+            if (!qtyInput.prop('disabled')) {
+                let qty = parseFloat(qtyInput.val()) || 0;
+                let price = parseFloat(row.find('.lot-selector option:selected').data('price')) || 0;
+                let total = qty * price;
+                
+                row.find('.row-total').text(total.toLocaleString(undefined, {minimumFractionDigits: 2}));
+                grandTotal += total;
+            } else {
+                row.find('.row-total').text('0.00');
+            }
+        });
+        $('#grand-total').text(grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}));
+    }
+
+    // เรียกคำนวนครั้งแรกเมื่อโหลดหน้า
+    calculateTotal();
+
+    // คำนวนเมื่อเปลี่ยนจำนวนหรือเปลี่ยนล็อต
+    $(document).on('input', '.qty-issued', calculateTotal);
+    $(document).on('change', '.lot-selector', calculateTotal);
+
     // 1. จัดการการยกเลิกรายการ (Item Cancellation)
     $(document).on('click', '.btn-cancel-item', function() {
         let row = $(this).closest('tr');
@@ -119,6 +166,7 @@ $(document).ready(function() {
         $(this).addClass('d-none');
         row.find('.btn-restore-item').removeClass('d-none');
         
+        calculateTotal(); // คำนวนใหม่เมื่อยกเลิก
         checkButtonStatus();
     });
 
@@ -134,6 +182,7 @@ $(document).ready(function() {
         $(this).addClass('d-none');
         row.find('.btn-cancel-item').removeClass('d-none');
         
+        calculateTotal(); // คำนวนใหม่เมื่อเรียกคืน
         checkButtonStatus();
     });
 
@@ -143,7 +192,6 @@ $(document).ready(function() {
             return $(this).val() > 0;
         }).length;
         
-        // ถ้าไม่มีรายการที่จะจ่ายเลย (ยกเลิกหมด) อาจจะเตือนหรือปิดปุ่ม
         if(activeItems === 0) {
             $('#btnSubmitIssue').addClass('btn-secondary').removeClass('btn-success');
         } else {
@@ -153,20 +201,17 @@ $(document).ready(function() {
 
     // 4. กดยืนยันบันทึก
     $('#btnSubmitIssue').click(function() {
+        let finalTotal = $('#grand-total').text();
         Swal.fire({
             title: 'ยืนยันการบันทึก?',
-            text: "ระบบจะตัดสต็อกตาม 'จำนวนจ่ายจริง' และเปลี่ยนสถานะรายการที่ยกเลิก",
+            text: "มูลค่ารวมทั้งสิ้น " + finalTotal + " บาท ระบบจะตัดสต็อกและเปลี่ยนสถานะรายการ",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#198754',
             confirmButtonText: 'ยืนยันตัดสต็อก'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Logic ส่ง Ajax ไปที่ Controller ของคุณ
-                Swal.fire('สำเร็จ!', 'บันทึกข้อมูลและอัปเดตสต็อกเรียบร้อย', 'success')
-                .then(() => {
-                    // location.reload();
-                });
+                Swal.fire('สำเร็จ!', 'บันทึกข้อมูลมูลค่า ' + finalTotal + ' เรียบร้อย', 'success');
             }
         });
     });

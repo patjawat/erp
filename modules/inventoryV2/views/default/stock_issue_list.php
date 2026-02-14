@@ -1,4 +1,5 @@
 <?php
+use yii\helpers\Url;
 use yii\web\View;
 
 $this->title = 'รายการใบเบิกพัสดุ (Stock Issue List)';
@@ -53,7 +54,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                                 <span class="badge rounded-pill bg-warning text-dark">รอคลังหลักจ่าย</span>
                             </td>
                             <td class="text-end">
-                                <a href="#" class="btn btn-primary btn-sm btn-issue-process" data-id="REQ67-0045">
+                                <a href="<?= Url::to(['/inventory-v2/default/stock-issue']) ?>?>" class="btn btn-primary btn-sm btn-issue-process" data-id="REQ67-0045">
                                     <i class="bi bi-box-seam"></i> ดำเนินการจ่าย
                                 </a>
                             </td>
@@ -98,7 +99,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 // ใน Yii2 คุณจะใช้การ redirect ไปยัง action ที่เราทำไว้ก่อนหน้านี้
-                // window.location.href = '/inventory/stock-issue?id=' + docNo;
+                window.location.href = '/inventory-v2/default/stock-issue?id=' + docNo;
                 Swal.fire('กำลังย้ายหน้า...', 'Redirecting to issue process', 'success');
             }
         });

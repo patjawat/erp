@@ -1,13 +1,16 @@
 <?php
-use yii\web\View;
+
 use yii\bootstrap5\Html;
+use yii\helpers\Url;
+use yii\web\View;
 
 // ลงทะเบียน ApexCharts และ Bootstrap Icons
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
 ?>
 
-<div class="container-fluid py-4 bg-light">
-    <div class="row mb-4">
+<div class="card">
+    <div class="card-body">
+<div class="row">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fw-bold mb-1 text-dark">ระบบจัดการคลังย่อย: <span class="text-primary">แผนกไอที / ซ่อมบำรุง</span></h4>
@@ -15,125 +18,128 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-white border shadow-sm"><i class="bi bi-printer"></i> พิมพ์รายงาน</button>
-                <button class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> บันทึกการใช้งาน</button>
+                <a href="<?= Url::to(['/inventory-v2/default/sub-stock-issue']) ?>" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> บันทึกการใช้งาน</a>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold">รอตรวจรับเข้า</p>
+                        <h3 class="fw-bold mb-0">5 <small class="h6 text-muted">ใบ</small></h3>
+                    </div>
+                    <div class="icon-box bg-info-subtle rounded-circle p-3">
+                        <i class="bi bi-truck text-info h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="mt-2"><span class="badge bg-info-subtle text-info">จากคลังหลัก</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold">พัสดุต่ำกว่าจุดวิกฤต</p>
+                        <h3 class="fw-bold mb-0 text-danger">12 <small class="h6 text-muted">รายการ</small></h3>
+                    </div>
+                    <div class="icon-box bg-danger-subtle rounded-circle p-3">
+                        <i class="bi bi-exclamation-triangle text-danger h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="mt-2"><a href="#" class="small text-danger fw-bold">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></a></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold">มูลค่าเบิกใช้เดือนนี้</p>
+                        <h3 class="fw-bold mb-0">45,200 <small class="h6 text-muted">฿</small></h3>
+                    </div>
+                    <div class="icon-box bg-success-subtle rounded-circle p-3">
+                        <i class="bi bi-wallet2 text-success h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-success small fw-bold"><i class="bi bi-graph-up"></i> +12% จากเดือนก่อน</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold">วัสดุหมดอายุ (30 วัน)</p>
+                        <h3 class="fw-bold mb-0 text-warning">2 <small class="h6 text-muted">Lot</small></h3>
+                    </div>
+                    <div class="icon-box bg-warning-subtle rounded-circle p-3">
+                        <i class="bi bi-hourglass-split text-warning h4 mb-0"></i>
+                    </div>
+                </div>
+                <div class="mt-2 small text-muted">ควรนำออกมาใช้งานก่อน</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h6 class="fw-bold mb-0">แนวโน้มการตัดจ่ายพัสดุในแผนก (7 วันล่าสุด)</h6>
+            </div>
+            <div class="card-body">
+                <div id="usageApexChart"></div>
             </div>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">รอตรวจรับเข้า</p>
-                            <h3 class="fw-bold mb-0">5 <small class="h6 text-muted">ใบ</small></h3>
-                        </div>
-                        <div class="icon-box bg-info-subtle rounded-circle p-3">
-                            <i class="bi bi-truck text-info h4 mb-0"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2"><span class="badge bg-info-subtle text-info">จากคลังหลัก</span></div>
-                </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h6 class="fw-bold mb-0 text-primary">รายการส่งของจากคลังหลัก</h6>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">พัสดุต่ำกว่าจุดวิกฤต</p>
-                            <h3 class="fw-bold mb-0 text-danger">12 <small class="h6 text-muted">รายการ</small></h3>
-                        </div>
-                        <div class="icon-box bg-danger-subtle rounded-circle p-3">
-                            <i class="bi bi-exclamation-triangle text-danger h4 mb-0"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2"><a href="#" class="small text-danger fw-bold">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></a></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">มูลค่าเบิกใช้เดือนนี้</p>
-                            <h3 class="fw-bold mb-0">45,200 <small class="h6 text-muted">฿</small></h3>
-                        </div>
-                        <div class="icon-box bg-success-subtle rounded-circle p-3">
-                            <i class="bi bi-wallet2 text-success h4 mb-0"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-success small fw-bold"><i class="bi bi-graph-up"></i> +12% จากเดือนก่อน</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">วัสดุหมดอายุ (30 วัน)</p>
-                            <h3 class="fw-bold mb-0 text-warning">2 <small class="h6 text-muted">Lot</small></h3>
-                        </div>
-                        <div class="icon-box bg-warning-subtle rounded-circle p-3">
-                            <i class="bi bi-hourglass-split text-warning h4 mb-0"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 small text-muted">ควรนำออกมาใช้งานก่อน</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h6 class="fw-bold mb-0">แนวโน้มการตัดจ่ายพัสดุในแผนก (7 วันล่าสุด)</h6>
-                </div>
-                <div class="card-body">
-                    <div id="usageApexChart"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h6 class="fw-bold mb-0 text-primary">รายการส่งของจากคลังหลัก</h6>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item px-3 py-3 border-0">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0 small fw-bold">ISS-670045</h6>
-                                    <small class="text-muted">8 รายการ | โดย: นายสมชาย</small>
-                                </div>
-                                <button class="btn btn-outline-primary btn-sm rounded-pill">ตรวจรับ</button>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-3 py-3 border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 small fw-bold">ISS-670045</h6>
+                                <small class="text-muted">8 รายการ | โดย: นายสมชาย</small>
                             </div>
-                        </li>
-                        <li class="list-group-item px-3 py-3 border-0 border-top">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0 small fw-bold">ISS-670048</h6>
-                                    <small class="text-muted">3 รายการ | โดย: นางสาวสวย</small>
-                                </div>
-                                <?php echo Html::a('ตรวจรับ', ['sub-stock-receiving'], ['class' => 'btn btn-outline-primary btn-sm rounded-pill'])?>
+                            <button class="btn btn-outline-primary btn-sm rounded-pill">ตรวจรับ</button>
+                        </div>
+                    </li>
+                    <li class="list-group-item px-3 py-3 border-0 border-top">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 small fw-bold">ISS-670048</h6>
+                                <small class="text-muted">3 รายการ | โดย: นางสาวสวย</small>
                             </div>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-footer bg-transparent border-0 text-center pb-3">
-                    <a href="#" class="small text-decoration-none">ดูรายการค้างรับทั้งหมด</a>
-                </div>
+                            <?php echo Html::a('ตรวจรับ', ['sub-stock-receiving'], ['class' => 'btn btn-outline-primary btn-sm rounded-pill']) ?>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center pb-3">
+                <a href="#" class="small text-decoration-none">ดูรายการค้างรับทั้งหมด</a>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <?php
@@ -190,10 +196,10 @@ $this->registerJS($js, View::POS_READY);
 ?>
 
 
-<button class="btn btn-outline-primary btn-sm rounded-pill" 
-        data-bs-toggle="modal" 
-        data-bs-target="#receiveModal"
-        onclick="loadReceiveData('ISS-670045')">
+<button class="btn btn-outline-primary btn-sm rounded-pill"
+    data-bs-toggle="modal"
+    data-bs-target="#receiveModal"
+    onclick="loadReceiveData('ISS-670045')">
     ตรวจรับ
 </button>
 
