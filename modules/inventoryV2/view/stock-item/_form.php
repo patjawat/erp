@@ -4,27 +4,29 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventoryV2\models\StockOrder $model */
+/** @var app\modules\inventoryV2\models\StockItem $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="stock-order-form">
+<div class="stock-item-form">
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'order_no')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'item_code')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'order_type')->dropDownList([ 'IN' => 'IN', 'OUT' => 'OUT', 'TRANSFER' => 'TRANSFER', ], ['prompt' => '']) ?>
+    <?= $form->field($model, 'item_name')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'order_date')->textInput() ?>
+    <?= $form->field($model, 'category_id')->textInput() ?>
 
-    <?= $form->field($model, 'warehouse_id')->textInput() ?>
+    <?= $form->field($model, 'min_qty')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'to_warehouse_id')->textInput() ?>
+    <?= $form->field($model, 'max_qty')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'contact_id')->textInput() ?>
+    <?= $form->field($model, 'is_asset')->textInput() ?>
 
-    <?= $form->field($model, 'status')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'is_innovation')->textInput() ?>
+
+    <?= $form->field($model, 'is_active')->textInput() ?>
 
     <?= $form->field($model, 'ref')->textInput(['maxlength' => true]) ?>
 

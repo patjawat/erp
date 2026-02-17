@@ -17,7 +17,7 @@ class StockOrderSearch extends StockOrder
     public function rules()
     {
         return [
-            [['id', 'warehouse_id', 'to_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['id', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json'], 'safe'],
         ];
     }
@@ -61,8 +61,8 @@ class StockOrderSearch extends StockOrder
         $query->andFilterWhere([
             'id' => $this->id,
             'order_date' => $this->order_date,
-            'warehouse_id' => $this->warehouse_id,
-            'to_warehouse_id' => $this->to_warehouse_id,
+            'main_warehouse_id' => $this->main_warehouse_id,
+            'sub_warehouse_id' => $this->sub_warehouse_id,
             'contact_id' => $this->contact_id,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,

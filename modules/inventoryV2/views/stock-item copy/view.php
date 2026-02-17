@@ -39,13 +39,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'label' => 'ชื่อรายการ',
                         'value' => function ($model) {
-                            return $model->item_name;
+                            return $model->title;
                         },
                     ],
                     [
                         'label' => 'รหัส',
                         'value' => function ($model) {
-                            return $model->item_code;
+                            return $model->code;
                         },
                     ],
                       [
@@ -71,13 +71,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'label' => 'จำนวนสูงสุด',
                         'value' => function ($model) {
-                            return $model->max_qty;
+                            return $model->qty_max;
                         },
                     ],
                     [
                         'label' => 'จำนวนต่ำสุด',
                         'value' => function ($model) {
-                            return $model->min_qty;
+                            return $model->qty_min;
                         },
                     ],
                 ],
@@ -88,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="d-flex justify-content-center gap-2">
-    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/inventory-v2/stock-item/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/sm/product/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
     <i class="fa-regular fa-circle-xmark"></i>  ปิด
     </button>

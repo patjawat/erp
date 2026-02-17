@@ -9,7 +9,7 @@ use Yii;
  *
  * @property int $id
  * @property int $stock_order_id เชื่อมกับ stock_order
- * @property int $item_id เชื่อมกับ stock_item
+ * @property int $item_code เชื่อมกับ stock_item
  * @property float $qty จำนวนที่ทำรายการ
  * @property float|null $unit_price ราคาทุนต่อหน่วย
  * @property string|null $lot_number เลขล็อตสินค้า
@@ -38,13 +38,19 @@ class StockDetail extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function rules()
+public function rules()
     {
         return [
             [['unit_price', 'lot_number', 'expiry_date', 'ref', 'data_json', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
-            [['stock_order_id', 'item_id', 'qty'], 'required'],
-            [['stock_order_id', 'item_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['qty', 'unit_price'], 'number'],
+            [['stock_order_id', 'item_code', 'qty'], 'required'],
+            
+            // 1. ❌ เอา 'item_code' ออกจากกลุ่ม 'integer' เพราะมันเป็น string(50) 
+            [['stock_order_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            
+            // 2. ✅ เพิ่มกฎสำหรับ item_code ให้เป็น string ตาม Migration
+            [['item_code'], 'string', 'max' => 50],
+            
+            [['qty', 'unit_price', 'remain_qty'], 'number'],
             [['expiry_date', 'data_json'], 'safe'],
             [['lot_number'], 'string', 'max' => 100],
             [['ref'], 'string', 'max' => 255],
@@ -60,7 +66,7 @@ class StockDetail extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'stock_order_id' => 'Stock Order ID',
-            'item_id' => 'Item ID',
+            'item_code' => 'Item ID',
             'qty' => 'Qty',
             'unit_price' => 'Unit Price',
             'lot_number' => 'Lot Number',
@@ -83,5 +89,12 @@ class StockDetail extends \yii\db\ActiveRecord
     {
         return $this->hasOne(StockOrder::class, ['id' => 'stock_order_id']);
     }
+
+public function getItem()
+{
+    // เปลี่ยน StockItem เป็นชื่อ Class ของตารางวัสดุของคุณ
+    // และ item_code คือฟิลด์ที่ใช้เชื่อมในตาราง stock_detail
+    return $this->hasOne(StockItem::class, ['item_code' => 'item_code']);
+}
 
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cedec75fd57d5d224223f35f9d26cedc",
+    "content-hash": "9ed6140b4a9cbd1bc991077345cf159c",
     "packages": [
         {
             "name": "2amigos/yii2-qrcode-helper",
@@ -561,170 +561,6 @@
                 "source": "https://github.com/2amigos/yii2-flatpickr-widget"
             },
             "time": "2024-09-25T08:16:01+00:00"
-        },
-        {
-            "name": "chillerlan/php-qrcode",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/chillerlan/php-qrcode.git",
-                "reference": "c55c64dfa035a3c3ad91a4e13ed10bcd5a3c6807"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/c55c64dfa035a3c3ad91a4e13ed10bcd5a3c6807",
-                "reference": "c55c64dfa035a3c3ad91a4e13ed10bcd5a3c6807",
-                "shasum": ""
-            },
-            "require": {
-                "chillerlan/php-settings-container": "^3.2.1",
-                "ext-mbstring": "*",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "chillerlan/php-authenticator": "^5.2.1",
-                "ext-fileinfo": "*",
-                "intervention/image": "^3.11",
-                "phan/phan": "6.0.0-beta",
-                "phpbench/phpbench": "^1.4",
-                "phpmd/phpmd": "^2.15",
-                "phpstan/phpstan": "^2.1.28",
-                "phpstan/phpstan-deprecation-rules": "^2.0.3",
-                "phpunit/phpunit": "^11.5",
-                "setasign/fpdf": "^1.8.6",
-                "slevomat/coding-standard": "^8.23",
-                "squizlabs/php_codesniffer": "^4.0"
-            },
-            "suggest": {
-                "chillerlan/php-authenticator": "Yet another Google authenticator! Also creates URIs for mobile apps.",
-                "intervention/image": "More advanced GD and ImageMagick output.",
-                "setasign/fpdf": "Required to use the QR FPDF output.",
-                "simple-icons/simple-icons": "SVG icons that you can use to embed as logos in the QR Code"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "chillerlan\\QRCode\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT",
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Kazuhiko Arase",
-                    "homepage": "https://github.com/kazuhikoarase/qrcode-generator"
-                },
-                {
-                    "name": "ZXing Authors",
-                    "homepage": "https://github.com/zxing/zxing"
-                },
-                {
-                    "name": "Ashot Khanamiryan",
-                    "homepage": "https://github.com/khanamiryan/php-qrcode-detector-decoder"
-                },
-                {
-                    "name": "Smiley",
-                    "email": "smiley@chillerlan.net",
-                    "homepage": "https://github.com/codemasher"
-                },
-                {
-                    "name": "Contributors",
-                    "homepage": "https://github.com/chillerlan/php-qrcode/graphs/contributors"
-                }
-            ],
-            "description": "A QR Code generator and reader with a user-friendly API. PHP 8.2+",
-            "homepage": "https://github.com/chillerlan/php-qrcode",
-            "keywords": [
-                "phpqrcode",
-                "qr",
-                "qr code",
-                "qr-reader",
-                "qrcode",
-                "qrcode-generator",
-                "qrcode-reader"
-            ],
-            "support": {
-                "docs": "https://php-qrcode.readthedocs.io",
-                "issues": "https://github.com/chillerlan/php-qrcode/issues",
-                "source": "https://github.com/chillerlan/php-qrcode"
-            },
-            "funding": [
-                {
-                    "url": "https://ko-fi.com/codemasher",
-                    "type": "Ko-Fi"
-                }
-            ],
-            "time": "2025-11-23T22:26:24+00:00"
-        },
-        {
-            "name": "chillerlan/php-settings-container",
-            "version": "3.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/chillerlan/php-settings-container.git",
-                "reference": "95ed3e9676a1d47cab2e3174d19b43f5dbf52681"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/95ed3e9676a1d47cab2e3174d19b43f5dbf52681",
-                "reference": "95ed3e9676a1d47cab2e3174d19b43f5dbf52681",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "phpmd/phpmd": "^2.15",
-                "phpstan/phpstan": "^1.11",
-                "phpstan/phpstan-deprecation-rules": "^1.2",
-                "phpunit/phpunit": "^10.5",
-                "squizlabs/php_codesniffer": "^3.10"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "chillerlan\\Settings\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Smiley",
-                    "email": "smiley@chillerlan.net",
-                    "homepage": "https://github.com/codemasher"
-                }
-            ],
-            "description": "A container class for immutable settings objects. Not a DI container.",
-            "homepage": "https://github.com/chillerlan/php-settings-container",
-            "keywords": [
-                "Settings",
-                "configuration",
-                "container",
-                "helper"
-            ],
-            "support": {
-                "issues": "https://github.com/chillerlan/php-settings-container/issues",
-                "source": "https://github.com/chillerlan/php-settings-container"
-            },
-            "funding": [
-                {
-                    "url": "https://www.paypal.com/donate?hosted_button_id=WLYUNAT9ZTJZ4",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://ko-fi.com/codemasher",
-                    "type": "ko_fi"
-                }
-            ],
-            "time": "2024-07-16T11:13:48+00:00"
         },
         {
             "name": "codenix-sv/yii2-flatpickr",
@@ -1556,6 +1392,78 @@
                 }
             ],
             "time": "2023-06-01T07:04:22+00:00"
+        },
+        {
+            "name": "endroid/qr-code",
+            "version": "4.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/endroid/qr-code.git",
+                "reference": "a75c913b0e4d6ad275e49a2c1de1cacffc6c2184"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/endroid/qr-code/zipball/a75c913b0e4d6ad275e49a2c1de1cacffc6c2184",
+                "reference": "a75c913b0e4d6ad275e49a2c1de1cacffc6c2184",
+                "shasum": ""
+            },
+            "require": {
+                "bacon/bacon-qr-code": "^2.0.5",
+                "php": "^7.4||^8.0"
+            },
+            "require-dev": {
+                "endroid/quality": "dev-master",
+                "ext-gd": "*",
+                "khanamiryan/qrcode-detector-decoder": "^1.0.4",
+                "setasign/fpdf": "^1.8.2"
+            },
+            "suggest": {
+                "ext-gd": "Enables you to write PNG images",
+                "khanamiryan/qrcode-detector-decoder": "Enables you to use the image validator",
+                "roave/security-advisories": "Makes sure package versions with known security issues are not installed",
+                "setasign/fpdf": "Enables you to use the PDF writer"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Endroid\\QrCode\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jeroen van den Enden",
+                    "email": "info@endroid.nl"
+                }
+            ],
+            "description": "Endroid QR Code",
+            "homepage": "https://github.com/endroid/qr-code",
+            "keywords": [
+                "code",
+                "endroid",
+                "php",
+                "qr",
+                "qrcode"
+            ],
+            "support": {
+                "issues": "https://github.com/endroid/qr-code/issues",
+                "source": "https://github.com/endroid/qr-code/tree/4.6.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/endroid",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-10-26T08:48:17+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -15357,7 +15265,6 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "asyou99/yii2-cart": 20,
-        "chillerlan/php-qrcode": 20,
         "coderius/yii2-hit-counter": 20,
         "creocoder/yii2-nested-sets": 20,
         "dektrium/yii2-rbac": 20,

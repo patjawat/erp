@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var app\modules\inventoryV2\models\StockOrder $model */
+/** @var app\modules\inventoryV2\models\StockItem $model */
 
 $this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Stock Orders', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Stock Items', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="stock-order-view">
+<div class="stock-item-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -30,13 +30,14 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'order_no',
-            'order_type',
-            'order_date',
-            'warehouse_id',
-            'to_warehouse_id',
-            'contact_id',
-            'status',
+            'item_code',
+            'item_name',
+            'category_id',
+            'min_qty',
+            'max_qty',
+            'is_asset',
+            'is_innovation',
+            'is_active',
             'ref',
             'data_json',
             'created_at',

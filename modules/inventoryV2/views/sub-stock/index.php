@@ -19,7 +19,7 @@ use yii\helpers\Url;
             </div>
 
             <div class="col-md-4 col-lg-3">
-                <a href="<?= Url::to(['/inventory-v2/sub-stock/requisition']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none nav-portal-card border-warning-subtle border-start border-4">
+                <a href="<?= Url::to(['/inventory-v2/requisition']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none nav-portal-card border-warning-subtle border-start border-4">
                    <div class="card-body p-4 d-flex align-items-center flex-column justify-content-center gap-3">
                 <div class="erp-icon-box-xl">
                     <i class="bi bi-file-earmark-plus h2 mb-0"></i>

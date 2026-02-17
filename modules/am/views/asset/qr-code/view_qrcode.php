@@ -1,36 +1,49 @@
 <?php
+
 use yii\helpers\Html;
-use chillerlan\QRCode\QRCode;
- $data = $model->code;
- $qr = new QRCode();
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
+
+$code = $model->code;
+$result = Builder::create()
+        ->writer(new PngWriter())
+        ->data($code)
+        ->size(300)
+        ->build();
+    $base64 = base64_encode($result->getString());
+
 ?>
+
 <div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded">
     <div class="flex-shrink-0">
-        <img src="<?=$qr->render($data)?>" width="140">
+       <img src="data:image/png;base64,<?= $base64 ?>" width="140">
     </div>
     <div class="flex-grow-1 ms-3">
         <ul class="list-inline">
             <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <span class="text-danger"><?=$model->code?><span>
+                <span class="text-danger"><?= $model->code ?><span>
             </li>
             <li><i class="bi bi-check2-circle text-primary fs-5"></i>
                 <?= $model->assetType->title ?>
+                <li><i class="bi bi-check2-circle text-primary fs-5"></i>
+                <?= $model->asset_name ?>
+                <li><i class="bi bi-check2-circle text-primary fs-5"></i>
+                <?= $model->departmentName() ?>
             <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?=number_format($model->price, 2)?>
-                :: <?=Yii::$app->thaiFormatter->asDate($model->receive_date, 'short')?>
+                <?= number_format($model->price, 2) ?> :: <?= Yii::$app->thaiFormatter->asDate($model->receive_date, 'short') ?>
             </li>
             <!-- <li><i class="bi bi-check2-circle text-primary fs-5"></i>
                 <?php if (isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''): ?>
-                <?=isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : ''?>
+                <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : '' ?>
                 <?php else: ?>
-                <?=isset($model->data_json['department_name']) ? $model->data_json['department_name'] : ''?>
-                <?php endif;?>
+                <?= isset($model->data_json['department_name']) ? $model->data_json['department_name'] : '' ?>
+                <?php endif; ?>
             </li> -->
             <ul>
     </div>
 </div>
 <div class="flex gap-2 mt-3">
-    <?=Html::a('<i class="fa-solid fa-print"></i> QR-Code',['#'],['class' => 'btn btn-primary'])?>
-    <?=Html::a('<i class="fa-solid fa-print"></i> Barcode',['#'],['class' => 'btn btn-primary'])?>
-    <?=Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ',['/am/asset/qrcode-setting','title' => '<i class="fa-solid fa-sliders"></i> กำหนดขนาดกระดาษา'],['class' => 'btn btn-secondary open-modal','data' => ['size' => 'modal-lg']])?>
+    <?= Html::a('<i class="fa-solid fa-print"></i> QR-Code', ['#'], ['class' => 'btn btn-primary']) ?>
+    <?= Html::a('<i class="fa-solid fa-print"></i> Barcode', ['#'], ['class' => 'btn btn-primary']) ?>
+    <?= Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ', ['/am/asset/qrcode-setting', 'title' => '<i class="fa-solid fa-sliders"></i> กำหนดขนาดกระดาษา'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
 </div>

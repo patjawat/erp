@@ -77,7 +77,7 @@
         "karatae99/yii2-date-picker-thai-widget" : "~1.0",
         "istvan-ujjmeszaros/bootstrap-duallistbox": "~4.0.0",
         "softark/yii2-dual-listbox": "dev-master",
-        "chillerlan/php-qrcode": "dev-main",
+        
         "kartik-v/php-date-formatter": "dev-master",
         "kartik-v/yii2-popover-x": "dev-master",
         "edofre/yii2-fullcalendar": "V1.0.11",
@@ -93,7 +93,8 @@
         "mpdf/mpdf": "^8.2",
         "setasign/fpdi": "^2.6",
         "2amigos/yii2-qrcode-helper": "^3.1",
-        "guzzlehttp/guzzle": "7.10.x-dev"
+        "guzzlehttp/guzzle": "7.10.x-dev",
+        "endroid/qr-code": "^4.6"
         
     },
     "require-dev": {

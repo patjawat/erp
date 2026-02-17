@@ -1,22 +1,25 @@
 <?php
 
-
 namespace app\modules\inventoryV2\models;
 
 use yii\base\Model;
-use yii\db\Expression;
 use yii\data\ActiveDataProvider;
+use app\modules\inventoryV2\models\StockItem;
 
 /**
- * StockItemSearch represents the model behind the search form of `app\modules\sm\models\StockItem`.
+ * StockItemSearch represents the model behind the search form of `app\modules\inventoryV2\models\StockItem`.
  */
 class StockItemSearch extends StockItem
 {
+    /**
+     * {@inheritdoc}
+     */
     public function rules()
     {
         return [
-            [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'q_category', 'q', 'metter_type', 'unit','innovation_account','group_id'], 'safe'],
+            [['id','is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['item_code', 'item_name', 'ref', 'data_json','category_id'], 'safe'],
+            [['min_qty', 'max_qty'], 'number'],
         ];
     }
 
@@ -33,10 +36,11 @@ class StockItemSearch extends StockItem
      * Creates data provider instance with search query applied
      *
      * @param array $params
+     * @param string|null $formName Form name to be used into `->load()` method.
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $formName = null)
     {
         $query = StockItem::find();
 
@@ -46,7 +50,7 @@ class StockItemSearch extends StockItem
             'query' => $query,
         ]);
 
-        $this->load($params);
+        $this->load($params, $formName);
 
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
@@ -57,23 +61,22 @@ class StockItemSearch extends StockItem
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'active' => $this->active,
-            'group_id' => $this->group_id,
-            'qty_min' => $this->qty_min,
-            'qty_max' => $this->qty_max,
+            'category_id' => $this->category_id,
+            'min_qty' => $this->min_qty,
+            'max_qty' => $this->max_qty,
+            'is_asset' => $this->is_asset,
+            'is_innovation' => $this->is_innovation,
+            'is_active' => $this->is_active,
+            'created_at' => $this->created_at,
+            'created_by' => $this->created_by,
+            'updated_at' => $this->updated_at,
+            'updated_by' => $this->updated_by,
         ]);
-        $query
+
+        $query->andFilterWhere(['like', 'item_code', $this->item_code])
+            ->andFilterWhere(['like', 'item_name', $this->item_name])
             ->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'category_id', $this->category_id])
-            ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'emp_id', $this->emp_id])
-            ->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'data_json', $this->data_json])
-            ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.metter_type')"), $this->metter_type])
-            // ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.innovation_account')"), $this->innovation_account])
-            ->andFilterWhere(['like', new Expression("JSON_EXTRACT(data_json, '$.unit')"), $this->unit]);
+            ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
         return $dataProvider;
     }

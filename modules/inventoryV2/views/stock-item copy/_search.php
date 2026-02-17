@@ -39,8 +39,8 @@ use kartik\widgets\ActiveForm;
         ?>
     </div>
     <div class="col-lg-2 col-md-6 col-sm-12">
-        <?php $form->field($model, 'metter_type')->widget(Select2::classname(), [
-            //'data' => $model->listMatterType(),
+        <?= $form->field($model, 'metter_type')->widget(Select2::classname(), [
+            'data' => $model->listMatterType(),
             'options' => ['placeholder' => 'ประเภทวัสดุทั้งหมด'],
             'pluginOptions' => [
                 'allowClear' => true,
@@ -60,12 +60,12 @@ use kartik\widgets\ActiveForm;
     </div>
     <div class="col-lg-2 col-md-6 col-sm-6">
         <div class="mt-1">
-            <?= $form->field($model, 'is_innovation')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->is_innovation == "1" ? true : false])->label('แสดงบัญชีนวัตกรรม'); ?>
+            <?= $form->field($model, 'innovation_account')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->innovation_account == "1" ? true : false])->label('แสดงบัญชีนวัตกรรม'); ?>
         </div>
     </div>
     <div class="col-lg-2 col-md-6 col-sm-6">
         <div class="mt-1">
-            <?= $form->field($model, 'is_active')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->is_active == 1 ? true : false])->label('สถานะเปิดใช้งาน'); ?>
+            <?= $form->field($model, 'active')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->active == 1 ? true : false])->label('สถานะเปิดใช้งาน'); ?>
         </div>
     </div>
 

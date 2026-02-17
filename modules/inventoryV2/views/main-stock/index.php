@@ -11,7 +11,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="col-md-4 col-lg-3">
-        <a href="<?= Url::to(['/inventory-v2/default/main-dashboard']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none rounded-4">
+        <a href="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none rounded-4">
             <div class="card-body p-4 d-flex align-items-center flex-column justify-content-center gap-3">
                 <div class="erp-icon-box-xl">
                     <i class="bi bi-speedometer2 h2 mb-0"></i>

@@ -2,57 +2,68 @@
 
 namespace app\modules\inventoryV2\models;
 
-use app\models\Categorise;
-use app\models\Uploads;
-use app\modules\filemanager\components\FileManagerHelper;
 use Yii;
+use yii\helpers\Html;
+use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /**
- * This is the model class for table "stock_item".
+ * This is the model class for table "asset".
  *
  * @property int $id
- * @property string $item_code รหัสพัสดุ
- * @property string $item_name ชื่อพัสดุ
- * @property int|null $category_id ID หมวดหมู่
- * @property float|null $min_qty จุดสั่งซื้อขั้นต่ำ
- * @property float|null $max_qty จุดสั่งซื้อขั้นสูง
- * @property int|null $is_asset เป็นครุภัณฑ์หรือไม่ (0=วัสดุ, 1=ครุภัณฑ์)
- * @property int|null $is_innovation เป็นบัญชีนวัตกรรมหรือไม่ (0=ไม่เป็น, 1=เป็น)
- * @property int|null $is_active สะานะ (0=ปิด, 1=เปิด)
- * @property string|null $ref ฟิลด์อ้างอิงภายนอก
- * @property string|null $data_json เก็บข้อมูลเสริมอื่นๆ รูปแบบ JSON
- * @property int|null $created_at เวลาที่สร้าง
+ * @property string|null $ref
+ * @property string|null $asset_group แยกประเภทพัสดุ/ครุภัณฑ์
+ * @property string|null $asset_item
+ * @property string|null $code ครุภัณฑ์
+ * @property string|null $fsn_number หมายเลขครุภัณฑ์
+ * @property int|null $qty จำนวน
+ * @property string|null $receive_date วันที่รับเข้า
+ * @property float|null $price ราคา
+ * @property int|null $purchase
+ * @property int|null $department
+ * @property string|null $repair ประวัติการซ่อม
+ * @property string|null $owner
+ * @property int|null $life อายุการใช้งาน
+ * @property string|null $device_items อุปกรณ์ภายใน
+ * @property int|null $on_year
+ * @property int|null $dep_id ประจำอยู่หน่วยงาน
+ * @property int|null $depre_type ประเภทค่าเสื่อมราคา
+ * @property int|null $budget_year งบประมาณ
+ * @property string|null $asset_status สถานะทรัพย์สิน
+ * @property string|null $data_json
+ * @property string|null $updated_at วันเวลาแก้ไข
+ * @property string|null $created_at วันเวลาสร้าง
  * @property int|null $created_by ผู้สร้าง
- * @property int|null $updated_at เวลาที่แก้ไขล่าสุด
- * @property int|null $updated_by ผู้แก้ไขล่าสุด
+ * @property int|null $updated_by ผู้แก้ไข
  */
 class StockItem extends \yii\db\ActiveRecord
 {
-
-
-    public $auto;
-    public $metter_type;
-    public $unit;
-    public $unit_name;
-    public $q;
-
-    public function init()
-{
-    parent::init();
-    if ($this->isNewRecord) {
-        // ตั้งค่าเริ่มต้นเป็น 1 เมื่อสร้างรายการใหม่
-        $this->is_active = 1; 
-    }
-}
-
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'stock_item';
+        return 'categorise';
     }
+
+    public $q_category;
+    public $unit;
+    public $unit_name;
+    public $auto;
+    public $q;
+    public $metter_type;
+    public $innovation_account;
+
+
+    public function init()
+{
+    parent::init();
+    if ($this->isNewRecord) {
+        $this->active = 1;
+    }
+}
 
     /**
      * {@inheritdoc}
@@ -60,16 +71,13 @@ class StockItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category_id', 'ref', 'data_json', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
-            [['max_qty'], 'default', 'value' => 0.00],
-            [['is_active'], 'default', 'value' => 0],
-            [['item_code', 'item_name'], 'required'],
-            [['is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['min_qty', 'max_qty'], 'number'],
-            [['category_id', 'data_json', 'auto', 'metter_type', 'unit_name', 'unit', 'q'], 'safe'],
-            [['item_code'], 'string', 'max' => 50],
-            [['item_name', 'ref'], 'string', 'max' => 255],
-            [['item_code'], 'unique'],
+            [['name'], 'required'],
+            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account','qty_min','qty_max'], 'safe'],
+            [['active'], 'integer'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+            [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
+            ['active', 'default', 'value' => 1],
+
         ];
     }
 
@@ -80,52 +88,44 @@ class StockItem extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'item_code' => 'Item Code',
-            'item_name' => 'Item Name',
-            'category_id' => 'Category ID',
-            'min_qty' => 'Min Qty',
-            'max_qty' => 'Max Qty',
-            'is_asset' => 'Is Asset',
-            'is_innovation' => 'Is Innovation',
-            'is_active' => 'Is Active',
             'ref' => 'Ref',
+            'category_id' => 'Category ID',
+            'code' => 'Code',
+            'emp_id' => 'Emp ID',
+            'name' => 'Name',
+            'title' => 'Title',
+            'description' => 'Description',
             'data_json' => 'Data Json',
-            'created_at' => 'Created At',
-            'created_by' => 'Created By',
-            'updated_at' => 'Updated At',
-            'updated_by' => 'Updated By',
+            'active' => 'Active',
         ];
+    }
+
+
+    public function afterFind()
+    {
+        try {
+
+            $this->unit_name = isset($this->data_json['unit']) ? $this->data_json['unit'] : '-';
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
     }
 
     public function getStockItemItem()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_item']);
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_item']);
     }
 
     public function getStockItemType()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
-
-    public function getCategoryType()
-    {
-        return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
-    }
-
-
-    public function getStockBalance($warehouse_id)
-{
-    $balance = StockBalance::find()
-        ->where(['item_code' => $this->id, 'warehouse_id' => $warehouse_id])
-        ->sum('balance_qty');
-        
-    return $balance ?: 0;
-}
 
 
     public function listAssetType()
     {
-        $items = Categorise::find()->where(['category_id' => 4, 'name' => 'asset_type'])->all();
+        $items = self::find()->where(['category_id' => 4, 'name' => 'asset_type'])->all();
         return ArrayHelper::map($items, 'code', 'title');
     }
 
@@ -148,7 +148,7 @@ class StockItem extends \yii\db\ActiveRecord
         ];
         return $items;
     }
-
+    
     //สร้างรหัสวัสดุ
     public static function nextCode($categoryId)
     {
@@ -222,20 +222,20 @@ class StockItem extends \yii\db\ActiveRecord
     //แสดงรูปแบบประเภท
     public function ViewTypeName()
     {
-        try {
+        // try {
 
-            $model =  Categorise::find()->where(['name' => $this->name])->one();
+            $model =  self::find()->where(['name' => $this->name])->one();
 
             return [
                 'title' =>  isset($this->stockItemType->title) ? $this->stockItemType->title : 'ไม่ได้ระบุ',
                 'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
             ];
-        } catch (\Throwable $th) {
-            return [
-                'title' =>  '',
-                'code' => ''
-            ];
-        }
+        // } catch (\Throwable $th) {
+        //     return [
+        //         'title' =>  '',
+        //         'code' => ''
+        //     ];
+        // }
     }
 
     public function AvatarXl()

@@ -21,104 +21,105 @@ $ref = isset($ref) ? Html::encode($ref) : '';
 ]); ?>
 
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
 
 <div class="row">
     <div class="col-6">
-        <?= $form->field($model, 'item_name')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อวัสดุ') ?>
+        <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อวัสดุ') ?>
     </div>
     <div class="col-6">
         <?php
-        echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-            'data' => $model->listUnit(),
-            'options' => ['placeholder' => 'เช่น ชิ้น, กล่อง, แพ็ค'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => "function(result) { 
+                        echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
+                            'data' => $model->listUnit(),
+                            'options' => ['placeholder' => 'เช่น ชิ้น, กล่อง, แพ็ค'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => "function(result) { 
                                             var data = \$(this).select2('data')[0].text;
                                             console.log(data)
                                         }",
-            ]
-        ])->label('หน่วย')
-        ?>
+                            ]
+                        ])->label('หน่วย')
+                        ?>
     </div>
     <div class="col-6">
         <?php if ($model->isNewRecord): ?>
-            <?= $form->field($model, 'item_code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสวัสดุ / Barcode'])->label('รหัสวัสดุ') ?>
+        <?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสวัสดุ / Barcode'])->label('รหัสวัสดุ') ?>
         <?php else: ?>
-            <div class="mb-3 highlight-addon field-stock-tem-item-item_code">
-                <label class="form-label has-star" for="stock-tem-item_code">รหัสวัสดุ</label>
-                <input type="text" class="form-control" name="StockItem[item_code]" value="<?= Html::encode($model->item_code) ?>"
-                    disabled>
-            </div>
+        <div class="mb-3 highlight-addon field-product-code">
+            <label class="form-label has-star" for="product-code">รหัสวัสดุ</label>
+            <input type="text" class="form-control" name="Product[code]" value="<?= Html::encode($model->code) ?>"
+                disabled>
+        </div>
         <?php endif ?>
 
     </div>
 
     <div class="col-6">
         <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
-            'data' => $model->listAssetType(),
-            'options' => ['placeholder' => 'ประเภทของวัสดุ'],
-            'pluginOptions' => [
-                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) {}',
-                'select2:unselecting' => 'function() {}',
-            ],
+                            'data' => $model->listAssetType(),
+                            'options' => ['placeholder' => 'ประเภทของวัสดุ'],
+                            'pluginOptions' => [
+                                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                            'pluginEvents' => [
+                                'select2:select' => 'function(result) {}',
+                                'select2:unselecting' => 'function() {}',
+                            ],
 
-        ])->label('หมวดหมู่') ?>
+                        ])->label('หมวดหมู่') ?>
 
     </div>
 
     <div class="col-6">
         <?php
-        echo $form->field($model, 'data_json[metter_type]')->widget(Select2::classname(), [
-            'data' => $model->listMatterType(),
-            'options' => ['placeholder' => 'ระบุประเภทวัสดุ...'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-        ])->label('ประเภทวัสดุ')
-        ?>
+                        echo $form->field($model, 'data_json[metter_type]')->widget(Select2::classname(), [
+                            'data' => $model->listMatterType(),
+                            'options' => ['placeholder' => 'ระบุประเภทวัสดุ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                        ])->label('ประเภทวัสดุ')
+                        ?>
     </div>
     <div class="col-3">
-        <?= $form->field($model, 'max_qty')->textInput([
-            'type' => 'number',
-            'maxlength' => true,
-            'placeholder' => 'ระบุจำนวนสูงสุด',
-            'min' => 0
-        ])->label('จำนวนสูงสุด') ?>
-    </div>
+    <?= $form->field($model, 'qty_max')->textInput([
+        'type' => 'number',
+        'maxlength' => true,
+        'placeholder' => 'ระบุจำนวนสูงสุด',
+        'min' => 0
+    ])->label('จำนวนสูงสุด') ?>
+</div>
 
-    <div class="col-3">
-        <?= $form->field($model, 'min_qty')->textInput([
-            'type' => 'number',
-            'maxlength' => true,
-            'placeholder' => 'ระบุจำนวนต่ำสุด',
-            'min' => 0
-        ])->label('จำนวนต่ำสุด') ?>
-    </div>
+<div class="col-3">
+    <?= $form->field($model, 'qty_min')->textInput([
+        'type' => 'number',
+        'maxlength' => true,
+        'placeholder' => 'ระบุจำนวนต่ำสุด',
+        'min' => 0
+    ])->label('จำนวนต่ำสุด') ?>
+</div>
 
     <div class="col-6">
         <?php
-        echo $form->field($model, 'data_json[purchase_type]')->widget(Select2::classname(), [
-            'data' => $model->listPurchaseType(),
-            'options' => ['placeholder' => 'ระบุการจัดซื้อ...'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-        ])->label('การจัดซื้อ')
-        ?>
+                        echo $form->field($model, 'data_json[purchase_type]')->widget(Select2::classname(), [
+                            'data' => $model->listPurchaseType(),
+                            'options' => ['placeholder' => 'ระบุการจัดซื้อ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'tags' => true,
+                                'dropdownParent' => '#main-modal',
+                            ],
+                        ])->label('การจัดซื้อ')
+                        ?>
     </div>
 
     <div class="col-3">
@@ -128,11 +129,7 @@ $ref = isset($ref) ? Html::encode($ref) : '';
     </div>
     <div class="col-3">
         <div class="mt-4">
-            <?= $form->field($model, 'is_innovation')->checkbox([
-                'custom' => true,
-                'switch' => true,
-                // ไม่ต้องใส่ 'checked' เอง ถ้าค่าใน Database เป็น 1 หรือ true มันจะจัดการให้ครับ
-            ])->label('บัญชีนวัตกรรม'); ?>
+            <?=$form->field($model, 'data_json[innovation_account]')->checkbox(['custom' => true,'switch' => true, 'checked' => (isset($model->data_json['innovation_account']) && $model->data_json['innovation_account'] == "1" ? true : false )])->label('บัญชีนวัตกรรม');?>
         </div>
     </div>
 
@@ -158,9 +155,9 @@ $ref = isset($ref) ? Html::encode($ref) : '';
     <?php ActiveForm::end(); ?>
 
     <?php
-    $urlUpload = Url::to('/filemanager/uploads/single');
-    $ref = $model->ref;
-    $js = <<< JS
+$urlUpload = Url::to('/filemanager/uploads/single');
+$ref = $model->ref;
+$js = <<< JS
     if (localStorage.getItem('auto') === '1') {
         $('#product-auto').prop('checked', true);
         $('#product-code').prop('disabled', true).val('อัตโนมัติ');
@@ -297,5 +294,5 @@ $('#form-product').on('beforeSubmit', function (e) {
 
 
 JS;
-    $this->registerJS($js);
-    ?>
+$this->registerJS($js);
+?>
