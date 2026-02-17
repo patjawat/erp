@@ -47,12 +47,7 @@ use app\components\widgets\DataSummaryWidget;
                             <div class="text-muted" style="font-size: 0.9rem;"><?= $model->data_json['brand'] ?? '-' ?></div>
                         </td>
                         <td class="text-secondary py-2">
-                            <?php if (isset($item->data_json['department_name']) && $item->data_json['department_name'] == ''): ?>
-                                <?= isset($item->data_json['department_name_old']) ? $item->data_json['department_name_old'] : '' ?>
-                            <?php else: ?>
-                                <?= isset($item->data_json['department_name']) ? $item->data_json['department_name'] : '' ?>
-                            <?php endif; ?>
-
+                            <?= $item->departmentName() ?>
                         </td>
                         <td class="text-secondary py-2"> <?= Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium') ?></td>
                         <td class="text-end fw-semibold"><?= number_format($item->price ?? 0, 2) ?? 0.00 ?></td>

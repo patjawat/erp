@@ -149,7 +149,7 @@ class Asset extends \yii\db\ActiveRecord
         if ($department) {
             return $department->name;
         } else {
-            return 'ไม่ระบุ';
+            return $this->department;
         }
     }
 
