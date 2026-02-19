@@ -124,7 +124,7 @@ class MainStockController extends \yii\web\Controller
                             // 3. อัปเดตสต็อกจริง (Service ที่เราทำไว้ตอนแรก)
                             $success = InventoryService::moveStock(
                                 $detail->item_code,
-                                $model->warehouse_id,
+                                $model->main_warehouse_id,
                                 $detail->qty,
                                 'IN',
                                 $model->id
@@ -185,9 +185,9 @@ class MainStockController extends \yii\web\Controller
                 foreach ($oldItems as $oldItem) {
                     InventoryService::moveStock(
                         $oldItem->item_code,
-                        $model->warehouse_id,
+                        $model->main_warehouse_id,
                         $oldItem->qty,
-                        'IN', // ใช้ OUT เพื่อหักลดยอดที่เคยรับเข้า (Reverse IN)
+                        'OUT', // ใช้ OUT เพื่อหักลดยอดที่เคยรับเข้า (Reverse IN)
                         $model->id
                     );
                 }
@@ -209,7 +209,7 @@ class MainStockController extends \yii\web\Controller
                                 // 3. ปรับปรุงสต็อกตามยอดใหม่ (Update Balance)
                                 InventoryService::moveStock(
                                     $detail->item_code,
-                                    $model->warehouse_id,
+                                    $model->main_warehouse_id,
                                     $detail->qty,
                                     'IN',
                                     $model->id

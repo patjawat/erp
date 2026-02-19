@@ -87,4 +87,12 @@ class DefaultController extends Controller
     {
         return $this->render('sub_stock_receiving');
     }
+
+    /**
+     * หน้าเมนูนำทางระบบ - แสดงขั้นตอนการทำงาน
+     */
+    public function actionNavigation()
+    {
+        return $this->render('navigation');
+    }
 }

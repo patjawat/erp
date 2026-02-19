@@ -11,6 +11,7 @@ use Yii;
  * @property int $stock_order_id เชื่อมกับ stock_order
  * @property int $item_code เชื่อมกับ stock_item
  * @property float $qty จำนวนที่ทำรายการ
+ * @property float|null $remain_qty จำนวนคงเหลือสำหรับ FIFO
  * @property float|null $unit_price ราคาทุนต่อหน่วย
  * @property string|null $lot_number เลขล็อตสินค้า
  * @property string|null $expiry_date วันหมดอายุ
@@ -41,8 +42,9 @@ class StockDetail extends \yii\db\ActiveRecord
 public function rules()
     {
         return [
-            [['unit_price', 'lot_number', 'expiry_date', 'ref', 'data_json', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
-            [['stock_order_id', 'item_code', 'qty'], 'required'],
+            [['unit_price', 'expiry_date', 'ref', 'data_json', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
+            [['remain_qty'], 'default', 'value' => 0.00],
+            [['stock_order_id', 'item_code', 'qty', 'lot_number'], 'required'],
             
             // 1. ❌ เอา 'item_code' ออกจากกลุ่ม 'integer' เพราะมันเป็น string(50) 
             [['stock_order_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],

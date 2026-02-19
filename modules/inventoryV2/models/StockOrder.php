@@ -13,8 +13,8 @@ use Yii;
  * @property string $order_type ประเภทธุรกรรม
  * @property string|null $source_type เช่น PO, DONATE, INITIAL, REQUEST, ADJUST
  * @property string $order_date วันที่ทำรายการ
- * @property int|null $warehouse_id คลังสินค้าต้นทาง/คลังหลัก
- * @property int|null $to_warehouse_id คลังสินค้าปลายทาง (กรณีโอน)
+ * @property int|null $main_warehouse_id คลังสินค้าต้นทาง/คลังหลัก/คลังจ่าย
+ * @property int|null $sub_warehouse_id คลังสินค้าปลายทาง/คลังรับ (กรณีโอน)
  * @property int|null $contact_id ID ผู้ขาย หรือ ผู้เบิก/แผนก
  * @property string|null $status สถานะเอกสาร
  * @property string|null $ref อ้างอิงเลขที่ใบ PO หรือ PR
@@ -101,6 +101,7 @@ class StockOrder extends \yii\db\ActiveRecord
     {
         return $this->hasMany(StockDetail::class, ['stock_order_id' => 'id']);
     }
+    
 
     public function getMainWarehouse()
 {
@@ -111,13 +112,13 @@ class StockOrder extends \yii\db\ActiveRecord
 
 public function getSubWarehouse()
 {
-    // เชื่อม warehouse_id ในตาราง stock_order กับ id ในตาราง warehouse
-    return $this->hasOne(Warehouse::class, ['id' => 'main_warehouse_id']);
+    // เชื่อม sub_warehouse_id ในตาราง stock_order กับ id ในตาราง warehouse
+    return $this->hasOne(Warehouse::class, ['id' => 'sub_warehouse_id']);
 }
 
 public function getToWarehouse()
 {
-    // ใน Migration คุณใช้ชื่อ to_warehouse_id เป็นคลังปลายทาง
+    // เชื่อม sub_warehouse_id ในตาราง stock_order กับ id ในตาราง warehouse (คลังปลายทาง)
     return $this->hasOne(\app\modules\inventory\models\Warehouse::class, ['id' => 'sub_warehouse_id']);
 }
 

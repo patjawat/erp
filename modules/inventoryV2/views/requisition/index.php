@@ -34,17 +34,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
-                        'attribute' => 'from_warehouse_id',
+                        'attribute' => 'main_warehouse_id',
                         'label' => 'คลังต้นทาง (จ่าย)',
                         'value' => function($model) {
-                            return $model->fromWarehouse->warehouse_name ?? '-';
+                            return $model->mainWarehouse->warehouse_name ?? '-';
                         }
                     ],
                     [
-                        'attribute' => 'to_warehouse_id',
+                        'attribute' => 'sub_warehouse_id',
                         'label' => 'คลังปลายทาง (รับ)',
                         'value' => function($model) {
-                            return $model->toWarehouse->warehouse_name ?? '-';
+                            return $model->subWarehouse->warehouse_name ?? '-';
                         }
                     ],
                     [

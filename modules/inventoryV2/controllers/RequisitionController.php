@@ -86,6 +86,7 @@ public function behaviors()
                             $detail = new StockDetail();
                             if ($detail->load($data, '')) {
                                 $detail->stock_order_id = $model->id; // ใช้ ID จาก $model ที่เพิ่ง save
+                                $detail->lot_number = '-';
                                 if (!$detail->save()) {
                                     throw new \Exception("ไม่สามารถบันทึกรายการวัสดุได้: " . implode(', ', $detail->getFirstErrors()));
                                 }
@@ -127,38 +128,35 @@ public function behaviors()
     // app\modules\inventoryV2\controllers\RequisitionController.php
 
     public function actionApprove($id)
-    {
-        $model = $this->findModel($id);
+{
+    $model = $this->findModel($id);
+    $transaction = Yii::$app->db->beginTransaction();
 
-        // ป้องกันการอนุมัติซ้ำ
-        if ($model->status === 'CONFIRMED') {
-            \Yii::$app->session->setFlash('warning', 'เอกสารนี้ได้รับอนุมัติไปแล้ว');
-            return $this->redirect(['view', 'id' => $model->id]);
+    try {
+        $model->status = 'CONFIRMED';
+        $model->save(false);
+
+        foreach ($model->stockDetails as $detail) {
+            // ใช้ Logic FIFO ในการจ่ายของออก
+            InventoryService::moveStock(
+        $detail->item_code,
+        $model->main_warehouse_id, // คลังหลักต้นทาง
+        $detail->qty,
+        'OUT',
+        $model->id,
+        $detail->id
+    );
         }
 
-        $transaction = \Yii::$app->db->beginTransaction();
-        try {
-            // 1. เปลี่ยนสถานะหัวเอกสาร
-            $model->status = 'CONFIRMED';
-            if (!$model->save()) {
-                throw new \Exception("ไม่สามารถเปลี่ยนสถานะเอกสารได้");
-            }
-
-            // 2. Logic การตัดสต็อก (Stock Balance)
-            foreach ($model->stockDetails as $detail) {
-                // เรียกฟังก์ชันตัดสต็อก (ต้องสร้างไว้ใน Model หรือ Component)
-                $this->updateStockBalance($detail);
-            }
-
-            $transaction->commit();
-            \Yii::$app->session->setFlash('success', 'อนุมัติและตัดสต็อกเรียบร้อยแล้ว');
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-        }
-
-        return $this->redirect(['view', 'id' => $model->id]);
+        $transaction->commit();
+        Yii::$app->session->setFlash('success', 'อนุมัติจ่ายพัสดุตามระบบ FIFO เรียบร้อยแล้ว');
+    } catch (\Exception $e) {
+        $transaction->rollBack();
+        Yii::$app->session->setFlash('error', $e->getMessage());
     }
+    return $this->redirect(['view', 'id' => $model->id]);
+}
+
 
     /**
      * ฟังก์ชันช่วยอัปเดตยอดคงเหลือในตาราง stock_balance
@@ -168,7 +166,7 @@ public function behaviors()
         $order = $detail->stockOrder;
         $balance = \app\modules\inventoryV2\models\StockBalance::findOne([
             'item_code' => $detail->item_code,
-            'warehouse_id' => $order->warehouse_id, // คลังต้นทาง
+            'warehouse_id' => $order->main_warehouse_id, // คลังต้นทาง
         ]);
 
         if (!$balance) {
@@ -213,10 +211,10 @@ public function behaviors()
         // หากสถานะเดิมคือ CONFIRMED แปลว่าของถูกหักออกจากคลังไปแล้ว
         if ($model->status === 'CONFIRMED') {
             foreach ($model->stockDetails as $detail) {
-                // คืนของเข้าคลังต้นทาง (warehouse_id)
+                // คืนของเข้าคลังต้นทาง (main_warehouse_id)
                 $success = InventoryService::moveStock(
                     $detail->item_code,
-                    $model->warehouse_id, // คืนเข้าคลังหลักที่โดนหักไป
+                    $model->main_warehouse_id, // คืนเข้าคลังหลักที่โดนหักไป
                     $detail->qty,
                     'IN', // เปลี่ยนเป็น IN เพื่อเพิ่มยอดกลับเข้าไป
                     $model->id,

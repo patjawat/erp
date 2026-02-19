@@ -47,7 +47,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                     ]) ?>
                 </div>
                 <div class="col-md-3">
-                    <?= $form->field($model, 'warehouse_id')->dropDownList($listWarehouse, ['prompt' => '-- เลือกคลัง --', 'class' => 'form-select']) ?>
+                    <?= $form->field($model, 'main_warehouse_id')->dropDownList($listWarehouse, ['prompt' => '-- เลือกคลัง --', 'class' => 'form-select']) ?>
                 </div>
             </div>
 

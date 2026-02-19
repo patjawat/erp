@@ -3,7 +3,11 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
-<div class="d-flex gap-2">
+<div class="d-flex gap-2 flex-wrap">
+    <a href="<?= Url::to(['/inventory-v2/default/navigation']) ?>" class="btn <?= $active !== 'navigation' ? 'btn-outline-info' : 'btn-info' ?>">
+        <i data-lucide="map"></i>  
+        เมนูนำทาง
+    </a>
     <a href="<?= Url::to(['/inventory/warehouse']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
 <i data-lucide="layout-grid"></i>  
         ภาพรวม
