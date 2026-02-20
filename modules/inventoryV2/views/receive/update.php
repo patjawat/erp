@@ -11,13 +11,11 @@ $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' 
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="stock-order-update">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <?= $this->render('_form', [
         'model' => $model,
-        'items' => $items, // ส่งรายการเดิมไปแสดงในตาราง
-        'listWarehouse' =>  $listWarehouse
+        'items' => $items,
+        'listWarehouse' => $listWarehouse,
+        'listItemType' => $listItemType ?? [],
     ]) ?>
 
 </div>

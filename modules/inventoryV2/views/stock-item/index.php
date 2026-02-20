@@ -11,28 +11,31 @@ use yii\bootstrap5\LinkPager;
 $this->title = 'วัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 //  sql นำเข้าวัสดุจาก categorise
-$sql ="INSERT INTO stock_item (
-    			ref,
-    			category_id,
-                item_code, 
-                item_name, 
-                is_asset, 
-                is_active, 
-                data_json, 
-                created_at
-            )
-            SELECT 
-            	ref,
-                category_id,
-                code,           -- หรือรหัสพัสดุจากตารางเดิม
-                title,         -- ชื่อพัสดุ
-                0,                 -- MATER คือวัสดุ (is_asset = false)
-                1,                 -- เปิดใช้งานทันที
-                data_json,
-                UNIX_TIMESTAMP()
-            FROM categorise 
-            WHERE name = 'asset_item' 
-            AND group_id = 'MATER'";
+$sql = "INSERT INTO stock_item (
+    ref,
+    category_id,
+    item_code, 
+    item_name, 
+    is_asset, 
+    is_active, 
+    data_json, 
+    created_at
+)
+SELECT 
+    ref,
+    category_id,
+    code,
+    title,
+    0,
+    1,
+    JSON_OBJECT(
+        'unit_name', JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.unit'))
+    ) AS data_json,
+    UNIX_TIMESTAMP()
+FROM categorise 
+WHERE name = 'asset_item' 
+AND group_id = 'MATER';
+";
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -69,7 +72,7 @@ $sql ="INSERT INTO stock_item (
         </div>
     </div>
     <div class="card-body">
-        <?php  echo $this->render('_search', ['model' => $searchModel]); 
+        <?php echo $this->render('_search', ['model' => $searchModel]);
         ?>
     </div>
 </div>
@@ -80,7 +83,7 @@ $sql ="INSERT INTO stock_item (
             <i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?>
             <?= number_format($dataProvider->getTotalCount()) ?> รายการ
         </h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     </div>
 
     <div class="card-body">
@@ -106,68 +109,87 @@ $sql ="INSERT INTO stock_item (
                 </thead>
 
                 <tbody class="table-group-divider">
-                    <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <?php if ($dataProvider->getTotalCount() > 0): ?>
+                        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                            <tr>
+                                <td class="text-center">
+                                    <?= (($dataProvider->pagination->offset + 1) + $key) ?>
+                                </td>
+
+                                <td class="text-center ps-4 fw-bold text-primary"> <?= $item->item_code ?></td>
+                                <td class="text-center">
+                                    <?php echo Html::img($item->ShowImg(), ['class' => 'img-thumbnail', 'style' => 'width:100px']) ?>
+                                </td>
+                                <td>
+                                    <div class="fw-bold"><?= $item->item_name; ?></div>
+                                    <small class="text-muted">หมวดหมู่: <?= $item->categoryType->title ?? '-' ?></small>
+                                </td>
+                                <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
+                                <td><?= $item->data_json['unit'] ?? '-' ?></td>
+
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input class="form-check-input set-active" type="checkbox" data-id="<?= $item->id ?>"
+                                            <?= $item->is_innovation == 1 ? 'checked' : '' ?>>
+                                    </div>
+                                </td>
+
+                                <td class="text-center"><?= $item->max_qty ?></td>
+                                <td class="text-center"><?= $item->min_qty ?></td>
+
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input class="form-check-input set-active" type="checkbox" data-id="<?= $item->id ?>"
+                                            <?= $item->is_active == 1 ? 'checked' : '' ?>>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            type="button" data-bs-toggle="dropdown">
+                                            จัดการ
+                                        </button>
+
+                                        <ul class="dropdown-menu">
+                                            <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['//inventory-v2/stock-item/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['//inventory-v2/stock-item/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                            <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['//inventory-v2/stock-item/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                         <tr>
-                            <td class="text-center">
-                                <?= (($dataProvider->pagination->offset + 1) + $key) ?>
-                            </td>
-
-                            <td class="text-center ps-4 fw-bold text-primary"> <?= $item->item_code ?></td>
-                            <td class="text-center">
-                                <?php echo Html::img($item->ShowImg(), ['class' => 'img-thumbnail', 'style' => 'width:100px']) ?>
-                            </td>
-                            <td>
-                                <div class="fw-bold"><?= $item->item_name;?></div>
-                                <small class="text-muted">หมวดหมู่: <?= $item->categoryType->title ?? '-' ?></small>
-                            </td>
-                            <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
-                            <td><?= $item->data_json['unit'] ?? '-' ?></td>
-
-                            <td class="text-center">
-                                <div class="form-check form-switch d-flex justify-content-center">
-                                    <input class="form-check-input set-active" type="checkbox" data-id="<?=$item->id?>"
-                                        <?= $item->is_innovation == 1 ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-
-                            <td class="text-center"><?= $item->max_qty ?></td>
-                            <td class="text-center"><?= $item->min_qty ?></td>
-
-                            <td class="text-center">
-                                <div class="form-check form-switch d-flex justify-content-center">
-                                    <input class="form-check-input set-active" type="checkbox" data-id="<?=$item->id?>"
-                                        <?= $item->is_active == 1 ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-
-                            <td class="text-center">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                        type="button" data-bs-toggle="dropdown">
-                                        จัดการ
-                                    </button>
-
-                                    <ul class="dropdown-menu">
-                                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['//inventory-v2/stock-item/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['//inventory-v2/stock-item/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                        <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['//inventory-v2/stock-item/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
-                                    </ul>
+                            <td colspan="11" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                                    <h5 class="text-muted mb-2">ไม่พบข้อมูลพัสดุ</h5>
+                                    <p class="text-muted mb-4">ไม่พบรายการที่ตรงกับการค้นหาของคุณ</p>
+                                    <?= Html::a(
+                                        '<i class="fa-solid fa-circle-plus me-2"></i> สร้างพัสดุใหม่',
+                                        ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'],
+                                        ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]
+                                    ) ?>
                                 </div>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
-        <div class="d-flex justify-content-center mt-3">
-            <?= LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => ['class' => 'pagination pagination-sm'],
-            ]) ?>
-        </div>
+        <?php if ($dataProvider->getTotalCount() > 0 && $dataProvider->pagination->pageCount > 1): ?>
+            <div class="d-flex justify-content-center mt-3">
+                <?= LinkPager::widget([
+                    'pagination' => $dataProvider->pagination,
+                    'firstPageLabel' => 'หน้าแรก',
+                    'lastPageLabel' => 'หน้าสุดท้าย',
+                    'options' => ['class' => 'pagination pagination-sm'],
+                ]) ?>
+            </div>
+        <?php endif; ?>
 
     </div>
 </div>

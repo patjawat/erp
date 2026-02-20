@@ -10,12 +10,11 @@ $this->params['breadcrumbs'][] = ['label' => 'Stock Orders', 'url' => ['index']]
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="stock-order-create">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <?= $this->render('_form', [
         'model' => $model,
-        'listWarehouse' => $listWarehouse
+        'listWarehouse' => $listWarehouse,
+        'listItemType' => $listItemType ?? [],
+        'items' => $items ?? [],
     ]) ?>
 
 </div>

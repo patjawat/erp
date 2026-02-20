@@ -24,15 +24,18 @@ class DefaultController extends Controller
 
         $bmiData = $searchModel->getBmiChartData();
         $stats = $searchModel->getDeptExamStats();
+        $kpiStats = $searchModel->getKpiStats();
+        $diseaseStats = $searchModel->getDiseaseHistoryStats();
+        $riskTrend = $searchModel->getRiskTrendByYear(5);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-           'bmiData' => $bmiData,
-           'stats' => $stats
-        //    'deptCategories' => $stats['categories'],
-        //     'deptSuccess'    => $stats['success'],
-        //     'deptPending'    => $stats['pending'],
+            'bmiData' => $bmiData,
+            'stats' => $stats,
+            'kpiStats' => $kpiStats,
+            'diseaseStats' => $diseaseStats,
+            'riskTrend' => $riskTrend,
         ]);
     }
 

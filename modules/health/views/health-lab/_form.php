@@ -75,13 +75,48 @@ use kartik\widgets\Select2;
             ])->label('ราคาพื้นฐานต่อหน่วย') ?>
         </div>
 
-        <div class="col-12">
-            <?= $form->field($model, 'data_json')->textarea([
-                'rows' => 3,
-                'placeholder' => '{"unit": "mg/dL", "min": 70, "max": 100}',
-                'class' => 'form-control border-dashed bg-light font-monospace small',
-                'value' => is_array($model->data_json) ? json_encode($model->data_json, JSON_UNESCAPED_UNICODE) : $model->data_json
-            ])->label('ค่ามาตรฐาน / ข้อมูล JSON <small class="text-muted fw-normal">(Optional)</small>') ?>
+        <div class="col-md-4">
+            <?= $form->field($model, 'age_condition_type')->widget(Select2::classname(), [
+                'data' => \app\modules\health\models\HealthLab::ageConditionTypeOptions(),
+                'options' => ['placeholder' => 'เลือกเงื่อนไขอายุ...', 'id' => 'healthlab-age_condition_type'],
+                'pluginOptions' => [
+                    'allowClear' => false,
+                    'dropdownParent' => '#main-modal'
+                ],
+            ])->label('เงื่อนไขอายุ') ?>
+        </div>
+        <div class="col-md-2 age-value-wrap">
+            <?= $form->field($model, 'age_condition_value')->textInput([
+                'type' => 'number',
+                'min' => 0,
+                'max' => 120,
+                'placeholder' => 'ปี',
+                'class' => 'form-control form-control-lg',
+            ])->label('อายุ (ปี)') ?>
+        </div>
+        <div class="col-md-2 age-value-2-wrap">
+            <?= $form->field($model, 'age_condition_value_2')->textInput([
+                'type' => 'number',
+                'min' => 0,
+                'max' => 120,
+                'placeholder' => 'ปี',
+                'class' => 'form-control form-control-lg',
+            ])->label('ถึง (ปี)') ?>
+        </div>
+
+        <div class="col-md-4">
+            <?= $form->field($model, 'gender_condition')->widget(Select2::classname(), [
+                'data' => [
+                    'all' => 'ทุกคน',
+                    'male' => 'ชาย',
+                    'female' => 'หญิง',
+                ],
+                'options' => ['placeholder' => 'เลือกเงื่อนไขเพศ...'],
+                'pluginOptions' => [
+                    'allowClear' => false,
+                    'dropdownParent' => '#main-modal'
+                ],
+            ])->label('เงื่อนไขเพศ') ?>
         </div>
     </div>
 
@@ -123,9 +158,19 @@ use kartik\widgets\Select2;
 
 <?php
 $js = <<< JS
-    handleFormSubmit('#form', null, async function(response) {
-        await location.reload();
-    });
+(function() {
+    function toggleAgeInputs() {
+        var type = $('#healthlab-age_condition_type').val();
+        var isAll = (type === 'all' || type === '');
+        $('.age-value-wrap').toggle(!isAll);
+        $('.age-value-2-wrap').toggle(type === 'between');
+    }
+    $(document).on('change', '#healthlab-age_condition_type', toggleAgeInputs);
+    toggleAgeInputs();
+})();
+handleFormSubmit('#form', null, async function(response) {
+    await location.reload();
+});
 JS;
 $this->registerJs($js);
 ?>

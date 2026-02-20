@@ -42,6 +42,8 @@ $this->title = 'ตั้งค่ารายการ LAB';
             <th class="ps-4 py-3 text-muted small uppercase" style="width: 80px;">#</th>
             <th class="py-3 text-muted small uppercase" style="width: 150px;">รหัส LAB</th>
             <th class="py-3 text-muted small uppercase">รายการ / ประเภท</th>
+            <th class="py-3 text-muted small uppercase" style="width: 140px;">ช่วงอายุ</th>
+            <th class="py-3 text-muted small uppercase" style="width: 80px;">เพศ</th>
             <th class="py-3 text-muted small uppercase text-end">ราคาพื้นฐาน</th>
             <th class="py-3 text-center text-muted small uppercase" style="width: 180px;">จัดการ</th>
         </tr>
@@ -61,7 +63,16 @@ $this->title = 'ตั้งค่ารายการ LAB';
                     <td>
                         <div class="fw-bold text-dark"><?= $model->lab_name ?></div>
                     </td>
-                    
+                    <td>
+                        <?= Html::encode($model->getAgeConditionLabel()) ?>
+                    </td>
+                    <td>
+                        <?php
+                        $genderLabels = ['all' => 'ทุกคน', 'male' => 'ชาย', 'female' => 'หญิง'];
+                        $gender = $model->gender_condition ?? 'all';
+                        echo Html::encode($genderLabels[$gender] ?? $gender);
+                        ?>
+                    </td>
                     <td class="text-end fw-bold">
                         <span class="text-primary">฿<?= number_format($model->lab_price, 2) ?></span>
                     </td>
@@ -97,7 +108,7 @@ $this->title = 'ตั้งค่ารายการ LAB';
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <td colspan="5" class="text-center py-5 text-muted small">ไม่พบข้อมูลรายการตั้งค่า LAB</td>
+                <td colspan="7" class="text-center py-5 text-muted small">ไม่พบข้อมูลรายการตั้งค่า LAB</td>
             </tr>
         <?php endif; ?>
     </tbody>

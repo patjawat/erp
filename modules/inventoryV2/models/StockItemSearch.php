@@ -18,7 +18,7 @@ class StockItemSearch extends StockItem
     {
         return [
             [['id','is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['item_code', 'item_name', 'ref', 'data_json','category_id'], 'safe'],
+            [['item_code', 'item_name', 'ref', 'data_json','category_id','q'], 'safe'],
             [['min_qty', 'max_qty'], 'number'],
         ];
     }

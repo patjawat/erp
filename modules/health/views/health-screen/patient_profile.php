@@ -53,7 +53,7 @@ use yii\helpers\Html;
                     <div class="small text-muted d-flex align-items-center gap-2">
                         <div class="erp-icon-box">
                             <i class="far fa-clock me-1"></i>
-                        </div> วันที่ตรวจสุขภาพ: <span class="text-dark fw-bold"><?= Yii::$app->formatter->asDate($model->date_checkup) ?></span>
+                        </div> วันที่คัดกรอง: <span class="text-dark fw-bold"><?= Yii::$app->formatter->asDate($model->date_checkup) ?></span>
                     </div>
                 </div>
 

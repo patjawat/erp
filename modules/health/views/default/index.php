@@ -43,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-body">
-                <h3 class="card-title">แนวโน้มระดับความเสี่ยงรายเดือน</h3>
+                <h3 class="card-title">แนวโน้มระดับความเสี่ยงรายปี</h3>
                 <div id="riskBarChart"></div>
             </div>
         </div>
@@ -64,16 +64,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="row g-3">
                     <div class="col-sm-6 col-lg-3">
                         <div class="rounded-3 p-3" style="background-color: #eff6ff;">
-                            <div class="h3 mb-0" style="color: #1d4ed8;"><?php // $searchModel->healthSummary()['percent_screened'] 
-                                                                            ?>%</div>
+                            <div class="h3 mb-0" style="color: #1d4ed8;"><?= $kpiStats['percent_screened'] ?? 0 ?>%</div>
                             <div class="small" style="color: #2563eb;">อัตราการคัดกรอง</div>
+                            <div class="small text-muted mt-1"><?= number_format($kpiStats['screened_count'] ?? 0) ?>/<?= number_format($kpiStats['total_employees'] ?? 0) ?> คน</div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-lg-3">
                         <div class="rounded-3 p-3" style="background-color: #f0fdf4;">
-                            <div class="h3 mb-0" style="color: #15803d;"><?php // $searchModel->healthSummary()['details'][1]['percent'] 
-                                                                            ?>%</div>
+                            <div class="h3 mb-0" style="color: #15803d;"><?= $kpiStats['percent_normal_bmi'] ?? 0 ?>%</div>
                             <div class="small" style="color: #16a34a;">BMI ปกติ</div>
+                            <div class="small text-muted mt-1"><?= number_format($kpiStats['normal_bmi_count'] ?? 0) ?>/<?= number_format($kpiStats['total_with_bmi'] ?? 0) ?> คน</div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-lg-3">
@@ -124,6 +124,14 @@ $bmiSeries = json_encode($bmiData['series']);
 $deptPending = json_encode($stats['pending']);
 $deptSuccess = json_encode($stats['success']);
 $deptCategories = json_encode($stats['categories']);
+// สรุปประวัติการเจ็บป่วย
+$diseaseHas = json_encode($diseaseStats['has'] ?? [0, 0, 0, 0]);
+$diseaseNo = json_encode($diseaseStats['no'] ?? [0, 0, 0, 0]);
+// แนวโน้มระดับความเสี่ยงรายปี
+$riskYears = json_encode($riskTrend['years'] ?? []);
+$riskLow = json_encode($riskTrend['low'] ?? []);
+$riskMedium = json_encode($riskTrend['medium'] ?? []);
+$riskHigh = json_encode($riskTrend['high'] ?? []);
 
 $js = <<< JS
     // --- BMI Pie Chart ---
@@ -175,17 +183,17 @@ const bmiOptions = {
 
 new ApexCharts(document.querySelector("#bmiPieChart"), bmiOptions).render();
 
-    // --- Risk Level Bar Chart ---
+    // --- Risk Level Bar Chart (รายปี) ---
     const riskOptions = {
         series: [{
             name: 'เสี่ยงต่ำ',
-            data: [400, 420, 380, 450] // คำนวณจากความสูงใน SVG (ม.ค.-เม.ย.)
+            data: $riskLow
         }, {
             name: 'เสี่ยงกลาง',
-            data: [240, 220, 260, 210]
+            data: $riskMedium
         }, {
             name: 'เสี่ยงสูง',
-            data: [100, 90, 110, 80]
+            data: $riskHigh
         }],
         chart: {
             type: 'bar',
@@ -203,13 +211,22 @@ new ApexCharts(document.querySelector("#bmiPieChart"), bmiOptions).render();
             enabled: false
         },
         xaxis: {
-            categories: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.'],
+            categories: $riskYears,
+            labels: { style: { fontFamily: 'Sarabun' } }
         },
         legend: {
-            position: 'bottom'
+            position: 'bottom',
+            fontFamily: 'Sarabun'
         },
         grid: {
             strokeDashArray: 3
+        },
+        tooltip: {
+            y: {
+                formatter: function(val) {
+                    return val + " คน"
+                }
+            }
         }
     };
     new ApexCharts(document.querySelector("#riskBarChart"), riskOptions).render();
@@ -287,10 +304,10 @@ new ApexCharts(document.querySelector("#deptChart"), deptChartOptions).render();
 const diseaseChartOptions = {
     series: [{
         name: 'มีประวัติ',
-        data: [12, 18, 5, 25] // จำนวนคนที่มีโรคนั้นๆ
+        data: $diseaseHas // จำนวนคนที่มีโรคนั้นๆ
     }, {
         name: 'ไม่มีประวัติ',
-        data: [88, 82, 95, 75] // จำนวนคนที่ไม่มี
+        data: $diseaseNo // จำนวนคนที่ไม่มี
     }],
     chart: {
         type: 'bar',

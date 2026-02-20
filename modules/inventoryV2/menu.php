@@ -8,7 +8,7 @@ use yii\helpers\Url;
         <i data-lucide="map"></i>  
         เมนูนำทาง
     </a>
-    <a href="<?= Url::to(['/inventory/warehouse']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
+    <a href="<?= Url::to(['/inventory-v2/warehouse/index']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
 <i data-lucide="layout-grid"></i>  
         ภาพรวม
     </a>
@@ -33,13 +33,17 @@ use yii\helpers\Url;
         ทะเบียนรับเข้า
     </a>
 
-    <a href="<?= Url::to(['/inventory/warehouse/order-request']) ?>" class="btn <?= $active !== 'list' ? 'btn-outline-primary' : 'btn-primary' ?>">
+    <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>" class="btn <?= $active !== 'list' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-minus-icon lucide-file-minus">
             <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
             <path d="M14 2v5a1 1 0 0 0 1 1h5" />
             <path d="M9 15h6" />
         </svg>
         ทะเบียนขอเบิกวัสดุ
+    </a>
+    <a href="<?= Url::to(['/inventory-v2/default/setting']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-secondary' : 'btn-secondary' ?>">
+        <i class="bi bi-building"></i>
+        ตั้งค่าคลังสินค้า
     </a>
 
 </div>

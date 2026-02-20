@@ -2,7 +2,7 @@
 
 namespace app\modules\inventoryV2\models;
 
-use app\modules\inventory\models\Warehouse;
+use app\modules\inventoryV2\models\Warehouse;
 use Yii;
 
 /**
@@ -39,6 +39,13 @@ class StockOrder extends \yii\db\ActiveRecord
     const STATUS_CONFIRMED = 'CONFIRMED';
     const STATUS_CANCELLED = 'CANCELLED';
 
+    /** ประเภทการรับเข้า (source_type สำหรับ order_type = IN) */
+    const SOURCE_NORMAL = 'NORMAL';
+    const SOURCE_PO = 'PO';
+    const SOURCE_INITIAL = 'INITIAL';
+    const SOURCE_FREE_GIFT = 'FREE_GIFT';
+    const SOURCE_DONATE = 'DONATE';
+
     /**
      * {@inheritdoc}
      */
@@ -55,16 +62,16 @@ class StockOrder extends \yii\db\ActiveRecord
         return [
             [['source_type', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'ref', 'data_json', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['status'], 'default', 'value' => 'DRAFT'],
-            [['order_no', 'order_type', 'order_date'], 'required'],
+            [['order_type', 'order_date'], 'required'],
+            [['order_no'], 'string', 'max' => 100],
+            [['order_no'], 'unique'],
             [['order_type', 'status'], 'string'],
             [['order_date', 'data_json'], 'safe'],
             [['main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['order_no'], 'string', 'max' => 100],
             [['source_type'], 'string', 'max' => 50],
             [['ref'], 'string', 'max' => 255],
             ['order_type', 'in', 'range' => array_keys(self::optsOrderType())],
             ['status', 'in', 'range' => array_keys(self::optsStatus())],
-            [['order_no'], 'unique'],
         ];
     }
 
@@ -119,7 +126,7 @@ public function getSubWarehouse()
 public function getToWarehouse()
 {
     // เชื่อม sub_warehouse_id ในตาราง stock_order กับ id ในตาราง warehouse (คลังปลายทาง)
-    return $this->hasOne(\app\modules\inventory\models\Warehouse::class, ['id' => 'sub_warehouse_id']);
+    return $this->hasOne(Warehouse::class, ['id' => 'sub_warehouse_id']);
 }
 
 
@@ -151,6 +158,28 @@ public function getToWarehouse()
             self::STATUS_CONFIRMED => 'CONFIRMED',
             self::STATUS_CANCELLED => 'CANCELLED',
         ];
+    }
+
+    /**
+     * ประเภทการรับเข้า (ใช้ในหน้าสร้างใบรับเข้า)
+     * @return string[]
+     */
+    public static function optsReceiveSourceType()
+    {
+        return [
+            self::SOURCE_NORMAL => 'รายการปกติ',
+            self::SOURCE_PO => 'จัดซื้อ',
+            self::SOURCE_INITIAL => 'ยอดยกมา',
+            self::SOURCE_FREE_GIFT => 'ของแถม',
+            self::SOURCE_DONATE => 'บริจาค',
+        ];
+    }
+
+    /** คืน label ประเภทการรับเข้า (สำหรับแสดงใน view/รายงาน) */
+    public function displayReceiveSourceType()
+    {
+        $opts = self::optsReceiveSourceType();
+        return $opts[$this->source_type] ?? $this->source_type;
     }
 
     /**

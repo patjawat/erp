@@ -2,6 +2,13 @@
 
 namespace app\modules\inventoryV2\controllers;
 
+use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\WarehouseSearch;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+use yii\db\Expression;
 use yii\web\Controller;
 
 /**
@@ -18,81 +25,123 @@ class DefaultController extends Controller
         return $this->render('index');
     }
 
-        public function actionMainDashboard()
-    {
-        return $this->render('main_dashboard');
-    }
-
-    //หน้ารับพัสดุเข้าคลัง
-    public function actionStockInbound()
-    {
-        return $this->render('stock_inbound');
-    }
-    //หน้าบันทึกทะเบียนรับพัสดุ
-    public function actionInboundRegistry()
-    {
-        return $this->render('inbound_registry');
-    }
-     //หน้าจ่ายพัสดุ รายการใบเบิกจากคลังย่อย
-    public function actionStockIssueList()
-    {
-        return $this->render('stock_issue_list');
-    }
-
-
-    //หน้าปรับปรุงสต็อก
-    public function actionStockAdjustment()
-    {
-        return $this->render('stock_adjustment');
-    }
-
-        //จัดการรายการวัสดุ
-    public function actionProductList()
-    {
-        return $this->render('product_list');
-    }
-
-        public function actionStockCard()
-    {
-        return $this->render('stock_card');
-    }
-
-            public function actionSetting()
-    {
-        return $this->render('setting');
-    }
-
-    //#### ส่วนคลังย่อย
-    //หน้าเบิกพัสดุจากคลังหลัก
-    public function actionRequisition()
-    {
-        return $this->render('requisition');
-    }
-   
-    public function actionStockIssue()
-    {
-        return $this->render('stock_issue');
-    }
-    public function actionSubStockIssue()
-    {
-        return $this->render('sub_stock_issue');
-    }
-    public function actionSubStockDashboard()
-    {
-        return $this->render('sub_stock_dashboard',[
-            'departmentName' => 'แผนกไอที / ซ่อมบำรุง',
-        ]);
-    }
-    public function actionSubStockReceiving()
-    {
-        return $this->render('sub_stock_receiving');
-    }
-
     /**
-     * หน้าเมนูนำทางระบบ - แสดงขั้นตอนการทำงาน
+     * เมนูนำทาง - แผนผังขั้นตอนการทำงาน (ใช้ view เดียวกับ index)
+     * @return string
      */
     public function actionNavigation()
     {
-        return $this->render('navigation');
+        return $this->render('index');
+    }
+
+    /**
+     * Dashboard คลังหลัก - redirect ไป main-stock/dashboard
+     * @return \yii\web\Response
+     */
+    public function actionMainDashboard()
+    {
+        return $this->redirect(['/inventory-v2/main-stock/dashboard']);
+    }
+
+    /**
+     * Dashboard คลังย่อย - redirect ไป sub-stock/dashboard
+     * @return \yii\web\Response
+     */
+    public function actionSubStockDashboard()
+    {
+        return $this->redirect(['/inventory-v2/sub-stock/dashboard']);
+    }
+
+    /**
+     * ตั้งค่าคลังสินค้า - จัดการคลังหลัก/คลังย่อย
+     * โหลดข้อมูลแบบ batch เพื่อลดจำนวน query (แก้ N+1)
+     */
+    public function actionSetting()
+    {
+        $searchModel = new WarehouseSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['delete' => null]);
+        $dataProvider->pagination->defaultPageSize = 12;
+        $dataProvider->pagination->pageSizeParam = 'per-page';
+        if ($dataProvider->sort !== null) {
+            $dataProvider->sort->defaultOrder = ['warehouse_name' => SORT_ASC];
+        }
+
+        if (!\Yii::$app->user->can('admin')) {
+            $userId = (string) \Yii::$app->user->id;
+            $dataProvider->query->andWhere(
+                new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")
+            );
+        }
+
+        $models = $dataProvider->getModels();
+        $departmentNames = [];
+        $reqCounts = [];
+        $imgUrls = [];
+        $employees = [];
+
+        if (!empty($models)) {
+            $warehouseIds = array_map(function ($m) { return $m->id; }, $models);
+            $refs = array_unique(array_filter(array_column($models, 'ref')));
+            $departmentIds = array_unique(array_filter(array_column($models, 'department')));
+            $officerIds = [];
+            foreach ($models as $m) {
+                if (!empty($m->data_json['officer']) && is_array($m->data_json['officer'])) {
+                    $officerIds = array_merge($officerIds, $m->data_json['officer']);
+                }
+            }
+            $officerIds = array_unique(array_filter($officerIds));
+
+            if (!empty($departmentIds)) {
+                $orgs = Organization::find()->where(['id' => $departmentIds])->indexBy('id')->all();
+                foreach ($orgs as $id => $org) {
+                    $departmentNames[$id] = $org->name ?? 'ไม่ระบุ';
+                }
+            }
+
+            if (!empty($warehouseIds)) {
+                $counts = StockOrder::find()
+                    ->select(['main_warehouse_id', 'COUNT(*) as cnt'])
+                    ->where([
+                        'main_warehouse_id' => $warehouseIds,
+                        'order_type' => 'OUT',
+                        'source_type' => 'REQUEST',
+                        'status' => 'DRAFT',
+                    ])
+                    ->groupBy('main_warehouse_id')
+                    ->asArray()
+                    ->all();
+                foreach ($counts as $row) {
+                    $reqCounts[(int) $row['main_warehouse_id']] = (int) $row['cnt'];
+                }
+            }
+
+            if (!empty($refs)) {
+                $uploads = Uploads::find()
+                    ->where(['ref' => $refs, 'name' => 'warehouse'])
+                    ->indexBy('ref')
+                    ->all();
+                $defaultImg = \Yii::getAlias('@web') . '/images/store1.jpg';
+                foreach ($uploads as $ref => $upload) {
+                    $imgUrls[$ref] = FileManagerHelper::getImg($upload->id) ?: $defaultImg;
+                }
+            }
+
+            if (!empty($officerIds)) {
+                $employees = Employees::find()
+                    ->where(['user_id' => $officerIds])
+                    ->indexBy('user_id')
+                    ->all();
+            }
+        }
+
+        return $this->render('setting', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'departmentNames' => $departmentNames,
+            'reqCounts' => $reqCounts,
+            'imgUrls' => $imgUrls,
+            'employees' => $employees,
+        ]);
     }
 }

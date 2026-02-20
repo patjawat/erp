@@ -1,6 +1,6 @@
 <?php
 
-use app\modules\inventory\models\Warehouse;
+use app\modules\inventoryV2\models\Warehouse;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Url;
 use yii\web\View;

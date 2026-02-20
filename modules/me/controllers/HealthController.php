@@ -125,49 +125,24 @@ public function actionView($id)
 
     return [
         'title' => '<i class="fa-solid fa-heart-pulse"></i> ผลตรวจสุขภาพ',
-        'content' => $this->renderAjax('view', [
+        'content' => $this->renderAjax('@app/modules/health/views/health-screen/view', [
             'model' => $model,
         ]),
         'footer' => Html::button('<i class="fa-solid fa-xmark"></i> ปิด', ['class' => 'btn btn-secondary pull-left', 'data-bs-dismiss' => "modal"])
     ];
 }
 
-// ตรวจสอบความถูกต้อง
+    /**
+     * Ajax validation สำหรับฟอร์มคัดกรองสุขภาพ
+     */
     public function actionValidator()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $model = new HealthScreen();
-        $result = []; // เตรียมตัวแปรเก็บ Error
-
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $requiredName = 'ต้องระบุ';
-
-            // รายการฟิลด์ที่ต้องการ Check
-            $fields = [
-                'smoking_status',
-                'alcohol_status',
-                'exercise_status',
-                'food_taste',
-                'driving_safety',
-                'condom_usage',
-            ];
-
-            foreach ($fields as $field) {
-                if (!isset($model->data_json[$field]) || $model->data_json[$field] === '') {
-                    // สร้าง ID แบบเดียวกับที่ Yii2 ใช้ในหน้าเว็บเป๊ะๆ
-                    $id = \yii\helpers\Html::getInputId($model, "data_json[$field]");
-                    $result[$id] = [$requiredName];
-                }
-            }
-
-            // เช็ค Checkbox
-            if (empty($model->data_json['family_history'])) {
-                $id = \yii\helpers\Html::getInputId($model, 'data_json[family_history]');
-                $result[$id] = ['กรุณาเลือกอย่างน้อย 1 รายการ'];
-            }
-
-            return $result; // ส่ง Array ของ ID และ Message กลับไปตรงๆ
+            return HealthScreen::getScreenFormValidationErrors($model);
         }
+        return [];
     }
 
         public function actionDelete($id)

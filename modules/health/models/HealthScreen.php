@@ -13,6 +13,12 @@ use app\modules\hr\models\Employees;
  * @property int $thai_year ปีงบประมาณ
  * @property int $emp_id รหัสพนักงาน
  * @property string|null $date_checkup ข้อมูลการตรวจสุขภาพ
+ * @property string|null $ref อ้างอิง
+ * @property float|null $weight น้ำหนัก
+ * @property float|null $height ส่วนสูง
+ * @property float|null $bmi ดัชนีมวลกาย
+ * @property string|null $health_status สถานะ (SCREEN|CONFIRM|SUCCESS)
+ * @property string|null $appointment_date วันที่การนัดหมาย
  * @property string|null $data_json data_json
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
@@ -43,7 +49,7 @@ public $q_department;
             [['date_checkup', 'data_json', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at', 'deleted_by'], 'default', 'value' => null],
             [['thai_year', 'emp_id', 'date_checkup', 'weight', 'height'], 'required'],
             [['thai_year', 'emp_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'ref', 'bmi','health_status','q_department'], 'safe'],
+            [['date_checkup', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'ref', 'bmi','health_status','appointment_date','q_department'], 'safe'],
         ];
     }
 
@@ -56,7 +62,7 @@ public $q_department;
             'id' => 'ID',
             'thai_year' => 'ปีงบประมาณ',
             'emp_id' => 'รหัสพนักงาน',
-            'date_checkup' => 'วันที่ตรวจสุขภาพ',
+            'date_checkup' => 'วันที่คัดกรอง',
             'data_json' => 'ข้อมูล JSON',
             'weight' => 'น้ำหนัก',
             'height' => 'ส่วนสูง',
@@ -67,7 +73,41 @@ public $q_department;
             'updated_by' => 'ผู้แก้ไข',
             'deleted_at' => 'วันที่ลบ',
             'deleted_by' => 'ผู้ลบ',
+            'appointment_date' => 'วันที่การนัดหมาย',
         ];
+    }
+
+    /**
+     * คืนค่า array ของ validation errors สำหรับฟอร์มคัดกรองสุขภาพ (ใช้ร่วมกับ Ajax validation)
+     * @param HealthScreen $model โมเดลที่ load post data แล้ว
+     * @return array [inputId => [error message], ...]
+     */
+    public static function getScreenFormValidationErrors($model)
+    {
+        $result = [];
+        if (!$model->data_json || !is_array($model->data_json)) {
+            return $result;
+        }
+        $requiredName = 'ต้องระบุ';
+        $fields = [
+            'smoking_status',
+            'alcohol_status',
+            'exercise_status',
+            'food_taste',
+            'driving_safety',
+            'condom_usage',
+        ];
+        foreach ($fields as $field) {
+            if (!isset($model->data_json[$field]) || $model->data_json[$field] === '') {
+                $id = \yii\helpers\Html::getInputId($model, "data_json[$field]");
+                $result[$id] = [$requiredName];
+            }
+        }
+        if (empty($model->data_json['family_history'])) {
+            $id = \yii\helpers\Html::getInputId($model, 'data_json[family_history]');
+            $result[$id] = ['กรุณาเลือกอย่างน้อย 1 รายการ'];
+        }
+        return $result;
     }
 
     public function getEmployee()
@@ -317,14 +357,12 @@ public function getDeptExamStats()
 
         $successData[] = (int)$successCount;
         $pendingData[] = (int)($pendingCount > 0 ? $pendingCount : 0);
-        $demo[] = (int)$dept->id;
     }
 
     return [
         'categories' => $categories,
         'success' => $successData,
         'pending' => $pendingData,
-        'demo' => $demo
     ];
 }
 

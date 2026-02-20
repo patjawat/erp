@@ -130,9 +130,30 @@ class HealthScreenController extends Controller
         $labItems = HealthLabConfirm::find()->where(['lab_screen_id' => $id])->all();
 
         if (empty($labItems)) {
-            $listLabItems = HealthLab::find()->all();
-            if (!empty($listLabItems)) {
-                foreach ($listLabItems as $lab) {
+            // ดึงข้อมูลอายุและเพศของพนักงาน
+            $employee = $model->employee;
+            $employeeAge = (int)($employee->age ?? 0);
+            $employeeGender = $employee->gender ?? '';
+            
+            // แปลงเพศจากภาษาไทยเป็นภาษาอังกฤษสำหรับการตรวจสอบ
+            $genderMap = ['ชาย' => 'male', 'หญิง' => 'female'];
+            $employeeGenderCode = $genderMap[$employeeGender] ?? '';
+            
+            // ดึงรายการ Lab ทั้งหมด
+            $allLabs = HealthLab::find()->all();
+            
+            // กรองรายการ Lab ตามเงื่อนไขอายุและเพศ (แต่ละรายการกำหนดเองได้)
+            $filteredLabs = [];
+            foreach ($allLabs as $lab) {
+                $ageMatch = $lab->matchAgeCondition($employeeAge);
+                $genderMatch = ($lab->gender_condition === 'all' || $lab->gender_condition === $employeeGenderCode);
+                if ($ageMatch && $genderMatch) {
+                    $filteredLabs[] = $lab;
+                }
+            }
+            
+            if (!empty($filteredLabs)) {
+                foreach ($filteredLabs as $lab) {
                     $labConfirm = new HealthLabConfirm();
                     $labConfirm->lab_screen_id = $id;
                     $labConfirm->lab_code = $lab->lab_code;
@@ -150,6 +171,11 @@ class HealthScreenController extends Controller
             // ใช้ Transaction เพื่อความปลอดภัยของข้อมูล
             $transaction = Yii::$app->db->beginTransaction();
             try {
+            // โหลดและบันทึกวันที่นัดหมาย (HealthScreen)
+            if ($model->load(Yii::$app->request->post()) && !empty($model->appointment_date)) {
+                $model->appointment_date = AppHelper::DateToDb($model->appointment_date);
+            }
+
             // เคลียร์ข้อมูลเก่าเฉพาะของเคสนี้
             HealthLabConfirm::deleteAll(['lab_screen_id' => $id]);
 
@@ -164,10 +190,10 @@ class HealthScreenController extends Controller
                     }
                 }
             }
-            if($model->health_status == 'SCREEN'){
+            if ($model->health_status == 'SCREEN') {
                 $model->health_status = 'CONFIRM';
-                $model->save();
             }
+            $model->save(false);
 
             $transaction->commit();
             Yii::$app->session->setFlash('success', 'ยืนยันผล LAB เรียบร้อยแล้ว');
@@ -176,6 +202,11 @@ class HealthScreenController extends Controller
                 $transaction->rollBack();
                 Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
             }
+        }
+
+        // แปลงวันที่นัดหมายเป็นรูปแบบไทยสำหรับแสดงในฟอร์ม
+        if (!empty($model->appointment_date)) {
+            $model->appointment_date = AppHelper::convertToThai($model->appointment_date);
         }
 
         return $this->render('lab_confirm', [
@@ -190,11 +221,33 @@ class HealthScreenController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
-            // ข้อมูล data_json จะถูกส่งมาเป็น Array จากฟอร์ม
-            // หากต้องการบันทึกลง MySQL คอลัมน์ JSON ตรงๆ Yii2 จะจัดการให้
-            if($model->health_status == 'CONFIRM'){
+            // รองรับ AJAX request
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                
+                // ข้อมูล data_json จะถูกส่งมาเป็น Array จากฟอร์ม
+                // หากต้องการบันทึกลง MySQL คอลัมน์ JSON ตรงๆ Yii2 จะจัดการให้
+                if ($model->health_status == 'CONFIRM') {
+                    $model->health_status = 'SUCCESS';
+                }
+
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกผลการตรวจร่างกายเรียบร้อยแล้ว',
+                        'redirect_url' => \yii\helpers\Url::to(['index']),
+                    ];
+                } else {
+                    return [
+                        'status' => 'error',
+                        'message' => 'ไม่สามารถบันทึกข้อมูลได้ กรุณาตรวจสอบข้อมูลอีกครั้ง',
+                    ];
+                }
+            }
+            
+            // สำหรับ non-AJAX request (fallback)
+            if ($model->health_status == 'CONFIRM') {
                 $model->health_status = 'SUCCESS';
-                $model->save();
             }
 
             if ($model->save()) {
@@ -263,42 +316,17 @@ public function actionPrint($id)
     }
 
 
-    // ตรวจสอบความถูกต้อง
+    /**
+     * Ajax validation สำหรับฟอร์มคัดกรองสุขภาพ
+     */
     public function actionValidator()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $model = new HealthScreen();
-        $result = []; // เตรียมตัวแปรเก็บ Error
-
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $requiredName = 'ต้องระบุ';
-
-            // รายการฟิลด์ที่ต้องการ Check
-            $fields = [
-                'smoking_status',
-                'alcohol_status',
-                'exercise_status',
-                'food_taste',
-                'driving_safety',
-                'condom_usage',
-            ];
-
-            foreach ($fields as $field) {
-                if (!isset($model->data_json[$field]) || $model->data_json[$field] === '') {
-                    // สร้าง ID แบบเดียวกับที่ Yii2 ใช้ในหน้าเว็บเป๊ะๆ
-                    $id = \yii\helpers\Html::getInputId($model, "data_json[$field]");
-                    $result[$id] = [$requiredName];
-                }
-            }
-
-            // เช็ค Checkbox
-            if (empty($model->data_json['family_history'])) {
-                $id = \yii\helpers\Html::getInputId($model, 'data_json[family_history]');
-                $result[$id] = ['กรุณาเลือกอย่างน้อย 1 รายการ'];
-            }
-
-            return $result; // ส่ง Array ของ ID และ Message กลับไปตรงๆ
+            return HealthScreen::getScreenFormValidationErrors($model);
         }
+        return [];
     }
 
 

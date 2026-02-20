@@ -2,12 +2,15 @@
 
 namespace app\modules\inventoryV2\controllers;
 
-use app\modules\inventory\models\Warehouse;
-use app\modules\inventoryV2\components\InventoryService;
+use app\components\AppHelper;
+use app\modules\inventoryV2\models\Warehouse;
+use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\components\InventoryService;
 use Yii;
+use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
 
@@ -17,9 +20,226 @@ class MainStockController extends \yii\web\Controller
     {
         return $this->render('index');
     }
+
+    /**
+     * Dashboard คลังหลัก - แสดง KPIs และรายการจากข้อมูลจริง
+     */
     public function actionDashboard()
     {
-        return $this->render('dashboard');
+        $warehouseId = $this->getFilterWarehouseId();
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $stats = $this->getDashboardStats($warehouseId, $mainWarehouseIds);
+        $warehouses = $this->getMainWarehousesList();
+        $pendingRequisitions = $this->getPendingRequisitions($warehouseId, $mainWarehouseIds, 10);
+        $chartData = $this->getChartData($warehouseId, $mainWarehouseIds);
+
+        return $this->render('dashboard', [
+            'stats' => $stats,
+            'warehouses' => $warehouses,
+            'pendingRequisitions' => $pendingRequisitions,
+            'chartData' => $chartData,
+            'currentWarehouseId' => $warehouseId,
+        ]);
+    }
+
+    /** คลังหลักที่ยังไม่ถูกลบ */
+    protected function getMainWarehouseIds()
+    {
+        $query = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->select('id');
+        return $query->column();
+    }
+
+    /** รายการคลังหลักสำหรับ dropdown */
+    protected function getMainWarehousesList()
+    {
+        return Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy('warehouse_name')
+            ->all();
+    }
+
+    /** warehouse id จาก session หรือ query (all = null) */
+    protected function getFilterWarehouseId()
+    {
+        $session = Yii::$app->session;
+        if ($this->request->get('warehouse_id') === 'all' || $this->request->get('warehouse_id') === '') {
+            $session->remove('dashboard_warehouse_id');
+            return null;
+        }
+        $id = $this->request->get('warehouse_id');
+        if ($id !== null && $id !== '') {
+            $id = (int) $id;
+            $session->set('dashboard_warehouse_id', $id);
+            return $id;
+        }
+        return $session->get('dashboard_warehouse_id');
+    }
+
+    /**
+     * สถิติ Dashboard: รอจ่าย, รายการวิกฤต, มูลค่าคลัง, จำนวน Lot/รายการ
+     */
+    protected function getDashboardStats($warehouseId, array $mainWarehouseIds)
+    {
+        $baseRequisition = StockOrder::find()
+            ->where([
+                'order_type' => 'OUT',
+                'source_type' => 'REQUEST',
+                'status' => 'DRAFT',
+            ])
+            ->andWhere(['main_warehouse_id' => $warehouseId ? [$warehouseId] : $mainWarehouseIds]);
+
+        $pendingCount = (int) (clone $baseRequisition)->count();
+
+        $criticalQuery = (new Query())
+            ->from(['i' => StockItem::tableName()])
+            ->leftJoin(
+                ['b' => (new Query())
+                    ->select(['item_code', 'SUM(balance_qty) as total_qty'])
+                    ->from(StockBalance::tableName())
+                    ->where($warehouseId ? ['warehouse_id' => $warehouseId] : ['warehouse_id' => $mainWarehouseIds])
+                    ->groupBy('item_code')],
+                'b.item_code = i.item_code'
+            )
+            ->where(['and',
+                ['i.is_active' => 1],
+                ['not', ['i.min_qty' => null]],
+                ['>', 'i.min_qty', 0],
+            ])
+            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+        $criticalCount = (int) $criticalQuery->count();
+
+        $valueQuery = (new Query())
+            ->from(['sb' => StockBalance::tableName()])
+            ->leftJoin(
+                ['sd' => StockDetail::tableName()],
+                'sd.item_code = sb.item_code AND sd.lot_number = sb.lot_number'
+            )
+            ->innerJoin(
+                ['so' => StockOrder::tableName()],
+                'so.id = sd.stock_order_id AND so.order_type = \'IN\''
+            )
+            ->innerJoin(
+                ['latest' => (new Query())
+                    ->select(['sd2.item_code', 'sd2.lot_number', 'MAX(sd2.id) as mid'])
+                    ->from(['sd2' => StockDetail::tableName()])
+                    ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
+                    ->groupBy('sd2.item_code', 'sd2.lot_number')],
+                'latest.item_code = sd.item_code AND latest.lot_number = sd.lot_number AND latest.mid = sd.id'
+            )
+            ->where($warehouseId ? ['sb.warehouse_id' => $warehouseId] : ['sb.warehouse_id' => $mainWarehouseIds]);
+        $valueQuery->select(['SUM(sb.balance_qty * COALESCE(sd.unit_price, 0)) as total']);
+        $totalValue = (float) $valueQuery->scalar();
+
+        $usageQuery = (new Query())
+            ->from(StockBalance::tableName())
+            ->where($warehouseId ? ['warehouse_id' => $warehouseId] : ['warehouse_id' => $mainWarehouseIds])
+            ->andWhere(['>', 'balance_qty', 0]);
+        $lotsCount = (int) $usageQuery->count();
+        $itemsCount = (int) (clone $usageQuery)->select('item_code')->groupBy('item_code')->count();
+
+        return [
+            'pending_count' => $pendingCount,
+            'critical_count' => $criticalCount,
+            'total_value' => $totalValue,
+            'lots_count' => $lotsCount,
+            'items_with_stock' => $itemsCount,
+        ];
+    }
+
+    /** ใบขอเบิกรอจ่าย (DRAFT) */
+    protected function getPendingRequisitions($warehouseId, array $mainWarehouseIds, $limit = 10)
+    {
+        $query = StockOrder::find()
+            ->with(['mainWarehouse', 'subWarehouse', 'stockDetails'])
+            ->where([
+                'order_type' => 'OUT',
+                'source_type' => 'REQUEST',
+                'status' => 'DRAFT',
+            ])
+            ->andWhere(['main_warehouse_id' => $warehouseId ? [$warehouseId] : $mainWarehouseIds])
+            ->orderBy(['order_date' => SORT_DESC])
+            ->limit($limit);
+        return $query->all();
+    }
+
+    /**
+     * ข้อมูลกราฟ: การรับเข้าและจ่ายออกต่อเดือน ในปีงบประมาณไทย (ต.ค. - ก.ย.)
+     */
+    protected function getChartData($warehouseId, array $mainWarehouseIds)
+    {
+        $thaiYear = (int) AppHelper::YearBudget();
+        $range = AppHelper::BudgetYearRange($thaiYear);
+        $from = $range['start'] . ' 00:00:00';
+        $to = $range['end'] . ' 23:59:59';
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+        $monthOrder = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        $monthLabels = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+
+        $inByMonth = array_fill_keys($monthOrder, 0);
+        $outByMonth = array_fill_keys($monthOrder, 0);
+
+        $inRows = (new Query())
+            ->select(['MONTH(so.order_date) as m', 'COUNT(*) as cnt'])
+            ->from(['so' => StockOrder::tableName()])
+            ->where([
+                'so.order_type' => 'IN',
+                'so.status' => 'CONFIRMED',
+            ])
+            ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+            ->andWhere(['>=', 'so.order_date', $from])
+            ->andWhere(['<=', 'so.order_date', $to])
+            ->groupBy('m')
+            ->all();
+
+        foreach ($inRows as $r) {
+            $m = (int) $r['m'];
+            if (isset($inByMonth[$m])) {
+                $inByMonth[$m] = (int) $r['cnt'];
+            }
+        }
+
+        $outRows = (new Query())
+            ->select(['MONTH(so.order_date) as m', 'COUNT(*) as cnt'])
+            ->from(['so' => StockOrder::tableName()])
+            ->where([
+                'so.order_type' => 'OUT',
+                'so.source_type' => 'REQUEST',
+                'so.status' => 'CONFIRMED',
+            ])
+            ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+            ->andWhere(['>=', 'so.order_date', $from])
+            ->andWhere(['<=', 'so.order_date', $to])
+            ->groupBy('m')
+            ->all();
+
+        foreach ($outRows as $r) {
+            $m = (int) $r['m'];
+            if (isset($outByMonth[$m])) {
+                $outByMonth[$m] = (int) $r['cnt'];
+            }
+        }
+
+        $inData = array_values($inByMonth);
+        $outData = array_values($outByMonth);
+
+        return [
+            'categories' => $monthLabels,
+            'series' => [
+                ['name' => 'รับเข้า', 'data' => $inData],
+                ['name' => 'จ่ายออก', 'data' => $outData],
+            ],
+            'fiscal_year' => $thaiYear,
+        ];
     }
     //     public function actionReceive()
     // {

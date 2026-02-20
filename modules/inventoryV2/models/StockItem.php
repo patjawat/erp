@@ -112,6 +112,18 @@ class StockItem extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
     }
 
+    /**
+     * ดึงหน่วยนับจาก data_json
+     */
+    public function getUnitName()
+    {
+        if ($this->data_json) {
+            $dataJson = is_string($this->data_json) ? json_decode($this->data_json, true) : $this->data_json;
+            return $dataJson['unit_name'] ?? null;
+        }
+        return null;
+    }
+
 
     public function getStockBalance($warehouse_id)
 {
@@ -155,21 +167,17 @@ class StockItem extends \yii\db\ActiveRecord
     {
         return Yii::$app->db->createCommand("
         SELECT  CONCAT(
-        'M1-', 
+        '$categoryId-', 
         IFNULL(
-            MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 
+            MAX(CAST(SUBSTRING_INDEX(item_code, '-', -1) AS UNSIGNED)), 
             0
         ) + 1
     ) AS next_code
-        FROM categorise
-        WHERE group_id = :group_id
-          AND category_id = :category_id
-          AND name = :name
-          AND code LIKE :code_like
+        FROM stock_item
+        WHERE category_id = :category_id
+          AND item_code LIKE :code_like
     ")->bindValues([
-            ':group_id' => 4,
             ':category_id' => $categoryId,
-            ':name' => 'asset_item',
             ':code_like' => $categoryId . '-%',
         ])->queryScalar();
     }
@@ -249,7 +257,7 @@ class StockItem extends \yii\db\ActiveRecord
                             </div>
         </div>';
     }
-    public function ListStockItemType()
+    public static function ListStockItemType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'category_id' => [4]])->all(), 'code', 'title');
     }

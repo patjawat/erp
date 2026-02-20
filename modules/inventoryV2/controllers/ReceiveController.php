@@ -2,9 +2,11 @@
 
 namespace app\modules\inventoryV2\controllers;
 
-use app\modules\inventory\models\Warehouse;
+use app\components\AppHelper;
+use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
 use app\modules\inventoryV2\models\StockDetail;
+use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
 use yii\filters\VerbFilter;
@@ -75,7 +77,7 @@ class ReceiveController extends Controller
     {
         $model = new StockOrder();
         $model->order_type = 'IN';
-        $model->status = 'CONFIRMED'; // กำหนดสถานะรอไว้เลย
+        $model->status = 'CONFIRMED';
 
         if ($this->request->isPost) {
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -83,31 +85,110 @@ class ReceiveController extends Controller
             $transaction = $db->beginTransaction();
 
             try {
-                // 1. โหลดข้อมูลหัวเอกสาร
-                if ($model->load($this->request->post()) && $model->save()) {
+                $isDraft = (bool) $this->request->post('save_as_draft', false);
+                if ($isDraft) {
+                    $model->status = 'DRAFT';
+                }
 
-                    // 2. รับค่า StockDetail จากฟอร์ม
-                    $details = $this->request->post('StockDetail', []);
+                $model->load($this->request->post());
+                $orderNoEmpty = trim((string) $model->order_no) === '';
+                if ($orderNoEmpty && $model->source_type === StockOrder::SOURCE_PO) {
+                    throw new \Exception('กรุณากรอกเลขที่ใบรับเข้า');
+                }
+                if ($orderNoEmpty && $model->source_type !== StockOrder::SOURCE_PO) {
+                    $model->order_no = $this->generateReceiveOrderNo();
+                }
+                // แปลงวันที่จาก พ.ศ. (ไทย) เป็น ค.ศ. ก่อนบันทึก
+                if (!empty($model->order_date)) {
+                    $model->order_date = AppHelper::convertToGregorian($model->order_date);
+                    if ($model->order_date !== null) {
+                        $model->order_date .= ' ' . date('H:i:s');
+                    }
+                }
+                $details = $this->request->post('StockDetail', []);
+                if (!empty($details) && $model->main_warehouse_id) {
+                    $warehouse = Warehouse::findOne($model->main_warehouse_id);
+                    if ($warehouse) {
+                        foreach ($details as $i => $data) {
+                            $itemCode = $data['item_code'] ?? null;
+                            if (!$itemCode) continue;
+                            $item = StockItem::findOne(['item_code' => $itemCode]);
+                            if ($item && !$warehouse->allowsItemType($item->category_id)) {
+                                throw new \Exception("พัสดุ [{$item->item_name}] ไม่สามารถรับเข้าคลังนี้ได้ เนื่องจากคลังกำหนดเฉพาะประเภทที่รับเข้า (รายการที่ " . ($i + 1) . ")");
+                            }
+                        }
+                    }
+                }
+                if ($model->save()) {
+
+                    // บันทึกฉบับร่าง: อนุญาตให้ไม่มีรายการ; validate จำนวน/ราคา/หน่วย; บันทึกรายการที่ครบ; ไม่อัปเดตสต็อก
+                    if ($isDraft) {
+                        foreach ($details as $i => $data) {
+                            $rowNum = $i + 1;
+                            $itemCode = trim($data['item_code'] ?? '');
+                            if ($itemCode === '') continue;
+                            $lot = trim($data['lot_number'] ?? '');
+                            $qty = isset($data['qty']) ? (float) $data['qty'] : 0;
+                            $price = isset($data['unit_price']) ? (float) $data['unit_price'] : 0;
+                            if ($lot === '') {
+                                throw new \Exception("รายการที่ {$rowNum}: กรุณากรอก Lot number");
+                            }
+                            if ($qty <= 0) {
+                                throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
+                            }
+                            if ($price <= 0) {
+                                throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                            }
+                            $detail = new StockDetail();
+                            $detail->stock_order_id = $model->id;
+                            $detail->item_code = $itemCode;
+                            $detail->lot_number = $lot;
+                            $detail->qty = $qty;
+                            $detail->unit_price = $price;
+                            $detail->expiry_date = !empty($data['expiry_date']) ? $data['expiry_date'] : null;
+                            if (!$detail->save(false)) {
+                                $errors = implode(', ', $detail->getFirstErrors());
+                                throw new \Exception("รายการที่ {$rowNum}: " . $errors);
+                            }
+                        }
+                        $transaction->commit();
+                        return [
+                            'success' => true,
+                            'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id])
+                        ];
+                    }
 
                     if (empty($details)) {
                         throw new \Exception("กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ");
                     }
 
                     foreach ($details as $i => $data) {
+                        $rowNum = $i + 1;
+                        $lot = trim($data['lot_number'] ?? '');
+                        $qty = isset($data['qty']) ? (float) $data['qty'] : null;
+                        $price = isset($data['unit_price']) ? (float) $data['unit_price'] : null;
+                        if ($lot === '') {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอก Lot number");
+                        }
+                        if ($qty === null || $qty <= 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
+                        }
+                        if ($price === null || $price === '' || $price <= 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                        }
+                    }
+
+                    foreach ($details as $i => $data) {
                         $detail = new StockDetail();
 
-                        // สำคัญ: ต้องโหลดแบบเซตค่าตรงๆ หรือ load($data, '') 
-                        // เพราะเราสร้าง Array name="StockDetail[i][field]" ใน JS
                         if ($detail->load($data, '')) {
                             $detail->stock_order_id = $model->id;
 
                             if (!$detail->save()) {
-                                // ถ้า Detail บันทึกไม่สำเร็จ ให้ส่ง Error กลับไปดู
                                 $errors = implode(', ', $detail->getFirstErrors());
                                 throw new \Exception("รายการที่ " . ($i + 1) . " ติดปัญหา: " . $errors);
                             }
 
-                            // 3. อัปเดตสต็อกจริง (Service ที่เราทำไว้ตอนแรก)
                             $success = InventoryService::moveStock(
                                 $detail->item_code,
                                 $model->main_warehouse_id,
@@ -143,10 +224,21 @@ class ReceiveController extends Controller
             }
         }
 
-        // กรณีโหลดหน้าเว็บปกติ (GET)
+        // กรณีโหลดหน้าเว็บปกติ (GET) - แสดงวันที่เป็น พ.ศ.
+        $model->order_date = AppHelper::convertToThai(date('Y-m-d'));
         return $this->render('create', [
             'model' => $model,
-            'listWarehouse' => \yii\helpers\ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name'),
+            'listWarehouse' => \yii\helpers\ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            ),
+            'listItemType' => StockItem::ListStockItemType(),
+            'items' => [], // สำหรับหน้า create จะไม่มีรายการเริ่มต้น
         ]);
     }
 
@@ -160,59 +252,148 @@ class ReceiveController extends Controller
 
    public function actionUpdate($id)
 {
-    // 1. ดึงข้อมูลเดิมมาเตรียมไว้
-    $model = StockOrder::findOne($id);
+    $model = StockOrder::find()
+        ->where(['id' => $id])
+        ->with(['stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType'])
+        ->one();
     if (!$model) {
         throw new \yii\web\NotFoundHttpException("ไม่พบข้อมูลเอกสาร");
     }
 
-    // เก็บรายการเก่าและคลังสินค้าเดิมไว้ก่อนจะโดน Load ค่าใหม่ทับ
     $oldItems = $model->stockDetails;
     $oldWarehouseId = $model->main_warehouse_id;
+    $wasDraft = ($model->status === 'DRAFT');
 
     if ($this->request->isPost) {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $transaction = \Yii::$app->db->beginTransaction();
 
         try {
-            // --- ขั้นตอนที่ 1: Reverse สต็อกเก่าออก ---
-            // เราต้องหักยอดใน StockBalance ออกก่อนที่จะลบรายการทิ้ง
-            foreach ($oldItems as $oldItem) {
-                InventoryService::updateBalance(
-                    $oldItem->item_code,
-                    $oldWarehouseId,
-                    $oldItem->qty,
-                    'OUT', // หักออกเพื่อคืนค่า
-                    $oldItem->lot_number
-                );
+            $isDraft = (bool) $this->request->post('save_as_draft', false);
+            if (!$wasDraft && $isDraft) {
+                $isDraft = false; // เอกสารรับเข้าคลังแล้ว ไม่ให้เปลี่ยนกลับเป็นร่าง
             }
 
-            // --- ขั้นตอนที่ 2: ลบรายการ Detail เดิมทิ้งทั้งหมด ---
+            // Reverse สต็อกเก่าเฉพาะเมื่อเอกสารเคยรับเข้าจริงแล้ว (CONFIRMED)
+            if (!$wasDraft) {
+                foreach ($oldItems as $oldItem) {
+                    InventoryService::updateBalance(
+                        $oldItem->item_code,
+                        $oldWarehouseId,
+                        $oldItem->qty,
+                        'OUT',
+                        $oldItem->lot_number
+                    );
+                }
+            }
+
             StockDetail::deleteAll(['stock_order_id' => $model->id]);
 
-            // --- ขั้นตอนที่ 3: บันทึกหัวเอกสารและรายการใหม่ ---
-            if ($model->load($this->request->post()) && $model->save()) {
-                $detailsData = $this->request->post('StockDetail', []);
+            $model->load($this->request->post());
+            if ($isDraft) {
+                $model->status = 'DRAFT';
+            } else {
+                $model->status = 'CONFIRMED';
+            }
+            $orderNoEmpty = trim((string) $model->order_no) === '';
+            if ($orderNoEmpty && $model->source_type === StockOrder::SOURCE_PO) {
+                throw new \Exception('กรุณากรอกเลขที่ใบรับเข้า');
+            }
+            if ($orderNoEmpty && $model->source_type !== StockOrder::SOURCE_PO) {
+                $model->order_no = $this->generateReceiveOrderNo();
+            }
+            if (!empty($model->order_date)) {
+                $model->order_date = AppHelper::convertToGregorian($model->order_date);
+                if ($model->order_date !== null) {
+                    $model->order_date .= ' ' . date('H:i:s');
+                }
+            }
+            $detailsData = $this->request->post('StockDetail', []);
+            if (!empty($detailsData) && $model->main_warehouse_id) {
+                $warehouse = Warehouse::findOne($model->main_warehouse_id);
+                if ($warehouse) {
+                    foreach ($detailsData as $i => $data) {
+                        $itemCode = $data['item_code'] ?? null;
+                        if (!$itemCode) continue;
+                        $item = StockItem::findOne(['item_code' => $itemCode]);
+                        if ($item && !$warehouse->allowsItemType($item->category_id)) {
+                            throw new \Exception("พัสดุ [{$item->item_name}] ไม่สามารถรับเข้าคลังนี้ได้ เนื่องจากคลังกำหนดเฉพาะประเภทที่รับเข้า (รายการที่ " . ($i + 1) . ")");
+                        }
+                    }
+                }
+            }
+            if ($model->save()) {
+
+                if ($isDraft) {
+                    foreach ($detailsData as $i => $data) {
+                        $rowNum = $i + 1;
+                        $itemCode = trim($data['item_code'] ?? '');
+                        if ($itemCode === '') continue;
+                        $lot = trim($data['lot_number'] ?? '');
+                        $qty = isset($data['qty']) ? (float) $data['qty'] : 0;
+                        $price = isset($data['unit_price']) ? (float) $data['unit_price'] : 0;
+                        if ($lot === '') {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอก Lot number");
+                        }
+                        if ($qty <= 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
+                        }
+                        if ($price <= 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                        }
+                        $detail = new StockDetail();
+                        $detail->isNewRecord = true;
+                        $detail->id = null;
+                        $detail->stock_order_id = $model->id;
+                        $detail->item_code = $itemCode;
+                        $detail->lot_number = $lot;
+                        $detail->qty = $qty;
+                        $detail->unit_price = $price;
+                        $detail->expiry_date = !empty($data['expiry_date']) ? $data['expiry_date'] : null;
+                        if (!$detail->save(false)) {
+                            $errors = implode(', ', $detail->getFirstErrors());
+                            throw new \Exception("รายการที่ {$rowNum}: " . $errors);
+                        }
+                    }
+                    $transaction->commit();
+                    return [
+                        'success' => true,
+                        'message' => 'บันทึกฉบับร่างเรียบร้อย',
+                        'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id])
+                    ];
+                }
 
                 if (empty($detailsData)) {
                     throw new \Exception("กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ");
                 }
 
                 foreach ($detailsData as $i => $data) {
+                    $rowNum = $i + 1;
+                    $lot = trim($data['lot_number'] ?? '');
+                    $qty = isset($data['qty']) ? (float) $data['qty'] : null;
+                    $price = isset($data['unit_price']) ? (float) $data['unit_price'] : null;
+                    if ($lot === '') {
+                        throw new \Exception("รายการที่ {$rowNum}: กรุณากรอก Lot number");
+                    }
+                    if ($qty === null || $qty <= 0) {
+                        throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
+                    }
+                    if ($price === null || $price === '' || $price <= 0) {
+                        throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                    }
+                }
+
+                foreach ($detailsData as $i => $data) {
                     $detail = new StockDetail();
-                    
-                    // โหลดข้อมูลเข้า Model รายย่อย
                     if ($detail->load($data, '')) {
-                        // บังคับให้เป็นรายการใหม่เสมอ ป้องกัน ID เดิมจาก Form มาขัดขวางการ Save
                         $detail->isNewRecord = true;
-                        $detail->id = null; 
+                        $detail->id = null;
                         $detail->stock_order_id = $model->id;
 
                         if ($detail->save()) {
-                            // อัปเดตสต็อกใหม่ (IN) และตั้งค่า remain_qty
                             InventoryService::moveStock(
                                 $detail->item_code,
-                                $model->main_warehouse_id, // ใช้คลังใหม่จาก $model ที่โหลดค่ามาแล้ว
+                                $model->main_warehouse_id,
                                 $detail->qty,
                                 'IN',
                                 $model->id,
@@ -246,11 +427,21 @@ class ReceiveController extends Controller
         }
     }
 
-    // กรณีโหลดหน้าแก้ไขปกติ (GET)
+    // กรณีโหลดหน้าแก้ไขปกติ (GET) - แสดงวันที่เป็น พ.ศ.
+    $model->order_date = $model->order_date ? AppHelper::convertToThai($model->order_date) : AppHelper::convertToThai(date('Y-m-d'));
     return $this->render('update', [
         'model' => $model,
         'items' => $oldItems,
-        'listWarehouse' => ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name'),
+        'listWarehouse' => ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            ),
+        'listItemType' => StockItem::ListStockItemType(),
     ]);
 }
 
@@ -312,6 +503,19 @@ class ReceiveController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * สร้างเลขที่ใบรับเข้าให้อัตโนมัติ (ใช้เมื่อไม่ใช่การจัดซื้อและผู้ใช้เว้นว่าง)
+     * รูปแบบ RCV-YYYYMMDD-HHmmss-XXX ให้ไม่ซ้ำ
+     */
+    protected function generateReceiveOrderNo()
+    {
+        $prefix = 'RCV-' . date('Ymd-His') . '-';
+        do {
+            $no = $prefix . mt_rand(100, 999);
+        } while (StockOrder::findOne(['order_no' => $no]) !== null);
+        return $no;
     }
 
     /**

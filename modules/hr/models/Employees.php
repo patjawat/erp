@@ -2,23 +2,24 @@
 
 namespace app\modules\hr\models;
 
-use Yii;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\db\Expression;
-use app\models\Amphure;
-use app\models\District;
-use app\models\Province;
-use app\models\Categorise;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\CategoriseHelper;
 use app\components\EmployeeHelper;
 use app\components\ThaiDateHelper;
-use app\components\CategoriseHelper;
-use app\modules\usermanager\models\User;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\filemanager\models\Uploads;
+use app\models\Amphure;
+use app\models\Categorise;
+use app\models\District;
+use app\models\Province;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\health\models\HealthScreen;
+use app\modules\hr\models\EmployeeDetail;
+use app\modules\usermanager\models\User;
+use Yii;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
 
 /**
@@ -1496,13 +1497,10 @@ class Employees extends Yii\db\ActiveRecord
     //ห้อมูลการตรวจสุขภาพ
     public function healthData()
     {
-        $latestHealth = EmployeeDetail::find()
-    ->where([
-        'name' => 'health',
-        'emp_id' => $this->id
-    ])
+        $latestHealth = HealthScreen::find()
+    ->where(['emp_id' => $this->id])
     // แก้ไขจาก $.screeningDate เป็น $.screening_date ให้ตรงกับข้อมูลจริง
-    ->orderBy([new \yii\db\Expression('JSON_EXTRACT(data_json, "$.screening_date") DESC')])
+    ->orderBy(['date_checkup' => SORT_DESC])
     ->one();
 
         // การเรียกใช้งาน

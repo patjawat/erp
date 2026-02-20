@@ -36,6 +36,20 @@ $labListData = ArrayHelper::map($labList, 'lab_code', 'lab_name');
 
 <?php $form = ActiveForm::begin(['id' => 'lab-form']); ?>
 <?= $this->render('patient_profile', ['model' => $model]) ?>
+
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <?= $form->field($model, 'appointment_date')->textInput([
+                    'class' => 'form-control',
+                    'placeholder' => 'เลือกวันที่นัดหมาย',
+                ])->label('วันที่การนัดหมาย') ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between align-items-center py-3">
         <h6 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>บันทึกรายการ LAB และค่าใช้จ่าย</h6>
@@ -361,6 +375,9 @@ let newRowHtml = `
     \$(document).on('input', '.qty-input, .price-input', calculateTotals);
     calculateTotals();
 JS;
+
+// เปิดใช้ datepicker สำหรับช่องวันที่นัดหมาย
+$this->registerJs("$(function(){ if (typeof thaiDatepicker === 'function') thaiDatepicker('#healthscreen-appointment_date'); });", View::POS_END);
 
 $this->registerJs($js, View::POS_END);
 ?>

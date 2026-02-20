@@ -317,6 +317,22 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php ActiveForm::end(); ?>
 </div>
 
+<?php
+use yii\web\View;
+$actionUrl = \yii\helpers\Url::to(['physical-exam', 'id' => $model->id]);
+$js = <<< JS
+handleFormSubmit('#physical-exam-form', '{$actionUrl}', async function(response) {
+    // Redirect ไปหน้า index หลังจากบันทึกสำเร็จ
+    if (response.redirect_url) {
+        window.location.href = response.redirect_url;
+    } else {
+        window.location.href = '/health/health-screen/index';
+    }
+});
+JS;
+$this->registerJs($js, View::POS_END);
+?>
+
 <style>
     . {
         font-size: 0.8rem;

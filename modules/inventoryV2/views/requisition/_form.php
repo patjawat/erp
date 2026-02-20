@@ -1,7 +1,7 @@
 <?php
 
 use app\models\Item;
-use app\modules\inventory\models\Warehouse;
+use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\StockItem;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;

@@ -2,7 +2,7 @@
 
 namespace app\modules\inventoryV2\controllers;
 
-use app\modules\inventory\models\Warehouse;
+use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\StockDetail;
 use Yii;
 use yii\web\Controller;

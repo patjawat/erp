@@ -113,20 +113,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
                             </svg><span>ได้รับคำชมแล้ว: <span class="fw-black">0 ครั้ง</span></span>
                         </div>
                         <?php if($me->healthData()['result']):?>
-                        <div class="d-flex align-items-center px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
-                            <i class="fas fa-weight text-white me-2" style="font-size: 14px;"></i>
-                            <span class="text-white small fw-medium">BMI: </span>
-                            <span class="text-white fw-bold ms-1"> <?= $me->healthData()['result']['bmi'] ?? '-' ?></span>
-                        </div>
-                        
-                        <div class="d-flex align-items-center px-3 py-2 rounded-pill" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
-                            <div class="rounded-circle me-2 shadow-sm bg-<?= $me->healthData()['result']['color'] ?>" style="width: 10px; height: 10px;"></div> <span class="text-white small fw-bold">
-                                <?php
-                                echo $me->healthData()['result']['label']
-                                ?>
-                            </span>
-                        </div>
-                        <a href="<?= Url::to(['/me/health/view','id' => $me->healthData()['id']])?>" class="open-modal d-flex align-items-center px-3 py-2 rounded-pill text-decoration-none shadow-sm" data-size="modal-lg" style="background: #ffffff; color: #2563eb;">
+                        <a href="<?= Url::to(['/me/health/view','id' => $me->healthData()['id']])?>" class="open-modal d-flex align-items-center px-3 py-2 rounded-pill text-decoration-none shadow-sm" data-size="modal-xl" style="background: #ffffff; color: #2563eb;">
                             <i class="fas fa-file-medical-alt me-2"></i>
                             <span class="small fw-bold">ดูประวัติสุขภาพ</span>
                         </a>
