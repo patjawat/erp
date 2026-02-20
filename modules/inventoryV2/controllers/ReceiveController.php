@@ -31,6 +31,7 @@ class ReceiveController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'cancel' => ['POST'],
                     ],
                 ],
             ]
@@ -46,11 +47,33 @@ class ReceiveController extends Controller
     {
         $searchModel = new StockOrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['order_type' => 'IN']);
+        $dataProvider->query->andWhere(['order_type' => 'IN']);
+        $dataProvider->query->with(['mainWarehouse', 'stockDetails']);
+
+        $start = AppHelper::convertToGregorian($searchModel->date_start);
+        $end = AppHelper::convertToGregorian($searchModel->date_end);
+        if ($start !== null && $start !== '') {
+            $dataProvider->query->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
+        }
+        if ($end !== null && $end !== '') {
+            $dataProvider->query->andWhere(['<=', 'order_date', $end . ' 23:59:59']);
+        }
+
+        $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC];
+        $dataProvider->pagination->pageSize = 15;
+
+        $statusSummary = StockOrder::find()
+            ->where(['order_type' => 'IN'])
+            ->select(['status', 'COUNT(*) as cnt'])
+            ->groupBy('status')
+            ->asArray()
+            ->all();
+        $statusSummaryMap = array_column($statusSummary, 'cnt', 'status');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'statusSummary' => $statusSummaryMap,
         ]);
     }
 

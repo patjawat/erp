@@ -349,33 +349,45 @@ class StockItemController extends Controller
         return ['results' => $results];
     }
 
-    // ตัวอย่างใน Controller
-public function actionGetItemsByWarehouse($warehouse_id, $q = '')
-{
-    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-    $query = StockBalance::find()
-        ->select(['stock_balance.item_code'])
-        ->where(['warehouse_id' => $warehouse_id])
-        ->andWhere(['>', 'balance_qty', 0])
-        ->distinct(); // เอา code ไม่ซ้ำ
+    /**
+     * รายการวัสดุที่มีในคลัง (สำหรับ TomSelect ในใบขอเบิก)
+     * GET warehouse_id, q (optional ค้นหาชื่อ/รหัส)
+     */
+    public function actionGetItemsByWarehouse($warehouse_id, $q = '')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse_id = (int) $warehouse_id;
+        $q = trim((string) $q, " \t\n\r\0\x0B\"'");
 
-    // ค้นหาตามชื่อพัสดุ
-    if ($q) {
-        $query->joinWith('item') // หรือชื่อ relation ที่คุณตั้งไว้
-              ->andWhere(['like', 'stock_item.item_name', $q]);
-    }
+        $query = StockBalance::find()
+            ->select(['stock_balance.item_code'])
+            ->joinWith('item')
+            ->where(['stock_balance.warehouse_id' => $warehouse_id])
+            ->andWhere(['>', 'stock_balance.balance_qty', 0]);
 
-    $models = $query->all();
-    $results = [];
-    foreach ($models as $m) {
-        $results[] = [
-            'item_code' => $m->item_code,
-            'item_name' => $m->item->item_name, // ดึงชื่อจาก relation
-        ];
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'stock_item.item_name', $q],
+                ['like', 'stock_item.item_code', $q],
+            ]);
+        }
+
+        $query->distinct();
+        $models = $query->all();
+        $results = [];
+        foreach ($models as $m) {
+            $item = $m->item;
+            $itemName = $item ? $item->item_name : (string) $m->item_code;
+            $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
+            $results[] = [
+                'item_code' => (string) $m->item_code,
+                'item_name' => $itemName,
+                'unit_name' => $unitName ? (string) $unitName : '-',
+            ];
+        }
+        return $results;
     }
-    return $results;
-}
 
     /**
      * รายการหน่วยนับ (สำหรับ Tom-Select)

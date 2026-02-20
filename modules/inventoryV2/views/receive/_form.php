@@ -43,7 +43,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
         </div>
 
         <div class="card-body">
-            <div class="row g-3 mb-4 p-3 bg-light rounded border">
+            <div class="row g-3 mb-4 p-3 rounded border">
                 <div class="col-md-3">
                     <?= $form->field($model, 'main_warehouse_id')->dropDownList($listWarehouse, [
                         'prompt' => '-- เลือกคลัง --',
@@ -79,7 +79,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
             <div class="row g-2 mb-1 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label small fw-bold text-muted">ประเภทวัสดุ</label>
-                    <select id="itemTypeFilter" class="form-select form-select-sm">
+                    <select id="itemTypeFilter" class="form-select">
                         <option value="">-- เลือกประเภทวัสดุ --</option>
                     </select>
                 </div>
@@ -96,8 +96,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                     </button>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-bold text-muted">นำเข้าจาก CSV</label>
-                    <input type="file" id="csvFileInput" class="form-control form-control-sm" accept=".csv" style="display: none;">
+                    <input type="file" id="csvFileInput" class="form-control" accept=".csv" style="display: none;">
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-success btn-sm flex-grow-1" id="btnImportCSV">
                             <i class="bi bi-file-earmark-spreadsheet"></i> อัปโหลด CSV
@@ -169,10 +168,10 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                                         <span class="text-muted"><?= Html::encode($currentUnit) ?></span>
                                     </td>
                                     <td class="text-muted small"><?= $item->item && $item->item->categoryType ? Html::encode($item->item->categoryType->title) : '-' ?></td>
-                                    <td><input type="text" name="StockDetail[<?= $index ?>][lot_number]" class="form-control form-control-sm" value="<?= $item->lot_number ?>" placeholder="กรอกหรือกำหนดเอง"></td>
-                                    <td><input type="date" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control form-control-sm" value="<?= $item->expiry_date ?>"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control form-control-sm text-center qty-input" value="<?= $item->qty ?>" min="0.01" step="0.01"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control form-control-sm text-end price-input" value="<?= $item->unit_price ?>" step="0.01"></td>
+                                    <td><input type="text" name="StockDetail[<?= $index ?>][lot_number]" class="form-control" value="<?= $item->lot_number ?>" placeholder="กรอกหรือกำหนดเอง"></td>
+                                    <td><input type="date" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control" value="<?= $item->expiry_date ?>"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="0.01" step="0.01"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" step="0.01"></td>
                                     <td class="text-end fw-bold row-total"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>
                                 </tr>
@@ -814,10 +813,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (itemId || '') + '"><strong>' + (itemData.item_name || '') + '</strong></td>' +
         '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
         '<td class="text-muted small">' + typeLabel + '</td>' +
-        '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control form-control-sm lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
-        '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control form-control-sm"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control form-control-sm text-center qty-input" value="1" min="1" step="0.01"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control form-control-sm text-end price-input" value="0.00" step="0.01"></td>' +
+        '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
+        '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="0.01"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" step="0.01"></td>' +
         '<td class="text-end fw-bold row-total">0.00</td>' +
         '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
         '</tr>';
@@ -1061,10 +1060,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (item.item_code || '') + '"><strong>' + (item.item_name || '') + '</strong></td>' +
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
                     '<td class="text-muted small">' + (item.category_title || '-') + '</td>' +
-                    '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control form-control-sm lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
-                    '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control form-control-sm" value="' + expiryDateInput + '"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control form-control-sm text-center qty-input" value="' + (item.qty || 1) + '" min="0.01" step="0.01"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control form-control-sm text-end price-input" value="' + (item.unit_price || 0) + '" step="0.01"></td>' +
+                    '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
+                    '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control" value="' + expiryDateInput + '"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="0.01" step="0.01"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" step="0.01"></td>' +
                     '<td class="text-end fw-bold row-total">' + ((item.qty || 0) * (item.unit_price || 0)).toFixed(2) + '</td>' +
                     '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
                     '</tr>';

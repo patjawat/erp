@@ -18,21 +18,21 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
     <div class="alert <?= $model->status === 'CANCELLED' ? 'alert-danger' : 'alert-info' ?>">
         <div class="row">
             <div class="col-md-4">
-                <strong>สถานะ:</strong> 
-                <?php 
+                <strong>สถานะ:</strong>
+                <?php
                     $statusLabel = [
-                        'DRAFT' => '<span class="badge bg-warning text-dark">ฉบับร่าง (รออนุมัติ)</span>',
-                        'CONFIRMED' => '<span class="badge bg-success">อนุมัติ/จ่ายสินค้าแล้ว</span>',
-                        'CANCELLED' => '<span class="badge bg-danger">ยกเลิกรายการ</span>',
+                        'DRAFT' => '<span class="badge bg-warning text-dark">รออนุมัติ</span>',
+                        'CONFIRMED' => '<span class="badge bg-success">จ่ายสินค้าแล้ว</span>',
+                        'CANCELLED' => '<span class="badge bg-danger">ยกเลิกแล้ว</span>',
                     ];
                     echo $statusLabel[$model->status] ?? $model->status;
                 ?>
             </div>
             <div class="col-md-4">
-                <strong>จากคลัง:</strong> <?= $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
+                <strong>คลังที่จ่ายของ:</strong> <?= $model->mainWarehouse ? Html::encode($model->mainWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
             </div>
             <div class="col-md-4">
-                <strong>ไปยัง:</strong> <?= $model->mainWarehouse ? Html::encode($model->mainWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
+                <strong>หน่วยงานที่รับของ:</strong> <?= $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
             </div>
         </div>
     </div>
@@ -40,18 +40,20 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
     <table class="table table-bordered table-striped">
         <thead class="table-light">
             <tr>
-                <th>รายการ</th>
+                <th>รายการวัสดุ</th>
+                <th class="text-center" style="width: 100px;">หน่วยนับ</th>
                 <th class="text-end" style="width: 150px;">จำนวนที่ขอเบิก</th>
-                <th class="text-end" style="width: 200px;">คงเหลือในคลังหลัก</th>
+                <th class="text-end" style="width: 200px;">ยอดคงเหลือในคลังที่จ่าย</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($model->stockDetails as $detail): ?>
             <tr>
                 <td>
-                    <strong>[<?= Html::encode($detail->item_code) ?>]</strong> 
-                    <?= Html::encode($detail->item->item_name) ?>
+                    <strong>[<?= Html::encode($detail->item_code) ?>]</strong>
+                    <?= Html::encode($detail->item->item_name ?? '') ?>
                 </td>
+                <td class="text-center text-muted"><?= Html::encode($detail->item ? ($detail->item->getUnitName() ?: '-') : '-') ?></td>
                 <td class="text-end"><?= number_format($detail->qty, 2) ?></td>
                 <td class="text-end">
                     <?php 

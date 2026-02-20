@@ -1,0 +1,58 @@
+---
+description: มาตรฐานฟอร์ม ตาราง การ์ด และวันที่ (form ไม่ใช้ -sm, tbody align-middle table-group-divider, thaiDatepicker)
+globs: "**/views/**/*.php"
+alwaysApply: false
+---
+
+# มาตรฐาน UI: ฟอร์ม ตาราง การ์ด และวันที่
+
+## การใช้วันที่ (Date picker)
+
+- ใช้ **thaiDatepicker** สำหรับช่องวันที่
+- กำหนดโดยส่ง CSS selector (หรือหลาย selector คั่นด้วย comma) เข้าไปใน `thaiDatepicker(...)`
+
+### ตัวอย่าง
+
+```javascript
+thaiDatepicker('#leave-date_start,#leave-date_end');
+```
+
+หรือช่องเดียว:
+
+```javascript
+thaiDatepicker('#dateStart');
+thaiDatepicker('#dateEnd');
+```
+
+- ช่องวันที่ในฟอร์มให้ใช้ component / partial ที่เรียก thaiDatepicker ตาม pattern นี้ (เช่น `_date_start`, `_date_end`)
+
+## การ์ด (Card)
+
+- **card-body ไม่ใช้** `bg-light` (ใช้พื้นหลัง default ของการ์ดเท่านั้น)
+
+## ฟอร์ม (Form controls)
+
+- **ไม่ใช้** `form-control-sm` หรือ `form-select-sm`
+- ใช้ **`form-control`** และ **`form-select`** เท่านั้น (ขนาดปกติ)
+- ปุ่มในฟอร์มใช้ `btn btn-primary` / `btn btn-outline-secondary` โดยไม่ใช้ `btn-sm` เว้นแต่จะออกแบบเป็นปุ่มเล็กโดยเฉพาะ
+
+## หน้ารายการ (List / Table)
+
+- ตารางรายการให้ใช้ **`<tbody class="align-middle table-group-divider">`**
+- ใช้ตาราง HTML ธรรมดา หรือ GridView ก็ได้ แต่ต้องกำหนด class นี้ที่ tbody
+- หัวตาราง (thead) ใช้ class ที่สอดคล้อง เช่น `table`, `table-hover`, `align-middle` ที่ `<table>`
+
+### ตัวอย่าง
+
+```html
+<table class="table table-hover align-middle mb-0">
+    <thead>
+        <tr>...</tr>
+    </thead>
+    <tbody class="align-middle table-group-divider">
+        <?php foreach ($dataProvider->getModels() as $item): ?>
+            <tr>...</tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+```

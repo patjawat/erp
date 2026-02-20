@@ -4,6 +4,8 @@ namespace app\modules\inventoryV2\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use yii\db\Expression;
+use yii\db\Query;
 use app\modules\inventoryV2\models\StockOrder;
 
 /**
@@ -11,6 +13,13 @@ use app\modules\inventoryV2\models\StockOrder;
  */
 class StockOrderSearch extends StockOrder
 {
+    /** ช่วงวันที่รับเข้า (ค้นหา) มาตรฐาน date_start / date_end */
+    public $date_start;
+    public $date_end;
+    /** ช่วงมูลค่ารับเข้า (ค้นหา) */
+    public $total_from;
+    public $total_to;
+
     /**
      * {@inheritdoc}
      */
@@ -18,7 +27,7 @@ class StockOrderSearch extends StockOrder
     {
         return [
             [['id', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json'], 'safe'],
+            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json', 'date_start', 'date_end', 'total_from', 'total_to'], 'safe'],
         ];
     }
 
@@ -27,8 +36,15 @@ class StockOrderSearch extends StockOrder
      */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
+    }
+
+    /**
+     * formName for GET search params
+     */
+    public function formName()
+    {
+        return 'StockOrderSearch';
     }
 
     /**
@@ -42,22 +58,17 @@ class StockOrderSearch extends StockOrder
     public function search($params, $formName = null)
     {
         $query = StockOrder::find();
-
-        // add conditions that should always apply here
-
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
 
+        $formName = $formName ?? $this->formName();
         $this->load($params, $formName);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
             'order_date' => $this->order_date,
@@ -70,9 +81,36 @@ class StockOrderSearch extends StockOrder
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'order_no', $this->order_no])
-            ->andFilterWhere(['like', 'order_type', $this->order_type])
-            ->andFilterWhere(['like', 'status', $this->status])
+        if ($this->order_no !== null && $this->order_no !== '') {
+            $query->andWhere(['like', 'order_no', $this->order_no]);
+        }
+        if ($this->status !== null && $this->status !== '') {
+            $query->andWhere(['status' => $this->status]);
+        }
+
+        // ช่วงวันที่: แปลงและกรองฝั่ง Controller (AppHelper::convertToGregorian + andFilterWhere)
+
+        $totalFromSet = $this->total_from !== null && $this->total_from !== '';
+        $totalToSet = $this->total_to !== null && $this->total_to !== '';
+        if ($totalFromSet || $totalToSet) {
+            $subQuery = (new Query())
+                ->select('stock_order_id')
+                ->from('stock_detail')
+                ->groupBy('stock_order_id');
+            $havings = [];
+            if ($totalFromSet) {
+                $havings[] = ['>=', new Expression('SUM(qty * COALESCE(unit_price, 0))'), (float) $this->total_from];
+            }
+            if ($totalToSet) {
+                $havings[] = ['<=', new Expression('SUM(qty * COALESCE(unit_price, 0))'), (float) $this->total_to];
+            }
+            if (!empty($havings)) {
+                $subQuery->having(array_merge(['and'], $havings));
+            }
+            $query->andWhere(['id' => $subQuery]);
+        }
+
+        $query->andFilterWhere(['like', 'order_type', $this->order_type])
             ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 

@@ -50,66 +50,67 @@ public function behaviors()
     }
 
     /**
-     * สร้างใบขอเบิก (คลังย่อยเป็นคนทำ)
+     * สร้างใบขอเบิก (หน่วยงานผู้เบิกสร้างคำขอไปยังคลังหลัก เพื่อรอการอนุมัติจ่าย)
      */
     public function actionCreate()
     {
         $model = new StockOrder();
-        $model->order_type = 'REQUISITION';
-        $model->status = 'PENDING'; // เริ่มต้นเป็นรออนุมัติ
+        $model->order_type = StockOrder::ORDER_TYPE_OUT;
+        $model->status = StockOrder::STATUS_DRAFT;
+        $model->source_type = 'REQUEST';
         $model->order_date = date('Y-m-d');
-        $model->order_no = 'TEMP-' . time();
+        $model->order_no = 'REQ-AUTO';
 
         if ($this->request->isPost) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            Yii::$app->response->format = Response::FORMAT_JSON;
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 if ($model->load($this->request->post())) {
-
-                    // --- กำหนดค่าคงที่ตรงนี้ (หลังโหลด POST) ---
-                    $model->order_type = 'OUT';      // สำหรับใบเบิกพัสดุออก
-                    $model->status = 'DRAFT';        // เริ่มต้นเป็น DRAFT (หรือ CONFIRMED ถ้าต้องการให้มีผลทันที)
-                    $model->source_type = 'REQUEST'; // ระบุว่าเป็นประเภทการเบิก (ใช้ฟิลด์ string ที่คุณเตรียมไว้)
-
-                    if (empty($model->order_no) || $model->order_no === 'REQ-AUTO') {
-                        $model->order_no = 'REQ-' . date('YmdHis');
+                    $model->order_type = StockOrder::ORDER_TYPE_OUT;
+                    $model->status = StockOrder::STATUS_DRAFT;
+                    $model->source_type = 'REQUEST';
+                    if (!empty($model->order_date) && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', trim($model->order_date), $m)) {
+                        $y = (int) $m[3];
+                        $model->order_date = ($y > 2400 ? $y - 543 : $y) . '-' . sprintf('%02d', (int) $m[2]) . '-' . sprintf('%02d', (int) $m[1]);
                     }
 
-                    // เจนเลขที่ใบเบิกถ้ายังไม่มี
                     if (empty($model->order_no) || $model->order_no === 'REQ-AUTO') {
                         $model->order_no = $this->generateOrderNo();
                     }
 
-                    if ($model->save()) {
-                        $details = $this->request->post('StockDetail', []);
-                        foreach ($details as $data) {
-                            $detail = new StockDetail();
-                            if ($detail->load($data, '')) {
-                                $detail->stock_order_id = $model->id; // ใช้ ID จาก $model ที่เพิ่ง save
-                                $detail->lot_number = '-';
-                                if (!$detail->save()) {
-                                    throw new \Exception("ไม่สามารถบันทึกรายการวัสดุได้: " . implode(', ', $detail->getFirstErrors()));
-                                }
-                            }
-                        }
-
-                        $transaction->commit();
-
-                        // แก้ไขการส่ง URL กลับไป: ให้ระบุเส้นทางให้ชัดเจน
-                        return [
-                            'success' => true,
-                            'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]) // ตรวจสอบว่า $model->id มีค่าแล้ว
-                        ];
-                    } else {
-                        $error = implode('<br>', $model->getFirstErrors());
-                        throw new \Exception($error);
+                    $details = $this->request->post('StockDetail', []);
+                    $details = array_values(array_filter($details, function ($d) {
+                        return !empty($d['item_code']) && isset($d['qty']) && (float) $d['qty'] > 0;
+                    }));
+                    if (empty($details)) {
+                        throw new \Exception('กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ');
                     }
+
+                    if (!$model->save()) {
+                        throw new \Exception(implode('<br>', $model->getFirstErrors()));
+                    }
+
+                    foreach ($details as $data) {
+                        $detail = new StockDetail();
+                        $detail->load($data, '');
+                        $detail->stock_order_id = $model->id;
+                        $detail->lot_number = $detail->lot_number ?: '-';
+                        if (!$detail->save()) {
+                            throw new \Exception('ไม่สามารถบันทึกรายการวัสดุได้: ' . implode(', ', $detail->getFirstErrors()));
+                        }
+                    }
+
+                    $transaction->commit();
+                    return [
+                        'success' => true,
+                        'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+                    ];
                 }
             } catch (\Exception $e) {
                 $transaction->rollBack();
                 return [
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ];
             }
         }

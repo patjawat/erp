@@ -1,78 +1,77 @@
 <?php
 
-use app\models\Item;
+use app\components\AppHelper;
 use app\modules\inventoryV2\models\Warehouse;
-use app\modules\inventoryV2\models\StockItem;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
-// 1. ดึงคลังหลัก (สมมติ ID=1 คือคลังหลัก)
-$mainWarehouse = Warehouse::findOne(1);
-$warehouseList = ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name');
-// 2. ดึงรายการคลังย่อยทั้งหมด (สำหรับเลือกคลังผู้เบิก)
-$subWarehouses = ArrayHelper::map(Warehouse::find()->where(['!=', 'id', 1])->all(), 'id', 'warehouse_name');
-// 3. รายการพัสดุ
-$items = ArrayHelper::map(StockItem::find()->all(), 'id', 'item_name');
-?>
-<?php
-// ... (คงส่วน PHP ด้านบนไว้เหมือนเดิม แต่ลบ $items ออกเพราะเราใช้ AJAX) ...
+// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานผู้เบิก) – สมมติ id=1 เป็นคลังหลัก
+$mainWarehouseIds = [1,2,3,4,5,6,7];
+$warehouseList = ArrayHelper::map(Warehouse::find()->orderBy(['id' => SORT_ASC])->all(), 'id', 'warehouse_name');
+$subWarehouses = ArrayHelper::map(Warehouse::find()->where(['not in', 'id', $mainWarehouseIds])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
+$mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWarehouseIds])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
 ?>
 
 <div class="requisition-form">
     <?php $form = ActiveForm::begin(['id' => 'requisition-form']); ?>
 
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body bg-light rounded">
-            <div class="row">
-                <div class="col-md-3">
-                    <?= $form->field($model, 'order_no')->textInput(['readonly' => true, 'placeholder' => 'REQ-AUTO']) ?>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <?= $form->field($model, 'order_no', ['labelOptions' => ['label' => 'เลขที่ใบขอเบิก']])->textInput(['readonly' => true, 'class' => 'form-control', 'placeholder' => 'REQ-AUTO']) ?>
                 </div>
-                <div class="col-md-3">
-                    <?= $form->field($model, 'sub_warehouse_id')->hiddenInput(['value' => 1])->label(false) ?>
-                    <label class="control-label">หน่วยงานผู้เบิก</label>
-                    <input type="text" class="form-control bg-white" value="<?= $mainWarehouse->warehouse_name ?>" readonly>
-                </div>
-                <div class="col-md-3">
-                    <?= $form->field($model, 'main_warehouse_id')->dropDownList($warehouseList, [
-                        'id' => 'main-warehouse-id',
-                        'prompt' => '-- เลือกคลังต้นทาง --',
-                        'class' => 'form-select fw-bold border-primary shadow-sm'
+                <div class="col-12 col-sm-6 col-md-3">
+                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'หน่วยงานที่รับของ']])->dropDownList($subWarehouses, [
+                        'prompt' => '-- เลือกหน่วยงานที่รับของ --',
+                        'class' => 'form-select',
                     ]) ?>
                 </div>
-                <div class="col-md-3">
-                    <?= $form->field($model, 'order_date')->textInput(['type' => 'date', 'value' => date('Y-m-d')]) ?>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <?= $form->field($model, 'main_warehouse_id', ['labelOptions' => ['label' => 'คลังที่จ่ายของ']])->dropDownList($mainWarehouses ?: $warehouseList, [
+                        'id' => 'main-warehouse-id',
+                        'prompt' => '-- เลือกคลังที่จ่ายของ --',
+                        'class' => 'form-select',
+                    ]) ?>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <?= $form->field($model, 'order_date', ['labelOptions' => ['label' => 'วันที่ขอเบิก']])->textInput([
+                        'class' => 'form-control',
+                        'id' => 'requisition-order_date',
+                        'placeholder' => 'เลือกวันที่',
+                        'value' => $model->order_date ? AppHelper::convertToThai($model->order_date) : '',
+                    ]) ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-            <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-box-seam me-2"></i>รายการวัสดุที่ต้องการเบิก</h6>
-            <button type="button" id="add-item" class="btn btn-primary btn-sm rounded-pill px-3">
-                <i class="bi bi-plus-lg"></i> เพิ่มวัสดุ
+    <div class="card border-0 shadow-sm" style="min-height: 400px;">
+        <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการวัสดุที่ต้องการเบิก</h6>
+            <button type="button" id="add-item" class="btn btn-light btn-sm">
+                <i class="bi bi-plus-lg me-1"></i> เพิ่มวัสดุ
             </button>
         </div>
-        <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="item-table">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 60%">ชื่อวัสดุ (เฉพาะที่มีในคลังที่เลือก)</th>
-                        <th style="width: 25%" class="text-center">จำนวนที่ขอเบิก</th>
+                        <th style="width: 50%">รายการวัสดุ</th>
+                        <th style="width: 12%" class="text-center">หน่วยนับ</th>
+                        <th style="width: 23%" class="text-center">จำนวนที่ขอเบิก</th>
                         <th style="width: 15%" class="text-center">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody>
-                    </tbody>
+                <tbody class="align-middle table-group-divider">
+                </tbody>
             </table>
-        </div>
     </div>
 
     <div class="form-group mt-4 d-flex justify-content-end gap-2">
-        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light px-4 border']) ?>
-        <?= Html::submitButton('<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก', ['class' => 'btn btn-primary px-4 shadow-sm']) ?>
+        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::submitButton('<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก', ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
@@ -82,13 +81,14 @@ $items = ArrayHelper::map(StockItem::find()->all(), 'id', 'item_name');
     <tbody id="row-template">
         <tr class="item-row">
             <td>
-                <select name="StockDetail[{idx}][item_code]" class="item-select-ajax" required></select>
+                <select name="StockDetail[{idx}][item_code]" class="item-select-ajax form-select" required></select>
             </td>
+            <td class="text-center unit-cell text-muted small align-middle"></td>
             <td>
                 <input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" required placeholder="0.00">
             </td>
             <td class="text-center">
-                <button type="button" class="btn btn-outline-danger btn-sm border-0 remove-item"><i class="bi bi-trash fs-5"></i></button>
+                <button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button>
             </td>
         </tr>
     </tbody>
@@ -96,6 +96,13 @@ $items = ArrayHelper::map(StockItem::find()->all(), 'id', 'item_name');
 
 <?php
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
+$this->registerCss(<<<CSS
+.ts-dropdown { z-index: 1060 !important; }
+.requisition-form #item-table td:first-child { overflow: visible; position: relative; }
+.requisition-form #item-table .ts-wrapper { position: relative; }
+.requisition-form #item-table .ts-control { min-height: 38px; }
+CSS
+);
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
@@ -103,69 +110,109 @@ $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
 $script = <<< JS
 let idx = 0;
 
-// 1. ฟังก์ชันสร้าง TomSelect
+// รหัสวัสดุที่ถูกเลือกแล้วในแถวอื่น (ไม่รวมแถวที่ส่งเข้า)
+function getSelectedItemCodes(excludeRow) {
+    var codes = [];
+    $('#item-table tbody tr').each(function() {
+        if (excludeRow && this !== excludeRow[0]) {
+            var v = $(this).find('select[name*="[item_code]"]').val();
+            if (v) codes.push(v);
+        }
+    });
+    return codes;
+}
+
+// 1. ฟังก์ชันสร้าง TomSelect (กรองรายการที่เลือกแล้วในแถวอื่น)
 function initItemSelect(elementId) {
-    let whId = $('#main-warehouse-id').val();
-    
+    var selfRef = null;
     return new TomSelect('#' + elementId, {
         valueField: 'item_code',
         labelField: 'item_name',
         searchField: ['item_name', 'item_code'],
         placeholder: 'พิมพ์ชื่อหรือรหัสวัสดุ...',
+        noResults: function() { return 'ไม่มีรายการหรือเลือกครบแล้ว'; },
         load: function(query, callback) {
-            let currentWhId = $('#main-warehouse-id').val();
-            if (!query.length || !currentWhId) return callback();
-            
-            let url = '$getItemInWhUrl' + '?warehouse_id=' + currentWhId + '&q=' + encodeURIComponent(query);
+            var currentWhId = $('#main-warehouse-id').val();
+            if (!currentWhId) return callback();
+            var excludeRow = $(this.input).closest('tr');
+            var selectedCodes = getSelectedItemCodes(excludeRow);
+            var q = (typeof query === 'string') ? query : '';
+            q = q.replace(/^["'\s]+|["'\s]+$/g, '');
+            var url = '$getItemInWhUrl' + '?warehouse_id=' + currentWhId + '&q=' + encodeURIComponent(q);
             fetch(url)
-                .then(response => response.json())
-                .then(json => {
-                    // ปรับตามโครงสร้าง JSON ของคุณ (ถ้า Controller ส่งตรงๆ ไม่ต้อง .results)
-                    callback(json); 
-                }).catch(() => callback());
+                .then(function(response) {
+                    if (!response.ok) return [];
+                    var ct = response.headers.get('Content-Type') || '';
+                    if (ct.indexOf('json') === -1) return [];
+                    return response.json();
+                })
+                .then(function(json) {
+                    var list = Array.isArray(json) ? json : (json && (json.results || json.data)) || [];
+                    list = list.filter(function(item) {
+                        return item && item.item_code && selectedCodes.indexOf(item.item_code) === -1;
+                    });
+                    callback(list);
+                })
+                .catch(function() { callback([]); });
         },
         render: {
             option: function(item, escape) {
-                return `<div class="py-1">
-                            <div class="fw-bold">\${escape(item.item_name)}</div>
-                            <small class="text-muted">รหัส: \${escape(item.item_code)}</small>
-                        </div>`;
+                var unit = (item.unit_name && item.unit_name !== '-') ? ' <span class="text-muted">(' + escape(item.unit_name) + ')</span>' : '';
+                return '<div class="py-1"><div class="fw-bold">' + escape(item.item_name) + unit + '</div><small class="text-muted">รหัส: ' + escape(item.item_code) + '</small></div>';
             }
         },
         onChange: function(value) {
-            if(value) {
+            if (value) {
+                var opt = this.options[value];
+                var unitText = (opt && opt.unit_name) ? opt.unit_name : '-';
+                $(this.wrapper).closest('tr').find('.unit-cell').text(unitText);
                 $(this.wrapper).closest('tr').find('.qty-input').focus();
             }
         }
     });
 }
 
-// 2. ฟังก์ชันเพิ่มแถว
+// 2. ฟังก์ชันเพิ่มแถว (คืนค่า TomSelect ของแถวใหม่)
 function addItem() {
-    let whId = $('#main-warehouse-id').val();
+    var whId = $('#main-warehouse-id').val();
     if (!whId) {
-        Swal.fire('คำเตือน', 'กรุณาเลือกคลังต้นทางก่อนเพิ่มรายการ', 'warning');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของก่อนเพิ่มรายการ', 'warning');
+        }
         $('#main-warehouse-id').addClass('is-invalid').focus();
-        return;
+        return null;
     }
 
-    let template = $('#row-template').html();
-    let rowHtml = template.replace(/{idx}/g, idx);
-    let newRow = $(rowHtml);
-    
+    var template = $('#row-template').html();
+    var rowHtml = template.replace(/{idx}/g, idx);
+    var newRow = $(rowHtml);
+
     $('#item-table tbody').append(newRow);
-    
-    let selectId = 'select-item-' + idx;
+
+    var selectId = 'select-item-' + idx;
     newRow.find('.item-select-ajax').attr('id', selectId);
-    
-    initItemSelect(selectId);
+
+    var ts = initItemSelect(selectId);
     idx++;
+    return ts;
 }
 
 // 3. Event Listeners
 $(document).on('click', '#add-item', function(e) {
     e.preventDefault();
-    addItem();
+    var ts = addItem();
+    if (ts) ts.open();
+});
+
+// Enter ที่ช่องจำนวน = เพิ่มแถวใหม่ แล้วโฟกัสที่ช่องค้นหาวัสดุ
+$(document).on('keydown', '.qty-input', function(e) {
+    if (e.which === 13) {
+        e.preventDefault();
+        var ts = addItem();
+        if (ts) {
+            ts.open();
+        }
+    }
 });
 
 // เมื่อเปลี่ยนคลังต้นทาง ให้ล้างรายการเดิม
@@ -222,6 +269,9 @@ $('#requisition-form').on('beforeSubmit', function(e) {
     });
     return false;
 });
+if (typeof thaiDatepicker === 'function') {
+    thaiDatepicker('#requisition-order_date');
+}
 JS;
 $this->registerJs($script);
 ?>

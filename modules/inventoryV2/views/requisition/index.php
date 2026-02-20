@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use yii\grid\GridView;
 
-$this->title = 'รายการใบขอเบิกวัสดุ (Requisition)';
+$this->title = 'รายการใบขอเบิกวัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     [
                         'attribute' => 'order_no',
-                        'label' => 'เลขที่ใบเบิก',
+                        'label' => 'เลขที่เอกสาร',
                         'format' => 'raw',
                         'value' => function($model) {
                             return Html::a($model->order_no, ['view', 'id' => $model->id], ['class' => 'fw-bold']);
@@ -35,15 +35,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'attribute' => 'main_warehouse_id',
-                        'label' => 'คลังต้นทาง (จ่าย)',
-                        'value' => function($model) {
+                        'label' => 'คลังที่จ่ายของ',
+                        'value' => function ($model) {
                             return $model->mainWarehouse->warehouse_name ?? '-';
                         }
                     ],
                     [
                         'attribute' => 'sub_warehouse_id',
-                        'label' => 'คลังปลายทาง (รับ)',
-                        'value' => function($model) {
+                        'label' => 'หน่วยงานที่รับของ',
+                        'value' => function ($model) {
                             return $model->subWarehouse->warehouse_name ?? '-';
                         }
                     ],
@@ -56,12 +56,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'label' => 'สถานะ',
                         'format' => 'raw',
-                        'value' => function($model) {
+                        'value' => function ($model) {
                             $statusMap = [
-                                'PENDING'  => ['class' => 'bg-warning text-dark', 'label' => 'รออนุมัติ'],
-                                'APPROVED' => ['class' => 'bg-success', 'label' => 'จ่ายของแล้ว'],
-                                'RECEIVED' => ['class' => 'bg-info', 'label' => 'รับเข้าคลังย่อยแล้ว'],
-                                'CANCELLED'=> ['class' => 'bg-danger', 'label' => 'ยกเลิก'],
+                                'DRAFT'     => ['class' => 'bg-warning text-dark', 'label' => 'รออนุมัติ'],
+                                'CONFIRMED' => ['class' => 'bg-success', 'label' => 'จ่ายแล้ว'],
+                                'CANCELLED' => ['class' => 'bg-danger', 'label' => 'ยกเลิก'],
                             ];
                             $s = $statusMap[$model->status] ?? ['class' => 'bg-secondary', 'label' => $model->status];
                             return "<span class='badge {$s['class']}'>{$s['label']}</span>";
@@ -74,11 +73,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             'view' => function ($url, $model) {
                                 return Html::a('<i class="bi bi-search"></i>', $url, [
                                     'class' => 'btn btn-sm btn-outline-primary',
-                                    'title' => 'ดูรายละเอียด'
+                                    'title' => 'ดูรายละเอียด',
                                 ]);
                             },
                             'approve' => function ($url, $model) {
-                                if ($model->status === 'PENDING') {
+                                if ($model->status === 'DRAFT') {
                                     return Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                                         'class' => 'btn btn-sm btn-success',
                                         'data' => [
