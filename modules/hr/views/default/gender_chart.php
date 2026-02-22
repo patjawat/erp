@@ -1,36 +1,31 @@
 <?php
-use yii\helpers\Url;
 use yii\helpers\Json;
 use app\components\SiteHelper;
-?>
-<div id="chart"></div>
-<!-- <div id="chart2"></div> -->
-  <?php
-   $ageCategories = [];
-   $ageRangeF = [];
-   $ageRangeM = [];
-   $ageTotal = [];
-          foreach ($dataProviderGender->getModels() as $age) {
-            $ageCategories[] = $age['_age_generation'];
-            $ageTotal[] = $age['cnt'];
-            // $ageRangeF[] = round((float)$age['f_percen'],2);
-            // $ageRangeM[] = round((float)$age['m_percen'],2);
-            $ageRangeF[] = (float) $age['_female'];
-            $ageRangeM[] = (float) $age['_male'];
 
-        }
-  
-  ?>
-
-<?php
+$totalCount = isset($totalCount) && (int) $totalCount > 0 ? (int) $totalCount : 1;
+$ageCategories = [];
+$ageRangeF = [];
+$ageRangeM = [];
+foreach ($dataProviderGender->getModels() as $age) {
+    $ageCategories[] = $age['_age_generation'];
+    $ageRangeF[] = (float) $age['_female'];
+    $ageRangeM[] = (float) $age['_male'];
+}
 
 $companyName = SiteHelper::getInfo()["company_name"];
 $ageRangeMale = Json::encode($ageRangeM);
 $ageRangeFeMale = Json::encode($ageRangeF);
 $categories = Json::encode($ageCategories);
+$totalCountJs = (int) $totalCount;
+?>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <div id="chart"></div>
+    </div>
+</div>
+<?php
 $js = <<< JS
-
-
+        var totalCount = $totalCountJs;
         var options = {
           series: [{
             name: 'ชาย',
@@ -50,19 +45,18 @@ $js = <<< JS
         plotOptions: {
           bar: {
             borderRadius: 5,
-            borderRadiusApplication: 'end', // 'around', 'end'
-            borderRadiusWhenStacked: 'all', // 'all', 'last'
+            borderRadiusApplication: 'end',
+            borderRadiusWhenStacked: 'all',
             horizontal: true,
             barHeight: '80%',
           },
         },
-               dataLabels: {
-        enabled: true,
-        formatter: function(val, opt) {
-      // return opt.w.globals.labels[opt.dataPointIndex] + ":  " + val
-      return Math.abs(Math.round(val*100 / 264) ) + "%"
-  },
-  },
+        dataLabels: {
+          enabled: true,
+          formatter: function(val, opt) {
+            return Math.abs(totalCount ? Math.round(val * 100 / totalCount) : 0) + "%";
+          },
+        },
         stroke: {
           width: 1,
           colors: ["#fff"]

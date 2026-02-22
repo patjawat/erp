@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
         <div id="positionNameChart"></div>
     </div>

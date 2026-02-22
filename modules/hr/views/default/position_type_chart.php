@@ -1,39 +1,4 @@
-
-<style>
-/**
- * index.scss
- * - Add any styles you want here!
- */
-/* .customLabel{
-  font-family: Arial Black;
-font-size: 20px;
-  fill: #fffff;
-} */
-/* 
-.chart{
-  width:500px;
-  height: 500px;
-}
-.PRLegend{
-  position: absolute;
-  width: 23%;
-  height:10%;
-  background: white;
-  bottom: 55%;
-  left:12%;
-  display:flex;
-  align-items: center;
-  justify-content: center;
-}
-.tooltipValue{
-  font-size: 15px;
-}
-
-.apexcharts-tooltip {
-  color: '#000 !important';
-} */
-</style>
-<div class="card">
+<div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
         <div id="positionTypeBar"></div>
     </div>

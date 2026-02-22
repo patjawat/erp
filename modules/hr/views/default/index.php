@@ -23,25 +23,50 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/hr/menu', ['active' => 'dashboard'])
+<?= $this->render('@app/modules/hr/menu', ['active' => 'overview'])
 ?>
 <?php $this->endBlock(); ?>
 
 
 <?= $this->render('employee_summary', [
     'dataProvider' => $dataProvider,
+    'totalCount' => $totalCount ?? 0,
+    'dataProviderGenderM' => $dataProviderGenderM,
+    'dataProviderGenderW' => $dataProviderGenderW,
 ]) ?>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <p class="text-muted small mb-0">
+            <strong>มุมมองผู้บริหาร:</strong>
+            องค์กรมีบุคลากรทั้งหมด <strong><?= (int)($totalCount ?? 0) ?></strong> คน
+            (ชาย <?= (int)($dataProviderGenderM->getTotalCount() ?? 0) ?> · หญิง <?= (int)($dataProviderGenderW->getTotalCount() ?? 0) ?>)
+            กระจายใน <?= count($dataProviderWorkGroup->getModels()) ?> กลุ่มงาน
+            และ <?= count($dataProviderPositionType->getModels()) ?> ประเภทการจ้าง
+        </p>
+    </div>
+</div>
+
+<div class="row mb-2">
+    <div class="col-12">
+        <h6 class="text-muted small fw-normal text-uppercase mb-0">โครงสร้างและประชากรบุคลากร</h6>
+    </div>
+</div>
 <div class="row">
     <div class="col-lg-8 col-md-6 col-sm-12">
 
-        <?= $this->render('gender_chart', ['dataProviderGender' => $dataProviderGender]) ?>
+        <?= $this->render('position_group_type', [
+            'dataProviderWorkGroup' => $dataProviderWorkGroup,
+            'positionTypeLabels' => $positionTypeLabels ?? [],
+        ]) ?>
+
+        <?= $this->render('gender_chart', [
+            'dataProviderGender' => $dataProviderGender,
+            'totalCount' => $totalCount ?? 1,
+        ]) ?>
 
         <?php $this->render('position_name', [
             'dataProviderPositionName' => $dataProviderPositionName
-        ]) ?>
-
-        <?php echo $this->render('position_group_type', [
-            'dataProviderWorkGroup' => $dataProviderWorkGroup
         ]) ?>
     </div>
 
@@ -58,17 +83,9 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
             'dataProviderGenZ' => $dataProviderGenZ,
             'dataProviderGenA' => $dataProviderGenA,
         ]) ?>
-        <?php
-        // $this->render('position_level_chart',[
-        //     'dataProviderPositionLevel' => $dataProviderPositionLevel
-        // ])
-        ?>
         <?= $this->render('position_type_chart', [
             'dataProviderPositionType' => $dataProviderPositionType
         ]) ?>
-
-        <?php // $this->render('perfection_data') 
-        ?>
     </div>
 </div>
 
