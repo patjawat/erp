@@ -6,6 +6,9 @@ services:
     environment:
       - TZ=Asia/Bangkok
       - PHP_MEMORY_LIMIT=2048M
+      # เชื่อมต่อ Ollama (AI สรุป PDF) - ใช้ hostname ollama เมื่อรันใน Docker
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.2
     volumes:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
@@ -95,3 +98,18 @@ services:
     volumes:
       - ./docker/databasus-data:/databasus-data
     restart: unless-stopped
+
+  # Ollama สำหรับ AI สรุปเนื้อหา PDF (DMS)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./docker/ollama-data:/root/.ollama
+    restart: unless-stopped
+    # รันแบบไม่มี GPU ก็ได้ (ใช้ CPU)
+    deploy:
+      resources:
+        limits:
+          memory: 4G

@@ -47,6 +47,11 @@ $config = [
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
+        'ollamaSummarizer' => [
+            'class' => 'app\components\OllamaSummarizer',
+            'baseUrl' => $params['ollamaUrl'] ?? 'http://ollama:11434',
+            'model' => $params['ollamaModel'] ?? 'llama3.2',
+        ],
         'cart' => [
             'class' => 'asyou99\cart\Cart',
         ],

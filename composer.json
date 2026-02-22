@@ -94,8 +94,8 @@
         "setasign/fpdi": "^2.6",
         "2amigos/yii2-qrcode-helper": "^3.1",
         "guzzlehttp/guzzle": "7.10.x-dev",
-        "endroid/qr-code": "^4.6"
-        
+        "endroid/qr-code": "^4.6",
+        "smalot/pdfparser": "^2.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

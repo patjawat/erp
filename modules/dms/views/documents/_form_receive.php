@@ -53,16 +53,20 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row">
             <div class="col-xl-7 col-lg-7 col-md-6 col-sm-12 pt-3">
 
-                <div class="d-flex justify-content-between align-item-middle mb-3">
-                    <h6><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
-                    <div class="position-relative">
-                        <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
-                            <i class="fa-solid fa-upload"></i>
-                            <span>คลิกอัปโหลดไฟล์ที่นี่</span>
+                <div class="d-flex justify-content-between align-item-middle mb-3 flex-wrap gap-2">
+                    <h6 class="mb-0"><i class="fa-solid fa-file-pdf text-danger fs-3"></i> ข้อมูลไฟล์เอกสาร</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="position-relative">
+                            <div class="file-upload-btnxx btn btn-primary shadow rounded-pill">
+                                <i class="fa-solid fa-upload"></i>
+                                <span>คลิกอัปโหลดไฟล์ที่นี่</span>
+                            </div>
+                            <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
                         </div>
-                        <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
+                        <button type="button" class="btn btn-outline-success shadow rounded-pill" id="btn-summarize-ai" title="อัปโหลด PDF ก่อน แล้วกดปุ่มนี้">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI
+                        </button>
                     </div>
-
                 </div>
                 <div class="card">
                     <div class="card-body">
@@ -282,6 +286,7 @@ $urlUpload = Url::to('/filemanager/uploads/upload-pdf');
 $file = Yii::$app->request->get('file_name');
 $url = Url::to(['/dms/documents/get-items']);
 $showPdfUrl = Url::to(['/dms/documents/show', 'ref' => $model->ref, 'file_name' => $file]);
+$summarizePdfUrl = Url::to(['/dms/documents/summarize-pdf']);
 $js = <<< JS
 
     loadPdf()
@@ -361,6 +366,39 @@ $js = <<< JS
                     });
                 } else {
                     $('#my_file').val('');
+                }
+            });
+        });
+
+        // สรุปด้วย AI (Ollama)
+        $('#btn-summarize-ai').on('click', function () {
+            var ref = $('#documents-ref').val();
+            if (!ref) {
+                Swal.fire({ icon: 'warning', title: 'กรุณาอัปโหลด PDF ก่อน', text: 'อัปโหลดไฟล์ PDF แล้วกดปุ่ม "สรุปด้วย AI" อีกครั้ง' });
+                return;
+            }
+            var \$btn = $(this);
+            \$btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสรุป...');
+            $.ajax({
+                url: '$summarizePdfUrl',
+                type: 'POST',
+                data: { ref: ref },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.success && data.topic !== undefined) {
+                        $('#documents-topic').val(data.topic || '');
+                        $('#documents-data_json-des').val(data.des || '');
+                        Swal.fire({ icon: 'success', title: 'สรุปเรียบร้อย', showConfirmButton: false, timer: 1500 });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'ไม่สามารถสรุปได้', text: data.error || 'เกิดข้อผิดพลาด' });
+                    }
+                },
+                error: function (xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ';
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: msg });
+                },
+                complete: function () {
+                    \$btn.prop('disabled', false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI');
                 }
             });
         });

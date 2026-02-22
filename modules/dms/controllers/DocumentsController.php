@@ -28,6 +28,7 @@ use app\modules\dms\models\DocumentsDetail;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
 use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก component ที่เราเขียนเอง
+use Smalot\PdfParser\Parser as PdfParser;
 
 /**
  * DocumentsController implements the CRUD actions for Documents model.
@@ -732,6 +733,59 @@ class DocumentsController extends Controller
         return $this->render('index');
     }
 
+    /**
+     * สรุปเนื้อหาจาก PDF ด้วย Ollama (AI) คืน topic และรายละเอียด
+     * ใช้ ref ของเอกสารที่อัปโหลดแล้ว
+     */
+    public function actionSummarizePdf()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $ref = $this->request->post('ref') ?: $this->request->get('ref');
+        if (empty($ref)) {
+            return ['success' => false, 'error' => 'ไม่พบ ref ของเอกสาร'];
+        }
+
+        $upload = Uploads::find()
+            ->where(['ref' => $ref])
+            ->andWhere(['type' => 'pdf'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        if (!$upload || empty($upload->real_filename)) {
+            return ['success' => false, 'error' => 'ไม่พบไฟล์ PDF กรุณาอัปโหลด PDF ก่อน แล้วกดปุ่ม "สรุปด้วย AI" อีกครั้ง'];
+        }
+
+        $basePath = FileManagerHelper::getUploadPath() . $ref . '/';
+        $filePath = $basePath . $upload->real_filename;
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            return ['success' => false, 'error' => 'ไม่สามารถอ่านไฟล์ PDF ได้'];
+        }
+
+        try {
+            $parser = new PdfParser();
+            $pdf = $parser->parseFile($filePath);
+            $text = $pdf->getText();
+        } catch (\Exception $e) {
+            Yii::warning('PDF parse failed: ' . $e->getMessage(), __METHOD__);
+            return ['success' => false, 'error' => 'ดึงข้อความจาก PDF ไม่ได้: ' . $e->getMessage()];
+        }
+
+        $text = trim($text);
+        if (mb_strlen($text) < 30) {
+            return ['success' => false, 'error' => 'ไม่พบข้อความใน PDF (อาจเป็น PDF แบบสแกนหรือภาพ)'];
+        }
+
+        $result = Yii::$app->ollamaSummarizer->summarize($text);
+        if (isset($result['error'])) {
+            return ['success' => false, 'error' => $result['error']];
+        }
+
+        return [
+            'success' => true,
+            'topic' => $result['topic'],
+            'des' => $result['des'],
+        ];
+    }
 
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
     public function moveFile($model)
