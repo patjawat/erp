@@ -65,7 +65,16 @@ class LeaveController extends Controller
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $query = $dataProvider->query;
-        $query->joinWith('employee');
+        $query->joinWith([
+            'employee' => function ($q) {
+                $q->joinWith(['positionType', 'empDepartment']);
+            },
+            'leaveType',
+        ]);
+
+        if ($dataProvider->pagination !== false) {
+            $dataProvider->pagination->pageSize = 20;
+        }
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);

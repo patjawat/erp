@@ -5,6 +5,8 @@ use yii\helpers\Url;
 use yii\bootstrap5\Html;
 use app\components\UserHelper;
 use app\components\ApproveHelper;
+use app\modules\hr\models\Leave;
+use app\modules\approveV2\models\Approve;
 
 $me = UserHelper::GetEmployee();
 
@@ -14,6 +16,30 @@ $isDesc = $currentSort === '-total_days';
 
 $newSort = $isAsc ? '-total_days' : 'total_days';
 $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
+
+$models = $dataProvider->getModels();
+$leaveIds = array_filter(array_map(function ($m) { return $m->id; }, $models));
+$approvesByLeaveId = [];
+$stepsByLeaveId = [];
+if (!empty($leaveIds)) {
+    $allApproves = Approve::find()
+        ->where(['name' => 'leave', 'from_id' => $leaveIds])
+        ->with('employee')
+        ->orderBy(['from_id' => SORT_ASC, 'id' => SORT_ASC])
+        ->all();
+    foreach ($allApproves as $a) {
+        $stepsByLeaveId[$a->from_id][] = $a;
+        if (!in_array($a->status, ['None', 'Pending'], true)) {
+            if (!isset($approvesByLeaveId[$a->from_id])) {
+                $approvesByLeaveId[$a->from_id] = [];
+            }
+            $approvesByLeaveId[$a->from_id][] = $a;
+        }
+    }
+    foreach (array_keys($approvesByLeaveId) as $lid) {
+        usort($approvesByLeaveId[$lid], function ($x, $y) { return $y->level - $x->level; });
+    }
+}
 
 ?>
 
@@ -35,32 +61,32 @@ $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
             </tr>
         </thead>
         <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
-            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+            <?php foreach ($models as $key => $item): ?>
                 <tr>
-                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                    <td class="text-center "><?php echo $item->employee->positionType->title ?? '-' ?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination ? $dataProvider->pagination->offset : 0) + 1 + $key) ?></td>
+                    <td class="text-center "><?php echo $item->employee && $item->employee->positionType ? $item->employee->positionType->title : '-' ?></td>
                     <td class="text-truncate" style="max-width: 230px;">
                         <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                             class="open-modal" data-size="modal-xl">
-                            <?php echo  $item->employee->getAvatar(false) ?>
+                            <?php echo $item->employee ? $item->employee->getAvatar(false) : '-' ?>
                         </a>
                     </td>
                     <td><?= $item->work_shift_name ?></td>
                     <td>
-                        <?= $item->data_json['reason'] ?>
+                        <?= $item->data_json['reason'] ?? '' ?>
                         <div class="d-flex flex-column justofy-content-start align-items-start">
                             <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
                                     class="bi bi-exclamation-circle-fill"></i>
-                                <?php echo $item->leaveType?->title ?? '-' ?>
+                                <?php echo $item->leaveType ? $item->leaveType->title : '-' ?>
                                 <code><?php echo $item->total_days ?> </code> วัน</span>
                         </div>
                     </td>
                     <td><?php echo $item->showLeaveDate() ?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee->departmentName() ?></td>
-                    <td><?php echo $item->stackChecker() ?></td>
+                    <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee ? $item->employee->departmentName() : '-' ?></td>
+                    <td><?php echo Leave::renderStackChecker($approvesByLeaveId[$item->id] ?? []); ?></td>
                     <td class="fw-light align-middle text-start" style="width:150px;">
                         <?php echo $item->viewStatus(); ?>
-                        <?php echo ApproveHelper::viewStep('leave',$item->id); ?>
+                        <?php echo ApproveHelper::viewStepFromSteps($stepsByLeaveId[$item->id] ?? []); ?>
                     </td>
 
                     <td class="text-end">

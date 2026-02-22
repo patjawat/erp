@@ -72,6 +72,29 @@ class ApproveHelper extends Component
     </div>';
 }
 
+    /**
+     * Render step progress from pre-loaded Approve models (avoids N+1 in lists).
+     * @param \app\modules\approveV2\models\Approve[] $steps
+     * @return string
+     */
+    public static function viewStepFromSteps(array $steps)
+    {
+        $count = count($steps);
+        $pass = 0;
+        $bars = '';
+        foreach ($steps as $step) {
+            $color = ($step->status == 'Pass') ? 'bg-primary' : 'bg-secondary bg-opacity-25';
+            if ($step->status == 'Pass') {
+                $pass++;
+            }
+            $bars .= '<div class="rounded-pill ' . $color . '" style="width: 20px; height: 6px;"></div>';
+        }
+        return '<div class="d-flex align-items-center justify-content-between">'
+            . '<div class="d-flex align-items-center gap-1">'
+            . '<div class="d-flex gap-1">' . $bars . '</div>'
+            . '<small class="text-muted ms-2" style="font-size: 0.75rem;">Step ' . $pass . '/' . $count . '</small>'
+            . '</div></div>';
+    }
 
 
     // ระบบการแจ้งเตือนการอนุมัติใช้รถยนต์

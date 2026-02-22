@@ -94,6 +94,25 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
                     </div>
+                    <?php
+                    $substitute = $model->leaveWorkSend();
+                    if (!empty($substitute)):
+                    ?>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-3 border border-light-subtle">
+                            <small class="text-muted d-block mb-1"><i class="fa-regular fa-user fa-xl me-1"></i> ผู้ปฏิบัติหน้าที่แทน</small>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= $substitute->getAvatar(false, 'ผู้ปฏิบัติหน้าที่แทน') ?>
+                                </div>
+                                <div>
+                                    <p class="fw-bold text-dark mb-1"><?= Html::encode($substitute->fullname) ?></p>
+                                    <p class="text-muted small mb-0"><?= Html::encode($substitute->positionName()) ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <div class="col-12">
                         <?= $this->render('view_summary', ['model' => $model]) ?>
                       
