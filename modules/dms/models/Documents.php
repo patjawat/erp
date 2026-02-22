@@ -714,6 +714,32 @@ public function StackDocumentTagsLimit($tag_name)
         return self::find()->where(['thai_year' => $this->thai_year, 'document_group' => $group])->count();
     }
 
+    /**
+     * นับจำนวนทุก document_group ในปีเดียวกัน 1 query (ใช้แทน CountType หลายครั้ง)
+     * @return array ['receive' => int, 'send' => int, 'appointment' => int, 'announce' => int]
+     */
+    public function getCountsByGroup()
+    {
+        $rows = self::find()
+            ->select(['document_group', 'cnt' => new Expression('COUNT(*)')])
+            ->where(['thai_year' => $this->thai_year])
+            ->groupBy('document_group')
+            ->asArray()
+            ->all();
+        $counts = [
+            'receive' => 0,
+            'send' => 0,
+            'appointment' => 0,
+            'announce' => 0,
+        ];
+        foreach ($rows as $row) {
+            if (isset($counts[$row['document_group']])) {
+                $counts[$row['document_group']] = (int) $row['cnt'];
+            }
+        }
+        return $counts;
+    }
+
 
 
     // รายงานแยกตามเดือน

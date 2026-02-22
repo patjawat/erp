@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel, 'active' => 'dashboard']) ?>
+<?php echo $this->render('@app/modules/dms/menu', ['model' => $searchModel, 'active' => 'dashboard', 'counts' => $counts ?? null]) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -42,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5"><?php echo number_format($searchModel->CountType('receive')) ?>
+                    <span class="h5"><?php echo number_format($counts['receive'] ?? 0) ?>
                         ทะเบียนรับ</span>
                     <div class="relative">
                         <i class="fa-solid fa-download text-black-50 fs-1 mt-1"></i>
@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5"><?php echo number_format($searchModel->CountType('send')) ?>
+                    <span class="h5"><?php echo number_format($counts['send'] ?? 0) ?>
                         ทะเบียนรับส่ง</span>
                     <div class="relative">
                         <i class="fa-solid fa-paper-plane text-black-50 fs-1 mt-1"></i>
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5">0 คำสั่ง</span>
+                    <span class="h5"><?php echo number_format($counts['appointment'] ?? 0) ?> คำสั่ง</span>
                     <div class="relative">
                         <i class="fa-solid fa-bullhorn text-black-50 fs-1"></i>
                     </div>
@@ -94,7 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between gap-1 mb-0">
-                    <span class="h5">0 ทะเบียนประกาศ/นโยบาย</span>
+                    <span class="h5"><?php echo number_format($counts['announce'] ?? 0) ?> ทะเบียนประกาศ/นโยบาย</span>
                     <div class="relative">
                         <i class="bi bi-eraser text-black-50 fs-2"></i>
                     </div>
@@ -110,7 +110,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <div class="row">
-    <div class="col-7"> <?php echo $this->render('chart_receive', ['model' => $searchModel]); ?></div>
-    <div class="col-5"> <?php echo $this->render('chart_send', ['model' => $searchModel]); ?></div>
-    <div class="col-12"> <?php echo $this->render('org_summary', ['model' => $searchModel]); ?></div>
+    <div class="col-7"> <?php echo $this->render('chart_receive', ['model' => $searchModel, 'chartReceive' => $chartReceive, 'summaryDocSpeed' => $summaryDocSpeed, 'summaryDocType' => $summaryDocType]); ?></div>
+    <div class="col-5"> <?php echo $this->render('chart_send', ['model' => $searchModel, 'chartSend' => $chartSend]); ?></div>
+    <div class="col-12"> <?php echo $this->render('org_summary', ['summaryOrg' => $summaryOrg]); ?></div>
 </div>

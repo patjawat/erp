@@ -108,8 +108,14 @@ services:
     volumes:
       - ./docker/ollama-data:/root/.ollama
     restart: unless-stopped
+    networks:
+      - web-network
     # รันแบบไม่มี GPU ก็ได้ (ใช้ CPU)
     deploy:
       resources:
         limits:
           memory: 4G
+
+networks:
+  web-network:
+    driver: bridge

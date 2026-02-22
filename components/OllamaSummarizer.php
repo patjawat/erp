@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\RequestException;
 /**
  * สรุปเนื้อหาข้อความด้วย Ollama (รันใน Docker)
  * ใช้สำหรับ DMS สรุปเรื่องและรายละเอียดจาก PDF
+ * ความยาวการสรุป: short, medium, long (ตั้งใน params หรือหน้า ตั้งค่า > AI สรุป)
  */
 class OllamaSummarizer extends Component
 {
@@ -22,6 +23,16 @@ class OllamaSummarizer extends Component
     /** @var int timeout วินาที */
     public $timeout = 120;
 
+    /** @var string ความยาวการสรุป: short, medium, long */
+    public $summaryLength = 'medium';
+
+    /** ความยาวสูงสุดของรายละเอียด (ตัวอักษร) ต่อโหมด */
+    protected static $desMaxLength = [
+        'short' => 800,
+        'medium' => 2000,
+        'long' => 4000,
+    ];
+
     public function init()
     {
         parent::init();
@@ -31,6 +42,21 @@ class OllamaSummarizer extends Component
         if (isset(Yii::$app->params['ollamaModel'])) {
             $this->model = Yii::$app->params['ollamaModel'];
         }
+        $this->summaryLength = $this->resolveSummaryLength();
+    }
+
+    /** อ่านค่าความยาวจากไฟล์ตั้งค่า (DMS) หรือ params */
+    protected function resolveSummaryLength(): string
+    {
+        $file = Yii::getAlias('@runtime/dms-ai-summary-settings.json');
+        if (is_file($file) && is_readable($file)) {
+            $data = @json_decode(file_get_contents($file), true);
+            if (!empty($data['summary_length']) && isset(self::$desMaxLength[$data['summary_length']])) {
+                return $data['summary_length'];
+            }
+        }
+        $p = Yii::$app->params['ollamaSummaryLength'] ?? 'medium';
+        return isset(self::$desMaxLength[$p]) ? $p : 'medium';
     }
 
     /**
@@ -60,17 +86,28 @@ class OllamaSummarizer extends Component
         return $this->parseResponse($responseText['text']);
     }
 
+    protected function getLengthInstructions(): string
+    {
+        $instructions = [
+            'short' => 'สรุปสั้นมาก: รายละเอียดใช้ 1–3 ประโยคเท่านั้น เน้นเฉพาะประเด็นหลัก',
+            'medium' => 'สรุปปานกลาง: รายละเอียดใช้ 3–6 ประโยค ครอบคลุมวัตถุประสงค์ สาระสำคัญ และสิ่งที่ต้องดำเนินการ',
+            'long' => 'สรุปยาว/ครบถ้วน: รายละเอียดใช้ 5–10 ประโยค ครอบคลุมวัตถุประสงค์ ประเด็นหลัก สาระสำคัญ สิ่งที่ต้องดำเนินการ และข้อสรุป',
+        ];
+        return $instructions[$this->summaryLength] ?? $instructions['medium'];
+    }
+
     protected function buildPrompt(string $text): string
     {
+        $lengthGuide = $this->getLengthInstructions();
         return <<<PROMPT
-คุณเป็นผู้ช่วยสรุปเอกสารราชการ/หนังสือราชการ จงสรุปข้อความด้านล่างเป็น 2 ส่วนเท่านั้น (ตอบเป็นภาษาไทย):
+คุณเป็นผู้ช่วยสรุปเอกสารราชการ/หนังสือราชการ จงสรุปข้อความด้านล่างเป็นภาษาไทย:
 
-1) หัวเรื่อง: สรุปเป็นหนึ่งบรรทัดสั้นๆ ว่าเอกสารนี้เกี่ยวกับอะไร
-2) รายละเอียด: สรุปเนื้อหาสำคัญ 2-5 ประโยค
+1) หัวเรื่อง: สรุปเป็นหนึ่งบรรทัดว่าเอกสารนี้เกี่ยวกับอะไร
+2) รายละเอียด: {$lengthGuide}
 
 ตอบเฉพาะในรูปแบบนี้เท่านั้น (ห้ามมีข้อความอื่นนำหน้าหรือตามหลัง):
 หัวเรื่อง: <ข้อความหนึ่งบรรทัด>
-รายละเอียด: <ข้อความสรุป>
+รายละเอียด: <ข้อความสรุปใจความ>
 
 ข้อความที่จะสรุป:
 ---
@@ -143,9 +180,20 @@ PROMPT;
             $des = implode(' ', array_slice($lines, 1)) ?: $text;
         }
 
+        $maxDes = self::$desMaxLength[$this->summaryLength] ?? 2000;
         return [
             'topic' => mb_substr($topic, 0, 500),
-            'des' => mb_substr($des, 0, 2000),
+            'des' => mb_substr($des, 0, $maxDes),
+        ];
+    }
+
+    /** คืนค่าตัวเลือกความยาวสำหรับฟอร์มตั้งค่า */
+    public static function getSummaryLengthOptions(): array
+    {
+        return [
+            'short' => 'สั้น (1–3 ประโยค)',
+            'medium' => 'ปานกลาง (3–6 ประโยค)',
+            'long' => 'ยาว/ครบถ้วน (5–10 ประโยค)',
         ];
     }
 }

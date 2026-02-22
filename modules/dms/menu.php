@@ -6,16 +6,23 @@ use app\models\Categorise;
 use app\components\CategoriseHelper;
 use app\modules\am\models\AssetItem;
 
-try {
-    $countReceive = $model->CountType('receive') ?? 0;
-    $countSend = $model->CountType('send') ?? 0;
-    $countAppointment = $model->CountType('appointment') ?? 0;
-    $countAnnounce = $model->CountType('announce') ?? 0;
-} catch (\Throwable $th) {
-    $countReceive =  0;
-    $countSend =  0;
-    $countAppointment =  0;
-    $countAnnounce =  0;
+if (isset($counts) && is_array($counts)) {
+    $countReceive = $counts['receive'] ?? 0;
+    $countSend = $counts['send'] ?? 0;
+    $countAppointment = $counts['appointment'] ?? 0;
+    $countAnnounce = $counts['announce'] ?? 0;
+} else {
+    try {
+        $countReceive = $model->CountType('receive') ?? 0;
+        $countSend = $model->CountType('send') ?? 0;
+        $countAppointment = $model->CountType('appointment') ?? 0;
+        $countAnnounce = $model->CountType('announce') ?? 0;
+    } catch (\Throwable $th) {
+        $countReceive = 0;
+        $countSend = 0;
+        $countAppointment = 0;
+        $countAnnounce = 0;
+    }
 }
 
 
@@ -71,6 +78,9 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <ul class="dropdown-menu">
             <li>
                 <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> หน่วยงาน', ['/dms/document-org'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI สรุปเนื้อหา', ['/dms/default/ai-summary-settings'], ['class' => 'dropdown-item']) ?>
             </li>
         </ul>
     </div>

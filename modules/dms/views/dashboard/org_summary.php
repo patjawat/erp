@@ -18,7 +18,10 @@
         </tr>
     </thead>
     <tbody class="table-group-divider">
-        <?php foreach($model->summaryOrg() as $key => $item):?>
+        <?php
+        $orgRows = isset($summaryOrg) ? $summaryOrg : (isset($model) ? $model->summaryOrg() : []);
+        foreach ($orgRows as $key => $item):
+        ?>
             <tr class="">
                 <td scope="row" class="text-center"><?php echo $key + 1?></td>
                 <td><?php echo $item['org_name']?></td>

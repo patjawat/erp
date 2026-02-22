@@ -34,40 +34,32 @@ use yii\helpers\Json;
 
 
 <?php
-$query = $model->getChartSummary('receive');
-
+$query = isset($chartReceive) ? $chartReceive : $model->getChartSummary('receive');
 try {
-  $chartSummary = [$query['m1'], $query['m2'], $query['m3'], $query['m4'], $query['m5'], $query['m6'], $query['m7'], $query['m8'], $query['m9'],$query['m10'], $query['m11'], $query['m12'], ];
+  $chartSummary = [$query['m1'] ?? 0, $query['m2'] ?? 0, $query['m3'] ?? 0, $query['m4'] ?? 0, $query['m5'] ?? 0, $query['m6'] ?? 0, $query['m7'] ?? 0, $query['m8'] ?? 0, $query['m9'] ?? 0, $query['m10'] ?? 0, $query['m11'] ?? 0, $query['m12'] ?? 0];
 } catch (\Throwable $th) {
   $chartSummary = [];
 }
 
-//ขั้นความเร่งด่วนทะเบียนรับ
+$docSpeedRows = isset($summaryDocSpeed) ? $summaryDocSpeed : $model->summaryDocSpeed();
 $docSpeedLabel = [];
 $docSpeedSeries = [];
-
-foreach ($model->summaryDocSpeed() as $docSpeedItem) {
+foreach ($docSpeedRows as $docSpeedItem) {
     $docSpeedLabel[] = $docSpeedItem['title'];
-    $docSpeedSeries[] =$docSpeedItem['total'];
+    $docSpeedSeries[] = $docSpeedItem['total'];
 }
-$donutDocSpeed = Json::encode([
-  'series' => $docSpeedSeries,  // ตัวอย่างข้อมูลโดนัท
-  'labels' => $docSpeedLabel,
-]);
+$donutDocSpeedSeriesJson = Json::encode($docSpeedSeries);
+$donutDocSpeedLabelsJson = Json::encode($docSpeedLabel);
 
-
-//ประเภทหนังสือ
+$docTypeRows = isset($summaryDocType) ? $summaryDocType : $model->summaryDocType();
 $docTypeLabel = [];
 $docTypeSeries = [];
-
-foreach ($model->summaryDocType() as $docTypeItem) {
+foreach ($docTypeRows as $docTypeItem) {
     $docTypeLabel[] = $docTypeItem['title'];
-    $docTypeSeries[] =$docTypeItem['total'];
+    $docTypeSeries[] = $docTypeItem['total'];
 }
-$donutDocType = Json::encode([
-  'series' => $docTypeSeries,  // ตัวอย่างข้อมูลโดนัท
-  'labels' => $docTypeLabel,
-]);
+$donutDocTypeSeriesJson = Json::encode($docTypeSeries);
+$donutDocTypeLabelsJson = Json::encode($docTypeLabel);
 
 
 $data = Json::encode($chartSummary);
@@ -153,8 +145,8 @@ $js = <<< JS
 
   // Donut Chart Options
   var donutDocSpeedOptions = {
-    series: $donutDocSpeed.series,
-    labels: $donutDocSpeed.labels,
+    series: $donutDocSpeedSeriesJson,
+    labels: $donutDocSpeedLabelsJson,
     chart: {
       type: 'donut',
       height: 650,
@@ -182,8 +174,8 @@ $js = <<< JS
 
   // Donut Chart Options
   var donutTypeOptions = {
-    series: $donutDocType.series,
-    labels: $donutDocType.labels,
+    series: $donutDocTypeSeriesJson,
+    labels: $donutDocTypeLabelsJson,
     chart: {
       type: 'donut',
       height: 650,
