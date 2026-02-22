@@ -1,7 +1,6 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
@@ -13,10 +12,10 @@ $this->params['breadcrumbs'][] = ['label' => 'งานสารบรรณ', '
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
         <h5 class="card-title mb-0">
-            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> ความยาวของการสรุปคำ (จาก PDF)
+            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> ตั้งค่า AI สรุป (DMS)
         </h5>
     </div>
     <div class="card-body">
@@ -33,29 +32,23 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         <?php endif; ?>
 
-        <p class="text-muted mb-4">
-            เลือกระดับความยาวของรายละเอียดที่ AI จะสรุปจากไฟล์ PDF เมื่อกดปุ่ม "สรุปด้วย AI" ในหน้าสร้างหนังสือ
+        <p class="text-muted small mb-3">
+            <i class="fa-solid fa-server me-1"></i> ใช้ Ollama รันในเครื่อง/Docker ไม่ต้องใช้ API Key
         </p>
 
-        <?php $form = ActiveForm::begin([
-            'id' => 'form-ai-summary-settings',
-            'options' => ['class' => ''],
-        ]); ?>
+        <?php $form = ActiveForm::begin(['id' => 'form-ai-summary-settings']); ?>
 
         <div class="mb-4">
-            <label class="form-label fw-semibold">ความยาวการสรุป</label>
-            <div class="row g-3">
+            <label class="form-label fw-semibold">ความยาวการสรุป (ค่าเริ่มต้น)</label>
+            <p class="text-muted small mb-2">ใช้เมื่อไม่เลือกแบบสั้น/กลาง/ยาวจากปุ่ม (หรือเป็นค่า default)</p>
+            <div class="row g-2">
                 <?php foreach ($options as $value => $label): ?>
-                    <div class="col-md-4">
-                        <div class="form-check card border rounded-3 h-100 <?= $currentLength === $value ? 'border-primary border-2' : '' ?>">
-                            <div class="card-body">
-                                <input type="radio" name="summary_length" value="<?= Html::encode($value) ?>"
-                                       id="length-<?= $value ?>" class="form-check-input"
-                                       <?= $currentLength === $value ? 'checked' : '' ?>>
-                                <label class="form-check-label w-100" for="length-<?= $value ?>">
-                                    <span class="fw-semibold"><?= Html::encode($label) ?></span>
-                                </label>
-                            </div>
+                    <div class="col-auto">
+                        <div class="form-check">
+                            <input type="radio" name="summary_length" value="<?= Html::encode($value) ?>"
+                                   id="length-<?= $value ?>" class="form-check-input"
+                                   <?= $currentLength === $value ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="length-<?= $value ?>"><?= Html::encode($label) ?></label>
                         </div>
                     </div>
                 <?php endforeach; ?>

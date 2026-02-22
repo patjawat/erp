@@ -34,38 +34,42 @@ class DefaultController extends Controller
     }
 
     /**
-     * ตั้งค่าความยาวการสรุป AI (DMS)
+     * ตั้งค่า AI สรุป (DMS): ใช้ Ollama เท่านั้น + ความยาว default
      */
     public function actionAiSummarySettings()
     {
         $file = Yii::getAlias('@runtime/dms-ai-summary-settings.json');
-        $current = 'medium';
+        $data = ['summary_length' => 'medium'];
         if (is_file($file) && is_readable($file)) {
-            $data = @json_decode(file_get_contents($file), true);
-            if (!empty($data['summary_length'])) {
-                $current = $data['summary_length'];
+            $loaded = @json_decode(file_get_contents($file), true);
+            if (is_array($loaded) && isset($loaded['summary_length'])) {
+                $data['summary_length'] = $loaded['summary_length'];
             }
         }
+        $lengthAllowed = array_keys(OllamaSummarizer::getSummaryLengthOptions());
+        $currentLength = isset($data['summary_length']) && in_array($data['summary_length'], $lengthAllowed, true)
+            ? $data['summary_length'] : 'medium';
 
         if (Yii::$app->request->isPost) {
             $length = Yii::$app->request->post('summary_length', 'medium');
-            $allowed = array_keys(OllamaSummarizer::getSummaryLengthOptions());
-            if (in_array($length, $allowed, true)) {
-                $dir = dirname($file);
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
-                }
-                if (file_put_contents($file, json_encode(['summary_length' => $length], JSON_UNESCAPED_UNICODE)) !== false) {
-                    Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่าความยาวการสรุปเรียบร้อยแล้ว');
-                } else {
-                    Yii::$app->session->setFlash('error', 'บันทึกไฟล์ไม่สำเร็จ');
-                }
+            if (!in_array($length, $lengthAllowed, true)) {
+                $length = 'medium';
+            }
+            $data = ['summary_length' => $length];
+            $dir = dirname($file);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            if (file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE)) !== false) {
+                Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่าเรียบร้อยแล้ว');
+            } else {
+                Yii::$app->session->setFlash('error', 'บันทึกไฟล์ไม่สำเร็จ');
             }
             return $this->redirect(['ai-summary-settings']);
         }
 
         return $this->render('ai-summary-settings', [
-            'currentLength' => $current,
+            'currentLength' => $currentLength,
             'options' => OllamaSummarizer::getSummaryLengthOptions(),
         ]);
     }

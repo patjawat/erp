@@ -51,9 +51,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <input type="file" class="file-upload-input" id="my_file" accept="pdf/*">
                         </div>
-                        <button type="button" class="btn btn-outline-success shadow rounded-pill" id="btn-summarize-ai" title="อัปโหลด PDF ก่อน แล้วกดปุ่มนี้">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI
-                        </button>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-success shadow rounded-pill dropdown-toggle" id="btn-summarize-ai" data-bs-toggle="dropdown" aria-expanded="false" title="อัปโหลด PDF ก่อน แล้วเลือกความยาวการสรุป">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="btn-summarize-ai">
+                                <li><a class="dropdown-item summarize-ai-option" href="#" data-length="short"><i class="fa-solid fa-align-left me-2"></i>แบบสั้น</a></li>
+                                <li><a class="dropdown-item summarize-ai-option" href="#" data-length="medium"><i class="fa-solid fa-align-center me-2"></i>แบบกลาง</a></li>
+                                <li><a class="dropdown-item summarize-ai-option" href="#" data-length="long"><i class="fa-solid fa-align-justify me-2"></i>แบบยาว</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -405,18 +412,21 @@ $js = <<< JS
             });
         });
 
-        $('#btn-summarize-ai').on('click', function () {
+        $(document).on('click', '.summarize-ai-option', function (e) {
+            e.preventDefault();
             var ref = $('#documents-ref').val();
             if (!ref) {
-                Swal.fire({ icon: 'warning', title: 'กรุณาอัปโหลด PDF ก่อน', text: 'อัปโหลดไฟล์ PDF แล้วกดปุ่ม "สรุปด้วย AI" อีกครั้ง' });
+                Swal.fire({ icon: 'warning', title: 'กรุณาอัปโหลด PDF ก่อน', text: 'อัปโหลดไฟล์ PDF แล้วเลือกความยาวการสรุปอีกครั้ง' });
                 return;
             }
-            var \$btn = $(this);
+            var length = $(this).data('length') || 'medium';
+            var \$btn = $('#btn-summarize-ai');
+            var btnHtml = \$btn.html();
             \$btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสรุป...');
             $.ajax({
                 url: '$summarizePdfUrl',
                 type: 'POST',
-                data: { ref: ref },
+                data: { ref: ref, length: length },
                 dataType: 'json',
                 success: function (data) {
                     if (data.success && data.topic !== undefined) {
@@ -432,7 +442,7 @@ $js = <<< JS
                     Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: msg });
                 },
                 complete: function () {
-                    \$btn.prop('disabled', false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> สรุปด้วย AI');
+                    \$btn.prop('disabled', false).html(btnHtml);
                 }
             });
         });

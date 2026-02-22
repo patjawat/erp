@@ -62,13 +62,19 @@ class OllamaSummarizer extends Component
     /**
      * สรุปข้อความแล้วคืนค่า topic (หัวเรื่องหนึ่งบรรทัด) และ des (รายละเอียดสรุป)
      * @param string $text ข้อความจาก PDF (หรือที่อื่น)
+     * @param string|null $length override ความยาว: short, medium, long (null = ใช้ค่าที่ตั้งไว้)
      * @return array ['topic' => string, 'des' => string] หรือ ['error' => string]
      */
-    public function summarize(string $text): array
+    public function summarize(string $text, ?string $length = null): array
     {
         $text = trim($text);
         if (mb_strlen($text) < 50) {
             return ['error' => 'ข้อความสั้นเกินไปสำหรับสรุป'];
+        }
+
+        $saveLength = $this->summaryLength;
+        if ($length !== null && isset(self::$desMaxLength[$length])) {
+            $this->summaryLength = $length;
         }
 
         // ลดความยาวถ้ายาวมาก (Ollama จำ context)
@@ -80,10 +86,13 @@ class OllamaSummarizer extends Component
         $prompt = $this->buildPrompt($text);
         $responseText = $this->callOllama($prompt);
         if (isset($responseText['error'])) {
+            $this->summaryLength = $saveLength;
             return $responseText;
         }
 
-        return $this->parseResponse($responseText['text']);
+        $result = $this->parseResponse($responseText['text']);
+        $this->summaryLength = $saveLength;
+        return $result;
     }
 
     protected function getLengthInstructions(): string

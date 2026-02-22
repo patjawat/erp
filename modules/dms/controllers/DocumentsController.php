@@ -771,11 +771,28 @@ class DocumentsController extends Controller
         }
 
         $text = trim($text);
+        // เริ่มอ่านเนื้อหาจากคำว่า "เรื่อง" (ตัดหัวกระดาษ/หัวเรื่องออก)
+        $marker = 'เรื่อง';
+        $pos = mb_strpos($text, $marker);
+        if ($pos !== false) {
+            $text = trim(mb_substr($text, $pos));
+        }
         if (mb_strlen($text) < 30) {
             return ['success' => false, 'error' => 'ไม่พบข้อความใน PDF (อาจเป็น PDF แบบสแกนหรือภาพ)'];
         }
 
-        $result = Yii::$app->ollamaSummarizer->summarize($text);
+        $length = $this->request->post('length');
+        $allowedLengths = ['short', 'medium', 'long'];
+        if ($length === null || !in_array($length, $allowedLengths, true)) {
+            $length = 'medium';
+        }
+
+        $summarizer = Yii::$app->ollamaSummarizer;
+        $defaultLength = $this->getDmsSummarySetting('summary_length');
+        if ($defaultLength !== null) {
+            $summarizer->summaryLength = $defaultLength;
+        }
+        $result = $summarizer->summarize($text, $length);
         if (isset($result['error'])) {
             return ['success' => false, 'error' => $result['error']];
         }
@@ -785,6 +802,17 @@ class DocumentsController extends Controller
             'topic' => $result['topic'],
             'des' => $result['des'],
         ];
+    }
+
+    /** อ่านค่าจาก dms-ai-summary-settings.json */
+    protected function getDmsSummarySetting(string $key)
+    {
+        $file = Yii::getAlias('@runtime/dms-ai-summary-settings.json');
+        if (!is_file($file) || !is_readable($file)) {
+            return null;
+        }
+        $data = @json_decode(file_get_contents($file), true);
+        return $data[$key] ?? null;
     }
 
     //ย้าไฟล์จากหนังสือรอรับเข้าระบบ
