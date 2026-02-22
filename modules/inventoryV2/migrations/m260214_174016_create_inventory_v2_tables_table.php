@@ -51,7 +51,7 @@ class m260214_174016_create_inventory_v2_tables_table extends Migration
             'main_warehouse_id' => $this->integer()->comment('คลังสินค้าต้นทาง/คลังหลัก/คลังจ่าย'),
             'sub_warehouse_id' => $this->integer()->comment('คลังปลายทาง/คลังรับ'),
             'contact_id' => $this->integer()->comment('ID ผู้ขาย หรือ ผู้เบิก/แผนก'),
-            'status' => "ENUM('DRAFT', 'CONFIRMED', 'CANCELLED') DEFAULT 'DRAFT' COMMENT 'สถานะเอกสาร'",
+            'status' => "ENUM('DRAFT', 'PENDING', 'APPROVED', 'CONFIRMED', 'CANCELLED') DEFAULT 'DRAFT' COMMENT 'สถานะเอกสาร'",
             'ref' => $this->string(255),
             'data_json' => $this->json(),
             'created_at' => $this->integer(),

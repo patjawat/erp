@@ -13,14 +13,14 @@ use yii\web\NotFoundHttpException;
 class IssueController extends Controller
 {
     /**
-     * แสดงรายการใบขอเบิกที่คลังหลักต้องจัดการ
+     * แสดงรายการใบขอเบิกที่อนุมัติแล้ว (รอคลังจ่าย) และที่จ่ายแล้ว
      */
     public function actionIndex()
     {
         $query = StockOrder::find()->where([
-            'order_type' => 'OUT', // หรือตามที่เก็บใน DB
-            'source_type' => 'REQUEST'
-        ]);
+            'order_type' => 'OUT',
+            'source_type' => 'REQUEST',
+        ])->andWhere(['status' => [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED]]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -33,13 +33,23 @@ class IssueController extends Controller
     }
 
     /**
-     * หน้าจอสำหรับดูรายละเอียดและกดจ่าย (คล้าย View ของ Requisition แต่เน้นฝั่งคนจ่าย)
+     * หน้าจอสำหรับดำเนินการจ่าย (เลือก Lot/จำนวน) — ตัดสต็อกเมื่อกดยืนยันจ่าย
+     * เฉพาะใบที่ status = APPROVED เท่านั้นที่กดจ่ายได้
      */
     public function actionProcess($id)
     {
         $model = $this->findModel($id);
 
+        if (!in_array($model->status, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED])) {
+            Yii::$app->session->setFlash('warning', 'เฉพาะใบที่หัวหน้าอนุมัติแล้ว (สถานะอนุมัติแล้ว) จึงจะดำเนินการจ่ายได้');
+            return $this->redirect(['index']);
+        }
+
         if (Yii::$app->request->isPost) {
+            if ($model->status !== StockOrder::STATUS_APPROVED) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['success' => false, 'message' => 'ใบนี้จ่ายของไปแล้ว'];
+            }
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $data = Yii::$app->request->post('Issue', []);
             $transaction = Yii::$app->db->beginTransaction();
@@ -83,18 +93,34 @@ class IssueController extends Controller
                         $tempQty -= $take;
                     }
 
-                    // 3. อัปเดตยอดรวมใน StockBalance (แยกตามคลังและ Lot) 
-                    // เรียกผ่าน Service เพื่อบันทึกยอดสรุป
+                    if ($tempQty > 0) {
+                        throw new \Exception("พัสดุรหัส {$detail->item_code} ใน Lot {$selectedLot} มีไม่พอจ่าย (ขอจ่าย " . $qtyToProcess . " เหลือใน Lot ไม่เพียงพอ)");
+                    }
+
+                    $qtyActuallyIssued = $qtyToProcess - $tempQty;
+
+                    // 3. อัปเดตยอดรวมใน StockBalance (แยกตามคลังและ Lot) — หักเฉพาะจำนวนที่หักได้จริง
                     InventoryService::updateBalance(
                         $detail->item_code,
                         $model->main_warehouse_id,
-                        $qtyToProcess,
+                        $qtyActuallyIssued,
                         'OUT',
                         $selectedLot
                     );
 
+                    // 3.1 โอนยอดเข้าคลังย่อย (ถ้ามี sub_warehouse_id) เพื่อให้คลังย่อยมีสต็อกสำหรับบันทึกการใช้งาน
+                    if ($model->sub_warehouse_id) {
+                        InventoryService::updateBalance(
+                            $detail->item_code,
+                            $model->sub_warehouse_id,
+                            $qtyActuallyIssued,
+                            'IN',
+                            $selectedLot
+                        );
+                    }
+
                     // 4. บันทึกข้อมูลกลับลงใน StockDetail ของ "ใบเบิกใบนี้"
-                    $detail->qty = $qtyToProcess;        // จำนวนที่จ่ายจริง
+                    $detail->qty = $qtyActuallyIssued;   // จำนวนที่จ่ายจริง
                     $detail->lot_number = $selectedLot;    // ล็อตที่เลือกจ่าย
                     $detail->unit_price = $lastUnitPrice;   // ราคาทุนที่ดึงมาจากต้นทาง
 

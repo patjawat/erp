@@ -1,280 +1,276 @@
 <?php
-
-use yii\bootstrap5\Html;
+use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
 
-// ลงทะเบียน ApexCharts และ Bootstrap Icons
+$this->title = 'Dashboard คลังย่อย';
+$this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
+
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
+
+$pendingReceiveCount = (int) ($pendingReceiveCount ?? 0);
+$criticalCount = (int) ($criticalCount ?? 0);
+$monthlyValue = (float) ($monthlyValue ?? 0);
+$expiringSoonCount = (int) ($expiringSoonCount ?? 0);
+$incomingList = $incomingList ?? [];
+$chartData = $chartData ?? ['categories' => [], 'series' => []];
 ?>
 
-<div class="card">
-    <div class="card-body">
-<div class="row">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fw-bold mb-1 text-dark">ระบบจัดการคลังย่อย: <span class="text-primary">แผนกไอที / ซ่อมบำรุง</span></h4>
-                <p class="text-muted mb-0"><i class="bi bi-clock"></i> ข้อมูลอัปเดตล่าสุด: <?= date('d/m/Y H:i') ?></p>
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-white border shadow-sm"><i class="bi bi-printer"></i> พิมพ์รายงาน</button>
-                <a href="<?= Url::to(['/inventory-v2/sub-stock/issue']) ?>" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> บันทึกการใช้งาน</a>
-            </div>
-        </div>
-    </div>
-    </div>
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <?= Html::encode($this->title) ?>
+    </h4>
+    <p class="text-muted mb-0">ภาพรวมคลังย่อย — รอตรวจรับ ต่ำกว่าจุดวิกฤต และแนวโน้มการจ่ายมาคลังย่อย</p>
 </div>
+<?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('action'); ?>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                <?= Html::a('<i class="bi bi-boxes me-1"></i> สถานะวัสดุคงคลัง', array_merge(['/inventory-v2/report/balance-by-warehouse'], count($subWarehouseIds ?? []) === 1 ? ['warehouse_id' => $subWarehouseIds[0]] : []), ['class' => 'btn btn-outline-primary rounded-pill px-3']) ?>
+                <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', '#', ['class' => 'btn btn-outline-secondary rounded-pill px-3']) ?>
+                <?= Html::a('<i class="bi bi-box-arrow-up-right me-1"></i> บันทึกการจ่าย/ใช้งาน', ['/inventory-v2/sub-stock/issue'], ['class' => 'btn btn-success rounded-pill px-4']) ?>
+                <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบขอเบิก', ['/inventory-v2/requisition/create'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
+            </div>
+        </div>
+    </div>
+<?php $this->endBlock(); ?>
 
-<div class="row g-3 mb-4">
-    
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1 fw-bold">รอตรวจรับเข้า</p>
-                        <h3 class="fw-bold mb-0">5 <small class="h6 text-muted">ใบ</small></h3>
-                    </div>
-                    <div class="icon-box bg-info-subtle rounded-circle p-3">
-                        <i class="bi bi-truck text-info h4 mb-0"></i>
-                    </div>
-                </div>
-                <div class="mt-2"><span class="badge bg-info-subtle text-info">จากคลังหลัก</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1 fw-bold">พัสดุต่ำกว่าจุดวิกฤต</p>
-                        <h3 class="fw-bold mb-0 text-danger">12 <small class="h6 text-muted">รายการ</small></h3>
-                    </div>
-                    <div class="icon-box bg-danger-subtle rounded-circle p-3">
-                        <i class="bi bi-exclamation-triangle text-danger h4 mb-0"></i>
-                    </div>
-                </div>
-                <div class="mt-2"><a href="#" class="small text-danger fw-bold">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></a></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1 fw-bold">มูลค่าเบิกใช้เดือนนี้</p>
-                        <h3 class="fw-bold mb-0">45,200 <small class="h6 text-muted">฿</small></h3>
-                    </div>
-                    <div class="icon-box bg-success-subtle rounded-circle p-3">
-                        <i class="bi bi-wallet2 text-success h4 mb-0"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-success small fw-bold"><i class="bi bi-graph-up"></i> +12% จากเดือนก่อน</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <p class="text-muted small mb-1 fw-bold">วัสดุหมดอายุ (30 วัน)</p>
-                        <h3 class="fw-bold mb-0 text-warning">2 <small class="h6 text-muted">Lot</small></h3>
-                    </div>
-                    <div class="icon-box bg-warning-subtle rounded-circle p-3">
-                        <i class="bi bi-hourglass-split text-warning h4 mb-0"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-muted">ควรนำออกมาใช้งานก่อน</div>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="container-fluid py-4 sub-stock-dashboard">
 
-<div class="row g-3">
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h6 class="fw-bold mb-0">แนวโน้มการตัดจ่ายพัสดุในแผนก (7 วันล่าสุด)</h6>
-            </div>
-            <div class="card-body">
-                <div id="usageApexChart"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h6 class="fw-bold mb-0 text-primary">รายการส่งของจากคลังหลัก</h6>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item px-3 py-3 border-0">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 small fw-bold">ISS-670045</h6>
-                                <small class="text-muted">8 รายการ | โดย: นายสมชาย</small>
-                            </div>
-                            <button class="btn btn-outline-primary btn-sm rounded-pill">ตรวจรับ</button>
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-info border-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1 fw-bold">รอตรวจรับเข้า</p>
+                            <span class="fs-4 fw-bold text-dark"><?= (int)$pendingReceiveCount ?></span>
+                            <span class="text-muted small">ใบ</span>
                         </div>
-                    </li>
-                    <li class="list-group-item px-3 py-3 border-0 border-top">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-file-earmark-text"></i></div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 small fw-bold">ISS-670048</h6>
-                                <small class="text-muted">3 รายการ | โดย: นางสาวสวย</small>
-                            </div>
-                            <?php echo Html::a('ตรวจรับ', ['sub-stock-receiving'], ['class' => 'btn btn-outline-primary btn-sm rounded-pill']) ?>
+                        <div class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3">
+                            <i class="bi bi-truck fs-4"></i>
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                    <span class="badge bg-info bg-opacity-25 text-dark mt-2">จากคลังหลัก</span>
+                </div>
             </div>
-            <div class="card-footer bg-transparent border-0 text-center pb-3">
-                <a href="#" class="small text-decoration-none">ดูรายการค้างรับทั้งหมด</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
+                <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted small mb-1 fw-bold">ต่ำกว่าจุดวิกฤต</p>
+                                <span class="fs-4 fw-bold text-danger"><?= (int)$criticalCount ?></span>
+                                <span class="text-muted small">รายการ</span>
+                            </div>
+                            <div class="erp-icon-box bg-danger bg-opacity-10 text-danger rounded-3">
+                                <i class="bi bi-exclamation-triangle fs-4"></i>
+                            </div>
+                        </div>
+                        <span class="text-danger small fw-bold mt-2 d-inline-block">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-success border-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1 fw-bold">มูลค่าเบิกใช้เดือนนี้</p>
+                            <span class="fs-4 fw-bold text-dark"><?= number_format($monthlyValue, 0) ?></span>
+                            <span class="text-muted small">฿</span>
+                        </div>
+                        <div class="erp-icon-box bg-success bg-opacity-10 text-success rounded-3">
+                            <i class="bi bi-wallet2 fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-success small mb-0 mt-2"><i class="bi bi-graph-up me-1"></i>เทียบเดือนก่อน</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-warning border-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1 fw-bold">หมดอายุภายใน 30 วัน</p>
+                            <span class="fs-4 fw-bold text-warning"><?= (int)$expiringSoonCount ?></span>
+                            <span class="text-muted small">Lot</span>
+                        </div>
+                        <div class="erp-icon-box bg-warning bg-opacity-10 text-warning rounded-3">
+                            <i class="bi bi-hourglass-split fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">ควรนำออกมาใช้งานก่อน</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- แนวโน้มการตัดจ่าย (7 วันล่าสุด) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary-gradient text-white py-2 px-3">
+                    <h6 class="text-white mb-0 fw-normal"><i class="bi bi-graph-up me-1"></i>แนวโน้มมูลค่าที่จ่ายมาคลังย่อย (7 วันล่าสุด)</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div id="usageApexChart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- รายการส่งของจากคลังหลัก -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h6 class="text-white mb-0 fw-normal"><i class="bi bi-box-seam me-1"></i>รายการส่งของจากคลังหลัก</h6>
+                    <span class="badge bg-light text-dark"><?= count($incomingList) ?></span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <?php if (!empty($incomingList)): ?>
+                            <?php foreach ($incomingList as $item): ?>
+                                <div class="list-group-item border-0 border-start border-3 border-primary px-3 py-2 incoming-item">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-primary bg-opacity-25 rounded p-2 flex-shrink-0"><i class="bi bi-file-earmark-text text-primary"></i></div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="fw-bold"><?= Html::encode($item['doc_no'] ?? '-') ?></div>
+                                            <span class="text-muted"><?= (int)($item['detail_count'] ?? 0) ?> รายการ</span>
+                                            <?php if (!empty($item['main_warehouse_name'])): ?>
+                                                <span class="text-muted"> | <?= Html::encode($item['main_warehouse_name']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?= Html::a('ดูใบส่ง', ['/inventory-v2/requisition/view', 'id' => $item['id'] ?? null], ['class' => 'btn btn-outline-primary rounded-pill flex-shrink-0']) ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="list-group-item border-0 px-3 py-4 text-center text-muted">
+                                ไม่มีรายการส่งของจากคลังหลักในขณะนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 py-2 text-center">
+                    <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>" class="text-muted text-decoration-none">ดูทะเบียนใบขอเบิก <i class="bi bi-chevron-right"></i></a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-</div>
 
-<?php
-$js = <<< JS
-$(document).ready(function() {
-    
-    // 1. คำนวณวันที่ย้อนหลัง (แก้บั๊กชื่อวันไม่ตรง)
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-        let d = new Date();
-        d.setDate(d.getDate() - i);
-        last7Days.push(d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
-    }
-
-    // 2. ข้อมูลจำลอง (Mockup)
-    const options = {
-        series: [{
-            name: 'จำนวนชิ้นที่จ่ายออก',
-            data: [44, 55, 31, 47, 31, 43, 26]
-        }],
-        chart: {
-            height: 320,
-            type: 'area',
-            toolbar: { show: false },
-            fontFamily: 'inherit',
-            dropShadow: { enabled: true, top: 10, left: 0, blur: 3, color: '#000', opacity: 0.1 }
-        },
-        colors: ['#0d6efd'],
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.45,
-                opacityTo: 0.05,
-                stops: [0, 100]
-            }
-        },
-        stroke: { curve: 'smooth', width: 3 },
-        xaxis: {
-            categories: last7Days,
-            axisBorder: { show: false },
-            axisTicks: { show: false }
-        },
-        grid: { borderColor: '#f1f1f1', strokeDashArray: 4 },
-        tooltip: { theme: 'light' }
-    };
-
-    const chart = new ApexCharts(document.querySelector("#usageApexChart"), options);
-    chart.render();
-
-});
-JS;
-$this->registerJS($js, View::POS_READY);
-?>
-
-
-<button class="btn btn-outline-primary btn-sm rounded-pill"
-    data-bs-toggle="modal"
-    data-bs-target="#receiveModal"
-    onclick="loadReceiveData('ISS-670045')">
-    ตรวจรับ
-</button>
-
+<!-- Modal ตรวจรับพัสดุ -->
 <div class="modal fade border-0" id="receiveModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-3">
             <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i> ตรวจรับพัสดุเข้าคลังย่อย</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i>ตรวจรับพัสดุเข้าคลังย่อย</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="d-flex justify-content-between mb-3">
-                    <div>
-                        <span class="text-muted">เลขที่ใบส่ง:</span> <strong id="m-doc-no">ISS-670045</strong>
-                    </div>
-                    <div>
-                        <span class="text-muted">คลังต้นทาง:</span> <strong id="m-from">คลังพัสดุกลาง</strong>
-                    </div>
+                <div class="d-flex justify-content-between mb-3 flex-wrap gap-2">
+                    <div><span class="text-muted">เลขที่ใบส่ง:</span> <strong id="m-doc-no">—</strong></div>
+                    <div><span class="text-muted">คลังต้นทาง:</span> <strong id="m-from">คลังหลัก</strong></div>
                 </div>
-
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-hover align-middle border-top">
-                        <thead class="sticky-top bg-white">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr class="small text-muted text-uppercase">
                                 <th>รายการ</th>
                                 <th class="text-center">Lot</th>
                                 <th class="text-center">ส่งมา</th>
-                                <th class="text-center" width="150">รับจริง</th>
+                                <th class="text-center" style="width: 140px;">รับจริง</th>
                                 <th>หมายเหตุ</th>
                             </tr>
                         </thead>
-                        <tbody id="receive-list-body">
+                        <tbody class="align-middle table-group-divider" id="receive-list-body">
                             <tr>
                                 <td><strong>SSD 500GB Samsung</strong></td>
                                 <td class="text-center font-monospace small">67-01</td>
                                 <td class="text-center">5</td>
-                                <td><input type="number" class="form-control text-center border-primary" value="5"></td>
-                                <td><input type="text" class="form-control form-control-sm border-light" placeholder="..."></td>
+                                <td><input type="number" class="form-control text-center" value="5" min="0"></td>
+                                <td><input type="text" class="form-control" placeholder="หมายเหตุ"></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
-                <button type="button" class="btn btn-primary rounded-pill px-5 shadow" id="btnConfirmModal">ยืนยันรับเข้าสต็อก</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 me-2" id="btnConfirmModal">ยืนยันรับเข้าสต็อก</button>
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
             </div>
         </div>
     </div>
 </div>
 
-<?php
-$js = <<< JS
-function loadReceiveData(id) {
-    // ในความเป็นจริงคุณจะใช้ $.ajax({ url: 'get-data?id=' + id })
-    console.log('กำลังโหลดข้อมูลใบส่งของ: ' + id);
-    $('#m-doc-no').text(id);
+<style>
+.sub-stock-dashboard .erp-icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
+.sub-stock-dashboard .kpi-card-link { color: inherit; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.sub-stock-dashboard .kpi-card-link:hover { color: inherit; transform: translateY(-2px); }
+.sub-stock-dashboard .kpi-card-link:hover .card { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
+.sub-stock-dashboard .kpi-card-link:focus-visible { outline: 2px solid #0d6efd; outline-offset: 2px; border-radius: 0.5rem; }
+.sub-stock-dashboard .incoming-item { transition: background-color 0.15s ease; }
+.sub-stock-dashboard .incoming-item:hover { background-color: rgba(13, 110, 253, 0.04); }
+</style>
 
-$('#btnConfirmModal').click(function() {
-    Swal.fire({
-        title: 'ยืนยันการรับ?',
-        text: "สต็อกในคลังย่อยจะถูกเพิ่มทันที",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'ยืนยัน',
-        confirmButtonColor: '#0d6efd',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $('#receiveModal').modal('hide');
-            Swal.fire('สำเร็จ!', 'รับพัสดุเข้าคลังย่อยเรียบร้อย', 'success');
-        }
-    });
+<?php
+$chartCategoriesJson = json_encode($chartData['categories']);
+$chartSeriesJson = json_encode($chartData['series']);
+$js = <<<JS
+$(document).ready(function() {
+    var categories = {$chartCategoriesJson};
+    var seriesData = {$chartSeriesJson};
+    if (categories.length === 0) categories = ['-'];
+    if (seriesData.length === 0) seriesData = [0];
+    var options = {
+        series: [{ name: 'มูลค่าที่จ่ายมา (บาท)', data: seriesData }],
+        chart: { height: 320, type: 'area', toolbar: { show: false }, fontFamily: 'inherit' },
+        colors: ['#0d6efd'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [0, 100] } },
+        stroke: { curve: 'smooth', width: 3 },
+        xaxis: { categories: categories, axisBorder: { show: false }, axisTicks: { show: false } },
+        grid: { borderColor: '#f1f1f1', strokeDashArray: 4 },
+        tooltip: { theme: 'light', y: { formatter: function(v) { return v != null ? Number(v).toLocaleString('th-TH') + ' บาท' : ''; } } }
+    };
+    var chart = new ApexCharts(document.querySelector("#usageApexChart"), options);
+    chart.render();
+});
+
+$('#receiveModal').on('show.bs.modal', function(e) {
+    var docNo = $(e.relatedTarget).data('doc-no') || '—';
+    $('#m-doc-no').text(docNo);
+});
+
+$('#btnConfirmModal').on('click', function() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({ title: 'ยืนยันการรับ?', text: 'บันทึกการตรวจรับพัสดุ', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#0d6efd' })
+            .then(function(result) {
+                if (result.isConfirmed) $('#receiveModal').modal('hide');
+            });
+    } else {
+        $('#receiveModal').modal('hide');
+    }
 });
 JS;
-$this->registerJS($js, View::POS_READY);
+$this->registerJs($js, View::POS_READY);
 ?>

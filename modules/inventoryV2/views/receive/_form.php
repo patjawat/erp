@@ -1,5 +1,6 @@
 <?php
 
+use app\components\AppHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
@@ -33,12 +34,12 @@ $this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/t
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
 ?>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 receive-form">
     <?php $form = ActiveForm::begin(['id' => 'receipt-form']); ?>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-download"></i> บันทึกรับวัสดุเข้าคลัง</h5>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center">
+            <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-arrow-in-down me-1"></i>บันทึกรับวัสดุเข้าคลัง</h6>
             <?= $form->field($model, 'order_type')->hiddenInput(['value' => 'IN'])->label(false) ?>
         </div>
 
@@ -51,11 +52,20 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                         'id' => 'warehouseSelector',
                     ])->label('คลังสินค้า') ?>
                 </div>
-                 <div class="col-md-3">
+                <div class="col-md-3">
+                    <?php
+                    $orderDateDisplay = '';
+                    if (!empty($model->order_date)) {
+                        $orderDateDisplay = (preg_match('/^\d{4}-\d{2}-\d{2}/', trim($model->order_date)))
+                            ? AppHelper::convertToThai($model->order_date)
+                            : $model->order_date;
+                    }
+                    ?>
                     <?= $form->field($model, 'order_date')->textInput([
                         'class' => 'form-control',
-                        'value' => $model->order_date,
+                        'id' => 'stockorder-order_date',
                         'placeholder' => 'วว/ดด/พพพพ',
+                        'value' => $orderDateDisplay,
                     ])->label('วันที่รับเข้า') ?>
                 </div>
                 <div class="col-md-3">
@@ -98,10 +108,10 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                 <div class="col-md-4">
                     <input type="file" id="csvFileInput" class="form-control" accept=".csv" style="display: none;">
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-success btn-sm flex-grow-1" id="btnImportCSV">
+                        <button type="button" class="btn btn-success flex-grow-1" id="btnImportCSV">
                             <i class="bi bi-file-earmark-spreadsheet"></i> อัปโหลด CSV
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDownloadCsvTemplate" title="ดาวน์โหลดไฟล์ตัวอย่างรูปแบบ CSV">
+                        <button type="button" class="btn btn-outline-secondary" id="btnDownloadCsvTemplate" title="ดาวน์โหลดไฟล์ตัวอย่างรูปแบบ CSV">
                             <i class="bi bi-download"></i> Template
                         </button>
                     </div>
@@ -129,9 +139,9 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
             </div>
 
             <div class="table-responsive mt-4">
-                <table class="table table-bordered align-middle" id="inboundTable">
-                    <thead class="table-primary text-center">
-                        <tr>
+                <table class="table table-hover align-middle mb-0" id="inboundTable">
+                    <thead class="table-light">
+                        <tr class="text-center">
                             <th style="width: 4%;">#</th>
                             <th style="width: 18%;">รายการวัสดุ</th>
                             <th style="width: 10%;">หน่วยนับ</th>
@@ -144,12 +154,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                             <th style="width: 4%;"></th>
                         </tr>
                     </thead>
-                    <!-- <tbody id="detail-body">
-                        <tr id="emptyRow">
-                            <td colspan="8" class="text-center py-4 text-muted">ยังไม่มีรายการที่ถูกเพิ่ม</td>
-                        </tr>
-                    </tbody> -->
-                    <tbody id="detail-body">
+                    <tbody id="detail-body" class="align-middle table-group-divider">
                         <?php if (!empty($items) && is_array($items)): ?>
                             <?php foreach ($items as $index => $item): ?>
                                 <?php

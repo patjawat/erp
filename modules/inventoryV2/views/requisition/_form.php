@@ -25,6 +25,7 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
                     <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'หน่วยงานที่รับของ']])->dropDownList($subWarehouses, [
+                        'id' => 'sub-warehouse-id',
                         'prompt' => '-- เลือกหน่วยงานที่รับของ --',
                         'class' => 'form-select',
                     ]) ?>
@@ -48,6 +49,39 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
         </div>
     </div>
 
+    <div class="card border-0 shadow-sm mb-4" id="card-below-max" style="display: none;">
+        <div class="card-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="mb-0 small fw-bold text-secondary"><i class="bi bi-graph-down-arrow me-1"></i>รายการที่หน่วยงานรับของเหลือต่ำกว่า Min (เติมให้ถึง Max)</h6>
+            <button type="button" id="btn-load-below-max" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-repeat me-1"></i> โหลดรายการที่ต่ำกว่า Max
+            </button>
+        </div>
+        <div class="card-body p-3">
+            <p class="text-muted small mb-2">คำนวณจาก<strong>ยอดคงเหลือที่หน่วยงานที่รับของ</strong> (คลังย่อย) — ถ้าเหลือต่ำกว่า Min จะแสดงในรายการ เบิกให้พอดี = เติมจนหน่วยงานรับของมีครบ Max ไม่ต้องค้นหาทีละรายการ</p>
+            <div id="below-max-placeholder" class="text-muted text-center py-4 small">กรุณาเลือกคลังที่จ่ายของ และหน่วยงานที่รับของ แล้วกด "โหลดรายการที่ต่ำกว่า Max"</div>
+            <div id="below-max-table-wrap" style="display: none;">
+                <div class="table-responsive mb-2">
+                    <table class="table table-sm table-hover align-middle mb-0" id="below-max-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="below-max-checkall" title="เลือกทั้งหมด"></th>
+                                <th>รายการวัสดุ</th>
+                                <th class="text-center">หน่วย</th>
+                                <th class="text-end">คงเหลือที่หน่วยงานรับของ</th>
+                                <th class="text-end">Min / Max</th>
+                                <th class="text-end">เบิกให้พอดี</th>
+                            </tr>
+                        </thead>
+                        <tbody id="below-max-tbody"></tbody>
+                    </table>
+                </div>
+                <button type="button" id="btn-add-below-max" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> เพิ่มรายการที่เลือกเข้าใบเบิก
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm" style="min-height: 400px;">
         <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการวัสดุที่ต้องการเบิก</h6>
@@ -65,13 +99,26 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
+                <?php
+                if (!$model->isNewRecord && !empty($model->stockDetails)) {
+                    foreach ($model->stockDetails as $i => $detail) {
+                        $unitText = $detail->item ? ($detail->item->getUnitName() ?: '-') : '-';
+                        echo '<tr class="item-row">';
+                        echo '<td><input type="hidden" name="StockDetail[' . $i . '][item_code]" value="' . Html::encode($detail->item_code) . '"><span class="item-name-display">' . Html::encode($detail->item->item_name ?? $detail->item_code) . '</span></td>';
+                        echo '<td class="text-center unit-cell text-muted small align-middle">' . Html::encode($unitText) . '</td>';
+                        echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
+                        echo '<td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button></td>';
+                        echo '</tr>';
+                    }
+                }
+                ?>
                 </tbody>
             </table>
     </div>
 
     <div class="form-group mt-4 d-flex justify-content-end gap-2">
+        <?= Html::submitButton($model->isNewRecord ? '<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก' : '<i class="bi bi-check-lg me-1"></i> บันทึกการแก้ไข', ['class' => 'btn btn-primary me-2']) ?>
         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
-        <?= Html::submitButton('<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก', ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
@@ -92,6 +139,14 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
             </td>
         </tr>
     </tbody>
+    <tbody id="row-template-prefilled">
+        <tr class="item-row">
+            <td><input type="hidden" name="StockDetail[{idx}][item_code]" value="{item_code}"><span class="item-name-display">{item_name}</span></td>
+            <td class="text-center unit-cell text-muted small align-middle">{unit_name}</td>
+            <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="{qty}" required placeholder="0.00"></td>
+            <td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button></td>
+        </tr>
+    </tbody>
 </table>
 
 <?php
@@ -106,9 +161,11 @@ CSS
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
+$itemsBelowMaxUrl = Url::to(['/inventory-v2/requisition/items-below-max']);
+$initialIdx = !$model->isNewRecord && !empty($model->stockDetails) ? count($model->stockDetails) : 0;
 
 $script = <<< JS
-let idx = 0;
+let idx = {$initialIdx};
 
 // รหัสวัสดุที่ถูกเลือกแล้วในแถวอื่น (ไม่รวมแถวที่ส่งเข้า)
 function getSelectedItemCodes(excludeRow) {
@@ -130,7 +187,7 @@ function initItemSelect(elementId) {
         labelField: 'item_name',
         searchField: ['item_name', 'item_code'],
         placeholder: 'พิมพ์ชื่อหรือรหัสวัสดุ...',
-        noResults: function() { return 'ไม่มีรายการหรือเลือกครบแล้ว'; },
+        preload: true,
         load: function(query, callback) {
             var currentWhId = $('#main-warehouse-id').val();
             if (!currentWhId) return callback();
@@ -215,10 +272,18 @@ $(document).on('keydown', '.qty-input', function(e) {
     }
 });
 
-// เมื่อเปลี่ยนคลังต้นทาง ให้ล้างรายการเดิม
-$('#main-warehouse-id').on('change', function() {
+function refreshBelowMaxCard() {
+    var whId = $('#main-warehouse-id').val();
+    var subId = $('#sub-warehouse-id').val();
+    $('#card-below-max').toggle(!!whId);
+    $('#below-max-table-wrap').hide();
+    $('#below-max-placeholder').show().html(whId && subId ? 'กด "โหลดรายการที่ต่ำกว่า Max" เพื่อดึงรายการที่หน่วยงานรับของเหลือต่ำกว่า Min' : 'กรุณาเลือกคลังที่จ่ายของ และหน่วยงานที่รับของ แล้วกด "โหลดรายการที่ต่ำกว่า Max"');
+}
+// เมื่อเปลี่ยนคลังต้นทาง หรือหน่วยงานที่รับของ ให้ล้างตารางโหลดรายการ
+$('#main-warehouse-id, #sub-warehouse-id').on('change', function() {
     $(this).removeClass('is-invalid');
-    if ($('#item-table tbody tr').length > 0) {
+    refreshBelowMaxCard();
+    if ($(this).attr('id') === 'main-warehouse-id' && $('#item-table tbody tr').length > 0) {
         Swal.fire({
             title: 'ยืนยันการเปลี่ยนคลัง?',
             text: "รายการวัสดุเดิมจะถูกล้างออกทั้งหมด เนื่องจากวัสดุถูกจำกัดตามคลัง",
@@ -229,10 +294,93 @@ $('#main-warehouse-id').on('change', function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $('#item-table tbody').empty();
-            } else {
-                // ย้อนกลับไปค่าเดิม (ถ้าจำเป็น)
             }
         });
+    }
+});
+if ($('#main-warehouse-id').val()) refreshBelowMaxCard();
+
+// โหลดรายการวัสดุต่ำกว่า Max (คำนวณจากยอดที่หน่วยงานที่รับของ)
+$('#btn-load-below-max').on('click', function() {
+    var whId = $('#main-warehouse-id').val();
+    var subId = $('#sub-warehouse-id').val();
+    if (!whId) {
+        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของก่อน', 'warning');
+        return;
+    }
+    if (!subId) {
+        Swal.fire('คำเตือน', 'กรุณาเลือกหน่วยงานที่รับของก่อน จะได้คำนวณจากยอดคงเหลือที่หน่วยงานนี้', 'warning');
+        return;
+    }
+    var btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> กำลังโหลด...');
+    var url = '$itemsBelowMaxUrl'.replace(/\/$/, '') + '?warehouse_id=' + whId + '&sub_warehouse_id=' + encodeURIComponent(subId);
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(list) {
+            var tbody = $('#below-max-tbody').empty();
+            if (!list || list.length === 0) {
+                $('#below-max-placeholder').show().html('ไม่มีรายการที่หน่วยงานรับของเหลือต่ำกว่า Min (หรือยอดต่ำกว่า Max)').addClass('py-4');
+                $('#below-max-table-wrap').hide();
+            } else {
+                $('#below-max-placeholder').hide();
+                $('#below-max-table-wrap').show();
+                list.forEach(function(row) {
+                    var tr = $('<tr></tr>').data('row', row);
+                    tr.append($('<td></td>').html('<input type="checkbox" class="form-check-input below-max-cb" value="1">'));
+                    tr.append($('<td></td>').text(row.item_name));
+                    tr.append($('<td class="text-center"></td>').text(row.unit_name));
+                    tr.append($('<td class="text-end"></td>').text(parseFloat(row.balance_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })));
+                    var minMax = (row.min_qty != null ? parseFloat(row.min_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-') + ' / ' + parseFloat(row.max_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    tr.append($('<td class="text-end"></td>').text(minMax));
+                    tr.append($('<td class="text-end fw-bold text-success"></td>').text(parseFloat(row.qty_to_reach_max).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })));
+                    tbody.append(tr);
+                });
+            }
+        })
+        .catch(function() {
+            $('#below-max-placeholder').show().html('<span class="text-danger">โหลดไม่สำเร็จ</span>');
+            $('#below-max-table-wrap').hide();
+        })
+        .finally(function() { btn.prop('disabled', false).html('<i class="bi bi-arrow-repeat me-1"></i> โหลดรายการที่ต่ำกว่า Max'); });
+});
+
+$('#below-max-checkall').on('change', function() {
+    $('#below-max-tbody .below-max-cb').prop('checked', this.checked);
+});
+
+$('#btn-add-below-max').on('click', function() {
+    var selected = $('#below-max-tbody tr').has('input.below-max-cb:checked');
+    if (selected.length === 0) {
+        Swal.fire('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 รายการ', 'warning');
+        return;
+    }
+    var added = 0, updated = 0;
+    selected.each(function() {
+        var row = $(this).data('row');
+        if (!row) return;
+        var code = (row.item_code || '').toString();
+        var existing = $('#item-table tbody tr').filter(function() {
+            var el = $(this).find('input[name*="[item_code]"], select[name*="[item_code]"]');
+            return el.length && (el.val() === code || (el.find('option:selected').val() === code));
+        });
+        if (existing.length) {
+            existing.find('.qty-input').val(row.qty_to_reach_max);
+            updated++;
+        } else {
+            var template = $('#row-template-prefilled').html();
+            var html = template
+                .replace(/{idx}/g, idx)
+                .replace(/{item_code}/g, (row.item_code || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'))
+                .replace(/{item_name}/g, (row.item_name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                .replace(/{unit_name}/g, (row.unit_name || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                .replace(/{qty}/g, row.qty_to_reach_max);
+            $('#item-table tbody').append(html);
+            idx++;
+            added++;
+        }
+    });
+    if (added || updated) {
+        Swal.fire('เพิ่มแล้ว', 'เพิ่ม ' + added + ' รายการ, อัปเดตจำนวน ' + updated + ' รายการ', 'success', { timer: 1500 });
     }
 });
 

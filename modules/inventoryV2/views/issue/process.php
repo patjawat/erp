@@ -7,6 +7,8 @@ use yii\web\View;
 $this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
 $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Process) - ' . $model->order_no;
+$canProcess = ($model->status === \app\modules\inventoryV2\models\StockOrder::STATUS_APPROVED);
+$isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::STATUS_CONFIRMED);
 ?>
 
 <div class="container-fluid py-4">
@@ -17,9 +19,13 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                 <h5 class="mb-0 text-white">บันทึกการจ่ายพัสดุ: <?= Html::encode($model->order_no) ?></h5>
             </div>
             <div>
+                <?php if ($canProcess): ?>
                 <button type="button" class="btn btn-light btn-sm fw-bold shadow-sm" id="btnAddItem">
                     <i class="bi bi-plus-circle-fill text-primary"></i> เพิ่มพัสดุอื่นเพิ่มเติม
                 </button>
+                <?php elseif ($isConfirmed): ?>
+                <span class="badge bg-success fs-6">จ่ายพัสดุแล้ว</span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -80,10 +86,10 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                                     <td>
                                         <input type="number" name="Issue[<?= $index ?>][qty_issued]" 
                                                class="form-control text-center fw-bold border-primary qty-issued" 
-                                               value="<?= $detail->qty ?>" min="0" max="<?= $detail->qty ?>" step="0.01">
+                                               value="<?= $detail->qty ?>" min="0" max="<?= $detail->qty ?>" step="0.01" <?= $canProcess ? '' : 'readonly' ?>>
                                     </td>
                                     <td>
-                                        <select name="Issue[<?= $index ?>][lot_number]" class="form-select border-warning lot-selector">
+                                        <select name="Issue[<?= $index ?>][lot_number]" class="form-select border-warning lot-selector" <?= $canProcess ? '' : 'disabled' ?>>
                                             <?php foreach ($availableLots as $lotIn): ?>
                                                 <option value="<?= $lotIn->lot_number ?>" data-stock="<?= $lotIn->remain_qty ?>" data-price="<?= $lotIn->unit_price ?>">
                                                     LOT: <?= $lotIn->lot_number ?> (เหลือ <?= number_format($lotIn->remain_qty, 2) ?>) [@<?= number_format($lotIn->unit_price, 2) ?>]
@@ -93,8 +99,10 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                                     </td>
                                     <td class="text-end fw-bold text-primary"><span class="row-total">0.00</span></td>
                                     <td class="text-center">
+                                        <?php if ($canProcess): ?>
                                         <button type="button" class="btn btn-outline-danger btn-sm btn-cancel-item"><i class="bi bi-trash"></i></button>
                                         <button type="button" class="btn btn-link btn-sm btn-restore-item d-none">คืน</button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -112,9 +120,11 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
 
             <div class="text-end mt-4 pt-3 border-top">
                 <?= Html::a('กลับ', ['index'], ['class' => 'btn btn-light border px-4 me-2']) ?>
+                <?php if ($canProcess): ?>
                 <button type="button" class="btn btn-success btn-lg px-5 shadow" id="btnSubmitIssue">
                     <i class="bi bi-check-all"></i> บันทึกการจ่ายพัสดุ
                 </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -36,6 +36,8 @@ class StockOrder extends \yii\db\ActiveRecord
     const ORDER_TYPE_OUT = 'OUT';
     const ORDER_TYPE_TRANSFER = 'TRANSFER';
     const STATUS_DRAFT = 'DRAFT';
+    const STATUS_PENDING = 'PENDING';
+    const STATUS_APPROVED = 'APPROVED';
     const STATUS_CONFIRMED = 'CONFIRMED';
     const STATUS_CANCELLED = 'CANCELLED';
 
@@ -155,6 +157,8 @@ public function getToWarehouse()
     {
         return [
             self::STATUS_DRAFT => 'DRAFT',
+            self::STATUS_PENDING => 'PENDING',
+            self::STATUS_APPROVED => 'APPROVED',
             self::STATUS_CONFIRMED => 'CONFIRMED',
             self::STATUS_CANCELLED => 'CANCELLED',
         ];
@@ -253,6 +257,27 @@ public function getToWarehouse()
     /**
      * @return bool
      */
+    public function isStatusPending()
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStatusApproved()
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function setStatusToApproved()
+    {
+        $this->status = self::STATUS_APPROVED;
+    }
+
+    /**
+     * @return bool
+     */
     public function isStatusConfirmed()
     {
         return $this->status === self::STATUS_CONFIRMED;
@@ -274,5 +299,35 @@ public function getToWarehouse()
     public function setStatusToCancelled()
     {
         $this->status = self::STATUS_CANCELLED;
+    }
+
+    /**
+     * ตรวจสอบว่าเอกสารนี้แก้ไขได้หรือไม่
+     * แก้ไขได้เฉพาะเมื่อ status = DRAFT หรือ PENDING (ยังไม่ตัดสต็อก)
+     * @return bool
+     */
+    public function canEdit()
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_PENDING]);
+    }
+
+    /**
+     * ตรวจสอบว่าเอกสารนี้ยกเลิกได้หรือไม่
+     * ยกเลิกได้ทุกสถานะยกเว้น CANCELLED
+     * @return bool
+     */
+    public function canCancel()
+    {
+        return $this->status !== self::STATUS_CANCELLED;
+    }
+
+    /**
+     * ตรวจสอบว่าเอกสารนี้ตัดสต็อกแล้วหรือยัง
+     * ตัดสต็อกแล้วเมื่อ status = CONFIRMED
+     * @return bool
+     */
+    public function isStockDeducted()
+    {
+        return $this->status === self::STATUS_CONFIRMED;
     }
 }

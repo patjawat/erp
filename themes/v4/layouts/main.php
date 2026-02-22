@@ -213,7 +213,6 @@ AppAsset::register($this);
 <body class="d-flex flex-column min-vh-100">
     <?php $this->beginBody() ?>
 
-    <?php echo $this->render('loader'); ?>
     <?php echo $this->render('modal'); ?>
     <?php echo $this->render('sub_modal'); ?>
     <?php echo $this->render('modal-fullscreen'); ?>

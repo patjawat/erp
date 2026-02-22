@@ -39,10 +39,13 @@ $this->title = 'รายการจ่ายพัสดุ (Stock Issue)';
                             'format' => 'raw',
                             'contentOptions' => ['class' => 'text-center'],
                             'value' => function($model) {
-                                if ($model->status === 'DRAFT') {
-                                    return '<span class="badge rounded-pill bg-warning text-dark">รอคลังหลักจ่าย</span>';
+                                if ($model->status === 'APPROVED') {
+                                    return '<span class="badge rounded-pill bg-primary">รอคลังจ่าย</span>';
                                 }
-                                return '<span class="badge rounded-pill bg-success">จ่ายพัสดุแล้ว</span>';
+                                if ($model->status === 'CONFIRMED') {
+                                    return '<span class="badge rounded-pill bg-success">จ่ายพัสดุแล้ว</span>';
+                                }
+                                return $model->status;
                             }
                         ],
                         [
@@ -53,7 +56,7 @@ $this->title = 'รายการจ่ายพัสดุ (Stock Issue)';
                             'template' => '{process}',
                             'buttons' => [
                                 'process' => function($url, $model) {
-                                    if ($model->status === 'DRAFT') {
+                                    if ($model->status === 'APPROVED') {
                                         return Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['process', 'id' => $model->id], [
                                             'class' => 'btn btn-primary btn-sm'
                                         ]);

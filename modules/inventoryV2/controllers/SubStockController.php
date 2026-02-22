@@ -3,6 +3,15 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\StockBalance;
+use app\modules\inventoryV2\models\StockDetail;
+use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\Warehouse;
+use app\modules\inventoryV2\components\InventoryService;
+use Yii;
+use yii\db\Expression;
+use yii\db\Query;
+use yii\web\Response;
 
 class SubStockController extends \yii\web\Controller
 {
@@ -10,12 +19,305 @@ class SubStockController extends \yii\web\Controller
     {
         return $this->render('index');
     }
-        public function actionDashboard()
+
+    /**
+     * Dashboard คลังย่อย — ใช้ข้อมูลจริงจากใบจ่ายที่ส่งมาที่คลังย่อย
+     */
+    public function actionDashboard()
     {
-        return $this->render('dashboard');
+        $subWarehouseIds = $this->getSubWarehouseIds();
+        if (empty($subWarehouseIds)) {
+            $subWarehouseIds = [-1];
+        }
+
+        $stats = $this->getDashboardStats($subWarehouseIds);
+        $incomingList = $this->getIncomingList($subWarehouseIds, 10);
+        $chartData = $this->getChartDataLast7Days($subWarehouseIds);
+
+        return $this->render('dashboard', [
+            'pendingReceiveCount' => $stats['pending_receive'],
+            'criticalCount' => $stats['critical_count'],
+            'monthlyValue' => $stats['monthly_value'],
+            'expiringSoonCount' => $stats['expiring_soon'],
+            'incomingList' => $incomingList,
+            'chartData' => $chartData,
+            'subWarehouseIds' => $subWarehouseIds,
+        ]);
     }
 
-        public function actionRequisition()
+    /** รหัสคลังย่อยที่ผู้ใช้รับผิดชอบ (หรือทั้งหมดถ้า admin) */
+    protected function getSubWarehouseIds()
+    {
+        $query = Warehouse::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->select('id');
+        if (!Yii::$app->user->isGuest && !Yii::$app->user->can('admin')) {
+            $userId = (string) Yii::$app->user->id;
+            $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
+        }
+        return $query->column();
+    }
+
+    /**
+     * สถิติ: รอตรวจรับ, ต่ำกว่าจุดวิกฤต, มูลค่าเบิกใช้เดือนนี้, หมดอายุภายใน 30 วัน
+     */
+    protected function getDashboardStats(array $subWarehouseIds)
+    {
+        $pendingReceive = (int) StockOrder::find()
+            ->where([
+                'order_type' => 'OUT',
+                'source_type' => 'REQUEST',
+                'status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['sub_warehouse_id' => $subWarehouseIds])
+            ->count();
+
+        $criticalQuery = (new Query())
+            ->from(['i' => StockItem::tableName()])
+            ->leftJoin(
+                ['b' => (new Query())
+                    ->select(['item_code', 'SUM(balance_qty) as total_qty'])
+                    ->from(StockBalance::tableName())
+                    ->where(['warehouse_id' => $subWarehouseIds])
+                    ->groupBy('item_code')],
+                'b.item_code = i.item_code'
+            )
+            ->where(['and',
+                ['i.is_active' => 1],
+                ['not', ['i.min_qty' => null]],
+                ['>', 'i.min_qty', 0],
+            ])
+            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+        $criticalCount = (int) $criticalQuery->count();
+
+        $monthStart = date('Y-m-01 00:00:00');
+        $monthEnd = date('Y-m-t 23:59:59');
+        $monthlyValue = (float) (new Query())
+            ->select(new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'))
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'so.order_type' => 'OUT',
+                'so.source_type' => 'REQUEST',
+                'so.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['so.sub_warehouse_id' => $subWarehouseIds])
+            ->andWhere(['>=', 'so.order_date', $monthStart])
+            ->andWhere(['<=', 'so.order_date', $monthEnd])
+            ->scalar();
+
+        return [
+            'pending_receive' => $pendingReceive,
+            'critical_count' => $criticalCount,
+            'monthly_value' => $monthlyValue,
+            'expiring_soon' => 0,
+        ];
+    }
+
+    /** รายการส่งของจากคลังหลัก (ใบจ่ายที่ CONFIRMED ส่งมาที่คลังย่อยนี้) */
+    protected function getIncomingList(array $subWarehouseIds, $limit = 10)
+    {
+        $orders = StockOrder::find()
+            ->with('stockDetails')
+            ->where([
+                'order_type' => 'OUT',
+                'source_type' => 'REQUEST',
+                'status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['sub_warehouse_id' => $subWarehouseIds])
+            ->orderBy(['order_date' => SORT_DESC])
+            ->limit($limit)
+            ->all();
+
+        $list = [];
+        foreach ($orders as $o) {
+            $list[] = [
+                'id' => $o->id,
+                'doc_no' => $o->order_no,
+                'detail_count' => is_array($o->stockDetails) ? count($o->stockDetails) : 0,
+                'order_date' => $o->order_date,
+                'main_warehouse_name' => $o->mainWarehouse ? $o->mainWarehouse->warehouse_name : 'คลังหลัก',
+            ];
+        }
+        return $list;
+    }
+
+    /** ข้อมูลกราฟ: มูลค่าที่จ่ายมาคลังย่อย 7 วันล่าสุด */
+    protected function getChartDataLast7Days(array $subWarehouseIds)
+    {
+        $days = [];
+        $values = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-$i days"));
+            $days[] = $d;
+            $start = $d . ' 00:00:00';
+            $end = $d . ' 23:59:59';
+            $v = (float) (new Query())
+                ->select(new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'))
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->where([
+                    'so.order_type' => 'OUT',
+                    'so.source_type' => 'REQUEST',
+                    'so.status' => StockOrder::STATUS_CONFIRMED,
+                ])
+                ->andWhere(['so.sub_warehouse_id' => $subWarehouseIds])
+                ->andWhere(['>=', 'so.order_date', $start])
+                ->andWhere(['<=', 'so.order_date', $end])
+                ->scalar();
+            $values[] = $v;
+        }
+        $labels = array_map(function ($d) {
+            return date('j/n', strtotime($d));
+        }, $days);
+        return ['categories' => $labels, 'series' => $values];
+    }
+
+    /**
+     * ระบบตัดจ่ายพัสดุที่คลังย่อย (บันทึกการจ่าย/การใช้งาน)
+     * คลังย่อยต้องมีสต็อกก่อน (รับจากคลังหลักเมื่อคลังหลักจ่ายของแล้ว)
+     */
+    public function actionIssue()
+    {
+        $subIds = $this->getSubWarehouseIds();
+        $subWarehouses = Warehouse::find()
+            ->where(['id' => $subIds])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        if (empty($subWarehouses)) {
+            $subIds = [];
+        }
+        return $this->render('issue', [
+            'subWarehouses' => $subWarehouses,
+        ]);
+    }
+
+    /**
+     * API: รายการ Lot ที่มีในคลังย่อย (จาก stock_balance)
+     */
+    public function actionGetAvailableLots($warehouse_id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $subIds = $this->getSubWarehouseIds();
+        $wid = (int) $warehouse_id;
+        if ($wid <= 0 || !in_array($wid, $subIds, true)) {
+            return [];
+        }
+        $rows = (new Query())
+            ->select([
+                'sb.item_code',
+                'i.item_name',
+                'sb.lot_number',
+                'sb.balance_qty',
+            ])
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->where(['sb.warehouse_id' => $wid])
+            ->andWhere(['>', 'sb.balance_qty', 0])
+            ->orderBy(['i.item_name' => SORT_ASC, 'sb.lot_number' => SORT_ASC])
+            ->all();
+        $out = [];
+        foreach ($rows as $r) {
+            $unit = '';
+            if (!empty($r['item_name']) && isset($r['item_code'])) {
+                $item = StockItem::findOne($r['item_code']);
+                $unit = $item && method_exists($item, 'getUnitName') ? ($item->getUnitName() ?: '') : '';
+            }
+            $out[] = [
+                'item_code' => $r['item_code'],
+                'item_name' => $r['item_name'],
+                'lot_number' => $r['lot_number'],
+                'balance_qty' => (float) $r['balance_qty'],
+                'unit' => $unit,
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * บันทึกการตัดจ่ายพัสดุที่คลังย่อย (POST)
+     */
+    public function actionSaveUsage()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!$this->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid request'];
+        }
+        $warehouse_id = (int) $this->request->post('warehouse_id');
+        $job_type = trim((string) $this->request->post('job_type', ''));
+        $reference = trim((string) $this->request->post('reference', ''));
+        $items = (array) $this->request->post('items', []);
+
+        $subIds = $this->getSubWarehouseIds();
+        if ($warehouse_id <= 0 || !in_array($warehouse_id, $subIds, true)) {
+            return ['success' => false, 'message' => 'กรุณาเลือกคลังย่อยที่ถูกต้อง'];
+        }
+        $items = array_filter($items, function ($r) {
+            return !empty($r['item_code']) && !empty($r['lot_number']) && isset($r['qty']) && (float)$r['qty'] > 0;
+        });
+        if (empty($items)) {
+            return ['success' => false, 'message' => 'กรุณาเพิ่มรายการพัสดุที่ตัดจ่าย'];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $orderNo = $this->generateSubIssueOrderNo();
+            $order = new StockOrder();
+            $order->order_no = $orderNo;
+            $order->order_type = StockOrder::ORDER_TYPE_OUT;
+            $order->source_type = 'USAGE';
+            $order->order_date = date('Y-m-d H:i:s');
+            $order->main_warehouse_id = $warehouse_id;
+            $order->status = StockOrder::STATUS_CONFIRMED;
+            $order->data_json = ['job_type' => $job_type, 'reference' => $reference];
+            if (!$order->save(false)) {
+                throw new \Exception('บันทึกหัวเอกสารไม่สำเร็จ');
+            }
+
+            foreach ($items as $row) {
+                $itemCode = $row['item_code'];
+                $lotNumber = $row['lot_number'];
+                $qty = (float) $row['qty'];
+                $balance = StockBalance::findOne([
+                    'item_code' => $itemCode,
+                    'warehouse_id' => $warehouse_id,
+                    'lot_number' => $lotNumber,
+                ]);
+                if (!$balance || (float)$balance->balance_qty < $qty) {
+                    throw new \Exception("พัสดุ {$itemCode} Lot {$lotNumber} มีไม่พอจ่าย (ยอดคงเหลือไม่เพียงพอ)");
+                }
+                InventoryService::updateBalance($itemCode, $warehouse_id, $qty, 'OUT', $lotNumber);
+                $detail = new StockDetail();
+                $detail->stock_order_id = $order->id;
+                $detail->item_code = $itemCode;
+                $detail->qty = $qty;
+                $detail->remain_qty = 0;
+                $detail->lot_number = $lotNumber;
+                $detail->unit_price = 0;
+                $detail->save(false);
+            }
+
+            $transaction->commit();
+            return ['success' => true, 'message' => 'บันทึกการตัดจ่ายเรียบร้อย', 'order_no' => $orderNo];
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    protected function generateSubIssueOrderNo()
+    {
+        $prefix = 'SUB-OUT-' . date('Ymd') . '-';
+        $n = 1;
+        do {
+            $no = $prefix . str_pad((string)$n, 4, '0', STR_PAD_LEFT);
+            $n++;
+        } while (StockOrder::findOne(['order_no' => $no]) !== null);
+        return $no;
+    }
+
+    public function actionRequisition()
     {
             $model = new StockOrder();
 

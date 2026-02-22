@@ -10,7 +10,10 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
 <div class="requisition-view">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1><?= Html::encode($this->title) ?></h1>
-        <div>
+        <div class="d-flex gap-2">
+            <?php if ($model->canEdit()): ?>
+            <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+            <?php endif; ?>
             <?= Html::a('ย้อนกลับ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
@@ -21,7 +24,9 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
                 <strong>สถานะ:</strong>
                 <?php
                     $statusLabel = [
-                        'DRAFT' => '<span class="badge bg-warning text-dark">รออนุมัติ</span>',
+                        'DRAFT' => '<span class="badge bg-warning text-dark">ฉบับร่าง / รออนุมัติ</span>',
+                        'PENDING' => '<span class="badge bg-info">รอหัวหน้าอนุมัติ</span>',
+                        'APPROVED' => '<span class="badge bg-primary">อนุมัติแล้ว — รอคลังจ่าย</span>',
                         'CONFIRMED' => '<span class="badge bg-success">จ่ายสินค้าแล้ว</span>',
                         'CANCELLED' => '<span class="badge bg-danger">ยกเลิกแล้ว</span>',
                     ];
@@ -61,7 +66,7 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
                         $balance = $detail->item->getStockBalance($model->main_warehouse_id);
                         
                         // ถ้ายกเลิกแล้ว หรือจ่ายแล้ว ยอดคงเหลือปัจจุบันอาจเปลี่ยนไป จึงใช้การแสดงผลเพื่อแจ้งเตือน
-                        if ($model->status === 'DRAFT' && $balance < $detail->qty) {
+                        if (in_array($model->status, ['DRAFT', 'PENDING', 'APPROVED']) && $balance < $detail->qty) {
                             echo "<span class='text-danger fw-bold'>" . number_format($balance, 2) . " (ไม่พอจ่าย)</span>";
                         } else {
                             echo number_format($balance, 2);
@@ -77,13 +82,18 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
 
     <div class="form-group d-flex justify-content-between">
         <div>
-            <?php if ($model->status === 'DRAFT'): ?>
-                <?= Html::a('<i class="fas fa-check"></i> อนุมัติและจ่ายสินค้า', ['approve', 'id' => $model->id], [
+            <?php if (in_array($model->status, ['DRAFT', 'PENDING'])): ?>
+                <?= Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success btn-lg',
                     'data' => [
-                        'confirm' => 'ยืนยันการตัดสต็อกคลังหลักเพื่อจ่ายสินค้า?',
+                        'confirm' => 'ยืนยันอนุมัติใบขอเบิก? (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "รายการจ่ายพัสดุ")',
                         'method' => 'post'
                     ]
+                ]) ?>
+            <?php endif; ?>
+            <?php if ($model->status === 'APPROVED'): ?>
+                <?= Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['/inventory-v2/issue/process', 'id' => $model->id], [
+                    'class' => 'btn btn-primary btn-lg',
                 ]) ?>
             <?php endif; ?>
         </div>
@@ -93,8 +103,8 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
                 <?= Html::a('ยกเลิกใบเบิกนี้', ['cancel', 'id' => $model->id], [
                     'class' => 'btn btn-outline-danger',
                     'data' => [
-                        'confirm' => $model->status === 'CONFIRMED' 
-                            ? 'เอกสารนี้จ่ายของไปแล้ว การยกเลิกจะนำสินค้ากลับเข้าสต็อกคลังหลัก ยืนยันหรือไม่?' 
+                        'confirm' => $model->status === 'CONFIRMED'
+                            ? 'เอกสารนี้จ่ายของไปแล้ว การยกเลิกจะนำสินค้ากลับเข้าสต็อกคลังหลัก ยืนยันหรือไม่?'
                             : 'ยืนยันการยกเลิกใบขอเบิกนี้?',
                         'method' => 'post',
                     ],

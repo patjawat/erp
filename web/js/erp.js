@@ -1,6 +1,3 @@
-window.onbeforeunload = function () {
-  showTableLoading();
-};
 
 
 jQuery(document).on("pjax:start", function () {

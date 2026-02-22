@@ -151,7 +151,7 @@ $ref = isset($ref) ? Html::encode($ref) : '';
         </a>
     </div>
     <div class="form-group mt-3 d-flex justify-content-center gap-3">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
+        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow me-2', 'id' => 'summit']) ?>
         <?= Html::button('ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
     </div>
 

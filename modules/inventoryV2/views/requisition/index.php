@@ -58,7 +58,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => 'raw',
                         'value' => function ($model) {
                             $statusMap = [
-                                'DRAFT'     => ['class' => 'bg-warning text-dark', 'label' => 'รออนุมัติ'],
+                                'DRAFT'     => ['class' => 'bg-warning text-dark', 'label' => 'ฉบับร่าง'],
+                                'PENDING'   => ['class' => 'bg-info', 'label' => 'รอหัวหน้าอนุมัติ'],
+                                'APPROVED'  => ['class' => 'bg-primary', 'label' => 'อนุมัติแล้ว — รอคลังจ่าย'],
                                 'CONFIRMED' => ['class' => 'bg-success', 'label' => 'จ่ายแล้ว'],
                                 'CANCELLED' => ['class' => 'bg-danger', 'label' => 'ยกเลิก'],
                             ];
@@ -68,7 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'class' => 'yii\grid\ActionColumn',
-                        'template' => '{view} {approve}',
+                        'template' => '{view} {update} {approve}',
                         'buttons' => [
                             'view' => function ($url, $model) {
                                 return Html::a('<i class="bi bi-search"></i>', $url, [
@@ -76,12 +78,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'title' => 'ดูรายละเอียด',
                                 ]);
                             },
+                            'update' => function ($url, $model) {
+                                if (!$model->canEdit()) return '';
+                                return Html::a('<i class="bi bi-pencil"></i>', $url, [
+                                    'class' => 'btn btn-sm btn-outline-secondary',
+                                    'title' => 'แก้ไข',
+                                ]);
+                            },
                             'approve' => function ($url, $model) {
-                                if ($model->status === 'DRAFT') {
+                                if (in_array($model->status, ['DRAFT', 'PENDING'])) {
                                     return Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                                         'class' => 'btn btn-sm btn-success',
                                         'data' => [
-                                            'confirm' => 'ยืนยันการอนุมัติและตัดสต็อกคลังหลัก?',
+                                            'confirm' => 'ยืนยันอนุมัติใบขอเบิก? (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "รายการจ่ายพัสดุ")',
                                             'method' => 'post',
                                         ],
                                     ]);

@@ -350,7 +350,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * รายการวัสดุที่มีในคลัง (สำหรับ TomSelect ในใบขอเบิก)
+     * รายการวัสดุสำหรับเลือกในใบขอเบิก (แสดงทุกวัสดุที่เปิดใช้ พร้อมยอดคงเหลือในคลังที่เลือก)
      * GET warehouse_id, q (optional ค้นหาชื่อ/รหัส)
      */
     public function actionGetItemsByWarehouse($warehouse_id, $q = '')
@@ -359,11 +359,21 @@ class StockItemController extends Controller
         $warehouse_id = (int) $warehouse_id;
         $q = trim((string) $q, " \t\n\r\0\x0B\"'");
 
-        $query = StockBalance::find()
-            ->select(['stock_balance.item_code'])
-            ->joinWith('item')
-            ->where(['stock_balance.warehouse_id' => $warehouse_id])
-            ->andWhere(['>', 'stock_balance.balance_qty', 0]);
+        $balanceSubQuery = (new \yii\db\Query())
+            ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
+            ->from(StockBalance::tableName())
+            ->where(['warehouse_id' => $warehouse_id])
+            ->groupBy('item_code');
+
+        $query = StockItem::find()
+            ->select([
+                'stock_item.item_code',
+                'stock_item.item_name',
+                'COALESCE(b.balance_qty, 0) AS balance_qty',
+            ])
+            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = stock_item.item_code')
+            ->where(['stock_item.is_active' => 1])
+            ->orderBy(['stock_item.item_code' => SORT_ASC]);
 
         if ($q !== '') {
             $query->andWhere([
@@ -373,17 +383,17 @@ class StockItemController extends Controller
             ]);
         }
 
-        $query->distinct();
-        $models = $query->all();
+        $models = $query->asArray()->all();
         $results = [];
-        foreach ($models as $m) {
-            $item = $m->item;
-            $itemName = $item ? $item->item_name : (string) $m->item_code;
+        foreach ($models as $row) {
+            $item = StockItem::findOne($row['item_code']);
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
+            $balance = (float) ($row['balance_qty'] ?? 0);
             $results[] = [
-                'item_code' => (string) $m->item_code,
-                'item_name' => $itemName,
+                'item_code' => (string) $row['item_code'],
+                'item_name' => (string) $row['item_name'],
                 'unit_name' => $unitName ? (string) $unitName : '-',
+                'balance_qty' => $balance,
             ];
         }
         return $results;

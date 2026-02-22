@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'name')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'category_id')->hiddenInput()->label(false) ?>
     <div class="form-group mt-3">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
+        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary me-2']) ?>
         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
     <?php ActiveForm::end(); ?>

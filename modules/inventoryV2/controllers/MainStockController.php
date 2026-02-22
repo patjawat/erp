@@ -92,7 +92,7 @@ class MainStockController extends \yii\web\Controller
             ->where([
                 'order_type' => 'OUT',
                 'source_type' => 'REQUEST',
-                'status' => 'DRAFT',
+                'status' => StockOrder::STATUS_APPROVED,
             ])
             ->andWhere(['main_warehouse_id' => $warehouseId ? [$warehouseId] : $mainWarehouseIds]);
 
@@ -154,7 +154,7 @@ class MainStockController extends \yii\web\Controller
         ];
     }
 
-    /** ใบขอเบิกรอจ่าย (DRAFT) */
+    /** ใบขอเบิกรอคลังจ่าย (อนุมัติแล้ว APPROVED) */
     protected function getPendingRequisitions($warehouseId, array $mainWarehouseIds, $limit = 10)
     {
         $query = StockOrder::find()
@@ -162,7 +162,7 @@ class MainStockController extends \yii\web\Controller
             ->where([
                 'order_type' => 'OUT',
                 'source_type' => 'REQUEST',
-                'status' => 'DRAFT',
+                'status' => StockOrder::STATUS_APPROVED,
             ])
             ->andWhere(['main_warehouse_id' => $warehouseId ? [$warehouseId] : $mainWarehouseIds])
             ->orderBy(['order_date' => SORT_DESC])

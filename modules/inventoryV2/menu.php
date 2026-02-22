@@ -41,6 +41,18 @@ use yii\helpers\Url;
         </svg>
         ทะเบียนขอเบิกวัสดุ
     </a>
+    <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn <?= $active !== 'issue' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-box-seam"></i>
+        รายการจ่ายพัสดุ
+    </a>
+    <a href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" class="btn <?= ($active ?? '') !== 'report-material' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-file-earmark-bar-graph"></i>
+        สรุปรายงานวัสดุคงคลัง
+    </a>
+    <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="btn <?= ($active ?? '') !== 'report-balance' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-boxes"></i>
+        ยอดคงเหลือตามคลัง
+    </a>
     <a href="<?= Url::to(['/inventory-v2/default/setting']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-secondary' : 'btn-secondary' ?>">
         <i class="bi bi-building"></i>
         ตั้งค่าคลังสินค้า

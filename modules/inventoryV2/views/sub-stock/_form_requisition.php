@@ -112,10 +112,10 @@ $this->title = 'สร้างใบเบิกพัสดุใหม่';
                 </div>
 
                 <div class="text-end mt-4">
-                    <button class="btn btn-outline-secondary px-4 me-2">ยกเลิก</button>
-                    <button class="btn btn-success btn-lg px-5 shadow rounded-3" id="btnSubmit">
+                    <button type="button" class="btn btn-success btn-lg px-5 shadow rounded-3 me-2" id="btnSubmit">
                         ส่งใบเบิกไปที่คลังหลัก
                     </button>
+                    <button type="button" class="btn btn-outline-secondary px-4">ยกเลิก</button>
                 </div>
             </div>
 
