@@ -6,10 +6,15 @@ use yii\widgets\Pjax;
 use yii\bootstrap5\LinkPager;
 
 /** @var yii\web\View $this */
-/** @var app\modules\sm\models\ProductSearch $searchModel */
+/** @var app\modules\inventoryV2\models\StockItemSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var int|null $warehouseId */
+/** @var array $balanceMap item_code => balance_qty */
+/** @var array $warehouses */
 $this->title = 'วัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
+$warehouseId = $warehouseId ?? null;
+$balanceMap = $balanceMap ?? [];
 //  sql นำเข้าวัสดุจาก categorise
 $sql = "INSERT INTO stock_item (
     ref,
@@ -72,7 +77,7 @@ AND group_id = 'MATER';
         </div>
     </div>
     <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]);
+        <?php echo $this->render('_search', ['model' => $searchModel, 'warehouses' => $warehouses ?? []]);
         ?>
     </div>
 </div>
@@ -93,11 +98,12 @@ AND group_id = 'MATER';
                 <thead>
                     <tr>
                         <th class="text-center" style="width:30px">ลำดับ</th>
-                        <th class="text-center" style="min-width: 80px;">รหัสพัสดุ</th>
+                        <th class="text-center" style="min-width: 110px;">รหัสพัสดุ</th>
                         <th class="text-center" style="min-width: 100px;">รูปภาพ</th>
                         <th style="min-width: 350px;">รายการวัสดุ</th>
                         <th class="text-center" style="min-width: 150px;">ประเภทวัสดุ</th>
                         <th style="min-width: 100px;">หน่วยนับ</th>
+                        <th class="text-center" style="min-width: 172px;">จำนวนคงเหลือ<?= $warehouseId ? ' (คลังที่เลือก)' : '' ?></th>
                         <th style="min-width: 120px;">บัญชีนวัตกรรม</th>
                         <th class="text-center" style="min-width: 100px;">จำนวนสูงสุด</th>
                         <th class="text-center" style="min-width: 100px;">จำนวนต่ำสุด</th>
@@ -125,8 +131,41 @@ AND group_id = 'MATER';
                                     <small class="text-muted">หมวดหมู่: <?= $item->categoryType->title ?? '-' ?></small>
                                 </td>
                                 <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
-                                <td><?= $item->data_json['unit'] ?? '-' ?></td>
-
+                                <td><?= $item->data_json['unit'] ?? $item->getUnitName() ?: '-' ?></td>
+                                <td class="text-center">
+                                    <?php if ($warehouseId): ?>
+                                        <?php
+                                        $bal = (float)($balanceMap[$item->item_code] ?? 0);
+                                        $minQ = $item->min_qty !== null && $item->min_qty !== '' ? (float)$item->min_qty : null;
+                                        $maxQ = $item->max_qty !== null && $item->max_qty !== '' ? (float)$item->max_qty : null;
+                                        $hasMin = $minQ !== null && $minQ > 0;
+                                        $hasMax = $maxQ !== null && $maxQ > 0;
+                                        if ($hasMin && $bal < $minQ) {
+                                            $statusClass = 'text-danger';
+                                            $statusIcon = 'bi-arrow-down-circle-fill';
+                                            $statusTitle = 'ต่ำกว่ากำหนด (ยอด < Min)';
+                                        } elseif ($hasMax && $bal > $maxQ) {
+                                            $statusClass = 'text-warning';
+                                            $statusIcon = 'bi-arrow-up-circle-fill';
+                                            $statusTitle = 'มากกว่ากำหนด (ยอด > Max)';
+                                        } elseif ($hasMin || $hasMax) {
+                                            $statusClass = 'text-success';
+                                            $statusIcon = 'bi-check-circle-fill';
+                                            $statusTitle = 'พอดี';
+                                        } else {
+                                            $statusClass = 'text-muted';
+                                            $statusIcon = 'bi-dash-circle';
+                                            $statusTitle = 'ยังไม่ได้กำหนด Min/Max';
+                                        }
+                                        ?>
+                                        <span class="<?= $statusClass ?>" title="<?= htmlspecialchars($statusTitle) ?>">
+                                            <i class="bi <?= $statusIcon ?> me-1"></i>
+                                            <?= number_format($bal, 2) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-flex justify-content-center">
                                         <input class="form-check-input set-active" type="checkbox" data-id="<?= $item->id ?>"
@@ -162,7 +201,7 @@ AND group_id = 'MATER';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="11" class="text-center py-5">
+                            <td colspan="12" class="text-center py-5">
                                 <div class="d-flex flex-column align-items-center justify-content-center">
                                     <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
                                     <h5 class="text-muted mb-2">ไม่พบข้อมูลพัสดุ</h5>

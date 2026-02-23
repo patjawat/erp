@@ -4,13 +4,21 @@ namespace app\modules\inventoryV2\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use yii\db\Query;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockBalance;
 
 /**
  * StockItemSearch represents the model behind the search form of `app\modules\inventoryV2\models\StockItem`.
  */
 class StockItemSearch extends StockItem
 {
+    /** คลังที่ใช้กรอง/แสดงจำนวนคงเหลือ */
+    public $warehouse_id;
+
+    /** กรองตามสถานะยอดเทียบ Min/Max: below = ต่ำกว่ากำหนด, above = มากกว่ากำหนด (ใช้ได้เมื่อเลือกคลัง) */
+    public $balance_status;
+
     /**
      * {@inheritdoc}
      */
@@ -18,7 +26,7 @@ class StockItemSearch extends StockItem
     {
         return [
             [['id','is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['item_code', 'item_name', 'ref', 'data_json','category_id','q'], 'safe'],
+            [['item_code', 'item_name', 'ref', 'data_json','category_id','q', 'warehouse_id', 'balance_status'], 'safe'],
             [['min_qty', 'max_qty'], 'number'],
         ];
     }
@@ -77,6 +85,25 @@ class StockItemSearch extends StockItem
             ->andFilterWhere(['like', 'item_name', $this->item_name])
             ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
+
+        $warehouseId = $this->warehouse_id ? (int) $this->warehouse_id : 0;
+        $balanceStatus = $this->balance_status === 'below' || $this->balance_status === 'above' ? $this->balance_status : '';
+
+        if ($warehouseId > 0 && $balanceStatus !== '') {
+            $balanceSubQuery = (new Query())
+                ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
+                ->from(StockBalance::tableName())
+                ->where(['warehouse_id' => $warehouseId])
+                ->groupBy('item_code');
+            $query->leftJoin(['b' => $balanceSubQuery], 'b.item_code = stock_item.item_code');
+            if ($balanceStatus === 'below') {
+                $query->andWhere('stock_item.min_qty IS NOT NULL AND stock_item.min_qty > 0')
+                    ->andWhere('COALESCE(b.balance_qty, 0) < stock_item.min_qty');
+            } else {
+                $query->andWhere('stock_item.max_qty IS NOT NULL AND stock_item.max_qty > 0')
+                    ->andWhere('COALESCE(b.balance_qty, 0) > stock_item.max_qty');
+            }
+        }
 
         return $dataProvider;
     }

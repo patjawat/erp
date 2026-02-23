@@ -7,6 +7,11 @@ use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockItemSearch;
 use app\modules\inventoryV2\models\Warehouse;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -58,15 +63,157 @@ class StockItemController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere([
             'or',
-            ['like', 'item_code', $searchModel->q],
-            ['like', 'item_name', $searchModel->q],
+            ['like', 'stock_item.item_code', $searchModel->q],
+            ['like', 'stock_item.item_name', $searchModel->q],
         ]);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
+
+        $warehouseId = $searchModel->warehouse_id ? (int) $searchModel->warehouse_id : null;
+        $balanceMap = [];
+        if ($warehouseId > 0) {
+            $models = $dataProvider->getModels();
+            $itemCodes = array_map(function ($m) {
+                return $m->item_code;
+            }, $models);
+            if (!empty($itemCodes)) {
+                $rows = StockBalance::find()
+                    ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
+                    ->where(['warehouse_id' => $warehouseId])
+                    ->andWhere(['item_code' => $itemCodes])
+                    ->groupBy('item_code')
+                    ->asArray()
+                    ->all();
+                foreach ($rows as $r) {
+                    $balanceMap[$r['item_code']] = (float) $r['balance_qty'];
+                }
+            }
+        }
+
+        $listWarehouse = Warehouse::find()
+            ->orderBy(['warehouse_type' => SORT_ASC, 'warehouse_name' => SORT_ASC])
+            ->all();
+        $warehouses = ['' => '-- ทุกคลัง (ไม่แสดงยอดคงเหลือ) --'];
+        foreach ($listWarehouse as $w) {
+            $prefix = $w->warehouse_type === 'MAIN' ? 'คลังหลัก: ' : ($w->warehouse_type === 'SUB' ? 'คลังย่อย: ' : '');
+            $warehouses[$w->id] = $prefix . $w->warehouse_name;
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'warehouseId' => $warehouseId,
+            'balanceMap' => $balanceMap,
+            'warehouses' => $warehouses,
         ]);
+    }
+
+    /**
+     * ส่งออกรายการพัสดุเป็น Excel (ตามตัวกรองที่ใช้ใน index)
+     */
+    public function actionExportExcel()
+    {
+        $searchModel = new StockItemSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'stock_item.item_code', $searchModel->q],
+            ['like', 'stock_item.item_name', $searchModel->q],
+        ]);
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        $dataProvider->pagination = false;
+
+        $warehouseId = $searchModel->warehouse_id ? (int) $searchModel->warehouse_id : null;
+        $balanceMap = [];
+        $models = $dataProvider->getModels();
+        if ($warehouseId > 0 && !empty($models)) {
+            $itemCodes = array_map(function ($m) {
+                return $m->item_code;
+            }, $models);
+            $rows = StockBalance::find()
+                ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
+                ->where(['warehouse_id' => $warehouseId])
+                ->andWhere(['item_code' => $itemCodes])
+                ->groupBy('item_code')
+                ->asArray()
+                ->all();
+            foreach ($rows as $r) {
+                $balanceMap[$r['item_code']] = (float) $r['balance_qty'];
+            }
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('รายการพัสดุ');
+
+        $headers = [
+            'รหัสพัสดุ',
+            'รายการวัสดุ',
+            'หมวดวัสดุ',
+            'ประเภทวัสดุ',
+            'หน่วยนับ',
+            'จำนวนคงเหลือ' . ($warehouseId ? ' (คลังที่เลือก)' : ''),
+            'บัญชีนวัตกรรม',
+            'จำนวนสูงสุด',
+            'จำนวนต่ำสุด',
+            'สถานะ',
+        ];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A1:' . $lastCol . '1')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $rowNum = 2;
+        foreach ($models as $i => $item) {
+            $bal = $warehouseId ? (float) ($balanceMap[$item->item_code] ?? 0) : null;
+
+            $metterType = is_array($item->data_json) ? ($item->data_json['metter_type'] ?? '-') : '-';
+            if (!is_array($item->data_json) && is_string($item->data_json)) {
+                $dataJson = json_decode($item->data_json, true);
+                $metterType = $dataJson['metter_type'] ?? '-';
+            }
+            $unitName = method_exists($item, 'getUnitName') ? ($item->getUnitName() ?: null) : null;
+            if ($unitName === null && $item->data_json) {
+                $dataJson = is_array($item->data_json) ? $item->data_json : json_decode($item->data_json, true);
+                $unitName = $dataJson['unit_name'] ?? $dataJson['unit'] ?? null;
+            }
+            $unitName = $unitName ?: '-';
+
+            $categoryTitle = $item->categoryType ? $item->categoryType->title : '-';
+            $sheet->setCellValue('A' . $rowNum, $item->item_code);
+            $sheet->setCellValue('B' . $rowNum, $item->item_name);
+            $sheet->setCellValue('C' . $rowNum, $categoryTitle);
+            $sheet->setCellValue('D' . $rowNum, $metterType);
+            $sheet->setCellValue('E' . $rowNum, $unitName);
+            $sheet->setCellValue('F' . $rowNum, $bal !== null ? $bal : '—');
+            $sheet->setCellValue('G' . $rowNum, $item->is_innovation == 1 ? 'ใช่' : 'ไม่');
+            $sheet->setCellValue('H' . $rowNum, $item->max_qty !== null && $item->max_qty !== '' ? (float) $item->max_qty : '');
+            $sheet->setCellValue('I' . $rowNum, $item->min_qty !== null && $item->min_qty !== '' ? (float) $item->min_qty : '');
+            $sheet->setCellValue('J' . $rowNum, $item->is_active == 1 ? 'เปิด' : 'ปิด');
+            $rowNum++;
+        }
+
+        $sheet->getStyle('F2:F' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('H2:I' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $filenameUtf8 = 'รายการพัสดุ-' . date('Ymd-His') . '.xlsx';
+        $filenameAscii = 'stock-items-' . date('Ymd-His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8) . '"');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     /**
