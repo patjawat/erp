@@ -1,7 +1,12 @@
 {
     "name": "yiisoft/yii2-app-basic",
     "description": "Yii 2 Basic Project Template",
-    "keywords": ["yii2", "framework", "basic", "project template"],
+    "keywords": [
+        "yii2",
+        "framework",
+        "basic",
+        "project template"
+    ],
     "homepage": "http://www.yiiframework.com/",
     "type": "project",
     "license": "BSD-3-Clause",
@@ -74,10 +79,9 @@
         "phpoffice/phpword": "dev-master",
         "yurkinx/yii2-image": "dev-master",
         "yiisoft/yii2-imagine": "~2.2.0",
-        "karatae99/yii2-date-picker-thai-widget" : "~1.0",
+        "karatae99/yii2-date-picker-thai-widget": "~1.0",
         "istvan-ujjmeszaros/bootstrap-duallistbox": "~4.0.0",
         "softark/yii2-dual-listbox": "dev-master",
-        
         "kartik-v/php-date-formatter": "dev-master",
         "kartik-v/yii2-popover-x": "dev-master",
         "edofre/yii2-fullcalendar": "V1.0.11",
@@ -85,17 +89,16 @@
         "kartik-v/yii2-sortable": "dev-master",
         "phpoffice/phpspreadsheet": "dev-master",
         "cgsmith/yii2-flatpickr-widget": "~1.1",
-        "codenix-sv/yii2-flatpickr" : "~2.0",
+        "codenix-sv/yii2-flatpickr": "~2.0",
         "linecorp/line-bot-sdk": "dev-master",
-        "philippfrenzel/yii2fullcalendar":"*",
+        "philippfrenzel/yii2fullcalendar": "*",
         "setasign/fpdf": "dev-master",
         "tecnickcom/tcpdf": "dev-main",
         "mpdf/mpdf": "^8.2",
         "setasign/fpdi": "^2.6",
         "2amigos/yii2-qrcode-helper": "^3.1",
         "guzzlehttp/guzzle": "7.10.x-dev",
-        "endroid/qr-code": "^4.6",
-        "smalot/pdfparser": "^2.0"
+        "endroid/qr-code": "^4.6"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
@@ -111,7 +114,7 @@
     "config": {
         "platform-check": false,
         "allow-plugins": {
-            "yiisoft/yii2-composer" : true
+            "yiisoft/yii2-composer": true
         },
         "process-timeout": 1800,
         "fxp-asset": {

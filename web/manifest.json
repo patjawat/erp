@@ -1,0 +1,26 @@
+{
+  "name": "ERP Hospital",
+  "short_name": "ERP",
+  "description": "ระบบ ERP โรงพยาบาล",
+  "start_url": "/site",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f7fa",
+  "theme_color": "#1a508e",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

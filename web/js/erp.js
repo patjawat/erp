@@ -8,6 +8,7 @@ jQuery(document).on("pjax:start", function () {
 
 jQuery(document).on("pjax:end", function () {
   tableLoading1.style.display = "none";
+  if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
   // ตัวอย่าง: รีโหลด Offcanvas
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
   if (offcanvasElList.length > 0) {

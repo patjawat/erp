@@ -47,22 +47,6 @@ $config = [
         'zip' => [
             'class' => 'app\components\ZipComponent',
         ],
-        'ollamaSummarizer' => [
-            'class' => 'app\components\OllamaSummarizer',
-            'baseUrl' => $params['ollamaUrl'] ?? 'http://ollama:11434',
-            'model' => $params['ollamaModel'] ?? 'llama3.2',
-        ],
-        'openaiSummarizer' => [
-            'class' => 'app\components\OpenAISummarizer',
-            'apiKey' => $params['openaiApiKey'] ?? '',
-            'model' => $params['openaiModel'] ?? 'gpt-4o-mini',
-            'baseUrl' => $params['openaiBaseUrl'] ?? 'https://api.openai.com/v1',
-        ],
-        'geminiSummarizer' => [
-            'class' => 'app\components\GeminiSummarizer',
-            'apiKey' => $params['geminiApiKey'] ?? '',
-            'model' => $params['geminiModel'] ?? 'gemini-1.5-flash',
-        ],
         'cart' => [
             'class' => 'asyou99\cart\Cart',
         ],

@@ -60,6 +60,12 @@ $total = $notify['total'];
     </div>
     <div class="d-flex align-items-center">
         <div class="d-flex align-items-center gap-1">
+            <button type="button" class="header-btn d-none" id="erp-install-pwa" title="ติดตั้งแอป (PWA)">
+                <i data-lucide="download"></i>
+            </button>
+            <button type="button" class="header-btn" id="erp-test-notification" title="ทดสอบการแจ้งเตือน (Push)">
+                <i data-lucide="bell-ring"></i>
+            </button>
             <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="header-btn position-relative">
                 <i data-lucide="bell"></i>
                 <?php if ($total > 0): ?>

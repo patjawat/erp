@@ -25,7 +25,14 @@ AppAsset::register($this);
 
     <title><?= Html::encode($this->title) ?></title>
 
-    
+    <!-- PWA -->
+    <link rel="manifest" href="<?= Yii::getAlias('@web') ?>/manifest.json">
+    <meta name="theme-color" content="#1a508e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="<?= Yii::getAlias('@web') ?>/images/logo_new.png">
+
     <?php $this->head() ?>
 </head>
 <style>
@@ -81,8 +88,8 @@ AppAsset::register($this);
         top: 64px;
         z-index: 1040;
         height: 86px;
-        background-color: white;
-        border-bottom: 1px solid #dee2e6;
+        background-color: var(--bs-body-bg, #fff);
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         width: 100%;
         overflow-x: auto;
@@ -255,10 +262,90 @@ AppAsset::register($this);
     <?= $this->render('scroll_buttons') ?>
 
     <?php
-    $js = <<< JS
-    lucide.createIcons();
-   
+    $pwaBaseUrl = rtrim(Yii::getAlias('@web'), '/');
+    $pwaBaseUrlJs = json_encode($pwaBaseUrl);
+    $pwaIconUrl = json_encode(Yii::getAlias('@web') . '/images/logo_new.png');
+    $this->registerJs('window.ERP_PWA_BASE=' . $pwaBaseUrlJs . ';window.ERP_PWA_ICON=' . $pwaIconUrl . ';', View::POS_HEAD);
+    $js = <<<'JS'
+    function erpLucideIcons() { if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }
+    erpLucideIcons();
+    window.addEventListener('load', erpLucideIcons);
     AOS.init({});
+
+    var erpInstallPrompt = null;
+    var installBtn = document.getElementById('erp-install-pwa');
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isStandalone && installBtn) {
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            erpInstallPrompt = e;
+            installBtn.classList.remove('d-none');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        });
+        installBtn.addEventListener('click', function () {
+            if (!erpInstallPrompt) return;
+            erpInstallPrompt.prompt();
+            erpInstallPrompt.userChoice.then(function (choice) {
+                if (choice.outcome === 'accepted') installBtn.classList.add('d-none');
+                erpInstallPrompt = null;
+            });
+        });
+    }
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            var base = (window.ERP_PWA_BASE || '') || '';
+            var swUrl = (base ? base + '/' : '/') + 'sw.js';
+            var scope = (base ? base + '/' : '/');
+            navigator.serviceWorker.register(swUrl, { scope: scope }).then(function (reg) {
+                console.log('PWA: Service Worker registered', reg.scope);
+            }).catch(function (err) {
+                console.warn('PWA: Service Worker registration failed', err);
+            });
+        });
+    }
+
+    window.erpTestNotification = function (title, body) {
+        if (!('Notification' in window)) {
+            var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            var msg = isIOS
+                ? 'บน iPhone/iPad: การแจ้งเตือนใช้ได้เมื่อติดตั้งแอปแล้ว (เพิ่มไปยังหน้าจอหลัก) และเปิดจากไอคอนแอป\n\nกรุณา: Safari -> ปุ่มแชร์ -> เพิ่มไปยังหน้าจอหลัก -> จากนั้นเปิดจากไอคอนแอป แล้วลองกดแจ้งเตือนอีกครั้ง'
+                : 'เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน\n\nบนมือถือ Android: กรุณาใช้ Chrome หรือ Edge แล้วเปิดเว็บนี้ผ่าน HTTPS';
+            alert(msg);
+            return;
+        }
+        title = title || 'ERP Hospital';
+        body = body || 'นี่คือการทดสอบการแจ้งเตือน';
+        var iconUrl = window.ERP_PWA_ICON || '';
+        function showNow() {
+            try {
+                new Notification(title, { body: body, icon: iconUrl });
+            } catch (e) {
+                new Notification(title, { body: body });
+            }
+        }
+        if (Notification.permission === 'granted') {
+            var done = false;
+            var t = setTimeout(function () { if (!done) { done = true; showNow(); } }, 2500);
+            if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(function (reg) {
+                    clearTimeout(t);
+                    if (done) return;
+                    reg.showNotification(title, { body: body, icon: iconUrl }).then(function () { done = true; }).catch(function () { if (!done) { done = true; showNow(); } });
+                }).catch(function () { clearTimeout(t); if (!done) { done = true; showNow(); } });
+            } else {
+                clearTimeout(t);
+                showNow();
+            }
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(function (p) {
+                if (p === 'granted') window.erpTestNotification(title, body);
+            });
+        } else {
+            alert('กรุณาอนุญาตการแจ้งเตือน: Chrome -> เมนู (จุด 3 จุด) -> การตั้งค่า -> ความเป็นส่วนตัวและความปลอดภัย -> การตั้งค่าไซต์ -> การแจ้งเตือน -> อนุญาตสำหรับไซต์นี้');
+        }
+    };
+    document.getElementById('erp-test-notification') && document.getElementById('erp-test-notification').addEventListener('click', function () { erpTestNotification(); });
 
 			// });
          	$('header .dropdown-mega').on('show.bs.dropdown', function () {
