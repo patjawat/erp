@@ -25,46 +25,56 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-                <form method="get" action="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" id="form-material-summary" class="d-inline">
-                    <select name="month" class="form-select border shadow-sm rounded-pill px-3 d-inline-block" style="min-width: 130px;">
-                        <?php for ($m = 1; $m <= 12; $m++): ?>
-                            <option value="<?= $m ?>" <?= (int)$month === $m ? 'selected' : '' ?>><?= $monthNames[$m] ?></option>
-                        <?php endfor; ?>
-                    </select>
-                    <select name="year" class="form-select border shadow-sm rounded-pill px-3 d-inline-block ms-2" style="min-width: 95px;">
-                        <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
-                            <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?></option>
-                        <?php endfor; ?>
-                    </select>
-                    <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3 d-inline-block ms-2" style="min-width: 180px;">
-                        <?php foreach ($warehouses as $wid => $wname): ?>
-                            <option value="<?= $wid === '' ? '' : (int)$wid ?>" <?= (string)$warehouseId === (string)$wid ? 'selected' : '' ?>><?= Html::encode($wname) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit" class="btn btn-primary rounded-pill px-3 ms-2">
-                        <i class="bi bi-search me-1"></i> แสดงรายงาน
-                    </button>
-                </form>
-                <?php if ($hasData): ?>
-                    <a href="<?= Url::to(array_merge(['/inventory-v2/report/export-excel'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-success rounded-pill px-3">
-                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
-                    </a>
-                <?php endif; ?>
-                <a href="<?= Url::to(array_merge(['/inventory-v2/report/material-by-item'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-outline-secondary rounded-pill px-3">
-                    <i class="bi bi-list-ul me-1"></i> แยกรายการ
-                </a>
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" id="btn-close-month" data-bs-toggle="modal" data-bs-target="#modal-close-month">
-                    <i class="bi bi-calendar-check me-1"></i> ปิดเดือน
-                </button>
-            </div>
-        </div>
-    </div>
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid py-4">
+    <div class="card border shadow-sm rounded-3 mb-4">
+        <div class="card-body py-3 px-4">
+            <form method="get" action="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" id="form-material-summary">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-auto">
+                        <label class="form-label small text-muted fw-semibold text-uppercase mb-1">ช่วงเวลา</label>
+                        <div class="d-flex gap-2 flex-nowrap">
+                        <select name="month" class="form-select" style="min-width: 130px;">
+                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                                <option value="<?= $m ?>" <?= (int)$month === $m ? 'selected' : '' ?>><?= $monthNames[$m] ?></option>
+                            <?php endfor; ?>
+                        </select>
+                        <select name="year" class="form-select" style="min-width: 95px;">
+                                <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
+                                    <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <label class="form-label small text-muted fw-semibold text-uppercase mb-1">คลัง</label>
+                        <select name="warehouse_id" class="form-select" style="min-width: 200px;">
+                            <?php foreach ($warehouses as $wid => $wname): ?>
+                                <option value="<?= $wid === '' ? '' : (int)$wid ?>" <?= (string)$warehouseId === (string)$wid ? 'selected' : '' ?>><?= Html::encode($wname) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md d-flex flex-wrap gap-2 justify-content-md-end">
+<button type="submit" class="btn btn-primary px-3">
+                        <i class="bi bi-search me-1"></i> แสดงรายงาน
+                    </button>
+                    <?php if ($hasData): ?>
+                        <a href="<?= Url::to(array_merge(['/inventory-v2/report/export-excel'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-success px-3">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </a>
+                    <?php endif; ?>
+                    <a href="<?= Url::to(array_merge(['/inventory-v2/report/material-by-item'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-outline-secondary px-3">
+                        <i class="bi bi-list-ul me-1"></i> แยกรายการ
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary px-3" id="btn-close-month" data-bs-toggle="modal" data-bs-target="#modal-close-month">
+                        <i class="bi bi-calendar-check me-1"></i> ปิดเดือน
+                    </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <?php if (!$hasData): ?>
         <div class="alert alert-info border-0 shadow-sm">

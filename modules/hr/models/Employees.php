@@ -1516,4 +1516,22 @@ class Employees extends Yii\db\ActiveRecord
             ];
         }
     }
+
+    /**
+     * รายการนัดตรวจสุขภาพที่กำลังจะมาถึง (วันที่นัด >= วันนี้)
+     * ใช้แจ้งเตือนในหน้า /me
+     * @return HealthScreen[]
+     */
+    public function getUpcomingHealthAppointments()
+    {
+        $today = date('Y-m-d');
+        return HealthScreen::find()
+            ->where(['emp_id' => $this->id])
+            ->andWhere(['not', ['appointment_date' => null]])
+            ->andWhere(['>=', 'appointment_date', $today])
+            ->andWhere(['in', 'health_status', ['SCREEN', 'CONFIRM']])
+            ->orderBy(['appointment_date' => SORT_ASC])
+            ->limit(5)
+            ->all();
+    }
 }

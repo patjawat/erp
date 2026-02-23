@@ -4,6 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\UserHelper;
+use app\components\ThaiDateHelper;
 
 $me = UserHelper::GetEmployee();
 
@@ -32,6 +33,30 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 <?php echo $this->render('@app/modules/me/menu', ['active' => 'dashboard']) ?>
 
 <?php $this->endBlock(); ?>
+
+<?php
+$upcomingHealth = $me->getUpcomingHealthAppointments();
+if (!empty($upcomingHealth)): ?>
+<div class="alert alert-info border-0 shadow-sm rounded-4 mb-4 d-flex align-items-start gap-3" role="alert">
+    <div class="bg-info bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-info"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="flex-grow-1">
+        <h6 class="alert-heading fw-bold mb-2">การนัดตรวจสุขภาพ</h6>
+        <p class="mb-2 small">คุณมีการนัดหมายตรวจสุขภาพดังนี้:</p>
+        <ul class="mb-0 ps-3">
+            <?php foreach ($upcomingHealth as $app): ?>
+            <li class="mb-1">
+                <a href="<?= Url::to(['/me/health/view', 'id' => $app->id]) ?>" class="open-modal text-decoration-none fw-medium" data-size="modal-xl">
+                    วันที่ <?= ThaiDateHelper::formatThaiDate($app->appointment_date, 'medium') ?>
+                </a>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <a href="<?= Url::to(['/me/health/view', 'id' => $upcomingHealth[0]->id]) ?>" class="btn btn-sm btn-info mt-2 open-modal" data-size="modal-xl">ดูรายละเอียด</a>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="row">
     <div class="col-12 col-xl-6">
