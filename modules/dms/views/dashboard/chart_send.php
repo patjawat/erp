@@ -41,6 +41,8 @@ $data = Json::encode($chartSummary);
 
 
 $js = <<< JS
+  (function(){
+    function renderChart() {
   var chartSendOptions = {
     series: [
             { name: "จำนวน", data: $data },
@@ -115,7 +117,13 @@ $js = <<< JS
 
             var chartSend = new ApexCharts(document.querySelector('#ChartSend'), chartSendOptions);
             chartSend.render();
-
+    }
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(renderChart, { timeout: 300 });
+    } else {
+      setTimeout(renderChart, 0);
+    }
+  })();
   JS;
 $this->registerJS($js, View::POS_END);
 ?>

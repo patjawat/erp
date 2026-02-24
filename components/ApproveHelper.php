@@ -21,12 +21,13 @@ class ApproveHelper extends Component
     public static function Info()
     {
         return [
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
             'purchase' => self::Purchase(),
             'development' => self::Development(),
+            'checkin' => self::Checkin(),
             'assetMove' => self::AssetMove(),
             // 'helpdesk' => self::Helpdesk(),
         ];
@@ -233,6 +234,28 @@ class ApproveHelper extends Component
                 'total' => 0,
                 'datas' => [],
             ];
+        }
+    }
+
+    // อนุมัติการลงเวลาเข้างาน
+    public static function Checkin()
+    {
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return ['title' => 'อนุมัติลงเวลา', 'total' => 0, 'datas' => []];
+            }
+            $datas = Approve::find()
+                ->where(['name' => 'checkin', 'status' => 'Pending', 'emp_id' => $me->id])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+            return [
+                'title' => 'อนุมัติลงเวลา',
+                'total' => isset($datas) ? count($datas) : 0,
+                'datas' => $datas,
+            ];
+        } catch (\Throwable $th) {
+            return ['title' => 'อนุมัติลงเวลา', 'total' => 0, 'datas' => []];
         }
     }
 

@@ -1,5 +1,5 @@
 ---
-description: มาตรฐานฟอร์ม ตาราง การ์ด และวันที่ (form ไม่ใช้ -sm, tbody align-middle table-group-divider, thaiDatepicker)
+description: มาตรฐานฟอร์ม ตาราง การ์ด และวันที่ (ห้ามใช้ GridView — ใช้ foreach + table เท่านั้น, tbody align-middle table-group-divider, DatepickerThai)
 globs: "**/views/**/*.php"
 alwaysApply: false
 ---
@@ -8,23 +8,29 @@ alwaysApply: false
 
 ## การใช้วันที่ (Date picker)
 
-- ใช้ **thaiDatepicker** สำหรับช่องวันที่
-- กำหนดโดยส่ง CSS selector (หรือหลาย selector คั่นด้วย comma) เข้าไปใน `thaiDatepicker(...)`
+- ใช้ **DatepickerThai** widget (`\app\widgets\datepicker\DatepickerThai`) สำหรับช่องวันที่ (พ.ศ. / d/m/Y)
+- Widget ใช้สคริปต์จาก `web/js/thai.datepicker.js` โดยอัตโนมัติ
 
 ### ตัวอย่าง
 
-```javascript
-thaiDatepicker('#leave-date_start,#leave-date_end');
+กับ model (ใน ActiveForm):
+
+```php
+<?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => 'วว/ดด/ปปปป'],
+])->label('วันที่เริ่ม'); ?>
 ```
 
-หรือช่องเดียว:
+หลายช่องด้วย selector เดียว (ยังคง render แต่ละ field เอง แล้วใช้ clientOptions):
 
-```javascript
-thaiDatepicker('#dateStart');
-thaiDatepicker('#dateEnd');
+```php
+<?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'clientOptions' => ['selector' => '#leave-date_start,#leave-date_end'],
+])->label(false); ?>
+<?= $form->field($model, 'date_end')->textInput([...]); ?>
 ```
 
-- ช่องวันที่ในฟอร์มให้ใช้ component / partial ที่เรียก thaiDatepicker ตาม pattern นี้ (เช่น `_date_start`, `_date_end`)
+- ช่องวันที่ในฟอร์มค้นหาช่วงวันที่ให้ใช้ component ที่มี widget อยู่แล้ว: `_date_start`, `_date_end` (render ด้วย `@app/components/ui/_date_start`, `_date_end`)
 
 ## การ์ด (Card)
 
@@ -32,27 +38,54 @@ thaiDatepicker('#dateEnd');
 
 ## ฟอร์ม (Form controls)
 
-- **ไม่ใช้** `form-control-sm` หรือ `form-select-sm`
+- **ห้ามใช้** `form-control-sm` และ **ห้ามใช้** `form-select-sm` ทุกครั้ง (ใช้เฉพาะ `form-control` และ `form-select` ขนาดปกติ)
 - ใช้ **`form-control`** และ **`form-select`** เท่านั้น (ขนาดปกติ)
 - ปุ่มในฟอร์มใช้ `btn btn-primary` / `btn btn-outline-secondary` โดยไม่ใช้ `btn-sm` เว้นแต่จะออกแบบเป็นปุ่มเล็กโดยเฉพาะ
 
-## หน้ารายการ (List / Table)
+## Badge (ป้ายสถานะ)
 
-- ตารางรายการให้ใช้ **`<tbody class="align-middle table-group-divider">`**
-- ใช้ตาราง HTML ธรรมดา หรือ GridView ก็ได้ แต่ต้องกำหนด class นี้ที่ tbody
-- หัวตาราง (thead) ใช้ class ที่สอดคล้อง เช่น `table`, `table-hover`, `align-middle` ที่ `<table>`
+- **ใช้เฉพาะ** รูปแบบ Bootstrap 5 มาตรฐาน: **`badge text-bg-{color}`** เท่านั้น
+- **ห้ามใช้** `badge bg-*` อย่างเดียว (ต้องมี `text-bg-*` เพื่อให้สีตัวอักษรถูกต้อง)
+- สถานะความหมาย: อนุมัติ/สำเร็จ = `text-bg-success`, ไม่อนุมัติ/ผิดพลาด = `text-bg-danger`, รออนุมัติ/คำเตือน = `text-bg-warning` (ใช้ `text-bg-warning text-dark` ถ้าต้องการตัวอักษรเข้มบนพื้นเหลือง)
 
 ### ตัวอย่าง
 
+```php
+<span class="badge text-bg-success">อนุมัติแล้ว</span>
+<span class="badge text-bg-danger">ไม่อนุมัติ</span>
+<span class="badge text-bg-warning text-dark">รออนุมัติ</span>
+```
+
+## หน้ารายการ (List / Table) — กฎเหล็ก
+
+- **ห้ามใช้ GridView** (ทั้ง `yii\grid\GridView` และ `kartik\grid\GridView`) ทุกกรณี
+- **ให้ใช้ตาราง HTML + `foreach` เท่านั้น**: ใช้ `$dataProvider->getModels()` หรือ array ของ model แล้ว loop แสดงแถวใน `<table><thead>...</thead><tbody>...</tbody></table>`
+- ตารางรายการต้องมี **`<tbody class="align-middle table-group-divider">`**
+- หัวตาราง (thead) ใช้ `table-light` ที่ `<thead>` และ `table`, `table-hover`, `align-middle` ที่ `<table>`
+- การแบ่งหน้าใช้ `yii\bootstrap5\LinkPager` หรือ `Pagination` ตามปกติ
+
+### ตัวอย่าง (รูปแบบที่ต้องใช้)
+
 ```html
-<table class="table table-hover align-middle mb-0">
-    <thead>
-        <tr>...</tr>
-    </thead>
-    <tbody class="align-middle table-group-divider">
-        <?php foreach ($dataProvider->getModels() as $item): ?>
-            <tr>...</tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>คอลัมน์ 1</th>
+                <th>คอลัมน์ 2</th>
+                <th class="text-end">จัดการ</th>
+            </tr>
+        </thead>
+        <tbody class="align-middle table-group-divider">
+            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                <tr>
+                    <td>...</td>
+                    <td>...</td>
+                    <td class="text-end">...</td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?= \yii\bootstrap5\LinkPager::widget(['pagination' => $dataProvider->pagination]) ?>
 ```

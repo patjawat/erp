@@ -9,8 +9,8 @@ use app\modules\dms\models\DocumentSearch;
 
 class DashboardController extends \yii\web\Controller
 {
-    /** Cache duration สำหรับข้อมูล dashboard (วินาที) */
-    const DASHBOARD_CACHE_DURATION = 120;
+    /** Cache duration สำหรับข้อมูล dashboard (วินาที) - 5 นาที ลดโหลด DB */
+    const DASHBOARD_CACHE_DURATION = 300;
 
     public function actionIndex()
     {

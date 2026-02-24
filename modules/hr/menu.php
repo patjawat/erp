@@ -34,6 +34,9 @@ use yii\helpers\Url;
             <li>
                 <?= Html::a('<i class="fa-solid fa-user-tag me-1"></i> การกำหนดตำแหน่ง', ['/hr/position', 'title' => 'การตั้งค่าบุคลากร'], ['class' => 'btn btn-outline-primary open-modal-x dropdown-item', 'data' => ['size' => 'modal-md']]) ?>
             </li>
+            <li>
+                <?= Html::a('<i class="bi bi-file-earmark-text me-1"></i> Template คำอธิบายงาน (JD)', ['/jobdescription/template/index'], ['class' => 'dropdown-item']) ?>
+            </li>
 
         </ul>
     </div>

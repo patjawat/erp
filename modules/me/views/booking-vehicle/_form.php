@@ -69,11 +69,15 @@ $resultsJs = <<<JS
                 <h6 class="fw-bold mb-3 text-primary border-start border-4 border-primary ps-2">ข้อมูลการเดินทาง</h6>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('วันออกเดินทาง') ?>
+                        <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่ต้องการเดินทาง'],
+                        ])->label('วันออกเดินทาง') ?>
 
                     </div>
                     <div class="col-md-6">
-                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
+                        <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่เดินทางกลับ'],
+                        ])->label('ถึงวันที่') ?>
 
                     </div>
                     <!-- <div class="col-md-6">
@@ -452,8 +456,6 @@ $resultsJs = <<<JS
 <?php
 
 $js = <<<JS
-
-    thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
 
     \$(document).ready(function () {
     if(\$('#vehicle-vehicle_type_id').val() == ''){

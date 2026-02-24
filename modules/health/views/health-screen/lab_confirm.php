@@ -11,8 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => 'ข้อมูลสุขภา�
 $this->params['breadcrumbs'][] = $this->title;
 
 // ใส่ใน View ไฟล์เดิมของคุณ
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
+\app\assets\TomSelectAsset::register($this);
 
 $labList = HealthLab::find()->all();
 $labListData = ArrayHelper::map($labList, 'lab_code', 'lab_name');

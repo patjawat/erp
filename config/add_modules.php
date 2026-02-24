@@ -86,4 +86,8 @@ $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงา�
 $modules['line2'] = ['class' => 'app\modules\line2\Module'];  // line officail 2 By PCH
 $modules['dev'] = ['class' => 'app\modules\dev\Module'];  // ปรับปรุงระบบ theme layout
 $modules['health'] = ['class' => 'app\modules\health\Module'];  //ข้อมูลสุขภาพ
+$modules['attendance'] = ['class' => 'app\modules\attendance\Module'];  // บันทึกเวลาเข้างาน (Check-in)
+$modules['appreciation'] = ['class' => 'app\modules\appreciation\Module'];  // พลังแห่งคำขอบคุณ (Appreciation Wall)
+$modules['notify'] = ['class' => 'app\modules\notify\Module'];  // แจ้งเตือน (การขออนุมัติลา/จัดซื้อ/ลงเวลา ฯลฯ)
+$modules['jobdescription'] = ['class' => 'app\modules\jobdescription\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
 return $modules;

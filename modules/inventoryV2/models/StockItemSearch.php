@@ -19,6 +19,12 @@ class StockItemSearch extends StockItem
     /** กรองตามสถานะยอดเทียบ Min/Max: below = ต่ำกว่ากำหนด, above = มากกว่ากำหนด (ใช้ได้เมื่อเลือกคลัง) */
     public $balance_status;
 
+    /** กรองจำนวนคงเหลือ: ยอดตั้งแต่ (>=) ใช้ได้เมื่อเลือกคลัง */
+    public $balance_min;
+
+    /** กรองจำนวนคงเหลือ: ยอดไม่เกิน (<=) ใช้ได้เมื่อเลือกคลัง */
+    public $balance_max;
+
     /**
      * {@inheritdoc}
      */
@@ -27,7 +33,7 @@ class StockItemSearch extends StockItem
         return [
             [['id','is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['item_code', 'item_name', 'ref', 'data_json','category_id','q', 'warehouse_id', 'balance_status'], 'safe'],
-            [['min_qty', 'max_qty'], 'number'],
+            [['min_qty', 'max_qty', 'balance_min', 'balance_max'], 'number'],
         ];
     }
 
@@ -88,8 +94,11 @@ class StockItemSearch extends StockItem
 
         $warehouseId = $this->warehouse_id ? (int) $this->warehouse_id : 0;
         $balanceStatus = $this->balance_status === 'below' || $this->balance_status === 'above' ? $this->balance_status : '';
+        $balanceMin = $this->balance_min !== null && $this->balance_min !== '' ? (float) $this->balance_min : null;
+        $balanceMax = $this->balance_max !== null && $this->balance_max !== '' ? (float) $this->balance_max : null;
+        $needBalanceJoin = $warehouseId > 0 && ($balanceStatus !== '' || $balanceMin !== null || $balanceMax !== null);
 
-        if ($warehouseId > 0 && $balanceStatus !== '') {
+        if ($needBalanceJoin) {
             $balanceSubQuery = (new Query())
                 ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
                 ->from(StockBalance::tableName())
@@ -99,9 +108,15 @@ class StockItemSearch extends StockItem
             if ($balanceStatus === 'below') {
                 $query->andWhere('stock_item.min_qty IS NOT NULL AND stock_item.min_qty > 0')
                     ->andWhere('COALESCE(b.balance_qty, 0) < stock_item.min_qty');
-            } else {
+            } elseif ($balanceStatus === 'above') {
                 $query->andWhere('stock_item.max_qty IS NOT NULL AND stock_item.max_qty > 0')
                     ->andWhere('COALESCE(b.balance_qty, 0) > stock_item.max_qty');
+            }
+            if ($balanceMin !== null) {
+                $query->andWhere('COALESCE(b.balance_qty, 0) >= :bal_min', [':bal_min' => $balanceMin]);
+            }
+            if ($balanceMax !== null) {
+                $query->andWhere('COALESCE(b.balance_qty, 0) <= :bal_max', [':bal_max' => $balanceMax]);
             }
         }
 

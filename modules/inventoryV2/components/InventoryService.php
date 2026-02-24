@@ -155,4 +155,43 @@ class InventoryService
             throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));
         }
     }
+
+    /**
+     * ปรับยอดคงเหลือโดยตรง (ใช้กับเอกสารประเภท ADJUST)
+     * @param string $itemCode รหัสพัสดุ
+     * @param int $warehouseId คลัง
+     * @param string $lotNumber เลข Lot (เช่น 'ADJUST')
+     * @param float $delta จำนวนที่เพิ่ม (+) หรือลด (-)
+     */
+    public static function adjustBalance($itemCode, $warehouseId, $lotNumber, $delta)
+    {
+        $lot = !empty($lotNumber) ? $lotNumber : '-';
+
+        $balance = StockBalance::findOne([
+            'item_code' => $itemCode,
+            'warehouse_id' => $warehouseId,
+            'lot_number' => $lot,
+        ]);
+
+        if (!$balance) {
+            $balance = new StockBalance([
+                'item_code' => $itemCode,
+                'warehouse_id' => $warehouseId,
+                'lot_number' => $lot,
+                'balance_qty' => 0,
+            ]);
+        }
+
+        $balance->balance_qty += (float) $delta;
+        // Lot ADJUST อนุญาตให้ยอดติดลบได้ (กรณีตรวจนับแล้วยอดจริงน้อยกว่าระบบ)
+        if ($balance->balance_qty < 0 && $lot !== 'ADJUST') {
+            throw new \Exception("ยอดคงเหลือหลังปรับจะติดลบ (พัสดุ {$itemCode} Lot {$lot})");
+        }
+
+        $balance->updated_at = time();
+        $balance->updated_by = Yii::$app->user->id;
+        if (!$balance->save()) {
+            throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));
+        }
+    }
 }

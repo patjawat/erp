@@ -12,6 +12,7 @@ use app\components\ApproveHelper;
     $totalStock = $notify['stock']['total'];
     $totalDevelopment = $notify['development']['total'];
     $totalAssetMove = $notify['assetMove']['total'];
+    $totalCheckin = $notify['checkin']['total'];
     ?>
 
 <?php //  $this->render('@app/modules/approveV2/views/default/card_summary') ?>
@@ -71,6 +72,16 @@ use app\components\ApproveHelper;
              <?php if($totalAssetMove > 0):?>
                 <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
                     <?=$totalAssetMove?>
+                  </span>
+            <?php endif;?>
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/checkin']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'checkin' ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="clock"></i>
+         ลงเวลา
+             <?php if(!empty($totalCheckin) && $totalCheckin > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?= $totalCheckin ?>
                   </span>
             <?php endif;?>
      </a>

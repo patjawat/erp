@@ -38,11 +38,12 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
                     ]) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'order_date', ['labelOptions' => ['label' => 'วันที่ขอเบิก']])->textInput([
-                        'class' => 'form-control',
-                        'id' => 'requisition-order_date',
-                        'placeholder' => 'เลือกวันที่',
-                        'value' => $model->order_date ? AppHelper::convertToThai($model->order_date) : '',
+                    <?= $form->field($model, 'order_date', ['labelOptions' => ['label' => 'วันที่ขอเบิก']])->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                        'options' => [
+                            'id' => 'requisition-order_date',
+                            'placeholder' => 'เลือกวันที่',
+                            'value' => $model->order_date ? AppHelper::convertToThai($model->order_date) : '',
+                        ],
                     ]) ?>
                 </div>
             </div>
@@ -150,7 +151,7 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
 </table>
 
 <?php
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
+\app\assets\TomSelectAsset::register($this);
 $this->registerCss(<<<CSS
 .ts-dropdown { z-index: 1060 !important; }
 .requisition-form #item-table td:first-child { overflow: visible; position: relative; }
@@ -158,7 +159,6 @@ $this->registerCss(<<<CSS
 .requisition-form #item-table .ts-control { min-height: 38px; }
 CSS
 );
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
 $itemsBelowMaxUrl = Url::to(['/inventory-v2/requisition/items-below-max']);
@@ -417,9 +417,6 @@ $('#requisition-form').on('beforeSubmit', function(e) {
     });
     return false;
 });
-if (typeof thaiDatepicker === 'function') {
-    thaiDatepicker('#requisition-order_date');
-}
 JS;
 $this->registerJs($script);
 ?>

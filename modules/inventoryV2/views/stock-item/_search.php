@@ -98,6 +98,22 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
         ])->label(false) ?>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
+        <?= $form->field($model, 'balance_min', ['options' => ['class' => 'mb-0']])->textInput([
+            'type' => 'number',
+            'step' => 'any',
+            'placeholder' => 'ยอดตั้งแต่ (≥) เช่น 2',
+            'class' => 'form-control',
+        ])->label(false) ?>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <?= $form->field($model, 'balance_max', ['options' => ['class' => 'mb-0']])->textInput([
+            'type' => 'number',
+            'step' => 'any',
+            'placeholder' => 'ยอดไม่เกิน (≤) เช่น 10',
+            'class' => 'form-control',
+        ])->label(false) ?>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
         <?= $form->field($model, 'category_id', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
             'data' => $model->ListStockItemType(),
             'options' => ['placeholder' => 'หมวดหมู่'],

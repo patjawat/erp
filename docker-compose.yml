@@ -65,18 +65,6 @@ services:
       # - ./docker/mysql_dansai8.0/data:/var/lib/mysql
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  demo:
-    image: patjawat/erp:demo
-    container_name: demo
-    platform: linux/amd64
-    volumes:
-      - ./modules/filemanager/fileupload:/app/modules/filemanager/fileupload
-    env_file:
-      - ./.env
-    ports:
-      - "81:80"
-
   phpmyadmin_mysql:
     image: phpmyadmin
     container_name: ${CONTAINER_NAME}_pma
@@ -98,23 +86,6 @@ services:
     volumes:
       - ./docker/databasus-data:/databasus-data
     restart: unless-stopped
-
-  # Ollama สำหรับ AI สรุปเนื้อหา PDF (DMS)
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./docker/ollama-data:/root/.ollama
-    restart: unless-stopped
-    networks:
-      - web-network
-    # รันแบบไม่มี GPU ก็ได้ (ใช้ CPU)
-    deploy:
-      resources:
-        limits:
-          memory: 4G
 
 networks:
   web-network:

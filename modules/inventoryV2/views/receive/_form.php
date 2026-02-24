@@ -29,9 +29,8 @@ foreach ($items as $it) {
     }
 }
 
-// ใส่ใน View ไฟล์เดิมของคุณ
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
+\app\assets\TomSelectAsset::register($this);
+\app\widgets\datepicker\Assets::register($this);
 ?>
 
 <div class="container-fluid py-4 receive-form">
@@ -61,11 +60,13 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                             : $model->order_date;
                     }
                     ?>
-                    <?= $form->field($model, 'order_date')->textInput([
-                        'class' => 'form-control',
-                        'id' => 'stockorder-order_date',
-                        'placeholder' => 'วว/ดด/พพพพ',
-                        'value' => $orderDateDisplay,
+                    <?= $form->field($model, 'order_date')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                        'options' => [
+                            'class' => 'form-control',
+                            'id' => 'stockorder-order_date',
+                            'placeholder' => 'วว/ดด/พพพพ',
+                            'value' => $orderDateDisplay,
+                        ],
                     ])->label('วันที่รับเข้า') ?>
                 </div>
                 <div class="col-md-3">
@@ -174,7 +175,14 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
                                     </td>
                                     <td class="text-muted small"><?= $item->item && $item->item->categoryType ? Html::encode($item->item->categoryType->title) : '-' ?></td>
                                     <td><input type="text" name="StockDetail[<?= $index ?>][lot_number]" class="form-control" value="<?= $item->lot_number ?>" placeholder="กรอกหรือกำหนดเอง"></td>
-                                    <td><input type="date" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control" value="<?= $item->expiry_date ?>"></td>
+                                    <?php
+                                    $expiryDisplay = '';
+                                    if (!empty($item->expiry_date)) {
+                                        $t = strtotime($item->expiry_date);
+                                        $expiryDisplay = date('d/m/', $t) . (date('Y', $t) + 543);
+                                    }
+                                    ?>
+                                    <td><input type="text" id="expiry-date-<?= $index ?>" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control expiry-date-thai" value="<?= Html::encode($expiryDisplay) ?>" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
                                     <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="0.01" step="0.01"></td>
                                     <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" step="0.01"></td>
                                     <td class="text-end fw-bold row-total"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
@@ -254,7 +262,10 @@ $msgSaveError = json_encode('ไม่สามารถบันทึกข้
 $msgError = json_encode('ผิดพลาด');
 $js = <<< JS
     $(document).ready(function() {
-    thaiDatepicker('#stockorder-order_date');
+    // วันหมดอายุ: ใช้ Thai datepicker (วว/ดด/พ.ศ.)
+    $('.expiry-date-thai').each(function() {
+        if (this.id && typeof thaiDatepicker === 'function') thaiDatepicker('#' + this.id);
+    });
 
     // เลขที่ใบรับเข้า: บังคับกรอกเฉพาะเมื่อประเภทการรับเข้า = จัดซื้อ (PO)
     function toggleOrderNoRequired() {
@@ -504,7 +515,25 @@ $js = <<< JS
             $('#receipt-form').trigger('submit');
         });
 
+        // แปลงวันหมดอายุจาก รูปแบบไทย (วว/ดด/พ.ศ.) เป็น Y-m-d ก่อนส่งฟอร์ม
+        function convertExpiryThaiToYmd(val) {
+            if (!val || typeof val !== 'string') return '';
+            var p = val.trim().split(/[\/\-]/);
+            if (p.length !== 3) return val;
+            var d = parseInt(p[0], 10); var m = parseInt(p[1], 10); var y = parseInt(p[2], 10) - 543;
+            if (isNaN(d) || isNaN(m) || isNaN(y) || y < 1900) return val;
+            var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            return y + '-' + pad(m) + '-' + pad(d);
+        }
+        function applyExpiryConvert() {
+            $('.expiry-date-thai').each(function() {
+                var v = $(this).val();
+                if (v) $(this).val(convertExpiryThaiToYmd(v));
+            });
+        }
+
         $('#receipt-form').on('beforeSubmit', function(e) {
+            applyExpiryConvert();
             var isDraft = $('#save_as_draft').val() === '1';
             if (!isDraft) {
                 // เช็คก่อนว่ามีรายการในตารางไหม (เฉพาะเมื่อบันทึกรับเข้าจริง)
@@ -819,7 +848,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
         '<td class="text-muted small">' + typeLabel + '</td>' +
         '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
-        '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control"></td>' +
+        '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
         '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="0.01"></td>' +
         '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" step="0.01"></td>' +
         '<td class="text-end fw-bold row-total">0.00</td>' +
@@ -827,6 +856,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '</tr>';
 
     $('#detail-body').append(row);
+    if (typeof thaiDatepicker === 'function') thaiDatepicker('#expiry-date-' + currentIndex);
 
     reOrder(); // รันเลขลำดับ 1, 2, 3 ใหม่
     calculateTotal();
@@ -1051,6 +1081,14 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             });
         }
 
+        function ymdToThaiDisplay(ymd) {
+            if (!ymd || ymd.length < 10) return '';
+            var y = parseInt(ymd.substring(0, 4), 10);
+            var m = parseInt(ymd.substring(5, 7), 10);
+            var d = parseInt(ymd.substring(8, 10), 10);
+            var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            return pad(d) + '/' + pad(m) + '/' + (y + 543);
+        }
         function addCSVItemsToTable(items) {
             $('#emptyRow').hide();
             var currentIndex = $('.item-row').length;
@@ -1058,6 +1096,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 
             items.forEach(function(item, i) {
                 var expiryDateInput = item.expiry_date ? item.expiry_date.substring(0, 10) : '';
+                var expiryDisplay = expiryDateInput ? ymdToThaiDisplay(expiryDateInput) : '';
                 var unitValue = item.unit_name || '-';
                 var lotVal = useAutoLot ? getAutoLotNumber(currentIndex + i) : (item.lot_number || '');
                 var row = '<tr class="item-row">' +
@@ -1066,13 +1105,14 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
                     '<td class="text-muted small">' + (item.category_title || '-') + '</td>' +
                     '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
-                    '<td><input type="date" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control" value="' + expiryDateInput + '"></td>' +
+                    '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" value="' + (expiryDisplay || '') + '" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
                     '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="0.01" step="0.01"></td>' +
                     '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" step="0.01"></td>' +
                     '<td class="text-end fw-bold row-total">' + ((item.qty || 0) * (item.unit_price || 0)).toFixed(2) + '</td>' +
                     '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
                     '</tr>';
                 $('#detail-body').append(row);
+                if (typeof thaiDatepicker === 'function') thaiDatepicker('#expiry-date-' + currentIndex);
                 currentIndex++;
             });
 

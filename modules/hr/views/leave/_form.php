@@ -83,8 +83,12 @@ $resultsJs = <<<JS
 
                 <div class="d-flex justify-content-between gap-3">
                     <div class="w-50">
-                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่']); ?>
-                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่']); ?>
+                        <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                        ]); ?>
+                        <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                        ]); ?>
                     </div>
                     <div class="w-50">
                         <?= $form->field($model, 'date_start_type')->widget(Select2::classname(), [
@@ -316,7 +320,6 @@ $js = <<<JS
 
         calDays()
         // ตรวจสอบเบื้องต้นตอนโหลดหน้าเว็บ
-        thaiDatepicker('#leave-date_start,#leave-date_end')
 
         function toggleDateEndType() {
             let dateStart = \$('#leave-date_start').val();

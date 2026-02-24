@@ -9,8 +9,7 @@ use yii\widgets\ActiveForm;
 /* @var $model app\models\StockOrder */
 /* @var $form yii\widgets\ActiveForm */
 // ใส่ใน View ไฟล์เดิมของคุณ
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
+\app\assets\TomSelectAsset::register($this);
 ?>
 
 <div class="container-fluid py-4">

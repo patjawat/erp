@@ -24,9 +24,6 @@ if (isset($counts) && is_array($counts)) {
         $countAnnounce = 0;
     }
 }
-
-
-$layout = app\components\SiteHelper::getInfo()['layout'];
 ?>
 
 

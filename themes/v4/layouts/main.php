@@ -213,12 +213,49 @@ AppAsset::register($this);
     /* .page-content-wrapper .page-title-box {
             background-color: rgba(var(--bs-primary-rgb), 0.11);
         } */
+
+    /* Global loading - modern indeterminate bar + pill */
+    #erp-global-loading {
+        z-index: 9999;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    #erp-global-loading.erp-loading-hidden {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+    }
+    #erp-global-loading .erp-loading-bar {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(var(--bs-primary-rgb), 0.4), var(--bs-primary), rgba(var(--bs-primary-rgb), 0.4), transparent);
+        background-size: 200% 100%;
+        animation: erp-loading-bar 1.2s ease-in-out infinite;
+    }
+    @keyframes erp-loading-bar {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    #erp-global-loading .erp-loading-pill {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
 </style>
 <?php $this->head() ?>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
     <?php $this->beginBody() ?>
+
+    <!-- Global loading: แสดงตั้งแต่โหลดหน้า (รวม reload) จนถึง pjax/full page พร้อม -->
+    <div id="erp-global-loading" class="position-fixed top-0 start-0 end-0" role="status" aria-live="polite" aria-label="กำลังโหลด">
+        <div class="erp-loading-bar rounded-0" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="position-fixed top-0 start-50 translate-middle-x mt-3">
+            <span class="erp-loading-pill d-inline-flex align-items-center gap-2 rounded-pill bg-white bg-opacity-95 text-dark border border-opacity-10 shadow px-3 py-2 small fw-medium">
+                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                <span>กำลังโหลด...</span>
+            </span>
+        </div>
+    </div>
 
     <?php echo $this->render('modal'); ?>
     <?php echo $this->render('sub_modal'); ?>
@@ -264,13 +301,15 @@ AppAsset::register($this);
     <?php
     $pwaBaseUrl = rtrim(Yii::getAlias('@web'), '/');
     $pwaBaseUrlJs = json_encode($pwaBaseUrl);
-    $pwaIconUrl = json_encode(Yii::getAlias('@web') . '/images/logo_new.png');
+    $pwaIconUrl = json_encode($pwaBaseUrl . '/images/logo_new.png');
     $this->registerJs('window.ERP_PWA_BASE=' . $pwaBaseUrlJs . ';window.ERP_PWA_ICON=' . $pwaIconUrl . ';', View::POS_HEAD);
     $js = <<<'JS'
     function erpLucideIcons() { if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }
     erpLucideIcons();
     window.addEventListener('load', erpLucideIcons);
     AOS.init({});
+    if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading();
+    document.addEventListener('DOMContentLoaded', function () { if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading(); });
 
     var erpInstallPrompt = null;
     var installBtn = document.getElementById('erp-install-pwa');
@@ -346,6 +385,53 @@ AppAsset::register($this);
         }
     };
     document.getElementById('erp-test-notification') && document.getElementById('erp-test-notification').addEventListener('click', function () { erpTestNotification(); });
+
+    // PWA แจ้งเตือนจากโมดูล notify (poll ทุก 60 วินาที)
+    (function () {
+        var POLL_INTERVAL_MS = 60000;
+        var STORAGE_KEY = 'erp_notify_last_id';
+        function getNotifyPollUrl() {
+            var base = (window.ERP_PWA_BASE || '').replace(/\/$/, '');
+            return (base || '') + '/notify/default/poll';
+        }
+        function pollNotify() {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            var lastId = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+            var url = getNotifyPollUrl() + '?last_id=' + lastId;
+            fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res || !res.items || !res.items.length) {
+                        if (res && res.last_id) localStorage.setItem(STORAGE_KEY, String(res.last_id));
+                        return;
+                    }
+                    var iconUrl = (window.ERP_PWA_ICON || '') || (window.ERP_PWA_BASE || '') + '/images/logo_new.png';
+                    var showOne = function (item, index) {
+                        var opts = { body: item.type_label || 'แจ้งเตือน', icon: iconUrl, tag: 'erp-notify-' + item.id, data: { url: item.url || ((window.ERP_PWA_BASE || '') + '/notify/default/view?id=' + item.id) } };
+                        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                            navigator.serviceWorker.ready.then(function (reg) {
+                                reg.showNotification(item.title || 'แจ้งเตือน', opts);
+                            });
+                        } else if (typeof Notification !== 'undefined') {
+                            new Notification(item.title || 'แจ้งเตือน', opts);
+                        }
+                    };
+                    for (var i = 0; i < res.items.length; i++) showOne(res.items[i], i);
+                    localStorage.setItem(STORAGE_KEY, String(res.last_id || lastId));
+                })
+                .catch(function () {});
+        }
+        if (window.ERP_PWA_BASE && 'Notification' in navigator) {
+            if (Notification.permission === 'granted') {
+                setTimeout(pollNotify, 3000);
+                setInterval(pollNotify, POLL_INTERVAL_MS);
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(function (p) {
+                    if (p === 'granted') { setTimeout(pollNotify, 2000); setInterval(pollNotify, POLL_INTERVAL_MS); }
+                });
+            }
+        }
+    })();
 
 			// });
          	$('header .dropdown-mega').on('show.bs.dropdown', function () {

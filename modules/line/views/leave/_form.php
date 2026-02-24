@@ -149,8 +149,12 @@ $resultsJs = <<< JS
         
         <!-- Step 1: Personal Details -->
         <div class="form-step active">
-            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10']); ?>
-                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่','class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10']); ?>
+            <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                'options' => ['placeholder' => 'เลือกวันที่', 'class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10'],
+            ]); ?>
+                <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                'options' => ['placeholder' => 'เลือกวันที่', 'class' => 'form-control form-control-lg rounded-pill border-0 bg-secondary bg-opacity-10'],
+            ]); ?>
           <button type="button" class="btn btn-primary next-step">Next</button>
         </div>
 
@@ -508,9 +512,6 @@ $js = <<< JS
     // Example: alert('Form submitted successfully!');
     });
 
-
-
-      thaiDatepicker('#leave-date_start,#leave-date_end')
 
 
       \$('#form-elave').on('beforeSubmit', function (e) {

@@ -84,7 +84,9 @@ try {
                     ?>
 
 
-                            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''])->label('วันที่') ?>
+                            <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                'options' => ['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''],
+                            ])->label('วันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
                         </div>
@@ -235,7 +237,6 @@ $js = <<<JS
         $('#meeting-date_start').on('change', function () {
             $('#meeting-form').yiiActiveForm('validateAttribute', 'meeting-room_id');
         });
-          thaiDatepicker('#meeting-date_start,#meeting-date_end')
 
             \$('#meeting-room_id').on('change', function() {
               \$.ajax({

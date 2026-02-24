@@ -135,7 +135,7 @@ if (!empty($upcomingHealth)): ?>
                         <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="heart" style="color: #fca5a5; fill: #fca5a5;" class="lucide lucide-heart">
                                 <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>
-                            </svg><span>ได้รับคำชมแล้ว: <span class="fw-black">0 ครั้ง</span></span>
+                            </svg><span>ได้รับคำชมแล้ว: <span class="fw-black"><?= (int) ($appreciationReceivedCount ?? 0) ?> ครั้ง</span></span>
                         </div>
                         <?php if($me->healthData()['result']):?>
                         <a href="<?= Url::to(['/me/health/view','id' => $me->healthData()['id']])?>" class="open-modal d-flex align-items-center px-3 py-2 rounded-pill text-decoration-none shadow-sm" data-size="modal-xl" style="background: #ffffff; color: #2563eb;">
@@ -146,17 +146,25 @@ if (!empty($upcomingHealth)): ?>
                     </div>
                 </div>
 
+                <?php $todayCheckinCount = isset($todayCheckinCount) ? (int)$todayCheckinCount : 0; ?>
                 <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
                     style="min-width: 180px; backdrop-filter: blur(12px);">
                     <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
                             <path d="M12 6v6l4 2"></path>
                             <circle cx="12" cy="12" r="10"></circle>
-                        </svg> บันทึกเวลาเข้างาน</p>
-                    <span id="current-time" class="text-white fw-black mb-4 lh-1" style="font-size: 2.25rem; letter-spacing: -0.05em;">00:00:00</span>
-                    <button id="btn-clock-in" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">Check-in <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
+                        </svg> ลงเวลาเข้า-ออก</p>
+                    <span id="current-time" class="text-white fw-black mb-2 lh-1 d-block" style="font-size: 2.75rem; letter-spacing: 0.02em;">00:00:00</span>
+                    <p class="text-white text-opacity-90 small mb-2">ลงเวลาแล้ว <span id="today-checkin-count" class="fw-bold"><?= $todayCheckinCount ?></span> ครั้งวันนี้</p>
+                    <div class="d-flex gap-2 mb-3 w-100">
+                        <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1 active bg-white bg-opacity-25" data-check-type="in">เข้า</button>
+                        <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1" data-check-type="out">ออก</button>
+                    </div>
+                    <button id="btn-clock-in" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;"><span id="me-btn-checkin-label">ลงเวลาเข้า</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
                             <path d="M7 7h10v10"></path>
                             <path d="M7 17 17 7"></path>
                         </svg></button>
+                    <a href="<?= Url::to(['/attendance/default/checkin']) ?>" class="text-white text-opacity-75 small text-decoration-none mt-2">ลงเวลาแบบเต็ม</a>
+                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-1">ประวัติลงเวลา</a>
                 </div>
             </div>
         </div>
@@ -270,18 +278,14 @@ if (!empty($upcomingHealth)): ?>
     <div class="col-12 col-xl-3">
         <div class="row g-2">
             <div class="col-6">
-
-
-                <div
-                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                     <a href="<?= Url::to(['/me/leave']) ?>">
-                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                            style="width: 42px; height: 42px;">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">ระบบลา</span></div>
+                    </a>
                 </div>
-                </a>
             </div>
             <div class="col-6">
                 <a href="<?= Url::to(['/me/repair-v2']) ?>">
@@ -451,8 +455,10 @@ if (!empty($upcomingHealth)): ?>
                     </h4>
                     <p class="fw-medium px-2 mb-3" style="color: #64748b; font-size: 0.75rem;">คำชื่นชมเล็กๆ น้อยๆ
                         ช่วยสร้างกำลังใจอันยิ่งใหญ่ให้เพื่อนร่วมงานของเราได้นะครับ</p>
-                    <button class="btn fw-black shadow-sm hover-scale"
-                        style="background-color: #4f46e5; color: white; border-radius: 12px; font-size: 0.75rem; padding: 10px 24px;">เริ่มส่งคำขอบคุณเลย</button>
+                    <div class="d-flex gap-2 flex-wrap justify-content-center">
+                        <?= Html::a('เริ่มส่งคำขอบคุณเลย', ['/appreciation/default/create'], ['class' => 'btn fw-black shadow-sm hover-scale', 'style' => 'background-color: #4f46e5; color: white; border-radius: 12px; font-size: 0.75rem; padding: 10px 24px;']) ?>
+                        <?= Html::a('ดูฟีด', ['/appreciation/default/index'], ['class' => 'btn btn-outline-primary fw-bold', 'style' => 'border-radius: 12px; font-size: 0.75rem;']) ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -514,6 +520,7 @@ if (!empty($upcomingHealth)): ?>
 
 $documentUrl = Url::to(['/me/documents/show-home']);
 $urlUpload = Url::to(["/filemanager/uploads/single"]);
+$checkinSaveUrl = Url::to(['/attendance/default/save']);
 $ref = $me->ref;
 $userId = $me->id;
 
@@ -563,11 +570,51 @@ $js = <<< JS
     // ตั้งเวลาให้ทำงานทุกๆ 1 วินาที
     setInterval(updateClock, 1000);
     
-    // โบนัส: คลิกปุ่ม Check-in แล้วแสดง Alert เวลาที่กด
-    $('#btn-clock-in').on('click', function() {
-        const timeAtClick = $('#current-time').text();
-        alert('บันทึกเวลาเข้างานสำเร็จที่เวลา: ' + timeAtClick);
+    // Check-in: เรียก API บันทึกเวลาเข้า/ออก (หัวหน้าอนุมัติภายหลัง)
+    var checkinSaveUrl = "$checkinSaveUrl";
+    var meCheckType = 'in';
+
+    $('.me-check-type-btn').on('click', function() {
+        meCheckType = $(this).data('check-type');
+        $('.me-check-type-btn').removeClass('active bg-white bg-opacity-25').addClass('text-white');
+        $(this).addClass('active bg-white bg-opacity-25').removeClass('text-white');
+        $('#me-btn-checkin-label').text(meCheckType === 'in' ? 'ลงเวลาเข้า' : 'ลงเวลาออก');
     });
+
+    $('#btn-clock-in').on('click', function() {
+        var \$btn = $(this);
+        \$btn.prop('disabled', true);
+        var payload = { method: 'manual', check_type: meCheckType };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(p) {
+                    payload.lat = p.coords.latitude;
+                    payload.lng = p.coords.longitude;
+                    doCheckin(payload, \$btn);
+                },
+                function() { doCheckin(payload, \$btn); },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        } else {
+            doCheckin(payload, \$btn);
+        }
+    });
+
+    function doCheckin(payload, \$btn) {
+        $.post(checkinSaveUrl, payload).then(function(res) {
+            if (res.success) {
+                var \$cnt = $('#today-checkin-count');
+                \$cnt.text(parseInt(\$cnt.text(), 10) + 1);
+                alert(res.message || 'บันทึกสำเร็จ');
+            } else {
+                alert(res.message || 'บันทึกไม่สำเร็จ');
+            }
+        }).fail(function() {
+            alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+        }).always(function() {
+            \$btn.prop('disabled', false);
+        });
+    }
     });
     
 // --- ส่วนงานอัปโหลดรูปภาพ ---

@@ -151,8 +151,8 @@ $config = [
         'request' => [
             'cookieValidationKey' => 'UDNVjHYuFN4F2HiYRvQjPXW-kbcki6C8',
             'parsers' => [
-            'application/json' => 'yii\web\JsonParser',
-        ]
+                'application/json' => 'yii\web\JsonParser',
+            ]
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',

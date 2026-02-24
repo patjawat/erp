@@ -1,42 +1,77 @@
 
 
+// --- Global loading (ใช้ทั้ง pjax และ full page) ---
+function erpShowPageLoading() {
+  var el = document.getElementById("erp-global-loading");
+  if (el) el.classList.remove("erp-loading-hidden");
+}
+function erpHidePageLoading() {
+  var el = document.getElementById("erp-global-loading");
+  if (el) el.classList.add("erp-loading-hidden");
+}
+window.erpShowPageLoading = erpShowPageLoading;
+window.erpHidePageLoading = erpHidePageLoading;
+
+jQuery(document).on("pjax:send", function () {
+  erpShowPageLoading();
+});
 jQuery(document).on("pjax:start", function () {
+  erpShowPageLoading();
   const el = document.getElementById("offcanvasRight");
   if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
-  console.log("pjax start");
 });
-
 jQuery(document).on("pjax:end", function () {
-  tableLoading1.style.display = "none";
+  erpHidePageLoading();
+  
   if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
-  // ตัวอย่าง: รีโหลด Offcanvas
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
   if (offcanvasElList.length > 0) {
-    var offcanvasList = offcanvasElList.map(function (offcanvasEl) {
+    offcanvasElList.map(function (offcanvasEl) {
       return new bootstrap.Offcanvas(offcanvasEl);
     });
   }
 });
+jQuery(document).on("pjax:complete", function () {
+  erpHidePageLoading();
+});
+
+// แสดง loading เมื่อคลิกลิงก์ที่นำไปหน้าใหม่ (full page)
+$(document).on("click", "a[href]", function () {
+  var $a = $(this);
+  if ($a.attr("target") === "_blank") return;
+  if ($a.hasClass("open-modal") || $a.hasClass("open-modal-fullscreen")) return;
+  if ($a.data("pjax") === false || $a.data("pjax") === 0) return;
+  var href = ($a.attr("href") || "").trim();
+  if (!href || href === "#" || href.indexOf("javascript:") === 0) return;
+  try {
+    var sameOrigin = new URL(href, location.origin).origin === location.origin;
+    if (sameOrigin) erpShowPageLoading();
+  } catch (e) {}
+});
+
+// ซ่อน loading เมื่อโหลดหน้าเสร็จ (ทั้งเปิดหน้าแรกและหลัง full page)
+$(window).on("load", function () {
+  erpHidePageLoading();
+});
 
 // // ฟังก์ชันเลื่อนขึ้นบนสุด
-document.getElementById("btnScrollTop").addEventListener("click", function () {
+var btnScrollTop = document.getElementById("btnScrollTop");
+if (btnScrollTop) btnScrollTop.addEventListener("click", function () {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-
 // // ฟังก์ชันเลื่อนลงล่างสุด
-document
-  .getElementById("btnScrollBottom")
-  .addEventListener("click", function () {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-  });
+var btnScrollBottom = document.getElementById("btnScrollBottom");
+if (btnScrollBottom) btnScrollBottom.addEventListener("click", function () {
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+});
 
 // // แสดงปุ่มเมื่อ scroll ลงมา
 window.addEventListener("scroll", function () {
   const buttons = document.getElementById("scroll-buttons");
-  if (window.scrollY > 100) {
+  if (buttons && window.scrollY > 100) {
     buttons.style.display = "block";
-  } else {
+  } else if (buttons) {
     buttons.style.display = "none";
   }
 });
@@ -360,6 +395,9 @@ $("body").on("click", ".open-modal", function (e) {
                  .addClass(size);
             
             modal.modal("show");
+            if (response.initCallback && typeof window[response.initCallback] === "function") {
+                try { window[response.initCallback](); } catch (err) { console.warn("initCallback error", err); }
+            }
         },
         error: function (xhr) {
             // จัดการ error เหมือนเดิม

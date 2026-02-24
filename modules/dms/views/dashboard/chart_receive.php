@@ -67,6 +67,8 @@ $data = Json::encode($chartSummary);
 
 
 $js = <<< JS
+  (function(){
+    function renderCharts() {
   var orderOptions = {
     series: [
             { name: "จำนวน", data: $data },
@@ -200,9 +202,13 @@ $js = <<< JS
   // Render Donut Chart
   var donutTypeChart = new ApexCharts(document.querySelector("#donut-type-chart"), donutTypeOptions);
   donutTypeChart.render();
-  
-
-   
+    }
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(renderCharts, { timeout: 300 });
+    } else {
+      setTimeout(renderCharts, 0);
+    }
+  })();
   JS;
 $this->registerJS($js, View::POS_END);
 ?>

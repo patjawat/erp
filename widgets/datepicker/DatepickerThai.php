@@ -3,12 +3,40 @@ namespace app\widgets\datepicker;
 
 use yii\web\View;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\widgets\InputWidget;
 
+/**
+ * Widget สำหรับช่องวันที่รูปแบบไทย (พ.ศ.) ใช้ web/js/thai.datepicker.js
+ *
+ * ตัวอย่าง (กับ model):
+ * echo \app\widgets\datepicker\DatepickerThai::widget([
+ *     'model' => $model,
+ *     'attribute' => 'date_start',
+ * ]);
+ *
+ * ตัวอย่าง (ไม่มี model):
+ * echo \app\widgets\datepicker\DatepickerThai::widget([
+ *     'name' => 'order_date',
+ *     'value' => date('d/m/Y'),
+ * ]);
+ *
+ * หลายช่องใน selector เดียว (ใช้ clientOptions['selector']):
+ * echo \app\widgets\datepicker\DatepickerThai::widget([
+ *     'model' => $model,
+ *     'attribute' => 'date_start',
+ *     'clientOptions' => ['selector' => '#leave-date_start,#leave-date_end'],
+ * ]);
+ */
 class DatepickerThai extends InputWidget
 {
+    /** @var array options สำหรับ input (id, class, placeholder ฯลฯ) */
     public $options = [];
+
+    /**
+     * ถ้ากำหนด selector จะใช้แทน #id ของ input นี้ (สำหรับ bind หลาย input กับ thaiDatepicker ตัวเดียว)
+     * @var array เช่น ['selector' => '#leave-date_start,#leave-date_end']
+     */
+    public $clientOptions = [];
 
     public function init()
     {
@@ -26,34 +54,10 @@ class DatepickerThai extends InputWidget
             echo Html::textInput($this->name, $this->value, $this->options);
         }
 
-        $options = "";
-        if (!empty($this->options)) {
-            $options .= "{\n";
-            foreach ((array) $this->options as $key => $value) {
-                if (is_array($value)) {
-                    $values = [];
-                    foreach ($value as $_key => $_value) {
-                        if (is_int($_value) || is_float($_value)) {
-                            $values[] = $_value; // хотя по факту не нужно, используется только для передачи дат
-                        } else {
-                            $values[] = "'{$_value}'";
-                        }
-                    }
-                    $value = "[" . implode(', ', $values) . "]";
-                    $options .= "    {$key}: {$value},\n";
-                } elseif (is_int($value) || is_float($value)) {
-                    $options .= "    {$key}: {$value},\n";
-                } else {
-                    $options .= "    {$key}: '{$value}',\n";
-                }
-            }
-            $options .= "}\n";
-        }
-        // thaiDatepicker('#leave-date_start,#leave-date_end')
-        $JavaScript = "thaiDatepicker('";
-        $JavaScript .= '#'.$this->options['id'];
-        $JavaScript .= "');";
-
-        $this->getView()->registerJs($JavaScript, View::POS_END);
+        $selector = !empty($this->clientOptions['selector'])
+            ? $this->clientOptions['selector']
+            : '#' . $this->options['id'];
+        $js = "if (typeof thaiDatepicker === 'function') thaiDatepicker(" . json_encode($selector) . ");";
+        $this->getView()->registerJs($js, View::POS_END);
     }
 }

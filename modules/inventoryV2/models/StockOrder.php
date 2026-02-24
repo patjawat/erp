@@ -35,6 +35,7 @@ class StockOrder extends \yii\db\ActiveRecord
     const ORDER_TYPE_IN = 'IN';
     const ORDER_TYPE_OUT = 'OUT';
     const ORDER_TYPE_TRANSFER = 'TRANSFER';
+    const ORDER_TYPE_ADJUST = 'ADJUST';
     const STATUS_DRAFT = 'DRAFT';
     const STATUS_PENDING = 'PENDING';
     const STATUS_APPROVED = 'APPROVED';
@@ -146,6 +147,7 @@ public function getToWarehouse()
             self::ORDER_TYPE_IN => 'IN',
             self::ORDER_TYPE_OUT => 'OUT',
             self::ORDER_TYPE_TRANSFER => 'TRANSFER',
+            self::ORDER_TYPE_ADJUST => 'ADJUST',
         ];
     }
 

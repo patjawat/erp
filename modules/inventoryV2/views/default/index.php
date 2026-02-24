@@ -45,6 +45,14 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
                             </div>
                             <i class="bi bi-chevron-right text-muted"></i>
                         </a>
+                        <a href="<?= Url::to(['/inventory-v2/stock-adjust/index']) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3">
+                            <span class="rounded-3 p-2 bg-info bg-opacity-10 text-info flex-shrink-0"><i class="bi bi-wrench-adjustable fs-5"></i></span>
+                            <div class="flex-grow-1">
+                                <span class="fw-semibold">ปรับยอด stock</span>
+                                <span class="d-block text-muted">เพิ่ม/ลดยอดคงเหลือโดยตรง (ตรวจนับหรือแก้ยอดผิด)</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted"></i>
+                        </a>
                         <a href="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3">
                             <span class="rounded-3 p-2 bg-primary bg-opacity-10 text-primary flex-shrink-0"><i class="bi bi-speedometer2 fs-5"></i></span>
                             <div class="flex-grow-1">

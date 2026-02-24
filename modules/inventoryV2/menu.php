@@ -45,6 +45,10 @@ use yii\helpers\Url;
         <i class="bi bi-box-seam"></i>
         รายการจ่ายพัสดุ
     </a>
+    <a href="<?= Url::to(['/inventory-v2/stock-adjust/index']) ?>" class="btn <?= ($active ?? '') !== 'stock-adjust' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-wrench-adjustable"></i>
+        ปรับยอด stock
+    </a>
     <a href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" class="btn <?= ($active ?? '') !== 'report-material' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-file-earmark-bar-graph"></i>
         สรุปรายงานวัสดุคงคลัง

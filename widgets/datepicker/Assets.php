@@ -4,19 +4,17 @@ namespace app\widgets\datepicker;
 
 use yii\web\AssetBundle;
 
+/**
+ * Asset bundle สำหรับ Thai Datepicker widget
+ * ใช้ thaiDatepicker จาก AppAsset (web/js/thai.datepicker.js) เพื่อไม่โหลดซ้ำ
+ */
 class Assets extends AssetBundle
 {
-	public $sourcePath = '@app/widgets/datepicker';
+    public $js = [];
+    public $css = [];
 
-    public $js = [
-        'dist/thai.datepicker.js',
+    public $depends = [
+        'yii\web\YiiAsset',
+        'app\assets\AppAsset',
     ];
-
-    public $css = [
-        'dist/jquery.datetimepicker.css',
-    ];
-
-	public $depends = [
-		'yii\web\YiiAsset',
-	];
 }

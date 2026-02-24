@@ -14,8 +14,7 @@ $subWarehouseList = ArrayHelper::map(Warehouse::find()->where(['warehouse_type' 
 $this->title = 'สร้างใบเบิกพัสดุใหม่';
 ?>
 
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<?php \app\assets\TomSelectAsset::register($this); ?>
 
 <style>
     /* ปรับแต่งสไตล์ดั้งเดิมให้รองรับ Tom-Select */

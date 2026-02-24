@@ -629,6 +629,13 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => count($this->positions),
             ],
             [
+                'title' => 'คำอธิบายงาน (JD)',
+                'icon' => '<i data-lucide="file-text" class="lucide-icon text-primary"></i>',
+                'name' => 'job_description',
+                'subtitle' => 'Job Description ตามตำแหน่ง แก้ไข/เพิ่มเติมได้',
+                'count' => $this->getJdSectionCount(),
+            ],
+            [
                 'title' => 'ข้อมูลการศึกษา',
                 'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
                 'name' => 'education',
@@ -713,6 +720,19 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
         ];
+    }
+
+    /** จำนวนหัวข้อในคำอธิบายงาน (JD) ของพนักงาน */
+    public function getJdSectionCount()
+    {
+        if (!class_exists(\app\modules\jobdescription\models\JdEmployee::class)) {
+            return 0;
+        }
+        $jd = \app\modules\jobdescription\models\JdEmployee::find()
+            ->where(['emp_id' => $this->id])
+            ->with('sections')
+            ->one();
+        return $jd ? count($jd->sections) : 0;
     }
 
     // คำนำหน้า

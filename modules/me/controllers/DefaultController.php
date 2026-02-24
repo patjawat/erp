@@ -10,6 +10,8 @@ use app\components\UserHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveSearch;
 use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\attendance\models\CheckinRecord;
+use app\modules\appreciation\models\Appreciation;
 
 /**
  * Default controller for the `me` module
@@ -45,10 +47,31 @@ class DefaultController extends Controller
             return $this->redirect(['/me/store-v2/dashboard']);
         }
 
+        $todayCheckinCount = 0;
+        $appreciationReceivedCount = 0;
+        if ($model && $model->id) {
+            try {
+                $todayCheckinCount = CheckinRecord::find()
+                    ->andWhere(['emp_id' => $model->id])
+                    ->andWhere(['>=', 'checkin_at', date('Y-m-d 00:00:00')])
+                    ->andWhere(['<=', 'checkin_at', date('Y-m-d 23:59:59')])
+                    ->count();
+            } catch (\Throwable $e) {
+                $todayCheckinCount = 0;
+            }
+            try {
+                $appreciationReceivedCount = (int) Appreciation::find()->andWhere(['to_emp_id' => $model->id])->count();
+            } catch (\Throwable $e) {
+                $appreciationReceivedCount = 0;
+            }
+        }
+
         return $this->render('index', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'todayCheckinCount' => $todayCheckinCount,
+            'appreciationReceivedCount' => $appreciationReceivedCount,
         ]);
     }
 

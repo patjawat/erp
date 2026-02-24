@@ -157,10 +157,11 @@ AND group_id = 'MATER';
                                             $statusIcon = 'bi-dash-circle';
                                             $statusTitle = 'ยังไม่ได้กำหนด Min/Max';
                                         }
+                                        $numberClass = $bal > 0 ? 'text-dark' : $statusClass;
                                         ?>
-                                        <span class="<?= $statusClass ?>" title="<?= htmlspecialchars($statusTitle) ?>">
-                                            <i class="bi <?= $statusIcon ?> me-1"></i>
-                                            <?= number_format($bal, 2) ?>
+                                        <span title="<?= htmlspecialchars($statusTitle) ?>">
+                                            <i class="bi <?= $statusIcon ?> me-1 <?= $statusClass ?>"></i>
+                                            <span class="fw-bold <?= $numberClass ?>"><?= number_format($bal, 2) ?></span>
                                         </span>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>

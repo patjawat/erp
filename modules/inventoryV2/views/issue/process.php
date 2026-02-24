@@ -4,8 +4,7 @@ use yii\helpers\Url;
 use yii\web\View;
 
 // ลงทะเบียน Tom-select (ถ้ายังไม่ได้ลงใน Asset)
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
+\app\assets\TomSelectAsset::register($this);
 $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Process) - ' . $model->order_no;
 $canProcess = ($model->status === \app\modules\inventoryV2\models\StockOrder::STATUS_APPROVED);
 $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::STATUS_CONFIRMED);

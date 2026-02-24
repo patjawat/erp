@@ -143,6 +143,11 @@ class Approve extends \yii\db\ActiveRecord
         return $this->hasOne(AssetDetail::class, ['id' => 'from_id'])->andOnCondition(['asset_detail.name' => 'asset-move']);
     }
 
+    public function getCheckinRecord()
+    {
+        return $this->hasOne(\app\modules\attendance\models\CheckinRecord::class, ['id' => 'from_id']);
+    }
+
 
 
     // แสดงปีงบประมานทั้งหมด

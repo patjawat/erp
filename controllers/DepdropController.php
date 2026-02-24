@@ -175,20 +175,27 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
-    // บุคลากร
-    public function actionEmployeeById($q = null, $id = null)
+    // บุคลากร (รองรับ exclude_emp_id สำหรับฟอร์มที่ไม่ให้เลือกตัวเอง เช่น คำขอบคุณ)
+    public function actionEmployeeById($q = null, $id = null, $exclude_emp_id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $querys = Employees::find()
-            ->Where(['or', 
-            ['LIKE', 'fname', $q],
-            ['LIKE', 'lname', $q],
-            ])
+        $query = Employees::find()
             ->andWhere(['<>', 'user_id', '0'])
-            ->andWhere(['status' => 1])
-            ->limit(10)
-            ->all();
+            ->andWhere(['status' => 1]);
+
+        $q = trim((string) $q);
+        if ($q !== '') {
+            $query->andWhere(['or',
+                ['LIKE', 'fname', $q],
+                ['LIKE', 'lname', $q],
+            ]);
+        }
+        if ($exclude_emp_id !== null && $exclude_emp_id !== '') {
+            $query->andWhere(['!=', 'id', (int) $exclude_emp_id]);
+        }
+        $query->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->limit(30);
+        $querys = $query->all();
 
         $data = [['id' => '', 'text' => '']];
         foreach ($querys as $model) {

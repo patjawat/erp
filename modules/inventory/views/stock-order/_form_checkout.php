@@ -21,7 +21,7 @@ use app\modules\inventory\models\Warehouse;
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/inventory/stock-in/create-validator']
 ]); ?>
-<?= $form->field($model, 'movement_date')->textInput()->label('วันที่จ่าย'); ?>
+<?= $form->field($model, 'movement_date')->widget(\app\widgets\datepicker\DatepickerThai::class)->label('วันที่จ่าย'); ?>
 
 <div class="form-group mt-3 d-flex justify-content-center gap-2">
     <?= Html::submitButton('<i class="fa-solid fa-circle-check"></i> ตกลง', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
@@ -38,9 +38,6 @@ use app\modules\inventory\models\Warehouse;
 
 <?php
 $js = <<< JS
-
-
-thaiDatepicker('#stockevent-created_at,#stockevent-movement_date')
 
 handleFormSubmit('#form', null, async function(response) {
     if (response.status === 'success') {

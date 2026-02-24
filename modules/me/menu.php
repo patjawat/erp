@@ -20,9 +20,9 @@ $menus = [
 ?>
 
 
-<div class="d-flex gap-2">
-    <a href="<?= Url::to(['/me']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-<i data-lucide="layout-grid"></i>  
+<div class="d-flex flex-wrap gap-2">
+    <a href="<?= Url::to(['/me']) ?>" class="btn <?= ($active ?? '') !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i data-lucide="layout-grid"></i>
         ภาพรวม
     </a>
     <?php if (!Yii::$app->user->can('branch')): ?>
@@ -34,8 +34,6 @@ $menus = [
             </svg>
             รายการที่รออนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary ms-1"> <?= $total ?> </span>
         </a>
-
-
     <?php endif; ?>
 
     <a href="<?= Url::to(['/me/store-v2/dashboard']) ?>" class="btn btn-outline-primary">
@@ -47,6 +45,10 @@ $menus = [
         คลังหน่วยงาน
     </a>
 
+    <a href="<?= Url::to(['/notify/default/index']) ?>" class="btn <?= ($active ?? '') !== 'notify' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i data-lucide="bell"></i>
+        แจ้งเตือน
+    </a>
     <a href="<?= Url::to(['/me/guide']) ?>" class="btn <?= $active !== 'guide' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />

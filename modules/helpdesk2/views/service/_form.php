@@ -98,7 +98,9 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
     </div>
 
     <div class="col-12 col-md-12">
-        <?= $form->field($model, 'request_repair_date')->textInput(['placeholder' => 'เลือกวันที่ต้องการให้ซ่อม'])->label('วันที่ต้องการให้ซ่อม'); ?>
+        <?= $form->field($model, 'request_repair_date')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+            'options' => ['placeholder' => 'เลือกวันที่ต้องการให้ซ่อม'],
+        ])->label('วันที่ต้องการให้ซ่อม'); ?>
     </div>
 
     <div class="col-12">
@@ -134,9 +136,6 @@ $js = <<< JS
      if ($assetNumber) {
         getRepairGroup($assetNumber);
     }
-    
-    thaiDatepicker('#helpdesk-request_repair_date');
-
 
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();

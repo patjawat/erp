@@ -44,9 +44,6 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 $js = <<< JS
 
-
-    thaiDatepicker('#stockevent-created_at,#stockevent-movement_date')
-
     handleFormSubmit('#form', null, async function(response) {
         // await location.reload();
     });

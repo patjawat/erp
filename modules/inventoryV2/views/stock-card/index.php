@@ -3,12 +3,9 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
+use app\widgets\TomSelectWidget;
 
 $this->title = 'Stock Card | บัตรควบคุมพัสดุ';
-
-// ลงทะเบียน Assets สำหรับ Tom-Select
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js');
 ?>
 
 <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -17,9 +14,18 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label small fw-bold text-primary">1. เลือกรายการพัสดุ</label>
-                    <select id="select-item" name="item_code" class="form-select border-0 bg-light rounded-3 shadow-none" required>
-                        <option value="">ค้นหาพัสดุ...</option>
-                    </select>
+                    <?= TomSelectWidget::widget([
+                        'name' => 'item_code',
+                        'id' => 'select-item',
+                        'options' => ['class' => 'form-select border-0 bg-light rounded-3 shadow-none', 'required' => true],
+                        'items' => ['' => 'ค้นหาพัสดุ...'],
+                        'loadUrl' => Url::to(['/inventory-v2/stock-item/item-list']),
+                        'clientOptions' => [
+                            'valueField' => 'item_code',
+                            'labelField' => 'item_name',
+                            'searchField' => ['item_name', 'item_code'],
+                        ],
+                    ]) ?>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-primary">2. คลังสินค้า</label>
@@ -101,18 +107,7 @@ $getStockCardUrl = Url::to(['/inventory-v2/stock-card/get-stock-data']);
 $js = <<< JS
 
 $(document).ready(function() {
-    // 1. ตั้งค่า Tom-Select สำหรับค้นหาพัสดุ
-    let itemSelect = new TomSelect('#select-item', {
-        valueField: 'item_code',
-        labelField: 'item_name',
-        searchField: ['item_name', 'item_code'],
-        load: function(query, callback) {
-            let url = '/inventory-v2/stock-item/item-list?q=' + encodeURIComponent(query);
-            fetch(url).then(r => r.json()).then(j => callback(j.results)).catch(() => callback());
-        }
-    });
-
-    // 2. ฟังก์ชันโหลดข้อมูล Stock Card
+    // โหลดข้อมูล Stock Card
     $('#stock-card-filter').on('submit', function(e) {
         e.preventDefault();
         let formData = $(this).serialize();
