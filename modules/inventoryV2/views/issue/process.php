@@ -146,7 +146,6 @@ $itemsJson = json_encode($items);
 $js = <<< JS
 $(document).ready(function() {
     let itemIndex = $('.item-row').length;
-    const allItems = $itemsJson;
     const itemList = $itemsJson;
 
 
@@ -216,6 +215,7 @@ $(document).ready(function() {
         $('#issueTable tbody').append(newRow);
         initTomSelect(itemIndex); // เรียกใช้ Tom-select ทันทีที่สร้างแถว
         itemIndex++;
+        calculateTotal();
     });
 
     // การลบแถว
@@ -246,40 +246,6 @@ $(document).ready(function() {
     calculateTotal();
     $(document).on('input', '.qty-issued', calculateTotal);
     $(document).on('change', '.lot-selector', calculateTotal);
-
-    // --- เพิ่มรายการใหม่ ---
-    $('#btnAddItem').click(function() {
-        let options = allItems.map(item => `<option value="\${item.item_code}">\${item.item_name}</option>`).join('');
-        
-        let newRow = `
-        <tr class="item-row table-info" data-index="\${itemIndex}">
-            <td class="text-center text-primary fw-bold">NEW</td>
-            <td>
-                <select name="Issue[\${itemIndex}][item_code]" class="form-select new-item-select shadow-sm border-primary">
-                    <option value="">-- เลือกพัสดุ --</option>
-                    \${options}
-                </select>
-                <input type="hidden" name="Issue[\${itemIndex}][detail_id]" value="new">
-            </td>
-            <td class="text-center text-muted">-</td>
-            <td>
-                <input type="number" name="Issue[\${itemIndex}][qty_issued]" class="form-control text-center fw-bold border-primary qty-issued" value="1" min="0.01" step="0.01">
-            </td>
-            <td>
-                <select name="Issue[\${itemIndex}][lot_number]" class="form-select border-warning lot-selector" required>
-                    <option value="">-- เลือกพัสดุเพื่อดู Lot --</option>
-                </select>
-            </td>
-            <td class="text-end fw-bold text-primary"><span class="row-total">0.00</span></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-danger btn-sm btn-remove-row"><i class="bi bi-trash"></i></button>
-            </td>
-        </tr>`;
-        
-        $('#issueTable tbody').append(newRow);
-        itemIndex++;
-        calculateTotal();
-    });
 
     // --- เมื่อเลือกพัสดุใหม่ ให้ไปดึง Lot มาโชว์ ---
     $(document).on('change', '.new-item-select', function() {

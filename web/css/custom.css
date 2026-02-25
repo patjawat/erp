@@ -2127,7 +2127,7 @@ progress {
   width: 100%;
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.5;
   color: var(--bs-body-color);
   appearance: none;
@@ -2277,7 +2277,7 @@ textarea.form-control-lg {
   width: 100%;
   padding: 0.5rem 2.25rem 0.5rem 0.75rem;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.5;
   color: var(--bs-body-color);
   appearance: none;
@@ -2666,7 +2666,7 @@ textarea.form-control-lg {
   align-items: center;
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.5;
   color: var(--bs-body-color);
   text-align: center;
@@ -15740,3 +15740,5 @@ small, .small {
     max-width: 90%;
   }
 }
+
+/*# sourceMappingURL=custom.css.map */
