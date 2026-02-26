@@ -21,7 +21,7 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold"><i class="bi bi-house-down"></i> 2. หน่วยงานผู้เบิก (คลังย่อย)</label>
+                    <label class="form-label fw-bold"><i class="bi bi-house-down"></i> 2. แผนก/ฝ่ายผู้เบิก (คลังย่อย)</label>
                     <select class="form-select border-secondary shadow-sm" id="subWarehouse">
                         <option value="SUB01">แผนกฉุกเฉิน (ER)</option>
                         <option value="SUB02">แผนกผู้ป่วยนอก (OPD)</option>

@@ -92,93 +92,9 @@ class ReportController extends Controller
             ? [$warehouseId]
             : array_column($allWarehouses, 'id');
 
-        if (empty($warehouseIds)) {
-            $rows = [];
-            $summary = ['total_value' => 0, 'below_min_count' => 0, 'below_max_count' => 0, 'items_count' => 0];
-        } else {
-            $latestPriceSub = (new Query())
-                ->select(['sd2.item_code', 'sd2.lot_number', 'sd2.unit_price'])
-                ->from(['sd2' => StockDetail::tableName()])
-                ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
-                ->innerJoin(
-                    ['latest' => (new Query())
-                        ->select(['sd3.item_code', 'sd3.lot_number', 'MAX(sd3.id) AS mid'])
-                        ->from(['sd3' => StockDetail::tableName()])
-                        ->innerJoin(['so3' => StockOrder::tableName()], 'so3.id = sd3.stock_order_id AND so3.order_type = \'IN\'')
-                        ->groupBy('sd3.item_code', 'sd3.lot_number')],
-                    'latest.item_code = sd2.item_code AND latest.lot_number = sd2.lot_number AND latest.mid = sd2.id'
-                );
-
-            $query = (new Query())
-                ->select([
-                    'sb.warehouse_id',
-                    'sb.item_code',
-                    'i.item_name',
-                    'i.min_qty',
-                    'i.max_qty',
-                    new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
-                    new Expression('SUM(sb.balance_qty) AS balance_qty'),
-                    new Expression('SUM(sb.balance_qty * COALESCE(lp.unit_price, 0)) AS value'),
-                ])
-                ->from(['sb' => StockBalance::tableName()])
-                ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
-                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
-                ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
-                ->where(['sb.warehouse_id' => $warehouseIds])
-                ->andWhere(['>', 'sb.balance_qty', 0])
-                ->groupBy('sb.warehouse_id', 'sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
-
-            $raw = $query->all();
-            $warehouseNames = [];
-            foreach ($listMain as $w) {
-                $warehouseNames[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
-            }
-            foreach ($listSub as $w) {
-                $warehouseNames[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
-            }
-            $rows = [];
-            $totalValue = 0;
-            $belowMinCount = 0;
-            $belowMaxCount = 0;
-
-            foreach ($raw as $r) {
-                $balance = (float) $r['balance_qty'];
-                $value = (float) $r['value'];
-                $minQty = $r['min_qty'] !== null ? (float) $r['min_qty'] : null;
-                $maxQty = $r['max_qty'] !== null ? (float) $r['max_qty'] : null;
-                $belowMin = $minQty !== null && $minQty > 0 && $balance < $minQty;
-                $belowMax = $maxQty !== null && $maxQty > 0 && $balance < $maxQty;
-                if ($belowMin) {
-                    $belowMinCount++;
-                }
-                if ($belowMax) {
-                    $belowMaxCount++;
-                }
-                $totalValue += $value;
-                $item = StockItem::findOne($r['item_code']);
-                $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
-                $rows[] = [
-                    'warehouse_id' => (int) $r['warehouse_id'],
-                    'warehouse_name' => $warehouseNames[(int) $r['warehouse_id']] ?? (string) $r['warehouse_id'],
-                    'item_code' => (string) $r['item_code'],
-                    'item_name' => (string) $r['item_name'],
-                    'category_title' => (string) ($r['category_title'] ?? 'อื่นๆ'),
-                    'unit_name' => $unitName ? (string) $unitName : '-',
-                    'balance_qty' => $balance,
-                    'value' => $value,
-                    'min_qty' => $minQty,
-                    'max_qty' => $maxQty,
-                    'below_min' => $belowMin,
-                    'below_max' => $belowMax,
-                ];
-            }
-            $summary = [
-                'total_value' => $totalValue,
-                'below_min_count' => $belowMinCount,
-                'below_max_count' => $belowMaxCount,
-                'items_count' => count($rows),
-            ];
-        }
+        $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
+        $rows = $data['rows'];
+        $summary = $data['summary'];
 
         $this->view->params['active'] = 'report-balance';
         return $this->render('balance-by-warehouse', [
@@ -187,6 +103,400 @@ class ReportController extends Controller
             'rows' => $rows,
             'summary' => $summary,
         ]);
+    }
+
+    /**
+     * ดึงข้อมูลรายการวัสดุคงเหลือตามคลัง (ใช้ทั้งหน้าแสดงและ export Excel)
+     * @param int[] $warehouseIds
+     * @param \app\modules\inventoryV2\models\Warehouse[] $listMain
+     * @param \app\modules\inventoryV2\models\Warehouse[] $listSub
+     * @return array{rows: array, summary: array}
+     */
+    protected function getBalanceByWarehouseData($warehouseIds, $listMain, $listSub)
+    {
+        if (empty($warehouseIds)) {
+            return [
+                'rows' => [],
+                'summary' => ['total_value' => 0, 'below_min_count' => 0, 'below_max_count' => 0, 'items_count' => 0],
+            ];
+        }
+        $latestPriceSub = (new Query())
+            ->select(['sd2.item_code', 'sd2.lot_number', 'sd2.unit_price'])
+            ->from(['sd2' => StockDetail::tableName()])
+            ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
+            ->innerJoin(
+                ['latest' => (new Query())
+                    ->select(['sd3.item_code', 'sd3.lot_number', 'MAX(sd3.id) AS mid'])
+                    ->from(['sd3' => StockDetail::tableName()])
+                    ->innerJoin(['so3' => StockOrder::tableName()], 'so3.id = sd3.stock_order_id AND so3.order_type = \'IN\'')
+                    ->groupBy('sd3.item_code', 'sd3.lot_number')],
+                'latest.item_code = sd2.item_code AND latest.lot_number = sd2.lot_number AND latest.mid = sd2.id'
+            );
+
+        $query = (new Query())
+            ->select([
+                'sb.warehouse_id',
+                'sb.item_code',
+                'i.item_name',
+                'i.min_qty',
+                'i.max_qty',
+                new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
+                new Expression('SUM(sb.balance_qty) AS balance_qty'),
+                new Expression('SUM(sb.balance_qty * COALESCE(lp.unit_price, 0)) AS value'),
+            ])
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
+            ->where(['sb.warehouse_id' => $warehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0])
+            ->groupBy('sb.warehouse_id', 'sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
+
+        $raw = $query->all();
+        $warehouseNames = [];
+        foreach ($listMain as $w) {
+            $warehouseNames[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
+        }
+        foreach ($listSub as $w) {
+            $warehouseNames[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
+        }
+        $rows = [];
+        $totalValue = 0;
+        $belowMinCount = 0;
+        $belowMaxCount = 0;
+
+        foreach ($raw as $r) {
+            $balance = (float) $r['balance_qty'];
+            $value = (float) $r['value'];
+            $minQty = $r['min_qty'] !== null ? (float) $r['min_qty'] : null;
+            $maxQty = $r['max_qty'] !== null ? (float) $r['max_qty'] : null;
+            $belowMin = $minQty !== null && $minQty > 0 && $balance < $minQty;
+            $belowMax = $maxQty !== null && $maxQty > 0 && $balance < $maxQty;
+            if ($belowMin) {
+                $belowMinCount++;
+            }
+            if ($belowMax) {
+                $belowMaxCount++;
+            }
+            $totalValue += $value;
+            $item = StockItem::findOne($r['item_code']);
+            $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
+            $rows[] = [
+                'warehouse_id' => (int) $r['warehouse_id'],
+                'warehouse_name' => $warehouseNames[(int) $r['warehouse_id']] ?? (string) $r['warehouse_id'],
+                'item_code' => (string) $r['item_code'],
+                'item_name' => (string) $r['item_name'],
+                'category_title' => (string) ($r['category_title'] ?? 'อื่นๆ'),
+                'unit_name' => $unitName ? (string) $unitName : '-',
+                'balance_qty' => $balance,
+                'value' => $value,
+                'min_qty' => $minQty,
+                'max_qty' => $maxQty,
+                'below_min' => $belowMin,
+                'below_max' => $belowMax,
+            ];
+        }
+        $itemsCountQuery = (new Query())
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->where(['sb.warehouse_id' => $warehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0]);
+        $itemsCount = (int) (clone $itemsCountQuery)->select('sb.item_code')->groupBy('sb.item_code')->count();
+
+        return [
+            'rows' => $rows,
+            'summary' => [
+                'total_value' => $totalValue,
+                'below_min_count' => $belowMinCount,
+                'below_max_count' => $belowMaxCount,
+                'items_count' => $itemsCount,
+            ],
+        ];
+    }
+
+    /**
+     * Export รายงานยอดคงเหลือตามคลังเป็น Excel
+     */
+    public function actionExportBalanceByWarehouse()
+    {
+        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
+            ? (int) $this->request->get('warehouse_id')
+            : null;
+
+        $listMain = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $listSub = Warehouse::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $allWarehouses = array_merge($listMain, $listSub);
+        $warehouseIds = $warehouseId ? [$warehouseId] : array_column($allWarehouses, 'id');
+
+        $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
+        $rows = $data['rows'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ยอดคงเหลือตามคลัง');
+
+        $sheet->setCellValue('A1', 'รายการวัสดุคงเหลือตามคลัง');
+        $sheet->mergeCells('A1:K1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        $headers = ['ลำดับ', 'คลัง', 'รหัส', 'ชื่อวัสดุ', 'ประเภท', 'หน่วย', 'จำนวนคงเหลือ', 'มูลค่า (บาท)', 'Min', 'Max', 'สถานะ'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '3', $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+
+        $rowNum = 4;
+        foreach ($rows as $i => $r) {
+            $status = $r['below_min'] ? 'ต่ำกว่า Min' : ($r['below_max'] ? 'ต่ำกว่า Max' : 'พอดี');
+            $sheet->setCellValue('A' . $rowNum, $i + 1);
+            $sheet->setCellValue('B' . $rowNum, $r['warehouse_name']);
+            $sheet->setCellValue('C' . $rowNum, $r['item_code']);
+            $sheet->setCellValue('D' . $rowNum, $r['item_name']);
+            $sheet->setCellValue('E' . $rowNum, $r['category_title']);
+            $sheet->setCellValue('F' . $rowNum, $r['unit_name']);
+            $sheet->setCellValue('G' . $rowNum, $r['balance_qty']);
+            $sheet->setCellValue('H' . $rowNum, $r['value']);
+            $sheet->setCellValue('I' . $rowNum, $r['min_qty'] !== null ? $r['min_qty'] : '-');
+            $sheet->setCellValue('J' . $rowNum, $r['max_qty'] !== null ? $r['max_qty'] : '-');
+            $sheet->setCellValue('K' . $rowNum, $status);
+            $rowNum++;
+        }
+
+        $sheet->getStyle('G4:H' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        if (!empty($rows)) {
+            $sheet->getStyle('I4:J' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        }
+
+        $filename = 'balance-by-warehouse-' . date('Ymd-His') . '.xlsx';
+        $this->response->format = Response::FORMAT_RAW;
+        $this->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        Yii::$app->end();
+    }
+
+    /**
+     * รายงานวัสดุไม่พอจ่าย: จากยอดที่ขอเบิก (ใบ PENDING + APPROVED) เทียบยอดคงเหลือในคลังหลัก
+     * แสดงแต่ละรายการ ต้องซื้อเพิ่มเท่าไหร่ (shortfall) — รวมรายการที่ยังไม่เคยรับเข้าคลัง (ยอดคงเหลือ 0) เพื่อออกใบสั่งซื้อ
+     * Filter: ประเภทวัสดุ, คลังย่อยที่ขอเบิก, คลังหลักที่รอจ่าย
+     */
+    public function actionInsufficientToDisburse()
+    {
+        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
+            ? (int) $this->request->get('main_warehouse_id') : null;
+        $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
+            ? (int) $this->request->get('sub_warehouse_id') : null;
+        $categoryId = $this->request->get('category_id') !== null && $this->request->get('category_id') !== ''
+            ? (string) $this->request->get('category_id') : null;
+
+        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId);
+        $rows = $data['rows'];
+        $listMain = $data['listMain'];
+        $listSub = $data['listSub'];
+
+        $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
+            Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->orderBy('title')->all(),
+            'code',
+            'title'
+        );
+        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
+        $subWarehouses = ['' => '-- ทุกคลังย่อยที่ขอเบิก --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
+
+        $this->view->params['active'] = 'report-balance';
+        return $this->render('insufficient-to-disburse', [
+            'rows' => $rows,
+            'mainWarehouseId' => $mainWarehouseId,
+            'subWarehouseId' => $subWarehouseId,
+            'categoryId' => $categoryId,
+            'mainWarehouses' => $mainWarehouses,
+            'subWarehouses' => $subWarehouses,
+            'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Export รายงานวัสดุไม่พอจ่ายเป็น Excel (ใช้ filter เดียวกับหน้ารายงาน)
+     */
+    public function actionExportInsufficientToDisburse()
+    {
+        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
+            ? (int) $this->request->get('main_warehouse_id') : null;
+        $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
+            ? (int) $this->request->get('sub_warehouse_id') : null;
+
+        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId);
+        $rows = $data['rows'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('วัสดุไม่พอจ่าย');
+
+        $sheet->setCellValue('A1', 'รายงานวัสดุไม่พอจ่าย');
+        $sheet->mergeCells('A1:I1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->setCellValue('A2', 'จากรายการที่ขอเบิก (ใบรออนุมัติ + อนุมัติแล้ว) เทียบยอดคงเหลือในคลังหลัก — ต้องซื้อเพิ่ม');
+        $sheet->mergeCells('A2:I2');
+        $sheet->getStyle('A2')->getFont()->setSize(10);
+
+        $headers = ['ลำดับ', 'คลังหลักที่รอจ่าย', 'รหัส', 'ชื่อวัสดุ', 'ประเภท', 'หน่วย', 'จำนวนที่ขอเบิก', 'ยอดคงเหลือในคลัง', 'ต้องซื้อเพิ่ม'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '4', $h);
+            $col++;
+        }
+        $sheet->getStyle('A4:I4')->getFont()->setBold(true);
+        $sheet->getStyle('A4:I4')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('FFF3CD');
+
+        $rowNum = 5;
+        foreach ($rows as $i => $r) {
+            $sheet->setCellValue('A' . $rowNum, $i + 1);
+            $sheet->setCellValue('B' . $rowNum, $r['main_warehouse_name']);
+            $sheet->setCellValue('C' . $rowNum, $r['item_code']);
+            $sheet->setCellValue('D' . $rowNum, $r['item_name']);
+            $sheet->setCellValue('E' . $rowNum, $r['category_title']);
+            $sheet->setCellValue('F' . $rowNum, $r['unit_name']);
+            $sheet->setCellValue('G' . $rowNum, $r['requested_qty']);
+            $sheet->setCellValue('H' . $rowNum, $r['balance_qty']);
+            $sheet->setCellValue('I' . $rowNum, $r['shortfall']);
+            $rowNum++;
+        }
+
+        $sheet->getStyle('G5:I' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $filename = 'insufficient-to-disburse-' . date('Ymd-His') . '.xlsx';
+        $tempPath = Yii::getAlias('@runtime') . '/insufficient_' . uniqid('', true) . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        Yii::$app->response->sendFile($tempPath, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ])->on(Response::EVENT_AFTER_SEND, function ($event) use ($tempPath) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        });
+    }
+
+    /**
+     * ดึงข้อมูลรายงานวัสดุไม่พอจ่าย (ใช้ทั้งหน้าแสดงและ export Excel)
+     * @return array { rows: array, listMain: Warehouse[] }
+     */
+    protected function getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId)
+    {
+        $listMain = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $listSub = Warehouse::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $mainWarehouseIds = array_column($listMain, 'id');
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseIds = $mainWarehouseId ? [$mainWarehouseId] : $mainWarehouseIds;
+
+        $reqSub = (new Query())
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'so.order_type' => 'OUT',
+                'so.source_type' => 'REQUEST',
+                'so.status' => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+            ])
+            ->andWhere(['so.main_warehouse_id' => $warehouseIds]);
+        if ($subWarehouseId !== null) {
+            $reqSub->andWhere(['so.sub_warehouse_id' => $subWarehouseId]);
+        }
+        if ($mainWarehouseId) {
+            $reqSub->select(['so.main_warehouse_id', 'sd.item_code', 'SUM(sd.qty) AS requested_qty'])->groupBy('so.main_warehouse_id', 'sd.item_code');
+        } else {
+            $reqSub->select(['sd.item_code', 'SUM(sd.qty) AS requested_qty'])->groupBy('sd.item_code');
+        }
+
+        $balSub = (new Query())
+            ->from(StockBalance::tableName())
+            ->where(['warehouse_id' => $warehouseIds]);
+        if ($mainWarehouseId) {
+            $balSub->select(['warehouse_id AS main_warehouse_id', 'item_code', 'SUM(balance_qty) AS balance_qty'])->groupBy('warehouse_id', 'item_code');
+        } else {
+            $balSub->select(['item_code', 'SUM(balance_qty) AS balance_qty'])->groupBy('item_code');
+        }
+
+        if ($mainWarehouseId) {
+            $query = (new Query())
+                ->select([
+                    'req.item_code',
+                    'req.main_warehouse_id',
+                    'req.requested_qty',
+                    'balance_qty' => new Expression('COALESCE(bal.balance_qty, 0)'),
+                    'shortfall' => new Expression('req.requested_qty - COALESCE(bal.balance_qty, 0)'),
+                    'item_name' => new Expression("COALESCE(i.item_name, req.item_code)"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                ])
+                ->from(['req' => $reqSub])
+                ->leftJoin(['bal' => $balSub], 'bal.main_warehouse_id = req.main_warehouse_id AND bal.item_code = req.item_code')
+                ->leftJoin(['i' => StockItem::tableName()], 'i.item_code = req.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
+        } else {
+            $query = (new Query())
+                ->select([
+                    'req.item_code',
+                    'main_warehouse_id' => new Expression('NULL'),
+                    'req.requested_qty',
+                    'balance_qty' => new Expression('COALESCE(bal.balance_qty, 0)'),
+                    'shortfall' => new Expression('req.requested_qty - COALESCE(bal.balance_qty, 0)'),
+                    'item_name' => new Expression("COALESCE(i.item_name, req.item_code)"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                ])
+                ->from(['req' => $reqSub])
+                ->leftJoin(['bal' => $balSub], 'bal.item_code = req.item_code')
+                ->leftJoin(['i' => StockItem::tableName()], 'i.item_code = req.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
+        }
+        $query->orderBy(['shortfall' => SORT_DESC]);
+        $rows = $query->all();
+
+        $mainNames = [];
+        foreach ($listMain as $w) {
+            $mainNames[$w->id] = $w->warehouse_name;
+        }
+        foreach ($rows as &$r) {
+            $r['main_warehouse_name'] = isset($r['main_warehouse_id']) && $r['main_warehouse_id'] !== null
+                ? ($mainNames[$r['main_warehouse_id']] ?? (string) $r['main_warehouse_id'])
+                : 'ทุกคลังหลัก';
+            $r['balance_qty'] = (float) ($r['balance_qty'] ?? 0);
+            $r['requested_qty'] = (float) $r['requested_qty'];
+            $r['shortfall'] = (float) $r['shortfall'];
+            $item = StockItem::findOne($r['item_code']);
+            $r['unit_name'] = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : '-';
+        }
+        unset($r);
+
+        return ['rows' => $rows, 'listMain' => $listMain, 'listSub' => $listSub];
     }
 
     /**

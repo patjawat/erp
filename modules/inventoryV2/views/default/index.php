@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
         <i class="bi bi-box-seam fs-4 text-primary"></i>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted mb-0">ระบบคลังมี 2 ระดับ — <strong>คลังหลัก</strong> รับเข้า/จ่ายออก และ <strong>คลังย่อย</strong> ขอเบิกจากคลังหลัก เลือกเมนูตามบทบาทของคุณด้านล่าง</p>
+    <p class="text-muted mb-0">ระบบคลังของโรงพยาบาล — <strong>คลังหลัก</strong> รับเข้า/จ่ายออก <strong>คลังย่อย</strong> (แผนก/ฝ่าย) ขอเบิกจากคลังหลัก เลือกเมนูตามบทบาทของคุณด้านล่าง</p>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
                     <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-buildings me-1"></i>สำหรับผู้ดูแลคลังหลัก</h6>
-                    <span class="text-muted">รับของเข้า คลัง จ่ายของออกตามใบขอเบิก ดู Dashboard</span>
+                    <span class="text-muted">รับของเข้าคลัง จ่ายของออกตามใบขอเบิกจากแผนก/ฝ่าย ดู Dashboard</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-warning bg-opacity-10 border-0 py-2 px-3">
                     <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-house-door me-1"></i>สำหรับผู้ดูแลคลังย่อย</h6>
-                    <span class="text-muted">สร้างใบขอเบิก ดูสถานะและ Dashboard คลังย่อย</span>
+                    <span class="text-muted">สร้างใบขอเบิกจากแผนก/ฝ่าย ดูสถานะและ Dashboard คลังย่อย</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
@@ -111,16 +111,16 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
         </div>
     </div>
 
-    <!-- วิธีเบิกใช้งานในคลัง (สำหรับหน่วยงานที่เบิกบ่อย) -->
+    <!-- วิธีเบิกใช้งานในคลัง (สำหรับแผนก/ฝ่ายของโรงพยาบาล) -->
     <div class="card border-0 shadow-sm mb-4 border-start border-warning border-3">
         <div class="card-header bg-warning bg-opacity-10 py-2 px-3 d-flex flex-wrap justify-content-between align-items-center">
-            <h6 class="mb-0 fw-normal"><i class="bi bi-question-circle me-1"></i>วิธีเบิกใช้งานในคลัง</h6>
+            <h6 class="mb-0 fw-normal"><i class="bi bi-question-circle me-1"></i>วิธีเบิกพัสดุ (แผนก/ฝ่าย)</h6>
             <?= Html::a('สร้างใบขอเบิก', ['/inventory-v2/requisition/create'], ['class' => 'btn btn-warning btn-sm']) ?>
         </div>
         <div class="card-body py-2 px-3">
-            <p class="mb-2 text-muted">หน่วยงาน/คลังย่อยที่ต้องการเบิกของจากคลังหลัก — ทำได้บ่อยตามต้องการ โดยแต่ละครั้งสร้างใบขอเบิกใหม่</p>
+            <p class="mb-2 text-muted">แผนก/ฝ่ายของโรงพยาบาลที่ต้องการเบิกของจากคลังหลัก — สร้างใบขอเบิกได้ตามต้องการ</p>
             <ol class="mb-0 ps-3 text-muted">
-                <li>ไปที่ <strong>สร้างใบขอเบิก</strong> → เลือกคลังที่จ่าย + หน่วยงานที่รับ → ใส่รายการพัสดุและจำนวน → ส่งคำขอ</li>
+                <li>ไปที่ <strong>สร้างใบขอเบิก</strong> → เลือกคลังที่จ่าย + แผนก/ฝ่ายที่รับ → ใส่รายการพัสดุและจำนวน → ส่งคำขอ</li>
                 <li>หัวหน้าอนุมัติที่ <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>">ทะเบียนใบขอเบิก</a></li>
                 <li>คลังหลักไปที่ <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>">รายการจ่ายพัสดุ</a> → ดำเนินการจ่าย → ยืนยัน (ระบบตัดสต็อก)</li>
                 <li>ดูสถานะและรายการที่ส่งมาได้ที่ <a href="<?= Url::to(['/inventory-v2/sub-stock/dashboard']) ?>">Dashboard คลังย่อย</a></li>
@@ -195,7 +195,7 @@ $this->params['breadcrumbs'][] = 'เมนูนำทาง';
                 <ol class="mb-0 ps-3">
                     <li class="mb-3"><strong>จัดการข้อมูลพัสดุ</strong> — ไปที่ <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>">จัดการรายการพัสดุ</a> เพิ่มรหัส ชื่อ หมวดหมู่ หน่วยนับ</li>
                     <li class="mb-3"><strong>คลังหลักรับเข้า</strong> — ไปที่ <a href="<?= Url::to(['/inventory-v2/receive/create']) ?>">สร้างใบรับเข้า</a> เลือกคลัง พัสดุ จำนวน Lot ราคา บันทึก</li>
-                    <li class="mb-3"><strong>คลังย่อยขอเบิก</strong> — ไปที่ <a href="<?= Url::to(['/inventory-v2/requisition/create']) ?>">สร้างใบขอเบิก</a> เลือกคลังที่จ่าย หน่วยงานที่รับ พัสดุและจำนวน ส่งคำขอ</li>
+                    <li class="mb-3"><strong>คลังย่อยขอเบิก</strong> — ไปที่ <a href="<?= Url::to(['/inventory-v2/requisition/create']) ?>">สร้างใบขอเบิก</a> เลือกคลังที่จ่าย แผนก/ฝ่ายที่รับ พัสดุและจำนวน ส่งคำขอ</li>
                     <li class="mb-3"><strong>หัวหน้าอนุมัติ → คลังหลักจ่าย</strong> — อนุมัติที่ <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>">ทะเบียนใบขอเบิก</a> จากนั้นไปที่ <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>">รายการจ่ายพัสดุ</a> ดำเนินการจ่าย เลือก Lot และจำนวน ยืนยัน (ระบบตัดสต็อก)</li>
                     <li><strong>ตรวจสอบ</strong> — ดู <a href="<?= Url::to(['/inventory-v2/stock-card/index']) ?>">Stock Card</a> และ Dashboard</li>
                 </ol>

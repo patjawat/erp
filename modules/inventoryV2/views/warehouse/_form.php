@@ -107,7 +107,7 @@ JS;
                     <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab">กำหนดประเภทที่รับเข้า</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab">กำหนดหน่วยงานที่มีสิทธิเบิก</button>
+                    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab">กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก</button>
                 </li>
             </ul>
             <div class="tab-content" id="pills-tabContent">
@@ -152,7 +152,7 @@ JS;
                         'asDropdown' => true,
                         'multiple' => true,
                         'options' => ['disabled' => false],
-                    ])->label('หน่วยงานภายในตามโครงสร้าง') ?>
+                    ])->label('แผนก/ฝ่ายภายในโรงพยาบาลตามโครงสร้าง') ?>
                 </div>
             </div>
         </div>

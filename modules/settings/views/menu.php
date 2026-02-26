@@ -24,4 +24,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 <li class="nav-item">
     <?=Html::a('<i class="fa-solid fa-folder me-1"></i> ตั้งค่าประเภททรัพย์สิน',['/am/setting'],['class' => 'nav-link ' . (isset($active) && $active =='line' ? 'am-setting' : '')])?>
 </li>
+<li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-arrows-rotate me-1"></i> อัปเดตระบบ',['/settings/update'],['class' => 'nav-link ' . (isset($active) && $active == 'update' ? 'active' : '')])?>
+</li>
 <?php endif;?>

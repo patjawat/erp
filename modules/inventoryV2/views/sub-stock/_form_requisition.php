@@ -64,9 +64,9 @@ $this->title = 'สร้างใบเบิกพัสดุใหม่';
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold"><i class="bi bi-house-down me-1"></i> 2. หน่วยงานผู้เบิก (คลังย่อย)</label>
-                    <select class="form-select" id="subWarehouse" placeholder="-- เลือกแผนกผู้เบิก --">
-                        <option value="">-- เลือกแผนกผู้เบิก --</option>
+                    <label class="form-label fw-bold"><i class="bi bi-house-down me-1"></i> 2. แผนก/ฝ่ายผู้เบิก (คลังย่อย)</label>
+                    <select class="form-select" id="subWarehouse" placeholder="-- เลือกแผนก/ฝ่ายผู้เบิก --">
+                        <option value="">-- เลือกแผนก/ฝ่ายผู้เบิก --</option>
                            <?php foreach ($subWarehouseList as $id => $name): ?>
                                 <option value="<?= $id ?>"><?= htmlspecialchars($name) ?></option>
                             <?php endforeach; ?>
@@ -129,6 +129,7 @@ $(document).ready(function() {
     
     // --- 0. ตั้งค่า Tom-Select ---
     const config = { 
+        dropdownParent: document.body,
         create: false, 
         allowEmptyOption: true,
         render: {

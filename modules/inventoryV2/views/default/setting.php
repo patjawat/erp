@@ -71,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center py-2">
             <h6 class="mb-0">
                 <i class="bi bi-ui-checks me-2"></i>รายการคลัง
-                <span class="badge bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
+                <span class="badge text-bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
             </h6>
             <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [
                 'class' => 'btn btn-light btn-sm open-modal',
@@ -132,7 +132,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             ?>
                                         </div>
                                         <?php if ($reqCount > 0): ?>
-                                            <span class="badge rounded-pill bg-primary"><?= (int) $reqCount ?> รอดำเนินการ</span>
+                                            <span class="badge rounded-pill text-bg-primary"><?= (int) $reqCount ?> รอดำเนินการ</span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="mt-auto pt-2">

@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
         <h6 class="text-white mt-2 mb-0">
             <i class="bi bi-ui-checks me-2"></i>จำนวนคลัง
-            <span class="badge bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
+            <span class="badge text-bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
         </h6>
         <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], ['id' => 'addWarehouse', 'class' => 'btn btn-light btn-sm open-modal', 'data' => ['size' => 'modal-xl']]) ?>
     </div>
@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th scope="col" style="width:50px">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
-                    <th scope="col">หน่วยงาน</th>
+                    <th scope="col">แผนก/ฝ่าย</th>
                     <th scope="col">ประเภทคลัง</th>
                     <th scope="col">ผู้รับผิดชอบคลัง</th>
                     <th scope="col" style="width:150px">ดำเนินการ</th>

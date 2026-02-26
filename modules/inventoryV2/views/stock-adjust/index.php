@@ -18,6 +18,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
+<a href="<?= Url::to(['/inventory-v2/stock-adjust/reset-warehouse']) ?>" class="btn btn-outline-warning btn-sm me-2">
+    <i class="bi bi-arrow-counterclockwise me-1"></i> ล้างยอดคลัง (สำหรับทดสอบ)
+</a>
 <a href="<?= Url::to(['/inventory-v2/default/index']) ?>" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left me-1"></i> เมนูย้อนกลับ
 </a>

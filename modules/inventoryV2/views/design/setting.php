@@ -1,11 +1,11 @@
 <div class="row mb-4">
         <div class="col-md-6">
             <h3 class="fw-bold text-dark mb-0">ตั้งค่าโครงสร้างคลังสินค้า</h3>
-            <p class="text-muted">จัดการข้อมูลคลังหลัก คลังย่อย และหน่วยงานที่เกี่ยวข้อง</p>
+            <p class="text-muted">จัดการข้อมูลคลังหลัก คลังย่อย (แผนก/ฝ่ายของโรงพยาบาล) ที่เกี่ยวข้อง</p>
         </div>
         <div class="col-md-6 text-md-end">
             <button class="btn btn-dark rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#warehouseModal">
-                <i class="bi bi-plus-lg me-2"></i>เพิ่มจุดเก็บ/แผนกใหม่
+                <i class="bi bi-plus-lg me-2"></i>เพิ่มคลัง/แผนก (ฝ่าย) ใหม่
             </button>
         </div>
     </div>
@@ -16,7 +16,7 @@
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">รายการจุดเก็บพัสดุทั้งหมด</h5>
-                        <div class="badge bg-primary-subtle text-primary rounded-pill px-3">ทั้งหมด 5 แห่ง</div>
+                        <div class="badge text-bg-primary rounded-pill px-3">ทั้งหมด 5 แห่ง</div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -25,7 +25,7 @@
                             <thead class="bg-light text-muted small">
                                 <tr>
                                     <th class="ps-4" width="10%">ประเภท</th>
-                                    <th width="30%">ชื่อคลัง / แผนก</th>
+                                    <th width="30%">ชื่อคลัง / แผนก (ฝ่าย)</th>
                                     <th width="20%">ผู้รับผิดชอบ</th>
                                     <th width="20%">สถานะ</th>
                                     <th class="text-end pe-4" width="20%">จัดการ</th>
@@ -34,10 +34,10 @@
                             <tbody>
                                 <tr class="bg-primary-subtle bg-opacity-10">
                                     <td class="ps-4">
-                                        <span class="badge bg-primary text-white">Main</span>
+                                        <span class="badge text-bg-primary">Main</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">คลังพัสดุกลาง (Central)</div>
+                                        <div class="fw-bold">คลังพัสดุกลาง (โรงพยาบาล)</div>
                                         <small class="text-muted">ID: WH-001</small>
                                     </td>
                                     <td>นายสมชาย มั่นคง</td>
@@ -49,10 +49,10 @@
                                 </tr>
                                 <tr>
                                     <td class="ps-4">
-                                        <span class="badge bg-warning text-dark">Sub</span>
+                                        <span class="badge text-bg-warning text-dark">Sub</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">แผนกไอที (IT Dept)</div>
+                                        <div class="fw-bold">แผนกผู้ป่วยนอก (OPD)</div>
                                         <small class="text-muted">ID: WH-002</small>
                                     </td>
                                     <td>นางสาววิภา ใจดี</td>
@@ -64,10 +64,10 @@
                                 </tr>
                                 <tr>
                                     <td class="ps-4">
-                                        <span class="badge bg-warning text-dark">Sub</span>
+                                        <span class="badge text-bg-warning text-dark">Sub</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">แผนกซ่อมบำรุง (Maintenance)</div>
+                                        <div class="fw-bold">แผนกฉุกเฉิน (ER)</div>
                                         <small class="text-muted">ID: WH-003</small>
                                     </td>
                                     <td>นายธีรพล ช่างเก่ง</td>
@@ -93,7 +93,7 @@
                     <h6 class="fw-bold">เกี่ยวกับประเภทคลัง</h6>
                     <p class="small text-muted text-start mb-0">
                         <strong>คลังหลัก (Main):</strong> มีอำนาจในการรับสินค้าเข้าจาก Supplier และกระจายของให้คลังย่อย<br><br>
-                        <strong>คลังย่อย (Sub):</strong> รับพัสดุจากคลังหลักเพื่อนำไปใช้ภายในหน่วยงาน ไม่สามารถรับของจาก Supplier โดยตรงได้
+                        <strong>คลังย่อย (Sub):</strong> รับพัสดุจากคลังหลักเพื่อนำไปใช้ภายในแผนก/ฝ่ายของโรงพยาบาล ไม่สามารถรับของจาก Supplier โดยตรงได้
                     </p>
                 </div>
             </div>
@@ -123,7 +123,7 @@
                         </div>
                         <div class="col-12">
                             <label class="small fw-bold mb-1">ชื่อเรียก (ภาษาไทย)</label>
-                            <input type="text" class="form-control rounded-3" placeholder="เช่น แผนกบัญชี, คลังสินค้าไอที">
+                            <input type="text" class="form-control rounded-3" placeholder="เช่น แผนก OPD, แผนก ER, คลังพัสดุกลาง">
                         </div>
                         <div class="col-12">
                             <label class="small fw-bold mb-1">ชื่อเรียก (English Name)</label>

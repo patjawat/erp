@@ -10,6 +10,7 @@ use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\components\InventoryService;
 use Yii;
+use yii\db\Expression;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
@@ -26,10 +27,16 @@ class MainStockController extends \yii\web\Controller
      */
     public function actionDashboard()
     {
-        $warehouseId = $this->getFilterWarehouseId();
         $mainWarehouseIds = $this->getMainWarehouseIds();
         if (empty($mainWarehouseIds)) {
             $mainWarehouseIds = [-1];
+        }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        // ถ้าไม่ใช่ admin และเลือกคลังที่ไม่อยู่ในรายการที่รับผิดชอบ ให้ล้างการเลือก
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            Yii::$app->session->remove('dashboard_warehouse_id');
+            $warehouseId = null;
         }
 
         $stats = $this->getDashboardStats($warehouseId, $mainWarehouseIds);
@@ -46,24 +53,41 @@ class MainStockController extends \yii\web\Controller
         ]);
     }
 
-    /** คลังหลักที่ยังไม่ถูกลบ */
+    /** คลังหลักที่ยังไม่ถูกลบ (ถ้าไม่ใช่ admin เฉพาะคลังที่ผู้ใช้ถูกกำหนดเป็นผู้รับผิดชอบใน warehouse) */
     protected function getMainWarehouseIds()
     {
         $query = Warehouse::find()
             ->where(['warehouse_type' => 'MAIN'])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
             ->select('id');
+        $this->applyOfficerFilter($query);
         return $query->column();
     }
 
-    /** รายการคลังหลักสำหรับ dropdown */
+    /** รายการคลังหลักสำหรับ dropdown (ถ้าไม่ใช่ admin เฉพาะคลังที่ผู้ใช้ถูกกำหนดเป็นผู้รับผิดชอบใน warehouse) */
     protected function getMainWarehousesList()
     {
-        return Warehouse::find()
+        $query = Warehouse::find()
             ->where(['warehouse_type' => 'MAIN'])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy('warehouse_name')
-            ->all();
+            ->orderBy('warehouse_name');
+        $this->applyOfficerFilter($query);
+        return $query->all();
+    }
+
+    /**
+     * กรองคลังเฉพาะที่ current user ถูกกำหนดเป็นผู้รับผิดชอบ (data_json.officer)
+     * ไม่ใช้กับ admin
+     */
+    protected function applyOfficerFilter($query)
+    {
+        if (Yii::$app->user->can('admin')) {
+            return;
+        }
+        $userId = (string) Yii::$app->user->id;
+        $query->andWhere(
+            new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")
+        );
     }
 
     /** warehouse id จาก session หรือ query (all = null) */
@@ -139,11 +163,14 @@ class MainStockController extends \yii\web\Controller
         $totalValue = (float) $valueQuery->scalar();
 
         $usageQuery = (new Query())
-            ->from(StockBalance::tableName())
-            ->where($warehouseId ? ['warehouse_id' => $warehouseId] : ['warehouse_id' => $mainWarehouseIds])
-            ->andWhere(['>', 'balance_qty', 0]);
-        $lotsCount = (int) $usageQuery->count();
-        $itemsCount = (int) (clone $usageQuery)->select('item_code')->groupBy('item_code')->count();
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->where($warehouseId ? ['sb.warehouse_id' => $warehouseId] : ['sb.warehouse_id' => $mainWarehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0]);
+        $lotsCount = (int) (clone $usageQuery)->count();
+        $itemsCount = (int) (clone $usageQuery)->select('sb.item_code')->groupBy('sb.item_code')->count();
+
+        $insufficientCount = $this->getInsufficientToDisburseCount($warehouseId, $mainWarehouseIds);
 
         return [
             'pending_count' => $pendingCount,
@@ -151,7 +178,38 @@ class MainStockController extends \yii\web\Controller
             'total_value' => $totalValue,
             'lots_count' => $lotsCount,
             'items_with_stock' => $itemsCount,
+            'insufficient_to_disburse_count' => $insufficientCount,
         ];
+    }
+
+    /**
+     * นับจำนวนรายการวัสดุที่ขอเบิก (ใบ PENDING + APPROVED) แต่ยอดในสต็อกไม่พอจ่าย
+     * นับจาก: ยอดที่ขอเบิก (รวมจาก stock_detail ของใบ OUT/REQUEST/APPROVED) เทียบกับยอดคงเหลือใน stock_balance
+     */
+    protected function getInsufficientToDisburseCount($warehouseId, array $mainWarehouseIds)
+    {
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+        $reqSub = (new Query())
+            ->select(['sd.item_code', 'SUM(sd.qty) AS requested_qty'])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'so.order_type' => 'OUT',
+                'so.source_type' => 'REQUEST',
+                'so.status' => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+            ])
+            ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+            ->groupBy('sd.item_code');
+        $balSub = (new Query())
+            ->select(['item_code', 'SUM(balance_qty) AS balance_qty'])
+            ->from(StockBalance::tableName())
+            ->where(['warehouse_id' => $warehouseIds])
+            ->groupBy('item_code');
+        $q = (new Query())
+            ->from(['req' => $reqSub])
+            ->leftJoin(['bal' => $balSub], 'bal.item_code = req.item_code')
+            ->where('req.requested_qty > COALESCE(bal.balance_qty, 0)');
+        return (int) $q->count();
     }
 
     /** ใบขอเบิกรอคลังจ่าย (อนุมัติแล้ว APPROVED) */

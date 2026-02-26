@@ -10,7 +10,7 @@ $this->title = 'ตรวจรับพัสดุเข้าคลังย�
                 <h5 class="fw-bold mb-0 text-primary">📦 ตรวจรับพัสดุจากคลังหลัก</h5>
                 <small class="text-muted">อ้างอิงใบโอนจ่าย: <strong>ISS-670045</strong> | ผู้ส่ง: นายสมชาย (คลังกลาง)</small>
             </div>
-            <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">สถานะ: อยู่ระหว่างขนส่ง</span>
+            <span class="badge text-bg-info rounded-pill px-3 py-2">สถานะ: อยู่ระหว่างขนส่ง</span>
         </div>
         
         <div class="card-body">

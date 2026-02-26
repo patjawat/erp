@@ -21,7 +21,7 @@ $this->title = "ระบบลา";
     <div class="col-4">
 
     <?php foreach(LeaveType::find()->where(['name' => 'leave_type','active' => 1])->all() as $item):?>
-        <a href="<?=Url::to(['/me/leave/create','leave_type_id' => $item->code,'title' => $item->title])?>">
+        <a href="<?=Url::to(['/leave/leave/create'])?>">
             <div class="card mb-2 zoom-in">
                 <div class="card-body">
                     <?= isset($item->data_json['icon']) ? $item->data_json['icon'] : '-' ?> <?=$item->title?>

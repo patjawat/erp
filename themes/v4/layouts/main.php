@@ -243,7 +243,7 @@ AppAsset::register($this);
 <?php $this->head() ?>
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100<?= (isset(Yii::$app->controller->module) && Yii::$app->controller->module->id === 'approveV2') ? ' approve-v2-wrap' : '' ?>">
     <?php $this->beginBody() ?>
 
     <!-- Global loading: แสดงตั้งแต่โหลดหน้า (รวม reload) จนถึง pjax/full page พร้อม -->

@@ -9,11 +9,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="requisition-index">
     <div class="card shadow-sm">
         <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0 text-primary fw-bold">
                     <i class="bi bi-file-earmark-text me-2"></i><?= Html::encode($this->title) ?>
                 </h5>
-                <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบขอเบิกใหม่', ['create'], ['class' => 'btn btn-success rounded-pill']) ?>
+                <div class="d-flex gap-2">
+                    <?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary rounded-pill']) ?>
+                    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบขอเบิกใหม่', ['create'], ['class' => 'btn btn-success rounded-pill']) ?>
+                </div>
             </div>
         </div>
 
@@ -42,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'attribute' => 'sub_warehouse_id',
-                        'label' => 'หน่วยงานที่รับของ',
+                        'label' => 'แผนก/ฝ่ายที่รับของ',
                         'value' => function ($model) {
                             return $model->subWarehouse->warehouse_name ?? '-';
                         }
@@ -50,22 +53,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'attribute' => 'order_date',
                         'label' => 'วันที่ขอเบิก',
-                        'format' => ['date', 'php:d/m/Y'],
+                        'format' => 'raw',
+                        'value' => function ($model) {
+                            return $model->order_date ? \app\components\ThaiDateHelper::formatThaiDate($model->order_date) : '-';
+                        },
                     ],
                     [
                         'attribute' => 'status',
-                        'label' => 'สถานะ',
+                        'label' => 'สถานะการอนุมัติ',
                         'format' => 'raw',
                         'value' => function ($model) {
-                            $statusMap = [
-                                'DRAFT'     => ['class' => 'bg-warning text-dark', 'label' => 'ฉบับร่าง'],
-                                'PENDING'   => ['class' => 'bg-info', 'label' => 'รอหัวหน้าอนุมัติ'],
-                                'APPROVED'  => ['class' => 'bg-primary', 'label' => 'อนุมัติแล้ว — รอคลังจ่าย'],
-                                'CONFIRMED' => ['class' => 'bg-success', 'label' => 'จ่ายแล้ว'],
-                                'CANCELLED' => ['class' => 'bg-danger', 'label' => 'ยกเลิก'],
-                            ];
-                            $s = $statusMap[$model->status] ?? ['class' => 'bg-secondary', 'label' => $model->status];
-                            return "<span class='badge {$s['class']}'>{$s['label']}</span>";
+                            $s = \app\modules\inventoryV2\models\StockOrder::getStatusBadgeConfigFor($model->status);
+                            $icon = !empty($s['icon']) ? '<i data-lucide="' . Html::encode($s['icon']) . '" class="me-1" style="width:14px;height:14px;vertical-align:-0.2em"></i>' : '';
+                            return '<span class="' . $s['class'] . '">' . $icon . Html::encode($s['label']) . '</span>';
                         }
                     ],
                     [
@@ -86,16 +86,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ]);
                             },
                             'approve' => function ($url, $model) {
-                                if (in_array($model->status, ['DRAFT', 'PENDING'])) {
-                                    return Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
-                                        'class' => 'btn btn-sm btn-success',
-                                        'data' => [
-                                            'confirm' => 'ยืนยันอนุมัติใบขอเบิก? (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "รายการจ่ายพัสดุ")',
-                                            'method' => 'post',
-                                        ],
-                                    ]);
+                                if (!in_array($model->status, ['DRAFT', 'PENDING'])) return '';
+                                $approverEmpId = $model->getIssueSignatureEmpId('approver');
+                                $isApprover = false;
+                                if ($approverEmpId && !\Yii::$app->user->isGuest) {
+                                    $approverEmp = \app\modules\hr\models\Employees::findOne($approverEmpId);
+                                    $isApprover = $approverEmp && (int)$approverEmp->user_id === (int)\Yii::$app->user->id;
                                 }
-                                return '';
+                                if (!$isApprover && !\Yii::$app->user->can('inventory')) return '';
+                                return Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+                                    'class' => 'btn btn-sm btn-success',
+                                    'data' => [
+                                        'confirm' => 'ยืนยันอนุมัติใบขอเบิก? (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "รายการจ่ายพัสดุ")',
+                                        'method' => 'post',
+                                    ],
+                                ]);
                             },
                         ],
                     ],

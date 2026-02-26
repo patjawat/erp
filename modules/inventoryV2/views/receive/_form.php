@@ -1,6 +1,7 @@
 <?php
 
 use app\components\AppHelper;
+use app\widgets\TomSelectWidget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
@@ -13,6 +14,7 @@ use kartik\widgets\ActiveForm;
 
 // กำหนดค่าเริ่มต้นเพื่อป้องกัน undefined variable
 $items = $items ?? [];
+$listVendors = $listVendors ?? ['' => '-- เลือกผู้ขาย (ไม่บังคับ) --'];
 // หน้าแก้ไข: ถ้าไม่มี $items แต่โมเดลมี stockDetails ให้ใช้จาก relation (ป้องกันรายการไม่โหลด)
 if (!$model->isNewRecord && empty($items) && is_array($model->stockDetails)) {
     $items = $model->stockDetails;
@@ -34,7 +36,7 @@ foreach ($items as $it) {
 ?>
 
 <div class="container-fluid py-4 receive-form">
-    <?php $form = ActiveForm::begin(['id' => 'receipt-form']); ?>
+    <?php $form = ActiveForm::begin(['id' => 'receipt-form', 'options' => ['enctype' => 'multipart/form-data']]); ?>
 
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center">
@@ -69,13 +71,23 @@ foreach ($items as $it) {
                         ],
                     ])->label('วันที่รับเข้า') ?>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <?= $form->field($model, 'source_type')->dropDownList(
                         \app\modules\inventoryV2\models\StockOrder::optsReceiveSourceType(),
                         ['class' => 'form-select border-primary', 'prompt' => '-- เลือกประเภทการรับเข้า --']
                     )->label('ประเภทการรับเข้า') ?>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <?= $form->field($model, 'contact_id')->widget(TomSelectWidget::class, [
+                        'items' => $listVendors,
+                        'options' => ['class' => 'form-select', 'id' => 'stockorder-contact_id'],
+                        'clientOptions' => [
+                            'placeholder' => 'เลือกผู้ขาย (ไม่บังคับ)',
+                            'allowEmptyOption' => true,
+                        ],
+                    ])->label('ผู้ขาย') ?>
+                </div>
+                <div class="col-md-2">
                     <?= Html::activeHiddenInput($model, 'order_type', ['value' => 'IN']) ?>
                     <?= $form->field($model, 'order_no')->textInput([
                         'maxlength' => true,
@@ -83,8 +95,6 @@ foreach ($items as $it) {
                         'id' => 'stockorder-order_no',
                     ])->label('เลขที่ใบรับเข้า')->hint('กรณีไม่ใช่การจัดซื้อ ไม่มีเลขใบรับสินค้า สามารถเว้นว่างได้ ระบบจะสร้างเลขที่ให้อัตโนมัติ', ['class' => 'form-text text-muted small']) ?>
                 </div>
-               
-                
             </div>
 
             <div class="row g-2 mb-1 align-items-end">
@@ -203,6 +213,55 @@ foreach ($items as $it) {
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+
+            <!-- รายการค่าใช้จ่าย + แนบใบเสร็จ -->
+            <div class="card border border-secondary border-opacity-25 mt-4">
+                <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-cash-stack me-1"></i> รายการค่าใช้จ่าย (ไม่บังคับ)</h6>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddExpense">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มรายการค่าใช้จ่าย
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="expenseTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="width: 40%;">รายการ (คำอธิบาย)</th>
+                                    <th style="width: 15%;">จำนวนเงิน (บาท)</th>
+                                    <th style="width: 35%;">แนบใบเสร็จ</th>
+                                    <th style="width: 6%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="expense-body">
+                                <?php
+                                $expenseItems = $model->getExpenseItems();
+                                foreach ($expenseItems as $ei => $row):
+                                    $desc = isset($row['description']) ? Html::encode($row['description']) : '';
+                                    $amt = isset($row['amount']) ? (float)$row['amount'] : '';
+                                ?>
+                                <tr class="expense-row">
+                                    <td class="text-center text-muted"><?= $ei + 1 ?></td>
+                                    <td><input type="text" name="ExpenseItems[<?= $ei ?>][description]" class="form-control form-control-sm" value="<?= $desc ?>" placeholder="เช่น ค่าขนส่ง"></td>
+                                    <td><input type="number" name="ExpenseItems[<?= $ei ?>][amount]" class="form-control form-control-sm expense-amount" value="<?= $amt !== '' ? $amt : '' ?>" step="0.01" min="0" placeholder="0.00"></td>
+                                    <td>
+                                        <?php if (!empty($row['receipt_path'])): ?>
+                                            <a href="<?= Html::encode($row['receipt_path']) ?>" target="_blank" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-file-earmark-pdf"></i> ดูใบเสร็จ</a>
+                                        <?php endif; ?>
+                                        <input type="file" name="ExpenseItems[<?= $ei ?>][receipt]" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.gif">
+                                    </td>
+                                    <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-expense border-0"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <tr id="expense-empty-row" style="<?= !empty($expenseItems) ? 'display:none' : '' ?>">
+                                    <td colspan="5" class="text-center py-3 text-muted small">ยังไม่มีรายการค่าใช้จ่าย กดปุ่มเพิ่มรายการด้านบน</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div class="text-end mt-4">
@@ -443,6 +502,7 @@ $js = <<< JS
         
         var currentValue = selectEl.val();
         var unitTomSelect = new TomSelect('#' + selectId, {
+            dropdownParent: document.body,
             valueField: 'value',
             labelField: 'text',
             searchField: 'text',
@@ -494,6 +554,17 @@ $js = <<< JS
                 option_create: function(data, escape) {
                     return '<div class="py-1"><strong>สร้างใหม่: ' + escape(data.input) + '</strong></div>';
                 }
+            },
+            onDropdownOpen: function() {
+                var wrapper = this.wrapper;
+                var dropdown = this.dropdown;
+                if (!wrapper || !dropdown) return;
+                var rect = wrapper.getBoundingClientRect();
+                dropdown.style.position = 'fixed';
+                dropdown.style.left = rect.left + 'px';
+                dropdown.style.top = rect.bottom + 'px';
+                dropdown.style.width = Math.max(rect.width, 280) + 'px';
+                dropdown.style.minWidth = rect.width + 'px';
             }
         });
         
@@ -572,8 +643,8 @@ $js = <<< JS
                     err.push('จำนวน (ต้องมากกว่า 0)');
                     qtyInput.addClass('is-invalid');
                 }
-                if (priceVal === '' || priceVal === null || isNaN(price) || price <= 0) {
-                    err.push('ราคา/หน่วย (ต้องมากกว่า 0)');
+                if (priceVal === '' || priceVal === null || isNaN(price) || price < 0) {
+                    err.push('ราคา/หน่วย (ต้องไม่น้อยกว่า 0)');
                     priceInput.addClass('is-invalid');
                 }
                 if (err.length) invalidRows.push({ rowEl: row, row: rowNum, name: itemName, fields: err });
@@ -583,7 +654,7 @@ $js = <<< JS
                 if (firstRow && firstRow.scrollIntoView) {
                     firstRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                var msg = 'กรุณากรอกให้ครบในทุกแถว: Lot number, จำนวน, ราคา/หน่วย (จำนวนและราคาต้องมากกว่า 0)\\n\\n';
+                var msg = 'กรุณากรอกให้ครบในทุกแถว: Lot number, จำนวน (ต้องมากกว่า 0), ราคา/หน่วย (ต้องไม่น้อยกว่า 0)\\n\\n';
                 invalidRows.slice(0, 5).forEach(function(r) {
                     msg += 'แถว ' + r.row + ' (' + r.name.substring(0, 30) + (r.name.length > 30 ? '...' : '') + '): ' + r.fields.join(', ') + '\\n';
                 });
@@ -710,6 +781,7 @@ $js = <<< JS
 
         // 2. ตั้งค่า TomSelect รายการพัสดุ (ใช้ได้เมื่อเลือกประเภทวัสดุแล้วเท่านั้น)
         itemSelect = new TomSelect('#itemSelector', {
+            dropdownParent: document.body,
             valueField: 'item_code',
             labelField: 'item_name',
             searchField: ['item_name', 'item_code'],
@@ -787,7 +859,7 @@ $js = <<< JS
             },
             render: {
                 option: function(data, escape) {
-                    return '<div class="py-2 d-flex justify-content-between"><div><span class="fw-bold">' + escape(data.item_name) + '</span></div><span class="badge bg-secondary">' + escape(data.item_code) + '</span></div>';
+                    return '<div class="py-2 d-flex justify-content-between"><div><span class="fw-bold">' + escape(data.item_name) + '</span></div><span class="badge text-bg-secondary">' + escape(data.item_code) + '</span></div>';
                 },
                 item: function(data, escape) {
                     return '<div>' + escape(data.item_name) + ' <small class="text-muted">[' + escape(data.item_code) + ']</small></div>';
@@ -798,12 +870,50 @@ $js = <<< JS
             shouldLoad: function(query) {
                 var cat = (typeof itemTypeTomSelect !== 'undefined' && itemTypeTomSelect) ? itemTypeTomSelect.getValue() : '';
                 return !!cat;
+            },
+            onDropdownOpen: function() {
+                var wrapper = this.wrapper;
+                var dropdown = this.dropdown;
+                if (!wrapper || !dropdown) return;
+                var rect = wrapper.getBoundingClientRect();
+                dropdown.style.position = 'fixed';
+                dropdown.style.left = rect.left + 'px';
+                dropdown.style.top = rect.bottom + 'px';
+                dropdown.style.width = Math.max(rect.width, 280) + 'px';
+                dropdown.style.minWidth = rect.width + 'px';
             }
         });
         if (!(itemTypeTomSelect.getValue())) itemSelect.disable();
         else { itemSelect.enable(); itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...'; }
 
         if ($('.item-row').length) { reOrder(); calculateTotal(); }
+
+        // รายการค่าใช้จ่าย: เพิ่มแถว
+        function reindexExpenseRows() {
+            $('#expense-body tr.expense-row').each(function(idx) {
+                $(this).find('td:first').text(idx + 1);
+                $(this).find('input[name*="[description]"]').attr('name', 'ExpenseItems[' + idx + '][description]');
+                $(this).find('input[name*="[amount]"]').attr('name', 'ExpenseItems[' + idx + '][amount]');
+                $(this).find('input[type="file"]').attr('name', 'ExpenseItems[' + idx + '][receipt]');
+            });
+            $('#expense-empty-row').toggle($('#expense-body tr.expense-row').length === 0);
+        }
+        $('#btnAddExpense').on('click', function() {
+            var idx = $('#expense-body tr.expense-row').length;
+            var row = '<tr class="expense-row">' +
+                '<td class="text-center text-muted">' + (idx + 1) + '</td>' +
+                '<td><input type="text" name="ExpenseItems[' + idx + '][description]" class="form-control form-control-sm" placeholder="เช่น ค่าขนส่ง"></td>' +
+                '<td><input type="number" name="ExpenseItems[' + idx + '][amount]" class="form-control form-control-sm expense-amount" step="0.01" min="0" placeholder="0.00"></td>' +
+                '<td><input type="file" name="ExpenseItems[' + idx + '][receipt]" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.gif"></td>' +
+                '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-expense border-0"><i class="bi bi-trash"></i></button></td>' +
+                '</tr>';
+            $('#expense-empty-row').before(row);
+            $('#expense-empty-row').hide();
+        });
+        $(document).on('click', '.btn-remove-expense', function() {
+            $(this).closest('tr.expense-row').remove();
+            reindexExpenseRows();
+        });
 
         // 3. ปุ่มเพิ่มแถว (เหมือนเดิม)
        // เปลี่ยนจาก $('#btnAddRow').click(function() { ... });

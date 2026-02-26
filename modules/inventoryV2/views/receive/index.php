@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use yii\widgets\LinkPager;
+use yii\widgets\Pjax;
 use app\components\StatusBadgeHelper;
 
 $totalCount = (int) $dataProvider->getTotalCount();
@@ -47,6 +48,10 @@ $currentStatus = $searchModel->status ?? '';
 </div>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('action'); ?>
+<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?php $this->endBlock(); ?>
+
 
 <div class="receive-index">
     <?= $this->render('_summary_cards', [
@@ -65,15 +70,16 @@ $currentStatus = $searchModel->status ?? '';
                     <i class="bi bi-ui-checks me-1"></i> ทะเบียน<?= Html::encode($this->title) ?>
                     <span class="badge text-bg-light ms-1"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
                 </h6>
-                <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบรับเข้า', ['create'], ['class' => 'btn btn-light btn-sm']) ?>
+                <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบรับเข้า', ['create'], ['class' => 'btn btn-light btn-sm', 'data' => ['pjax' => 0]]) ?>
             </div>
         </div>
         <div class="card-body p-0">
+            <?php Pjax::begin(['id' => 'receive-pjax', 'timeout' => 5000, 'enablePushState' => true]); ?>
             <div class="p-3">
             <?php $form = ActiveForm::begin([
                 'method' => 'get',
                 'action' => Url::to(['index']),
-                'options' => ['class' => 'row g-3 align-items-end w-100 m-0', 'id' => 'receive-search-form'],
+                'options' => ['class' => 'row g-3 align-items-end w-100 m-0', 'id' => 'receive-search-form', 'data-pjax' => 1],
                 'enableClientValidation' => false,
             ]); ?>
             <div class="col-12 col-sm-6 col-md-4 col-lg">
@@ -89,6 +95,12 @@ $currentStatus = $searchModel->status ?? '';
                     <span class="text-muted small flex-shrink-0">–</span>
                     <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $searchModel, 'label' => false]) ?>
                 </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                <label class="form-label small text-muted mb-1">คลัง</label>
+                <?= Html::activeDropDownList($searchModel, 'main_warehouse_id', $warehouses ?? ['' => 'ทุกคลัง'], [
+                    'class' => 'form-select w-100',
+                ]) ?>
             </div>
             <div class="col-12 col-sm-6 col-md-4 col-lg-2">
                 <label class="form-label small text-muted mb-1">สถานะ</label>
@@ -132,7 +144,7 @@ $currentStatus = $searchModel->status ?? '';
                     <tr>
                         <td colspan="7" class="text-center">
                             <div class="text-muted py-5"><i class="bi bi-inbox display-6 d-block mb-2"></i>ยังไม่มีใบรับเข้า</div>
-                            <div class="pb-3"><?= Html::a('สร้างใบรับเข้า', ['create'], ['class' => 'btn btn-success btn-sm']) ?></div>
+                            <div class="pb-3"><?= Html::a('สร้างใบรับเข้า', ['create'], ['class' => 'btn btn-success btn-sm', 'data' => ['pjax' => 0]]) ?></div>
                         </td>
                     </tr>
                 <?php else: ?>
@@ -148,22 +160,22 @@ $currentStatus = $searchModel->status ?? '';
                     $pageTotalValue += $rowTotal;
                     ?>
                     <tr>
-                        <td><?= Html::a(Html::encode($item->order_no), ['view', 'id' => $item->id], ['class' => 'fw-semibold text-decoration-none']) ?></td>
-                        <td class="text-secondary"><?= Yii::$app->formatter->asDate($item->order_date, 'php:d/m/Y') ?></td>
+                        <td><?= Html::a(Html::encode($item->order_no), ['view', 'id' => $item->id], ['class' => 'fw-semibold text-decoration-none', 'data' => ['pjax' => 0]]) ?></td>
+                        <td class="text-secondary"><?= $item->order_date ? \app\components\ThaiDateHelper::formatThaiDate($item->order_date) : '-' ?></td>
                         <td><?= $item->main_warehouse_id ? $warehouseName : '<span class="text-muted">-</span>' ?></td>
                         <td class="text-end text-muted"><?= $detailCount ?></td>
                         <td class="text-end"><span class="fw-semibold"><?= number_format($rowTotal, 2) ?></span> <span class="text-muted small">บาท</span></td>
                         <td class="text-center"><?= StatusBadgeHelper::renderStatusBadge($item->status, ['tooltip' => StatusBadgeHelper::getLabel($item->status)]) ?></td>
                         <td class="text-end">
-                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary border-0', 'title' => 'ดู']) ?>
+                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary border-0', 'title' => 'ดู', 'data' => ['pjax' => 0]]) ?>
                             <?php if ($item->status !== 'CANCELLED'): ?>
-                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary border-0', 'title' => 'แก้ไข']) ?>
+                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary border-0', 'title' => 'แก้ไข', 'data' => ['pjax' => 0]]) ?>
                             <?php endif; ?>
                             <?php if ($item->status === 'CONFIRMED'): ?>
                                 <?= Html::a('<i class="bi bi-x-circle"></i>', ['cancel', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-outline-danger border-0',
                                     'title' => 'ยกเลิกใบรับเข้า',
-                                    'data' => ['method' => 'post', 'confirm' => 'ยืนยันยกเลิกใบรับเข้านี้? ระบบจะหักยอดสต็อกคืน'],
+                                    'data' => ['method' => 'post', 'confirm' => 'ยืนยันยกเลิกใบรับเข้านี้? ระบบจะหักยอดสต็อกคืน', 'pjax' => 0],
                                 ]) ?>
                             <?php endif; ?>
                         </td>
@@ -176,7 +188,8 @@ $currentStatus = $searchModel->status ?? '';
                 <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
                     <span class="text-muted small">แสดง <?= $summaryBegin ?>–<?= $summaryEnd ?> จาก <?= $totalCount ?> รายการ</span>
                     <?php if ($totalCount > 0): ?>
-                        <span class="text-muted small">ผลรวมมูลค่าที่รับเข้า: <strong class="text-body"><?= number_format($pageTotalValue, 2) ?></strong> บาท</span>
+                        <span class="text-muted small">ผลรวมหน้านี้: <strong class="text-body"><?= number_format($pageTotalValue, 2) ?></strong> บาท</span>
+                        <span class="text-muted small">รวมยอดเงินทั้งหมด: <strong class="text-primary"><?= number_format($totalAmount ?? 0, 2) ?></strong> บาท</span>
                     <?php endif; ?>
                 </div>
                 <?= LinkPager::widget([
@@ -188,14 +201,21 @@ $currentStatus = $searchModel->status ?? '';
                 ]) ?>
             </div>
             </div>
+            <?php Pjax::end(); ?>
         </div>
     </div>
 </div>
 <?php
 $this->registerJs(
     <<<'JS'
-document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
-    new bootstrap.Tooltip(el);
+function initReceiveTooltips() {
+    document.querySelectorAll('#receive-pjax [data-bs-toggle="tooltip"]').forEach(function(el) {
+        new bootstrap.Tooltip(el);
+    });
+}
+initReceiveTooltips();
+$(document).on('pjax:end', '#receive-pjax', function() {
+    initReceiveTooltips();
 });
 JS,
     \yii\web\View::POS_READY

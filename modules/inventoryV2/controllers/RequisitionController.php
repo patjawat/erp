@@ -2,6 +2,8 @@
 
 namespace app\modules\inventoryV2\controllers;
 
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\inventoryV2\components\InventoryService;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
@@ -82,6 +84,33 @@ public function behaviors()
                         $model->order_no = $this->generateOrderNo();
                     }
 
+                    $model->setIssueReason($this->request->post('issue_reason', ''));
+
+                    $approverEmpId = $this->request->post('approver_emp_id');
+                    $model->setIssueSignatures([
+                        'approver' => [
+                            'name' => $this->request->post('approver_name', ''),
+                            'position' => $this->request->post('approver_position', ''),
+                            'date' => '',
+                            'emp_id' => $approverEmpId ? (int) $approverEmpId : null,
+                        ],
+                    ]);
+
+                    // ผู้เบิก = พนักงานจาก user ที่ล็อกอิน (ดึงตำแหน่งจากระบบพนักงาน)
+                    $userId = Yii::$app->user->id;
+                    $emp = $userId ? Employees::findOne(['user_id' => $userId]) : null;
+                    if ($emp) {
+                        $reqData = StockOrder::getEmployeeNameAndPosition($emp->id);
+                        $model->setIssueSignatures([
+                            'requester' => [
+                                'name' => $reqData['name'],
+                                'position' => $reqData['position'],
+                                'date' => date('Y-m-d'),
+                                'emp_id' => $emp->id,
+                            ],
+                        ]);
+                    }
+
                     $details = $this->request->post('StockDetail', []);
                     $details = array_values(array_filter($details, function ($d) {
                         return !empty($d['item_code']) && isset($d['qty']) && (float) $d['qty'] > 0;
@@ -119,7 +148,54 @@ public function behaviors()
             }
         }
 
+        // ดึงผู้เห็นชอบ (หัวหน้า) จากการตั้งค่าผังโครงสร้างองค์กร ถ้ายังไม่ได้ตั้ง
+        if (!$model->getIssueSignatureEmpId('approver')) {
+            $defaultApprover = static::getDefaultApproverFromOrgDiagram();
+            if ($defaultApprover && !empty($defaultApprover['emp_id'])) {
+                $model->setIssueSignatures([
+                    'approver' => [
+                        'name' => $defaultApprover['name'],
+                        'position' => $defaultApprover['position'],
+                        'date' => '',
+                        'emp_id' => $defaultApprover['emp_id'],
+                    ],
+                ]);
+            }
+        }
+
         return $this->render('create', ['model' => $model]);
+    }
+
+    /**
+     * ดึงหัวหน้า/ผู้ควบคุม/ประสานงาน จากผังโครงสร้างองค์กร (hr/organization/diagram)
+     * ใช้โหนดแรกที่ตั้งค่า leader1 (หัวหน้า/ผู้ควบคุม/ประสานงาน) แล้ว
+     * @return array{name: string, position: string, emp_id: int|null}|null
+     */
+    protected static function getDefaultApproverFromOrgDiagram()
+    {
+        if (!class_exists(Organization::class)) {
+            return null;
+        }
+        $nodes = Organization::find()
+            ->where(['tb_name' => 'diagram'])
+            ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+            ->all();
+        foreach ($nodes as $node) {
+            $dj = $node->data_json;
+            if (is_string($dj)) {
+                $dj = json_decode($dj, true) ?: [];
+            }
+            if (!is_array($dj)) {
+                $dj = [];
+            }
+            $leader1 = isset($dj['leader1']) ? (int) $dj['leader1'] : 0;
+            if ($leader1 > 0) {
+                $info = StockOrder::getEmployeeNameAndPosition($leader1);
+                $info['emp_id'] = $leader1;
+                return $info;
+            }
+        }
+        return null;
     }
 
     protected function generateOrderNo()
@@ -221,6 +297,7 @@ public function behaviors()
 
     /**
      * หัวหน้ากดอนุมัติใบขอเบิก (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "ดำเนินการจ่าย")
+     * เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิ inventory เท่านั้น
      */
     public function actionApprove($id)
     {
@@ -229,7 +306,28 @@ public function behaviors()
             Yii::$app->session->setFlash('warning', 'เอกสารนี้ไม่อยู่ในสถานะที่อนุมัติได้');
             return $this->redirect(['view', 'id' => $model->id]);
         }
+        $approverEmpId = $model->getIssueSignatureEmpId('approver');
+        $isCurrentUserApprover = false;
+        if ($approverEmpId && !Yii::$app->user->isGuest) {
+            $approverEmp = Employees::findOne($approverEmpId);
+            $isCurrentUserApprover = $approverEmp && (int) $approverEmp->user_id === (int) Yii::$app->user->id;
+        }
+        $hasInventoryPermission = Yii::$app->user->can('inventory');
+        if (!$isCurrentUserApprover && !$hasInventoryPermission) {
+            Yii::$app->session->setFlash('warning', 'เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิคลังสินค้าเท่านั้นที่อนุมัติได้');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
         $model->status = StockOrder::STATUS_APPROVED;
+        // บันทึกวันที่อนุมัติใน issue_approver.date
+        $approverSig = $model->getIssueSignature('approver');
+        $model->setIssueSignatures([
+            'approver' => [
+                'name' => $approverSig['name'],
+                'position' => $approverSig['position'],
+                'date' => date('Y-m-d H:i:s'),
+                'emp_id' => $model->getIssueSignatureEmpId('approver'),
+            ],
+        ]);
         if ($model->save(false)) {
             Yii::$app->session->setFlash('success', 'อนุมัติใบขอเบิกแล้ว — คลังสามารถดำเนินการจ่ายที่เมนู "รายการจ่ายพัสดุ"');
         } else {
@@ -289,6 +387,18 @@ public function behaviors()
                         $model->order_date = ($y > 2400 ? $y - 543 : $y) . '-' . sprintf('%02d', (int) $m[2]) . '-' . sprintf('%02d', (int) $m[1]);
                     }
 
+                    $model->setIssueReason($this->request->post('issue_reason', ''));
+
+                    $approverEmpId = $this->request->post('approver_emp_id');
+                    $model->setIssueSignatures([
+                        'approver' => [
+                            'name' => $this->request->post('approver_name', ''),
+                            'position' => $this->request->post('approver_position', ''),
+                            'date' => $model->getIssueSignature('approver')['date'],
+                            'emp_id' => $approverEmpId ? (int) $approverEmpId : null,
+                        ],
+                    ]);
+
                     $details = $this->request->post('StockDetail', []);
                     $details = array_values(array_filter($details, function ($d) {
                         return !empty($d['item_code']) && isset($d['qty']) && (float) $d['qty'] > 0;
@@ -335,8 +445,17 @@ public function behaviors()
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'รายละเอียดใบขอเบิก: ' . $model->order_no,
+                'content' => $this->renderAjax('view', ['model' => $model]),
+                'footer' => '',
+            ];
+        }
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 

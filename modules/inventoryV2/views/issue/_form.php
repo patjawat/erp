@@ -13,13 +13,13 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                 <h5 class="mb-0">บันทึกการจ่ายพัสดุ: REQ67-0045</h5>
             </div>
                 
-            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">คลังต้นทาง: คลังพัสดุกลาง</span>
+            <span class="badge text-bg-primary rounded-pill fw-medium px-2 py-1">คลังต้นทาง: คลังพัสดุกลาง</span>
         </div>
         <div class="card-body">
             <div class="row mb-4 bg-light p-3 rounded mx-0">
                 <div class="col-md-4">
-                    <small class="text-muted d-block">หน่วยงานที่เบิก</small>
-                    <strong class="h6">แผนกไอที (IT Department)</strong>
+                    <small class="text-muted d-block">แผนก/ฝ่ายที่เบิก</small>
+                    <strong class="h6">แผนกผู้ป่วยนอก (OPD)</strong>
                 </div>
                 <div class="col-md-4 text-center border-start border-end">
                     <small class="text-muted d-block">อ้างอิงใบแจ้งซ่อม/โครงการ</small>

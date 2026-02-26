@@ -10,7 +10,7 @@ $totalLeave = $notify['leave']['total'];
 $totalPurchase = $notify['purchase']['total'];
 
 $menus = [
-    ['icon' => 'fa-regular fa-calendar', 'label' => 'ขอลา', 'url' => ['/me/leave']],
+    ['icon' => 'fa-regular fa-calendar', 'label' => 'ขอลา', 'url' => ['/leave/default/index']],
     ['icon' => 'fa-solid fa-screwdriver-wrench', 'label' => 'แจ้งซ่อม', 'url' => ['/me/repair-v2']],
     ['icon' => 'fa-solid fa-bag-shopping', 'label' => 'ขอซื้อขอจ้าง', 'url' => ['/me/purchase']],
     ['icon' => 'fa-solid fa-car', 'label' => 'จองรถ', 'url' => ['/me/booking-vehicle/calendar']],

@@ -1,10 +1,12 @@
 <?php
 use app\components\UserHelper;
 use app\components\ApproveHelper;
+use yii\helpers\Url;
+use app\assets\ApproveV2Asset;
 
-    use yii\helpers\Url;
+ApproveV2Asset::register($this);
 
-    $me = UserHelper::GetEmployee();
+$me = UserHelper::GetEmployee();
     $notify = ApproveHelper::Info();
     $totalLeave = $notify['leave']['total'];
     $totalBookingCar = $notify['booking_car']['total'];
@@ -13,11 +15,12 @@ use app\components\ApproveHelper;
     $totalDevelopment = $notify['development']['total'];
     $totalAssetMove = $notify['assetMove']['total'];
     $totalCheckin = $notify['checkin']['total'];
+    $totalRequisitionV2 = $notify['requisitionV2']['total'] ?? 0;
     ?>
 
 <?php //  $this->render('@app/modules/approveV2/views/default/card_summary') ?>
 
- <div class="d-flex flex-row gap-3 bg-light p-2 rounded-3 mb-3">
+ <div class="approve-v2-tabs d-flex flex-row flex-wrap gap-2 gap-md-3 p-2 mb-3">
         <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="btn d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'leave'  ? 'bg-white shadow-sm' : '' ?>">
             <i data-lucide="calendar"></i>
             วันลา
@@ -52,6 +55,16 @@ use app\components\ApproveHelper;
            <?php if($totalStock > 0):?>
                 <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
                     <?=$totalStock?>
+                  </span>
+            <?php endif;?>
+     </a>
+
+     <a href="<?= Url::to(['/approve-v2/main-stock/requisition-v2']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'main-stock-requisition-v2' ? 'bg-white shadow-sm' : '' ?>">
+         <i data-lucide="clipboard-list"></i>
+         เบิกวัสดุv2
+           <?php if($totalRequisitionV2 > 0):?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?= $totalRequisitionV2 ?>
                   </span>
             <?php endif;?>
      </a>

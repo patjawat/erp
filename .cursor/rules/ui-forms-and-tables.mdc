@@ -1,5 +1,5 @@
 ---
-description: มาตรฐานฟอร์ม ตาราง การ์ด และวันที่ (ห้ามใช้ GridView — ใช้ foreach + table เท่านั้น, tbody align-middle table-group-divider, DatepickerThai)
+description: มาตรฐานฟอร์ม ตาราง การ์ด หัวข้อ h1–h6 และวันที่ (h1–h6 ไม่ใส่ class ความหนา; ห้ามใช้ GridView — ใช้ foreach + table เท่านั้น)
 globs: "**/views/**/*.php"
 alwaysApply: false
 ---
@@ -32,9 +32,35 @@ alwaysApply: false
 
 - ช่องวันที่ในฟอร์มค้นหาช่วงวันที่ให้ใช้ component ที่มี widget อยู่แล้ว: `_date_start`, `_date_end` (render ด้วย `@app/components/ui/_date_start`, `_date_end`)
 
+## การแสดงวันที่ในตาราง (พ.ศ.)
+
+- **ในตาราง (GridView, DetailView, foreach)** ให้แสดงวันที่เป็น **พ.ศ.** เสมอ โดยใช้ **`\app\components\ThaiDateHelper::formatThaiDate($date)`**
+- ห้ามใช้ `format => ['date', 'php:d/m/Y']` หรือ `asDate(..., 'php:d/m/Y')` ในคอลัมน์วันที่ — ให้ใช้ `format => 'raw'` และ `value` ที่คืนค่าจาก `ThaiDateHelper::formatThaiDate(...)` แทน (รูปแบบผลลัพธ์เช่น "15 ก.พ. 2568")
+- ถ้าต้องแสดงเวลา: ใช้ `formatThaiDate($date)` แล้วต่อท้ายด้วย `date('H:i', strtotime($date))` หรือเทียบเท่า
+
 ## การ์ด (Card)
 
 - **card-body ไม่ใช้** `bg-light` (ใช้พื้นหลัง default ของการ์ดเท่านั้น)
+
+## หัวข้อ (Headings h1–h6)
+
+- **ห้ามใส่ class ความหนาของตัวอักษร** กับแท็ก `<h1>` ถึง `<h6>`
+- ไม่ใช้ `fw-bold`, `fw-semibold`, `fw-medium`, `font-weight-bold` หรือ class อื่นที่ควบคุม font-weight กับหัวข้อ
+- ให้ใช้ความหนาตาม default ของ heading หรือตาม theme/CSS หลักของโปรเจกต์เท่านั้น
+
+### ตัวอย่างที่ผิด
+
+```html
+<h4 class="fw-bold text-body mb-0">หัวข้อ</h4>
+<h5 class="fw-semibold text-body mb-2">หัวข้อย่อย</h5>
+```
+
+### ตัวอย่างที่ถูก
+
+```html
+<h4 class="text-body mb-0">หัวข้อ</h4>
+<h5 class="text-body mb-2">หัวข้อย่อย</h5>
+```
 
 ## ฟอร์ม (Form controls)
 
@@ -44,17 +70,10 @@ alwaysApply: false
 
 ## Badge (ป้ายสถานะ)
 
-- **ใช้เฉพาะ** รูปแบบ Bootstrap 5 มาตรฐาน: **`badge text-bg-{color}`** เท่านั้น
-- **ห้ามใช้** `badge bg-*` อย่างเดียว (ต้องมี `text-bg-*` เพื่อให้สีตัวอักษรถูกต้อง)
-- สถานะความหมาย: อนุมัติ/สำเร็จ = `text-bg-success`, ไม่อนุมัติ/ผิดพลาด = `text-bg-danger`, รออนุมัติ/คำเตือน = `text-bg-warning` (ใช้ `text-bg-warning text-dark` ถ้าต้องการตัวอักษรเข้มบนพื้นเหลือง)
-
-### ตัวอย่าง
-
-```php
-<span class="badge text-bg-success">อนุมัติแล้ว</span>
-<span class="badge text-bg-danger">ไม่อนุมัติ</span>
-<span class="badge text-bg-warning text-dark">รออนุมัติ</span>
-```
+- **ทุก badge ต้องใช้รูปแบบมาตรฐานเท่านั้น — ห้ามแหกกฎ** → รายละเอียดเต็มที่ **`.cursor/rules/badges-ux-ui.mdc`**
+- รูปแบบบังคับ: **`badge bg-{color} bg-opacity-10 text-{color} border border-{color}-subtle rounded-pill fw-medium px-2 py-1`**
+- เปลี่ยนได้เฉพาะ **{color}**: `warning`, `success`, `danger`, `info`, `primary`, `secondary` ตามความเหมาะสม
+- ห้ามใช้ `text-bg-*` หรือรูปแบบ badge อื่น
 
 ## หน้ารายการ (List / Table) — กฎเหล็ก
 

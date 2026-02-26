@@ -389,7 +389,7 @@ class LeaveController extends Controller
                         $model->createApprove();
                 }
 
-                return $this->redirect(['/me/leave']);
+                return $this->redirect(['/leave/default/index']);
 
             }
         } else {
@@ -436,7 +436,7 @@ class LeaveController extends Controller
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
             $model->save();
 
-            return $this->redirect(['/me/leave']);
+            return $this->redirect(['/leave/default/index']);
         }
 
         if ($this->request->isAJax) {

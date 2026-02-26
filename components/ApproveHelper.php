@@ -21,7 +21,7 @@ class ApproveHelper extends Component
     public static function Info()
     {
         return [
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -29,7 +29,7 @@ class ApproveHelper extends Component
             'development' => self::Development(),
             'checkin' => self::Checkin(),
             'assetMove' => self::AssetMove(),
-            // 'helpdesk' => self::Helpdesk(),
+            'requisitionV2' => self::RequisitionV2(),
         ];
     }
 
@@ -194,6 +194,31 @@ class ApproveHelper extends Component
         } catch (\Throwable $th) {
             return [
                 'title' => 'อนุมัติขอเบิกวัสดุ',
+                'total' => 0,
+                'datas' => [],
+            ];
+        }
+    }
+
+    /** รายการขออนุมัติเบิกวัสดุ (inventoryV2 – ใบขอเบิกรอหัวหน้าอนุมัติ) */
+    public static function RequisitionV2()
+    {
+        try {
+            $count = (int) \app\modules\inventoryV2\models\StockOrder::find()
+                ->where([
+                    'order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_OUT,
+                    'source_type' => 'REQUEST',
+                ])
+                ->andWhere(['status' => [\app\modules\inventoryV2\models\StockOrder::STATUS_DRAFT, \app\modules\inventoryV2\models\StockOrder::STATUS_PENDING]])
+                ->count();
+            return [
+                'title' => 'ขออนุมัติเบิกวัสดุ',
+                'total' => $count,
+                'datas' => [],
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'title' => 'ขออนุมัติเบิกวัสดุ',
                 'total' => 0,
                 'datas' => [],
             ];

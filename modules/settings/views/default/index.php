@@ -145,5 +145,18 @@ $this->title = "การตั้งค่าระบบ";
                 </div>
             </a>
         </div>
+
+        <div class="col-lg-3 col-mg-3 col-sm-6">
+            <a href="<?php echo Url::to(['/settings/update']) ?>">
+                <div class="card border-0 shadow-sm hover-card">
+                    <div class="d-flex justify-content-center align-items-center bg-secondary p-4 rounded-top">
+                        <i class="fa-solid fa-arrows-rotate fs-1 text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-center text-primary">อัปเดตระบบ</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>

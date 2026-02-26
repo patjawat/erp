@@ -9,7 +9,7 @@ $this->title = 'ระบบตัดจ่ายพัสดุอเนกป�
     <div class="card shadow-sm border-0 border-top border-4 border-primary">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-box-arrow-up-right"></i> บันทึกการจ่ายพัสดุ/การใช้งาน</h5>
-            <span class="badge bg-primary bg-opacity-10 border border-1 border-primary text-primary">คลังที่ดำเนินการ: <span id="currentWarehouse">ห้องยา/คลังเวชภัณฑ์</span></span>
+            <span class="badge text-bg-primary">คลังที่ดำเนินการ: <span id="currentWarehouse">ห้องยา/คลังเวชภัณฑ์</span></span>
         </div>
         <div class="card-body">
             

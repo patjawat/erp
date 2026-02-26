@@ -20,7 +20,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0" placeholder="ค้นหาเลขที่ใบเบิก/หน่วยงาน...">
+                        <input type="text" class="form-control border-start-0" placeholder="ค้นหาเลขที่ใบเบิก/แผนก...">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -38,7 +38,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                         <tr>
                             <th width="12%">วันที่เบิก</th>
                             <th width="15%">เลขที่ใบเบิก</th>
-                            <th width="20%">หน่วยงานที่เบิก</th>
+                            <th width="20%">แผนก/ฝ่ายที่เบิก</th>
                             <th width="25%">รายการย่อ</th>
                             <th width="13%" class="text-center">สถานะ</th>
                             <th width="15%" class="text-end">จัดการ</th>
@@ -51,7 +51,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                             <td>แผนกฉุกเฉิน (ER)</td>
                             <td>ถุงมือตรวจโรค, หน้ากาก N95...</td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-warning text-dark">รอคลังหลักจ่าย</span>
+                                <span class="badge rounded-pill text-bg-warning text-dark">รอคลังหลักจ่าย</span>
                             </td>
                             <td class="text-end">
                                 <a href="<?= Url::to(['/inventory-v2/default/stock-issue']) ?>?>" class="btn btn-primary btn-sm btn-issue-process" data-id="REQ67-0045">
@@ -65,7 +65,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                             <td>รพ.สต. บ้านโพธิ์</td>
                             <td>สำลีพันปลายไม้, แอลกอฮอล์...</td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-success">จ่ายพัสดุแล้ว</span>
+                                <span class="badge rounded-pill text-bg-success">จ่ายพัสดุแล้ว</span>
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-outline-secondary btn-sm">

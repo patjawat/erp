@@ -5,14 +5,18 @@ namespace app\modules\inventoryV2\controllers;
 use app\components\AppHelper;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
+use app\modules\sm\models\Vendor;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
+use yii\db\Expression;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\UploadedFile;
 
 /**
  * StockOrderController implements the CRUD actions for StockOrder model.
@@ -70,10 +74,60 @@ class ReceiveController extends Controller
             ->all();
         $statusSummaryMap = array_column($statusSummary, 'cnt', 'status');
 
+        $warehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
+            Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                ->orderBy('warehouse_name')
+                ->all(),
+            'id',
+            'warehouse_name'
+        );
+
+        // รวมยอดเงินทั้งหมด (ตามตัวกรองปัจจุบัน)
+        $totalAmountQuery = StockOrder::find()->select('id')->where(['order_type' => 'IN']);
+        if ($start !== null && $start !== '') {
+            $totalAmountQuery->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
+        }
+        if ($end !== null && $end !== '') {
+            $totalAmountQuery->andWhere(['<=', 'order_date', $end . ' 23:59:59']);
+        }
+        $totalAmountQuery->andFilterWhere(['main_warehouse_id' => $searchModel->main_warehouse_id]);
+        if ($searchModel->order_no !== null && $searchModel->order_no !== '') {
+            $totalAmountQuery->andWhere(['like', 'order_no', $searchModel->order_no]);
+        }
+        if ($searchModel->status !== null && $searchModel->status !== '') {
+            $totalAmountQuery->andWhere(['status' => $searchModel->status]);
+        }
+        $totalFromSet = $searchModel->total_from !== null && $searchModel->total_from !== '';
+        $totalToSet = $searchModel->total_to !== null && $searchModel->total_to !== '';
+        if ($totalFromSet || $totalToSet) {
+            $havingSub = (new \yii\db\Query())
+                ->select('stock_order_id')
+                ->from(StockDetail::tableName())
+                ->groupBy('stock_order_id');
+            $havings = [];
+            if ($totalFromSet) {
+                $havings[] = ['>=', new Expression('SUM(qty * COALESCE(unit_price, 0))'), (float) $searchModel->total_from];
+            }
+            if ($totalToSet) {
+                $havings[] = ['<=', new Expression('SUM(qty * COALESCE(unit_price, 0))'), (float) $searchModel->total_to];
+            }
+            if (!empty($havings)) {
+                $havingSub->having(array_merge(['and'], $havings));
+            }
+            $totalAmountQuery->andWhere(['id' => $havingSub]);
+        }
+        $totalAmount = (float) StockDetail::find()
+            ->where(['stock_order_id' => $totalAmountQuery])
+            ->sum(new Expression('qty * COALESCE(unit_price, 0)'));
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'statusSummary' => $statusSummaryMap,
+            'warehouses' => $warehouses,
+            'totalAmount' => $totalAmount,
         ]);
     }
 
@@ -159,8 +213,8 @@ class ReceiveController extends Controller
                             if ($qty <= 0) {
                                 throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
                             }
-                            if ($price <= 0) {
-                                throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                            if ($price < 0) {
+                                throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องไม่น้อยกว่า 0)");
                             }
                             $detail = new StockDetail();
                             $detail->stock_order_id = $model->id;
@@ -174,6 +228,7 @@ class ReceiveController extends Controller
                                 throw new \Exception("รายการที่ {$rowNum}: " . $errors);
                             }
                         }
+                        $this->saveExpenseItemsAndReceipts($model);
                         $transaction->commit();
                         return [
                             'success' => true,
@@ -196,8 +251,8 @@ class ReceiveController extends Controller
                         if ($qty === null || $qty <= 0) {
                             throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
                         }
-                        if ($price === null || $price === '' || $price <= 0) {
-                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                        if ($price === null || $price === '' || $price < 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องไม่น้อยกว่า 0)");
                         }
                     }
 
@@ -228,6 +283,7 @@ class ReceiveController extends Controller
                         }
                     }
 
+                    $this->saveExpenseItemsAndReceipts($model);
                     $transaction->commit();
                     return [
                         'success' => true,
@@ -249,6 +305,11 @@ class ReceiveController extends Controller
 
         // กรณีโหลดหน้าเว็บปกติ (GET) - แสดงวันที่เป็น พ.ศ.
         $model->order_date = AppHelper::convertToThai(date('Y-m-d'));
+        $listVendors = ['' => '-- เลือกผู้ขาย (ไม่บังคับ) --'] + ArrayHelper::map(
+            Vendor::find()->where(['name' => 'vendor'])->orderBy('title')->all(),
+            'id',
+            'title'
+        );
         return $this->render('create', [
             'model' => $model,
             'listWarehouse' => \yii\helpers\ArrayHelper::map(
@@ -262,6 +323,7 @@ class ReceiveController extends Controller
             ),
             'listItemType' => StockItem::ListStockItemType(),
             'items' => [], // สำหรับหน้า create จะไม่มีรายการเริ่มต้น
+            'listVendors' => $listVendors,
         ]);
     }
 
@@ -361,8 +423,8 @@ class ReceiveController extends Controller
                         if ($qty <= 0) {
                             throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
                         }
-                        if ($price <= 0) {
-                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                        if ($price < 0) {
+                            throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องไม่น้อยกว่า 0)");
                         }
                         $detail = new StockDetail();
                         $detail->isNewRecord = true;
@@ -378,6 +440,7 @@ class ReceiveController extends Controller
                             throw new \Exception("รายการที่ {$rowNum}: " . $errors);
                         }
                     }
+                    $this->saveExpenseItemsAndReceipts($model);
                     $transaction->commit();
                     return [
                         'success' => true,
@@ -401,8 +464,8 @@ class ReceiveController extends Controller
                     if ($qty === null || $qty <= 0) {
                         throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกจำนวน (ต้องมากกว่า 0)");
                     }
-                    if ($price === null || $price === '' || $price <= 0) {
-                        throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องมากกว่า 0)");
+                    if ($price === null || $price === '' || $price < 0) {
+                        throw new \Exception("รายการที่ {$rowNum}: กรุณากรอกราคา/หน่วย (ต้องไม่น้อยกว่า 0)");
                     }
                 }
 
@@ -430,6 +493,7 @@ class ReceiveController extends Controller
                     }
                 }
 
+                $this->saveExpenseItemsAndReceipts($model);
                 $transaction->commit();
                 return [
                     'success' => true,
@@ -452,6 +516,11 @@ class ReceiveController extends Controller
 
     // กรณีโหลดหน้าแก้ไขปกติ (GET) - แสดงวันที่เป็น พ.ศ.
     $model->order_date = $model->order_date ? AppHelper::convertToThai($model->order_date) : AppHelper::convertToThai(date('Y-m-d'));
+    $listVendors = ['' => '-- เลือกผู้ขาย (ไม่บังคับ) --'] + ArrayHelper::map(
+        Vendor::find()->where(['name' => 'vendor'])->orderBy('title')->all(),
+        'id',
+        'title'
+    );
     return $this->render('update', [
         'model' => $model,
         'items' => $oldItems,
@@ -465,6 +534,7 @@ class ReceiveController extends Controller
                 'warehouse_name'
             ),
         'listItemType' => StockItem::ListStockItemType(),
+        'listVendors' => $listVendors,
     ]);
 }
 
@@ -539,6 +609,47 @@ class ReceiveController extends Controller
             $no = $prefix . mt_rand(100, 999);
         } while (StockOrder::findOne(['order_no' => $no]) !== null);
         return $no;
+    }
+
+    /**
+     * บันทึกรายการค่าใช้จ่ายและไฟล์ใบเสร็จแนบ จาก POST และ FILES ลง data_json
+     * @param StockOrder $model ต้องมี id แล้ว (หลัง save)
+     */
+    protected function saveExpenseItemsAndReceipts(StockOrder $model)
+    {
+        $expensePost = $this->request->post('ExpenseItems', []);
+        if (!is_array($expensePost)) {
+            return;
+        }
+        $existing = $model->getExpenseItems();
+        $dir = Yii::getAlias('@webroot/uploads/receive-receipts');
+        if (!is_dir($dir)) {
+            FileHelper::createDirectory($dir, 0755, true);
+        }
+        $expenseList = [];
+        foreach ($expensePost as $i => $row) {
+            $desc = trim($row['description'] ?? '');
+            $amount = isset($row['amount']) && $row['amount'] !== '' ? (float) $row['amount'] : 0;
+            $receiptPath = isset($existing[$i]['receipt_path']) ? $existing[$i]['receipt_path'] : null;
+            $file = UploadedFile::getInstanceByName('ExpenseItems[' . $i . '][receipt]');
+            if ($file && $file->error === \UPLOAD_ERR_OK) {
+                $baseName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->baseName);
+                $name = $model->id . '_' . $i . '_' . $baseName . '.' . $file->extension;
+                $path = $dir . '/' . $name;
+                if ($file->saveAs($path)) {
+                    $receiptPath = '/uploads/receive-receipts/' . $name;
+                }
+            }
+            if ($desc !== '' || $amount > 0 || $receiptPath !== null) {
+                $expenseList[] = [
+                    'description' => $desc,
+                    'amount' => $amount,
+                    'receipt_path' => $receiptPath,
+                ];
+            }
+        }
+        $model->setExpenseItems($expenseList);
+        $model->save(false);
     }
 
     /**

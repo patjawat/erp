@@ -13123,6 +13123,7 @@ textarea:focus {
   transition: opacity 300ms;
 }
 
+/* Badge: ตาม .cursor/rules ใช้เฉพาะรูปแบบ badge text-bg-{color} (เช่น text-bg-success, text-bg-danger, text-bg-warning text-dark) */
 .badge {
   font-weight: normal;
   font-size: 0.85rem;

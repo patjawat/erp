@@ -13,6 +13,7 @@ $stats = $stats ?? [
     'total_value' => 0,
     'lots_count' => 0,
     'items_with_stock' => 0,
+    'insufficient_to_disburse_count' => 0,
 ];
 $warehouses = $warehouses ?? [];
 $pendingRequisitions = $pendingRequisitions ?? [];
@@ -47,10 +48,11 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-    <!-- Toolbar: filter + action -->
+    <!-- Toolbar: ย้อนกลับ + filter + action -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                <?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm me-auto']) ?>
                 <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse" class="d-inline">
                     <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3" id="warehouseFilter" style="min-width: 200px;">
                         <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังทั้งหมด</option>
@@ -69,8 +71,6 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
 
 <div class="container-fluid py-4 main-stock-dashboard">
 
-
-
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
@@ -83,6 +83,20 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                             <span class="text-muted small mb-1">ฉบับ</span>
                         </div>
                         <span class="text-primary small fw-bold mt-2 d-inline-block">ดูรายการค้างจ่าย <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="<?= Url::to(['/inventory-v2/report/insufficient-to-disburse']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
+                <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-warning border-3">
+                    <div class="card-body p-3">
+                        <p class="text-muted small mb-1 fw-bold">วัสดุไม่พอจ่าย</p>
+                        <div class="d-flex align-items-end gap-2">
+                            <span class="fs-4 fw-bold text-warning text-dark" id="kpi-insufficient"><?= (int)($stats['insufficient_to_disburse_count'] ?? 0) ?></span>
+                            <span class="text-muted small mb-1">รายการ</span>
+                        </div>
+                        <span class="text-warning text-dark small fw-bold mt-2 d-inline-block">ดูรายการ + ต้องซื้อเพิ่ม <i class="bi bi-arrow-right"></i></span>
                     </div>
                 </div>
             </a>
@@ -134,7 +148,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="text-white mb-0 small fw-normal">
                         <i class="bi bi-graph-up me-1"></i>แนวโน้มการรับเข้า-จ่ายออก
-                        <span class="badge bg-light text-dark ms-1" id="chart-badge"><?= Html::encode($currentWarehouseName) ?></span>
+                        <span class="badge text-bg-light text-dark ms-1" id="chart-badge"><?= Html::encode($currentWarehouseName) ?></span>
                     </h6>
                     <?php if ($fiscalYear): ?>
                         <span class="small opacity-90">ปีงบประมาณ <?= (int)$fiscalYear ?></span>
@@ -151,7 +165,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการเบิกที่รอจัดของ</h6>
-                    <span class="badge bg-light text-dark"><?= count($pendingRequisitions) ?></span>
+                    <span class="badge text-bg-light text-dark"><?= count($pendingRequisitions) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
@@ -161,16 +175,22 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                                 <p class="mb-0 mt-2 small">ไม่มีใบขอเบิกรอดำเนินการ</p>
                             </div>
                         <?php else: ?>
-                            <?php foreach ($pendingRequisitions as $req): ?>
+                            <?php
+                            foreach ($pendingRequisitions as $req): ?>
                                 <?php
                                 $subName = $req->subWarehouse ? $req->subWarehouse->warehouse_name : 'ไม่ระบุ';
                                 $detailCount = is_array($req->stockDetails) ? count($req->stockDetails) : (method_exists($req, 'getStockDetails') ? $req->getStockDetails()->count() : 0);
                                 $timeAgo = $req->order_date ? Yii::$app->formatter->asRelativeTime(strtotime($req->order_date)) : '';
+                                $statusInfo = \app\modules\inventoryV2\models\StockOrder::getStatusBadgeConfigFor($req->status);
+                                $statusIcon = !empty($statusInfo['icon']) ? '<i data-lucide="' . Html::encode($statusInfo['icon']) . '" class="me-1" style="width:14px;height:14px;vertical-align:-0.2em"></i>' : '';
                                 ?>
                                 <div class="list-group-item border-0 border-start border-3 border-primary px-3 py-2 pending-item">
                                     <div class="d-flex justify-content-between align-items-start gap-2">
                                         <div class="min-w-0">
-                                            <span class="badge bg-primary bg-opacity-25 text-dark mb-1"><?= Html::encode($req->order_no) ?></span>
+                                            <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                                                <span class="badge text-bg-primary"><?= Html::encode($req->order_no) ?></span>
+                                                <span class="<?= $statusInfo['class'] ?>"><?= $statusIcon . Html::encode($statusInfo['label']) ?></span>
+                                            </div>
                                             <div class="fw-bold text-truncate"><?= Html::encode($subName) ?></div>
                                             <small class="text-muted"><?= $detailCount ?> รายการ · <?= $timeAgo ?></small>
                                         </div>

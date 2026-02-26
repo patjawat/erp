@@ -51,7 +51,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                             <td>แผนกฉุกเฉิน (ER)</td>
                             <td>ถุงมือตรวจโรค, หน้ากาก N95...</td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-warning text-dark">รอคลังหลักจ่าย</span>
+                                <span class="badge rounded-pill text-bg-warning text-dark">รอคลังหลักจ่าย</span>
                             </td>
                             <td class="text-end">
                                 <a href="<?= Url::to(['/inventory-v2/default/stock-issue']) ?>?>" class="btn btn-primary btn-sm btn-issue-process" data-id="REQ67-0045">
@@ -65,7 +65,7 @@ $this->title = 'รายการใบเบิกพัสดุ (Stock Issue
                             <td>รพ.สต. บ้านโพธิ์</td>
                             <td>สำลีพันปลายไม้, แอลกอฮอล์...</td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-success">จ่ายพัสดุแล้ว</span>
+                                <span class="badge rounded-pill text-bg-success">จ่ายพัสดุแล้ว</span>
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-outline-secondary btn-sm">

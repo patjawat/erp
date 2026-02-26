@@ -15,6 +15,18 @@ $monthlyValue = (float) ($monthlyValue ?? 0);
 $expiringSoonCount = (int) ($expiringSoonCount ?? 0);
 $incomingList = $incomingList ?? [];
 $chartData = $chartData ?? ['categories' => [], 'series' => []];
+$warehouses = $warehouses ?? [];
+$currentWarehouseId = $currentWarehouseId ?? null;
+
+$currentWarehouseName = 'ทั้งหมด';
+if ($currentWarehouseId && $warehouses) {
+    foreach ($warehouses as $w) {
+        if ((int)$w->id === (int)$currentWarehouseId) {
+            $currentWarehouseName = $w->warehouse_name;
+            break;
+        }
+    }
+}
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -26,7 +38,7 @@ $chartData = $chartData ?? ['categories' => [], 'series' => []];
         </svg>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted mb-0">ภาพรวมคลังย่อย — รอตรวจรับ ต่ำกว่าจุดวิกฤต และแนวโน้มการจ่ายมาคลังย่อย</p>
+    <p class="text-muted mb-0"><?= Html::encode($currentWarehouseName) ?> — ภาพรวมคลังย่อย รอตรวจรับ ต่ำกว่าจุดวิกฤต และแนวโน้มการจ่ายมาคลังย่อย</p>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -34,8 +46,15 @@ $chartData = $chartData ?? ['categories' => [], 'series' => []];
     <div class="row mb-3">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                <form method="get" action="<?= Url::to(['/inventory-v2/sub-stock/dashboard']) ?>" id="form-sub-warehouse" class="d-inline">
+                    <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3" id="subWarehouseFilter" style="min-width: 200px;">
+                        <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังย่อยทั้งหมด</option>
+                        <?php foreach ($warehouses as $w): ?>
+                            <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
                 <?= Html::a('<i class="bi bi-boxes me-1"></i> สถานะวัสดุคงคลัง', array_merge(['/inventory-v2/report/balance-by-warehouse'], count($subWarehouseIds ?? []) === 1 ? ['warehouse_id' => $subWarehouseIds[0]] : []), ['class' => 'btn btn-outline-primary rounded-pill px-3']) ?>
-                <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', '#', ['class' => 'btn btn-outline-secondary rounded-pill px-3']) ?>
                 <?= Html::a('<i class="bi bi-box-arrow-up-right me-1"></i> บันทึกการจ่าย/ใช้งาน', ['/inventory-v2/sub-stock/issue'], ['class' => 'btn btn-success rounded-pill px-4']) ?>
                 <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบขอเบิก', ['/inventory-v2/requisition/create'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
             </div>
@@ -60,7 +79,7 @@ $chartData = $chartData ?? ['categories' => [], 'series' => []];
                             <i class="bi bi-truck fs-4"></i>
                         </div>
                     </div>
-                    <span class="badge bg-info bg-opacity-25 text-dark mt-2">จากคลังหลัก</span>
+                    <span class="badge text-bg-info mt-2">จากคลังหลัก</span>
                 </div>
             </div>
         </div>
@@ -137,7 +156,7 @@ $chartData = $chartData ?? ['categories' => [], 'series' => []];
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="text-white mb-0 fw-normal"><i class="bi bi-box-seam me-1"></i>รายการส่งของจากคลังหลัก</h6>
-                    <span class="badge bg-light text-dark"><?= count($incomingList) ?></span>
+                    <span class="badge text-bg-light text-dark"><?= count($incomingList) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
@@ -254,6 +273,10 @@ $(document).ready(function() {
     };
     var chart = new ApexCharts(document.querySelector("#usageApexChart"), options);
     chart.render();
+});
+
+$('#subWarehouseFilter').on('change', function() {
+    $('#form-sub-warehouse').submit();
 });
 
 $('#receiveModal').on('show.bs.modal', function(e) {

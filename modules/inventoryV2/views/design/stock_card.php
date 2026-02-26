@@ -41,7 +41,7 @@ $this->title = 'Stock Card | บัตรควบคุมพัสดุ';
                     <select class="form-select border-0 bg-light rounded-3">
                         <option value="all">ทุกคลัง (รวม)</option>
                         <option value="1">คลังพัสดุกลาง</option>
-                        <option value="2">คลังย่อยแผนกไอที</option>
+                        <option value="2">คลังย่อยแผนก OPD</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -113,7 +113,7 @@ $this->title = 'Stock Card | บัตรควบคุมพัสดุ';
                     </tr>
                     <tr>
                         <td>05/02/2026 10:30</td>
-                        <td><span class="badge bg-light text-dark border">RCV-67-004</span></td>
+                        <td><span class="badge text-bg-light text-dark border">RCV-67-004</span></td>
                         <td class="text-start ps-4">รับเข้าจากซัพพลายเออร์ (คลังหลัก)</td>
                         <td class="text-success fw-bold">+20</td>
                         <td>-</td>
@@ -122,8 +122,8 @@ $this->title = 'Stock Card | บัตรควบคุมพัสดุ';
                     </tr>
                     <tr>
                         <td>11/02/2026 14:15</td>
-                        <td><span class="badge bg-light text-dark border">ISS-67-045</span></td>
-                        <td class="text-start ps-4">จ่ายของให้: แผนกไอที (IT Dept)</td>
+                        <td><span class="badge text-bg-light text-dark border">ISS-67-045</span></td>
+                        <td class="text-start ps-4">จ่ายของให้: แผนกผู้ป่วยนอก (OPD)</td>
                         <td>-</td>
                         <td class="text-danger fw-bold">-10</td>
                         <td class="fw-bold">130</td>
@@ -131,8 +131,8 @@ $this->title = 'Stock Card | บัตรควบคุมพัสดุ';
                     </tr>
                     <tr>
                         <td>12/02/2026 09:00</td>
-                        <td><span class="badge bg-light text-dark border">ISS-67-048</span></td>
-                        <td class="text-start ps-4">จ่ายของให้: แผนกซ่อมบำรุง</td>
+                        <td><span class="badge text-bg-light text-dark border">ISS-67-048</span></td>
+                        <td class="text-start ps-4">จ่ายของให้: แผนกฉุกเฉิน (ER)</td>
                         <td>-</td>
                         <td class="text-danger fw-bold">-5</td>
                         <td class="fw-bold">125</td>

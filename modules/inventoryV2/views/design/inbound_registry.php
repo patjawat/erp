@@ -37,7 +37,7 @@
                         <tr id="row-1">
                             <td>INIT-67-001</td>
                             <td>ถุงมือตรวจโรค (100 กล่อง), ผ้าก๊อซ (50 ห่อ)</td>
-                            <td><span class="badge bg-warning text-dark" id="status-1">รอตรวจรับ</span></td>
+                            <td><span class="badge text-bg-warning text-dark" id="status-1">รอตรวจรับ</span></td>
                             <td>
                                 <button class="btn btn-sm btn-success btn-verify" data-id="1">
                                     <i class="bi bi-check-lg"></i> ตรวจรับเข้าสต็อก
@@ -257,7 +257,7 @@ function viewDetail(docNo) {
             <tr>
                 <td class="text-center">${index + 1}</td>
                 <td>
-                    <span class="badge bg-secondary-subtle text-secondary small">${item.cat}</span><br>
+                    <span class="badge text-bg-secondary small">${item.cat}</span><br>
                     <strong>${item.name}</strong>
                 </td>
                 <td class="fw-bold text-primary">${item.lot}</td>

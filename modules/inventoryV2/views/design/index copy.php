@@ -54,25 +54,25 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><span class="badge bg-success">M7</span></td>
+                                    <td><span class="badge text-bg-success">M7</span></td>
                                     <td>วัสดุวิทยาศาสตร์หรือการแพทย์</td>
                                     <td class="text-center fw-bold">14,200</td>
                                     <td class="text-end"><span class="text-success"><i class="bi bi-check-circle-fill"></i> ปกติ</span></td>
                                 </tr>
                                 <tr>
-                                    <td><span class="badge bg-primary">M22</span></td>
+                                    <td><span class="badge text-bg-primary">M22</span></td>
                                     <td>วัสดุการแพทย์ทั่วไป</td>
                                     <td class="text-center fw-bold">8,500</td>
                                     <td class="text-end"><span class="text-success"><i class="bi bi-check-circle-fill"></i> ปกติ</span></td>
                                 </tr>
                                 <tr>
-                                    <td><span class="badge bg-warning text-dark">M1</span></td>
+                                    <td><span class="badge text-bg-warning text-dark">M1</span></td>
                                     <td>วัสดุสำนักงาน</td>
                                     <td class="text-center fw-bold text-danger">120</td>
                                     <td class="text-end"><span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ต่ำกว่าเกณฑ์</span></td>
                                 </tr>
                                 <tr>
-                                    <td><span class="badge bg-info text-dark">M26</span></td>
+                                    <td><span class="badge text-bg-info text-dark">M26</span></td>
                                     <td>วัสดุการแพทย์ ออกซิเจน</td>
                                     <td class="text-center fw-bold">450</td>
                                     <td class="text-end"><span class="text-success"><i class="bi bi-check-circle-fill"></i> ปกติ</span></td>

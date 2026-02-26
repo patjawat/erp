@@ -18,7 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<div class="d-flex flex-wrap justify-content-end align-items-center">
+<div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+    <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
     <form method="get" action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="d-flex align-items-center gap-2">
         <select name="warehouse_id" class="form-select border shadow-sm" style="width: 240px; height: 38px;">
             <?php foreach ($warehouses as $wid => $wname): ?>
@@ -28,6 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <button type="submit" class="btn btn-primary px-4" style="height: 38px;">
             <i class="bi bi-search me-1"></i> แสดง
         </button>
+        <?= Html::a('<i class="bi bi-file-earmark-excel me-1"></i> Excel', array_merge(['/inventory-v2/report/export-balance-by-warehouse'], $warehouseId !== null && $warehouseId !== '' ? ['warehouse_id' => $warehouseId] : []), ['class' => 'btn btn-success', 'style' => 'height: 38px;']) ?>
     </form>
 </div>
 <?php $this->endBlock(); ?>
@@ -84,37 +86,39 @@ $this->params['breadcrumbs'][] = $this->title;
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th class="text-nowrap text-center" style="width: 4rem;">ลำดับ</th>
                                 <th class="text-nowrap">คลัง</th>
                                 <th class="text-nowrap">รหัส</th>
                                 <th>ชื่อวัสดุ</th>
                                 <th class="text-nowrap text-center">ประเภท</th>
                                 <th class="text-nowrap text-center">หน่วย</th>
-                                <th class="text-end">ยอดคงเหลือ</th>
-                                <th class="text-end">มูลค่า (บาท)</th>
+                                <th class="text-end fw-bold">จำนวนคงเหลือ</th>
+                                <th class="text-end fw-bold">มูลค่า (บาท)</th>
                                 <th class="text-end">Min</th>
                                 <th class="text-end">Max</th>
                                 <th class="text-center">สถานะ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($rows as $r): ?>
+                            <?php foreach ($rows as $i => $r): ?>
                                 <tr class="<?= $r['below_min'] ? 'table-danger' : ($r['below_max'] ? 'table-warning' : '') ?>">
+                                    <td class="text-center text-muted"><?= $i + 1 ?></td>
                                     <td class="text-nowrap"><?= Html::encode($r['warehouse_name']) ?></td>
                                     <td class="text-nowrap"><?= Html::encode($r['item_code']) ?></td>
                                     <td><?= Html::encode($r['item_name']) ?></td>
                                     <td class="text-center text-muted small"><?= Html::encode($r['category_title']) ?></td>
                                     <td class="text-center text-muted small"><?= Html::encode($r['unit_name']) ?></td>
-                                    <td class="text-end"><?= number_format($r['balance_qty'], 2) ?></td>
-                                    <td class="text-end"><?= number_format($r['value'], 2) ?></td>
+                                    <td class="text-end fw-bold"><?= number_format($r['balance_qty'], 2) ?></td>
+                                    <td class="text-end fw-bold"><?= number_format($r['value'], 2) ?></td>
                                     <td class="text-end"><?= $r['min_qty'] !== null ? number_format($r['min_qty'], 2) : '-' ?></td>
                                     <td class="text-end"><?= $r['max_qty'] !== null ? number_format($r['max_qty'], 2) : '-' ?></td>
                                     <td class="text-center">
                                         <?php if ($r['below_min']): ?>
-                                            <span class="badge bg-danger">ต่ำกว่า Min</span>
+                                            <span class="badge text-bg-danger">ต่ำกว่า Min</span>
                                         <?php elseif ($r['below_max']): ?>
-                                            <span class="badge bg-warning text-dark">ต่ำกว่า Max</span>
+                                            <span class="badge text-bg-warning text-dark">ต่ำกว่า Max</span>
                                         <?php else: ?>
-                                            <span class="badge bg-success">พอดี</span>
+                                            <span class="badge text-bg-success">พอดี</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>

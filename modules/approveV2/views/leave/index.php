@@ -41,7 +41,7 @@ $msg = 'ขอ';
 
 
 
-<div class="card">
+<div class="card approve-v2-card">
   <div class="card-body">
     <div class="d-flex justify-content-between">
       <h6>เห็นชอบการลา <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</h6>

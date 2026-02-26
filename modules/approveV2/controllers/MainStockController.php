@@ -5,10 +5,13 @@ namespace app\modules\approveV2\controllers;
 use Yii;
 use yii\web\Response;
 use yii\helpers\ArrayHelper;
+use yii\base\DynamicModel;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveSearch;
+use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\Warehouse;
 
 class MainStockController extends \yii\web\Controller
 {
@@ -34,6 +37,81 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * รายการขออนุมัติเบิกวัสดุ (inventoryV2) — แสดงทั้งรออนุมัติและย้อนหลัง (filter ตาม status ได้)
+     * query: status = all | pending | APPROVED | CONFIRMED | CANCELLED
+     * ค้นหา: order_no, main_warehouse_id, sub_warehouse_id, date_start, date_end
+     */
+    public function actionRequisitionV2()
+    {
+        $filterStatus = $this->request->get('status', 'all');
+
+        $searchModel = new DynamicModel(['order_no', 'main_warehouse_id', 'sub_warehouse_id', 'date_start', 'date_end']);
+        $searchModel->addRule(['order_no', 'main_warehouse_id', 'sub_warehouse_id', 'date_start', 'date_end'], 'safe');
+        $searchModel->load($this->request->get(), '');
+
+        $query = StockOrder::find()
+            ->where([
+                'order_type' => StockOrder::ORDER_TYPE_OUT,
+                'source_type' => 'REQUEST',
+            ])
+            ->with(['mainWarehouse', 'subWarehouse'])
+            ->orderBy(['id' => SORT_DESC]);
+
+        if ($filterStatus === 'pending') {
+            $query->andWhere(['status' => [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING]]);
+        } elseif (in_array($filterStatus, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED, StockOrder::STATUS_CANCELLED], true)) {
+            $query->andWhere(['status' => $filterStatus]);
+        }
+
+        if (trim($searchModel->order_no ?? '') !== '') {
+            $query->andWhere(['like', 'order_no', trim($searchModel->order_no)]);
+        }
+        if (isset($searchModel->main_warehouse_id) && $searchModel->main_warehouse_id !== '' && $searchModel->main_warehouse_id !== null) {
+            $query->andWhere(['main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
+        }
+        if (isset($searchModel->sub_warehouse_id) && $searchModel->sub_warehouse_id !== '' && $searchModel->sub_warehouse_id !== null) {
+            $query->andWhere(['sub_warehouse_id' => (int) $searchModel->sub_warehouse_id]);
+        }
+        if (trim($searchModel->date_start ?? '') !== '') {
+            try {
+                $from = AppHelper::convertToGregorian($searchModel->date_start);
+                if ($from) {
+                    $query->andWhere(['>=', 'order_date', $from]);
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        if (trim($searchModel->date_end ?? '') !== '') {
+            try {
+                $to = AppHelper::convertToGregorian($searchModel->date_end);
+                if ($to) {
+                    $query->andWhere(['<=', 'order_date', $to]);
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+                'defaultPageSize' => 20,
+            ],
+        ]);
+
+        $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
+        $subWarehouses = ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'SUB'])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
+
+        return $this->render('requisition-v2', [
+            'dataProvider' => $dataProvider,
+            'filterStatus' => $filterStatus,
+            'searchModel' => $searchModel,
+            'mainWarehouses' => $mainWarehouses,
+            'subWarehouses' => $subWarehouses,
         ]);
     }
 

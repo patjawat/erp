@@ -21,18 +21,26 @@ class SubStockController extends \yii\web\Controller
     }
 
     /**
-     * Dashboard คลังย่อย — ใช้ข้อมูลจริงจากใบจ่ายที่ส่งมาที่คลังย่อย
+     * Dashboard คลังย่อย — ใช้ข้อมูลจริงจากใบจ่ายที่ส่งมาที่คลังย่อย (มีตัวเลือกชื่อคลังย่อย)
      */
     public function actionDashboard()
     {
-        $subWarehouseIds = $this->getSubWarehouseIds();
-        if (empty($subWarehouseIds)) {
-            $subWarehouseIds = [-1];
+        $allSubIds = $this->getSubWarehouseIds();
+        if (empty($allSubIds)) {
+            $allSubIds = [-1];
         }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        if ($warehouseId !== null && !in_array($warehouseId, $allSubIds, true)) {
+            $warehouseId = null;
+        }
+
+        $subWarehouseIds = $warehouseId !== null ? [$warehouseId] : $allSubIds;
 
         $stats = $this->getDashboardStats($subWarehouseIds);
         $incomingList = $this->getIncomingList($subWarehouseIds, 10);
         $chartData = $this->getChartDataLast7Days($subWarehouseIds);
+        $warehouses = $this->getSubWarehousesList();
 
         return $this->render('dashboard', [
             'pendingReceiveCount' => $stats['pending_receive'],
@@ -42,6 +50,8 @@ class SubStockController extends \yii\web\Controller
             'incomingList' => $incomingList,
             'chartData' => $chartData,
             'subWarehouseIds' => $subWarehouseIds,
+            'warehouses' => $warehouses,
+            'currentWarehouseId' => $warehouseId,
         ]);
     }
 
@@ -57,6 +67,35 @@ class SubStockController extends \yii\web\Controller
             $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
         }
         return $query->column();
+    }
+
+    /** รายการคลังย่อยสำหรับ dropdown (ตามสิทธิ์ผู้ใช้) */
+    protected function getSubWarehousesList()
+    {
+        $query = Warehouse::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy('warehouse_name');
+        if (!Yii::$app->user->isGuest && !Yii::$app->user->can('admin')) {
+            $userId = (string) Yii::$app->user->id;
+            $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
+        }
+        return $query->all();
+    }
+
+    /** warehouse_id จาก query หรือ session (all = null) */
+    protected function getFilterWarehouseId()
+    {
+        $get = Yii::$app->request->get('warehouse_id');
+        if ($get === 'all' || $get === null || $get === '') {
+            if ($get === 'all') {
+                Yii::$app->session->remove('sub_dashboard_warehouse_id');
+            }
+            return Yii::$app->session->get('sub_dashboard_warehouse_id');
+        }
+        $id = (int) $get;
+        Yii::$app->session->set('sub_dashboard_warehouse_id', $id);
+        return $id;
     }
 
     /**

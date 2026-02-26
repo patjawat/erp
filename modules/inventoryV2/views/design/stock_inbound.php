@@ -2,7 +2,7 @@
     <div class="card shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-download"></i> บันทึกรับวัสดุเข้าคลัง (Mockup Mode)</h5>
-            <span class="badge bg-info text-dark">ประเภท: <span id="displayType">รับจากการจัดซื้อ</span></span>
+            <span class="badge text-bg-info text-dark">ประเภท: <span id="displayType">รับจากการจัดซื้อ</span></span>
         </div>
         <div class="card-body">
             
@@ -130,7 +130,7 @@ $('#receiptType').change(function() {
             <tr class="item-row">
                 <td class="text-center">${rowCount}</td>
                 <td>
-                    <span class="badge bg-info text-dark">${cat}</span> <strong>${name}</strong><br>
+                    <span class="badge text-bg-info text-dark">${cat}</span> <strong>${name}</strong><br>
                     <small class="text-muted">หน่วยนับ: ${unit}</small>
                 </td>
                 <td><input type="text" class="form-control form-control-sm lot-no" placeholder="Lot No."></td>

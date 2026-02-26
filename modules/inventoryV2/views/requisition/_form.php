@@ -2,10 +2,17 @@
 
 use app\components\AppHelper;
 use app\modules\inventoryV2\models\Warehouse;
+use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\web\JsExpression;
+use yii\web\View;
 use yii\widgets\ActiveForm;
+
+$formatRepoJs = "var formatRepo=function(repo){if(repo.loading)return repo.avatar;return '<div>'+repo.avatar+'</div>';};";
+$this->registerJs($formatRepoJs, View::POS_HEAD);
+$resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagination:{more:(p.page*30)<(data.total_count||999)}};}";
 
 // คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานผู้เบิก) – สมมติ id=1 เป็นคลังหลัก
 $mainWarehouseIds = [1,2,3,4,5,6,7];
@@ -45,6 +52,88 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
                             'value' => $model->order_date ? AppHelper::convertToThai($model->order_date) : '',
                         ],
                     ]) ?>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="form-label d-flex align-items-center gap-2 flex-wrap">
+                            เหตุผล/วัตถุประสงค์การเบิก
+                            <div class="dropdown">
+                                <button class="btn btn-light border rounded-3 dropdown-toggle btn-sm" type="button" id="dropdownIssueReason" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-list-ul me-1"></i> ตัวเลือก
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownIssueReason">
+                                    <?php
+                                    $reasonOptions = [
+                                        'ใช้ในงานประจำ',
+                                        'ซ่อมบำรุง',
+                                        'เติมสต็อกคลังย่อย',
+                                        'โครงการ/กิจกรรม',
+                                        'เบิกทดแทนของเสียหาย',
+                                        'อื่นๆ (ระบุเพิ่มเติม)',
+                                    ];
+                                    foreach ($reasonOptions as $text):
+                                    ?>
+                                    <li><a class="dropdown-item issue-reason-option" href="#" data-reason="<?= Html::encode($text) ?>"><?= Html::encode($text) ?></a></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        </label>
+                        <textarea name="issue_reason" id="issue_reason" class="form-control" rows="2" placeholder="ระบุเหตุผลหรือวัตถุประสงค์ในการเบิกวัสดุ"><?= Html::encode($model->getIssueReason()) ?></textarea>
+                        <div class="form-text">เช่น เบิกเพื่อใช้ในหน่วยงาน, เติมสต็อกคลังย่อย หรือกดตัวเลือกเพื่อเลือกเหตุผลที่ใช้บ่อย</div>
+                    </div>
+                </div>
+                <?php
+                $approverSig = $model->getIssueSignature('approver');
+                $approverEmpId = '';
+                $dj = $model->data_json;
+                if (is_string($dj)) {
+                    $dj = json_decode($dj, true) ?: [];
+                }
+                if (!empty($dj['issue_approver']['emp_id'])) {
+                    $approverEmpId = $dj['issue_approver']['emp_id'];
+                }
+                ?>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร <a href="<?= \yii\helpers\Url::to(['/hr/organization/diagram']) ?>" target="_blank" class="small">ตั้งค่า <i class="bi bi-box-arrow-up-right"></i></a> หรือเลือกด้านล่าง)</label>
+                        <input type="hidden" name="approver_name" id="approver_name" value="<?= Html::encode($approverSig['name']) ?>">
+                        <input type="hidden" name="approver_position" id="approver_position" value="<?= Html::encode($approverSig['position']) ?>">
+                        <?= Select2::widget([
+                            'name' => 'approver_emp_id',
+                            'value' => $approverEmpId,
+                            'initValueText' => $approverSig['name'] ?: '— เลือกพนักงาน —',
+                            'options' => ['placeholder' => 'พิมพ์ชื่อเพื่อค้นหา...', 'id' => 'approver_emp_id_select'],
+                            'pluginEvents' => [
+                                'select2:select' => new JsExpression('function(e) {
+                                    var d = $(this).select2("data")[0];
+                                    if (d && d.id) {
+                                        $("#approver_name").val(d.fullname || "");
+                                        $("#approver_position").val(d.position_name || d.position_name_text || "");
+                                    }
+                                }'),
+                                'select2:unselect' => new JsExpression('function() {
+                                    $("#approver_name").val("");
+                                    $("#approver_position").val("");
+                                }'),
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'minimumInputLength' => 0,
+                                'ajax' => [
+                                    'url' => Url::to(['/depdrop/employee-by-id']),
+                                    'dataType' => 'json',
+                                    'delay' => 250,
+                                    'data' => new JsExpression('function(params) { return {q: params.term || "", page: params.page || 1}; }'),
+                                    'processResults' => new JsExpression($resultsJs),
+                                    'cache' => true,
+                                ],
+                                'escapeMarkup' => new JsExpression('function(m) { return m; }'),
+                                'templateSelection' => new JsExpression('function(item) { return item.fullname || item.text || item.id || ""; }'),
+                                'templateResult' => new JsExpression('formatRepo'),
+                            ],
+                        ]) ?>
+                        <div class="form-text">ตำแหน่งจะดึงจากระบบพนักงานอัตโนมัติ</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,7 +242,17 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
 <?php
 \app\assets\TomSelectAsset::register($this);
 $this->registerCss(<<<CSS
-.ts-dropdown { z-index: 1060 !important; }
+/* dropdown ถูก append ที่ body จึงใช้ class นี้ (ไม่มี parent .requisition-form) */
+.ts-dropdown.requisition-item-dropdown {
+    z-index: 1060 !important;
+    position: fixed !important;
+    border: 1px solid rgba(0,0,0,.15) !important;
+    border-radius: 0.375rem !important;
+    background: #fff !important;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important;
+    max-height: 280px;
+    overflow-y: auto;
+}
 .requisition-form #item-table td:first-child { overflow: visible; position: relative; }
 .requisition-form #item-table .ts-wrapper { position: relative; }
 .requisition-form #item-table .ts-control { min-height: 38px; }
@@ -183,11 +282,24 @@ function getSelectedItemCodes(excludeRow) {
 function initItemSelect(elementId) {
     var selfRef = null;
     return new TomSelect('#' + elementId, {
+        dropdownParent: document.body,
         valueField: 'item_code',
         labelField: 'item_name',
         searchField: ['item_name', 'item_code'],
         placeholder: 'พิมพ์ชื่อหรือรหัสวัสดุ...',
         preload: true,
+        onDropdownOpen: function() {
+            var wrapper = this.wrapper;
+            var dropdown = this.dropdown;
+            if (!wrapper || !dropdown) return;
+            var rect = wrapper.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.top = rect.bottom + 'px';
+            dropdown.style.width = Math.max(rect.width, 280) + 'px';
+            dropdown.style.minWidth = rect.width + 'px';
+            dropdown.classList.add('requisition-item-dropdown');
+        },
         load: function(query, callback) {
             var currentWhId = $('#main-warehouse-id').val();
             if (!currentWhId) return callback();
@@ -386,6 +498,13 @@ $('#btn-add-below-max').on('click', function() {
 
 $(document).on('click', '.remove-item', function() {
     $(this).closest('tr').remove();
+});
+
+// เลือกเหตุผลจาก dropdown แล้วใส่ในช่องเหตุผล/วัตถุประสงค์การเบิก
+$(document).on('click', '.issue-reason-option', function(e) {
+    e.preventDefault();
+    var reason = $(this).data('reason');
+    if (reason) $('#issue_reason').val(reason);
 });
 
 // Submit Form ด้วย AJAX

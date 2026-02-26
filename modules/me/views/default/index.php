@@ -279,11 +279,11 @@ if (!empty($upcomingHealth)): ?>
         <div class="row g-2">
             <div class="col-6">
                 <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <a href="<?= Url::to(['/me/leave']) ?>">
+                    <a href="<?= Url::to(['/leave/default/index']) ?>">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">ระบบลา</span></div>
+                        <div><span class="text-xs text-muted fw-bold d-block">การลางาน</span></div>
                     </a>
                 </div>
             </div>
@@ -365,12 +365,12 @@ if (!empty($upcomingHealth)): ?>
                             <i data-lucide="calendar-range"></i>
                         </div>
                         <div class="lh-sm">
-                            <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">ภาพรวมการลา</h3>
+                            <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">การลางาน</h3>
                             <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                                สะสมคะแนนเพื่ออัปเกรดระดับและแลกรางวัล</p>
+                                ดูสิทธิ์ ประวัติการลา และสร้างใบลาใหม่</p>
                         </div>
                     </div>
-                    <a href="<?= Url::to(['/me/leave']) ?>"
+                    <a href="<?= Url::to(['/leave/default/index']) ?>"
                         class="btn btn-primary rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale">
                         ดูทั้งหมด <i data-lucide="chevrons-right"></i>
                     </a>
@@ -380,7 +380,7 @@ if (!empty($upcomingHealth)): ?>
                     <div class="d-flex flex-row justify-content-between">
                         <div class="d-flex flex-column">
                             <h6 class="mb-1 text-dark">สิทธิลาพักผ่อน</h6>
-                            <p class="text-muted mb-4">ภาพรวมของการลาพักผ่อน</p>
+                            <p class="text-muted mb-4">ภาพรวมการใช้สิทธิ์และประวัติการลา</p>
                         </div>
                         <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
                             style="width: 42px; height: 42px;">
@@ -412,7 +412,7 @@ if (!empty($upcomingHealth)): ?>
                                 style="width: <?= $percenUseDay ?>%;">
                             </div>
                         </div>
-                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เริ่มการลา', ['/me/leave/create', 'title' => '<i class="fa-solid fa-calendar-plus"></i> บันทึกขออนุมัติการลา'], ['class' => 'btn w-100 rounded-4 fw-bold py-2 open-modal', 'data' => ['size' => 'modal-lg'], 'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: none;']) ?>
+                        <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบลา', ['/leave/leave/create'], ['class' => 'btn w-100 rounded-4 fw-bold py-2', 'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;']) ?>
 
                     </div>
                 </div>

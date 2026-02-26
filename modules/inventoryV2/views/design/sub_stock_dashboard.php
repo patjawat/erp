@@ -13,7 +13,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
 <div class="row">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="fw-bold mb-1 text-dark">ระบบจัดการคลังย่อย: <span class="text-primary">แผนกไอที / ซ่อมบำรุง</span></h4>
+                <h4 class="fw-bold mb-1 text-dark">ระบบจัดการคลังย่อย: <span class="text-primary">แผนก/ฝ่ายของโรงพยาบาล</span></h4>
                 <p class="text-muted mb-0"><i class="bi bi-clock"></i> ข้อมูลอัปเดตล่าสุด: <?= date('d/m/Y H:i') ?></p>
             </div>
             <div class="d-flex gap-2">
@@ -39,7 +39,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                         <i class="bi bi-truck text-info h4 mb-0"></i>
                     </div>
                 </div>
-                <div class="mt-2"><span class="badge bg-info-subtle text-info">จากคลังหลัก</span></div>
+                <div class="mt-2"><span class="badge text-bg-info">จากคลังหลัก</span></div>
             </div>
         </div>
     </div>
@@ -97,7 +97,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
     <div class="col-md-8">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-header bg-transparent border-0 py-3">
-                <h6 class="fw-bold mb-0">แนวโน้มการตัดจ่ายพัสดุในแผนก (7 วันล่าสุด)</h6>
+                <h6 class="fw-bold mb-0">แนวโน้มการตัดจ่ายพัสดุในแผนก/ฝ่าย (7 วันล่าสุด)</h6>
             </div>
             <div class="card-body">
                 <div id="usageApexChart"></div>

@@ -23,14 +23,9 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
             <div class="col-md-4">
                 <strong>สถานะ:</strong>
                 <?php
-                    $statusLabel = [
-                        'DRAFT' => '<span class="badge bg-warning text-dark">ฉบับร่าง / รออนุมัติ</span>',
-                        'PENDING' => '<span class="badge bg-info">รอหัวหน้าอนุมัติ</span>',
-                        'APPROVED' => '<span class="badge bg-primary">อนุมัติแล้ว — รอคลังจ่าย</span>',
-                        'CONFIRMED' => '<span class="badge bg-success">จ่ายสินค้าแล้ว</span>',
-                        'CANCELLED' => '<span class="badge bg-danger">ยกเลิกแล้ว</span>',
-                    ];
-                    echo $statusLabel[$model->status] ?? $model->status;
+                    $st = \app\modules\inventoryV2\models\StockOrder::getStatusBadgeConfigFor($model->status);
+                    $icon = !empty($st['icon']) ? '<i data-lucide="' . Html::encode($st['icon']) . '" class="me-1" style="width:14px;height:14px;vertical-align:-0.2em"></i>' : '';
+                    echo '<span class="' . $st['class'] . '">' . $icon . Html::encode($st['label']) . '</span>';
                 ?>
             </div>
             <div class="col-md-4">
@@ -40,6 +35,51 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
                 <strong>หน่วยงานที่รับของ:</strong> <?= $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
             </div>
         </div>
+        <?php if ($model->getIssueReason() !== ''): ?>
+        <div class="row mt-2">
+            <div class="col-12">
+                <strong>เหตุผล/วัตถุประสงค์การเบิก:</strong> <?= nl2br(Html::encode($model->getIssueReason())) ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php
+        $requester = $model->getIssueSignature('requester');
+        $requesterEmp = $model->getRequesterEmployee();
+        $requesterName = $requester['name'] ?: ($requesterEmp ? ($requesterEmp->fullname ?? '') : '');
+        $requesterPosition = $requester['position'] ?: ($requesterEmp && method_exists($requesterEmp, 'positionName') ? ($requesterEmp->positionName() ?: '') : '');
+        if ($requesterName !== '' || $requesterEmp): ?>
+        <div class="row mt-2">
+            <div class="col-12">
+                <strong>ผู้ขอเบิก:</strong>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <?php if ($requesterEmp && method_exists($requesterEmp, 'ShowAvatar')): ?>
+                        <?= Html::img($requesterEmp->ShowAvatar(), [
+                            'class' => 'rounded-circle object-fit-cover',
+                            'style' => 'width: 36px; height: 36px;',
+                            'alt' => Html::encode($requesterName),
+                        ]) ?>
+                    <?php endif; ?>
+                    <span><?= Html::encode($requesterName ?: '-') ?><?= $requesterPosition !== '' ? ' — ' . Html::encode($requesterPosition) : '' ?></span>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php
+        $approver = $model->getIssueSignature('approver');
+        if (!empty($approver['name']) || !empty($approver['position']) || !empty($approver['date'])): ?>
+        <div class="row mt-2">
+            <div class="col-12">
+                <strong>ผู้เห็นชอบ (หัวหน้า):</strong>
+                <?= Html::encode($approver['name']) ?><?= $approver['position'] ? ' — ' . Html::encode($approver['position']) : '' ?>
+                <?php if (!empty($approver['date'])): ?>
+                    <?php
+                    $approvalDateFormatted = \app\components\ThaiDateHelper::formatThaiDate($approver['date']);
+                    ?>
+                    <span class="text-muted ms-1">(วันที่อนุมัติ: <?= Html::encode($approvalDateFormatted) ?>)</span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <table class="table table-bordered table-striped">
@@ -80,9 +120,19 @@ $this->title = 'รายละเอียดใบขอเบิก: ' . $mod
 
     <hr>
 
+    <?php
+    $approverEmpId = $model->getIssueSignatureEmpId('approver');
+    $isCurrentUserApprover = false;
+    if ($approverEmpId && !Yii::$app->user->isGuest) {
+        $approverEmp = \app\modules\hr\models\Employees::findOne($approverEmpId);
+        $isCurrentUserApprover = $approverEmp && (int)$approverEmp->user_id === (int)Yii::$app->user->id;
+    }
+    $hasInventoryPermission = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+    $showApproveButton = in_array($model->status, ['DRAFT', 'PENDING']) && ($isCurrentUserApprover || $hasInventoryPermission);
+    ?>
     <div class="form-group d-flex justify-content-between">
         <div>
-            <?php if (in_array($model->status, ['DRAFT', 'PENDING'])): ?>
+            <?php if ($showApproveButton): ?>
                 <?= Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success btn-lg',
                     'data' => [

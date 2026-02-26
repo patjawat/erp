@@ -16,6 +16,9 @@ class StockOrderSearch extends StockOrder
     /** ช่วงวันที่รับเข้า (ค้นหา) มาตรฐาน date_start / date_end */
     public $date_start;
     public $date_end;
+    /** ช่วงวันที่จ่าย (สำหรับใบเบิก - filter ตาม updated_at) */
+    public $confirmed_date_start;
+    public $confirmed_date_end;
     /** ช่วงมูลค่ารับเข้า (ค้นหา) */
     public $total_from;
     public $total_to;
@@ -27,7 +30,7 @@ class StockOrderSearch extends StockOrder
     {
         return [
             [['id', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json', 'date_start', 'date_end', 'total_from', 'total_to'], 'safe'],
+            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json', 'date_start', 'date_end', 'confirmed_date_start', 'confirmed_date_end', 'total_from', 'total_to'], 'safe'],
         ];
     }
 

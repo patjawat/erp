@@ -24,11 +24,16 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
+<?php $this->beginBlock('action'); ?>
+<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?php $this->endBlock(); ?>
+
 <div class="receive-create">
     <?= $this->render('_form', [
         'model' => $model,
         'listWarehouse' => $listWarehouse,
         'listItemType' => $listItemType ?? [],
         'items' => $items ?? [],
+        'listVendors' => $listVendors ?? [],
     ]) ?>
 </div>

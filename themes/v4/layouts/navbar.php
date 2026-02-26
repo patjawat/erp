@@ -80,9 +80,9 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
     ],
     [
-         'show' => Yii::$app->user->can('hr') ? true : false,
-        'label' => 'อบรม/ดูงาน', 
-        'url' => ['/hr/development/dashboard'], 
+        'show' => (Yii::$app->user->can('hr') || Yii::$app->user->can('user')) ? true : false,
+        'label' => 'อบรม/ดูงาน',
+        'url' => ['/hr/development'],
         'active' => 'development',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></svg>'
     ],

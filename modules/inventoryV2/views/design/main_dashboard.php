@@ -26,9 +26,9 @@ use yii\helpers\Url;
             <div class="position-relative me-2">
                 <select class="form-select border-0 shadow-sm rounded-pill px-4" id="warehouseFilter" style="min-width: 220px; height: 45px; appearance: auto;">
                     <option value="all">📊 แสดงคลังทั้งหมด</option>
-                    <option value="it">💻 แผนกไอที (IT Sub-stock)</option>
-                    <option value="maint">🔧 แผนกซ่อมบำรุง (Maintenance)</option>
-                    <option value="central">📦 คลังพัสดุกลาง</option>
+                    <option value="it">💻 แผนกผู้ป่วยนอก (OPD)</option>
+                    <option value="maint">🔧 แผนกฉุกเฉิน (ER)</option>
+                    <option value="central">📦 คลังพัสดุกลาง (รพ.)</option>
                 </select>
             </div>
             
@@ -121,8 +121,8 @@ use yii\helpers\Url;
                         <div class="list-group-item border-0 p-3 mb-2 rounded-4 hover-action bg-white shadow-xs border-start border-4 border-warning">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <span class="badge bg-light text-dark mb-1">REQ-6702-001</span>
-                                    <h6 class="fw-bold mb-0">แผนกไอที (IT Dept)</h6>
+                                    <span class="badge text-bg-light text-dark mb-1">REQ-6702-001</span>
+                                    <h6 class="fw-bold mb-0">แผนกผู้ป่วยนอก (OPD)</h6>
                                 </div>
                                 <small class="text-muted">10 นาทีที่แล้ว</small>
                             </div>
@@ -134,7 +134,7 @@ use yii\helpers\Url;
                         <div class="list-group-item border-0 p-3 mb-2 rounded-4 hover-action bg-white shadow-xs border-start border-4 border-info">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <span class="badge bg-light text-dark mb-1">REQ-6702-005</span>
+                                    <span class="badge text-bg-light text-dark mb-1">REQ-6702-005</span>
                                     <h6 class="fw-bold mb-0">ซ่อมบำรุง (MT)</h6>
                                 </div>
                                 <small class="text-muted">2 ชม. ที่แล้ว</small>

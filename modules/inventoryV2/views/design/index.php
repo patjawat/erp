@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="bi bi-shop h2 mb-0"></i>
                         </div>
                         <h6 class="fw-bold text-dark">หน้าแรกคลังย่อย</h6>
-                        <small class="text-muted">เช็คยอดของในตู้/แผนก</small>
+                        <small class="text-muted">เช็คยอดของในตู้/แผนก (ฝ่าย)</small>
                     </div>
                 </a>
             </div>
@@ -125,7 +125,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <i class="bi bi-diagram-3 h2 mb-0"></i>
                         </div>
                         <h6 class="fw-bold text-dark">ตั้งค่าคลังสินค้า</h6>
-                        <small class="text-muted">เพิ่ม/ลบ คลังและแผนกต่างๆ</small>
+                        <small class="text-muted">เพิ่ม/ลบ คลังและแผนก (ฝ่าย) ของโรงพยาบาล</small>
                     </div>
                 </a>
             </div>

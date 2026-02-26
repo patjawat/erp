@@ -143,4 +143,47 @@ class StockAdjustController extends Controller
         } while (StockOrder::findOne(['order_no' => $no]) !== null);
         return $no;
     }
+
+    /**
+     * ล้างยอดคงเหลือในคลังเป็น 0 ทั้งหมด (สำหรับทดสอบระบบเท่านั้น)
+     * ไม่ลบเอกสารรับ/จ่าย — แค่ set stock_balance.balance_qty = 0 ในคลังที่เลือก
+     */
+    public function actionResetWarehouse()
+    {
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $confirm = trim((string) Yii::$app->request->post('confirm_text', ''));
+
+        $listWarehouse = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $warehouses = ['' => '-- เลือกคลัง --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+
+        if (Yii::$app->request->isPost && $warehouseId > 0) {
+            $warehouse = Warehouse::findOne($warehouseId);
+            if (!$warehouse) {
+                Yii::$app->session->setFlash('error', 'ไม่พบคลังที่เลือก');
+                return $this->redirect(['reset-warehouse']);
+            }
+            if ($confirm !== 'ล้าง') {
+                Yii::$app->session->setFlash('error', 'กรุณาพิมพ์คำว่า "ล้าง" เพื่อยืนยัน');
+                return $this->render('reset-warehouse', [
+                    'warehouses' => $warehouses,
+                    'selectedWarehouseId' => $warehouseId,
+                ]);
+            }
+
+            $count = StockBalance::updateAll(
+                ['balance_qty' => 0, 'updated_at' => time(), 'updated_by' => Yii::$app->user->id],
+                ['warehouse_id' => $warehouseId]
+            );
+            Yii::$app->session->setFlash('success', "ล้างยอดคลัง \"{$warehouse->warehouse_name}\" เรียบร้อย — ตั้งยอดคงเหลือเป็น 0 แล้ว {$count} รายการ (สำหรับทดสอบ)");
+            return $this->redirect(['index']);
+        }
+
+        return $this->render('reset-warehouse', [
+            'warehouses' => $warehouses,
+            'selectedWarehouseId' => null,
+        ]);
+    }
 }

@@ -34,6 +34,12 @@ $totalCount = $dataProvider->getTotalCount();
         </div>
     </div>
     <div class="card-body">
+        <div class="alert alert-info border-0 mb-3 py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2" id="notify-permission-hint">
+            <span class="small">รับแจ้งเตือนบนอุปกรณ์ (ป๊อปอัป) ได้เมื่ออนุญาตการแจ้งเตือนของเบราว์เซอร์</span>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-3" id="notify-request-permission">
+                <i data-lucide="bell-ring" class="icon-sm"></i> เปิดการแจ้งเตือนบนอุปกรณ์
+            </button>
+        </div>
         <?php if ($unreadCount > 0): ?>
             <p class="text-muted small mb-3">
                 <span class="badge bg-primary rounded-pill"><?= (int) $unreadCount ?></span> รายการยังไม่อ่าน
@@ -103,6 +109,20 @@ $totalCount = $dataProvider->getTotalCount();
         <?php
         $sendTestUrl = Url::to(['/notify/default/send-test']);
         $this->registerJs(<<<JS
+(function(){
+  var hint=document.getElementById('notify-permission-hint');
+  var btn=document.getElementById('notify-request-permission');
+  if(hint&&'Notification' in window){
+    if(Notification.permission==='granted'){ hint.style.display='none'; return; }
+    if(Notification.permission==='denied'){ hint.querySelector('span').textContent='การแจ้งเตือนถูกปิดกั้น — เปิดได้ที่ การตั้งค่าไซต์ → การแจ้งเตือน'; if(btn) btn.style.display='none'; return; }
+    if(btn)btn.addEventListener('click',function(){
+      Notification.requestPermission().then(function(p){
+        if(p==='granted'){ if(typeof Swal!=='undefined')Swal.fire({icon:'success',title:'เปิดการแจ้งเตือนแล้ว',timer:2000,showConfirmButton:false}); if(hint)hint.style.display='none'; }
+        else if(p==='denied'){ if(hint)hint.querySelector('span').textContent='การแจ้งเตือนถูกปิดกั้น — เปิดได้ที่ การตั้งค่าไซต์'; if(btn)btn.style.display='none'; }
+      });
+    });
+  } else if(hint) hint.style.display='none';
+})();
 \$(document).off('submit','#notify-send-test-form').on('submit','#notify-send-test-form',function(e){
   e.preventDefault();
   var form=this;

@@ -217,6 +217,7 @@ $js = <<< JS
 
         // 2. ตั้งค่า TomSelect (ใส่โค้ด AJAX กลับเข้าไป)
         itemSelect = new TomSelect('#itemSelector', {
+            dropdownParent: document.body,
             valueField: 'item_code',
             labelField: 'item_name',
             searchField: ['item_name', 'item_code'],
@@ -241,7 +242,7 @@ $js = <<< JS
                         <div>
                             <span class="fw-bold">\${escape(data.item_name)}</span>
                         </div>
-                        <span class="badge bg-secondary">\${escape(data.item_code)}</span>
+                        <span class="badge text-bg-secondary">\${escape(data.item_code)}</span>
                     </div>`;
                 },
                 item: function(data, escape) {

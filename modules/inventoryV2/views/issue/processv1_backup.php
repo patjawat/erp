@@ -18,7 +18,7 @@ $this->title = 'ดำเนินการจ่ายพัสดุ (Issue Pr
                 <i class="bi bi-box-seam fs-4"></i>
                 <h5 class="mb-0 text-white">บันทึกการจ่ายพัสดุ: <?= Html::encode($model->order_no) ?></h5>
             </div>
-            <span class="badge bg-white text-primary rounded-pill px-3">
+            <span class="badge text-bg-light text-primary rounded-pill px-3">
                 คลังต้นทาง: <?= Html::encode($model->mainWarehouse->warehouse_name ?? 'คลังหลัก') ?>
             </span>
         </div>

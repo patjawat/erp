@@ -136,13 +136,13 @@ class Warehouse extends \yii\db\ActiveRecord
     {
         switch ($this->warehouse_type) {
             case 'MAIN':
-                return '<span class="badge bg-warning text-dark"><i class="fa-solid fa-crown"></i> คลังหลัก</span>';
+                return '<span class="badge text-bg-warning text-dark"><i class="fa-solid fa-crown"></i> คลังหลัก</span>';
             case 'SUB':
-                return '<span class="badge bg-secondary text-white">คลังย่อย</span>';
+                return '<span class="badge text-bg-secondary">คลังย่อย</span>';
             case 'BRANCH':
-                return '<span class="badge bg-info">สาขา รพสต.</span>';
+                return '<span class="badge text-bg-info">สาขา รพสต.</span>';
             default:
-                return '<span class="badge bg-light text-dark">ไม่ระบุ</span>';
+                return '<span class="badge text-bg-light text-dark">ไม่ระบุ</span>';
         }
     }
 

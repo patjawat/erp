@@ -141,7 +141,7 @@ $(document).ready(function() {
                     res.transactions.forEach(function(row) {
                         html += '<tr>' +
                             '<td class="text-center">' + row.date + '</td>' +
-                            '<td class="text-center"><span class="badge bg-light text-dark border">' + row.order_no + '</span></td>' +
+                            '<td class="text-center"><span class="badge text-bg-light text-dark border">' + row.order_no + '</span></td>' +
                             '<td class="text-end">' + row.price + '</td>' +
                             '<td class="text-success fw-bold text-center">' + row.in_qty + '</td>' +
                             '<td class="text-danger fw-bold text-center">' + row.out_qty + '</td>' +

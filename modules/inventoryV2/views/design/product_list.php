@@ -68,7 +68,7 @@ $this->title = 'จัดการรายการพัสดุ (Item Master
                     </td>
                     <td>ชิ้น</td>
                     <td class="text-center">
-                        <span class="badge bg-danger-subtle text-danger rounded-pill px-3">5</span>
+                        <span class="badge text-bg-danger rounded-pill px-3">5</span>
                     </td>
                     <td class="text-end pe-4">
                         <button class="btn btn-light btn-sm rounded-circle me-1" title="แก้ไข" data-bs-toggle="modal" data-bs-target="#itemModal"><i class="bi bi-pencil-square"></i></button>
@@ -83,7 +83,7 @@ $this->title = 'จัดการรายการพัสดุ (Item Master
                     </td>
                     <td>หลอด</td>
                     <td class="text-center">
-                        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">20</span>
+                        <span class="badge text-bg-secondary rounded-pill px-3">20</span>
                     </td>
                     <td class="text-end pe-4">
                         <button class="btn btn-light btn-sm rounded-circle me-1"><i class="bi bi-pencil-square"></i></button>

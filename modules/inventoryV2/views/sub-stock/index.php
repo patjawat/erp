@@ -13,7 +13,7 @@ use yii\helpers\Url;
                     <i class="bi bi-shop h2 mb-0"></i>
                 </div>
                         <h6 class="fw-bold text-dark">หน้าแรกคลังย่อย</h6>
-                        <small class="text-muted">เช็คยอดของในตู้/แผนก</small>
+                        <small class="text-muted">เช็คยอดของในตู้/แผนก (ฝ่าย)</small>
                     </div>
                 </a>
             </div>

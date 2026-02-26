@@ -73,6 +73,8 @@ class StockItemSearch extends StockItem
         }
 
         // grid filtering conditions
+        $formName = $formName ?? $this->formName();
+        $subParams = $params[$formName] ?? [];
         $query->andFilterWhere([
             'id' => $this->id,
             'category_id' => $this->category_id,
@@ -80,12 +82,16 @@ class StockItemSearch extends StockItem
             'max_qty' => $this->max_qty,
             'is_asset' => $this->is_asset,
             'is_innovation' => $this->is_innovation,
-            'is_active' => $this->is_active,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
+        // สถานะ: กรองตาม dropdown (ทั้งหมด / เปิดใช้งาน / ปิดใช้งาน)
+        $isActiveRaw = $subParams['is_active'] ?? $this->is_active ?? null;
+        if ($isActiveRaw !== null && $isActiveRaw !== '') {
+            $query->andWhere(['stock_item.is_active' => (int) $isActiveRaw]);
+        }
 
         $query->andFilterWhere(['like', 'item_code', $this->item_code])
             ->andFilterWhere(['like', 'item_name', $this->item_name])

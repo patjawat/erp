@@ -27,7 +27,7 @@ $saveUrl = Url::to(['/inventory-v2/sub-stock/save-usage']);
     <div class="card border-0 shadow-sm border-top border-primary border-3">
         <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h6 class="text-white mb-0 fw-normal"><i class="bi bi-box-seam me-1"></i>ตัดจ่ายพัสดุที่คลังย่อย</h6>
-            <span class="badge bg-light text-dark">คลังที่ดำเนินการ: <span id="currentWarehouse">— เลือกคลังด้านล่าง</span></span>
+            <span class="badge text-bg-light text-dark">คลังที่ดำเนินการ: <span id="currentWarehouse">— เลือกคลังด้านล่าง</span></span>
         </div>
         <div class="card-body">
             <?php if (empty($subWarehouses)): ?>

@@ -109,9 +109,9 @@ $items = [
     [
         'title' => 'อบรม/ประชุม',
         'icon' => 'fa-solid fa-briefcase fs-1',
-        'url' => ['/hr/development/dashboard'],
+        'url' => ['/development/default/dashboard'],
         'padding' => 'p-3',
-        'show' => Yii::$app->user->can('hr') ? true : false,
+        'show' => (Yii::$app->user->can('hr') || Yii::$app->user->can('user')) ? true : false,
     ],
     [
         'title' => 'แผนงาน',

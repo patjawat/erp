@@ -114,6 +114,17 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
         ])->label(false) ?>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
+        <?= $form->field($model, 'is_active', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
+            'data' => [
+                '' => 'ทั้งหมด',
+                '1' => 'เปิดใช้งาน',
+                '0' => 'ปิดใช้งาน',
+            ],
+            'options' => ['placeholder' => 'สถานะ'],
+            'pluginOptions' => ['allowClear' => true],
+        ])->label(false) ?>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
         <?= $form->field($model, 'category_id', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
             'data' => $model->ListStockItemType(),
             'options' => ['placeholder' => 'หมวดหมู่'],
@@ -151,11 +162,6 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
                 'switch' => true,
                 'checked' => $model->is_innovation == '1' ? true : false,
             ])->label('บัญชีนวัตกรรม') ?>
-            <?= $form->field($model, 'is_active', ['options' => ['class' => 'mb-0']])->checkbox([
-                'custom' => true,
-                'switch' => true,
-                'checked' => $model->is_active == 1 ? true : false,
-            ])->label('เปิดใช้งาน') ?>
         </div>
     </div>
 </div>

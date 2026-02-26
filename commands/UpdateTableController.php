@@ -183,7 +183,13 @@ class UpdateTableController extends Controller
             // stock
             ['name' => '/inventory/default/index', 'type' => 2, 'description' => ''],
 
+            // คลังสินค้า V2 (inventoryV2)
+            ['name' => '/inventory-v2/*', 'type' => 2, 'description' => ''],
 
+            ['name' => '/appreciation/*', 'type' => 2, 'description' => ''],
+            ['name' => '/attendance/*', 'type' => 2, 'description' => ''],
+            ['name' => '/leave/*', 'type' => 2, 'description' => ''],
+            ['name' => '/development/*', 'type' => 2, 'description' => ''],
 
             //ขัดซื้อ
             ['name' => '/purchase/*', 'type' => 2, 'description' => ''],
@@ -379,6 +385,11 @@ class UpdateTableController extends Controller
             ['child' => '/inventory/warehouse/view', 'parent' => 'branch'],
             ['child' => '/inventory/default/index', 'parent' => 'branch'],
             ['child' => '/inventory/*', 'parent' => 'inventory'],
+            ['child' => '/inventory-v2/*', 'parent' => 'user'],
+            ['child' => '/appreciation/*', 'parent' => 'user'],
+            ['child' => '/attendance/*', 'parent' => 'user'],
+            ['child' => '/leave/*', 'parent' => 'user'],
+            ['child' => '/development/*', 'parent' => 'user'],
             // ['child' => '/inventory/main-stock/create', 'parent' => 'inventory'],
             // ['child' => '/inventory/main-stock/create', 'parent' => 'inventory'],
             // ['child' => '/inventory/stock-order', 'parent' => 'inventory'],

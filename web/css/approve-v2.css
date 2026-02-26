@@ -1,0 +1,174 @@
+/**
+ * Approve V2 — Soft Modern
+ * โทนสีอ่อน โมเดิร์น นุ่มตา
+ */
+
+/* ---- Variables (soft palette) ---- */
+body.approve-v2-wrap {
+    --av2-bg: #f8f9fd;
+    --av2-surface: #ffffff;
+    --av2-border: rgba(120, 119, 198, 0.12);
+    --av2-tab-bg: rgba(255, 255, 255, 0.8);
+    --av2-tab-active: #6b7fec;
+    --av2-tab-active-bg: rgba(107, 127, 236, 0.1);
+    --av2-tab-hover: rgba(107, 127, 236, 0.08);
+    --av2-card-shadow: 0 2px 12px rgba(107, 127, 236, 0.06);
+    --av2-card-radius: 16px;
+    --av2-badge-dot: #e8b4b8;
+    --av2-badge-bg: rgba(232, 180, 184, 0.25);
+    --av2-text: #2d3142;
+    --av2-muted: #6b7280;
+    --av2-success-soft: rgba(52, 199, 89, 0.12);
+    --av2-info-soft: rgba(90, 200, 250, 0.15);
+    --av2-warning-soft: rgba(255, 204, 0, 0.15);
+}
+
+/* ---- Tab bar ---- */
+body.approve-v2-wrap .approve-v2-tabs {
+    background: linear-gradient(135deg, rgba(248, 249, 253, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border: 1px solid var(--av2-border);
+    border-radius: var(--av2-card-radius);
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--av2-card-shadow);
+}
+
+body.approve-v2-wrap .approve-v2-tabs .tab-btn {
+    color: var(--av2-text);
+    font-weight: 500;
+    border: none;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+body.approve-v2-wrap .approve-v2-tabs .tab-btn:hover {
+    background: var(--av2-tab-hover);
+    color: var(--av2-tab-active);
+}
+
+body.approve-v2-wrap .approve-v2-tabs .tab-btn.bg-white,
+body.approve-v2-wrap .approve-v2-tabs .tab-btn.active {
+    background: var(--av2-tab-active-bg) !important;
+    color: var(--av2-tab-active);
+    box-shadow: 0 1px 6px rgba(107, 127, 236, 0.15);
+}
+
+body.approve-v2-wrap .approve-v2-tabs .tab-btn .badge {
+    background: var(--av2-badge-bg) !important;
+    color: #c94b5c;
+    font-weight: 600;
+}
+
+/* ---- Cards ---- */
+body.approve-v2-wrap .approve-v2-card {
+    border: 1px solid var(--av2-border);
+    border-radius: var(--av2-card-radius);
+    box-shadow: var(--av2-card-shadow);
+    overflow: hidden;
+}
+
+body.approve-v2-wrap .approve-v2-card .card-body {
+    background: var(--av2-surface);
+}
+
+/* ---- Tables ---- */
+body.approve-v2-wrap .approve-v2-card .table {
+    --bs-table-striped-bg: rgba(248, 249, 253, 0.6);
+    color: var(--av2-text);
+}
+
+body.approve-v2-wrap .approve-v2-card .table thead th {
+    background: linear-gradient(180deg, rgba(248, 249, 253, 0.98) 0%, rgba(245, 246, 252, 0.95) 100%) !important;
+    color: var(--av2-muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--av2-border);
+    padding: 0.85rem 1rem;
+}
+
+body.approve-v2-wrap .approve-v2-card .table tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+
+body.approve-v2-wrap .approve-v2-card .table tbody tr:hover {
+    background: rgba(107, 127, 236, 0.04);
+}
+
+body.approve-v2-wrap .approve-v2-card .table-striped > tbody > tr:nth-of-type(odd) {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+body.approve-v2-wrap .approve-v2-card .table-striped > tbody > tr:nth-of-type(odd):hover {
+    background: rgba(107, 127, 236, 0.06);
+}
+
+/* ---- Badges (ในตาราง / สถานะ) ---- */
+body.approve-v2-wrap .badge.text-bg-success {
+    background: var(--av2-success-soft) !important;
+    color: #16a34a;
+}
+
+body.approve-v2-wrap .badge.text-bg-warning,
+body.approve-v2-wrap .badge.text-bg-warning.text-dark {
+    background: var(--av2-warning-soft) !important;
+    color: #b45309;
+}
+
+body.approve-v2-wrap .badge.text-bg-info {
+    background: var(--av2-info-soft) !important;
+    color: #0284c7;
+}
+
+body.approve-v2-wrap .badge.text-bg-primary {
+    background: rgba(107, 127, 236, 0.2) !important;
+    color: var(--av2-tab-active);
+}
+
+body.approve-v2-wrap .badge.rounded-pill {
+    font-weight: 500;
+}
+
+/* ---- Buttons (ในตาราง) ---- */
+body.approve-v2-wrap .btn-outline-primary {
+    border-color: rgba(107, 127, 236, 0.4);
+    color: var(--av2-tab-active);
+}
+
+body.approve-v2-wrap .btn-outline-primary:hover {
+    background: var(--av2-tab-active-bg);
+    border-color: var(--av2-tab-active);
+    color: var(--av2-tab-active);
+}
+
+body.approve-v2-wrap .btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
+}
+
+body.approve-v2-wrap .btn-success:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+/* ---- Page title block ---- */
+body.approve-v2-wrap .text-primary-gradient {
+    color: var(--av2-tab-active);
+}
+
+body.approve-v2-wrap .text-primary-gradient .lucide,
+body.approve-v2-wrap .text-primary-gradient svg {
+    color: var(--av2-tab-active);
+}
+
+/* ---- Search / filter bar ---- */
+body.approve-v2-wrap .approve-v2-card h6 {
+    color: var(--av2-text);
+    font-weight: 600;
+}
+
+body.approve-v2-wrap .approve-v2-card .text-muted {
+    color: var(--av2-muted) !important;
+}
