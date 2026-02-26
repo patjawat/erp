@@ -53,7 +53,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
 
     <!-- Filter: card ค้นหา -->
     <?php
-    $hasFilter = (string)$searchModel->topic !== '' || (string)$searchModel->development_type_id !== '' || (string)$searchModel->status !== '' || (string)$searchModel->date_start_from !== '' || (string)$searchModel->date_start_to !== '' || (string)$searchModel->emp_keyword !== '';
+    $hasFilter = (string)$searchModel->topic !== '' || (string)$searchModel->development_type_id !== '' || (string)$searchModel->status !== '' || (string)$searchModel->date_start_from !== '' || (string)$searchModel->date_start_to !== '' || (string)$searchModel->emp_id !== '';
     $form = ActiveForm::begin([
         'method' => 'get',
         'action' => ['/development/default/list'],
@@ -96,10 +96,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
             <!-- Filter row: บุคลากร, ประเภท, สถานะ, วันที่ -->
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($searchModel, 'emp_keyword')->textInput([
-                        'placeholder' => 'ชื่อ นามสกุล หรือรหัส',
-                        'class' => 'form-control rounded-pill',
-                    ])->label('ค้นหาบุคลากร') ?>
+                    <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $searchModel, 'label' => 'ค้นหาบุคลากร', 'placeholder' => 'บุคลากร']) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
                     <?= $form->field($searchModel, 'development_type_id')->dropDownList(

@@ -110,9 +110,14 @@ class DevelopmentSearch extends Development
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])
             ->andFilterWhere(['like', 'leader_id', $this->leader_id])
             ->andFilterWhere(['like', 'leader_group_id', $this->leader_group_id])
-            ->andFilterWhere(['like', Development::tableName() . '.emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 
+        // กรองตามบุคลากรที่เลือก (จาก input_emp)
+        if ($this->emp_id !== null && $this->emp_id !== '') {
+            $query->andFilterWhere([Development::tableName() . '.emp_id' => $this->emp_id]);
+        }
+
+        // กรองตามคำค้น (ชื่อ นามสกุล รหัส) ถ้ามีส่งมาจาก params
         if (is_string($this->emp_keyword) && trim($this->emp_keyword) !== '') {
             $keyword = trim($this->emp_keyword);
             $query->joinWith(['emp']);
