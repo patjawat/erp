@@ -125,44 +125,6 @@ $statusLabel = StatusBadgeHelper::getLabel($model->status);
                     </div>
                 </div>
             </div>
-
-            <?php $expenseItems = $model->getExpenseItems(); if (!empty($expenseItems)): ?>
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-header bg-light py-2 px-3">
-                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-cash-stack me-1"></i> รายการค่าใช้จ่าย / ใบเสร็จแนบ</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 5%;">#</th>
-                                    <th style="width: 45%;">รายการ</th>
-                                    <th style="width: 20%;" class="text-end">จำนวนเงิน (บาท)</th>
-                                    <th style="width: 30%;">ใบเสร็จแนบ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($expenseItems as $ei => $row): ?>
-                                <tr>
-                                    <td class="text-center text-muted"><?= $ei + 1 ?></td>
-                                    <td><?= Html::encode($row['description'] ?? '-') ?></td>
-                                    <td class="text-end"><?= number_format((float)($row['amount'] ?? 0), 2) ?></td>
-                                    <td>
-                                        <?php if (!empty($row['receipt_path'])): ?>
-                                            <a href="<?= Html::encode($row['receipt_path']) ?>" target="_blank" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-pdf me-1"></i> ดูใบเสร็จ</a>
-                                        <?php else: ?>
-                                            <span class="text-muted">—</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>

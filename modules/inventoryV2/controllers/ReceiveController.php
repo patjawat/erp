@@ -622,7 +622,7 @@ class ReceiveController extends Controller
             return;
         }
         $existing = $model->getExpenseItems();
-        $dir = Yii::getAlias('@webroot/uploads/receive-receipts');
+        $dir = \Yii::getAlias('@webroot/uploads/receive-receipts');
         if (!is_dir($dir)) {
             FileHelper::createDirectory($dir, 0755, true);
         }

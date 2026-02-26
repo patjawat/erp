@@ -215,55 +215,6 @@ foreach ($items as $it) {
                 </table>
             </div>
 
-            <!-- รายการค่าใช้จ่าย + แนบใบเสร็จ -->
-            <div class="card border border-secondary border-opacity-25 mt-4">
-                <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-cash-stack me-1"></i> รายการค่าใช้จ่าย (ไม่บังคับ)</h6>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddExpense">
-                        <i class="bi bi-plus-lg me-1"></i> เพิ่มรายการค่าใช้จ่าย
-                    </button>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" id="expenseTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 4%;">#</th>
-                                    <th style="width: 40%;">รายการ (คำอธิบาย)</th>
-                                    <th style="width: 15%;">จำนวนเงิน (บาท)</th>
-                                    <th style="width: 35%;">แนบใบเสร็จ</th>
-                                    <th style="width: 6%;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="expense-body">
-                                <?php
-                                $expenseItems = $model->getExpenseItems();
-                                foreach ($expenseItems as $ei => $row):
-                                    $desc = isset($row['description']) ? Html::encode($row['description']) : '';
-                                    $amt = isset($row['amount']) ? (float)$row['amount'] : '';
-                                ?>
-                                <tr class="expense-row">
-                                    <td class="text-center text-muted"><?= $ei + 1 ?></td>
-                                    <td><input type="text" name="ExpenseItems[<?= $ei ?>][description]" class="form-control form-control-sm" value="<?= $desc ?>" placeholder="เช่น ค่าขนส่ง"></td>
-                                    <td><input type="number" name="ExpenseItems[<?= $ei ?>][amount]" class="form-control form-control-sm expense-amount" value="<?= $amt !== '' ? $amt : '' ?>" step="0.01" min="0" placeholder="0.00"></td>
-                                    <td>
-                                        <?php if (!empty($row['receipt_path'])): ?>
-                                            <a href="<?= Html::encode($row['receipt_path']) ?>" target="_blank" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-file-earmark-pdf"></i> ดูใบเสร็จ</a>
-                                        <?php endif; ?>
-                                        <input type="file" name="ExpenseItems[<?= $ei ?>][receipt]" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.gif">
-                                    </td>
-                                    <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-expense border-0"><i class="bi bi-trash"></i></button></td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <tr id="expense-empty-row" style="<?= !empty($expenseItems) ? 'display:none' : '' ?>">
-                                    <td colspan="5" class="text-center py-3 text-muted small">ยังไม่มีรายการค่าใช้จ่าย กดปุ่มเพิ่มรายการด้านบน</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
             <div class="text-end mt-4">
                 <input type="hidden" name="save_as_draft" id="save_as_draft" value="0">
                 <?php if ($model->isNewRecord || $model->status === 'DRAFT'): ?>
@@ -887,33 +838,6 @@ $js = <<< JS
         else { itemSelect.enable(); itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...'; }
 
         if ($('.item-row').length) { reOrder(); calculateTotal(); }
-
-        // รายการค่าใช้จ่าย: เพิ่มแถว
-        function reindexExpenseRows() {
-            $('#expense-body tr.expense-row').each(function(idx) {
-                $(this).find('td:first').text(idx + 1);
-                $(this).find('input[name*="[description]"]').attr('name', 'ExpenseItems[' + idx + '][description]');
-                $(this).find('input[name*="[amount]"]').attr('name', 'ExpenseItems[' + idx + '][amount]');
-                $(this).find('input[type="file"]').attr('name', 'ExpenseItems[' + idx + '][receipt]');
-            });
-            $('#expense-empty-row').toggle($('#expense-body tr.expense-row').length === 0);
-        }
-        $('#btnAddExpense').on('click', function() {
-            var idx = $('#expense-body tr.expense-row').length;
-            var row = '<tr class="expense-row">' +
-                '<td class="text-center text-muted">' + (idx + 1) + '</td>' +
-                '<td><input type="text" name="ExpenseItems[' + idx + '][description]" class="form-control form-control-sm" placeholder="เช่น ค่าขนส่ง"></td>' +
-                '<td><input type="number" name="ExpenseItems[' + idx + '][amount]" class="form-control form-control-sm expense-amount" step="0.01" min="0" placeholder="0.00"></td>' +
-                '<td><input type="file" name="ExpenseItems[' + idx + '][receipt]" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png,.gif"></td>' +
-                '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-expense border-0"><i class="bi bi-trash"></i></button></td>' +
-                '</tr>';
-            $('#expense-empty-row').before(row);
-            $('#expense-empty-row').hide();
-        });
-        $(document).on('click', '.btn-remove-expense', function() {
-            $(this).closest('tr.expense-row').remove();
-            reindexExpenseRows();
-        });
 
         // 3. ปุ่มเพิ่มแถว (เหมือนเดิม)
        // เปลี่ยนจาก $('#btnAddRow').click(function() { ... });

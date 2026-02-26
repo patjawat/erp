@@ -320,7 +320,7 @@ public function getToWarehouse()
      */
     public function setExpenseItems(array $items)
     {
-        $json = is_array($this->data_json) ? $this->data_json : (json_decode($this->data_json, true) ?: []);
+        $json = is_array($this->data_json) ? $this->data_json : (is_string($this->data_json) ? (json_decode($this->data_json, true) ?: []) : []);
         if (!is_array($json)) {
             $json = [];
         }
@@ -339,7 +339,7 @@ public function getToWarehouse()
         if (!$cat || empty($cat->data_json)) {
             return ['name' => '', 'position' => '', 'emp_id' => null];
         }
-        $json = is_array($cat->data_json) ? $cat->data_json : (json_decode($cat->data_json, true) ?: []);
+        $json = is_array($cat->data_json) ? $cat->data_json : (is_string($cat->data_json) ? (json_decode($cat->data_json, true) ?: []) : []);
         $leaderId = isset($json['leader']) ? (int) $json['leader'] : null;
         if ($leaderId > 0) {
             $info = self::getEmployeeNameAndPosition($leaderId);
