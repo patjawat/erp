@@ -108,10 +108,10 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card border-0 shadow-sm rounded-3 h-100" role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#onlineUsersModal" title="คลิกดูรายชื่อผู้กำลังออนไลน์" style="cursor: pointer;">
                 <div class="card-body d-flex justify-content-between align-items-start border-start border-4 border-info rounded-start">
                     <div class="flex-grow-1 min-w-0">
-                        <p class="text-muted small mb-1">กำลังออนไลน์</p>
+                        <p class="text-muted small mb-1">กำลังออนไลน์ <span class="text-info small">(คลิกดูรายชื่อ)</span></p>
                         <h3 class="fs-2 fw-bold text-body mb-0"><?= number_format($activeSessions) ?></h3>
                         <?php if (!empty($onlineUsers)): ?>
                         <div class="d-flex align-items-center mt-2 flex-wrap gap-1">
@@ -328,6 +328,55 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <?php endif; ?>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal รายชื่อผู้กำลังออนไลน์ -->
+<div class="modal fade" id="onlineUsersModal" tabindex="-1" aria-labelledby="onlineUsersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow rounded-3">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="onlineUsersModalLabel">
+                    <i class="bi bi-broadcast text-info me-2"></i> ผู้กำลังออนไลน์
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <?php if (!empty($onlineUsers)): ?>
+                <ul class="list-group list-group-flush">
+                    <?php foreach ($onlineUsers as $u):
+                        $emp = $u->employee;
+                        $avatarUrl = $emp && method_exists($emp, 'ShowAvatar') ? $emp->ShowAvatar() : null;
+                        $name = $emp ? trim($emp->fullname ?? (($emp->fname ?? '') . ' ' . ($emp->lname ?? ''))) : $u->username;
+                        if ($name === '') $name = $u->username;
+                        $initials = mb_strlen($name) >= 2 ? mb_substr($name, 0, 2) : ($name ? mb_substr($name, 0, 1) : '?');
+                    ?>
+                    <li class="list-group-item border-0 px-0 py-3 d-flex align-items-center">
+                        <div class="rounded-circle border border-2 border-light shadow-sm overflow-hidden flex-shrink-0 me-3" style="width: 48px; height: 48px;">
+                            <?php if ($avatarUrl): ?>
+                            <img src="<?= Html::encode($avatarUrl) ?>" alt="" width="48" height="48" style="object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span class="d-none bg-info bg-opacity-25 text-info fw-bold d-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1rem;"><?= Html::encode($initials) ?></span>
+                            <?php else: ?>
+                            <span class="bg-info bg-opacity-25 text-info fw-bold d-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1rem;"><?= Html::encode($initials) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-medium text-body"><?= Html::encode($name) ?></div>
+                            <div class="small text-muted"><?= Html::encode($u->username) ?></div>
+                        </div>
+                        <?= Html::a('<i class="bi bi-eye"></i> ดู', ['/usermanager/user/view', 'id' => $u->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill link-loading']) ?>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php else: ?>
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-broadcast display-4 opacity-50"></i>
+                    <p class="mt-3 mb-0">ไม่มีผู้ใช้กำลังออนไลน์</p>
+                    <p class="small mb-0">หรือระบบยังไม่ได้ใช้ตาราง session เก็บ user_id</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

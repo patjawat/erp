@@ -116,14 +116,14 @@ class LeaveController extends Controller
                     ->andWhere(['department' => $arrDepartment])
                     ->column();
 
-                $query->andWhere(['in', 'emp_id', $empIds]);
+                $query->andWhere(['in', 'leave.emp_id', $empIds]);
             } else {
                 $empIds = Employees::find()
                     ->select('id')
                     ->andWhere(['department' => $searchModel->q_department])
                     ->column();
 
-                $query->andWhere(['in', 'emp_id', $empIds]);
+                $query->andWhere(['in', 'leave.emp_id', $empIds]);
             }
         }
 
