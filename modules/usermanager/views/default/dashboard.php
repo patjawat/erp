@@ -20,6 +20,9 @@ if (!empty($roleDetails)) {
 /** @var int $inactiveUsers */
 /** @var int $rolesCount */
 /** @var int $activeSessions */
+/** @var \app\modules\usermanager\models\User[] $onlineUsers */
+/** @var array $visitSummary ['daily' => int, 'month' => int, 'lastMonth' => int, 'total' => int] */
+/** @var array $visitChart ['labels' => string[], 'series' => int[]] */
 /** @var array $usersPerRole ชื่อบทบาท => จำนวนคน */
 /** @var array $roleDetails ชื่อบทบาท => ['description' => string, 'count' => int] */
 /** @var yii\data\ActiveDataProvider $recentProvider */
@@ -107,13 +110,90 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-body d-flex justify-content-between align-items-start border-start border-4 border-info rounded-start">
-                    <div>
+                    <div class="flex-grow-1 min-w-0">
                         <p class="text-muted small mb-1">กำลังออนไลน์</p>
                         <h3 class="fs-2 fw-bold text-body mb-0"><?= number_format($activeSessions) ?></h3>
+                        <?php if (!empty($onlineUsers)): ?>
+                        <div class="d-flex align-items-center mt-2 flex-wrap gap-1">
+                            <div class="d-flex align-items-center">
+                                <?php
+                                $showCount = min(5, count($onlineUsers));
+                                $restCount = count($onlineUsers) - $showCount;
+                                $first = true;
+                                foreach (array_slice($onlineUsers, 0, $showCount) as $u):
+                                    $emp = $u->employee;
+                                    $avatarUrl = $emp && method_exists($emp, 'ShowAvatar') ? $emp->ShowAvatar() : null;
+                                    $name = $emp ? trim($emp->fullname ?? (($emp->fname ?? '') . ' ' . ($emp->lname ?? ''))) : $u->username;
+                                    if ($name === '') $name = $u->username;
+                                    $initials = mb_strlen($name) >= 2 ? mb_substr($name, 0, 2) : ($name ? mb_substr($name, 0, 1) : '?');
+                                    $ml = $first ? '0' : '-6px';
+                                    $first = false;
+                                ?>
+                                <div class="rounded-circle border border-2 border-white shadow-sm overflow-hidden flex-shrink-0" style="width: 28px; height: 28px; margin-left: <?= $ml ?>;" title="<?= Html::encode($name) ?>">
+                                    <?php if ($avatarUrl): ?>
+                                    <img src="<?= Html::encode($avatarUrl) ?>" alt="" width="28" height="28" style="object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <span class="d-none bg-info bg-opacity-25 text-info small fw-bold align-items-center justify-content-center" style="width:28px;height:28px;display:flex;font-size:10px;"><?= Html::encode($initials) ?></span>
+                                    <?php else: ?>
+                                    <span class="bg-info bg-opacity-25 text-info small fw-bold d-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:10px;"><?= Html::encode($initials) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endforeach; ?>
+                                <?php if ($restCount > 0): ?>
+                                <span class="rounded-circle border border-2 border-white bg-info bg-opacity-10 text-info small fw-medium d-flex align-items-center justify-content-center flex-shrink-0 ms-1" style="width: 28px; height: 28px; margin-left: -6px; font-size: 10px;">+<?= $restCount ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <div class="text-info opacity-75">
+                    <div class="text-info opacity-75 flex-shrink-0 ms-2">
                         <i class="bi bi-broadcast fs-2"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- สถิติการเข้าใช้งานเว็บ -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="fw-bold text-body mb-0"><i class="bi bi-graph-up-arrow me-2"></i> สถิติการเข้าใช้งานเว็บ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">วันนี้</span>
+                            <span class="fw-bold"><?= number_format($visitSummary['daily'] ?? 0) ?> ครั้ง</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">เดือนนี้</span>
+                            <span class="fw-bold"><?= number_format($visitSummary['month'] ?? 0) ?> ครั้ง</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">เดือนที่แล้ว</span>
+                            <span class="fw-bold"><?= number_format($visitSummary['lastMonth'] ?? 0) ?> ครั้ง</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">สะสมทั้งหมด</span>
+                            <span class="fw-bold text-primary"><?= number_format($visitSummary['total'] ?? 0) ?> ครั้ง</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="fw-bold text-body mb-0"><i class="bi bi-activity me-2"></i> แนวโน้มการเข้าใช้งานเว็บ</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($visitChart['series'])): ?>
+                    <div id="visitChart" style="min-height: 320px;"></div>
+                    <?php else: ?>
+                    <div class="text-center text-muted py-5">ยังไม่มีข้อมูลการเข้าใช้งาน</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -252,6 +332,37 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<?php if (!empty($visitChart['labels']) && !empty($visitChart['series'])): ?>
+<?php
+$visitLabelsForJs = array_map(function ($d) {
+    return ThaiDateHelper::formatThaiDate($d, 'short');
+}, $visitChart['labels']);
+$visitLabelsJson = Json::encode($visitLabelsForJs);
+$visitSeriesJson = Json::encode($visitChart['series']);
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof ApexCharts === 'undefined') return;
+    var el = document.querySelector('#visitChart');
+    if (!el) return;
+    var labels = <?= $visitLabelsJson ?>;
+    var seriesData = <?= $visitSeriesJson ?>;
+    if (!seriesData.length) return;
+    var options = {
+        series: [{ name: 'เข้าชม (ครั้ง)', data: seriesData }],
+        chart: { type: 'area', height: 320, fontFamily: 'Sarabun, sans-serif', toolbar: { show: false } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { categories: labels },
+        colors: ['#0d6efd'],
+        fill: { type: 'solid', opacity: 0.6 },
+        grid: { xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } }
+    };
+    new ApexCharts(el, options).render();
+});
+</script>
+<?php endif; ?>
 
 <?php if (!empty($roleChartSeries)): ?>
 <?php

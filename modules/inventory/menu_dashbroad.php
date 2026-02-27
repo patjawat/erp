@@ -40,6 +40,9 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <li>
                 <?= Html::a('<i class="fa-solid fa-cube me-2"></i> รายงานวัสดุคงคลังหลักรายตัว ', ['/inventory/report/list-by-item'], ['class' => 'dropdown-item']) ?>
             </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออกรายงานวัสดุคงคลังรายตัว ', ['/inventory/export-stock'], ['class' => 'dropdown-item']) ?>
+            </li>
 
         </ul>
     </div>

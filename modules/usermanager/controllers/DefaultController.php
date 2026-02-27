@@ -4,6 +4,7 @@ namespace app\modules\usermanager\controllers;
 
 use Yii;
 use yii\web\Controller;
+use app\models\VisitCounter;
 use app\modules\usermanager\models\User;
 use app\modules\usermanager\models\Session;
 use app\modules\usermanager\models\UserSearch;
@@ -56,12 +57,72 @@ class DefaultController extends Controller
             ];
         }
         $activeSessions = 0;
+        $onlineUsers = [];
         try {
             if (Yii::$app->db->getSchema()->getTableSchema(Session::tableName(), true) !== null) {
                 $activeSessions = Session::find()->where(['>', 'expire', time()])->count();
+                $schema = Yii::$app->db->getSchema()->getTableSchema(Session::tableName(), true);
+                if ($schema && $schema->getColumn('user_id') !== null) {
+                    $onlineUserIds = Session::find()
+                        ->select('user_id')
+                        ->where(['>', 'expire', time()])
+                        ->andWhere(['not', ['user_id' => null]])
+                        ->distinct()
+                        ->column();
+                    if (!empty($onlineUserIds)) {
+                        $onlineUsers = User::find()
+                            ->where([User::tableName() . '.id' => array_unique($onlineUserIds)])
+                            ->joinWith(['employee'])
+                            ->limit(10)
+                            ->all();
+                    }
+                }
             }
         } catch (\Throwable $e) {
             // ตาราง session อาจไม่มี (ใช้ session แบบ file/cache) — แสดง 0
+        }
+
+        // สถิติการเข้าใช้งานเว็บจากตาราง visit_counter
+        $visitSummary = [
+            'daily' => 0,
+            'month' => 0,
+            'lastMonth' => 0,
+            'total' => 0,
+        ];
+        $visitChart = [
+            'labels' => [],
+            'series' => [],
+        ];
+        try {
+            if (Yii::$app->db->getSchema()->getTableSchema('visit_counter', true) !== null) {
+                $today = date('Y-m-d');
+                $thisMonth = date('Y-m');
+                $lastMonth = date('Y-m', strtotime('-1 month'));
+
+                $visitSummary['daily'] = (int) VisitCounter::find()->where(['vdate' => $today])->sum('counter');
+                $visitSummary['month'] = (int) VisitCounter::find()
+                    ->where(['like', 'vdate', $thisMonth . '%', false])
+                    ->sum('counter');
+                $visitSummary['lastMonth'] = (int) VisitCounter::find()
+                    ->where(['like', 'vdate', $lastMonth . '%', false])
+                    ->sum('counter');
+                $visitSummary['total'] = (int) VisitCounter::find()->sum('counter');
+
+                $rows = VisitCounter::find()
+                    ->select(['vdate', 'SUM(counter) AS c'])
+                    ->groupBy('vdate')
+                    ->orderBy(['vdate' => SORT_DESC])
+                    ->limit(14)
+                    ->asArray()
+                    ->all();
+                $rows = array_reverse($rows);
+                foreach ($rows as $row) {
+                    $visitChart['labels'][] = $row['vdate'];
+                    $visitChart['series'][] = (int) $row['c'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // ถ้าไม่มีตารางหรือ query error ให้ใช้ค่าเริ่มต้น (0 / ว่าง)
         }
 
         $searchModel = new UserSearch();
@@ -76,6 +137,9 @@ class DefaultController extends Controller
             'inactiveUsers' => $inactiveUsers,
             'rolesCount' => $rolesCount,
             'activeSessions' => $activeSessions,
+            'onlineUsers' => $onlineUsers,
+            'visitSummary' => $visitSummary,
+            'visitChart' => $visitChart,
             'usersPerRole' => $usersPerRole,
             'roleDetails' => $roleDetails,
             'recentProvider' => $recentProvider,
