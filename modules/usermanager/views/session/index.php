@@ -1,22 +1,25 @@
 <?php
 
-use app\modules\usermanager\models\Session;
-use kartik\grid\GridView;
-use yii\widgets\Pjax;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
+use yii\grid\GridView;
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\modules\usermanager\models\SessionSearch */
-/* @var $dataProvider yii\data\ActiveDataProvider */
+/* @var $searchModel app\modules\usermanager\models\SessionSearch|null */
+/* @var $dataProvider yii\data\DataProviderInterface */
+/* @var bool $sessionTableExists */
+/* @var array $browsers */
 
-// $this->title = 'User Session';
+$this->title = 'เซสชัน / User Online';
 $this->params['breadcrumbs'][] = $this->title;
-$browsers = Session::find()
-    ->select('browser')
-    ->addSelect('count(id) as total')
-    ->groupBy('browser')
-    ->createCommand()->queryAll();
 ?>
+
+<?php if (!$sessionTableExists): ?>
+<div class="alert alert-info border-0 rounded-3 mb-4" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>ไม่มีตาราง session ในฐานข้อมูล</strong> — ระบบอาจใช้ session แบบ file หรือ cache จึงไม่สามารถแสดงรายการเซสชันที่เข้าสู่ระบบได้
+</div>
+<?php endif; ?>
 
 <div class="card">
     <div class="card-header text-success">
@@ -38,32 +41,35 @@ $browsers = Session::find()
         [
             'header' => 'Browser',
             'format' => 'raw',
-            'width' => '5%',
-            'hAlign' => 'center',
-            'vAlign' => 'middle',
+            'headerOptions' => ['style' => 'width: 5%'],
+            'contentOptions' => ['class' => 'text-center'],
             'value' => function ($model) {
-                if ($model['browser'] == 'chrome') {
-                    return Html::img('@web/img/browser-icon/chrome.svg',['width' => '50']);
-                    
-                } else if ($model['browser'] == 'safari') {
-                    return Html::img('@web/img/browser-icon/safari.svg',['width' => '50']);
-
-                } else if ($model['browser'] == 'firefox') {
-                    return Html::img('@web/img/browser-icon/firefox.svg',['width' => '50']);
-
-                } else if ($model['browser'] == 'internet-explorer') {
-                    return Html::img('@web/img/browser-icon/internet_explorer.svg',['width' => '50']);
-
+                if (isset($model['browser'])) {
+                    if ($model['browser'] == 'chrome') {
+                        return Html::img('@web/img/browser-icon/chrome.svg', ['width' => '50']);
+                    }
+                    if ($model['browser'] == 'safari') {
+                        return Html::img('@web/img/browser-icon/safari.svg', ['width' => '50']);
+                    }
+                    if ($model['browser'] == 'firefox') {
+                        return Html::img('@web/img/browser-icon/firefox.svg', ['width' => '50']);
+                    }
+                    if ($model['browser'] == 'internet-explorer') {
+                        return Html::img('@web/img/browser-icon/internet_explorer.svg', ['width' => '50']);
+                    }
                 }
+                return $model && is_object($model) && isset($model->browser) ? Html::encode($model->browser) : '-';
             },
         ],
         [
             'header' => 'ผู้ใช้งาน',
             'format' => 'raw',
-            'width' => '40%',
+            'headerOptions' => ['style' => 'width: 40%'],
             'value' => function ($model) {
-                return $model->user->fullname . ' (<code>' . $model->ip_address . '</code>)<br>' .
-                $model->data;
+                $name = is_object($model) && $model->user ? $model->user->fullname : '-';
+                $ip = is_object($model) && isset($model->ip_address) ? $model->ip_address : '-';
+                $data = is_object($model) && isset($model->data) ? $model->data : '';
+                return $name . ' (<code>' . Html::encode($ip) . '</code>)<br>' . Html::encode($data);
             },
         ],
         'login_time',

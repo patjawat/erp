@@ -433,10 +433,10 @@ class MainStockController extends \yii\web\Controller
             }
         }
 
-        // กรณีโหลดหน้าเว็บปกติ (GET)
+        // กรณีโหลดหน้าเว็บปกติ (GET) — คลังสินค้าแสดงตามการกำหนดเจ้าหน้าที่รับผิดชอบคลัง (admin เห็นทั้งหมด)
         return $this->render('_form_receive', [
             'model' => $model,
-            'listWarehouse' => \yii\helpers\ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name'),
+            'listWarehouse' => ArrayHelper::map(Warehouse::findMainWarehousesForReceive(), 'id', 'warehouse_name'),
         ]);
     }
 
@@ -513,10 +513,11 @@ class MainStockController extends \yii\web\Controller
             }
         }
 
+        // คลังสินค้าแสดงตามการกำหนดเจ้าหน้าที่รับผิดชอบคลัง (admin เห็นทั้งหมด)
         return $this->render('_form_receive', [
             'model' => $model,
             'items' => $model->stockDetails, // ส่งรายการเดิมไปแสดงในตาราง
-            'listWarehouse' => \yii\helpers\ArrayHelper::map(Warehouse::find()->all(), 'id', 'warehouse_name'),
+            'listWarehouse' => ArrayHelper::map(Warehouse::findMainWarehousesForReceive(), 'id', 'warehouse_name'),
         ]);
     }
 

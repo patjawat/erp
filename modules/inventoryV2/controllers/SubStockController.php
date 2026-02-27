@@ -55,32 +55,17 @@ class SubStockController extends \yii\web\Controller
         ]);
     }
 
-    /** รหัสคลังย่อยที่ผู้ใช้รับผิดชอบ (หรือทั้งหมดถ้า admin) */
+    /** รหัสคลังย่อยที่ผู้ใช้มีสิทธิ (ตามกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก ของคลังย่อย + แผนกของ user ที่ล็อกอิน) */
     protected function getSubWarehouseIds()
     {
-        $query = Warehouse::find()
-            ->where(['warehouse_type' => 'SUB'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->select('id');
-        if (!Yii::$app->user->isGuest && !Yii::$app->user->can('admin')) {
-            $userId = (string) Yii::$app->user->id;
-            $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
-        }
-        return $query->column();
+        $list = Warehouse::findSubWarehousesForUser();
+        return array_column($list, 'id');
     }
 
-    /** รายการคลังย่อยสำหรับ dropdown (ตามสิทธิ์ผู้ใช้) */
+    /** รายการคลังย่อยสำหรับ dropdown (ตาม user ที่ล็อกอินและกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก) */
     protected function getSubWarehousesList()
     {
-        $query = Warehouse::find()
-            ->where(['warehouse_type' => 'SUB'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy('warehouse_name');
-        if (!Yii::$app->user->isGuest && !Yii::$app->user->can('admin')) {
-            $userId = (string) Yii::$app->user->id;
-            $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
-        }
-        return $query->all();
+        return Warehouse::findSubWarehousesForUser();
     }
 
     /** warehouse_id จาก query หรือ session (all = null) */

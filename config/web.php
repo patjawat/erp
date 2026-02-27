@@ -164,6 +164,19 @@ $config = [
             'database' => 0,
         ],
 
+        // Session เก็บใน DB เพื่อให้ Dashboard "กำลังออนไลน์" และ /usermanager/session ทำงานได้
+        // ต้องรัน migration สร้างตาราง session ก่อน: php yii migrate --migrationPath=@app/migrations
+        'session' => [
+            'class' => 'yii\web\DbSession',
+            'sessionTable' => '{{%session}}',
+            'writeCallback' => function ($session) {
+                return [
+                    'user_id' => Yii::$app->user->isGuest ? null : Yii::$app->user->id,
+                    'ip_address' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
+                    'login_time' => time(),
+                ];
+            },
+        ],
         'user' => [
             'identityClass' => 'app\modules\usermanager\models\User',
             'loginUrl' => ['/auth/login'],

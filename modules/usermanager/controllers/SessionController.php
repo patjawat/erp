@@ -32,27 +32,48 @@ class SessionController extends Controller
 
     /**
      * Lists all Session models.
+     * เมื่อไม่มีตาราง session (ใช้ session แบบ file/cache) จะแสดงข้อความและรายการว่าง
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new SessionSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $sessionTableExists = Yii::$app->db->getSchema()->getTableSchema(Session::tableName(), true) !== null;
+
+        if (!$sessionTableExists) {
+            $dataProvider = new \yii\data\ArrayDataProvider(['allModels' => []]);
+            $searchModel = null;
+            $browsers = [];
+        } else {
+            $searchModel = new SessionSearch();
+            $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+            $browsers = [];
+            try {
+                $browsers = Session::find()
+                    ->select('browser')
+                    ->addSelect('count(id) as total')
+                    ->groupBy('browser')
+                    ->createCommand()->queryAll();
+            } catch (\Throwable $e) {
+                // คอลัมน์ browser อาจไม่มี
+            }
+        }
+
+        $params = [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'sessionTableExists' => $sessionTableExists,
+            'browsers' => $browsers ?? [],
+        ];
+
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => '',
-            'content' => $this->renderAjax('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]),
-            'footer' =>'',
+            return [
+                'title' => '',
+                'content' => $this->renderAjax('index', $params),
+                'footer' => '',
             ];
-        }else{
-            return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
         }
+        return $this->render('index', $params);
     }
 
     /**

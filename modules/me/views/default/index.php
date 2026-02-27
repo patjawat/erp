@@ -279,7 +279,7 @@ if (!empty($upcomingHealth)): ?>
         <div class="row g-2">
             <div class="col-6">
                 <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <a href="<?= Url::to(['/leave/default/index']) ?>">
+                    <a href="<?= Url::to(['/me/leave']) ?>">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
@@ -370,7 +370,7 @@ if (!empty($upcomingHealth)): ?>
                                 ดูสิทธิ์ ประวัติการลา และสร้างใบลาใหม่</p>
                         </div>
                     </div>
-                    <a href="<?= Url::to(['/leave/default/index']) ?>"
+                    <a href="<?= Url::to(['/me/leave']) ?>"
                         class="btn btn-primary rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale">
                         ดูทั้งหมด <i data-lucide="chevrons-right"></i>
                     </a>
@@ -412,7 +412,7 @@ if (!empty($upcomingHealth)): ?>
                                 style="width: <?= $percenUseDay ?>%;">
                             </div>
                         </div>
-                        <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบลา', ['/leave/leave/create'], ['class' => 'btn w-100 rounded-4 fw-bold py-2', 'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;']) ?>
+                        <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบลา', ['/me/leave/create'], ['class' => 'btn w-100 rounded-4 fw-bold py-2 open-modal','data' => ['size' => 'modal-lg'], 'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;']) ?>
 
                     </div>
                 </div>

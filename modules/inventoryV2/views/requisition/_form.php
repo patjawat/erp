@@ -14,11 +14,17 @@ $formatRepoJs = "var formatRepo=function(repo){if(repo.loading)return repo.avata
 $this->registerJs($formatRepoJs, View::POS_HEAD);
 $resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagination:{more:(p.page*30)<(data.total_count||999)}};}";
 
-// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานผู้เบิก) – สมมติ id=1 เป็นคลังหลัก
-$mainWarehouseIds = [1,2,3,4,5,6,7];
-$warehouseList = ArrayHelper::map(Warehouse::find()->orderBy(['id' => SORT_ASC])->all(), 'id', 'warehouse_name');
-$subWarehouses = ArrayHelper::map(Warehouse::find()->where(['not in', 'id', $mainWarehouseIds])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
-$mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWarehouseIds])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
+// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานที่รับของ) — คลังย่อยแสดงตาม user ที่ล็อกอินและกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก
+$mainWarehousesList = Warehouse::find()
+    ->where(['warehouse_type' => 'MAIN'])
+    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+    ->orderBy(['warehouse_name' => SORT_ASC])
+    ->all();
+$mainWarehouseIds = array_column($mainWarehousesList, 'id');
+$mainWarehouses = ArrayHelper::map($mainWarehousesList, 'id', 'warehouse_name');
+$warehouseList = ArrayHelper::map(Warehouse::find()->andWhere(['or', ['delete' => null], ['delete' => '']])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
+$subWarehousesList = Warehouse::findSubWarehousesForUser();
+$subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
 ?>
 
 <div class="requisition-form">
@@ -135,39 +141,6 @@ $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['id' => $mainWareho
                         <div class="form-text">ตำแหน่งจะดึงจากระบบพนักงานอัตโนมัติ</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mb-4" id="card-below-max" style="display: none;">
-        <div class="card-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h6 class="mb-0 small fw-bold text-secondary"><i class="bi bi-graph-down-arrow me-1"></i>รายการที่หน่วยงานรับของเหลือต่ำกว่า Min (เติมให้ถึง Max)</h6>
-            <button type="button" id="btn-load-below-max" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-arrow-repeat me-1"></i> โหลดรายการที่ต่ำกว่า Max
-            </button>
-        </div>
-        <div class="card-body p-3">
-            <p class="text-muted small mb-2">คำนวณจาก<strong>ยอดคงเหลือที่หน่วยงานที่รับของ</strong> (คลังย่อย) — ถ้าเหลือต่ำกว่า Min จะแสดงในรายการ เบิกให้พอดี = เติมจนหน่วยงานรับของมีครบ Max ไม่ต้องค้นหาทีละรายการ</p>
-            <div id="below-max-placeholder" class="text-muted text-center py-4 small">กรุณาเลือกคลังที่จ่ายของ และหน่วยงานที่รับของ แล้วกด "โหลดรายการที่ต่ำกว่า Max"</div>
-            <div id="below-max-table-wrap" style="display: none;">
-                <div class="table-responsive mb-2">
-                    <table class="table table-sm table-hover align-middle mb-0" id="below-max-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 40px;"><input type="checkbox" id="below-max-checkall" title="เลือกทั้งหมด"></th>
-                                <th>รายการวัสดุ</th>
-                                <th class="text-center">หน่วย</th>
-                                <th class="text-end">คงเหลือที่หน่วยงานรับของ</th>
-                                <th class="text-end">Min / Max</th>
-                                <th class="text-end">เบิกให้พอดี</th>
-                            </tr>
-                        </thead>
-                        <tbody id="below-max-tbody"></tbody>
-                    </table>
-                </div>
-                <button type="button" id="btn-add-below-max" class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-circle me-1"></i> เพิ่มรายการที่เลือกเข้าใบเบิก
-                </button>
             </div>
         </div>
     </div>
@@ -384,17 +357,48 @@ $(document).on('keydown', '.qty-input', function(e) {
     }
 });
 
-function refreshBelowMaxCard() {
+// โหลดรายการที่ต่ำกว่า Max แล้วเพิ่มเข้า "รายการวัสดุที่ต้องการเบิก" โดยอัตโนมัติ (ไม่แสดงตัวเลือก)
+function loadBelowMaxAndAddToTable() {
     var whId = $('#main-warehouse-id').val();
     var subId = $('#sub-warehouse-id').val();
-    $('#card-below-max').toggle(!!whId);
-    $('#below-max-table-wrap').hide();
-    $('#below-max-placeholder').show().html(whId && subId ? 'กด "โหลดรายการที่ต่ำกว่า Max" เพื่อดึงรายการที่หน่วยงานรับของเหลือต่ำกว่า Min' : 'กรุณาเลือกคลังที่จ่ายของ และหน่วยงานที่รับของ แล้วกด "โหลดรายการที่ต่ำกว่า Max"');
+    if (!whId || !subId) return;
+    var url = '$itemsBelowMaxUrl'.replace(/\/$/, '') + '?warehouse_id=' + whId + '&sub_warehouse_id=' + encodeURIComponent(subId);
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(list) {
+            if (!list || list.length === 0) return;
+            var added = 0, updated = 0;
+            list.forEach(function(row) {
+                var code = (row.item_code || '').toString();
+                var existing = $('#item-table tbody tr').filter(function() {
+                    var el = $(this).find('input[name*="[item_code]"], select[name*="[item_code]"]');
+                    return el.length && (el.val() === code || (el.find('option:selected').val() === code));
+                });
+                if (existing.length) {
+                    existing.find('.qty-input').val(row.qty_to_reach_max);
+                    updated++;
+                } else {
+                    var template = $('#row-template-prefilled').html();
+                    var html = template
+                        .replace(/{idx}/g, idx)
+                        .replace(/{item_code}/g, (row.item_code || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'))
+                        .replace(/{item_name}/g, (row.item_name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                        .replace(/{unit_name}/g, (row.unit_name || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                        .replace(/{qty}/g, row.qty_to_reach_max);
+                    $('#item-table tbody').append(html);
+                    idx++;
+                    added++;
+                }
+            });
+            if (added || updated) {
+                Swal.fire('โหลดรายการต่ำกว่า Max แล้ว', 'เพิ่ม ' + added + ' รายการ, อัปเดตจำนวน ' + updated + ' รายการ', 'success', { timer: 2000 });
+            }
+        })
+        .catch(function() {});
 }
-// เมื่อเปลี่ยนคลังต้นทาง หรือหน่วยงานที่รับของ ให้ล้างตารางโหลดรายการ
+
 $('#main-warehouse-id, #sub-warehouse-id').on('change', function() {
     $(this).removeClass('is-invalid');
-    refreshBelowMaxCard();
     if ($(this).attr('id') === 'main-warehouse-id' && $('#item-table tbody tr').length > 0) {
         Swal.fire({
             title: 'ยืนยันการเปลี่ยนคลัง?',
@@ -406,93 +410,12 @@ $('#main-warehouse-id, #sub-warehouse-id').on('change', function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $('#item-table tbody').empty();
+                idx = 0;
+                loadBelowMaxAndAddToTable();
             }
         });
-    }
-});
-if ($('#main-warehouse-id').val()) refreshBelowMaxCard();
-
-// โหลดรายการวัสดุต่ำกว่า Max (คำนวณจากยอดที่หน่วยงานที่รับของ)
-$('#btn-load-below-max').on('click', function() {
-    var whId = $('#main-warehouse-id').val();
-    var subId = $('#sub-warehouse-id').val();
-    if (!whId) {
-        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของก่อน', 'warning');
-        return;
-    }
-    if (!subId) {
-        Swal.fire('คำเตือน', 'กรุณาเลือกหน่วยงานที่รับของก่อน จะได้คำนวณจากยอดคงเหลือที่หน่วยงานนี้', 'warning');
-        return;
-    }
-    var btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> กำลังโหลด...');
-    var url = '$itemsBelowMaxUrl'.replace(/\/$/, '') + '?warehouse_id=' + whId + '&sub_warehouse_id=' + encodeURIComponent(subId);
-    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function(r) { return r.json(); })
-        .then(function(list) {
-            var tbody = $('#below-max-tbody').empty();
-            if (!list || list.length === 0) {
-                $('#below-max-placeholder').show().html('ไม่มีรายการที่หน่วยงานรับของเหลือต่ำกว่า Min (หรือยอดต่ำกว่า Max)').addClass('py-4');
-                $('#below-max-table-wrap').hide();
-            } else {
-                $('#below-max-placeholder').hide();
-                $('#below-max-table-wrap').show();
-                list.forEach(function(row) {
-                    var tr = $('<tr></tr>').data('row', row);
-                    tr.append($('<td></td>').html('<input type="checkbox" class="form-check-input below-max-cb" value="1">'));
-                    tr.append($('<td></td>').text(row.item_name));
-                    tr.append($('<td class="text-center"></td>').text(row.unit_name));
-                    tr.append($('<td class="text-end"></td>').text(parseFloat(row.balance_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })));
-                    var minMax = (row.min_qty != null ? parseFloat(row.min_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-') + ' / ' + parseFloat(row.max_qty).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    tr.append($('<td class="text-end"></td>').text(minMax));
-                    tr.append($('<td class="text-end fw-bold text-success"></td>').text(parseFloat(row.qty_to_reach_max).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })));
-                    tbody.append(tr);
-                });
-            }
-        })
-        .catch(function() {
-            $('#below-max-placeholder').show().html('<span class="text-danger">โหลดไม่สำเร็จ</span>');
-            $('#below-max-table-wrap').hide();
-        })
-        .finally(function() { btn.prop('disabled', false).html('<i class="bi bi-arrow-repeat me-1"></i> โหลดรายการที่ต่ำกว่า Max'); });
-});
-
-$('#below-max-checkall').on('change', function() {
-    $('#below-max-tbody .below-max-cb').prop('checked', this.checked);
-});
-
-$('#btn-add-below-max').on('click', function() {
-    var selected = $('#below-max-tbody tr').has('input.below-max-cb:checked');
-    if (selected.length === 0) {
-        Swal.fire('คำเตือน', 'กรุณาเลือกอย่างน้อย 1 รายการ', 'warning');
-        return;
-    }
-    var added = 0, updated = 0;
-    selected.each(function() {
-        var row = $(this).data('row');
-        if (!row) return;
-        var code = (row.item_code || '').toString();
-        var existing = $('#item-table tbody tr').filter(function() {
-            var el = $(this).find('input[name*="[item_code]"], select[name*="[item_code]"]');
-            return el.length && (el.val() === code || (el.find('option:selected').val() === code));
-        });
-        if (existing.length) {
-            existing.find('.qty-input').val(row.qty_to_reach_max);
-            updated++;
-        } else {
-            var template = $('#row-template-prefilled').html();
-            var html = template
-                .replace(/{idx}/g, idx)
-                .replace(/{item_code}/g, (row.item_code || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'))
-                .replace(/{item_name}/g, (row.item_name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
-                .replace(/{unit_name}/g, (row.unit_name || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
-                .replace(/{qty}/g, row.qty_to_reach_max);
-            $('#item-table tbody').append(html);
-            idx++;
-            added++;
-        }
-    });
-    if (added || updated) {
-        Swal.fire('เพิ่มแล้ว', 'เพิ่ม ' + added + ' รายการ, อัปเดตจำนวน ' + updated + ' รายการ', 'success', { timer: 1500 });
+    } else {
+        loadBelowMaxAndAddToTable();
     }
 });
 

@@ -3,6 +3,7 @@
 namespace app\modules\inventoryV2\models;
 
 use Yii;
+use yii\db\Expression;
 use yii\helpers\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -175,6 +176,84 @@ class Warehouse extends \yii\db\ActiveRecord
     public function ListGroup()
     {
         return ArrayHelper::map(self::find()->where(['warehouse_type' => 'MAIN'])->all(), 'id', 'warehouse_name');
+    }
+
+    /**
+     * คลังหลักสำหรับ dropdown ใบรับเข้า
+     * แสดงเฉพาะคลังที่ผู้ใช้ล็อกอินถูกกำหนดเป็นเจ้าหน้าที่รับผิดชอบคลัง (data_json.officer)
+     * @return Warehouse[]
+     */
+    public static function findMainWarehousesForReceive()
+    {
+        $userId = (string) Yii::$app->user->id;
+        return self::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"))
+            ->orderBy('warehouse_name')
+            ->all();
+    }
+
+    /**
+     * รหัสแผนก/ฝ่ายที่มีสิทธิเบิก (จากฟิลด์ department — อาจเป็นตัวเดียวหรือหลายตัวคั่นด้วย comma)
+     * @return int[]
+     */
+    public function getDepartmentIds()
+    {
+        if ($this->department === null || $this->department === '') {
+            return [];
+        }
+        $raw = is_array($this->department) ? implode(',', $this->department) : (string) $this->department;
+        $parts = preg_split('/\s*,\s*/', trim($raw), -1, PREG_SPLIT_NO_EMPTY);
+        $ids = [];
+        foreach ($parts as $p) {
+            if (is_numeric($p) && (int) $p > 0) {
+                $ids[] = (int) $p;
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * เช็คว่าแผนกที่กำหนดอยู่ในการกำหนดแผนก/ฝ่ายที่มีสิทธิเบิกของคลังนี้หรือไม่
+     * @param int|null $departmentId รหัสแผนก (เช่น จาก Employees.department)
+     * @return bool
+     */
+    public function allowsDepartment($departmentId)
+    {
+        if ($departmentId === null || $departmentId === '') {
+            return false;
+        }
+        $allowed = $this->getDepartmentIds();
+        return in_array((int) $departmentId, $allowed, true);
+    }
+
+    /**
+     * คลังย่อยสำหรับ dropdown / รายการ ตาม user ที่ล็อกอินและกำหนดคลัง "กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก"
+     * แสดงเฉพาะคลังย่อยที่แผนกของพนักงาน (user) อยู่ในรายการแผนก/ฝ่ายที่มีสิทธิเบิกของคลังนั้น
+     * @return Warehouse[]
+     */
+    public static function findSubWarehousesForUser()
+    {
+        $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+        $departmentId = null;
+        if ($userId && class_exists(Employees::class)) {
+            $emp = Employees::findOne(['user_id' => $userId]);
+            if ($emp && isset($emp->department) && $emp->department !== null && $emp->department !== '') {
+                $departmentId = (int) $emp->department;
+            }
+        }
+        $query = self::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy('warehouse_name');
+        if ($departmentId === null || $departmentId === 0) {
+            return [];
+        }
+        $all = $query->all();
+        return array_values(array_filter($all, function (Warehouse $w) use ($departmentId) {
+            return $w->allowsDepartment($departmentId);
+        }));
     }
 
     /**

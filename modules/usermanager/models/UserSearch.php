@@ -14,11 +14,14 @@ class UserSearch extends User
     public $q;
     public $phone;
     public $password_reset_token;
+    /** @var string กรองตามบทบาท (role name) */
+    public $role;
+
     public function rules()
     {
         return [
             [['id', 'confirmed_at', 'blocked_at', 'created_at', 'updated_at', 'last_login_at', 'status'], 'integer'],
-            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token','fullname','q','phone','line_id','hash_cid'], 'safe'],
+            [['username', 'email', 'password_hash', 'auth_key', 'unconfirmed_email', 'registration_ip', 'password_reset_token', 'fullname', 'q', 'phone', 'line_id', 'hash_cid', 'role'], 'safe'],
         ];
     }
 
@@ -74,7 +77,11 @@ class UserSearch extends User
             ->andFilterWhere(['like', 'auth_key', $this->auth_key])
             ->andFilterWhere(['like', 'unconfirmed_email', $this->unconfirmed_email])
             ->andFilterWhere(['like', 'password_reset_token', $this->password_reset_token]);
-            // ->andFilterWhere(['like', 'fullname', $this->fullname]);
+
+        if ($this->role !== null && $this->role !== '' && \Yii::$app->db->getSchema()->getTableSchema('auth_assignment', true) !== null) {
+            $query->innerJoin('auth_assignment', 'auth_assignment.user_id = ' . User::tableName() . '.id')
+                ->andWhere(['auth_assignment.item_name' => $this->role]);
+        }
 
         return $dataProvider;
     }

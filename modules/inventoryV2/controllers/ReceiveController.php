@@ -312,12 +312,8 @@ class ReceiveController extends Controller
         );
         return $this->render('create', [
             'model' => $model,
-            'listWarehouse' => \yii\helpers\ArrayHelper::map(
-                Warehouse::find()
-                    ->where(['warehouse_type' => 'MAIN'])
-                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                    ->orderBy('warehouse_name')
-                    ->all(),
+            'listWarehouse' => ArrayHelper::map(
+                Warehouse::findMainWarehousesForReceive(),
                 'id',
                 'warehouse_name'
             ),
@@ -525,11 +521,7 @@ class ReceiveController extends Controller
         'model' => $model,
         'items' => $oldItems,
         'listWarehouse' => ArrayHelper::map(
-                Warehouse::find()
-                    ->where(['warehouse_type' => 'MAIN'])
-                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                    ->orderBy('warehouse_name')
-                    ->all(),
+                Warehouse::findMainWarehousesForReceive(),
                 'id',
                 'warehouse_name'
             ),
