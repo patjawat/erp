@@ -159,12 +159,11 @@ if (!empty($upcomingHealth)): ?>
                         <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1 active bg-white bg-opacity-25" data-check-type="in">เข้า</button>
                         <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1" data-check-type="out">ออก</button>
                     </div>
-                    <button id="btn-clock-in" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;"><span id="me-btn-checkin-label">ลงเวลาเข้า</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
+                    <a id="btn-clock-in" href="<?= Url::to(['/attendance/default/checkin']) ?>" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1 text-decoration-none" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;"><span id="me-btn-checkin-label">ลงเวลาเข้า</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
                             <path d="M7 7h10v10"></path>
                             <path d="M7 17 17 7"></path>
-                        </svg></button>
-                    <a href="<?= Url::to(['/attendance/default/checkin']) ?>" class="text-white text-opacity-75 small text-decoration-none mt-2">ลงเวลาแบบเต็ม</a>
-                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-1">ประวัติลงเวลา</a>
+                        </svg></a>
+                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-2 d-block">ประวัติลงเวลา</a>
                 </div>
             </div>
         </div>
@@ -520,7 +519,6 @@ if (!empty($upcomingHealth)): ?>
 
 $documentUrl = Url::to(['/me/documents/show-home']);
 $urlUpload = Url::to(["/filemanager/uploads/single"]);
-$checkinSaveUrl = Url::to(['/attendance/default/save']);
 $ref = $me->ref;
 $userId = $me->id;
 
@@ -569,52 +567,17 @@ $js = <<< JS
 
     // ตั้งเวลาให้ทำงานทุกๆ 1 วินาที
     setInterval(updateClock, 1000);
-    
-    // Check-in: เรียก API บันทึกเวลาเข้า/ออก (หัวหน้าอนุมัติภายหลัง)
-    var checkinSaveUrl = "$checkinSaveUrl";
-    var meCheckType = 'in';
 
+    // ปุ่มเข้า/ออก อัปเดตข้อความและลิงก์ไปหน้ารายการลงเวลา
+    var meCheckType = 'in';
+    var checkinPageUrl = $(document).find('#btn-clock-in').attr('href') || '/attendance/default/checkin';
     $('.me-check-type-btn').on('click', function() {
         meCheckType = $(this).data('check-type');
         $('.me-check-type-btn').removeClass('active bg-white bg-opacity-25').addClass('text-white');
         $(this).addClass('active bg-white bg-opacity-25').removeClass('text-white');
         $('#me-btn-checkin-label').text(meCheckType === 'in' ? 'ลงเวลาเข้า' : 'ลงเวลาออก');
+        $('#btn-clock-in').attr('href', checkinPageUrl + (checkinPageUrl.indexOf('?') >= 0 ? '&' : '?') + 'check_type=' + meCheckType);
     });
-
-    $('#btn-clock-in').on('click', function() {
-        var \$btn = $(this);
-        \$btn.prop('disabled', true);
-        var payload = { method: 'manual', check_type: meCheckType };
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(p) {
-                    payload.lat = p.coords.latitude;
-                    payload.lng = p.coords.longitude;
-                    doCheckin(payload, \$btn);
-                },
-                function() { doCheckin(payload, \$btn); },
-                { enableHighAccuracy: true, timeout: 8000 }
-            );
-        } else {
-            doCheckin(payload, \$btn);
-        }
-    });
-
-    function doCheckin(payload, \$btn) {
-        $.post(checkinSaveUrl, payload).then(function(res) {
-            if (res.success) {
-                var \$cnt = $('#today-checkin-count');
-                \$cnt.text(parseInt(\$cnt.text(), 10) + 1);
-                alert(res.message || 'บันทึกสำเร็จ');
-            } else {
-                alert(res.message || 'บันทึกไม่สำเร็จ');
-            }
-        }).fail(function() {
-            alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-        }).always(function() {
-            \$btn.prop('disabled', false);
-        });
-    }
     });
     
 // --- ส่วนงานอัปโหลดรูปภาพ ---
