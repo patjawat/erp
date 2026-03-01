@@ -2,7 +2,7 @@
 
 namespace app\components;
 
-use app\modules\approveV3\models\ApproveLevelSetting;
+use app\modules\approveV2\models\ApproveLevelSetting;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 

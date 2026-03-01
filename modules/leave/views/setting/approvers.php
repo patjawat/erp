@@ -9,7 +9,7 @@ $this->title = 'ผู้อนุมัติใบลา';
 $this->params['breadcrumbs'][] = ['label' => 'การลา', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$levelsUrl = Url::to(['/approve-v3/setting/levels', 'system' => 'leave']);
+$levelsUrl = Url::to(['/approve-v2/setting/levels', 'system' => 'leave']);
 $diagramUrl = Url::to(['/hr/organization/diagram']);
 ?>
 <div class="row justify-content-center">
@@ -35,11 +35,13 @@ $diagramUrl = Url::to(['/hr/organization/diagram']);
                 </ul>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <?php if (Yii::$app->user->can('admin')): ?>
                     <?= Html::a(
                         '<i class="bi bi-diagram-3 me-2"></i> จัดการระดับการอนุมัติ',
                         $levelsUrl,
                         ['class' => 'btn btn-primary rounded-3 px-4']
                     ) ?>
+                    <?php endif; ?>
                     <?= Html::a(
                         'ดูผังองค์กร',
                         $diagramUrl,
