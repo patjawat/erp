@@ -173,7 +173,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * เกณฑ์การลาราชการ (ครู) — ข้อความตามภาพตัวอย่าง
+     * เกณฑ์การลาราชการ— ข้อความตามภาพตัวอย่าง
      */
     protected function getLeaveCriteriaRules($positionTypeId)
     {

@@ -146,7 +146,7 @@ $typeTheme = [
                         <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center">
                             <i data-lucide="pin" style="width:1.125rem;height:1.125rem"></i>
                         </span>
-                        เกณฑ์การลาราชการ (ครู)
+                        เกณฑ์การลาราชการ
                     </h6>
                     <ul class="list-unstyled mb-0 small text-body">
                         <?php foreach ($criteriaRules as $rule): ?>
