@@ -1,0 +1,85 @@
+<?php
+
+use yii\helpers\Html;
+use yii\helpers\Url;
+use app\components\ApproveHelper;
+use app\modules\leave\models\Leave;
+
+/** @var yii\web\View $this */
+/** @var app\modules\leave\models\LeaveSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+$offset = (int) ($dataProvider->pagination->offset ?? 0);
+$models = $dataProvider->getModels();
+?>
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th class="text-center py-3 px-3 small">ลำดับ</th>
+                <th class="text-center py-3 px-3 small">ประเภทบุคลากร</th>
+                <th class="py-3 px-3 small">ผู้ขออนุมัติการลา</th>
+                <th class="py-3 px-3 small">ประเภทเวร</th>
+                <th class="py-3 px-3 small">การลา</th>
+                <th class="py-3 px-3 small">ระหว่างวันที่</th>
+                <th class="py-3 px-3 small">หน่วยงาน</th>
+                <th class="py-3 px-3 small">ผู้อนุมัติ</th>
+                <th class="py-3 px-3 small">สถานะ/ความคืบหน้า</th>
+                <th class="text-end py-3 px-3 small">ดำเนินการ</th>
+            </tr>
+        </thead>
+        <tbody class="align-middle table-group-divider">
+            <?php foreach ($models as $key => $item): ?>
+                <?php
+                $no = $offset + $key + 1;
+                $stackApproves = $item->approves ? array_filter($item->approves, function ($a) {
+                    return !in_array($a->status, ['None', 'Pending'], true);
+                }) : [];
+                usort($stackApproves, function ($x, $y) {
+                    return (int) $y->level - (int) $x->level;
+                });
+                ?>
+                <tr>
+                    <td class="text-center py-3 px-3 text-muted small"><?= $no ?></td>
+                    <td class="text-center py-3 px-3 small"><?= $item->employee && $item->employee->positionType ? Html::encode($item->employee->positionType->title) : '-' ?></td>
+                    <td class="py-3 px-3">
+                        <a href="<?= Url::to(['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
+                            class="open-modal text-decoration-none d-inline-flex align-items-center gap-2" data-size="modal-xl">
+                            <?= $item->employee ? $item->employee->getAvatar(false) : '-' ?>
+                        </a>
+                    </td>
+                    <td class="py-3 px-3 small"><?= Html::encode($item->work_shift_name ?? '-') ?></td>
+                    <td class="py-3 px-3">
+                        <div class="small"><?= Html::encode($item->data_json['reason'] ?? '') ?></div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                            <?= $item->leaveType ? Html::encode($item->leaveType->title) : '-' ?>
+                            <code><?= (float) $item->total_days ?></code> วัน
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 small"><?= $item->showLeaveDate() ?></td>
+                    <td class="py-3 px-3 small text-muted text-truncate" style="max-width: 150px;"><?= $item->employee ? Html::encode($item->employee->departmentName()) : '-' ?></td>
+                    <td class="py-3 px-3"><?= Leave::renderStackChecker($stackApproves) ?></td>
+                    <td class="py-3 px-3 small">
+                        <?= $item->viewStatus() ?>
+                        <?= ApproveHelper::viewStepFromSteps($item->approves ?? []) ?>
+                    </td>
+                    <td class="text-end py-3 px-3">
+                        <?= Html::a(
+                            '<i class="bi bi-eye me-1"></i> แสดง',
+                            ['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],
+                            ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]
+                        ) ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            <?php if (count($models) === 0): ?>
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5 px-3">
+                        <i class="bi bi-inbox display-5 d-block mb-2 opacity-50"></i>
+                        <span class="small">ไม่มีรายการวันลา</span>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>

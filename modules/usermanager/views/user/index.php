@@ -51,6 +51,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                         <th class="small fw-semibold text-center">#</th>
                         <th class="small fw-semibold text-start"><i class="bi bi-person me-1"></i> ชื่อเข้าใช้งาน</th>
                         <th class="small fw-semibold text-start"><i class="bi bi-person-badge me-1"></i> ชื่อ-นามสกุล</th>
+                        <th class="small fw-semibold text-start"><i class="bi bi-building me-1"></i> แผนก/หน่วยงาน</th>
                         <th class="small fw-semibold text-start"><i class="bi bi-shield-check me-1"></i> บทบาท/สิทธิ</th>
                         <th class="small fw-semibold text-center">สถานะ</th>
                         <th class="small fw-semibold text-end">สร้างเมื่อ</th>
@@ -73,6 +74,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                         <td class="text-center text-muted small"><?= $index ?></td>
                         <td class="text-start"><?= Html::encode($model->username) ?></td>
                         <td class="text-start"><?= Html::encode($fullname) ?></td>
+                        <td class="text-start"><?= $model->employee && method_exists($model->employee, 'departmentName') ? Html::encode($model->employee->departmentName()) : '—' ?></td>
                         <td class="text-start">
                             <?php if (!empty($userRoles)): ?>
                                 <?php foreach ($userRoles as $r): ?>
@@ -97,7 +99,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                     ?>
                     <?php if ($dataProvider->getCount() === 0): ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">ไม่พบข้อมูลผู้ใช้งาน</td>
+                        <td colspan="8" class="text-center text-muted py-5">ไม่พบข้อมูลผู้ใช้งาน</td>
                     </tr>
                     <?php endif; ?>
                 </tbody>

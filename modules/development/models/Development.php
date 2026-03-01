@@ -5,8 +5,10 @@ namespace app\modules\development\models;
 use Yii;
 use yii\db\Expression;
 use yii\helpers\Html;
+use yii\helpers\ArrayHelper;
 use app\models\Categorise;
 use app\components\ThaiDateHelper;
+use app\components\SiteHelper;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Employees;
@@ -228,7 +230,7 @@ class Development extends \yii\db\ActiveRecord
         foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
             $emp = Employees::findOne(['id' => $item->emp_id]);
             if ($emp) {
-                $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
+                $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/development/default/update-detail', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> ผู้ร่วมเดินทาง'], ['class' => 'open-modal', 'data' => [
                     'size' => 'model-md',
                     'bs-toggle' => 'tooltip',
                     'bs-placement' => 'top',
@@ -297,6 +299,80 @@ class Development extends \yii\db\ActiveRecord
         return $this->vehicle_date_start && $this->vehicle_date_end
             ? ThaiDateHelper::formatThaiDateRange($this->vehicle_date_start, $this->vehicle_date_end, 'short')
             : 'ไม่ระบุ';
+    }
+
+    /** รายการประเภทยานพาหนะ (สำหรับฟอร์มแก้ไข) */
+    public function ListVehicleType()
+    {
+        $model = Categorise::find()
+            ->where(['name' => 'vehicle_type'])
+            ->andWhere(['!=', 'code', 'ambulance'])
+            ->all();
+        return ArrayHelper::map($model, 'code', 'title');
+    }
+
+    /**
+     * สร้างรายการอนุมัติ 4 ขั้น (เห็นชอบ 1–2, ตรวจสอบ 3, อนุมัติ 4)
+     */
+    public function createApprove()
+    {
+        $fromId = (string) $this->id;
+        try {
+            if (!Approve::findOne(['from_id' => $fromId, 'level' => 1, 'name' => 'development'])) {
+                $a1 = new Approve();
+                $a1->from_id = $fromId;
+                $a1->name = 'development';
+                $a1->emp_id = $this->leader_id;
+                $a1->title = 'เห็นชอบ';
+                $a1->data_json = ['label' => 'เห็นชอบ'];
+                $a1->level = 1;
+                $a1->status = 'Pending';
+                $a1->save(false);
+            }
+        } catch (\Throwable $e) {
+        }
+        try {
+            if (!Approve::findOne(['from_id' => $fromId, 'level' => 2, 'name' => 'development'])) {
+                $a2 = new Approve();
+                $a2->from_id = $fromId;
+                $a2->name = 'development';
+                $a2->emp_id = $this->leader_group_id;
+                $a2->title = 'เห็นชอบ';
+                $a2->data_json = ['label' => 'เห็นชอบ'];
+                $a2->level = 2;
+                $a2->status = 'None';
+                $a2->save(false);
+            }
+        } catch (\Throwable $e) {
+        }
+        try {
+            if (!Approve::findOne(['from_id' => $fromId, 'level' => 3, 'name' => 'development'])) {
+                $a3 = new Approve();
+                $a3->from_id = $fromId;
+                $a3->name = 'development';
+                $a3->title = 'ตรวจสอบ';
+                $a3->data_json = ['label' => 'ผ่าน'];
+                $a3->level = 3;
+                $a3->status = 'None';
+                $a3->save(false);
+            }
+        } catch (\Throwable $e) {
+        }
+        try {
+            $director = SiteHelper::viewDirector();
+            if (!Approve::findOne(['from_id' => $fromId, 'level' => 4, 'name' => 'development'])) {
+                $a4 = new Approve();
+                $a4->from_id = $fromId;
+                $a4->name = 'development';
+                $a4->emp_id = isset($director['id']) ? $director['id'] : null;
+                $a4->title = 'อนุมัติ';
+                $a4->data_json = ['label' => 'อนุมัติ'];
+                $a4->level = 4;
+                $a4->status = 'None';
+                $a4->save(false);
+            }
+        } catch (\Throwable $e) {
+        }
     }
 
     /**

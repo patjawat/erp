@@ -13,19 +13,19 @@ $settings = [
     [
         'label' => 'ประเภทการอบรม/ประชุม/ดูงาน',
         'description' => 'จัดการรายการประเภทกิจกรรม (เช่น ประชุมวิชาการ ฝึกอบรม ศึกษาดูงาน) ที่แสดงในแบบฟอร์มและรายงาน',
-        'url' => ['/hr/categorise/index', 'name' => 'development_type', 'title' => 'ประเภทการอบรม/ประชุม/ดูงาน'],
+        'url' => ['/settings/categorise/index', 'name' => 'development_type', 'title' => 'ประเภทการอบรม/ประชุม/ดูงาน'],
         'icon' => 'bi-journal-bookmark',
     ],
     [
         'label' => 'ประเภทยานพาหนะ',
         'description' => 'จัดการรายการประเภทยานพาหนะ (เช่น รถส่วนกลาง รถจ้างเหมา) สำหรับเลือกในแบบฟอร์มขอไปราชการ',
-        'url' => ['/hr/categorise/index', 'name' => 'vehicle_type', 'title' => 'ประเภทยานพาหนะ'],
+        'url' => ['/settings/categorise/index', 'name' => 'vehicle_type', 'title' => 'ประเภทยานพาหนะ'],
         'icon' => 'bi-truck',
     ],
     [
         'label' => 'ประเภทค่าใช้จ่าย',
         'description' => 'จัดการรายการประเภทค่าใช้จ่าย (เช่น ค่าเบี้ยเลี้ยง ค่าพาหนะ ค่าลงทะเบียน) สำหรับบันทึกในใบขอไปราชการ',
-        'url' => ['/hr/categorise/index', 'name' => 'expense_type', 'title' => 'ประเภทค่าใช้จ่าย'],
+        'url' => ['/settings/categorise/index', 'name' => 'expense_type', 'title' => 'ประเภทค่าใช้จ่าย'],
         'icon' => 'bi-currency-exchange',
     ],
 ];

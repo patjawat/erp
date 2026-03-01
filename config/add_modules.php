@@ -77,6 +77,7 @@ $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree 
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
 $modules['approve-v2'] = ['class' => 'app\modules\approveV2\Module'];  // module การจอง
+$modules['approve-v3'] = ['class' => 'app\modules\approveV3\Module'];  // module อนุมัติ V3 (ตาราง approve เดิม)
 $modules['asset'] = ['class' => 'app\modules\asset\Module'];  // module ทรัพสินย์
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf

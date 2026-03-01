@@ -44,6 +44,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
     <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ย้อนกลับก่อนหน้า', Yii::$app->request->referrer ?: ['/development/default/dashboard'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
+    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใหม่', ['/development/default/create', 'thai_year' => $thaiYear], ['class' => 'btn btn-primary rounded-3']) ?>
     <?= $this->render('_menu', ['active' => 'dashboard']) ?>
 </div>
 <?php $this->endBlock(); ?>

@@ -54,17 +54,7 @@ $(window).on("load", function () {
   erpHidePageLoading();
 });
 
-// // ฟังก์ชันเลื่อนขึ้นบนสุด
-var btnScrollTop = document.getElementById("btnScrollTop");
-if (btnScrollTop) btnScrollTop.addEventListener("click", function () {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
 
-// // ฟังก์ชันเลื่อนลงล่างสุด
-var btnScrollBottom = document.getElementById("btnScrollBottom");
-if (btnScrollBottom) btnScrollBottom.addEventListener("click", function () {
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-});
 
 // // แสดงปุ่มเมื่อ scroll ลงมา
 window.addEventListener("scroll", function () {

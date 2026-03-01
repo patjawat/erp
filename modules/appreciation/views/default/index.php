@@ -45,14 +45,14 @@ $showCelebrate = (bool) (Yii::$app->request->get('celebrate') ?? false);
             </div>
         </div>
 
-        <h6 class="mb-3 fw-bold text-muted small text-uppercase">คำขอบคุณล่าสุด</h6>
+        <h6 class="mb-3 fw-bold text-muted small text-uppercase">คำขอบคุณล่าสุด (ที่เกี่ยวข้องกับคุณ)</h6>
 
         <?php Pjax::begin(['id' => 'appreciation-feed', 'timeout' => 5000]); ?>
         <?= ListView::widget([
             'dataProvider' => $dataProvider,
             'itemView' => '_item',
             'layout' => "{items}\n<div class='d-flex justify-content-center py-4'>{pager}</div>",
-            'emptyText' => '<div class="card border-0 shadow-sm rounded-3"><div class="card-body text-center py-5"><p class="text-muted mb-2 fs-5">ยังไม่มีคำขอบคุณในฟีด</p><p class="small text-muted mb-4">เป็นคนแรกที่ส่งคำชมให้เพื่อนร่วมงาน แล้วทุกคนจะเห็นที่นี่</p>' . Html::a('<i class="bi bi-heart me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary rounded-3 open-modal', 'data' => ['size' => 'modal-lg']]) . '</div></div>',
+            'emptyText' => '<div class="card border-0 shadow-sm rounded-3"><div class="card-body text-center py-5"><p class="text-muted mb-2 fs-5">ยังไม่มีคำขอบคุณที่เกี่ยวข้องกับคุณ</p><p class="small text-muted mb-4">ลองเริ่มส่งคำขอบคุณให้เพื่อนร่วมงาน แล้วรายการของคุณจะปรากฏที่นี่</p>' . Html::a('<i class="bi bi-heart me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary rounded-3 open-modal', 'data' => ['size' => 'modal-lg']]) . '</div></div>',
             'viewParams' => ['me' => $me],
         ]) ?>
         <?php Pjax::end(); ?>

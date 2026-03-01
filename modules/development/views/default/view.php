@@ -107,7 +107,7 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
                     <!-- วันที่เดินทาง -->
                     <div class="mb-4">
                         <div class="text-muted small mb-1">วันที่เดินทาง</div>
-                        <div class="bg-light rounded-2 px-3 py-2">
+                        <div class="border border-secondary border-opacity-25 rounded-2 px-3 py-2">
                             <?= ThaiDateHelper::formatThaiDate($model->date_start, 'short') ?>
                             <?php if ($model->date_start !== $model->date_end): ?>
                                 <br><span class="text-muted small">ถึง <?= ThaiDateHelper::formatThaiDate($model->date_end, 'short') ?></span>
@@ -166,7 +166,7 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
                     <div class="mb-4">
                         <div class="text-muted small mb-1">สถานที่ / เหตุผล</div>
                         <div class="mb-2"><?= Html::encode($locationStr) ?></div>
-                        <div class="bg-light rounded-2 px-3 py-2 text-body"><?= Html::encode($model->topic ?: 'ไม่ระบุ') ?></div>
+                        <div class="border border-secondary border-opacity-25 rounded-2 px-3 py-2 text-body"><?= Html::encode($model->topic ?: 'ไม่ระบุ') ?></div>
                     </div>
 
                     <!-- สิ่งที่แนบมาด้วย -->
@@ -201,7 +201,7 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
                         <?php endif; ?>
                     </div>
 
-                    <!-- ปุ่มดำเนินการ -->
+                    <!-- ปุ่มดำเนินการ (สไตล์ตัวอย่าง: ปุ่มหลักส้ม/เขียว, ปุ่มรองขาวเทา) -->
                     <div class="d-flex flex-column gap-2 mt-4">
                         <?= Html::a('<i class="bi bi-printer me-2"></i> ฝากปริ้นท์ (ห้องบุคคล)', $printUrl, [
                             'class' => 'btn btn-warning rounded-3',
@@ -212,6 +212,11 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
                             'class' => 'btn btn-outline-secondary rounded-3',
                             'target' => '_blank',
                             'title' => 'เปิดหน้าพิมพ์เพื่อบันทึกเป็น PDF',
+                        ]) ?>
+                        <?= Html::a('<i class="bi bi-pencil-square me-2"></i> แก้ไข', ['/development/default/update', 'id' => $model->id, 'title' => 'แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'], [
+                            'class' => 'btn btn-outline-primary rounded-3 open-modal-x',
+                            'data' => ['size' => 'modal-xl'],
+                            'title' => 'แก้ไขรายการ',
                         ]) ?>
                     </div>
                 </div>

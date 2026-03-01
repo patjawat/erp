@@ -6,6 +6,8 @@ $db2 = require __DIR__ . '/db2.php';
 $modules = require __DIR__ . '/add_modules.php';
 $version = require __DIR__ . '/version.php';
 
+$cookieSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
 $config = [
     'id' => 'basic',
     'version' => $version,
@@ -169,6 +171,12 @@ $config = [
         'session' => [
             'class' => 'yii\web\DbSession',
             'sessionTable' => '{{%session}}',
+            'cookieParams' => [
+                'lifetime' => $params['session.cookieLifetime'] ?? 0,
+                'httpOnly' => true,
+                'sameSite' => 'Lax',
+                'secure' => $cookieSecure,
+            ],
             'writeCallback' => function ($session) {
                 return [
                     'user_id' => Yii::$app->user->isGuest ? null : Yii::$app->user->id,
@@ -180,8 +188,14 @@ $config = [
         'user' => [
             'identityClass' => 'app\modules\usermanager\models\User',
             'loginUrl' => ['/auth/login'],
-            'enableAutoLogin' => false,
+            'enableAutoLogin' => true,
             'enableSession' => true,
+            'identityCookie' => [
+                'name' => '_identity_erp',
+                'httpOnly' => true,
+                'sameSite' => 'Lax',
+                'secure' => $cookieSecure,
+            ],
         ],
         'authManager' => [
             'class' => 'dektrium\rbac\components\DbManager',

@@ -8,10 +8,11 @@ use yii\data\ActiveDataProvider;
 use app\components\UserHelper;
 use app\components\ApproveHelper;
 use app\components\AppHelper;
-use app\modules\hr\models\Leave;
-use app\modules\hr\models\LeaveSearch;
-use app\modules\hr\models\LeaveType;
-use app\modules\hr\models\LeavePolicies;
+use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveSearch;
+use app\modules\leave\models\LeaveSummarySearch;
+use app\modules\leave\models\LeaveType;
+use app\modules\leave\models\LeavePolicies;
 
 /**
  * Default controller for the leave module.
@@ -19,7 +20,24 @@ use app\modules\hr\models\LeavePolicies;
 class DefaultController extends Controller
 {
     /**
-     * Dashboard การลางาน — ข้อมูลปีงบประมาณ, สิทธิ์การลา, เกณฑ์การลา, ประวัติลาล่าสุด
+     * Dashboard ภาพรวมการลา — สรุปสถิติการลารายปี/รายเดือน/ประเภทการลา
+     */
+    public function actionDashboard()
+    {
+        $searchModel = new LeaveSummarySearch([
+            'thai_year' => AppHelper::YearBudget(),
+        ]);
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $dataProvider->query->groupBy('code');
+
+        return $this->render('dashboard', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * ขอลา / รายการของฉัน — ข้อมูลปีงบประมาณ, สิทธิ์การลา, เกณฑ์การลา, ประวัติลาล่าสุด (เฉพาะของฉัน)
      */
     public function actionIndex()
     {
@@ -37,7 +55,9 @@ class DefaultController extends Controller
         $canHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr');
 
         $budgetRange = AppHelper::BudgetYearRange($thaiYear);
-        $fiscalLabel = $thaiYear . ' (1 ต.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
+        $yPrev = substr((string) ($thaiYear - 1), -2);
+        $yCurr = substr((string) $thaiYear, -2);
+        $fiscalLabel = 'พ.ศ. ' . $thaiYear . ' (1 ต.ค. ' . $yPrev . ' - 31 มี.ค. ' . $yCurr . ')';
 
         $typeSummaries = $this->getLeaveTypeSummaries($me, $thaiYear);
         $criteriaRules = $this->getLeaveCriteriaRules($me->position_type ?? null);
@@ -55,9 +75,24 @@ class DefaultController extends Controller
 
         $listThaiYear = (new Leave())->ListThaiYear();
 
+        $myPendingLeaveCount = (int) Leave::find()
+            ->andWhere(['emp_id' => $me->id, 'thai_year' => $thaiYear, 'status' => 'Pending'])
+            ->count();
+        $remainingAnnualLeave = 0;
+        $totalDaysUsedThisYear = 0;
+        foreach ($typeSummaries as $s) {
+            $totalDaysUsedThisYear += (float) ($s['days_used'] ?? 0);
+            if (($s['code'] ?? '') === 'LT4') {
+                $remainingAnnualLeave = max(0, (int) ($s['entitlement_days'] ?? 0) - (int) ($s['days_used'] ?? 0));
+            }
+        }
+
         return $this->render('index', [
             'employee' => $me,
             'totalLeavePending' => (int) $totalLeavePending,
+            'myPendingLeaveCount' => $myPendingLeaveCount,
+            'remainingAnnualLeave' => $remainingAnnualLeave,
+            'totalDaysUsedThisYear' => $totalDaysUsedThisYear,
             'canHr' => (bool) $canHr,
             'thaiYear' => $thaiYear,
             'round' => $round,

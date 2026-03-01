@@ -7,10 +7,12 @@ use yii\web\Controller;
 use yii\helpers\FileHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\development\models\Development;
 use app\modules\development\models\DevelopmentSearch;
+use app\modules\development\models\DevelopmentDetail;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -231,6 +233,183 @@ class DefaultController extends Controller
         return $this->render('view', [
             'model' => $model,
         ]);
+    }
+
+    /**
+     * สร้างรายการใหม่ (ใช้ฟอร์มเดียวกับ update)
+     * @return mixed
+     */
+    public function actionCreate()
+    {
+        $me = UserHelper::GetEmployee();
+        $model = new Development([
+            'thai_year' => (int) AppHelper::YearBudget(),
+            'emp_id' => $me ? $me->id : null,
+            'status' => 'Pending',
+        ]);
+
+        if (Yii::$app->request->isPost) {
+            if ($model->load(Yii::$app->request->post())) {
+                $model->emp_id = $me ? $me->id : $model->emp_id;
+                $model->status = $model->status ?: 'Pending';
+                try {
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+                if ($model->save()) {
+                    if (is_array($model->data_json) && !empty($model->data_json['location'])) {
+                        AppHelper::checkLocation($model->data_json['location']);
+                    }
+                    if (is_array($model->data_json) && !empty($model->data_json['location_org'])) {
+                        AppHelper::checkLocation($model->data_json['location_org']);
+                    }
+                    // เพิ่มผู้ขอเป็นสมาชิกผู้ร่วมเดินทางคนแรก
+                    $addMember = new DevelopmentDetail([
+                        'development_id' => $model->id,
+                        'name' => 'member',
+                        'emp_id' => $model->emp_id,
+                    ]);
+                    $addMember->save(false);
+                    if (method_exists($model, 'createApprove')) {
+                        $model->createApprove();
+                    }
+                    if (Yii::$app->request->isAjax) {
+                        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                        return [
+                            'status' => 'success',
+                            'redirect' => \yii\helpers\Url::to(['/development/default/view', 'id' => $model->id]),
+                        ];
+                    }
+                    return $this->redirect(['/development/default/view', 'id' => $model->id]);
+                }
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => Yii::$app->request->get('title', 'บันทึกข้อความขอไปราชการ'),
+                'content' => $this->renderAjax('create', ['model' => $model]),
+            ];
+        }
+        return $this->render('create', ['model' => $model]);
+    }
+
+    /**
+     * แก้ไขรายการ (ภายในโมดูล development)
+     * @param int $id รหัส development
+     * @return mixed
+     * @throws NotFoundHttpException
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findDevelopment($id);
+
+        try {
+            $model->date_start = AppHelper::convertToThai($model->date_start);
+            $model->date_end = AppHelper::convertToThai($model->date_end);
+            $model->vehicle_date_start = AppHelper::convertToThai($model->vehicle_date_start);
+            $model->vehicle_date_end = AppHelper::convertToThai($model->vehicle_date_end);
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        if (Yii::$app->request->isPost) {
+            if ($model->load(Yii::$app->request->post())) {
+                try {
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+                if ($model->save()) {
+                    if (is_array($model->data_json) && !empty($model->data_json['location'])) {
+                        AppHelper::checkLocation($model->data_json['location']);
+                    }
+                    if (is_array($model->data_json) && !empty($model->data_json['location_org'])) {
+                        AppHelper::checkLocation($model->data_json['location_org']);
+                    }
+                    if (Yii::$app->request->isAjax) {
+                        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                        return [
+                            'status' => 'success',
+                            'redirect' => \yii\helpers\Url::to(['/development/default/view', 'id' => $model->id]),
+                        ];
+                    }
+                    return $this->redirect(['/development/default/view', 'id' => $model->id]);
+                }
+            }
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => Yii::$app->request->get('title', 'แก้ไข อบรม/ประชุม/ดูงาน'),
+                'content' => $this->renderAjax('update', ['model' => $model]),
+            ];
+        }
+
+        return $this->render('update', ['model' => $model]);
+    }
+
+    /**
+     * แก้ไขสมาชิกผู้ร่วมเดินทาง (development_detail)
+     * @param int $id development_detail id
+     */
+    public function actionUpdateDetail($id)
+    {
+        $model = DevelopmentDetail::findOne($id);
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+
+        if (Yii::$app->request->isPost) {
+            if ($model->load(Yii::$app->request->post()) && $model->save(false)) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                    return ['status' => 'success', 'redirect' => \yii\helpers\Url::to(['/development/default/view', 'id' => $model->development_id])];
+                }
+                return $this->redirect(['/development/default/view', 'id' => $model->development_id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => Yii::$app->request->get('title', 'แก้ไขผู้ร่วมเดินทาง'),
+                'content' => $this->renderAjax('_form_member', ['model' => $model, 'modal' => true]),
+            ];
+        }
+        return $this->render('_form_member', ['model' => $model]);
+    }
+
+    /**
+     * ลบสมาชิกผู้ร่วมเดินทาง
+     * @param int $id development_detail id
+     */
+    public function actionDeleteMember($id)
+    {
+        $model = DevelopmentDetail::findOne($id);
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        $developmentId = $model->development_id;
+        $model->delete();
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['status' => 'success', 'redirect' => \yii\helpers\Url::to(['/development/default/view', 'id' => $developmentId])];
+        }
+        return $this->redirect(['/development/default/view', 'id' => $developmentId]);
     }
 
     /**

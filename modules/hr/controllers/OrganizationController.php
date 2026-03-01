@@ -96,7 +96,47 @@ class OrganizationController extends Controller
 
     public function actionDiagram()
     {
-        return $this->render('diagram/index');
+        $levelNamesModel = $this->getDiagramLevelNamesModel();
+        return $this->render('diagram/index', [
+            'levelNamesModel' => $levelNamesModel,
+        ]);
+    }
+
+    /**
+     * บันทึกชื่อระดับในผังองค์กร (ระดับที่ 1 หัวหน้า, ระดับที่ 2 หัวหน้ากลุ่มงาน ฯลฯ)
+     * ใช้แสดงในตั้งค่าระดับการอนุมัติ (approve-v3)
+     */
+    public function actionSaveDiagramLevelNames()
+    {
+        $model = $this->getDiagramLevelNamesModel();
+        if (Yii::$app->request->isPost) {
+            $post = Yii::$app->request->post('levelNames', []);
+            $data = is_array($model->data_json) ? $model->data_json : [];
+            foreach ([1, 2, 3, 4, 5] as $lvl) {
+                $data[(string) $lvl] = isset($post[$lvl]) ? trim($post[$lvl]) : '';
+            }
+            $model->data_json = $data;
+            $model->name = 'org_diagram_level';
+            if ($model->save(false)) {
+                Yii::$app->session->setFlash('success', 'บันทึกชื่อระดับในผังองค์กรแล้ว');
+            }
+        }
+        return $this->redirect(['diagram']);
+    }
+
+    /**
+     * @return Categorise
+     */
+    protected function getDiagramLevelNamesModel()
+    {
+        $model = Categorise::findOne(['name' => 'org_diagram_level']);
+        if ($model === null) {
+            $model = new Categorise(['name' => 'org_diagram_level', 'data_json' => []]);
+        }
+        if (!is_array($model->data_json)) {
+            $model->data_json = [];
+        }
+        return $model;
     }
 
     public function actionChartOrg()

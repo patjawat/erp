@@ -34,6 +34,11 @@ class DefaultController extends Controller
         try {
             $searchModel = new AppreciationSearch();
             $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+            // แสดงเฉพาะคำขอบคุณที่เกี่ยวข้องกับเรา (ส่งโดยเรา หรือส่งถึงเรา)
+            $dataProvider->query->andWhere(['or',
+                ['from_emp_id' => $me->id],
+                ['to_emp_id' => $me->id],
+            ]);
             $receivedCount = (int) Appreciation::find()->andWhere(['to_emp_id' => $me->id])->count();
             $totalPoints = (int) Appreciation::find()->andWhere(['to_emp_id' => $me->id])->sum('points_given');
 

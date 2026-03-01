@@ -6,7 +6,9 @@ use app\components\AppHelper;
 use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthScreenSearch;
 use app\modules\hr\models\EmployeeDetailSearch;
+use Yii;
 use yii\web\Controller;
+use yii\web\Response;
 
 /**
  * Default controller for the `health` module
@@ -48,5 +50,51 @@ class DefaultController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    /**
+     * คืนค่า events สำหรับปฏิทินการนัดหมาย (FullCalendar)
+     * GET start, end (ISO), thai_year (optional)
+     */
+    public function actionCalendarEvents()
+    {
+        $this->request->setQueryParams($this->request->get());
+        $start = $this->request->get('start');
+        $end = $this->request->get('end');
+        $thaiYear = $this->request->get('thai_year') ?: AppHelper::YearBudget(date('Y-m-d'));
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (empty($start) || empty($end)) {
+            return [];
+        }
+
+        $query = HealthScreen::find()
+            ->innerJoinWith('employee')
+            ->where(['not', ['health_screen.appointment_date' => null]])
+            ->andWhere(['health_screen.thai_year' => $thaiYear])
+            ->andWhere(['>=', 'health_screen.appointment_date', date('Y-m-d', strtotime($start))])
+            ->andWhere(['<=', 'health_screen.appointment_date', date('Y-m-d', strtotime($end))])
+            ->orderBy(['health_screen.appointment_date' => SORT_ASC]);
+
+        $models = $query->all();
+        $events = [];
+        foreach ($models as $m) {
+            $empName = $m->employee ? $m->employee->fullname() : 'ไม่ทราบ';
+            $statusLabel = HealthScreen::getHealthStatusDisplay($m->health_status, 'label');
+            $events[] = [
+                'id' => $m->id,
+                'title' => $empName . ' (' . $statusLabel . ')',
+                'start' => $m->appointment_date . 'T09:00:00',
+                'allDay' => true,
+                'url' => \yii\helpers\Url::to(['/health/health-screen/lab-confirm', 'id' => $m->id]),
+                'extendedProps' => [
+                    'empName' => $empName,
+                    'status' => $m->health_status,
+                    'statusLabel' => $statusLabel,
+                ],
+            ];
+        }
+        return $events;
     }
 }

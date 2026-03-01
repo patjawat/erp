@@ -1,5 +1,6 @@
 <?php
 
+use yii\helpers\Url;
 use yii\web\View;
 
 /** @var yii\web\View $this */
@@ -28,6 +29,21 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 shadow-sm border mb-4">
     <h2 class="h5 mb-0 text-dark">Executive Health Dashboard</h2>
         <?php echo $this->render('_search_dashboard', ['model' => $searchModel]); ?>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-primary-gradient text-white d-flex align-items-center gap-2 py-3">
+                <i data-lucide="calendar-days"></i>
+                <h5 class="mb-0 fw-bold">ปฏิทินการนัดหมายตรวจสุขภาพ</h5>
+            </div>
+            <div class="card-body p-3 p-md-4">
+                <p class="text-muted small mb-3">คลิกวันที่เพื่อดูรายการนัด หรือคลิกรายการเพื่อไปหน้าบันทึก LAB</p>
+                <div id="health-appointment-calendar"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">
@@ -133,7 +149,50 @@ $riskLow = json_encode($riskTrend['low'] ?? []);
 $riskMedium = json_encode($riskTrend['medium'] ?? []);
 $riskHigh = json_encode($riskTrend['high'] ?? []);
 
+$calendarEventsUrl = Url::to(['/health/default/calendar-events']);
+$calendarThaiYear = (int)($searchModel->thai_year ?? 0);
+
+$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/th.global.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+
 $js = <<< JS
+    // --- ปฏิทินการนัดหมายตรวจสุขภาพ (FullCalendar) ---
+    (function() {
+        var calendarEl = document.getElementById('health-appointment-calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,listWeek'
+                },
+                buttonText: {
+                    today: 'วันนี้',
+                    month: 'เดือน',
+                    week: 'สัปดาห์',
+                    list: 'รายการ'
+                },
+                events: {
+                    url: '{$calendarEventsUrl}',
+                    extraParams: function() {
+                        return { thai_year: {$calendarThaiYear} };
+                    }
+                },
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        info.jsEvent.preventDefault();
+                        window.location.href = info.event.url;
+                    }
+                },
+                height: 'auto',
+                contentHeight: 380
+            });
+            calendar.render();
+        }
+    })();
+
     // --- BMI Pie Chart ---
 const bmiOptions = {
     // ดึงค่าจาก PHP มาใส่ใน Series
