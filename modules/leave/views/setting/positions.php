@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 // ใช้ฟอนต์ THSarabunNew ให้ตรงกับตอนพิมพ์ PDF
 $this->registerCssFile(Url::to('@web/css/thsarabunnew.css'), ['depends' => [\yii\web\YiiAsset::class]]);
-$this->registerCss('.leave-field-chip { font-family: "THSarabunNew", sans-serif; }');
+$this->registerCss('.leave-field-chip { font-family: "THSarabunNew", sans-serif; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; color: #0d6efd !important; }');
 
 $scale = 3; // 3 px = 1 mm (A4 210×297 mm → 630×891 px) — ขนาดใหญ่ขึ้นเพื่อลากจัดตำแหน่งได้ง่าย
 $pageW = 210;
@@ -185,10 +185,10 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                             $chipFontSizePt = round($fontSize * $fontDisplayScale, 1);
                             $chipFontWeight = $bold ? 'bold' : 'normal';
                         ?>
-                        <div class="position-absolute leave-field-chip text-primary small fw-medium user-select-none <?= !$enabled ? 'd-none' : '' ?>"
+                        <div class="position-absolute leave-field-chip text-primary user-select-none <?= !$enabled ? 'd-none' : '' ?>"
                              data-item-id="<?= Html::encode($itemId) ?>"
                              data-field-key="<?= Html::encode($key) ?>"
-                             style="left: <?= (int) $left ?>px; top: <?= (int) $top ?>px; min-width: 2rem; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: <?= Html::encode($chipFontSizePt) ?>pt; font-weight: <?= Html::encode($chipFontWeight) ?>;"
+                             style="left: <?= (int) $left ?>px; top: <?= (int) $top ?>px; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: <?= Html::encode($chipFontSizePt) ?>pt; font-weight: <?= Html::encode($chipFontWeight) ?>;"
                              title="<?= Html::encode($label) ?>"
                              draggable="false">
                             <span class="chip-label text-truncate d-inline-block" style="max-width: 140px;"><?= Html::encode($label) ?></span>
@@ -403,12 +403,11 @@ $this->registerJs(<<<JS
         rowsContainer.appendChild(row);
 
         var chip = document.createElement('div');
-        chip.className = 'position-absolute leave-field-chip text-primary small fw-medium user-select-none';
+        chip.className = 'position-absolute leave-field-chip text-primary user-select-none';
         chip.setAttribute('data-item-id', itemId);
         chip.setAttribute('data-field-key', fieldKeys[0] || '');
         chip.style.left = '0px';
         chip.style.top = '0px';
-        chip.style.minWidth = '2rem';
         chip.style.cursor = 'grab';
         chip.style.fontSize = (15 * fontDisplayScale).toFixed(1) + 'pt';
         chip.style.fontWeight = 'normal';

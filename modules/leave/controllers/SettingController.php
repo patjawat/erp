@@ -59,27 +59,168 @@ class SettingController extends Controller
 
     /**
      * อัปโหลดเทมเพลต PDF
+     * - ถ้าเป็น AJAX หรือ Accept: application/json จะคืน JSON (success/error)
+     * - ถ้าโพสต์ธรรมดาจะ redirect กลับหน้าแบบฟอร์มใบลา
      */
     public function actionUploadTemplate()
     {
+        $isAjax = Yii::$app->request->getIsAjax()
+            || strpos(Yii::$app->request->getHeaders()->get('Accept', ''), 'application/json') !== false
+            || Yii::$app->request->getHeaders()->get('X-Requested-With') === 'XMLHttpRequest';
+
         if (!Yii::$app->request->isPost) {
+            if ($isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['success' => false, 'error' => 'กรุณาเลือกไฟล์ PDF'];
+            }
             return $this->redirect(['leave-template']);
         }
-        $file = UploadedFile::getInstanceByName('template_pdf');
-        if (!$file || $file->extension !== 'pdf') {
-            Yii::$app->session->setFlash('error', 'กรุณาเลือกไฟล์ PDF');
+
+        $file = $this->getUploadedPdfFile();
+        if ($file === null) {
+            $errMsg = 'กรุณาเลือกไฟล์ PDF';
+            if ($isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['success' => false, 'error' => $errMsg];
+            }
+            Yii::$app->session->setFlash('error', $errMsg);
             return $this->redirect(['leave-template']);
+        }
+        if (!$this->validatePdfFile($file)) {
+            $errMsg = 'อนุญาตเฉพาะไฟล์ PDF เท่านั้น';
+            if ($isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['success' => false, 'error' => $errMsg];
+            }
+            Yii::$app->session->setFlash('error', $errMsg);
+            return $this->redirect(['leave-template']);
+        }
+
+        $dir = Yii::getAlias('@webroot') . '/uploads/leave_form_template';
+        FileHelper::createDirectory($dir);
+        $path = $dir . '/template.pdf';
+        if (!$file->saveAs($path)) {
+            if ($isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['success' => false, 'error' => 'บันทึกไฟล์ไม่สำเร็จ'];
+            }
+            Yii::$app->session->setFlash('error', 'บันทึกไฟล์ไม่สำเร็จ');
+            return $this->redirect(['leave-template']);
+        }
+
+        $this->ensureConfigRecord();
+        if ($isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['success' => true, 'message' => 'อัปโหลดเทมเพลต PDF เรียบร้อย'];
+        }
+        Yii::$app->session->setFlash('success', 'อัปโหลดเทมเพลต PDF เรียบร้อย');
+        return $this->redirect(['leave-template']);
+    }
+
+    /**
+     * อัปโหลดเทมเพลต PDF (AJAX) — alias ที่คืน JSON เสมอ
+     */
+    public function actionUploadTemplateAjax()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'error' => 'กรุณาเลือกไฟล์ PDF'];
+        }
+        $file = $this->getUploadedPdfFile();
+        if ($file === null) {
+            return ['success' => false, 'error' => 'กรุณาเลือกไฟล์ PDF'];
+        }
+        if (!$this->validatePdfFile($file)) {
+            return ['success' => false, 'error' => 'อนุญาตเฉพาะไฟล์ PDF เท่านั้น'];
         }
         $dir = Yii::getAlias('@webroot') . '/uploads/leave_form_template';
         FileHelper::createDirectory($dir);
         $path = $dir . '/template.pdf';
-        if ($file->saveAs($path)) {
-            $this->ensureConfigRecord();
-            Yii::$app->session->setFlash('success', 'อัปโหลดเทมเพลต PDF เรียบร้อย');
-        } else {
-            Yii::$app->session->setFlash('error', 'บันทึกไฟล์ไม่สำเร็จ');
+        if (!$file->saveAs($path)) {
+            return ['success' => false, 'error' => 'บันทึกไฟล์ไม่สำเร็จ'];
         }
-        return $this->redirect(['leave-template']);
+        $this->ensureConfigRecord();
+        return ['success' => true, 'message' => 'อัปโหลดเทมเพลต PDF เรียบร้อย'];
+    }
+
+    /**
+     * ดึงไฟล์ที่อัปโหลด — ลองหลายชื่อ input และ fallback จาก $_FILES
+     */
+    protected function getUploadedPdfFile()
+    {
+        $postName = Yii::$app->request->post('name');
+        $names = ['template_pdf', 'file', 'pdf_file', 'upload', 'upload_ajax', 'template_pdf[]', 'upload_ajax[]'];
+        if ($postName !== null && (string) $postName !== '') {
+            array_unshift($names, $postName);
+        }
+        foreach (array_unique($names) as $name) {
+            $file = UploadedFile::getInstanceByName($name);
+            if ($file !== null) {
+                return $file;
+            }
+        }
+        if (!empty($_FILES)) {
+            foreach (array_keys($_FILES) as $key) {
+                $file = UploadedFile::getInstanceByName($key);
+                if ($file !== null) {
+                    return $file;
+                }
+                $instances = UploadedFile::getInstancesByName($key);
+                if (!empty($instances)) {
+                    return $instances[0];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * ตรวจว่าเป็นไฟล์ PDF (รองรับนามสกุล .pdf, MIME type, magic bytes %PDF)
+     * ผ่อนปรน is_uploaded_file — บางสภาพแวดล้อม (proxy/FastCGI) อาจไม่ผ่าน
+     */
+    protected function validatePdfFile($file)
+    {
+        if (!$file || !$file->tempName) {
+            return false;
+        }
+        $path = $file->tempName;
+        if (!file_exists($path) || !is_readable($path)) {
+            return false;
+        }
+        $size = @filesize($path);
+        if ($size === false || $size <= 0) {
+            return false;
+        }
+        // ตรวจ magic bytes ก่อน — ถ้าเป็น PDF จริงให้ผ่าน
+        $head = @file_get_contents($path, false, null, 0, 8);
+        if ($head !== false && strpos($head, '%PDF') === 0) {
+            return true;
+        }
+        $ext = strtolower((string) ($file->extension ?? ''));
+        if ($ext === 'pdf') {
+            return true;
+        }
+        if ($file->name !== null && $file->name !== '') {
+            $nameExt = strtolower(pathinfo($file->name, PATHINFO_EXTENSION));
+            if ($nameExt === 'pdf') {
+                return true;
+            }
+        }
+        if (function_exists('mime_content_type')) {
+            $mime = @mime_content_type($path);
+            if ($mime && in_array($mime, ['application/pdf', 'application/x-pdf'], true)) {
+                return true;
+            }
+        }
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo) {
+            $mime = @finfo_file($finfo, $path);
+            finfo_close($finfo);
+            if ($mime && in_array($mime, ['application/pdf', 'application/x-pdf'], true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

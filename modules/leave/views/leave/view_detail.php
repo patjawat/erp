@@ -7,23 +7,41 @@ use app\components\UserHelper;
 /** @var app\modules\leave\models\Leave $model */
 
 $me = UserHelper::GetEmployee();
+$this->registerCss('.leave-creator-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }');
 ?>
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <?php
-                        $author = $model->getAvatar($model->emp_id, '');
-                        $authorAvatar = $author['avatar'] ?? '';
-                        ?>
-                        <?php if ($authorAvatar): ?>
-                            <div class="flex-shrink-0"><?= $authorAvatar ?></div>
-                        <?php endif; ?>
+                <?php
+                $author = $model->getAvatar($model->emp_id, '');
+                $authorAvatar = $author['avatar'] ?? '';
+                $authorName = $author['fullname'] ?? ($model->employee->fullname ?? '');
+                $authorDept = $author['department'] ?? ($model->employee ? $model->employee->departmentName() : '');
+                $authorPosition = $author['position_name'] ?? ($model->employee ? $model->employee->positionName() : '');
+                ?>
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                        <div class="leave-creator-avatar-wrap rounded-circle overflow-hidden border border-2 border-primary bg-body-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 56px; height: 56px;">
+                            <?php if ($authorAvatar): ?>
+                                <?= $authorAvatar ?>
+                            <?php else: ?>
+                                <i class="bi bi-person fs-2 text-muted"></i>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <div class="small text-muted mb-0">ผู้สร้างใบลา</div>
+                            <div class="fw-bold text-body"><?= Html::encode($authorName) ?></div>
+                            <?php if ($authorPosition !== ''): ?>
+                                <div class="small text-muted"><?= Html::encode($authorPosition) ?></div>
+                            <?php endif; ?>
+                            <?php if ($authorDept !== ''): ?>
+                                <div class="small text-secondary"><?= Html::encode($authorDept) ?></div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 text-muted small">
-                        <span><?= $model->viewStatus() ?></span>
+                        <?= $model->viewStatus() ?>
                     </div>
                 </div>
                 <div class="row g-4">
