@@ -178,8 +178,16 @@ $config = [
                 'secure' => $cookieSecure,
             ],
             'writeCallback' => function ($session) {
+                $userId = null;
+                if (Yii::$app->has('user')) {
+                    try {
+                        $userId = Yii::$app->user->getIsGuest() ? null : Yii::$app->user->getId();
+                    } catch (\Throwable $e) {
+                        $userId = null;
+                    }
+                }
                 return [
-                    'user_id' => Yii::$app->user->isGuest ? null : Yii::$app->user->id,
+                    'user_id' => $userId,
                     'ip_address' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
                     'login_time' => time(),
                 ];
