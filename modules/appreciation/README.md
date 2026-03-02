@@ -1,6 +1,6 @@
 # โมดูล พลังแห่งคำขอบคุณ (Appreciation Wall)
 
-ให้คำชมต่อกันในหน่วยงาน สะสมคะแนน และร่วม Challenge รับของรางวัล
+ให้คำขอบคุณต่อกันในหน่วยงาน สะสมคะแนน และร่วม Challenge รับของรางวัล
 
 ## การติดตั้ง
 
@@ -18,10 +18,10 @@ docker-compose exec app php yii migrate --migrationPath=@app/modules/appreciatio
 
 ## ฟีเจอร์
 
-- **ฟีดคำขอบคุณ** – แสดงคำชมที่ส่งถึงกันแบบ feed (คล้ายโซเชียล)
-- **ส่งคำขอบคุณ** – เลือกผู้รับ เลือกประเภทคำชม (Team Player, Problem Solver ฯลฯ) และเขียนข้อความ
+- **ฟีดคำขอบคุณ** – แสดงคำขอบคุณที่ส่งถึงกันแบบ feed (คล้ายโซเชียล)
+- **ส่งคำขอบคุณ** – เลือกผู้รับ เลือกประเภทคำขอบคุณ (Team Player, Problem Solver ฯลฯ) และเขียนข้อความ
 - **Like** – กด like ที่คำขอบคุณได้
-- **คะแนน** – ผู้รับได้ +50 คะแนนต่อ 1 คำชม (ปรับได้ที่ `Module::$pointsPerThank`)
+- **คะแนน** – ผู้รับได้ +50 คะแนนต่อ 1 คำขอบคุณ (ปรับได้ที่ `Module::$pointsPerThank`)
 - **Challenge** – กำหนดกิจกรรมเป้าหมาย (เช่น ส่งคำขอบคุณ 10 ครั้งใน 1 สัปดาห์) ทำครบรับรางวัล
 
 ## การสร้าง Challenge (กิจกรรมเป้าหมาย)
@@ -33,7 +33,7 @@ docker-compose exec app php yii migrate --migrationPath=@app/modules/appreciatio
 ```sql
 INSERT INTO appreciation_challenge (name, description, start_at, end_at, goal_type, goal_value, reward_name, status, created_at)
 VALUES (
-  'ส่งความดีกันสัปดาห์ละ 10 คำชม',
+  'ส่งความดีกันสัปดาห์ละ 10 คำขอบคุณ',
   'ส่งคำขอบคุณให้เพื่อนร่วมงานครบ 10 ครั้ง ภายใน 7 วัน รับของรางวัลจาก HR',
   '2025-02-24',
   '2025-03-02',

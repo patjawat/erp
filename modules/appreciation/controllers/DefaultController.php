@@ -146,7 +146,7 @@ class DefaultController extends Controller
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="bi bi-heart me-1"></i> ส่งคำชมให้เพื่อน',
+                'title' => '<i class="bi bi-heart me-1"></i> ส่งคำขอบคุณให้เพื่อน',
                 'content' => $this->renderAjax('create', ['model' => $model, 'me' => $me, 'isModal' => true]),
                 'footer' => '',
             ];

@@ -74,7 +74,7 @@ class Appreciation extends \yii\db\ActiveRecord
             'from_emp_id' => 'ผู้ส่ง',
             'to_emp_id' => 'ผู้รับ',
             'message' => 'ข้อความคำขอบคุณ',
-            'badge_type' => 'ประเภทคำชม',
+            'badge_type' => 'ประเภทคำขอบคุณ',
             'points_given' => 'คะแนน',
             'created_at' => 'เมื่อ',
         ];

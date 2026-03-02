@@ -17,11 +17,11 @@ class m260224_120000_create_appreciation_tables extends Migration
 
         $this->createTable('{{%appreciation}}', [
             'id' => $this->primaryKey(),
-            'from_emp_id' => $this->integer()->notNull()->comment('ผู้ส่งคำชม'),
-            'to_emp_id' => $this->integer()->notNull()->comment('ผู้รับคำชม'),
+            'from_emp_id' => $this->integer()->notNull()->comment('ผู้ส่งคำขอบคุณ'),
+            'to_emp_id' => $this->integer()->notNull()->comment('ผู้รับคำขอบคุณ'),
             'message' => $this->text()->notNull()->comment('ข้อความคำขอบคุณ'),
-            'badge_type' => $this->string(64)->null()->comment('ประเภทคำชม เช่น team_player, problem_solver'),
-            'points_given' => $this->integer()->notNull()->defaultValue(50)->comment('คะแนนที่ให้ต่อคำชม'),
+            'badge_type' => $this->string(64)->null()->comment('ประเภทคำขอบคุณ เช่น team_player, problem_solver'),
+            'points_given' => $this->integer()->notNull()->defaultValue(50)->comment('คะแนนที่ให้ต่อคำขอบคุณ'),
             'created_at' => $this->datetime()->notNull(),
         ], $tableOptions);
 

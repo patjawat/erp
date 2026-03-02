@@ -47,7 +47,7 @@ function formatRepo(repo) {
     return '<div class="d-flex align-items-center">' + (repo.avatar || repo.text) + '</div>';
 }
 function formatRepoSelection(repo) {
-    return repo.text || repo.fullname || 'เลือกผู้รับคำชม';
+    return repo.text || repo.fullname || 'เลือกผู้รับคำขอบคุณ';
 }
 JS;
 $this->registerJs($formatRepoJs, View::POS_HEAD);
@@ -62,7 +62,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
         <?php if (!$isModal): ?>
         <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
             <div class="card-header bg-primary text-white py-4 px-4">
-                <h5 class="mb-1 fw-bold"><i class="bi bi-heart me-1"></i> โพสต์คำชมให้เพื่อน</h5>
+                <h5 class="mb-1 fw-bold"><i class="bi bi-heart me-1"></i> โพสต์คำขอบคุณให้เพื่อน</h5>
                 <p class="mb-0 small opacity-75">ข้อความของคุณจะไปอยู่ในฟีด ให้เพื่อนๆ เห็นและกดชอบได้</p>
             </div>
             <div class="card-body p-4">
@@ -89,8 +89,8 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-medium d-block mb-2">ประเภทคำชม <span class="text-muted fw-normal small">(ไม่บังคับ)</span></label>
-                    <div class="d-flex flex-wrap gap-2" role="group" aria-label="เลือกประเภทคำชม">
+                    <label class="form-label fw-medium d-block mb-2">ประเภทคำขอบคุณ <span class="text-muted fw-normal small">(ไม่บังคับ)</span></label>
+                    <div class="d-flex flex-wrap gap-2" role="group" aria-label="เลือกประเภทคำขอบคุณ">
                         <?php
                         $badges = Appreciation::badgeLabels();
                         $emojis = Appreciation::badgeEmojis();
@@ -128,7 +128,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
 
                 <div class="d-flex align-items-center gap-2 mb-4 p-3 rounded-2 bg-opacity-10 bg-warning">
                     <span class="badge bg-warning text-dark rounded-pill">+<?= (int) $model->points_given ?></span>
-                    <span class="small text-muted">คะแนนจะถูกให้กับผู้รับคำชม</span>
+                    <span class="small text-muted">คะแนนจะถูกให้กับผู้รับคำขอบคุณ</span>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">

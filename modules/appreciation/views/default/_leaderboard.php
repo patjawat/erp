@@ -10,7 +10,7 @@ use yii\helpers\Html;
 ?>
 <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
     <div class="card-header bg-primary bg-opacity-10 py-2 px-3 d-flex align-items-center justify-content-between border-bottom">
-        <h6 class="mb-0 fw-bold small"><i class="bi bi-trophy text-warning me-1"></i> อันดับรับคำชม</h6>
+        <h6 class="mb-0 fw-bold small"><i class="bi bi-trophy text-warning me-1"></i> อันดับรับคำขอบคุณ</h6>
     </div>
     <div class="card-body p-2">
         <?php if (empty($leaderboard)): ?>

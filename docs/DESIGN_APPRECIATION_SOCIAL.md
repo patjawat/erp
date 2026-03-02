@@ -39,7 +39,7 @@
 ### 2.1 Thank You System (มีอยู่แล้ว + ปรับ)
 
 - ส่งคำขอบคุณพร้อม **Points** (จาก Module config)
-- **Badge / Core Value**: ใช้ฟิลด์ `badge_type` เป็น "สติกเกอร์/ประเภทคำชม" แสดงเป็นข้อความหรือ emoji ในฟีด (ถ้าต้องการ emoji จริง map ใน view เช่น team_player → 🤝)
+- **Badge / Core Value**: ใช้ฟิลด์ `badge_type` เป็น "สติกเกอร์/ประเภทคำขอบคุณ" แสดงเป็นข้อความหรือ emoji ในฟีด (ถ้าต้องการ emoji จริง map ใน view เช่น team_player → 🤝)
 - **การแจ้งเตือน**: หลัง save → สร้าง Notify ให้ผู้รับ (type `appreciation_thank`)
 
 ### 2.2 Challenge Mode (มีอยู่แล้ว + ปรับ)

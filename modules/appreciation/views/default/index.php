@@ -39,7 +39,7 @@ $showCelebrate = (bool) (Yii::$app->request->get('celebrate') ?? false);
                     <?php endif; ?>
                 </div>
                 <div class="mt-2 d-flex flex-wrap gap-2">
-                    <?= Html::a('<i class="bi bi-heart text-danger me-1"></i> ส่งคำชม', ['create'], ['class' => 'btn btn-outline-danger btn-sm rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= Html::a('<i class="bi bi-heart text-danger me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-outline-danger btn-sm rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                     <?= Html::a('Challenge', ['challenge/index'], ['class' => 'btn btn-outline-secondary btn-sm rounded-pill']) ?>
                 </div>
             </div>
@@ -78,7 +78,7 @@ $showCelebrate = (bool) (Yii::$app->request->get('celebrate') ?? false);
                     <div class="row g-2">
                         <div class="col-6">
                             <div class="p-3 rounded-3 border text-center">
-                                <p class="text-muted small mb-0">ได้รับคำชม</p>
+                                <p class="text-muted small mb-0">ได้รับคำขอบคุณ</p>
                                 <p class="mb-0 fw-bold fs-4 text-primary"><?= (int) $receivedCount ?></p>
                                 <p class="mb-0 small">ครั้ง</p>
                             </div>

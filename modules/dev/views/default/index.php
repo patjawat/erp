@@ -151,7 +151,7 @@ $user_name = Yii::$app->user->identity->profile->firstname ?? 'เดชา ส�
                                 <p class="text-white text-opacity-75 text-sm fw-medium mb-4">นักวิชาการคอมพิวเตอร์ ชำนาญการ • <span class="text-white fw-bold text-uppercase" style="letter-spacing: 0.05em;">Rank: Gold</span></p>
                                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
                                     <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs"><i data-lucide="map-pin" width="14" height="14"></i><span>ศูนย์คอมพิวเตอร์</span></div>
-                                    <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs"><i data-lucide="heart" width="14" height="14" style="color: #fca5a5; fill: #fca5a5;"></i><span>ได้รับคำชมแล้ว: <span class="fw-black">28 ครั้ง</span></span></div>
+                                    <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs"><i data-lucide="heart" width="14" height="14" style="color: #fca5a5; fill: #fca5a5;"></i><span>ได้รับคำขอบคุณแล้ว: <span class="fw-black">28 ครั้ง</span></span></div>
                                 </div>
                             </div>
                             <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative" style="min-width: 180px; border-radius: 32px; backdrop-filter: blur(12px);">
@@ -269,7 +269,7 @@ $user_name = Yii::$app->user->identity->profile->firstname ?? 'เดชา ส�
                     <div class="mb-4 d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-3">
                             <div class="d-flex align-items-center justify-content-center rounded-4 border border-danger-subtle shadow-sm" style="width: 48px; height: 48px; background-color: #fff1f2; color: #f43f5e;"><i data-lucide="heart-handshake" width="24" height="24"></i></div>
-                            <div><h3 class="fw-black text-dark mb-0" style="font-size: 1.125rem;">กำแพงแห่งคำขอบคุณ (Appreciation Wall)</h3><p class="text-muted fst-italic fw-medium mb-0" style="font-size: 0.75rem;">ส่งพลังบวกให้เพื่อนร่วมงาน (+50 แต้มสะสมต่อคำชม)</p></div>
+                            <div><h3 class="fw-black text-dark mb-0" style="font-size: 1.125rem;">กำแพงแห่งคำขอบคุณ (Appreciation Wall)</h3><p class="text-muted fst-italic fw-medium mb-0" style="font-size: 0.75rem;">ส่งพลังบวกให้เพื่อนร่วมงาน (+50 แต้มสะสมต่อคำขอบคุณ)</p></div>
                         </div>
                         <button class="btn btn-danger rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale" style="font-size: 0.75rem; background-color: #f43f5e; border: none;"><i data-lucide="plus" width="16" height="16"></i> ส่งคำขอบคุณ</button>
                     </div>

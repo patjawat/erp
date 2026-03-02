@@ -389,7 +389,7 @@ class LeaveController extends Controller
                         $model->createApprove();
                 }
 
-                return $this->redirect(['/leave/default/index']);
+                return $this->redirect(['/me/leave']);
 
             }
         } else {

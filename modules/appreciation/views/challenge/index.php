@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-warning text-dark py-3">
         <h5 class="mb-0 fw-bold">กิจกรรมเป้าหมาย แข่งกันทำครบรับของรางวัล</h5>
-        <p class="mb-0 small opacity-75">ส่งคำขอบคุณหรือรับคำชมให้ครบตามเป้า ภายในช่วงเวลาที่กำหนด เพื่อรับรางวัล</p>
+        <p class="mb-0 small opacity-75">ส่งคำขอบคุณหรือรับคำขอบคุณให้ครบตามเป้า ภายในช่วงเวลาที่กำหนด เพื่อรับรางวัล</p>
     </div>
 </div>
 
