@@ -378,7 +378,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <!-- https://www.canva.com/ai/code/thread/9dc074ce-cf81-420d-9c78-bc0fa333e10e -->
 <?php
-$url = Url::to(['/leave/default/index']);
+$url = Url::to(['/me/leave']);
 $js = <<<JS
         $(document).ready(function() {
 
