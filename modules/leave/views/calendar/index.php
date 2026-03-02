@@ -11,7 +11,7 @@ $this->title = 'ปฏิทินการลา';
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$eventsUrl   = Url::to(['/leave/calendar/events'], true);
+$eventsUrl   = Url::to(['/leave/calendar/events']);
 $eventsUrlJs = json_encode($eventsUrl);
 $myDeptIdJs  = json_encode($myDeptId ?: 0);
 
