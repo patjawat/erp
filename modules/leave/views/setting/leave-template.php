@@ -67,11 +67,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="border rounded-3 overflow-hidden bg-secondary bg-opacity-10">
                     <iframe src="<?= Html::encode($templateUrl) ?>#toolbar=0" class="w-100" style="height: 420px;" title="เทมเพลต PDF"></iframe>
                 </div>
-                <?= Html::a(
-                    '<i class="bi bi-geo-alt me-1"></i> กำหนดตำแหน่งข้อมูลบน PDF',
-                    ['/leave/setting/positions'],
-                    ['class' => 'btn btn-outline-primary rounded-3 mt-3']
-                ) ?>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <?= Html::a(
+                        '<i class="bi bi-geo-alt me-1"></i> กำหนดตำแหน่งข้อมูลบน PDF',
+                        ['/leave/setting/positions'],
+                        ['class' => 'btn btn-outline-primary rounded-3']
+                    ) ?>
+                    <?= Html::a(
+                        '<i class="bi bi-printer me-1"></i> ไปหน้ารายการขอลา / พิมพ์ใบลา',
+                        ['/leave/default/index'],
+                        ['class' => 'btn btn-outline-secondary rounded-3']
+                    ) ?>
+                </div>
+                <p class="small text-muted mt-2 mb-0">ตำแหน่งที่กำหนดจะถูกใช้กับหน้ารูปแบบพิมพ์ใบลา — ไปที่ <strong>ขอลา / รายการของฉัน</strong> แล้วกดปุ่ม «พิมพ์ใบลา» ที่รายการที่ต้องการ</p>
             </div>
             <?php endif; ?>
         </div>

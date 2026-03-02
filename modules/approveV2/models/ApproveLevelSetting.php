@@ -106,6 +106,7 @@ class ApproveLevelSetting extends \yii\db\ActiveRecord
 
     /**
      * ตัวเลือกระดับโหนดในผังองค์กร (diagram) — ชื่อระดับมาจากการตั้งใน /hr/organization/diagram
+     * ระดับที่ 1 กับ ระดับที่ 2 สลับตำแหน่งกัน (ในผัง lvl 1 = บน, lvl 2 = ถัดลงมา — ใน UI ระดับที่ 1 = หัวหน้างาน, ระดับที่ 2 = ผอ./หัวหน้า)
      */
     public static function orgNodeLevelOptions()
     {
@@ -114,25 +115,27 @@ class ApproveLevelSetting extends \yii\db\ActiveRecord
         $defaults = [1 => 'ผอ. หรือ หัวหน้า', 2 => 'หัวหน้างาน', 3 => 'หัวหน้ากลุ่มงาน', 4 => 'ระดับที่ 4', 5 => 'ผอ./บนสุด'];
         $options = [null => 'ใช้แผนกของพนักงานโดยตรง'];
         for ($lvl = 1; $lvl <= 5; $lvl++) {
-            $name = trim($labels[(string) $lvl] ?? '');
-            $options[$lvl] = $name !== '' ? 'ระดับที่ ' . $lvl . ' (' . $name . ')' : 'ระดับที่ ' . $lvl . ' (' . ($defaults[$lvl] ?? '') . ')';
+            $swapLvl = ($lvl === 1) ? 2 : (($lvl === 2) ? 1 : $lvl);
+            $name = trim($labels[(string) $swapLvl] ?? '');
+            $options[$lvl] = $name !== '' ? 'ระดับที่ ' . $lvl . ' (' . $name . ')' : 'ระดับที่ ' . $lvl . ' (' . ($defaults[$swapLvl] ?? '') . ')';
         }
         return $options;
     }
 
     /**
-     * ชื่อระดับในผังสำหรับแสดงผล (ระดับที่ 1 = หัวหน้า ฯลฯ)
+     * ชื่อระดับในผังสำหรับแสดงผล — ระดับที่ 1 กับ 2 สลับกับผัง (ระดับที่ 1 = หัวหน้างาน, ระดับที่ 2 = ผอ./หัวหน้า)
      */
     public static function getOrgDiagramLevelLabel($level)
     {
         if ($level === null || $level === '') {
             return null;
         }
+        $swapLevel = ((int) $level === 1) ? 2 : (((int) $level === 2) ? 1 : (int) $level);
         $model = Categorise::findOne(['name' => 'org_diagram_level']);
         $labels = ($model && is_array($model->data_json)) ? $model->data_json : [];
         $defaults = [1 => 'ผอ. หรือ หัวหน้า', 2 => 'หัวหน้างาน', 3 => 'หัวหน้ากลุ่มงาน', 4 => 'ระดับที่ 4', 5 => 'ผอ./บนสุด'];
-        $name = trim($labels[(string) $level] ?? '');
-        return $name !== '' ? $name : ($defaults[(int) $level] ?? 'ระดับที่ ' . $level);
+        $name = trim($labels[(string) $swapLevel] ?? '');
+        return $name !== '' ? $name : ($defaults[$swapLevel] ?? 'ระดับที่ ' . $level);
     }
 
     /**

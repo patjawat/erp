@@ -18,7 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?= $this->render('view_detail', ['model' => $model]) ?>
 
-<div class="d-flex justify-content-center gap-3">
+<div class="d-flex flex-wrap justify-content-center gap-2 gap-md-3">
+    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา', ['/leave/leave/print', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener']) ?>
     <?php echo ($model->status == 'ReqCancel' && ($me->id != $model->emp_id)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/leave/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
     <?php if ($me->id == $model->emp_id): ?>
         <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [

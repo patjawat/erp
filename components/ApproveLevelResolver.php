@@ -36,6 +36,12 @@ class ApproveLevelResolver
             $orgNodeName = null;
             if ($node && in_array($row->approver_type, [ApproveLevelSetting::TYPE_ORG_LEADER1, ApproveLevelSetting::TYPE_ORG_LEADER2], true)) {
                 $targetLevel = isset($row->org_node_level) ? (int) $row->org_node_level : null;
+                // สลับระดับที่ 1 กับ 2 ให้ตรงกับผังองค์กร (ใน UI ระดับที่ 1 = หัวหน้างาน = tree lvl 2, ระดับที่ 2 = ผอ. = tree lvl 1)
+                if ($targetLevel === 1) {
+                    $targetLevel = 2;
+                } elseif ($targetLevel === 2) {
+                    $targetLevel = 1;
+                }
                 if ($targetLevel !== null && $targetLevel > 0) {
                     while ($node && $node->lvl > $targetLevel) {
                         $parent = $node->getParent();

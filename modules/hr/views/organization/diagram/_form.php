@@ -6,22 +6,16 @@ use yii\helpers\ArrayHelper;
 use app\modules\hr\models\Employees;
 ?>
 <?php
+// lvl 1 = บนสุด (ประเภท) = ระดับที่ 2 ในชุดตั้งชื่อระดับ, lvl 2 = กลุ่มงาน = ระดับที่ 1 ในชุดตั้งชื่อระดับ
 switch ($node->lvl) {
     case 1:
-        $label = [
-            'name' => 'ประเภท'
-        ];
+        $label = ['name' => 'ประเภท (ระดับที่ 2 ในตั้งชื่อระดับ)'];
         break;
     case 2:
-        $label = [
-            'name' => 'กลุ่มงาน'
-        ];
+        $label = ['name' => 'กลุ่มงาน (ระดับที่ 1 ในตั้งชื่อระดับ)'];
         break;
-
     default:
-        $label = [
-            'name' => 'ชื่อ'
-        ];
+        $label = ['name' => 'ชื่อ'];
         break;
 }
 ?>

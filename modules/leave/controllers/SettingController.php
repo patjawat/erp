@@ -8,6 +8,9 @@ use yii\web\ForbiddenHttpException;
 use yii\web\UploadedFile;
 use yii\helpers\FileHelper;
 use app\models\Categorise;
+use app\components\UserHelper;
+use app\components\ThaiDateHelper;
+use app\modules\leave\models\Leave;
 
 const LEAVE_FORM_TEMPLATE_NAME = 'leave_form_template';
 const LEAVE_TEMPLATE_RELATIVE_PATH = 'uploads/leave_form_template/template.pdf';
@@ -21,6 +24,9 @@ class SettingController extends Controller
     {
         if (!parent::beforeAction($action)) {
             return false;
+        }
+        if ($action->id === 'leave-pdf') {
+            return true;
         }
         if (!Yii::$app->user->can('leave')) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าหน้าตั้งค่า');
@@ -77,6 +83,93 @@ class SettingController extends Controller
     }
 
     /**
+     * สร้าง PDF ใบลาจากเทมเพลตที่อัปโหลด + ตำแหน่งที่กำหนด (ให้เจ้าของใบลาหรือผู้มีสิทธิ์ leave เรียกได้)
+     */
+    public function actionLeavePdf($id)
+    {
+        $model = Leave::find()
+            ->andWhere(['id' => (int) $id])
+            ->with(['employee', 'leaveType'])
+            ->one();
+        if ($model === null) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            throw new ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
+        }
+        if ($me->id != $model->emp_id && !Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์พิมพ์ใบลานี้');
+        }
+        if (!$this->hasTemplateFile()) {
+            throw new \yii\web\NotFoundHttpException('ยังไม่มีเทมเพลต PDF กรุณาอัปโหลดที่การตั้งค่าแบบฟอร์มใบลา');
+        }
+
+        $templatePath = Yii::getAlias('@webroot') . '/' . LEAVE_TEMPLATE_RELATIVE_PATH;
+        $config = $this->getLeaveFormConfig();
+        $items = $this->getLeaveFormItems();
+
+        $author = $model->getAvatar($model->emp_id, '');
+        $values = [
+            'emp_fullname' => $author['fullname'] ?? ($model->employee->fullname ?? ''),
+            'department' => $author['department'] ?? ($model->employee ? $model->employee->departmentName() : ''),
+            'leave_type_title' => $model->leaveType ? $model->leaveType->title : '',
+            'date_start' => $model->date_start ? ThaiDateHelper::formatThaiDate($model->date_start) : '',
+            'date_end' => $model->date_end ? ThaiDateHelper::formatThaiDate($model->date_end) : '',
+            'total_days' => (string) ($model->total_days ?? ''),
+            'reason' => $model->data_json['reason'] ?? '',
+            'address' => $model->data_json['address'] ?? '',
+            'contact_phone' => $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '',
+            'place_go' => $model->data_json['place_go'] ?? '',
+            'create_date' => $model->created_at ? ThaiDateHelper::formatThaiDate($model->created_at, 'long') : '',
+        ];
+
+        if (!class_exists(\setasign\Fpdi\Fpdi::class)) {
+            throw new \yii\web\ServerErrorHttpException('ระบบสร้าง PDF ยังไม่พร้อม');
+        }
+
+        define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->setSourceFile($templatePath);
+        $tplIdx = $pdf->importPage(1);
+        $pdf->AddPage();
+        $pdf->useTemplate($tplIdx, 0, 0, 210);
+
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $pdf->SetTextColor(0, 0, 0);
+
+        // ใน FPDF ค่า Y ของ SetXY คือ baseline — เลื่อน Y ลงเล็กน้อยเพื่อให้ระดับข้อความใกล้เคียงตำแหน่งที่กำหนด
+        $ptToMm = 25.4 / 72;
+        foreach ($items as $item) {
+            if (empty($item['enabled'])) {
+                continue;
+            }
+            $key = $item['key'] ?? '';
+            $x = (float) ($item['x'] ?? 0);
+            $y = (float) ($item['y'] ?? 0);
+            $fontSize = (int) ($item['fontSize'] ?? 15);
+            $bold = !empty($item['bold']);
+            $text = isset($values[$key]) ? trim((string) $values[$key]) : '';
+            if ($text === '') {
+                continue;
+            }
+            $style = $bold ? 'B' : '';
+            $pdf->SetFont('THSarabunNew', $style, $fontSize);
+            $yBaseline = $y + $fontSize * $ptToMm * 0.45;
+            $pdf->SetXY($x, $yBaseline);
+            $pdf->Write(0, iconv('UTF-8', 'cp874//IGNORE', $text));
+        }
+
+        $filename = 'leave-' . (int) $model->id . '.pdf';
+        Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
+        Yii::$app->response->content = $pdf->Output('S');
+        return Yii::$app->response;
+    }
+
+    /**
      * หน้ากำหนดตำแหน่งข้อมูลบน PDF
      */
     public function actionPositions()
@@ -86,17 +179,31 @@ class SettingController extends Controller
             return $this->redirect(['leave-template']);
         }
         $config = $this->getLeaveFormConfig();
-        $fields = $this->getLeaveFormFields();
+        $items = $this->getLeaveFormItems();
+        $fieldLabels = $this->getDefaultFields();
+
+        $me = UserHelper::GetEmployee();
+        $recentLeaves = [];
+        if ($me) {
+            $recentLeaves = Leave::find()
+                ->where(['emp_id' => $me->id])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(5)
+                ->with(['leaveType'])
+                ->all();
+        }
 
         return $this->render('positions', [
             'config' => $config,
-            'fields' => $fields,
+            'items' => $items,
+            'fieldLabels' => $fieldLabels,
             'templateUrl' => Yii::getAlias('@web') . '/' . LEAVE_TEMPLATE_RELATIVE_PATH . '?t=' . time(),
+            'recentLeaves' => $recentLeaves,
         ]);
     }
 
     /**
-     * บันทึกตำแหน่ง (AJAX) — รองรับทั้ง POST form และ JSON body
+     * บันทึกตำแหน่ง (AJAX) — รองรับ items (id => { key, x, y, fontSize, bold, enabled })
      */
     public function actionSavePositions()
     {
@@ -114,14 +221,26 @@ class SettingController extends Controller
         }
         $defaults = $this->getDefaultFields();
         $config = $this->getLeaveFormConfig();
-        $merged = [];
-        foreach ($positions as $key => $pos) {
-            $merged[$key] = array_merge(
-                ['label' => $defaults[$key]['label'] ?? $key, 'x' => 0, 'y' => 0, 'fontSize' => 11],
-                array_intersect_key($pos, array_flip(['x', 'y', 'fontSize']))
-            );
+        $items = [];
+        foreach ($positions as $itemId => $pos) {
+            if (!is_array($pos)) {
+                continue;
+            }
+            $key = isset($pos['key']) ? (string) $pos['key'] : '';
+            if ($key === '' || !isset($defaults[$key])) {
+                continue;
+            }
+            $items[] = [
+                'id' => $itemId,
+                'key' => $key,
+                'x' => (float) ($pos['x'] ?? 0),
+                'y' => (float) ($pos['y'] ?? 0),
+                'fontSize' => (int) ($pos['fontSize'] ?? 15),
+                'bold' => (int) ($pos['bold'] ?? 0),
+                'enabled' => (int) ($pos['enabled'] ?? 1),
+            ];
         }
-        $config['fields'] = $merged;
+        $config['items'] = $items;
         $cat = $this->getConfigRecord();
         $cat->data_json = json_encode($config);
         if ($cat->save(false)) {
@@ -144,21 +263,96 @@ class SettingController extends Controller
             $json = json_decode($json, true);
         }
         $json = is_array($json) ? $json : [];
-        if (empty($json['fields'])) {
+        if (empty($json['items']) && empty($json['fields'])) {
             $json['fields'] = $this->getDefaultFields();
         }
         return $json;
+    }
+
+    /**
+     * แปลง config แบบเก่า (fields key=>data) เป็น items (รายการตำแหน่ง — ฟิลด์เดียวกันวางหลายที่ได้)
+     */
+    protected function fieldsToItems($fields)
+    {
+        $defaults = $this->getDefaultFields();
+        $items = [];
+        foreach ($fields as $key => $f) {
+            $items[] = [
+                'id' => 'legacy_' . $key,
+                'key' => $key,
+                'x' => (float) ($f['x'] ?? 0),
+                'y' => (float) ($f['y'] ?? 0),
+                'fontSize' => (int) ($f['fontSize'] ?? 15),
+                'bold' => (int) ($f['bold'] ?? 0),
+                'enabled' => isset($f['enabled']) ? (int) $f['enabled'] : 1,
+            ];
+        }
+        return $items;
+    }
+
+    /**
+     * รายการตำแหน่งสำหรับแสดง/แก้ไข — รองรับทั้ง config['items'] และ config['fields'] (แปลงเป็น items)
+     */
+    protected function getLeaveFormItems()
+    {
+        $config = $this->getLeaveFormConfig();
+        $defaults = $this->getDefaultFields();
+        if (!empty($config['items'])) {
+            $list = [];
+            foreach ($config['items'] as $item) {
+                $key = $item['key'] ?? '';
+                $list[] = [
+                    'id' => $item['id'] ?? uniqid('item_'),
+                    'key' => $key,
+                    'x' => (float) ($item['x'] ?? 0),
+                    'y' => (float) ($item['y'] ?? 0),
+                    'fontSize' => (int) ($item['fontSize'] ?? 15),
+                    'bold' => !empty($item['bold']),
+                    'enabled' => isset($item['enabled']) ? (int) $item['enabled'] : 1,
+                    'label' => $defaults[$key]['label'] ?? $key,
+                ];
+            }
+            return $list;
+        }
+        $fields = $config['fields'] ?? $defaults;
+        $items = [];
+        foreach ($fields as $key => $f) {
+            $items[] = [
+                'id' => 'legacy_' . $key,
+                'key' => $key,
+                'x' => (float) ($f['x'] ?? 0),
+                'y' => (float) ($f['y'] ?? 0),
+                'fontSize' => (int) ($f['fontSize'] ?? 15),
+                'bold' => !empty($f['bold']),
+                'enabled' => isset($f['enabled']) ? (int) $f['enabled'] : 1,
+                'label' => $defaults[$key]['label'] ?? $key,
+            ];
+        }
+        return $items;
     }
 
     protected function getConfigRecord()
     {
         $cat = Categorise::findOne(['name' => LEAVE_FORM_TEMPLATE_NAME]);
         if (!$cat) {
+            $defaults = $this->getDefaultFields();
+            $items = [];
+            foreach ($defaults as $key => $def) {
+                $items[] = [
+                    'id' => 'legacy_' . $key,
+                    'key' => $key,
+                    'x' => (float) ($def['x'] ?? 0),
+                    'y' => (float) ($def['y'] ?? 0),
+                    'fontSize' => (int) ($def['fontSize'] ?? 15),
+                    'bold' => (int) ($def['bold'] ?? 0),
+                    'enabled' => (int) ($def['enabled'] ?? 1),
+                ];
+            }
             $cat = new Categorise();
             $cat->name = LEAVE_FORM_TEMPLATE_NAME;
             $cat->code = 'default';
             $cat->title = 'ฟอร์มใบลา';
-            $cat->data_json = json_encode(['fields' => $this->getDefaultFields()]);
+            $cat->data_json = json_encode(['items' => $items]);
             $cat->save(false);
         }
         return $cat;
@@ -172,32 +366,17 @@ class SettingController extends Controller
     protected function getDefaultFields()
     {
         return [
-            'emp_fullname' => ['label' => 'ชื่อ-นามสกุลผู้ขอลา', 'x' => 30, 'y' => 50, 'fontSize' => 12],
-            'department' => ['label' => 'หน่วยงาน/แผนก', 'x' => 30, 'y' => 58, 'fontSize' => 11],
-            'leave_type_title' => ['label' => 'ประเภทการลา', 'x' => 30, 'y' => 66, 'fontSize' => 11],
-            'date_start' => ['label' => 'วันที่เริ่มลา', 'x' => 30, 'y' => 74, 'fontSize' => 11],
-            'date_end' => ['label' => 'วันที่สิ้นสุด', 'x' => 80, 'y' => 74, 'fontSize' => 11],
-            'total_days' => ['label' => 'จำนวนวัน', 'x' => 30, 'y' => 82, 'fontSize' => 11],
-            'reason' => ['label' => 'เหตุผลการลา', 'x' => 30, 'y' => 90, 'fontSize' => 11],
-            'address' => ['label' => 'ที่อยู่ที่ติดต่อได้', 'x' => 30, 'y' => 98, 'fontSize' => 10],
-            'contact_phone' => ['label' => 'เบอร์โทรติดต่อ', 'x' => 30, 'y' => 106, 'fontSize' => 10],
-            'place_go' => ['label' => 'สถานที่ไป', 'x' => 30, 'y' => 114, 'fontSize' => 10],
-            'create_date' => ['label' => 'วันที่ยื่นคำขอ', 'x' => 30, 'y' => 122, 'fontSize' => 10],
+            'emp_fullname' => ['label' => 'ชื่อ-นามสกุลผู้ขอลา', 'x' => 30, 'y' => 50, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'department' => ['label' => 'หน่วยงาน/แผนก', 'x' => 30, 'y' => 58, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'leave_type_title' => ['label' => 'ประเภทการลา', 'x' => 30, 'y' => 66, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'date_start' => ['label' => 'วันที่เริ่มลา', 'x' => 30, 'y' => 74, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'date_end' => ['label' => 'วันที่สิ้นสุด', 'x' => 80, 'y' => 74, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'total_days' => ['label' => 'จำนวนวัน', 'x' => 30, 'y' => 82, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'reason' => ['label' => 'เหตุผลการลา', 'x' => 30, 'y' => 90, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'address' => ['label' => 'ที่อยู่ที่ติดต่อได้', 'x' => 30, 'y' => 98, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'contact_phone' => ['label' => 'เบอร์โทรติดต่อ', 'x' => 30, 'y' => 106, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'place_go' => ['label' => 'สถานที่ไป', 'x' => 30, 'y' => 114, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'create_date' => ['label' => 'วันที่ยื่นคำขอ', 'x' => 30, 'y' => 122, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
         ];
-    }
-
-    protected function getLeaveFormFields()
-    {
-        $config = $this->getLeaveFormConfig();
-        $fields = $config['fields'] ?? [];
-        $defaults = $this->getDefaultFields();
-        foreach ($defaults as $key => $def) {
-            if (!isset($fields[$key])) {
-                $fields[$key] = $def;
-            } else {
-                $fields[$key]['label'] = $def['label'];
-            }
-        }
-        return $fields;
     }
 }

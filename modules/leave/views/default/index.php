@@ -42,64 +42,63 @@ $typeTheme = [
 ];
 ?>
 <div class="container-fluid py-3">
-    <!-- Card ภาพรวม 4 คอลัมน์ -->
+
+    <!-- แถบสถิติการลา -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="erp-icon-box bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i data-lucide="inbox" style="width:1.125rem;height:1.125rem"></i>
-                        </span>
-                        <span class="small fw-medium text-muted">ที่ต้องอนุมัติ</span>
+                <div class="card-body p-3 d-flex align-items-center gap-2">
+                    <span class="erp-icon-box bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                        <i data-lucide="clock" style="width:1.125rem;height:1.125rem"></i>
+                    </span>
+                    <div>
+                        <div class="small text-muted">รออนุมัติของฉัน</div>
+                        <div class="fw-bold text-body"><?= (int) $myPendingLeaveCount ?></div>
                     </div>
-                    <div class="fw-bold fs-4 text-body"><?= (int) ($totalLeavePending ?? 0) ?></div>
-                    <div class="small text-muted">ใบลารอฉันดำเนินการ</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i data-lucide="calendar-heart" style="width:1.125rem;height:1.125rem"></i>
-                        </span>
-                        <span class="small fw-medium text-muted">วันลาพักผ่อนคงเหลือ</span>
+                <div class="card-body p-3 d-flex align-items-center gap-2">
+                    <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                        <i data-lucide="calendar" style="width:1.125rem;height:1.125rem"></i>
+                    </span>
+                    <div>
+                        <div class="small text-muted">ลาพักผ่อนคงเหลือ</div>
+                        <div class="fw-bold text-body"><?= (int) $remainingAnnualLeave ?> วัน</div>
                     </div>
-                    <div class="fw-bold fs-4 text-body"><?= (int) ($remainingAnnualLeave ?? 0) ?></div>
-                    <div class="small text-muted">วัน (ปีนี้)</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i data-lucide="clock" style="width:1.125rem;height:1.125rem"></i>
-                        </span>
-                        <span class="small fw-medium text-muted">ลาของฉันที่รออนุมัติ</span>
+                <div class="card-body p-3 d-flex align-items-center gap-2">
+                    <span class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                        <i data-lucide="trending-up" style="width:1.125rem;height:1.125rem"></i>
+                    </span>
+                    <div>
+                        <div class="small text-muted">รวมวันลาที่ใช้ในปี</div>
+                        <div class="fw-bold text-body"><?= (int) $totalDaysUsedThisYear ?> วัน</div>
                     </div>
-                    <div class="fw-bold fs-4 text-body"><?= (int) ($myPendingLeaveCount ?? 0) ?></div>
-                    <div class="small text-muted">ใบ</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <?php if (!empty($canHr) && (int) $totalLeavePending > 0): ?>
+        <div class="col-6 col-md-4 col-lg">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="erp-icon-box bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i data-lucide="calendar-check" style="width:1.125rem;height:1.125rem"></i>
-                        </span>
-                        <span class="small fw-medium text-muted">ใช้ไปแล้วในปี</span>
+                <div class="card-body p-3 d-flex align-items-center gap-2">
+                    <span class="erp-icon-box bg-secondary bg-opacity-10 text-secondary rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                        <i data-lucide="inbox" style="width:1.125rem;height:1.125rem"></i>
+                    </span>
+                    <div>
+                        <div class="small text-muted">รออนุมัติทั้งหมด</div>
+                        <div class="fw-bold text-body"><?= (int) $totalLeavePending ?></div>
                     </div>
-                    <div class="fw-bold fs-4 text-body"><?= number_format((float) ($totalDaysUsedThisYear ?? 0), 1) ?></div>
-                    <div class="small text-muted">วัน</div>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="row g-4">
@@ -140,27 +139,27 @@ $typeTheme = [
             </div>
             <?php endforeach; ?>
 
-            <div class="card border-0 shadow-sm rounded-3 bg-primary bg-opacity-10 border-primary border-opacity-25">
-                <div class="card-body p-3">
-                    <h6 class="d-flex align-items-center gap-2 fw-bold text-body mb-2">
-                        <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center">
-                            <i data-lucide="pin" style="width:1.125rem;height:1.125rem"></i>
-                        </span>
-                        เกณฑ์การลาราชการ
+            <?php if (!empty($criteriaRules)): ?>
+            <div class="card border-0 shadow-sm rounded-3 mt-3">
+                <div class="card-header bg-transparent border-0 py-2 px-3">
+                    <h6 class="mb-0 fw-semibold text-body d-flex align-items-center gap-2">
+                        <i data-lucide="file-text" style="width:1rem;height:1rem"></i>
+                        เกณฑ์การลา
                     </h6>
-                    <ul class="list-unstyled mb-0 small text-body">
+                </div>
+                <div class="card-body pt-0 px-3 pb-3">
+                    <ul class="small text-secondary mb-0 ps-3 list-unstyled">
                         <?php foreach ($criteriaRules as $rule): ?>
-                        <li class="d-flex gap-2 mb-2">
-                            <span class="rounded-circle bg-primary bg-opacity-25" style="width: 6px; height: 6px; min-width: 6px; margin-top: 0.4rem;"></span>
+                        <li class="mb-2 position-relative" style="padding-left: 0.5rem;">
+                            <span class="position-absolute start-0 top-0 text-primary">•</span>
                             <?= Html::encode($rule) ?>
                         </li>
                         <?php endforeach; ?>
                     </ul>
-                    <div class="text-end mt-2">
-                        <i data-lucide="info" class="text-primary opacity-75" style="width:1rem;height:1rem"></i>
-                    </div>
                 </div>
             </div>
+            <?php endif; ?>
+
         </div>
 
         <!-- คอลัมน์ขวา: ประวัติการลาล่าสุด -->
@@ -226,6 +225,7 @@ $typeTheme = [
                                     <span class="badge bg-<?= $statusClass ?> bg-opacity-10 text-<?= $statusClass ?> border border-<?= $statusClass ?>-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($statusLabel) ?></span>
                                 </td>
                                 <td class="text-end">
+                                    <?= Html::a('<i class="bi bi-printer"></i>', ['/leave/leave/print', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ใบลา']) ?>
                                     <?= Html::a('<i class="bi bi-eye"></i>', ['/leave/leave/view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary rounded-pill open-modal', 'data' => ['size' => 'modal-xl'], 'title' => 'ดู']) ?>
                                 </td>
                             </tr>

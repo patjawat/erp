@@ -57,6 +57,27 @@ class LeaveController extends Controller
     }
 
     /**
+     * หน้ารูปแบบพิมพ์ใบลา — แสดง PDF จากเทมเพลตที่อัปโหลด (ถ้ามี) หรือแบบ HTML
+     */
+    public function actionPrint($id)
+    {
+        $model = Leave::find()
+            ->andWhere(['id' => (int) $id])
+            ->with(['employee', 'leaveType', 'leaveStatus'])
+            ->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        $templatePath = Yii::getAlias('@webroot') . '/uploads/leave_form_template/template.pdf';
+        $hasPdfTemplate = is_file($templatePath);
+        $pdfUrl = $hasPdfTemplate ? \yii\helpers\Url::to(['/leave/setting/leave-pdf', 'id' => $model->id]) : null;
+        return $this->render('print', [
+            'model' => $model,
+            'pdfUrl' => $pdfUrl,
+        ]);
+    }
+
+    /**
      * AJAX validation สำหรับฟอร์มสร้างใบลา (ใช้กับ Kartik ActiveForm enableAjaxValidation)
      */
     public function actionValidation()

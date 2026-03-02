@@ -45,8 +45,19 @@ $phone = $employee->phone ?? '';
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle overflow-hidden border border-2 border-primary" style="width: 56px; height: 56px;">
-                        <?= $employee ? $employee->getAvatar(false) : '<i class="bi bi-person fs-2 d-block text-center text-muted"></i>' ?>
+                    <div class="rounded-circle overflow-hidden border border-2 border-primary bg-body-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 56px; height: 56px;">
+                        <?php
+                        if ($employee && method_exists($employee, 'ShowAvatar')) {
+                            $photoUrl = $employee->ShowAvatar();
+                            echo Html::img($photoUrl, [
+                                'alt' => Html::encode($name),
+                                'class' => 'w-100 h-100 object-fit-cover',
+                                'style' => 'object-fit: cover;',
+                            ]);
+                        } else {
+                            echo '<i class="bi bi-person fs-2 text-muted"></i>';
+                        }
+                        ?>
                     </div>
                     <div>
                         <div class="fw-bold text-body"><?= Html::encode($name) ?></div>

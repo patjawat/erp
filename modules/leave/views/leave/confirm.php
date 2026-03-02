@@ -31,8 +31,19 @@ $signatureSystemUrl = $signatureSystemUrl ?? null;
                         ตรวจสอบข้อมูล
                     </h6>
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="rounded-circle overflow-hidden border border-2 border-primary flex-shrink-0" style="width: 64px; height: 64px;">
-                            <?= $employee ? $employee->getAvatar(false) : '' ?>
+                        <div class="rounded-circle overflow-hidden border border-2 border-primary bg-body-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 64px; height: 64px;">
+                            <?php
+                            if ($employee && method_exists($employee, 'ShowAvatar')) {
+                                $photoUrl = $employee->ShowAvatar();
+                                echo Html::img($photoUrl, [
+                                    'alt' => Html::encode($name),
+                                    'class' => 'w-100 h-100',
+                                    'style' => 'object-fit: cover;',
+                                ]);
+                            } else {
+                                echo '<i class="bi bi-person fs-1 text-muted"></i>';
+                            }
+                            ?>
                         </div>
                         <div>
                             <div class="fw-bold text-body fs-6"><?= Html::encode($name) ?></div>

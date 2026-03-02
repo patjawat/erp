@@ -103,8 +103,8 @@ class OrganizationController extends Controller
     }
 
     /**
-     * บันทึกชื่อระดับในผังองค์กร (ระดับที่ 1 หัวหน้า, ระดับที่ 2 หัวหน้ากลุ่มงาน ฯลฯ)
-     * ใช้แสดงในตั้งค่าระดับการอนุมัติ (approve-v3)
+     * บันทึกชื่อระดับในผังองค์กร
+     * ระดับที่ 1 = กลุ่มงาน (lvl 2 ใน tree), ระดับที่ 2 = ประเภท (lvl 1 ใน tree) — สอดคล้องกับ approve-v2
      */
     public function actionSaveDiagramLevelNames()
     {
