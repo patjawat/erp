@@ -39,11 +39,15 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนตรวจสุขภาพพนักงาน
-                <span class="badge text-bg-light">
-                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+                <span class="badge bg-light bg-opacity-10 text-white border border-light-subtle rounded-pill fw-medium px-2 py-1">
+                    <?php echo number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
             </h6>
             <div class="d-flex justify-content-center gap-2">
-
+                <?= \yii\helpers\Html::a(
+                    '<i class="fas fa-plus me-1"></i> บันทึกข้อมูลสุขภาพ',
+                    ['create'],
+                    ['class' => 'btn btn-light btn-sm rounded-pill px-3']
+                ) ?>
             </div>
         </div>
     </div>

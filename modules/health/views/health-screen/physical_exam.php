@@ -30,38 +30,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('patient_profile', ['model' => $model]) ?>
 
 
-    <style>
-        /* CSS ปรับแต่งให้ดูแพงและสะอาด */
-        .bg-soft-success {
-            background-color: #e8f5e9;
-        }
-
-        .tracking-tighter {
-            letter-spacing: 0.5px;
-            font-weight: 800;
-        }
-
-        .vitals-card {
-            min-width: 90px;
-        }
-
-        .patient-info-banner .card {
-            border: 1px solid #eef2f6 !important;
-        }
-
-        /* ปรับฟอนต์ให้ดูเป็นโปรแกรมระบบ */
-        .patient-info-banner h3 {
-            font-family: 'Inter', 'Sarabun', sans-serif;
-        }
-
-        /* เพิ่มลูกเล่นตอน Hover เบาๆ */
-        .vitals-card:hover {
-            background-color: #fff !important;
-            border-color: #0d6efd !important;
-            transition: all 0.3s ease;
-        }
-    </style>
-
     <?php $form = ActiveForm::begin(['id' => 'physical-exam-form']); ?>
 
     <div class="card border-0 shadow-sm rounded-4">
@@ -218,7 +186,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                         }
                                                     ]) ?>
                                 <?= Html::activeTextInput($model, 'data_json[history_other_detail]', [
-                                    'class' => 'form-control form-control-sm',
+                                    'class' => 'form-control',
                                     'placeholder' => 'ระบุโรคอื่นๆ...'
                                 ]) ?>
                             </div>
@@ -332,31 +300,3 @@ handleFormSubmit('#physical-exam-form', '{$actionUrl}', async function(response)
 JS;
 $this->registerJs($js, View::POS_END);
 ?>
-
-<style>
-    . {
-        font-size: 0.8rem;
-        border-radius: 4px;
-    }
-
-    .input-group-text {
-        background-color: #f8f9fa;
-        border-color: #dee2e6;
-    }
-
-    .table-sm td {
-        padding: 4px 0;
-        border: none;
-    }
-
-    .pe-radio-group label,
-    .small label {
-        font-size: 0.85rem !important;
-        margin-right: 10px;
-        cursor: pointer;
-    }
-
-    .card {
-        border: 1px solid rgba(0, 0, 0, .05);
-    }
-</style>

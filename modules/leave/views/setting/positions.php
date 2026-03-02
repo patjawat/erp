@@ -3,16 +3,23 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
+/** @var string $code */
+/** @var app\modules\leave\models\LeaveType|null $leaveType */
 /** @var array $config */
 /** @var array $items */
 /** @var array $fieldLabels */
 /** @var string $templateUrl */
 /** @var app\modules\leave\models\Leave[] $recentLeaves */
+/** @var bool $usingDefault */
 
-$this->title = 'กำหนดตำแหน่งข้อมูลบน PDF';
+$isDefault = ($code === 'default');
+$typeLabel = $isDefault ? 'Template กลาง (Default)' : ($leaveType ? $leaveType->title : $code);
+
+$this->title = 'กำหนดตำแหน่งข้อมูลบน PDF — ' . $typeLabel;
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = ['label' => 'แบบฟอร์มใบลา', 'url' => ['/leave/setting/leave-template']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = ['label' => $typeLabel, 'url' => ['/leave/setting/leave-template', 'code' => $code]];
+$this->params['breadcrumbs'][] = 'กำหนดตำแหน่ง';
 
 // ใช้ฟอนต์ THSarabunNew ให้ตรงกับตอนพิมพ์ PDF
 $this->registerCssFile(Url::to('@web/css/thsarabunnew.css'), ['depends' => [\yii\web\YiiAsset::class]]);
@@ -39,12 +46,30 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 <?= $this->render('@app/modules/leave/views/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
+<?php if (!$isDefault && ($usingDefault ?? false)): ?>
+<div class="alert alert-warning border-0 rounded-3 mb-3 d-flex align-items-start gap-2">
+    <i class="bi bi-exclamation-triangle fs-5 text-warning flex-shrink-0 mt-1"></i>
+    <div class="small">
+        <strong><?= Html::encode($typeLabel) ?></strong> ยังไม่มี template เฉพาะ — กำลังแสดงและแก้ไข<strong>ตำแหน่ง template กลาง (default)</strong>
+        การบันทึกจะบันทึกลงใน default config
+        <?= Html::a('อัปโหลด template เฉพาะ', ['/leave/setting/leave-template', 'code' => $code], ['class' => 'alert-link']) ?>
+    </div>
+</div>
+<?php elseif (!$isDefault): ?>
+<div class="alert alert-info border-0 rounded-3 mb-3 d-flex align-items-start gap-2">
+    <i class="bi bi-info-circle fs-5 text-info flex-shrink-0 mt-1"></i>
+    <div class="small">
+        กำลังแก้ไขตำแหน่งสำหรับ <strong><?= Html::encode($typeLabel) ?></strong> — ประเภทอื่นไม่ได้รับผลกระทบ
+    </div>
+</div>
+<?php else: ?>
 <div class="alert alert-info border-0 rounded-3 mb-3 d-flex align-items-start gap-2" role="status">
     <i class="bi bi-info-circle fs-5 text-info flex-shrink-0 mt-1"></i>
     <div class="small">
         <strong>การพิมพ์ใบลา</strong> — หลังบันทึกตำแหน่งแล้ว ไปที่ <strong>ขอลา / รายการของฉัน</strong> แล้วกดปุ่ม «พิมพ์ใบลา» ที่รายการที่ต้องการ เพื่อเปิดหน้ารูปแบบพิมพ์ หรือใช้บล็อก <strong>ทดสอบพิมพ์ใบลา</strong> ด้านซ้ายเพื่อตรวจสอบทันที
     </div>
 </div>
+<?php endif; ?>
 
 <div class="card border-0 shadow-sm rounded-3 mb-4">
     <div class="card-header bg-primary bg-opacity-10 text-primary border-0 py-3 px-4 rounded-top-3">
@@ -203,7 +228,7 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 </div>
 
 <?php
-$saveUrl = Url::to(['/leave/setting/save-positions']);
+$saveUrl = Url::to(['/leave/setting/save-positions', 'code' => $code]);
 $csrfParam = Yii::$app->request->csrfParam;
 $csrfToken = Yii::$app->request->csrfToken;
 $scaleJs = $scale;

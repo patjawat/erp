@@ -39,6 +39,40 @@ class HealthScreenController extends Controller
     }
 
     /**
+     * Creates a new HealthScreen model.
+     * @param int|null $emp_id รหัสพนักงาน (ส่งมาจาก URL ได้)
+     * @return string|\yii\web\Response
+     */
+    public function actionCreate($emp_id = null)
+    {
+        $model = new HealthScreen();
+        $model->emp_id = $emp_id;
+        $model->thai_year = AppHelper::YearBudget(date('Y-m-d'));
+        $model->date_checkup = AppHelper::convertToThai(date('Y-m-d'));
+        $model->health_status = 'SCREEN';
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if (!empty($model->date_checkup)) {
+                $model->date_checkup = AppHelper::DateToDb($model->date_checkup);
+            }
+            if ($model->weight && $model->height) {
+                $hm = (float)$model->height / 100;
+                $model->bmi = $hm > 0 ? round((float)$model->weight / ($hm * $hm), 1) : null;
+            }
+            $model->health_status = 'SCREEN';
+
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'บันทึกข้อมูลสุขภาพพนักงานเรียบร้อยแล้ว');
+                return $this->redirect(['lab-confirm', 'id' => $model->id]);
+            }
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
      * Lists all HealthScreen models.
      *
      * @return string

@@ -5,7 +5,6 @@ namespace app\modules\health\controllers;
 use app\components\AppHelper;
 use app\modules\health\models\HealthScreen;
 use app\modules\health\models\HealthScreenSearch;
-use app\modules\hr\models\EmployeeDetailSearch;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
@@ -41,10 +40,11 @@ class DefaultController extends Controller
         ]);
     }
 
-         public function actionList()
+    public function actionList()
     {
-        $searchModel = new EmployeeDetailSearch();
+        $searchModel = new HealthScreenSearch(['thai_year' => AppHelper::YearBudget(date('Y-m-d'))]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->joinWith('employee');
 
         return $this->render('list', [
             'searchModel' => $searchModel,
