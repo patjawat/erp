@@ -99,24 +99,18 @@ class CalendarController extends Controller
         $params = [':date_start' => $start, ':date_end' => $end];
 
         if (!empty($deptIds)) {
-            // รวม sub-department (ลูกหลานทั้งหมดในต้นไม้) โดย query nested set
+            // รวม sub-department ทั้งหมดจาก nested set
             $allDeptIds = $this->getAllDescendantIds($deptIds);
-            $placeholders = implode(',', array_fill(0, count($allDeptIds), '?'));
-            $sqlBase .= " AND e.department IN ($placeholders)";
-            $rows = $db->createCommand($sqlBase . ' ORDER BY l.date_start, fullname', $params)
-                ->bindValues(array_merge($params, array_values($allDeptIds)))
-                ->queryAll();
-            // bindValues กับ mixed params ต้องทำแยก
-            $cmd = $db->createCommand($sqlBase . ' ORDER BY l.date_start, fullname');
-            $cmd->bindValue(':date_start', $start);
-            $cmd->bindValue(':date_end',   $end);
+            // ใช้ named params เพื่อหลีกเลี่ยงการผสม positional + named params ใน PDO
+            $deptNamedParams = [];
             foreach ($allDeptIds as $i => $id) {
-                $cmd->bindValue($i + 1, $id, \PDO::PARAM_INT);
+                $deptNamedParams[":dept_$i"] = (int) $id;
             }
-            $rows = $cmd->queryAll();
-        } else {
-            $rows = $db->createCommand($sqlBase . ' ORDER BY l.date_start, fullname', $params)->queryAll();
+            $sqlBase .= ' AND e.department IN (' . implode(',', array_keys($deptNamedParams)) . ')';
+            $params   = array_merge($params, $deptNamedParams);
         }
+
+        $rows = $db->createCommand($sqlBase . ' ORDER BY l.date_start, fullname', $params)->queryAll();
 
         // แปลงเป็น FullCalendar events
         $events = [];
@@ -182,16 +176,18 @@ class CalendarController extends Controller
     {
         if (empty($deptIds)) return [];
         try {
-            $placeholders = implode(',', array_fill(0, count($deptIds), '?'));
-            // หา lft/rgt ของ nodes ที่เลือก
-            $nodes = Yii::$app->db->createCommand("
-                SELECT lft, rgt FROM `tree`
-                WHERE id IN ($placeholders)
-            ", $deptIds)->queryAll();
+            // ใช้ named params ทั้งหมด (PDO ไม่รองรับการผสม ? กับ :name)
+            $idParams = [];
+            foreach (array_values($deptIds) as $i => $id) {
+                $idParams[":nid_$i"] = (int) $id;
+            }
+            $nodes = Yii::$app->db->createCommand(
+                'SELECT lft, rgt FROM `tree` WHERE id IN (' . implode(',', array_keys($idParams)) . ')',
+                $idParams
+            )->queryAll();
 
             if (empty($nodes)) return $deptIds;
 
-            // รวม conditions สำหรับทุก node ที่เลือก
             $conditions = [];
             $params = [];
             foreach ($nodes as $i => $node) {
@@ -199,8 +195,10 @@ class CalendarController extends Controller
                 $params[":lft{$i}"] = $node['lft'];
                 $params[":rgt{$i}"] = $node['rgt'];
             }
-            $sql = "SELECT id FROM `tree` WHERE (" . implode(' OR ', $conditions) . ")";
-            return Yii::$app->db->createCommand($sql, $params)->queryColumn();
+            return Yii::$app->db->createCommand(
+                'SELECT id FROM `tree` WHERE (' . implode(' OR ', $conditions) . ')',
+                $params
+            )->queryColumn();
         } catch (\Throwable $e) {
             return $deptIds;
         }
