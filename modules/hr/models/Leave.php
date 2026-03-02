@@ -206,11 +206,151 @@ class Leave extends \yii\db\ActiveRecord
         LineMsg::sendMsg($lineId, $message);
     }
 
+
+    public function createApprove()
+    {
+       if(Yii::$app->user->can('director')) {
+                $me = UserHelper::GetEmployee();
+                $approveDate =  date('Y-m-d H:i:s');
+                $approve1 =  new Approve();
+                $approve1->from_id = $this->id;
+                $approve1->name = 'leave';
+                $approve1->emp_id = $me->id;
+                $approve1->title = 'อนุมัติ';
+                $approve1->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve1->level = 1;
+                $approve1->status = 'Pass';
+                $approve1->save(false);
+
+                $approve2 =  new Approve();
+                $approve2->from_id = $this->id;
+                $approve2->name = 'leave';
+                $approve2->emp_id = $me->id;
+                $approve2->title = 'อนุมัติ';
+                $approve2->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve2->level = 2;
+                $approve2->status = 'Pass';
+                $approve2->save(false);
+
+                $approve3 =  new Approve();
+                $approve3->from_id = $this->id;
+                $approve3->name = 'leave';
+                $approve3->emp_id = $me->id;
+                $approve3->title = 'อนุมัติ';
+                 $approve3->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve3->level = 3;
+                $approve3->status = 'Pass';
+                $approve3->save(false);
+
+                $approve4 =  new Approve();
+                $approve4->from_id = $this->id;
+                $approve4->name = 'leave';
+                $approve4->emp_id = $me->id;
+                $approve4->title = 'อนุมัติ';
+                $approve4->data_json = [
+                    'label' => 'อนุมัติ',
+                    "approve_date" => $approveDate
+                ];
+                $approve4->level = 4;
+                $approve4->status = 'Pass';
+                $approve4->save(false);
+
+        }else{
+        // หัวหน้างาน
+        $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
+        try {
+            if (!$leaveStep1Check) {
+                $leaveStep1 = $leaveStep1Check ? $leaveStep1Check : new Approve();
+                $leaveStep1->from_id = $this->id;
+                $leaveStep1->name = 'leave';
+                $leaveStep1->emp_id = $this->data_json['approve_1'];
+                $leaveStep1->title = 'หน.เห็นชอบ';
+                $leaveStep1->data_json = ['label' => 'เห็นชอบ'];
+                $leaveStep1->level = 1;
+                $leaveStep1->status = 'Pending';
+                $leaveStep1->save(false);
+                try {
+                    // ส่ง msg ให้ Approve
+                    $toUserId = $leaveStep1->employee->user->line_id;
+                    LineMsg::sendLeave($leaveStep1->id, $toUserId);
+                } catch (\Throwable $th) {
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+
+        try {
+            //หัวหน้ากลุ่มงานเห็นชอบ
+            $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
+            if (!$leaveStep2Check) {
+                $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
+                $leaveStep2->from_id = $this->id;
+                $leaveStep2->name = 'leave';
+                $leaveStep2->emp_id = $this->data_json['approve_2'] ?? 0;
+                $leaveStep2->title = 'หน.กลุ่มเห็นชอบ';
+                $leaveStep2->data_json = ['label' => 'เห็นชอบ'];
+                $leaveStep2->level = 2;
+                $leaveStep2->status = 'None';
+                $leaveStep2->save(false);
+            }
+        } catch (\Throwable $th) {
+        }
+
+        try {
+            //ผู้ตรวจสอบผู้ดูแลตรวจสอบวันลา
+            $leaveStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
+            if (!$leaveStep3Check) {
+                $leaveStep3 = $leaveStep3Check ? $leaveStep3Check : new Approve();
+                $leaveStep3->from_id = $this->id;
+                $leaveStep3->name = 'leave';
+                $leaveStep3->title = 'จท.ตรวจสอบ';
+                // $leaveStep3->emp_id = $this->data_json['approve_3'];
+                $leaveStep3->data_json = ['label' => 'ผ่าน'];
+                $leaveStep3->level = 3;
+                $leaveStep3->status = 'None';
+                $leaveStep3->save(false);
+            }
+        } catch (\Throwable $th) {
+        }
+
+        //ผู้อำนวยการอนุมัติ
+        $director = SiteHelper::viewDirector();
+        $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
+        try {
+            if (!$leaveStep4Check) {
+
+                $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
+                $leaveStep4->from_id = $this->id;
+                $leaveStep4->name = 'leave';
+                $leaveStep4->emp_id = $director['id'];
+                $leaveStep4->title = 'ผอ.อนุมัติ';
+                $leaveStep4->data_json = ['label' => 'อนุมัติ'];
+                $leaveStep4->level = 4;
+                $leaveStep4->status = 'None';
+                $leaveStep4->save(false);
+            }
+            // code...
+        } catch (\Throwable $th) {
+        }
+
+    }
+    }
+
+    
     /**
      * สร้างรายการอนุมัติจากตั้งค่า approve_level_setting (approveV3)
      * โครงสร้างองค์กรจาก /hr/organization/diagram
      */
-    public function createApprove()
+    public function createApproveV2()
     {
         $rows = ApproveLevelResolver::buildApproveRows('leave', (int) $this->emp_id, (string) $this->id);
         if (empty($rows)) {
