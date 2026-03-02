@@ -11,9 +11,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-
-    # เปิดใช้งาน Opcache
-RUN docker-php-ext-install opcache
 # เปิดใช้งาน Calendar extension
 RUN docker-php-ext-install calendar
 
@@ -21,12 +18,6 @@ RUN docker-php-ext-install calendar
 # RUN pecl install redis \
 #     && docker-php-ext-enable redis
 
-# ตั้งค่า OPcache ใน php.ini
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.interned_strings_buffer=8" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.max_accelerated_files=4000" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
 # ติดตั้ง Swoole
 # RUN pecl install  swoole-5.0.3

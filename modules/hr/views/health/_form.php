@@ -226,7 +226,7 @@ $diseasesYear = [
                     <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
                         <i class="fas fa-users text-primary"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ข้อมูลครอบครัว</h5>
+                    <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ประวัติการเจ็บป่วยในครอบครัว</h5>
                 </div>
             </div>
             <div class="card-body pt-0">
@@ -250,7 +250,7 @@ $diseasesYear = [
                     <div class="erp-icon-box bg-danger bg-opacity-10 text-danger">
                         <i class="fas fa-file-medical text-danger"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: ประวัติเจ็บป่วยปีก่อน</h5>
+                    <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: โรคประจำตัว</h5>
                 </div>
                 <span class="badge bg-light text-dark fw-normal">
                     <div class="d-flex gap-3">

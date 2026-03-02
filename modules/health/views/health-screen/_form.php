@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\health\models\HealthFamilyDisease;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
 
@@ -21,11 +22,8 @@ $miniSections = [
     ['title' => '1.5. ขับขี่ปลอดภัย', 'key' => 'driving_safety',  'opt' => ['none' => 'ไม่ขับขี่ไม่โดยสาร', 'always' => 'ทุกครั้ง', 'sometimes' => 'บางครั้ง', 'rarely' => 'นานๆ ครั้ง'], 'color' => 'primary'],
     ['title' => '1.6. เพศสัมพันธ์',   'key' => 'condom_usage',    'opt' => ['always' => 'ใช้ทุกครั้ง', 'requested' => 'ใช้เมื่อถูกร้องขอ', 'none' => 'ไม่ใช้', 'no_answer' => 'ไม่ตอบ'], 'color' => 'danger'],
 ];
-$familyDiseaseList = [
-    'diabetes' => 'เบาหวาน', 'hypertension' => 'ความดันสูง', 'gout' => 'เก๊าท์',
-    'kidney' => 'ไตวาย', 'heart' => 'หัวใจ', 'stroke' => 'อัมพาต',
-    'emphysema' => 'ถุงลมโป่งพอง', 'unknown' => 'ไม่ทราบ',
-];
+// โหลดจาก DB (fallback เป็นค่า hardcode ถ้าตารางยังไม่มี)
+$familyDiseaseList = HealthFamilyDisease::getActiveList();
 $diseasesYear = [
     'h_diabetes' => 'เบาหวาน',       'h_hypertension' => 'ความดันสูง',
     'h_liver'    => 'โรคตับ',         'h_stroke'       => 'อัมพาต',
@@ -221,7 +219,7 @@ $diseasesYear = [
 
     <div class="card border-0 shadow-sm border-top border-4 border-primary mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ข้อมูลครอบครัว</h5>
+            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ประวัติการเจ็บป่วยในครอบครัว</h5>
         </div>
         <div class="card-body">
             <?= $form->field($model, 'data_json[family_history]', [
@@ -247,7 +245,7 @@ $diseasesYear = [
 
     <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
         <div class="card-header bg-white d-flex justify-content-between">
-            <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: ประวัติเจ็บป่วยปีก่อน</h5>
+            <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: โรคประจำตัว</h5>
             <div class="d-flex align-items-center gap-2 small text-muted">
                 <span class="d-flex align-items-center gap-1"><span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ไม่มี</span></span>
                 <span class="d-flex align-items-center gap-1"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1">มี</span></span>

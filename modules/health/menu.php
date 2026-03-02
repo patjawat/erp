@@ -24,9 +24,14 @@ use yii\helpers\Url;
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
-                <?= Html::a('<i class="fa-solid fa-microscope me-1"></i>Lab', ['/health/health-lab', 'title' => 'Lab'], ['class' => 'btn btn-outline-primary dropdown-item']) ?>
+                <?= Html::a('<i class="fa-solid fa-microscope me-1"></i> Lab', ['/health/health-lab'], ['class' => 'dropdown-item']) ?>
             </li>
-
+            <li>
+                <?= Html::a('<i class="fas fa-dna me-1"></i> โรคประวัติครอบครัว', ['/health/health-family-disease'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fas fa-heartbeat me-1"></i> โรคประจำตัว', ['/health/health-chronic-disease'], ['class' => 'dropdown-item']) ?>
+            </li>
         </ul>
     </div>
 </div>

@@ -9,6 +9,9 @@ use yii\helpers\Html;
     <a href="<?= Url::to(['/leave/default/index']) ?>" class="btn <?= ($active ?? '') === 'index' ? 'btn-primary' : 'btn-outline-primary' ?>">
         <i class="bi bi-list-ul"></i> ขอลา / รายการของฉัน
     </a>
+    <a href="<?= Url::to(['/leave/calendar/index']) ?>" class="btn <?= ($active ?? '') === 'calendar' ? 'btn-primary' : 'btn-outline-primary' ?>">
+        <i class="bi bi-calendar3"></i> ปฏิทินการลา
+    </a>
     <?php if (Yii::$app->user->can('leave')): ?>
     <a href="<?= Url::to(['/leave/approver/index']) ?>" class="btn <?= ($active ?? '') === 'approver' ? 'btn-primary' : 'btn-outline-primary' ?>">
         <i class="bi bi-person-check"></i> ผู้ตรวจสอบวันลา

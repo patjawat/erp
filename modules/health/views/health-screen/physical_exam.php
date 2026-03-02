@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\health\models\HealthChronicDisease;
 use yii\helpers\Html;
 use kartik\widgets\ActiveForm;
 
@@ -168,23 +169,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="ps-4 mb-3">
                         <div class="row g-0">
                             <div class="col-11"> 
-                                <?= Html::activeCheckboxList($model, 'data_json[history_diseases]', [
-                                                        'DM' => 'DM',
-                                                        'HT' => 'HT',
-                                                        'DLP' => 'DLP',
-                                                        'Heart' => 'โรคหัวใจ',
-                                                        'Kidney' => 'โรคไต',
-                                                        'other' => 'อื่นๆ'
-                                                    ], [
-                                                        'class' => 'mb-2',
-                                                        'item' => function ($index, $label, $name, $checked, $value) {
-                                                            $check = $checked ? 'checked' : '';
-                                                            return "<div class='form-check form-check-inline'>
-                                        <input class='form-check-input' type='checkbox' name='{$name}' value='{$value}' {$check}>
-                                        <label class='form-check-label'>{$label}</label>
-                                    </div>";
-                                                        }
-                                                    ]) ?>
+                                <?= Html::activeCheckboxList($model, 'data_json[history_diseases]',
+                                    HealthChronicDisease::getActiveList(),
+                                    [
+                                        'class' => 'mb-2',
+                                        'item'  => function ($index, $label, $name, $checked, $value) {
+                                            $check = $checked ? 'checked' : '';
+                                            return "<div class='form-check form-check-inline'>
+                                                <input class='form-check-input' type='checkbox' name='{$name}' value='{$value}' {$check}>
+                                                <label class='form-check-label'>{$label}</label>
+                                            </div>";
+                                        },
+                                    ]
+                                ) ?>
                                 <?= Html::activeTextInput($model, 'data_json[history_other_detail]', [
                                     'class' => 'form-control',
                                     'placeholder' => 'ระบุโรคอื่นๆ...'
