@@ -6,12 +6,10 @@ use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\web\NotFoundHttpException;
-use yii\web\UploadedFile;
 use yii\helpers\Url;
 use yii\helpers\ArrayHelper;
-use yii\helpers\FileHelper;
 use app\components\UserHelper;
-use app\modules\approveV3\models\Approve as ApproveModel;
+use app\modules\approveV2\models\Approve as ApproveModel;
 use app\components\AppHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
@@ -95,7 +93,7 @@ class LeaveController extends Controller
     }
 
     /**
-     * อนุมัติ/ไม่อนุมัติขั้นตอนการลา (ใช้ตาราง approve + approveV3)
+     * อนุมัติ/ไม่อนุมัติขั้นตอนการลา (ใช้ตาราง approve + approveV2)
      * แทนที่ /approve-v2/leave/update เพื่อไม่พึ่ง approveV2
      */
     public function actionApproveUpdate($id)
@@ -208,28 +206,25 @@ class LeaveController extends Controller
         $budgetRange = AppHelper::BudgetYearRange($thaiYear);
         $roundLabel = 'รอบที่ 1 (1 ม.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
 
-        $typesQuery = LeaveType::find()
+        $types = LeaveType::find()
             ->where(['name' => 'leave_type', 'active' => 1])
-            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC]);
-        if (isset($me->gender) && $me->gender === 'ชาย') {
-            $typesQuery->andWhere(['not in', 'code', ['LT2']]);
-        } elseif (isset($me->gender) && $me->gender === 'หญิง') {
-            $typesQuery->andWhere(['not in', 'code', ['LT8', 'LT7']]);
-        }
-        $types = $typesQuery->all();
-
-        $hiddenCodes = [];
-        if (isset($me->gender) && $me->gender === 'ชาย') {
-            $hiddenCodes = ['LT2'];
-        } elseif (isset($me->gender) && $me->gender === 'หญิง') {
-            $hiddenCodes = ['LT8', 'LT7'];
-        }
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
         $stats = $this->getStatsForCreate($me->id, $thaiYear, $me->gender ?? null);
         $model = new LeaveCreateForm();
         $model->emp_id = $me->id;
         $model->contact_phone = $me->phone ?? '';
         $model->address = $me->fulladdress ?? '';
         $model->work_shift = $me->work_shift ?? 'normal';
+
+        // สร้าง draft ref ล่วงหน้าสำหรับ FileInput AJAX upload
+        // ถ้ามี draft เดิมอยู่แล้วให้ใช้ ref เดิม ไม่งั้นสร้างใหม่
+        $existingDraft = Yii::$app->session->get(self::SESSION_KEY);
+        $draftRef = $existingDraft['ref'] ?? substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
+        if (!isset($existingDraft['ref'])) {
+            Yii::$app->session->set(self::SESSION_KEY, array_merge((array)$existingDraft, ['ref' => $draftRef]));
+            FileManagerHelper::CreateDir($draftRef);
+        }
 
         if (Yii::$app->request->isPost) {
             $model->load(Yii::$app->request->post());
@@ -278,24 +273,8 @@ class LeaveController extends Controller
                     $totalDays = max(0, round((float) $manualTotal, 2));
                 }
             }
-            $attachmentInfo = [];
-            $files = UploadedFile::getInstancesByName('leave_attachments');
-            if (!empty($files)) {
-                $tempDir = Yii::getAlias('@runtime/leave_draft_uploads');
-                FileHelper::createDirectory($tempDir);
-                foreach ($files as $file) {
-                    if ($file->error !== UPLOAD_ERR_OK) {
-                        continue;
-                    }
-                    $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->name);
-                    $tempName = uniqid('leave_', true) . '_' . $safeName;
-                    $tempPath = $tempDir . '/' . $tempName;
-                    if ($file->saveAs($tempPath)) {
-                        $attachmentInfo[] = ['file_name' => $file->name, 'temp_path' => $tempPath];
-                    }
-                }
-            }
             $draft = [
+                'ref'                  => $draftRef,
                 'leave_type_id'        => $leaveTypeId,
                 'date_start'           => $dateStart,
                 'date_end'             => $dateEnd,
@@ -315,7 +294,6 @@ class LeaveController extends Controller
                 'address'              => $address,
                 'contact_phone'        => $contactPhone,
                 'place_go'             => $placeGo,
-                'attachment_info'      => $attachmentInfo,
             ];
                 Yii::$app->session->set(self::SESSION_KEY, $draft);
                 return $this->redirect(['confirm']);
@@ -323,12 +301,13 @@ class LeaveController extends Controller
         }
 
         return $this->render('create', [
-            'model' => $model,
-            'employee' => $me,
-            'types' => $types,
-            'stats' => $stats,
+            'model'      => $model,
+            'employee'   => $me,
+            'types'      => $types,
+            'stats'      => $stats,
             'roundLabel' => $roundLabel,
-            'thaiYear' => $thaiYear,
+            'thaiYear'   => $thaiYear,
+            'draftRef'   => $draftRef,
         ]);
     }
 
@@ -395,8 +374,10 @@ class LeaveController extends Controller
             }
         }
 
+        // ใช้ ref จาก draft (ที่สร้างไว้ตั้งแต่ขั้น create เพื่อให้ FileInput AJAX ใช้ ref เดิม)
+        $draftRef = $draft['ref'] ?? substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
         $model = new Leave([
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'ref' => $draftRef,
             'leave_type_id' => $draft['leave_type_id'],
             'date_start' => $draft['date_start_g'],
             'date_end' => $draft['date_end_g'],
@@ -408,7 +389,14 @@ class LeaveController extends Controller
         ]);
 
         $approve = $model->Approve();
-        $model->data_json = [
+
+        // เก็บ approve_N id ทุกระดับ (dynamic ตาม settings)
+        $approveIds = [];
+        foreach ($approve as $key => $info) {
+            $approveIds[$key] = $info['id'] ?? null;
+        }
+
+        $model->data_json = array_merge([
             'reason'               => $draft['reason'] ?? '',
             'address'              => $draft['address'] ?? '',
             'work_shift'           => $draft['work_shift'] ?? $me->work_shift ?? null,
@@ -416,8 +404,6 @@ class LeaveController extends Controller
             'date_end_type'        => $draft['date_end_type'] ?? '0',
             'leave_work_send_id'   => $draft['leave_work_send_id'] ?? null,
             'leave_work_send_name' => $draft['leave_work_send_name'] ?? '',
-            'approve_1'            => $approve['approve_1']['id'] ?? null,
-            'approve_2'            => $approve['approve_2']['id'] ?? null,
             'leave_contact_phone'  => $draft['contact_phone'] ?? $me->phone ?? '',
             'place_go'             => $draft['place_go'] ?? '',
             'director'             => SiteHelper::viewDirector()['id'] ?? null,
@@ -427,11 +413,10 @@ class LeaveController extends Controller
             'summary_calendar_days'=> (int) ($draft['summary_calendar_days'] ?? 0),
             'summary_sat_sun'      => (int) ($draft['summary_sat_sun'] ?? 0),
             'summary_holiday'      => (int) ($draft['summary_holiday'] ?? 0),
-        ];
+        ], $approveIds);
 
         $model->status = $me->isDirector() ? 'Approve' : 'Pending';
         if ($model->save(false)) {
-            $this->saveDraftAttachments($model, $draft['attachment_info'] ?? []);
             if (!$me->isDirector()) {
                 $model->createApprove();
             }
@@ -454,15 +439,10 @@ class LeaveController extends Controller
 
     protected function getStatsForCreate($empId, $thaiYear, $gender = null)
     {
-        $typesQuery = LeaveType::find()
+        $types = LeaveType::find()
             ->where(['name' => 'leave_type', 'active' => 1])
-            ->orderBy(['id' => SORT_ASC]);
-        if ($gender === 'ชาย') {
-            $typesQuery->andWhere(['not in', 'code', ['LT2']]);
-        } elseif ($gender === 'หญิง') {
-            $typesQuery->andWhere(['not in', 'code', ['LT8', 'LT7']]);
-        }
-        $types = $typesQuery->all();
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
         $rows = [];
         foreach ($types as $t) {
             $used = Leave::find()

@@ -133,7 +133,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-footer py-3 border-top-0">
         <div class="d-flex align-items-start gap-2 small text-muted">
             <i class="fas fa-info-circle text-danger mt-1"></i>
-            <span>รายการเหล่านี้จะแสดงในหน้า <strong>ตรวจร่างกาย (Physical Exam)</strong> ส่วน "ระบุโรค" — การเปลี่ยน <strong>รหัสโรค</strong> หลังมีข้อมูลแล้วจะกระทบข้อมูลเดิม</span>
+            <span>รายการที่ <strong>ใช้งาน</strong> จะแสดงในแบบฟอร์มคัดกรองสุขภาพ (ส่วนที่ 4: โรคประจำตัว) และหน้า <strong>ตรวจร่างกาย (Physical Exam)</strong> ส่วน "ระบุโรค" — รายการที่ <strong>ปิด</strong> จะไม่แสดงในฟอร์ม — การเปลี่ยน <strong>รหัสโรค</strong> หลังมีข้อมูลแล้วจะกระทบข้อมูลเดิม</span>
         </div>
     </div>
 </div>

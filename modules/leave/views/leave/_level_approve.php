@@ -5,10 +5,10 @@ use yii\helpers\Html;
 use app\components\UserHelper;
 
 /**
- * สถานะการตรวจสอบ (ไทม์ไลน์ผู้อนุมัติ) — ใช้ข้อมูลจาก approveV3 ผ่าน $listApprove ที่ส่งเข้ามา
+ * สถานะการตรวจสอบ (ไทม์ไลน์ผู้อนุมัติ) — ใช้ข้อมูลจาก approveV2 ผ่าน $listApprove ที่ส่งเข้ามา
  * @var View $this
  * @var \app\modules\leave\models\Leave $model
- * @var \app\modules\approveV3\models\Approve[] $listApprove
+ * @var \app\modules\approveV2\models\Approve[] $listApprove
  * @var string $name ชื่อฟอร์ม เช่น 'leave'
  */
 

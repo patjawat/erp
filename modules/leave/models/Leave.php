@@ -20,9 +20,9 @@ use app\modules\hr\models\Organization;
 use app\modules\leave\models\LeaveType;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
-use app\components\ApproveLevelResolver;
-use app\modules\approveV3\models\Approve;
+use app\modules\approveV2\models\Approve;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\leave\components\LeaveApproveResolver;
 
 /**
  * This is the model class for table "leave".
@@ -208,14 +208,30 @@ class Leave extends \yii\db\ActiveRecord
     }
 
     /**
-     * สร้างรายการอนุมัติจากตั้งค่า approve_level_setting (approveV3)
-     * โครงสร้างองค์กรจาก /hr/organization/diagram
+     * สร้างรายการอนุมัติตามตั้งค่า approve_level_setting (system=leave)
+     * ใช้ LeaveApproveResolver อ่านโครงสร้างองค์กรด้วย raw SQL
      */
     public function createApprove()
     {
-        $rows = ApproveLevelResolver::buildApproveRows('leave', (int) $this->emp_id, (string) $this->id);
+        $rows = LeaveApproveResolver::buildApproveRows((int) $this->emp_id, (string) $this->id);
+
+        // fallback: ถ้าไม่มี settings ให้ใช้ director เป็นผู้อนุมัติเสมอ
         if (empty($rows)) {
-            return;
+            $dirInfo = SiteHelper::viewDirector();
+            $dirId   = !empty($dirInfo['id']) ? (int) $dirInfo['id'] : null;
+            if ($dirId) {
+                $rows = [[
+                    'from_id'   => (string) $this->id,
+                    'name'      => 'leave',
+                    'level'     => 1,
+                    'title'     => 'ผู้อำนวยการ',
+                    'emp_id'    => $dirId,
+                    'status'    => 'Pending',
+                    'data_json' => ['label' => 'ผู้อำนวยการ'],
+                ]];
+            } else {
+                return; // ไม่มีทั้ง settings และ director — ไม่สร้าง approve
+            }
         }
 
         $isDirector = Yii::$app->user->can('director');
@@ -226,25 +242,23 @@ class Leave extends \yii\db\ActiveRecord
         foreach ($rows as $r) {
             $a = new Approve();
             $a->from_id = (string) $this->id;
-            $a->name = 'leave';
-            $a->level = $r['level'];
-            $a->title = $r['title'];
-            $a->data_json = $r['data_json'];
+            $a->name    = 'leave';
+            $a->level   = $r['level'];
+            $a->title   = $r['title'];
+
             if ($isDirector) {
-                $a->emp_id = $me->id;
-                $a->status = 'Pass';
-                $a->data_json['approve_date'] = $approveDate;
+                $a->emp_id    = $me ? $me->id : $r['emp_id'];
+                $a->status    = 'Pass';
+                $a->data_json = ['label' => $r['title'], 'approve_date' => $approveDate];
             } else {
-                $a->emp_id = $r['emp_id'];
-                $a->status = $r['status'];
-                if ($a->status === 'Pending') {
+                $a->emp_id    = $r['emp_id'];
+                $a->status    = $r['status'];
+                $a->data_json = $r['data_json'];
+                if ($a->status === 'Pending' && $firstPendingApprove === null) {
                     $firstPendingApprove = $a;
                 }
             }
             $a->save(false);
-            if ($a->status === 'Pending' && $firstPendingApprove === null) {
-                $firstPendingApprove = $a;
-            }
         }
 
         if (!$isDirector && $firstPendingApprove && $firstPendingApprove->id) {
@@ -586,7 +600,7 @@ class Leave extends \yii\db\ActiveRecord
 
     /**
      * Render stack checker from pre-loaded Approve models (avoids N+1 in lists).
-     * @param \app\modules\approveV3\models\Approve[] $approves
+     * @param \app\modules\approveV2\models\Approve[] $approves
      * @return string
      */
     public static function renderStackChecker(array $approves)
@@ -652,138 +666,59 @@ class Leave extends \yii\db\ActiveRecord
         return UserHelper::GetEmployee($this->created_by);
     }
 
+    /**
+     * ดึงลำดับผู้อนุมัติตามตั้งค่า approve_level_setting (system=leave)
+     * ใช้ LeaveApproveResolver เพื่อให้ตรงกับ createApprove()
+     * คืนค่าเป็น [ 'approve_1' => [...], 'approve_2' => [...], ... ]
+     * เพื่อให้ actionSave เก็บ data_json ได้ถูกต้อง
+     */
     public function Approve()
     {
         try {
+            $empId = $this->emp_id ?: ($this->CreateBy() ? $this->CreateBy()->id : null);
+            if (!$empId) {
+                throw new \Exception('no emp_id');
+            }
 
-            $emp = $this->CreateBy();
-            $department_id = $emp->department;
-            $sql = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
-                    t1.id,
-                    t1.name as t1name,
+            $list = LeaveApproveResolver::getApproverInfoList((int) $empId);
 
-                    t1.data_json->>'\$.leader1' as t1_leader,
-                    t1.data_json->>'\$.leader1_fullname' as t1_leader_fullname,
-                    t2.id,t2.name as t2name,
+            if (empty($list)) {
+                // ไม่มี settings — fallback เป็น director
+                $dirInfo = SiteHelper::viewDirector();
+                $dirId   = !empty($dirInfo['id']) ? (int) $dirInfo['id'] : null;
+                $dirEmp  = $dirId ? Employees::find()->where(['id' => $dirId])->one() : null;
+                $list    = [[
+                    'id'       => $dirId,
+                    'fullname' => $dirEmp ? $dirEmp->fullname : ($dirInfo['fullname'] ?? ''),
+                    'position' => $dirEmp ? $dirEmp->positionName() : '',
+                    'avatar'   => $dirEmp ? $dirEmp->getAvatar(false) : '',
+                    'title'    => 'ผู้อำนวยการ',
+                ]];
+            }
 
-                    t2.data_json->>'\$.leader1' as t2_leader,
-                    t2.data_json->>'\$.leader1_fullname' as t2_leader_fullname,
-                    t3.id,t3.name as t3name,
-                    t3.data_json->>'\$.leader1' as t3_leader,
-                    t3.data_json->>'\$.leader1_fullname' as t3_leader_fullname
-                    FROM tree t1
-                    JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-                    JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
-                    WHERE t1.id  = :id";
-            $query = Yii::$app
-                ->db
-                ->createCommand($sql)
-                ->bindValue('id', $department_id)
-                ->queryOne();
-
-            if ($query) {
-                $leader = Employees::find()->where(['id' => $query['t1_leader']])->one();
-                $leaderGroup = Employees::find()->where(['id' => $query['t2_leader']])->one();
-                $director = Employees::find()->where(['id' => $query['t3_leader']])->one();
-
-                return [
-                    'approve_1' => isset($query['t1_leader']) ? [
-                        'id' => $query['t1_leader'],
-                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                        'title' => 'หัวหน้างาน'
-                    ] : [],
-                    'approve_2' => [
-                        'id' => $query['t2_leader'],
-                        'avatar' => isset($leaderGroup) && $leaderGroup ? $leaderGroup->getAvatar(false)  : '',
-                        'fullname' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->fullname  : '',
-                        'position' => isset($leaderGroup) && $leaderGroup ?  $leaderGroup->positionName() : '',
-                        'title' => 'หัวหน้ากลุ่มงาน'
-                    ],
-                    'approve_3' => [
-                        'id' => $query['t3_leader'],
-                        'avatar' => isset($director) && $director ? $director->getAvatar(false) : '',
-                        'fullname' => isset($director) && $director ? $director->fullname : '',
-                        'position' => isset($director) && $director ? $director->positionName() : '',
-                        'title' => 'ผู้อำนวยการ'
-                    ]
-                ];
-            } else {
-
-                $sql2 = "SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, 
-                    t1.id,
-                    t1.name as t1name,
-
-                    t1.data_json->>'\$.leader1' as t1_leader,
-                    t1.data_json->>'\$.leader1_fullname' as t1_leader_fullname,
-                    t2.id,t2.name as t2name,
-
-                    t2.data_json->>'\$.leader1' as t2_leader,
-                    t2.data_json->>'\$.leader1_fullname' as t2_leader_fullname,
-                    t3.id,t3.name as t3name,
-                    t3.data_json->>'\$.leader1' as t3_leader,
-                    t3.data_json->>'\$.leader1_fullname' as t3_leader_fullname
-                    FROM tree t1
-                    JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl
-                    JOIN tree t3 ON t2.lft BETWEEN t3.lft AND t3.rgt AND t2.lvl = t3.lvl + 1
-                    WHERE t1.id  = :id";
-                $query2 = Yii::$app
-                    ->db
-                    ->createCommand($sql2)
-                    ->bindValue('id', $department_id)
-                    ->queryOne();
-
-                $leader = Employees::find()->where(['id' => $query2['t2_leader']])->one();
-                $director2 = Employees::find()->where(['id' => $query2['t3_leader']])->one();
-
-                return [
-                    'approve_1' => [
-                        'id' =>  $leader->id,
-                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                        'title' => 'หัวหน้างาน'
-                    ],
-                    'approve_2' => [
-                        'id' =>  $leader->id,
-                        'avatar' => isset($leader) && $leader ? $leader->getAvatar(false) : '',
-                        'fullname' => isset($leader) && $leader ? $leader->fullname : '',
-                        'position' => isset($leader) && $leader ? $leader->positionName() : '',
-                        'title' => 'หัวหน้ากลุ่มงาน'
-                    ],
-                    'approve_3' => [
-                        'id' => $query2['t3_leader'],
-                        'avatar' => isset($director2) && $director2 ? $director2->getAvatar(false) : '',
-                        'fullname' => isset($director2) && $director2 ? $director2->fullname : '',
-                        'position' => isset($director2) && $director2 ? $director2->positionName() : '',
-                        'title' => 'ผู้อำนวยการ'
-                    ]
+            // แปลงเป็น approve_1, approve_2, ... สำหรับ actionSave
+            $result = [];
+            foreach ($list as $i => $info) {
+                $key = 'approve_' . ($i + 1);
+                $empObj = null;
+                if (!empty($info['id'])) {
+                    $empObj = Employees::find()->where(['id' => $info['id']])->one();
+                }
+                $result[$key] = [
+                    'id'       => $info['id'],
+                    'avatar'   => $empObj ? $empObj->getAvatar(false) : '',
+                    'fullname' => $empObj ? $empObj->fullname : ($info['fullname'] ?? ''),
+                    'position' => $empObj ? $empObj->positionName() : ($info['position'] ?? ''),
+                    'title'    => $info['title'],
                 ];
             }
+            return $result;
+
         } catch (\Throwable $th) {
             return [
-                'approve_1' => [
-                    'id' =>  '',
-                    'avatar' => '',
-                    'fullname' => '',
-                    'position' => '',
-                    'title' => 'หัวหน้างาน'
-                ],
-                'approve_2' => [
-                    'id' =>  '',
-                    'avatar' => '',
-                    'fullname' => '',
-                    'position' => '',
-                    'title' => 'หัวหน้ากลุ่มงาน'
-                ],
-                'approve_3' => [
-                    'id' => '',
-                    'avatar' => '',
-                    'fullname' => '',
-                    'position' => '',
-                    'title' => 'ผู้อำนวยการ'
-                ]
+                'approve_1' => ['id' => null, 'avatar' => '', 'fullname' => '', 'position' => '', 'title' => 'หัวหน้างาน'],
+                'approve_2' => ['id' => null, 'avatar' => '', 'fullname' => '', 'position' => '', 'title' => 'หัวหน้ากลุ่มงาน'],
+                'approve_3' => ['id' => null, 'avatar' => '', 'fullname' => '', 'position' => '', 'title' => 'ผู้อำนวยการ'],
             ];
         }
     }

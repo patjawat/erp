@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var HealthOption[] $models */
 
-$this->title = 'ตั้งค่าโรคประวัติครอบครัว';
+$this->title = 'ตั้งค่าประวัติการเจ็บป่วยในครอบครัว';
 $this->params['breadcrumbs'][] = ['label' => 'ข้อมูลสุขภาพ', 'url' => ['/health']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -133,7 +133,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-footer py-3 border-top-0">
         <div class="d-flex align-items-start gap-2 small text-muted">
             <i class="fas fa-info-circle text-info mt-1"></i>
-            <span>รายการเหล่านี้จะแสดงในแบบฟอร์มคัดกรองสุขภาพ (หมวดที่ 3: ข้อมูลครอบครัว) — การเปลี่ยน <strong>รหัสโรค</strong> หลังมีข้อมูลแล้วจะกระทบข้อมูลเดิม</span>
+            <span>รายการที่ <strong>ใช้งาน</strong> จะแสดงในแบบฟอร์มคัดกรองสุขภาพ (ส่วนที่ 3: ประวัติการเจ็บป่วยในครอบครัว) — รายการที่ <strong>ปิด</strong> จะไม่แสดงในฟอร์ม — การเปลี่ยน <strong>รหัสโรค</strong> หลังมีข้อมูลแล้วจะกระทบข้อมูลเดิม</span>
         </div>
     </div>
 </div>

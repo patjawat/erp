@@ -16,8 +16,7 @@ class HealthFamilyDisease
      */
     public static function getActiveList(): array
     {
-        $list = HealthOption::getList(self::CATEGORY);
-        return !empty($list) ? $list : self::defaultList();
+        return HealthOption::getList(self::CATEGORY);
     }
 
     public static function defaultList(): array

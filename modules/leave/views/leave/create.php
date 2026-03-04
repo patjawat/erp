@@ -2,8 +2,12 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use kartik\widgets\ActiveForm;
+use kartik\widgets\Select2;
+use yii\web\JsExpression;
+use app\modules\filemanager\components\FileManagerHelper;
 
 /** @var app\modules\leave\models\LeaveCreateForm $model */
+/** @var string $draftRef */
 $this->title = 'สร้างใบลาใหม่';
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -24,7 +28,7 @@ $phone = $employee->phone ?? '';
         'id' => 'leave-create-form',
         'action' => ['/leave/leave/create'],
         'method' => 'post',
-        'options' => ['class' => 'row g-4', 'enctype' => 'multipart/form-data'],
+        'options' => ['class' => 'row g-4'],
         'enableAjaxValidation' => true,
         'validationUrl' => ['/leave/leave/validation'],
         'fieldConfig' => [
@@ -71,100 +75,8 @@ $phone = $employee->phone ?? '';
             </div>
         </div>
 
-        <!-- เลือกประเภทการลา -->
-        <?php
-        $lucideIconMap = [
-            'calendar-check' => 'calendar-check', 'heart' => 'heart', 'droplet' => 'droplet', 'baby' => 'baby',
-            'sun' => 'sun', 'stethoscope' => 'stethoscope', 'palm' => 'palmtree', 'palmtree' => 'palmtree',
-            'calendar' => 'calendar', 'briefcase' => 'briefcase', 'coffee' => 'coffee', 'umbrella' => 'umbrella',
-            'heart-pulse' => 'heart-pulse', 'syringe' => 'syringe', 'graduation-cap' => 'graduation-cap',
-            'book-open' => 'book-open', 'church' => 'church', 'scale' => 'scale', 'power' => 'power',
-            'bike' => 'bike', 'user-circle' => 'user-circle',
-        ];
-        // Font Awesome class (fa-*) → Lucide icon name
-        $faToLucide = [
-            'fa-stethoscope' => 'stethoscope', 'fa-person-breastfeeding' => 'baby', 'fa-person-circle-exclamation' => 'user-circle',
-            'fa-person-biking' => 'bike', 'fa-power-off' => 'power',
-        ];
-        // รหัสประเภทการลา → [lucide icon, สี] (fallback เมื่อไม่มีใน data_json)
-        $typeTheme = [
-            'LT1' => ['lucide' => 'stethoscope', 'color' => '#f4cccc'],
-            'LT2' => ['lucide' => 'baby', 'color' => '#db2777'],
-            'LT3' => ['lucide' => 'user-circle', 'color' => '#dc2626'],
-            'LT4' => ['lucide' => 'bike', 'color' => '#2563eb'],
-            'LT5' => ['lucide' => 'heart-pulse', 'color' => '#fff2cc'],
-            'LT6' => ['lucide' => 'graduation-cap', 'color' => '#d9d2e9'],
-            'LT7' => ['lucide' => 'scale', 'color' => '#d9ead3'],
-            'LT8' => ['lucide' => 'book-open', 'color' => '#d0e0e3'],
-            'LT9' => ['lucide' => 'briefcase', 'color' => '#cfe2f3'],
-            'LT10' => ['lucide' => 'heart', 'color' => '#c9daf8'],
-            'LT11' => ['lucide' => 'briefcase', 'color' => '#d0e0e3'],
-            'LT12' => ['lucide' => 'power', 'color' => '#6c757d'],
-        ];
-        // ดึง Lucide icon และสีจาก data_json (รองรับ icon เป็น HTML เช่น <i class="fa-solid fa-stethoscope"></i> และ color เป็น hex)
-        $getTypeIconColor = function ($t) use ($typeTheme, $lucideIconMap, $faToLucide) {
-            $code = $t->code ?? '';
-            $theme = $typeTheme[$code] ?? null;
-            $json = is_string($t->data_json ?? null) ? json_decode($t->data_json, true) : ($t->data_json ?? []);
-            $json = is_array($json) ? $json : [];
-            $color = !empty($json['color']) ? $json['color'] : ($theme['color'] ?? '#0d6efd');
-            $iconRaw = $json['icon'] ?? null;
-            if ($iconRaw !== null && $iconRaw !== '') {
-                if (is_string($iconRaw) && (strpos($iconRaw, 'fa-') !== false || strpos($iconRaw, 'class=') !== false)) {
-                    if (preg_match_all('/fa-[a-z0-9-]+/i', $iconRaw, $m)) {
-                        $faClasses = $m[0];
-                        $skip = ['fa-solid', 'fa-regular', 'fa-light', 'fa-duotone', 'fa-brands'];
-                        $faClass = 'fa-solid';
-                        foreach (array_reverse($faClasses) as $c) {
-                            if (!in_array($c, $skip, true)) { $faClass = $c; break; }
-                        }
-                        $lucide = $faToLucide[$faClass] ?? $lucideIconMap[$faClass] ?? ($theme['lucide'] ?? 'calendar-check');
-                    } else {
-                        $lucide = $theme['lucide'] ?? 'calendar-check';
-                    }
-                } else {
-                    $lucide = $lucideIconMap[$iconRaw] ?? $iconRaw;
-                }
-            } else {
-                $lucide = $theme['lucide'] ?? 'calendar-check';
-            }
-            return ['lucide' => $lucide, 'color' => $color];
-        };
-        ?>
-        <?php $hasLeaveTypeError = $model->hasErrors('leave_type_id'); ?>
-        <div class="card border-0 shadow-sm rounded-3 mb-4 <?= $hasLeaveTypeError ? 'border border-2 border-danger' : '' ?>">
-            <div class="card-body p-3">
-                <h6 class="d-flex align-items-center gap-2 fw-bold text-body mb-1">
-                    <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center">
-                        <i data-lucide="calendar-check" style="width:1.125rem;height:1.125rem"></i>
-                    </span>
-                    เลือกประเภทการลา
-                </h6>
-                <p class="small text-muted mb-3">กรุณาเลือก 1 ประเภทด้านล่าง</p>
-                <?= $form->field($model, 'leave_type_id')->hiddenInput(['id' => 'leave-create-form-leave_type_id'])->label(false) ?>
-                <div class="row g-2">
-                    <?php foreach ($types as $t):
-                        $ic = $getTypeIconColor($t);
-                        $lucideIcon = $ic['lucide'];
-                        $iconColor = $ic['color'];
-                        $iconColorSafe = Html::encode($iconColor);
-                        $code = $t->code ?? '';
-                        if ($code === '') continue;
-                    ?>
-                    <div class="col-6">
-                        <label class="d-block mb-0 position-relative cursor-pointer leave-type-option rounded-3 border border-2 p-3 text-center text-body text-decoration-none" style="cursor: pointer;" data-type-color="<?= $iconColorSafe ?>" data-type-value="<?= Html::encode($code) ?>">
-                            <input type="radio" name="leave_type_radio" value="<?= Html::encode($code) ?>" class="form-check-input position-absolute top-0 end-0 m-2 leave-type-radio" <?= ($model->leave_type_id === $code) ? 'checked' : '' ?>>
-                            <i data-lucide="<?= Html::encode($lucideIcon) ?>" class="d-block mb-2 mx-auto leave-type-lucide" style="width:1.75rem;height:1.75rem;color:<?= $iconColorSafe ?>"></i>
-                            <span class="small fw-medium"><?= Html::encode($t->title) ?></span>
-                        </label>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-
         <!-- สถิติการลา -->
-        <div class="card border-0 shadow-sm rounded-3">
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-body p-3">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                     <h6 class="d-flex align-items-center gap-2 fw-bold text-body mb-0">
@@ -211,6 +123,19 @@ $phone = $employee->phone ?? '';
                 </div>
             </div>
         </div>
+
+        <!-- เอกสารแนบ / ใบรับรองแพทย์ -->
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-3">
+                <h6 class="d-flex align-items-center gap-2 fw-bold text-body mb-3">
+                    <span class="erp-icon-box bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center">
+                        <i data-lucide="paperclip" style="width:1.125rem;height:1.125rem"></i>
+                    </span>
+                    เอกสารแนบ / ใบรับรองแพทย์
+                </h6>
+                <?= FileManagerHelper::FileUpload($draftRef, 'leave_file') ?>
+            </div>
+        </div>
     </div>
 
     <div class="col-12 col-lg-7">
@@ -223,18 +148,36 @@ $phone = $employee->phone ?? '';
                     กรอกรายละเอียด
                 </h6>
 
-                <!-- ประเภทของเวร -->
-                <div class="mb-3">
-                    <label class="form-label small text-body">
+                <!-- ประเภทการลา + ประเภทของเวร (แถวเดียวกัน) -->
+                <?php
+                $typeOptions = [];
+                foreach ($types as $t) {
+                    $code = $t->code ?? '';
+                    if ($code === '') continue;
+                    $typeOptions[$code] = $t->title;
+                }
+                ?>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-7">
+                        <?= $form->field($model, 'leave_type_id')->dropDownList(
+                            $typeOptions,
+                            [
+                                'id'     => 'leave-create-form-leave_type_id',
+                                'class'  => 'form-select',
+                                'prompt' => '--- เลือกประเภทการลา ---',
+                            ]
+                        )->label('ประเภทการลา') ?>
+                    </div>
+                    <div class="col-md-5">
                         <?= $form->field($model, 'work_shift')->dropDownList(
                             ['normal' => 'เวรปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
                             [
-                                'id'     => 'leave-work_shift',
-                                'class'  => 'form-select',
-                                'prompt' => '--- เลือกประเภทของเวร ---',
+                                'id'    => 'leave-work_shift',
+                                'class' => 'form-select',
                             ]
-                        )->label('(หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์)') ?>
-                    </label>
+                        )->label('ประเภทของเวร (เวร 8: ไม่นับวันหยุดและเสาร์-อาทิตย์)') ?>
+
+                    </div>
                 </div>
 
                 <!-- วันที่ + ประเภท -->
@@ -303,7 +246,7 @@ $phone = $employee->phone ?? '';
                     <?php
                     $searchEmpUrl = \yii\helpers\Url::to(['/leave/leave/search-employee']);
                     ?>
-                    <?= $form->field($model, 'leave_work_send_id')->widget(\kartik\widgets\Select2::class, [
+                    <?= $form->field($model, 'leave_work_send_id')->widget(Select2::class, [
                         'options'       => ['id' => 'leave-work_send_id', 'placeholder' => 'พิมพ์ชื่อเพื่อค้นหา...'],
                         'pluginOptions' => [
                             'allowClear'         => true,
@@ -312,17 +255,17 @@ $phone = $employee->phone ?? '';
                                 'url'            => $searchEmpUrl,
                                 'dataType'       => 'json',
                                 'delay'          => 250,
-                                'data'           => new \yii\web\JsExpression('function(params){ return {q:params.term}; }'),
-                                'processResults' => new \yii\web\JsExpression('function(data){ return {results: data.results}; }'),
+                                'data'           => new JsExpression('function(params){ return {q:params.term}; }'),
+                                'processResults' => new JsExpression('function(data){ return {results: data.results}; }'),
                                 'cache'          => true,
                             ],
-                            'escapeMarkup'       => new \yii\web\JsExpression('function(m){ return m; }'),
-                            'templateResult'     => new \yii\web\JsExpression('function(r){ return r.text||r.id; }'),
-                            'templateSelection'  => new \yii\web\JsExpression('function(r){ return r.text||r.id; }'),
+                            'escapeMarkup'       => new JsExpression('function(m){ return m; }'),
+                            'templateResult'     => new JsExpression('function(r){ return r.text||r.id; }'),
+                            'templateSelection'  => new JsExpression('function(r){ return r.text||r.id; }'),
                         ],
                         'pluginEvents'  => [
-                            'select2:select'   => new \yii\web\JsExpression('function(e){ var d=e.params.data; jQuery("#leave-work_send_name").val(d.fullname||d.text||""); }'),
-                            'select2:unselect' => new \yii\web\JsExpression('function(){ jQuery("#leave-work_send_name").val(""); }'),
+                            'select2:select'   => new JsExpression('function(e){ var d=e.params.data; jQuery("#leave-work_send_name").val(d.fullname||d.text||""); }'),
+                            'select2:unselect' => new JsExpression('function(){ jQuery("#leave-work_send_name").val(""); }'),
                         ],
                     ])->label('มอบหมายงานให้') ?>
                     <?= $form->field($model, 'leave_work_send_name')->hiddenInput(['id' => 'leave-work_send_name'])->label(false) ?>
@@ -342,17 +285,15 @@ $phone = $employee->phone ?? '';
                     ])->label('เบอร์โทรติดต่อ') ?>
                 </div>
                 <div class="mb-3">
-                    <?= $form->field($model, 'place_go')->textInput([
-                        'class' => 'form-control rounded-3',
-                        'placeholder' => 'สถานที่ที่ไประหว่างลาหรือปล่อยว่าง',
-                    ])->label('สถานที่ไป') ?>
+                    <?= $form->field($model, 'place_go')->dropDownList(
+                        [
+                            'ภายในจังหวัด' => 'ภายในจังหวัด',
+                            'ต่างจังหวัด'  => 'ต่างจังหวัด',
+                            'ต่างประเทศ'   => 'ต่างประเทศ',
+                        ],
+                        ['class' => 'form-select', 'prompt' => '--- เลือกสถานที่ไป ---']
+                    )->label('สถานที่ไป') ?>
                 </div>
-                <div class="mb-4">
-                    <label class="form-label small">เอกสารแนบ / ใบรับรองแพทย์</label>
-                    <input type="file" name="leave_attachments[]" class="form-control rounded-3" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
-                    <div class="form-text small text-muted">รองรับ PDF, รูปภาพ, Word (หลายไฟล์ได้)</div>
-                </div>
-
                 <div class="mb-4">
                     <?= $form->field($model, 'address')->textarea([
                         'class' => 'form-control rounded-3',
@@ -524,42 +465,26 @@ $js = <<<JS
             });
         }
 
-        // รองรับ jquery datepicker events
+        // xdsoft datepicker: bind ผ่าน setOptions + changedatetime.xdsoft (ครอบคลุมทุก version)
         if (typeof jQuery !== 'undefined') {
-            jQuery(document).on('changedatetime.xdsoft', '#leave-date_start,#leave-date_end', function(){
-                toggleDateEndType(); calDays();
+            function onPickerChange() {
+                setTimeout(function() { toggleDateEndType(); calDays(); }, 50);
+            }
+            jQuery('#leave-date_start, #leave-date_end').datetimepicker('setOptions', {
+                onSelectDate: onPickerChange
             });
+            jQuery(document).on('changedatetime.xdsoft', '#leave-date_start,#leave-date_end', onPickerChange);
         }
     }
 
-    // ── leave type selection ──────────────────────────────────────────────
-    var hiddenLeaveType = document.getElementById('leave-create-form-leave_type_id');
-    function syncLeaveTypeToHidden() {
-        if (!hiddenLeaveType) return;
-        var r = document.querySelector('input[name="leave_type_radio"]:checked');
-        hiddenLeaveType.value = r ? r.value : '';
-        calDays(); // recalc เมื่อ type เปลี่ยน (เช่น LT2 ไม่หักวันหยุด)
+    // ── leave type dropdown ───────────────────────────────────────────────
+    var leaveTypeEl = document.getElementById('leave-create-form-leave_type_id');
+    if (leaveTypeEl) {
+        leaveTypeEl.addEventListener('change', function(){ calDays(); });
     }
-    document.querySelectorAll('.leave-type-option').forEach(function(el){
-        el.addEventListener('click', function(){
-            el.querySelector('input[type=radio]').checked = true;
-            syncLeaveTypeToHidden();
-            var color = el.getAttribute('data-type-color') || '#0d6efd';
-            document.querySelectorAll('.leave-type-option').forEach(function(o){
-                o.style.borderColor = '';
-                o.style.backgroundColor = '';
-            });
-            el.style.borderColor = color;
-            el.style.backgroundColor = color + '18';
-        });
-    });
-    document.querySelectorAll('input[name="leave_type_radio"]').forEach(function(r){
-        r.addEventListener('change', syncLeaveTypeToHidden);
-    });
 
     // ── init ──────────────────────────────────────────────────────────────
     bindEvents();
-    syncLeaveTypeToHidden();
     toggleDateEndType();
     toggleTotalEditable();
     calDays();

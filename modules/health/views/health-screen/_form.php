@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\health\models\HealthChronicDisease;
 use app\modules\health\models\HealthFamilyDisease;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
@@ -23,17 +24,8 @@ $miniSections = [
     ['title' => '1.6. เพศสัมพันธ์',   'key' => 'condom_usage',    'opt' => ['always' => 'ใช้ทุกครั้ง', 'requested' => 'ใช้เมื่อถูกร้องขอ', 'none' => 'ไม่ใช้', 'no_answer' => 'ไม่ตอบ'], 'color' => 'danger'],
 ];
 // โหลดจาก DB (fallback เป็นค่า hardcode ถ้าตารางยังไม่มี)
-$familyDiseaseList = HealthFamilyDisease::getActiveList();
-$diseasesYear = [
-    'h_diabetes' => 'เบาหวาน',       'h_hypertension' => 'ความดันสูง',
-    'h_liver'    => 'โรคตับ',         'h_stroke'       => 'อัมพาต',
-    'h_heart'    => 'โรคหัวใจ',       'h_dyslipidemia' => 'ไขมันเลือดผิดปกติ',
-    'h_gastric'  => 'แผลในกระเพาะ',  'h_birth'        => 'คลอดบุตร > 4kg',
-    'h_thirst'   => 'ดื่มน้ำบ่อย',   'h_nocturia'     => 'ปัสสาวะบ่อยกลางคืน',
-    'h_fatigue'  => 'อ่อนเพลีย',     'h_skin_itch'    => 'คันตามผิวหนัง',
-    'h_vision'   => 'ตาพร่ามัว',     'h_numbness'     => 'ชาปลายมือเท้า',
-    'h_constipation' => 'ท้องผูกเรื้อรัง', 'h_urinary' => 'ฉี่ขัด/ปนเลือด',
-];
+$familyDiseaseList  = HealthFamilyDisease::getActiveList();
+$chronicDiseaseList = HealthChronicDisease::getActiveList();
 ?>
 
 <?php $form = ActiveForm::begin([
@@ -243,6 +235,7 @@ $diseasesYear = [
         </div>
     </div>
 
+    <?php if (!empty($chronicDiseaseList)): ?>
     <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
         <div class="card-header bg-white d-flex justify-content-between">
             <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: โรคประจำตัว</h5>
@@ -254,13 +247,13 @@ $diseasesYear = [
         </div>
         <div class="card-body p-0">
             <div class="row g-0">
-                <?php foreach ($diseasesYear as $attr => $label):
+                <?php foreach ($chronicDiseaseList as $attr => $label):
                     if (!isset($tmpData[$attr])) {
                         $tmpData[$attr] = 0;
                     }
                 ?>
                     <div class="col-md-6 border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-medium text-dark small"><?= $label ?></span>
+                        <span class="fw-medium text-dark small"><?= Html::encode($label) ?></span>
                         <?= $form->field($model, "data_json[$attr]", ['options' => ['class' => 'mb-0']])->radioList([0 => '', 1 => '', 2 => ''], [
                             'item' => function ($index, $label, $name, $checked, $value) use ($tmpData, $attr) {
                                 $isChecked = ($tmpData[$attr] == $value);
@@ -277,6 +270,7 @@ $diseasesYear = [
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <div class="text-center pb-5">
         <?= Html::submitButton('<i class="fas fa-save me-1"></i> บันทึกข้อมูลสุขภาพ', ['class' => 'btn btn-primary px-5 rounded-pill shadow']) ?>

@@ -16,19 +16,28 @@ class HealthChronicDisease
      */
     public static function getActiveList(): array
     {
-        $list = HealthOption::getList(self::CATEGORY);
-        return !empty($list) ? $list : self::defaultList();
+        return HealthOption::getList(self::CATEGORY);
     }
 
     public static function defaultList(): array
     {
         return [
-            'DM'     => 'DM (เบาหวาน)',
-            'HT'     => 'HT (ความดันโลหิตสูง)',
-            'DLP'    => 'DLP (ไขมันในเลือด)',
-            'Heart'  => 'โรคหัวใจ',
-            'Kidney' => 'โรคไต',
-            'other'  => 'อื่นๆ',
+            'h_diabetes'     => 'เบาหวาน',
+            'h_hypertension' => 'ความดันสูง',
+            'h_liver'        => 'โรคตับ',
+            'h_stroke'       => 'อัมพาต',
+            'h_heart'        => 'โรคหัวใจ',
+            'h_dyslipidemia' => 'ไขมันเลือดผิดปกติ',
+            'h_gastric'      => 'แผลในกระเพาะ',
+            'h_birth'        => 'คลอดบุตร > 4kg',
+            'h_thirst'       => 'ดื่มน้ำบ่อย',
+            'h_nocturia'     => 'ปัสสาวะบ่อยกลางคืน',
+            'h_fatigue'      => 'อ่อนเพลีย',
+            'h_skin_itch'    => 'คันตามผิวหนัง',
+            'h_vision'       => 'ตาพร่ามัว',
+            'h_numbness'     => 'ชาปลายมือเท้า',
+            'h_constipation' => 'ท้องผูกเรื้อรัง',
+            'h_urinary'      => 'ฉี่ขัด/ปนเลือด',
         ];
     }
 }

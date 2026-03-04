@@ -98,13 +98,13 @@ class HealthFamilyDiseaseController extends Controller
 
     public function actionDelete($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
         try {
             $this->findModel($id)->delete();
-            return ['status' => 'success', 'message' => 'ลบรายการเรียบร้อยแล้ว'];
+            Yii::$app->session->setFlash('success', 'ลบรายการเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return ['status' => 'error', 'message' => 'ไม่สามารถลบข้อมูลได้'];
+            Yii::$app->session->setFlash('warning', 'ไม่สามารถลบข้อมูลได้');
         }
+        return $this->redirect(['index']);
     }
 
     public function actionSeed()

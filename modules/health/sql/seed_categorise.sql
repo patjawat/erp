@@ -14,9 +14,19 @@ INSERT IGNORE INTO `categorise` (`name`, `code`, `title`, `active`) VALUES
 
 -- โรคประจำตัว (name = 'chronic_disease')
 INSERT IGNORE INTO `categorise` (`name`, `code`, `title`, `active`) VALUES
-('chronic_disease', 'DM',     'DM (เบาหวาน)',         1),
-('chronic_disease', 'HT',     'HT (ความดันโลหิตสูง)', 1),
-('chronic_disease', 'DLP',    'DLP (ไขมันในเลือด)',   1),
-('chronic_disease', 'Heart',  'โรคหัวใจ',             1),
-('chronic_disease', 'Kidney', 'โรคไต',                1),
-('chronic_disease', 'other',  'อื่นๆ',                1);
+('chronic_disease', 'h_diabetes',     'เบาหวาน',              1),
+('chronic_disease', 'h_hypertension', 'ความดันสูง',            1),
+('chronic_disease', 'h_liver',        'โรคตับ',                1),
+('chronic_disease', 'h_stroke',       'อัมพาต',                1),
+('chronic_disease', 'h_heart',        'โรคหัวใจ',              1),
+('chronic_disease', 'h_dyslipidemia', 'ไขมันเลือดผิดปกติ',     1),
+('chronic_disease', 'h_gastric',      'แผลในกระเพาะ',          1),
+('chronic_disease', 'h_birth',        'คลอดบุตร > 4kg',        1),
+('chronic_disease', 'h_thirst',       'ดื่มน้ำบ่อย',           1),
+('chronic_disease', 'h_nocturia',     'ปัสสาวะบ่อยกลางคืน',   1),
+('chronic_disease', 'h_fatigue',      'อ่อนเพลีย',             1),
+('chronic_disease', 'h_skin_itch',    'คันตามผิวหนัง',         1),
+('chronic_disease', 'h_vision',       'ตาพร่ามัว',             1),
+('chronic_disease', 'h_numbness',     'ชาปลายมือเท้า',         1),
+('chronic_disease', 'h_constipation', 'ท้องผูกเรื้อรัง',       1),
+('chronic_disease', 'h_urinary',      'ฉี่ขัด/ปนเลือด',        1);
