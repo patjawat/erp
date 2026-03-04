@@ -8,6 +8,7 @@ use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use yii\bootstrap5\LinkPager;
 use app\modules\sm\models\Order;
+use app\modules\helpdesk2\models\RepairFormSetting;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -37,11 +38,20 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
     <div class="col-12 col-md-4">
         <div class="card h-100">
             <div class="card-header p-3">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <i class="bi bi-person-circle"></i> ข้อมูลผู้แจ้งซ่อม
                     </div>
-                    <?= $model->viewCreateDateTime() ?>
+                    <div class="d-flex align-items-center gap-2">
+                        <?= $model->viewCreateDateTime() ?>
+                        <?php if (RepairFormSetting::isEnabled()): ?>
+                        <?= Html::a(
+                            '<i class="bi bi-printer me-1"></i> พิมพ์ใบส่งซ่อม',
+                            ['/helpdesk/setting/print-form', 'id' => $model->id],
+                            ['class' => 'btn btn-outline-primary btn-sm rounded-3', 'target' => '_blank', 'rel' => 'noopener']
+                        ) ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 

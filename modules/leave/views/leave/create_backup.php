@@ -223,109 +223,61 @@ $phone = $employee->phone ?? '';
                     กรอกรายละเอียด
                 </h6>
 
-                <!-- ประเภทของเวร -->
-                <div class="mb-3">
-                    <label class="form-label small text-body">
-                        <?= $form->field($model, 'work_shift')->dropDownList(
-                            ['normal' => 'เวรปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
-                            [
-                                'id'     => 'leave-work_shift',
-                                'class'  => 'form-select',
-                                'prompt' => '--- เลือกประเภทของเวร ---',
-                            ]
-                        )->label('(หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์)') ?>
-                    </label>
-                </div>
-
-                <!-- วันที่ + ประเภท -->
                 <div class="row g-3 mb-3">
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <?= $form->field($model, 'date_start')->textInput([
                             'id' => 'leave-date_start',
                             'class' => 'form-control',
                             'placeholder' => 'dd/mm/yyyy',
                         ])->label('ตั้งแต่วันที่') ?>
                     </div>
-                    <div class="col-md-5">
-                        <?= $form->field($model, 'date_start_type')->dropDownList(
-                            ['0' => 'เต็มวัน', '0.5' => 'ครึ่งวัน'],
-                            ['id' => 'leave-date_start_type', 'class' => 'form-select']
-                        )->label('ประเภท') ?>
-                    </div>
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <?= $form->field($model, 'date_end')->textInput([
                             'id' => 'leave-date_end',
                             'class' => 'form-control',
                             'placeholder' => 'dd/mm/yyyy',
                         ])->label('ถึงวันที่') ?>
                     </div>
-                    <div class="col-md-5">
-                        <?= $form->field($model, 'date_end_type')->dropDownList(
-                            ['0' => 'เต็มวัน', '0.5' => 'ครึ่งวัน'],
-                            ['id' => 'leave-date_end_type', 'class' => 'form-select']
-                        )->label('ประเภท') ?>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small d-block">ลักษณะการลา</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <label class="d-flex align-items-center gap-2 rounded-3 border border-2 p-3 cursor-pointer leave-time-option flex-grow-1 flex-md-grow-0" style="cursor: pointer; min-width: 120px;" data-value="1">
+                            <input type="radio" name="LeaveCreateForm[leave_time_type]" value="1" class="form-check-input leave-time-radio" <?= ((float) $model->leave_time_type === 1.0) ? 'checked' : '' ?>>
+                            <span class="small fw-medium">การลาเต็มวัน</span>
+                        </label>
+                        <label class="d-flex align-items-center gap-2 rounded-3 border border-2 p-3 cursor-pointer leave-time-option flex-grow-1 flex-md-grow-0" style="cursor: pointer; min-width: 120px;" data-value="0.5">
+                            <input type="radio" name="LeaveCreateForm[leave_time_type]" value="0.5" class="form-check-input leave-time-radio" <?= ((float) $model->leave_time_type === 0.5) ? 'checked' : '' ?>>
+                            <span class="small fw-medium">ครึ่งวัน</span>
+                        </label>
                     </div>
                 </div>
 
-                <!-- สรุปวันลา -->
-                <div class="card border-0 border-start border-3 border-info mb-3">
-                    <div class="card-body py-2 px-3">
-                        <div class="small fw-semibold text-secondary mb-2"><i class="bi bi-calendar3 me-1"></i> สรุปวันลา</div>
-                        <div class="row g-2">
-                            <div class="col-4">
-                                <label class="form-label small text-muted mb-1">วันเสาร์-อาทิตย์ <span class="text-secondary">(วัน)</span></label>
-                                <input type="text" id="leave-summary-satsun" class="form-control text-center fw-semibold" value="0" readonly tabindex="-1">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label small text-muted mb-1">วันหยุดนักขัตฤกษ์ <span class="text-secondary">(วัน)</span></label>
-                                <input type="text" id="leave-summary-holiday" class="form-control text-center fw-semibold" value="0" readonly tabindex="-1">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label small text-muted mb-1">
-                                    สรุปวันลา <span class="text-secondary">(วัน)</span>
-                                    <span id="leave-total-hint" class="text-info d-none" style="font-size:0.7rem"> (แก้ไขได้)</span>
-                                </label>
-                                <input type="text" id="leave-summary-total" class="form-control text-center fw-bold text-primary" value="0" readonly tabindex="-1">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?= $form->field($model, 'total_days_manual')->hiddenInput(['id' => 'leave-total_days_manual'])->label(false) ?>
                 <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded bg-body-secondary bg-opacity-25">
                     <i class="bi bi-file-text text-primary"></i>
                     <span class="small">รวมวันลา</span>
                     <span class="small text-muted ms-2">คำนวณอัตโนมัติ</span>
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1 ms-auto" id="leave-total-days">0 วัน</span>
+                    <span class="badge bg-primary ms-auto text-white" id="leave-total-days">0 วัน</span>
                 </div>
-
-                <!-- มอบหมายงานให้ -->
-                <div class="mb-3">
-                    <?php
-                    $searchEmpUrl = \yii\helpers\Url::to(['/leave/leave/search-employee']);
-                    ?>
-                    <?= $form->field($model, 'leave_work_send_id')->widget(\kartik\widgets\Select2::class, [
-                        'options'       => ['id' => 'leave-work_send_id', 'placeholder' => 'พิมพ์ชื่อเพื่อค้นหา...'],
-                        'pluginOptions' => [
-                            'allowClear'         => true,
-                            'minimumInputLength' => 1,
-                            'ajax'               => [
-                                'url'            => $searchEmpUrl,
-                                'dataType'       => 'json',
-                                'delay'          => 250,
-                                'data'           => new \yii\web\JsExpression('function(params){ return {q:params.term}; }'),
-                                'processResults' => new \yii\web\JsExpression('function(data){ return {results: data.results}; }'),
-                                'cache'          => true,
-                            ],
-                            'escapeMarkup'       => new \yii\web\JsExpression('function(m){ return m; }'),
-                            'templateResult'     => new \yii\web\JsExpression('function(r){ return r.text||r.id; }'),
-                            'templateSelection'  => new \yii\web\JsExpression('function(r){ return r.text||r.id; }'),
-                        ],
-                        'pluginEvents'  => [
-                            'select2:select'   => new \yii\web\JsExpression('function(e){ var d=e.params.data; jQuery("#leave-work_send_name").val(d.fullname||d.text||""); }'),
-                            'select2:unselect' => new \yii\web\JsExpression('function(){ jQuery("#leave-work_send_name").val(""); }'),
-                        ],
-                    ])->label('มอบหมายงานให้') ?>
-                    <?= $form->field($model, 'leave_work_send_name')->hiddenInput(['id' => 'leave-work_send_name'])->label(false) ?>
+                <div class="card border-0 border-start border-3 border-info mb-4">
+                    <div class="card-body py-2 px-3">
+                        <div class="small fw-semibold text-secondary mb-2"><i class="bi bi-calendar3 me-1"></i> สรุปวันลา</div>
+                        <div class="row g-2 small">
+                            <div class="col-4 text-center">
+                                <div class="text-muted">รวมระยะเวลา</div>
+                                <div class="fw-semibold" id="leave-summary-total">0 วัน</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="text-muted">วันเสาร์-อาทิตย์</div>
+                                <div class="fw-semibold" id="leave-summary-satsun">0 วัน</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="text-muted">วันหยุดนักขัตฤกษ์</div>
+                                <div class="fw-semibold" id="leave-summary-holiday">0 วัน</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -376,169 +328,99 @@ $phone = $employee->phone ?? '';
 <?php
 \app\widgets\datepicker\Assets::register($this);
 $this->registerJs("if (typeof thaiDatepicker === 'function') thaiDatepicker('#leave-date_start,#leave-date_end');", \yii\web\View::POS_END);
-$calDaysUrl       = \yii\helpers\Url::to(['/leave/leave/cal-days']);
-$updateShiftUrl   = \yii\helpers\Url::to(['/leave/leave/update-work-shift']);
-$empWorkShift     = $employee && isset($employee->work_shift) ? $employee->work_shift : 'normal';
-$csrfParam        = \Yii::$app->request->csrfParam;
-$csrfToken        = \Yii::$app->request->csrfToken;
+$summaryDaysUrl = \yii\helpers\Url::to(['/leave/leave/summary-days']);
 $js = <<<JS
 (function(){
-    var calDaysUrl     = "{$calDaysUrl}";
-    var updateShiftUrl = "{$updateShiftUrl}";
-    var csrfParam      = "{$csrfParam}";
-    var csrfToken      = "{$csrfToken}";
-
-    // ── helpers ───────────────────────────────────────────────────────────
-    function getDateStart()     { var el = document.getElementById('leave-date_start');      return el ? el.value.trim() : ''; }
-    function getDateEnd()       { var el = document.getElementById('leave-date_end');        return el ? el.value.trim() : ''; }
-    function getDateStartType() { var el = document.getElementById('leave-date_start_type'); return el ? parseFloat(el.value) || 0 : 0; }
-    function getDateEndType()   { var el = document.getElementById('leave-date_end_type');   return el ? parseFloat(el.value) || 0 : 0; }
-    function getWorkShift()     { var el = document.getElementById('leave-work_shift');      return el ? el.value : ''; }
-    function getLeaveTypeId()   { var el = document.getElementById('leave-create-form-leave_type_id'); return el ? el.value : ''; }
-
-    // ── toggleTotalEditable — เวร 8: สรุปวันลาแก้ไขได้ ───────────────────
-    function toggleTotalEditable() {
-        var shiftEl = document.getElementById('leave-work_shift');
-        var totalEl = document.getElementById('leave-summary-total');
-        var hintEl  = document.getElementById('leave-total-hint');
-        if (!totalEl) return;
-        var isShift8 = shiftEl && shiftEl.value === 'shift';
-        if (isShift8) {
-            totalEl.removeAttribute('readonly');
-            totalEl.tabIndex = 0;
-            totalEl.classList.add('border-info');
-            if (hintEl) hintEl.classList.remove('d-none');
-        } else {
-            totalEl.setAttribute('readonly', 'readonly');
-            totalEl.tabIndex = -1;
-            totalEl.classList.remove('border-info');
-            if (hintEl) hintEl.classList.add('d-none');
-        }
+    var summaryDaysUrl = "{$summaryDaysUrl}";
+    function parseThaiDate(str) {
+        if (!str || str.length < 8) return null;
+        var parts = str.split('/');
+        if (parts.length !== 3) return null;
+        var d = parseInt(parts[0],10), m = parseInt(parts[1],10)-1, y = parseInt(parts[2],10)-543;
+        if (y < 2400) y += 543;
+        var date = new Date(y, m, d);
+        return isNaN(date.getTime()) ? null : date;
     }
-
-    // ── updateSummary ──────────────────────────────────────────────────────
-    function updateSummary(satsun, holiday, total) {
-        var s = document.getElementById('leave-summary-satsun');
-        var h = document.getElementById('leave-summary-holiday');
-        var t = document.getElementById('leave-summary-total');
-        var m = document.getElementById('leave-total_days_manual');
-        var b = document.getElementById('leave-total-days');
-        if (s) s.value = satsun  != null ? satsun  : 0;
-        if (h) h.value = holiday != null ? holiday : 0;
-        if (t) t.value = total   != null ? total   : 0;
-        if (m) m.value = (total   != null ? total   : 0);
-        if (b) b.textContent = (total != null ? total : 0) + ' วัน';
+    function getLeaveTimeType() {
+        var r = document.querySelector('input[name="LeaveCreateForm[leave_time_type]"]:checked');
+        return r ? parseFloat(r.value) : 1;
     }
-
-    // ── toggleDateEndType ─── ปิด end_type เมื่อ start==end ──────────────
-    function toggleDateEndType() {
-        var s = getDateStart();
-        var e = getDateEnd();
-        var endTypeEl = document.getElementById('leave-date_end_type');
-        if (!endTypeEl) return;
-        if (s && e && s.length >= 8 && e.length >= 8 && s === e) {
-            endTypeEl.disabled = true;
-            endTypeEl.value = '0';
-        } else {
-            endTypeEl.disabled = false;
-        }
-    }
-
-    // ── calDays — เรียก /leave/leave/cal-days ─────────────────────────────
     function calDays() {
-        var s = getDateStart();
-        var e = getDateEnd();
-        if (!s || !e || s.length < 8 || e.length < 8) { updateSummary(0, 0, 0); return; }
-        var params = new URLSearchParams({
-            date_start:      s,
-            date_end:        e,
-            date_start_type: getDateStartType(),
-            date_end_type:   getDateEndType(),
-            leave_type_id:   getLeaveTypeId(),
-            work_shift:      getWorkShift(),
-        });
-        fetch(calDaysUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r){ return r.json(); })
-            .then(function(res){
-                if (res.status === 'error') {
-                    updateSummary(0, 0, 0);
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: res.message, timer: 4000, showConfirmButton: false });
-                    } else {
-                        alert(res.message);
-                    }
-                    return;
-                }
-                updateSummary(res.satsunDays || 0, res.holiday || 0, res.total || 0);
-                // auto-fill work_shift ถ้าผู้ใช้ยังไม่เลือก
-                var shiftEl = document.getElementById('leave-work_shift');
-                if (shiftEl && shiftEl.value === '' && res.shift) {
-                    shiftEl.value = res.shift;
-                }
+        var start = document.getElementById('leave-date_start');
+        var end = document.getElementById('leave-date_end');
+        if (!start || !end) return;
+        var d1 = parseThaiDate(start.value);
+        var d2 = parseThaiDate(end.value);
+        if (!d1 || !d2) { updateSummary(0, 0, 0, 0); return; }
+        updateSummaryViaAjax(start.value, end.value, getLeaveTimeType());
+    }
+    function updateSummary(calendarDays, totalLeaveDays, satSun, holiday) {
+        var elSummaryTotal = document.getElementById('leave-summary-total');
+        var elSatSun = document.getElementById('leave-summary-satsun');
+        var elHoliday = document.getElementById('leave-summary-holiday');
+        var elBadge = document.getElementById('leave-total-days');
+        if (elSummaryTotal) elSummaryTotal.textContent = (calendarDays || 0) + ' วัน';
+        if (elSatSun) elSatSun.textContent = (satSun || 0) + ' วัน';
+        if (elHoliday) elHoliday.textContent = (holiday || 0) + ' วัน';
+        if (elBadge) elBadge.textContent = (totalLeaveDays != null ? totalLeaveDays : 0) + ' วัน';
+    }
+    function updateSummaryViaAjax(dateStartTh, dateEndTh, leaveTimeType) {
+        if (!dateStartTh || !dateEndTh || dateStartTh.length < 8 || dateEndTh.length < 8) {
+            updateSummary(0, 0, 0, 0);
+            return;
+        }
+        var params = new URLSearchParams({ date_start: dateStartTh, date_end: dateEndTh, leave_time_type: leaveTimeType });
+        fetch(summaryDaysUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                updateSummary(data.calendar_days || 0, data.total_leave_days || 0, data.sat_sun_days || 0, data.holiday_days || 0);
             })
-            .catch(function(){ updateSummary(0, 0, 0); });
+            .catch(function() { updateSummary(0, 0, 0, 0); });
     }
-
-    // ── updateWorkShift — บันทึก work_shift ลง DB แล้ว recalc ────────────
-    function updateWorkShift(val) {
-        if (!val) { calDays(); return; }
-        var fd = new FormData();
-        fd.append('work_shift', val);
-        fd.append(csrfParam, csrfToken);
-        fetch(updateShiftUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(){ calDays(); })
-            .catch(function(){ calDays(); });
-    }
-
-    // ── bind events ───────────────────────────────────────────────────────
-    function bindEvents() {
-        var startEl     = document.getElementById('leave-date_start');
-        var endEl       = document.getElementById('leave-date_end');
-        var shiftEl     = document.getElementById('leave-work_shift');
-        var startTypeEl = document.getElementById('leave-date_start_type');
-        var endTypeEl   = document.getElementById('leave-date_end_type');
-
-        function onDateChange() { toggleDateEndType(); calDays(); }
-
-        if (startEl) { startEl.addEventListener('change', onDateChange); startEl.addEventListener('blur', onDateChange); }
-        if (endEl)   { endEl.addEventListener('change',   onDateChange); endEl.addEventListener('blur',   onDateChange); }
-        if (startTypeEl) startTypeEl.addEventListener('change', calDays);
-        if (endTypeEl)   endTypeEl.addEventListener('change',   calDays);
-
-        if (shiftEl) {
-            shiftEl.addEventListener('change', function(){
-                toggleTotalEditable();
-                updateWorkShift(this.value);
-            });
-        }
-
-        // sync manual total → hidden field + badge เมื่อผู้ใช้แก้ไขตรง (เวร 8)
-        var totalEl = document.getElementById('leave-summary-total');
-        if (totalEl) {
-            totalEl.addEventListener('input', function() {
-                var v = parseFloat(this.value.replace(/[^0-9.]/g, '')) || 0;
-                var m = document.getElementById('leave-total_days_manual');
-                var b = document.getElementById('leave-total-days');
-                if (m) m.value = v;
-                if (b) b.textContent = v + ' วัน';
-            });
-        }
-
-        // รองรับ jquery datepicker events
-        if (typeof jQuery !== 'undefined') {
-            jQuery(document).on('changedatetime.xdsoft', '#leave-date_start,#leave-date_end', function(){
-                toggleDateEndType(); calDays();
+    function bindCalDays() {
+        var startEl = document.getElementById('leave-date_start');
+        var endEl = document.getElementById('leave-date_end');
+        if (!startEl || !endEl) return;
+        ['change', 'input', 'blur'].forEach(function(ev) {
+            startEl.addEventListener(ev, calDays);
+            endEl.addEventListener(ev, calDays);
+        });
+        var jq = typeof jQuery !== 'undefined' ? jQuery : null;
+        if (jq) {
+            [startEl, endEl].forEach(function(el) {
+                var w = jq(el).data('xdsoft_datetimepicker');
+                if (w) {
+                    w.on('close.xdsoft', calDays);
+                    w.on('changedatetime.xdsoft', calDays);
+                }
             });
         }
     }
-
-    // ── leave type selection ──────────────────────────────────────────────
+    bindCalDays();
+    calDays();
+    document.querySelectorAll('input[name="LeaveCreateForm[leave_time_type]"]').forEach(function(r){
+        r.addEventListener('change', calDays);
+    });
+    document.querySelectorAll('.leave-time-option').forEach(function(el){
+        el.addEventListener('click', function(){
+            el.querySelector('input[type=radio]').checked = true;
+            document.querySelectorAll('.leave-time-option').forEach(function(o){
+                o.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+                o.style.borderColor = '';
+                o.style.backgroundColor = '';
+            });
+            el.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            el.style.borderColor = '';
+            el.style.backgroundColor = '';
+            calDays();
+        });
+    });
+    document.querySelector('.leave-time-option[data-value="1"]').classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
     var hiddenLeaveType = document.getElementById('leave-create-form-leave_type_id');
     function syncLeaveTypeToHidden() {
         if (!hiddenLeaveType) return;
         var r = document.querySelector('input[name="leave_type_radio"]:checked');
         hiddenLeaveType.value = r ? r.value : '';
-        calDays(); // recalc เมื่อ type เปลี่ยน (เช่น LT2 ไม่หักวันหยุด)
     }
     document.querySelectorAll('.leave-type-option').forEach(function(el){
         el.addEventListener('click', function(){
@@ -546,6 +428,7 @@ $js = <<<JS
             syncLeaveTypeToHidden();
             var color = el.getAttribute('data-type-color') || '#0d6efd';
             document.querySelectorAll('.leave-type-option').forEach(function(o){
+                o.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
                 o.style.borderColor = '';
                 o.style.backgroundColor = '';
             });
@@ -556,13 +439,7 @@ $js = <<<JS
     document.querySelectorAll('input[name="leave_type_radio"]').forEach(function(r){
         r.addEventListener('change', syncLeaveTypeToHidden);
     });
-
-    // ── init ──────────────────────────────────────────────────────────────
-    bindEvents();
     syncLeaveTypeToHidden();
-    toggleDateEndType();
-    toggleTotalEditable();
-    calDays();
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 })();
 JS;

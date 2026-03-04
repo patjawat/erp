@@ -229,6 +229,7 @@ class LeaveController extends Controller
         $model->emp_id = $me->id;
         $model->contact_phone = $me->phone ?? '';
         $model->address = $me->fulladdress ?? '';
+        $model->work_shift = $me->work_shift ?? 'normal';
 
         if (Yii::$app->request->isPost) {
             $model->load(Yii::$app->request->post());
@@ -248,13 +249,35 @@ class LeaveController extends Controller
 
                 $dateStartGregorian = AppHelper::convertToGregorian($dateStart);
                 $dateEndGregorian = AppHelper::convertToGregorian($dateEnd);
-            $daySummary = $this->getDaySummary($dateStartGregorian, $dateEndGregorian, $me->id);
-            $allDays = (int) ($daySummary['allDays'] ?? 0);
-            $satsunDays = (int) ($daySummary['satsunDays'] ?? 0);
-            $holidayDays = (int) ($daySummary['holiday'] ?? 0);
-            $isShift8 = (isset($daySummary['shift']) && $daySummary['shift'] === 'shift');
-            $calendarDays = $isShift8 ? $allDays : max(0, $allDays - $satsunDays - $holidayDays);
-            $totalDays = round($calendarDays * $leaveTimeType, 2);
+                $dateStartType  = in_array($model->date_start_type, ['0', '0.5']) ? $model->date_start_type : '0';
+                $dateEndType    = in_array($model->date_end_type,   ['0', '0.5']) ? $model->date_end_type   : '0';
+                $workShiftForm  = in_array($model->work_shift, ['normal', 'shift']) ? $model->work_shift : '';
+                $leaveWorkSendId   = (int) ($model->leave_work_send_id ?? 0);
+                $leaveWorkSendName = trim((string) ($model->leave_work_send_name ?? ''));
+                $daySummary = $this->getDaySummary($dateStartGregorian, $dateEndGregorian, $me->id);
+            $allDays    = (float) ($daySummary['allDays'] ?? 0);
+            $satsunDays = (float) ($daySummary['satsunDays'] ?? 0);
+            $holidayDays= (float) ($daySummary['holiday'] ?? 0);
+            $empShift   = (string) ($daySummary['shift'] ?? 'normal');
+            $effectiveShift = ($workShiftForm !== '') ? $workShiftForm : $empShift;
+            // formula เดียวกับ actionCalDays (ตาม hr/_form logic)
+            $dstF = (float) $dateStartType;
+            $detF = (float) $dateEndType;
+            if ($leaveTypeId === 'LT2') {
+                $totalDays = $allDays;
+            } elseif ($effectiveShift === 'normal') {
+                $totalDays = $allDays - ($dstF + $detF) - $satsunDays - $holidayDays;
+            } else {
+                $totalDays = $allDays - ($dstF + $detF);
+            }
+            $totalDays = max(0, round($totalDays, 2));
+            // เวร 8: ถ้าผู้ใช้กรอก total_days_manual มา ให้ใช้ค่านั้นแทน
+            if ($effectiveShift === 'shift') {
+                $manualTotal = $model->total_days_manual;
+                if ($manualTotal !== null && $manualTotal !== '' && (float) $manualTotal >= 0) {
+                    $totalDays = max(0, round((float) $manualTotal, 2));
+                }
+            }
             $attachmentInfo = [];
             $files = UploadedFile::getInstancesByName('leave_attachments');
             if (!empty($files)) {
@@ -273,21 +296,26 @@ class LeaveController extends Controller
                 }
             }
             $draft = [
-                'leave_type_id' => $leaveTypeId,
-                'date_start' => $dateStart,
-                'date_end' => $dateEnd,
-                'date_start_g' => $dateStartGregorian,
-                'date_end_g' => $dateEndGregorian,
-                'leave_time_type' => $leaveTimeType,
-                'total_days' => $totalDays,
-                'summary_calendar_days' => (int) ($daySummary['allDays'] ?? $calendarDays),
-                'summary_sat_sun' => (int) ($daySummary['satsunDays'] ?? 0),
-                'summary_holiday' => (int) ($daySummary['holiday'] ?? 0),
-                'reason' => $reason,
-                'address' => $address,
-                'contact_phone' => $contactPhone,
-                'place_go' => $placeGo,
-                'attachment_info' => $attachmentInfo,
+                'leave_type_id'        => $leaveTypeId,
+                'date_start'           => $dateStart,
+                'date_end'             => $dateEnd,
+                'date_start_g'         => $dateStartGregorian,
+                'date_end_g'           => $dateEndGregorian,
+                'date_start_type'      => $dateStartType,
+                'date_end_type'        => $dateEndType,
+                'leave_time_type'      => $leaveTimeType,
+                'total_days'           => $totalDays,
+                'summary_calendar_days'=> $allDays,
+                'summary_sat_sun'      => $satsunDays,
+                'summary_holiday'      => $holidayDays,
+                'work_shift'           => $effectiveShift,
+                'leave_work_send_id'   => $leaveWorkSendId ?: null,
+                'leave_work_send_name' => $leaveWorkSendName,
+                'reason'               => $reason,
+                'address'              => $address,
+                'contact_phone'        => $contactPhone,
+                'place_go'             => $placeGo,
+                'attachment_info'      => $attachmentInfo,
             ];
                 Yii::$app->session->set(self::SESSION_KEY, $draft);
                 return $this->redirect(['confirm']);
@@ -381,20 +409,24 @@ class LeaveController extends Controller
 
         $approve = $model->Approve();
         $model->data_json = [
-            'reason' => $draft['reason'] ?? '',
-            'address' => $draft['address'] ?? '',
-            'work_shift' => $me->work_shift ?? null,
-            'approve_1' => $approve['approve_1']['id'] ?? null,
-            'approve_2' => $approve['approve_2']['id'] ?? null,
-            'leave_contact_phone' => $draft['contact_phone'] ?? $me->phone ?? '',
-            'place_go' => $draft['place_go'] ?? '',
-            'director' => SiteHelper::viewDirector()['id'] ?? null,
-            'director_fullname' => SiteHelper::viewDirector()['fullname'] ?? '',
-            'signature_data' => $signatureData,
-            'signature_type' => ($signatureType === 'system' ? 'system' : 'canvas'),
-            'summary_calendar_days' => (int) ($draft['summary_calendar_days'] ?? 0),
-            'summary_sat_sun' => (int) ($draft['summary_sat_sun'] ?? 0),
-            'summary_holiday' => (int) ($draft['summary_holiday'] ?? 0),
+            'reason'               => $draft['reason'] ?? '',
+            'address'              => $draft['address'] ?? '',
+            'work_shift'           => $draft['work_shift'] ?? $me->work_shift ?? null,
+            'date_start_type'      => $draft['date_start_type'] ?? '0',
+            'date_end_type'        => $draft['date_end_type'] ?? '0',
+            'leave_work_send_id'   => $draft['leave_work_send_id'] ?? null,
+            'leave_work_send_name' => $draft['leave_work_send_name'] ?? '',
+            'approve_1'            => $approve['approve_1']['id'] ?? null,
+            'approve_2'            => $approve['approve_2']['id'] ?? null,
+            'leave_contact_phone'  => $draft['contact_phone'] ?? $me->phone ?? '',
+            'place_go'             => $draft['place_go'] ?? '',
+            'director'             => SiteHelper::viewDirector()['id'] ?? null,
+            'director_fullname'    => SiteHelper::viewDirector()['fullname'] ?? '',
+            'signature_data'       => $signatureData,
+            'signature_type'       => ($signatureType === 'system' ? 'system' : 'canvas'),
+            'summary_calendar_days'=> (int) ($draft['summary_calendar_days'] ?? 0),
+            'summary_sat_sun'      => (int) ($draft['summary_sat_sun'] ?? 0),
+            'summary_holiday'      => (int) ($draft['summary_holiday'] ?? 0),
         ];
 
         $model->status = $me->isDirector() ? 'Approve' : 'Pending';
@@ -486,32 +518,176 @@ class LeaveController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
-        $dateStartTh = trim((string) Yii::$app->request->get('date_start', ''));
-        $dateEndTh = trim((string) Yii::$app->request->get('date_end', ''));
-        $leaveTimeType = (float) Yii::$app->request->get('leave_time_type', 1);
-        if ($dateStartTh === '' || $dateEndTh === '') {
-            return ['calendar_days' => 0, 'sat_sun_days' => 0, 'holiday_days' => 0, 'total_leave_days' => 0];
-        }
+        $dateStartTh   = trim((string) Yii::$app->request->get('date_start', ''));
+        $dateEndTh     = trim((string) Yii::$app->request->get('date_end', ''));
+        $dateStartType = trim((string) Yii::$app->request->get('date_start_type', '0'));
+        $dateEndType   = trim((string) Yii::$app->request->get('date_end_type', '0'));
+        $workShiftReq  = trim((string) Yii::$app->request->get('work_shift', ''));
+
+        $empty = ['calendar_days' => 0, 'sat_sun_days' => 0, 'holiday_days' => 0, 'total_leave_days' => 0, 'work_shift' => ''];
+        if ($dateStartTh === '' || $dateEndTh === '') return $empty;
+
         $dateStartG = AppHelper::convertToGregorian($dateStartTh);
-        $dateEndG = AppHelper::convertToGregorian($dateEndTh);
-        if (!$dateStartG || !$dateEndG || strtotime($dateEndG) < strtotime($dateStartG)) {
-            return ['calendar_days' => 0, 'sat_sun_days' => 0, 'holiday_days' => 0, 'total_leave_days' => 0];
-        }
-        $summary = $this->getDaySummary($dateStartG, $dateEndG, $me ? $me->id : null);
-        $allDays = (int) ($summary['allDays'] ?? 0);
+        $dateEndG   = AppHelper::convertToGregorian($dateEndTh);
+        if (!$dateStartG || !$dateEndG || strtotime($dateEndG) < strtotime($dateStartG)) return $empty;
+
+        $summary    = $this->getDaySummary($dateStartG, $dateEndG, $me ? $me->id : null);
+        $allDays    = (int) ($summary['allDays'] ?? 0);
         $satsunDays = (int) ($summary['satsunDays'] ?? 0);
-        $holidayDays = (int) ($summary['holiday'] ?? 0);
-        $isShift8 = (isset($summary['shift']) && $summary['shift'] === 'shift');
-        // เวร 8: เอาวันหยุดมาคิด (ใช้จำนวนวันตามปฏิทินทั้งหมด)
-        // เวรปกติ: หักวันหยุดและเสาร์-อาทิตย์ออก
-        $calendarDays = $isShift8 ? $allDays : max(0, $allDays - $satsunDays - $holidayDays);
-        $totalLeaveDays = round($calendarDays * $leaveTimeType, 2);
+        $holidayDays= (int) ($summary['holiday'] ?? 0);
+
+        // work_shift: ใช้ค่าจาก request ถ้ามี ไม่งั้นใช้จากข้อมูลพนักงาน
+        $empShift = $summary['shift'] ?? '';
+        $effectiveShift = ($workShiftReq !== '') ? $workShiftReq : $empShift;
+        $isShift8 = ($effectiveShift === 'shift');
+
+        // เวร 8: ไม่หักวันหยุดและเสาร์-อาทิตย์
+        $workDays = $isShift8 ? $allDays : max(0, $allDays - $satsunDays - $holidayDays);
+
+        // ปรับตาม date_start_type และ date_end_type
+        // วันแรก = 0.5 → หัก 0.5 วัน (ถ้า workDays >= 1)
+        // วันสุดท้าย = 0.5 → หัก 0.5 วัน (ถ้าไม่ใช่วันเดียวกัน)
+        $adjustment = 0;
+        if ($workDays >= 1) {
+            if ($dateStartType === '0.5') $adjustment += 0.5;
+            if ($dateEndType === '0.5' && $dateStartG !== $dateEndG) $adjustment += 0.5;
+            if ($dateStartType === '0.5' && $dateStartG === $dateEndG) {
+                // วันเดียวกัน ใช้ date_start_type เท่านั้น
+                $adjustment = 0.5;
+            }
+        }
+        $totalLeaveDays = max(0, round($workDays - $adjustment, 2));
+
         return [
-            'calendar_days' => $allDays,
-            'sat_sun_days' => $satsunDays,
-            'holiday_days' => $holidayDays,
+            'calendar_days'    => $allDays,
+            'sat_sun_days'     => $satsunDays,
+            'holiday_days'     => $holidayDays,
             'total_leave_days' => $totalLeaveDays,
+            'work_shift'       => $effectiveShift,
         ];
+    }
+
+    /**
+     * ค้นหาพนักงานสำหรับ Select2 AJAX — copy logic จาก /depdrop/employee-by-id
+     * ใช้ raw SQL เพื่อไม่ต้องพึ่ง Employees model ที่อยู่นอก modules/leave
+     */
+    public function actionSearchEmployee($q = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $q = trim((string) ($q ?? Yii::$app->request->get('q', '')));
+        $params = [':status' => 1];
+        $where = 'status = :status AND user_id IS NOT NULL AND user_id <> 0';
+        if ($q !== '') {
+            $where .= ' AND (fname LIKE :q1 OR lname LIKE :q2 OR CONCAT(fname," ",lname) LIKE :q3)';
+            $like = '%' . addcslashes($q, '%_\\') . '%';
+            $params[':q1'] = $like;
+            $params[':q2'] = $like;
+            $params[':q3'] = $like;
+        }
+        $rows = Yii::$app->db->createCommand(
+            "SELECT id, fname, lname FROM `employees` WHERE {$where} ORDER BY fname, lname LIMIT 30",
+            $params
+        )->queryAll();
+        $data = [];
+        foreach ($rows as $row) {
+            $fullname = trim($row['fname'] . ' ' . $row['lname']);
+            $data[] = ['id' => $row['id'], 'text' => $fullname, 'fullname' => $fullname];
+        }
+        return ['results' => $data];
+    }
+
+    /**
+     * คำนวณวันลา — copy logic จาก /hr/leave/cal-days ไว้ใน modules/leave
+     * รับ: date_start, date_end (พ.ศ.), date_start_type, date_end_type, leave_type_id, work_shift (override)
+     */
+    public function actionCalDays()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $empId = $me ? (int) $me->id : 0;
+
+        $dateStartType    = (float) Yii::$app->request->get('date_start_type', 0);
+        $dateEndType      = (float) Yii::$app->request->get('date_end_type', 0);
+        $leaveTypeId      = trim((string) Yii::$app->request->get('leave_type_id', ''));
+        $workShiftOverride = trim((string) Yii::$app->request->get('work_shift', ''));
+        $dateStartRaw     = trim((string) Yii::$app->request->get('date_start', ''));
+        $dateEndRaw       = trim((string) Yii::$app->request->get('date_end', ''));
+
+        $empty = ['status' => 'ok', 'allDays' => 0, 'satsunDays' => 0, 'holiday' => 0, 'total' => 0, 'shift' => '', 'shift_name' => ''];
+        if ($dateStartRaw === '' || $dateEndRaw === '') return $empty;
+
+        $dateStart = preg_replace('/\D/', '', $dateStartRaw) === '' ? '' : AppHelper::convertToGregorian($dateStartRaw);
+        $dateEnd   = preg_replace('/\D/', '', $dateEndRaw)   === '' ? '' : AppHelper::convertToGregorian($dateEndRaw);
+        if (!$dateStart || !$dateEnd) return $empty;
+        if (strtotime($dateEnd) < strtotime($dateStart)) {
+            return ['status' => 'error', 'message' => 'วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น'];
+        }
+
+        // ตรวจสอบปีงบประมาณ (raw SQL แทน model ที่อยู่นอก modules/leave)
+        $checkYear = AppHelper::YearBudget($dateEnd);
+        $entitleCount = (int) Yii::$app->db->createCommand(
+            'SELECT COUNT(id) FROM `leave_entitlements` WHERE thai_year = :yr',
+            [':yr' => $checkYear]
+        )->queryScalar();
+        if ($entitleCount === 0) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลสิทธิ์การลาในปี ' . $checkYear . ' กรุณาติดต่อเจ้าหน้าที่'];
+        }
+
+        $result = LeaveHelper::CalDay($dateStart, $dateEnd, $empId);
+        $allDays    = (float) ($result['allDays'] ?? 0);
+        $satsunDays = (float) ($result['satsunDays'] ?? 0);
+        $holiday    = (float) ($result['holiday'] ?? 0);
+        // ถ้า work_shift ส่งมาให้ใช้ override ก่อน ไม่งั้นใช้จาก DB
+        $shift = ($workShiftOverride !== '' && in_array($workShiftOverride, ['normal', 'shift'], true))
+            ? $workShiftOverride
+            : (string) ($result['shift'] ?? 'normal');
+
+        if ($leaveTypeId === 'LT2') {
+            // ลาคลอดบุตร: ไม่หักวันใดทั้งนั้น
+            $total = $allDays;
+        } elseif ($shift === 'normal') {
+            $total = $allDays - ($dateStartType + $dateEndType) - $satsunDays - $holiday;
+        } else {
+            // เวร 8: ไม่หักวันเสาร์-อาทิตย์และวันหยุด
+            $total = $allDays - ($dateStartType + $dateEndType);
+        }
+        $total = max(0, round($total, 2));
+
+        return [
+            'status'     => 'ok',
+            'allDays'    => $allDays,
+            'satsunDays' => $satsunDays,
+            'holiday'    => $holiday,
+            'shift'      => $shift,
+            'shift_name' => $shift === 'normal' ? 'เวรปกติ' : 'เวร 8',
+            'type_days'  => round($dateStartType + $dateEndType, 2),
+            'total'      => $total,
+        ];
+    }
+
+    /**
+     * อัปเดต work_shift ของพนักงาน — copy logic จาก /hr/work-shift/update-shift
+     * ใช้ raw SQL เพื่อไม่ต้องพึ่ง Employees model ที่อยู่นอก modules/leave
+     */
+    public function actionUpdateWorkShift()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false];
+        }
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            return ['success' => false];
+        }
+        $workShift = trim((string) Yii::$app->request->post('work_shift', ''));
+        if (!in_array($workShift, ['normal', 'shift'], true)) {
+            return ['success' => false, 'message' => 'ค่าไม่ถูกต้อง'];
+        }
+        $rows = Yii::$app->db->createCommand(
+            'UPDATE `employees` SET `work_shift` = :ws WHERE `id` = :id',
+            [':ws' => $workShift, ':id' => (int) $me->id]
+        )->execute();
+        return ['success' => $rows > 0];
     }
 
     /**
