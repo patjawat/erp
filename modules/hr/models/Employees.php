@@ -253,6 +253,10 @@ class Employees extends Yii\db\ActiveRecord
         } else {
             $this->gender = 'หญิง';
         }
+        // ป้องกัน Array to string conversion: คอลัมน์ data_json รับ string (JSON) แต่ฟอร์มโหลดเป็น array
+        if (is_array($this->data_json)) {
+            $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
+        }
 
         return parent::beforeSave($insert);
     }

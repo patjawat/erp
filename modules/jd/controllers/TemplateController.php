@@ -8,9 +8,11 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\helpers\Url;
+use app\components\AppHelper;
 use app\modules\jd\models\JdTemplate;
 use app\modules\jd\models\JdTemplateSearch;
 use app\modules\jd\models\JdTemplateSection;
+use app\modules\jd\data\MophSeedData;
 
 class TemplateController extends Controller
 {
@@ -20,8 +22,9 @@ class TemplateController extends Controller
             'verbs' => [
                 'class' => VerbFilter::class,
                 'actions' => [
-                    'delete' => ['POST'],
+                    'delete'        => ['POST'],
                     'delete-section' => ['POST'],
+                    'import-seed'   => ['POST'],
                 ],
             ],
         ]);
@@ -48,17 +51,21 @@ class TemplateController extends Controller
     {
         $model = new JdTemplate();
         $model->is_active = 1;
-        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post()) && $model->save()) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'status' => 'success',
-                    'message' => 'สร้าง template สำเร็จ',
-                    'container' => '#jd-template-index',
-                ];
+        if (Yii::$app->request->isPost) {
+            $model->load(Yii::$app->request->post());
+            static::normalizeJdApprovedAt($model);
+            if ($model->save()) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'message' => 'สร้าง template สำเร็จ',
+                        'container' => '#jd-template-index',
+                    ];
+                }
+                Yii::$app->session->setFlash('success', 'สร้าง template สำเร็จ');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
-            Yii::$app->session->setFlash('success', 'สร้าง template สำเร็จ');
-            return $this->redirect(['view', 'id' => $model->id]);
         }
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -73,17 +80,21 @@ class TemplateController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post()) && $model->save()) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return [
-                    'status' => 'success',
-                    'message' => 'บันทึกแก้ไขแล้ว',
-                    'container' => '#jd-template-index',
-                ];
+        if (Yii::$app->request->isPost) {
+            $model->load(Yii::$app->request->post());
+            static::normalizeJdApprovedAt($model);
+            if ($model->save()) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกแก้ไขแล้ว',
+                        'container' => '#jd-template-index',
+                    ];
+                }
+                Yii::$app->session->setFlash('success', 'บันทึกแก้ไขแล้ว');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
-            Yii::$app->session->setFlash('success', 'บันทึกแก้ไขแล้ว');
-            return $this->redirect(['view', 'id' => $model->id]);
         }
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -95,10 +106,110 @@ class TemplateController extends Controller
         return $this->render('update', ['model' => $model]);
     }
 
+    /**
+     * แปลงช่องวันที่อนุมัติ JD จากรูปแบบไทย (วว/ดด/ปปปป) เป็น Y-m-d H:i:s
+     */
+    private static function normalizeJdApprovedAt(JdTemplate $model): void
+    {
+        $v = $model->jd_approved_at;
+        if ($v === null || $v === '') {
+            return;
+        }
+        $v = is_string($v) ? trim($v) : $v;
+        if (is_string($v) && preg_match('#^\d{1,2}/\d{1,2}/\d{4}$#', $v)) {
+            $converted = AppHelper::convertToGregorian($v);
+            if ($converted !== null) {
+                $model->jd_approved_at = $converted . ' 00:00:00';
+            }
+        }
+    }
+
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
         Yii::$app->session->setFlash('success', 'ลบ template แล้ว');
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * นำเข้า Template สำเร็จรูป — ตำแหน่งงานกระทรวงสาธารณสุข 15 ตำแหน่ง
+     * ข้อมูลจาก modules/jd/data/MophSeedData.php
+     */
+    public function actionImportSeed()
+    {
+        $db          = Yii::$app->db;
+        $now         = date('Y-m-d H:i:s');
+        $userId      = Yii::$app->has('user') && !Yii::$app->user->isGuest ? (int)Yii::$app->user->id : null;
+        $positions   = MophSeedData::getPositions();
+        $tTemplate   = JdTemplate::tableName();
+        $tSection    = JdTemplateSection::tableName();
+
+        $transaction = $db->beginTransaction();
+        $inserted    = 0;
+        $skipped     = 0;
+
+        try {
+            foreach ($positions as $pos) {
+                $code = $pos['position_code'];
+
+                // ถ้ามีอยู่แล้ว ข้ามไป (ไม่ทับข้อมูลที่แก้ไขแล้ว)
+                $exists = (new \yii\db\Query())
+                    ->from($tTemplate)
+                    ->where(['position_code' => $code])
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Insert template
+                $db->createCommand()->insert($tTemplate, [
+                    'name'            => $pos['name'],
+                    'position_code'   => $code,
+                    'job_code'        => $pos['job_code']        ?? null,
+                    'job_level'       => $pos['job_level']       ?? null,
+                    'department'      => $pos['department']      ?? null,
+                    'employment_type' => $pos['employment_type'] ?? null,
+                    'job_purpose'     => $pos['job_purpose']     ?? null,
+                    'edu_requirement' => $pos['edu_requirement'] ?? null,
+                    'exp_years'       => $pos['exp_years']       ?? null,
+                    'core_competency' => $pos['core_competency'] ?? null,
+                    'is_active'       => 1,
+                    'created_at'      => $now,
+                    'updated_at'      => $now,
+                    'created_by'      => $userId,
+                    'updated_by'      => $userId,
+                ])->execute();
+
+                $templateId = $db->getLastInsertID();
+
+                // Insert sections
+                foreach ($pos['sections'] as [$sort, $title, $content]) {
+                    $db->createCommand()->insert($tSection, [
+                        'template_id' => $templateId,
+                        'title'       => $title,
+                        'content'     => $content,
+                        'sort_order'  => $sort,
+                    ])->execute();
+                }
+
+                $inserted++;
+            }
+
+            $transaction->commit();
+
+            $msg = "นำเข้า Template สาธารณสุขสำเร็จ {$inserted} ตำแหน่ง";
+            if ($skipped > 0) {
+                $msg .= " (ข้ามตำแหน่งที่มีอยู่แล้ว {$skipped} รายการ)";
+            }
+            Yii::$app->session->setFlash('success', $msg);
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('danger', 'นำเข้าไม่สำเร็จ: ' . $e->getMessage());
+        }
+
         return $this->redirect(['index']);
     }
 

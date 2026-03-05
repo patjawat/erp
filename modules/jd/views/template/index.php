@@ -22,8 +22,68 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้าง Template', ['create', 'title' => '<i class="bi bi-file-earmark-plus"></i> สร้าง Template JD'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+<div class="d-flex gap-2">
+    <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้าง Template', ['create'], ['class' => 'btn btn-primary']) ?>
+    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalImportSeed">
+        <i class="bi bi-cloud-download me-1"></i> นำเข้า Template สาธารณสุข
+    </button>
+</div>
 <?php $this->endBlock(); ?>
+
+<!-- Modal ยืนยันการนำเข้า -->
+<div class="modal fade" id="modalImportSeed" tabindex="-1" aria-labelledby="modalImportSeedLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white py-2 px-3">
+                <h6 class="modal-title mb-0 small fw-normal" id="modalImportSeedLabel">
+                    <i class="bi bi-cloud-download me-1"></i> นำเข้า Template ตำแหน่งงานสาธารณสุข
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">ระบบจะนำเข้า <strong>15 ตำแหน่งงาน</strong> มาตรฐานกระทรวงสาธารณสุข ได้แก่:</p>
+                <div class="row g-1 small text-muted mb-3">
+                    <div class="col-6">
+                        <ul class="mb-0 ps-3">
+                            <li>นายแพทย์</li>
+                            <li>พยาบาลวิชาชีพ</li>
+                            <li>เภสัชกร</li>
+                            <li>ทันตแพทย์</li>
+                            <li>นักเทคนิคการแพทย์</li>
+                            <li>นักกายภาพบำบัด</li>
+                            <li>นักรังสีการแพทย์</li>
+                            <li>นักโภชนาการ</li>
+                        </ul>
+                    </div>
+                    <div class="col-6">
+                        <ul class="mb-0 ps-3">
+                            <li>นักสังคมสงเคราะห์</li>
+                            <li>นักวิชาการสาธารณสุข</li>
+                            <li>เจ้าพนักงานสาธารณสุข</li>
+                            <li>นักวิเคราะห์นโยบายและแผน</li>
+                            <li>นักทรัพยากรบุคคล</li>
+                            <li>นักจัดการงานทั่วไป</li>
+                            <li>นักวิชาการคอมพิวเตอร์</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert border-0 rounded-2 d-flex gap-2 align-items-start py-2 px-3 mb-0" style="background:#fff3cd">
+                    <i class="bi bi-exclamation-triangle text-warning mt-1 flex-shrink-0"></i>
+                    <div class="small">
+                        ตำแหน่งที่<strong>มีอยู่แล้ว</strong> (position_code ซ้ำ) จะถูกข้ามไป ข้อมูลเดิมจะไม่ถูกทับ<br>
+                        หลังนำเข้าแนะนำให้แก้ไข <strong>ตำแหน่งงาน</strong> ให้ตรงกับ Categorise ของระบบ
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <?= Html::beginForm(['import-seed'], 'post') ?>
+                    <?= Html::submitButton('<i class="bi bi-cloud-download me-1"></i> นำเข้าเลย', ['class' => 'btn btn-success']) ?>
+                <?= Html::endForm() ?>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php Pjax::begin(['id' => 'jd-template-index']); ?>
 <div class="card border-0 shadow-sm rounded-3">
@@ -61,10 +121,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead class="table-light">
                     <tr>
                         <th class="text-nowrap">ลำดับ</th>
-                        <th>ชื่อ template</th>
-                        <th>ตำแหน่งงาน</th>
-                        <th>สถานะ</th>
-                        <th class="text-nowrap">จำนวนหัวข้อ</th>
+                        <th>ชื่อ Template</th>
+                            <th>ตำแหน่งงาน</th>
+                            <th>ระดับ</th>
+                            <th>สถานะ</th>
+                            <th class="text-nowrap">หัวข้อ</th>
                         <th class="text-end" style="width: 140px;">จัดการ</th>
                     </tr>
                 </thead>
@@ -80,15 +141,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td class="text-nowrap"><?= $num ?></td>
                             <td><?= Html::encode($item->name) ?></td>
                             <td><?= Html::encode($item->getPositionTitle()) ?></td>
+                            <td class="text-nowrap"><?= $item->job_level ? Html::encode($item->job_level) : '<span class="text-muted">—</span>' ?></td>
                             <td>
                                 <?= $item->is_active
-                                    ? Html::tag('span', 'ใช้งาน', ['class' => 'badge text-bg-success'])
-                                    : Html::tag('span', 'ปิดใช้', ['class' => 'badge text-bg-secondary']) ?>
+                                    ? Html::tag('span', 'ใช้งาน', ['class' => 'badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1'])
+                                    : Html::tag('span', 'ปิดใช้', ['class' => 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1']) ?>
                             </td>
                             <td><?= count($item->sections) ?></td>
                             <td class="text-end">
-                                <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'ดู']) ?>
-                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => 'แก้ไข Template: ' . $item->name], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'แก้ไข']) ?>
+                                <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'ดู', 'data-pjax' => '0']) ?>
+                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary', 'title' => 'แก้ไข', 'data-pjax' => '0']) ?>
                                 <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-outline-danger',
                                     'title' => 'ลบ',

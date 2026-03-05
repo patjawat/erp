@@ -351,6 +351,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         $avatarUrl = $emp && method_exists($emp, 'ShowAvatar') ? $emp->ShowAvatar() : null;
                         $name = $emp ? trim($emp->fullname ?? (($emp->fname ?? '') . ' ' . ($emp->lname ?? ''))) : $u->username;
                         if ($name === '') $name = $u->username;
+                        $departmentName = $emp && method_exists($emp, 'departmentName') ? $emp->departmentName() : '-';
                         $initials = mb_strlen($name) >= 2 ? mb_substr($name, 0, 2) : ($name ? mb_substr($name, 0, 1) : '?');
                     ?>
                     <li class="list-group-item border-0 px-0 py-3 d-flex align-items-center">
@@ -364,7 +365,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                         <div class="flex-grow-1 min-w-0">
                             <div class="fw-medium text-body"><?= Html::encode($name) ?></div>
-                            <div class="small text-muted"><?= Html::encode($u->username) ?></div>
+                            <div class="small text-muted"><?= Html::encode($departmentName) ?></div>
                         </div>
                         <?= Html::a('<i class="bi bi-eye"></i> ดู', ['/usermanager/user/view', 'id' => $u->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill link-loading']) ?>
                     </li>

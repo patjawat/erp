@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = 'แก้ไขหัวข้อ';
 ?>
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-header bg-primary text-white py-2 px-3">
-        <h6 class="mb-0 small fw-normal"><?= Html::encode($this->title) ?></h6>
+        <h6 class="mb-0 small fw-normal text-white"><?= Html::encode($this->title) ?></h6>
     </div>
     <div class="card-body">
         <?php $form = ActiveForm::begin(); ?>

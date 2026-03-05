@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = 'คำอธิบายงาน (JD)';
 <?php else: ?>
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-header bg-primary text-white py-2 px-3">
-        <h6 class="mb-0 small fw-normal">หัวข้อคำอธิบายงาน</h6>
+        <h6 class="mb-0 small fw-normal text-white">หัวข้อคำอธิบายงาน</h6>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">

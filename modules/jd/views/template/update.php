@@ -1,53 +1,30 @@
 <?php
-use yii\helpers\Html;
-use yii\bootstrap5\ActiveForm;
-use app\widgets\TomSelectWidget;
 
+use yii\helpers\Html;
+
+/** @var yii\web\View $this */
 /** @var app\modules\jd\models\JdTemplate $model */
+
 $this->title = 'แก้ไข Template: ' . $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Template JD', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'แก้ไข';
-$positionItems = ['' => '-- เลือกตำแหน่งงาน --'] + \app\components\CategoriseHelper::PositionName();
 ?>
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex align-items-center gap-2">
+    <i class="bi bi-pencil-square fs-4 text-primary"></i>
+    <h4 class="fw-medium mb-0"><?= Html::encode($this->title) ?></h4>
+</div>
+<?php $this->endBlock(); ?>
+
 <div class="card border-0 shadow-sm rounded-3">
-    <div class="card-header bg-primary text-white py-2 px-3">
-        <h6 class="mb-0 small fw-normal"><?= Html::encode($this->title) ?></h6>
+    <div class="card-header bg-primary text-white py-2 px-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 small fw-normal text-white">
+            <i class="bi bi-file-earmark-text me-1"></i> แก้ไขข้อมูล JD
+        </h6>
+        <?= Html::a('<i class="bi bi-eye me-1"></i> ดู Template', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-light']) ?>
     </div>
-    <div class="card-body">
-        <?php $form = ActiveForm::begin(['id' => 'jd-template-form']); ?>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'class' => 'form-control'])->label('ชื่อ template') ?>
-            </div>
-            <div class="col-md-6">
-                <?= $form->field($model, 'position_code')->widget(TomSelectWidget::class, [
-                    'items' => $positionItems,
-                    'options' => ['class' => 'form-select'],
-                    'clientOptions' => [
-                        'placeholder' => '-- เลือกตำแหน่งงาน --',
-                        'allowEmptyOption' => true,
-                    ],
-                ])->label('ตำแหน่งงาน') ?>
-            </div>
-            <div class="col-12">
-                <?= $form->field($model, 'is_active')->dropDownList([1 => 'ใช้งาน', 0 => 'ปิดใช้'], ['class' => 'form-control form-select'])->label('สถานะ') ?>
-            </div>
-        </div>
-        <div class="mt-3">
-            <?= Html::submitButton('<i class="bi bi-check-lg me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
-            <?= Html::a('ยกเลิก', ['view', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
-        </div>
-        <?php ActiveForm::end(); ?>
+    <div class="card-body p-4">
+        <?= $this->render('_form', ['model' => $model]) ?>
     </div>
 </div>
-<?php $this->registerJs(<<<'JS'
-handleFormSubmit('#jd-template-form', null, async function(response) {
-    if (response.container) {
-        $.pjax.reload({ container: response.container, history: false });
-    } else {
-        location.reload();
-    }
-});
-JS
-); ?>

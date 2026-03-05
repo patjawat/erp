@@ -34,7 +34,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'model' => $model,
             'options' => ['class' => 'table table-borderless mb-0'],
             'attributes' => [
-                'username',
                 'email:email',
                 [
                     'format' => 'html',

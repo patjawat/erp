@@ -72,7 +72,7 @@ class DefaultController extends Controller
                     if (!empty($onlineUserIds)) {
                         $onlineUsers = User::find()
                             ->where([User::tableName() . '.id' => array_unique($onlineUserIds)])
-                            ->joinWith(['employee'])
+                            ->joinWith(['employee', 'employee.empDepartment'])
                             ->limit(10)
                             ->all();
                     }
