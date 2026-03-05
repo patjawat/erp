@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\jobdescription;
+namespace app\modules\jd;
 
 /**
  * Job Description (JD) module.
@@ -8,7 +8,7 @@ namespace app\modules\jobdescription;
  */
 class Module extends \yii\base\Module
 {
-    public $controllerNamespace = 'app\modules\jobdescription\controllers';
+    public $controllerNamespace = 'app\modules\jd\controllers';
 
     public function init()
     {

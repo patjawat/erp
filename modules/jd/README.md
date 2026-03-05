@@ -15,10 +15,10 @@
 ## การรัน Migration
 
 ```bash
-php yii migrate --migrationPath=@app/modules/jobdescription/migrations
+php yii migrate --migrationPath=@app/modules/jd/migrations
 ```
 
 ## เมนู/จุดเข้าใช้
 
-- **จัดการ Template**: HR > ตั้งค่า (dropdown) > **Template คำอธิบายงาน (JD)** หรือ `/jobdescription/template/index`
-- **JD ของพนักงาน**: HR > ทะเบียนบุคลากร > เลือกพนักงาน > **คำอธิบายงาน (JD)** (เมนูซ้าย) หรือ `/jobdescription/employee-jd/view?emp_id=...`
+- **จัดการ Template**: HR > ตั้งค่า (dropdown) > **Template คำอธิบายงาน (JD)** หรือ `/jd/template/index`
+- **JD ของพนักงาน**: HR > ทะเบียนบุคลากร > เลือกพนักงาน > **คำอธิบายงาน (JD)** (เมนูซ้าย) หรือ `/jd/employee-jd/view?emp_id=...`

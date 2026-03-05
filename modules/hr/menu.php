@@ -58,6 +58,13 @@ use yii\helpers\Url;
                     ['class' => 'dropdown-item']
                 ) ?>
             </li>
+<<<<<<< HEAD
+=======
+            <li>
+                <?= Html::a('<i class="bi bi-file-earmark-text me-1"></i> Template คำอธิบายงาน (JD)', ['/jd/template/index'], ['class' => 'dropdown-item']) ?>
+            </li>
+
+>>>>>>> main
         </ul>
     </div>
 </div>

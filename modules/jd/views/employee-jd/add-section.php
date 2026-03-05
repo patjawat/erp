@@ -3,8 +3,8 @@ use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
 
 /** @var app\modules\hr\models\Employees $employee */
-/** @var app\modules\jobdescription\models\JdEmployee $jd */
-/** @var app\modules\jobdescription\models\JdEmployeeSection $section */
+/** @var app\modules\jd\models\JdEmployee $jd */
+/** @var app\modules\jd\models\JdEmployeeSection $section */
 $this->title = 'เพิ่มหัวข้อ JD — ' . $employee->fullname;
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนบุคลากร', 'url' => ['/hr/employees/index']];
 $this->params['breadcrumbs'][] = ['label' => $employee->fullname, 'url' => ['/hr/employees/view', 'id' => $employee->id]];

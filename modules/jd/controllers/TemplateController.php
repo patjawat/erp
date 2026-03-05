@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\jobdescription\controllers;
+namespace app\modules\jd\controllers;
 
 use Yii;
 use yii\web\Controller;
@@ -8,9 +8,9 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use yii\helpers\Url;
-use app\modules\jobdescription\models\JdTemplate;
-use app\modules\jobdescription\models\JdTemplateSearch;
-use app\modules\jobdescription\models\JdTemplateSection;
+use app\modules\jd\models\JdTemplate;
+use app\modules\jd\models\JdTemplateSearch;
+use app\modules\jd\models\JdTemplateSection;
 
 class TemplateController extends Controller
 {

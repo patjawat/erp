@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var app\modules\jobdescription\models\JdTemplate $model */
+/** @var app\modules\jd\models\JdTemplate $model */
 $this->title = $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Template JD', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;

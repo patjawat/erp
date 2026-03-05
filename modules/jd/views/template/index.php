@@ -6,7 +6,7 @@ use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\LinkPager;
 
 /** @var yii\web\View $this */
-/** @var app\modules\jobdescription\models\JdTemplateSearch $searchModel */
+/** @var app\modules\jd\models\JdTemplateSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Template คำอธิบายงาน (JD)';
