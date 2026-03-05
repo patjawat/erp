@@ -68,6 +68,16 @@ class SiteHelper extends Component
 
         }
 
+        /**
+         * ตรวจว่า emp_id นี้เป็นผู้อำนวยการตามตั้งค่าองค์กร (settings/company) หรือไม่
+         * อิงจาก data_json['director_name'] ที่เก็บเป็น id
+         */
+        public static function isDirectorFromSettings($empId)
+        {
+                $id = self::getInfo()['director_name'] ?? null;
+                return $id && (int) $id === (int) $empId;
+        }
+
         //ข้อมูลของผู้อำนวยการ
         public static function viewDirector()
         {

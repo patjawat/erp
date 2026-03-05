@@ -207,15 +207,21 @@ class Leave extends \yii\db\ActiveRecord
     }
 
 
+    /**
+     * สร้างรายการอนุมัติแบบเดิม (ใช้กับ /me/leave/create และ /hr/leave เท่านั้น)
+     * อ่านผู้อนุมัติจาก data_json ที่ได้จาก Approve() (tree โครงสร้างองค์กรโดยตรง) และผอ. จาก SiteHelper
+     * ห้ามเชื่อมกับระดับการอนุมัติตาม approve_level_setting — ถ้าต้องการแบบนั้นให้ใช้ modules/leave แทน
+     */
     public function createApprove()
     {
-       if(Yii::$app->user->can('director')) {
-                $me = UserHelper::GetEmployee();
+       // ใช้ "ผู้ขอลา" เป็นหลัก — ถ้าผู้ขอลาเป็นผอ. ตามตั้งค่าองค์กร (settings/company data_json[director_name]) จึงให้ผ่านทุกระดับ
+       if ($this->employee && \app\components\SiteHelper::isDirectorFromSettings($this->emp_id)) {
+                $applicantId = (int) $this->emp_id;
                 $approveDate =  date('Y-m-d H:i:s');
                 $approve1 =  new Approve();
                 $approve1->from_id = $this->id;
                 $approve1->name = 'leave';
-                $approve1->emp_id = $me->id;
+                $approve1->emp_id = $applicantId;
                 $approve1->title = 'อนุมัติ';
                 $approve1->data_json = [
                     'label' => 'อนุมัติ',
@@ -228,7 +234,7 @@ class Leave extends \yii\db\ActiveRecord
                 $approve2 =  new Approve();
                 $approve2->from_id = $this->id;
                 $approve2->name = 'leave';
-                $approve2->emp_id = $me->id;
+                $approve2->emp_id = $applicantId;
                 $approve2->title = 'อนุมัติ';
                 $approve2->data_json = [
                     'label' => 'อนุมัติ',
@@ -241,7 +247,7 @@ class Leave extends \yii\db\ActiveRecord
                 $approve3 =  new Approve();
                 $approve3->from_id = $this->id;
                 $approve3->name = 'leave';
-                $approve3->emp_id = $me->id;
+                $approve3->emp_id = $applicantId;
                 $approve3->title = 'อนุมัติ';
                  $approve3->data_json = [
                     'label' => 'อนุมัติ',
@@ -254,7 +260,7 @@ class Leave extends \yii\db\ActiveRecord
                 $approve4 =  new Approve();
                 $approve4->from_id = $this->id;
                 $approve4->name = 'leave';
-                $approve4->emp_id = $me->id;
+                $approve4->emp_id = $applicantId;
                 $approve4->title = 'อนุมัติ';
                 $approve4->data_json = [
                     'label' => 'อนุมัติ',
@@ -265,23 +271,27 @@ class Leave extends \yii\db\ActiveRecord
                 $approve4->save(false);
 
         }else{
-        // หัวหน้างาน
+        // ไม่ใช่ ผอ. — สร้างการอนุมัติตาม form บันทึกการลา (หัวหน้างาน, หัวหน้ากลุ่มงาน จากฟอร์ม; ผอ. จากตั้งค่าองค์กร)
+        $director = SiteHelper::viewDirector();
+        $directorId = !empty($director['id']) ? (int) $director['id'] : null;
+
         $leaveStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'leave']);
         try {
             if (!$leaveStep1Check) {
-                $leaveStep1 = $leaveStep1Check ? $leaveStep1Check : new Approve();
+                $leaveStep1 = new Approve();
                 $leaveStep1->from_id = $this->id;
                 $leaveStep1->name = 'leave';
-                $leaveStep1->emp_id = $this->data_json['approve_1'];
+                $leaveStep1->emp_id = (int) ($this->data_json['approve_1'] ?? 0);
                 $leaveStep1->title = 'หน.เห็นชอบ';
                 $leaveStep1->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep1->level = 1;
                 $leaveStep1->status = 'Pending';
                 $leaveStep1->save(false);
                 try {
-                    // ส่ง msg ให้ Approve
-                    $toUserId = $leaveStep1->employee->user->line_id;
-                    LineMsg::sendLeave($leaveStep1->id, $toUserId);
+                    $toUserId = $leaveStep1->employee->user->line_id ?? null;
+                    if ($toUserId) {
+                        LineMsg::sendLeave($leaveStep1->id, $toUserId);
+                    }
                 } catch (\Throwable $th) {
                 }
             }
@@ -289,13 +299,12 @@ class Leave extends \yii\db\ActiveRecord
         }
 
         try {
-            //หัวหน้ากลุ่มงานเห็นชอบ
             $leaveStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'leave']);
             if (!$leaveStep2Check) {
-                $leaveStep2 = $leaveStep2Check ? $leaveStep2Check : new Approve();
+                $leaveStep2 = new Approve();
                 $leaveStep2->from_id = $this->id;
                 $leaveStep2->name = 'leave';
-                $leaveStep2->emp_id = $this->data_json['approve_2'] ?? 0;
+                $leaveStep2->emp_id = (int) ($this->data_json['approve_2'] ?? 0);
                 $leaveStep2->title = 'หน.กลุ่มเห็นชอบ';
                 $leaveStep2->data_json = ['label' => 'เห็นชอบ'];
                 $leaveStep2->level = 2;
@@ -306,14 +315,12 @@ class Leave extends \yii\db\ActiveRecord
         }
 
         try {
-            //ผู้ตรวจสอบผู้ดูแลตรวจสอบวันลา
             $leaveStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'leave']);
             if (!$leaveStep3Check) {
-                $leaveStep3 = $leaveStep3Check ? $leaveStep3Check : new Approve();
+                $leaveStep3 = new Approve();
                 $leaveStep3->from_id = $this->id;
                 $leaveStep3->name = 'leave';
                 $leaveStep3->title = 'จท.ตรวจสอบ';
-                // $leaveStep3->emp_id = $this->data_json['approve_3'];
                 $leaveStep3->data_json = ['label' => 'ผ่าน'];
                 $leaveStep3->level = 3;
                 $leaveStep3->status = 'None';
@@ -322,23 +329,21 @@ class Leave extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
         }
 
-        //ผู้อำนวยการอนุมัติ
-        $director = SiteHelper::viewDirector();
-        $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
         try {
-            if (!$leaveStep4Check) {
-
-                $leaveStep4 = $leaveStep4Check ? $leaveStep4Check : new Approve();
-                $leaveStep4->from_id = $this->id;
-                $leaveStep4->name = 'leave';
-                $leaveStep4->emp_id = $director['id'];
-                $leaveStep4->title = 'ผอ.อนุมัติ';
-                $leaveStep4->data_json = ['label' => 'อนุมัติ'];
-                $leaveStep4->level = 4;
-                $leaveStep4->status = 'None';
-                $leaveStep4->save(false);
+            if ($directorId) {
+                $leaveStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'leave']);
+                if (!$leaveStep4Check) {
+                    $leaveStep4 = new Approve();
+                    $leaveStep4->from_id = $this->id;
+                    $leaveStep4->name = 'leave';
+                    $leaveStep4->emp_id = $directorId;
+                    $leaveStep4->title = 'ผอ.อนุมัติ';
+                    $leaveStep4->data_json = ['label' => 'อนุมัติ'];
+                    $leaveStep4->level = 4;
+                    $leaveStep4->status = 'None';
+                    $leaveStep4->save(false);
+                }
             }
-            // code...
         } catch (\Throwable $th) {
         }
 
@@ -347,8 +352,8 @@ class Leave extends \yii\db\ActiveRecord
 
     
     /**
-     * สร้างรายการอนุมัติจากตั้งค่า approve_level_setting (approveV3)
-     * โครงสร้างองค์กรจาก /hr/organization/diagram
+     * สร้างรายการอนุมัติจากตั้งค่า approve_level_setting (ระดับการอนุมัติตามโครงสร้างองค์กร)
+     * ไม่ใช้ในเส้นทาง /me/leave/create หรือ /hr/leave — เส้นทางนั้นใช้ createApprove() แบบเดิมเท่านั้น
      */
     public function createApproveV2()
     {

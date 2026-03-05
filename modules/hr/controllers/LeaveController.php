@@ -685,15 +685,18 @@ class LeaveController extends Controller
             'total_days' => 0
         ]);
 
+        $directorInfo = \app\components\SiteHelper::viewDirector();
+        $empId = $model->emp_id ?? $model->CreateBy()->id ?? null;
+        $isDirector = $empId && \app\components\SiteHelper::isDirectorFromSettings($empId);
         $model->data_json = [
             'title' => $this->request->get('title'),
             'address' => strip_tags($model->CreateBy()->fulladdress),
             'phone' => $model->CreateBy()->phone,
-            'approve_1' => $model->Approve()['approve_1']['id'],
-            'approve_2' => $model->Approve()['approve_2']['id'],
+            'approve_1' => $isDirector && !empty($directorInfo['id']) ? $directorInfo['id'] : $model->Approve()['approve_1']['id'],
+            'approve_2' => $isDirector && !empty($directorInfo['id']) ? $directorInfo['id'] : $model->Approve()['approve_2']['id'],
             'leave_contact_phone' => $model->CreateBy()->phone,
-            'director' => \Yii::$app->site::viewDirector()['id'],
-            'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
+            'director' => $directorInfo['id'] ?? null,
+            'director_fullname' => $directorInfo['fullname'] ?? '',
         ];
 
         if ($this->request->isPost) {
@@ -702,18 +705,16 @@ class LeaveController extends Controller
                 $dateStart =  AppHelper::convertToGregorian($model->date_start);
                 $dateEnd =  AppHelper::convertToGregorian($model->date_end);
 
-                //ถ้าเป็น ผอ. ให้อนุมัติเลย
-                $model->status = $model->employee->isDirector() ? 'Approve' : 'Pending';
+                // ถ้าเป็น ผอ. ตามตั้งค่าองค์กร (settings/company) ให้อนุมัติเลย
+                $model->status = \app\components\SiteHelper::isDirectorFromSettings($model->emp_id) ? 'Approve' : 'Pending';
 
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
                 $model->date_end = $dateEnd;
 
                 if ($model->save()) {
-                    //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
-                    if (!$model->employee->isDirector()) {
-                        $model->createApprove();
-                    }
+                    // สร้างรายการอนุมัติเสมอ — ถ้าผู้ขอลาเป็นผอ. createApprove() จะสร้างทุกระดับเป็นผอ. และ status Pass (อนุมัติตัวเองได้เลย)
+                    $model->createApprove();
                 }
                 return [
                     'status' => 'success',

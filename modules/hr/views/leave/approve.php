@@ -5,13 +5,18 @@
 <?php
 use yii\web\View;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
+use app\components\SiteHelper;
 use app\modules\hr\models\Employees;
-$me = UserHelper::GetEmployee()->getInfo();
 
+$me = UserHelper::GetEmployee()->getInfo();
+$isDirectorApplicant = !empty($model->emp_id) && SiteHelper::isDirectorFromSettings($model->emp_id);
+$directorInfo = SiteHelper::viewDirector();
+$directorName = !empty($directorInfo['fullname']) ? $directorInfo['fullname'] : 'ผู้อำนวยการ';
 
 $formatJs = <<< 'JS'
     var formatRepo = function (repo) {
@@ -55,9 +60,15 @@ $resultsJs = <<< JS
 <div class="row">
 <div class="col-12">
 
+<?php if ($isDirectorApplicant) { ?>
+    <?php
+    $dirId = !empty($directorInfo['id']) ? $directorInfo['id'] : '';
+    echo $form->field($model, 'data_json[approve_1]')->hiddenInput(['value' => $dirId])->label(false);
+    echo $form->field($model, 'data_json[approve_2]')->hiddenInput(['value' => $dirId])->label(false);
+    ?>
+<?php } else { ?>
 <?php
                         try {
-                            //code...
                             if($model->isNewRecord){
                                 $initEmployee =  Employees::find()->where(['id' => $model->Approve()['approve_1']['id']])->one()->getAvatar(false);    
                                 // $initEmployee = $me['leader1'];    
@@ -71,7 +82,6 @@ $resultsJs = <<< JS
 
                         echo $form->field($model, 'data_json[approve_1]')->widget(Select2::classname(), [
                             'initValueText' => $initEmployee,
-                            // 'initValueText' => $model->Approve()['leader']['avatar'],
                             'options' => ['placeholder' => 'เลือกรายการ...'],
                             'size' => Select2::LARGE,
                             'pluginEvents' => [
@@ -110,7 +120,6 @@ $resultsJs = <<< JS
 
                     <?php
                         try {
-                            //code...
                             $initEmployee =  Employees::find()->where(['id' => $model->data_json['approve_2']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
                             $initEmployee = '';
@@ -147,8 +156,8 @@ $resultsJs = <<< JS
                                 'templateSelection' => new JsExpression('function (item) { return item.text; }'),
                                 'templateResult' => new JsExpression('formatRepo'),
                             ],
-                        ])->label('หัวหน้ากลุ่มงาน')
-                        ?>
+                        ])->label('หัวหน้ากลุ่มงาน');
+                        } ?>
 
     
 </div>

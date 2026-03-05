@@ -415,11 +415,10 @@ class LeaveController extends Controller
             'summary_holiday'      => (int) ($draft['summary_holiday'] ?? 0),
         ], $approveIds);
 
-        $model->status = $me->isDirector() ? 'Approve' : 'Pending';
+        // ผอ. ตามตั้งค่าองค์กร ให้สถานะ Approve; createApprove() จะสร้างทุกระดับเป็นผอ. และ Pass (อนุมัติตัวเองได้เลย)
+        $model->status = \app\components\SiteHelper::isDirectorFromSettings($me->id) ? 'Approve' : 'Pending';
         if ($model->save(false)) {
-            if (!$me->isDirector()) {
-                $model->createApprove();
-            }
+            $model->createApprove();
             Yii::$app->session->remove(self::SESSION_KEY);
             Yii::$app->session->setFlash('success', 'สร้างใบลาสำเร็จ');
             if (Yii::$app->request->isAjax) {

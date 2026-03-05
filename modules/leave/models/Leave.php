@@ -208,8 +208,9 @@ class Leave extends \yii\db\ActiveRecord
     }
 
     /**
-     * สร้างรายการอนุมัติตามตั้งค่า approve_level_setting (system=leave)
+     * สร้างรายการอนุมัติตามระดับการอนุมัติตามโครงสร้างองค์กร (approve_level_setting)
      * ใช้ LeaveApproveResolver อ่านโครงสร้างองค์กรด้วย raw SQL
+     * เฉพาะ modules/leave เท่านั้นที่ใช้วิธีนี้ — ระบบลาเดิม /me/leave/create ใช้การอนุมัติแบบเดิมใน modules/hr
      */
     public function createApprove()
     {
@@ -234,8 +235,18 @@ class Leave extends \yii\db\ActiveRecord
             }
         }
 
-        $isDirector = Yii::$app->user->can('director');
-        $me = $isDirector ? UserHelper::GetEmployee() : null;
+        // ให้ ผอ. (ตามตั้งค่าองค์กร) เป็นผู้ตรวจสอบทุกระดับ
+        $dirInfo = SiteHelper::viewDirector();
+        $directorId = !empty($dirInfo['id']) ? (int) $dirInfo['id'] : null;
+        if ($directorId) {
+            foreach ($rows as &$row) {
+                $row['emp_id'] = $directorId;
+            }
+            unset($row);
+        }
+
+        // ผอ. ตามตั้งค่าองค์กร (settings/company) — อิงจาก data_json[director_name] ที่เก็บเป็น id
+        $isDirector = \app\components\SiteHelper::isDirectorFromSettings($this->emp_id);
         $approveDate = date('Y-m-d H:i:s');
         $firstPendingApprove = null;
 
@@ -247,7 +258,7 @@ class Leave extends \yii\db\ActiveRecord
             $a->title   = $r['title'];
 
             if ($isDirector) {
-                $a->emp_id    = $me ? $me->id : $r['emp_id'];
+                $a->emp_id    = (int) $this->emp_id;
                 $a->status    = 'Pass';
                 $a->data_json = ['label' => $r['title'], 'approve_date' => $approveDate];
             } else {

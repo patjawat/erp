@@ -359,16 +359,18 @@ class LeaveController extends Controller
             'emp_id' => $me->id,
         ]);
         
+        $directorInfo = \app\components\SiteHelper::viewDirector();
+        $isDirector = \app\components\SiteHelper::isDirectorFromSettings($me->id);
         $model->data_json = [
             'work_shift' => $me->work_shift,
             'title' => $this->request->get('title'),
             'address' => strip_tags($model->CreateBy()->fulladdress),
             'phone' => $model->CreateBy()->phone,
-            'approve_1' => $model->Approve()['approve_1']['id'],
-            'approve_2' => $model->Approve()['approve_2']['id'],
+            'approve_1' => $isDirector && !empty($directorInfo['id']) ? $directorInfo['id'] : $model->Approve()['approve_1']['id'],
+            'approve_2' => $isDirector && !empty($directorInfo['id']) ? $directorInfo['id'] : $model->Approve()['approve_2']['id'],
             'leave_contact_phone' => $model->CreateBy()->phone,
-            'director' => \Yii::$app->site::viewDirector()['id'],
-            'director_fullname' => \Yii::$app->site::viewDirector()['fullname'],
+            'director' => $directorInfo['id'] ?? null,
+            'director_fullname' => $directorInfo['fullname'] ?? '',
         ];
 
         if ($this->request->isPost) {
@@ -377,16 +379,16 @@ class LeaveController extends Controller
                 $dateStart =  AppHelper::convertToGregorian($model->date_start);
                 $dateEnd =  AppHelper::convertToGregorian($model->date_end);
                 
-                //ถ้าเป็น ผอ. ให้อนุมัติเลย
-                $model->status = $me->isDirector() ? 'Approve' : 'Pending';
+                // ถ้าเป็น ผอ. ตามตั้งค่าองค์กร (settings/company) ให้อนุมัติเลย
+                $model->status = \app\components\SiteHelper::isDirectorFromSettings($me->id) ? 'Approve' : 'Pending';
                 
                 $model->thai_year = AppHelper::YearBudget($dateStart);
                 $model->date_start = $dateStart;
                 $model->date_end = $dateEnd;
 
                 if ($model->save()) {
-                    //ถ้าไม่ใช่ ผอ. ให้สร้างรายการอนุมัติ
-                        $model->createApprove();
+                    // สร้างรายการอนุมัติเสมอ — ถ้าผู้ขอลาเป็นผอ. createApprove() จะสร้างทุกระดับเป็นผอ. และ status Pass (อนุมัติตัวเองได้เลย)
+                    $model->createApprove();
                 }
 
                 return $this->redirect(['/me/leave']);

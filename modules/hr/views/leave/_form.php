@@ -211,9 +211,10 @@ $resultsJs = <<<JS
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
                 tabindex="0">
+                <?php $isDirectorApplicant = !empty($model->emp_id) && \app\components\SiteHelper::isDirectorFromSettings($model->emp_id); ?>
                 <!-- Start row -->
                 <div class="row">
-                    <div class="col-6">
+                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
                         <div class="d-flex gap-3">
                             <div class="w-50">
 
@@ -239,7 +240,7 @@ $resultsJs = <<<JS
                         </div>
                         <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
                     </div>
-                    <div class="col-6">
+                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
 
                         <?php
                         try {
