@@ -2,8 +2,8 @@
 use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
 
-/** @var app\modules\jobdescription\models\JdTemplate $template */
-/** @var app\modules\jobdescription\models\JdTemplateSection $section */
+/** @var app\modules\jd\models\JdTemplate $template */
+/** @var app\modules\jd\models\JdTemplateSection $section */
 $this->title = 'เพิ่มหัวข้อ: ' . $template->name;
 $this->params['breadcrumbs'][] = ['label' => 'Template JD', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $template->name, 'url' => ['view', 'id' => $template->id]];

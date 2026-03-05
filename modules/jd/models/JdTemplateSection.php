@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\jobdescription\models;
+namespace app\modules\jd\models;
 
 use Yii;
 use yii\db\ActiveRecord;

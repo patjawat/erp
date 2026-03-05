@@ -15,7 +15,7 @@ use yii\helpers\Url;
         </p>
         <?= Html::a(
             '<i class="bi bi-file-earmark-text me-1"></i> ดู/แก้ไข คำอธิบายงาน (JD)',
-            ['/jobdescription/employee-jd/view', 'emp_id' => $model->id],
+            ['/jd/employee-jd/view', 'emp_id' => $model->id],
             ['class' => 'btn btn-primary']
         ) ?>
     </div>

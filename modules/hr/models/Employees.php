@@ -725,10 +725,10 @@ class Employees extends Yii\db\ActiveRecord
     /** จำนวนหัวข้อในคำอธิบายงาน (JD) ของพนักงาน */
     public function getJdSectionCount()
     {
-        if (!class_exists(\app\modules\jobdescription\models\JdEmployee::class)) {
+        if (!class_exists(\app\modules\jd\models\JdEmployee::class)) {
             return 0;
         }
-        $jd = \app\modules\jobdescription\models\JdEmployee::find()
+        $jd = \app\modules\jd\models\JdEmployee::find()
             ->where(['emp_id' => $this->id])
             ->with('sections')
             ->one();

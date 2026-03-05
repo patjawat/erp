@@ -3,7 +3,7 @@ use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
 use app\widgets\TomSelectWidget;
 
-/** @var app\modules\jobdescription\models\JdTemplate $model */
+/** @var app\modules\jd\models\JdTemplate $model */
 $this->title = 'สร้าง Template JD';
 $this->params['breadcrumbs'][] = ['label' => 'Template JD', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;

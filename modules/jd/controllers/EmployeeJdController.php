@@ -1,15 +1,15 @@
 <?php
 
-namespace app\modules\jobdescription\controllers;
+namespace app\modules\jd\controllers;
 
 use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use app\modules\hr\models\Employees;
-use app\modules\jobdescription\models\JdEmployee;
-use app\modules\jobdescription\models\JdEmployeeSection;
-use app\modules\jobdescription\models\JdTemplate;
+use app\modules\jd\models\JdEmployee;
+use app\modules\jd\models\JdEmployeeSection;
+use app\modules\jd\models\JdTemplate;
 
 class EmployeeJdController extends Controller
 {

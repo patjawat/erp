@@ -3,8 +3,8 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var app\modules\hr\models\Employees $employee */
-/** @var app\modules\jobdescription\models\JdEmployee $jd */
-/** @var app\modules\jobdescription\models\JdTemplate|null $templateForPosition */
+/** @var app\modules\jd\models\JdEmployee $jd */
+/** @var app\modules\jd\models\JdTemplate|null $templateForPosition */
 $this->title = 'คำอธิบายงาน (JD) — ' . $employee->fullname;
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนบุคลากร', 'url' => ['/hr/employees/index']];
 $this->params['breadcrumbs'][] = ['label' => $employee->fullname, 'url' => ['/hr/employees/view', 'id' => $employee->id]];
@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = 'คำอธิบายงาน (JD)';
 
 <?php if (!$templateForPosition && $employee->position_name): ?>
 <div class="alert alert-info py-2">
-    <small>ยังไม่มี template สำหรับตำแหน่ง "<?= Html::encode($employee->positionName ? $employee->positionName->title : $employee->position_name) ?>" — สร้าง template ได้ที่ <?= Html::a('Template JD', ['/jobdescription/template/index']) ?></small>
+    <small>ยังไม่มี template สำหรับตำแหน่ง "<?= Html::encode($employee->positionName ? $employee->positionName->title : $employee->position_name) ?>" — สร้าง template ได้ที่ <?= Html::a('Template JD', ['/jd/template/index']) ?></small>
 </div>
 <?php endif; ?>
 

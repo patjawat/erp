@@ -91,6 +91,6 @@ $modules['attendance'] = ['class' => 'app\modules\attendance\Module'];  // บ�
 $modules['leave'] = ['class' => 'app\modules\leave\Module'];  // ระบบลา (ขอลา / อนุมัติ / ทางลัด)
 $modules['appreciation'] = ['class' => 'app\modules\appreciation\Module'];  // พลังแห่งคำขอบคุณ (Appreciation Wall)
 $modules['notify'] = ['class' => 'app\modules\notify\Module'];  // แจ้งเตือน (การขออนุมัติลา/จัดซื้อ/ลงเวลา ฯลฯ)
-$modules['jobdescription'] = ['class' => 'app\modules\jobdescription\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
+$modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
 return $modules;
