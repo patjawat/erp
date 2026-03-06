@@ -73,7 +73,18 @@ class ImportHosOfficeController extends Controller
             echo "user typed no\n";
         }
     }
-
+public function actionSync()
+    {
+         $this->actionUpdatePosition();
+            $this->actionLeave();
+            $this->actionCreateApproveLeave();
+            $this->actionDevelopment();
+            $this->actionVehicle();
+            $this->actionMeeting();
+            $this->actionRepairGeneral();
+            $this->actionAsset();
+            $this->actionMaterial();
+    }
     public function actionClearDir()
     {
         $dir = 'modules/filemanager/fileupload';
