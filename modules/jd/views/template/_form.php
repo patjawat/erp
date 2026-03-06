@@ -18,6 +18,15 @@ use kartik\widgets\Select2;
 $positionItems = ['' => '-- เลือกตำแหน่งงาน --'] + CategoriseHelper::PositionName();
 $positionTypeFromDb = CategoriseHelper::PositionType();
 $employmentTypeItems = empty($positionTypeFromDb) ? JdTemplate::employmentTypeOptions() : (['' => '-- เลือก --'] + $positionTypeFromDb);
+
+/** แปลงข้อความหลายบรรทัดเป็น array สำหรับแสดงทีละหัวข้อ */
+$toLines = function ($text) {
+    if ($text === null || $text === '') {
+        return [];
+    }
+    $lines = preg_split('/\r\n|\r|\n/', (string) $text, -1, PREG_SPLIT_NO_EMPTY);
+    return array_map('trim', $lines);
+};
 ?>
 <?php $form = ActiveForm::begin(['id' => 'jd-template-form']); ?>
 
@@ -140,13 +149,27 @@ $employmentTypeItems = empty($positionTypeFromDb) ? JdTemplate::employmentTypeOp
     <div class="tab-pane fade" id="ftab3" role="tabpanel">
         <div class="row g-3">
             <div class="col-12">
-                <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">Core</span>
                     <span class="fw-medium">Core Competency — สมรรถนะที่ทุกคนในองค์กรต้องมี</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2 btn-add-row" data-target="core-competency-rows" data-placeholder="เช่น ความซื่อสัตย์และจริยธรรม">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
                 </div>
-                <?= $form->field($model, 'core_competency')
-                    ->textarea(['rows' => 4, 'class' => 'form-control', 'placeholder' => "เช่น\n- ความซื่อสัตย์และจริยธรรม\n- การทำงานเป็นทีม\n- มุ่งมั่นสู่ผลสำเร็จ"])
-                    ->label(false) ?>
+                <?= Html::activeHiddenInput($model, 'core_competency', ['id' => 'jd-template-core_competency']) ?>
+                <div id="core-competency-rows" class="jd-item-rows mb-2">
+                    <?php foreach ($toLines($model->core_competency) as $line): ?>
+                    <div class="input-group mb-2 jd-row">
+                        <input type="text" class="form-control jd-row-input" value="<?= Html::encode($line) ?>" placeholder="สมรรถนะข้อที่...">
+                        <button type="button" class="btn btn-outline-danger btn-remove-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="core-competency-rows" data-placeholder="เช่น ความซื่อสัตย์และจริยธรรม">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
+                </div>
             </div>
             <div class="col-md-6">
                 <div class="d-flex align-items-center gap-2 mb-1">
@@ -168,10 +191,26 @@ $employmentTypeItems = empty($positionTypeFromDb) ? JdTemplate::employmentTypeOp
             </div>
             <div class="col-12">
                 <hr class="my-2">
-                <p class="text-muted small mb-1">ระบุ KPI หลักที่ใช้วัดความสำเร็จของตำแหน่งนี้ ช่วยให้พนักงานเข้าใจเป้าหมายตั้งแต่วันแรก</p>
-                <?= $form->field($model, 'kpis')
-                    ->textarea(['rows' => 5, 'class' => 'form-control', 'placeholder' => "เช่น\n- ความพึงพอใจของผู้ใช้งาน ≥ 90%\n- จำนวน Feature ที่ส่งมอบต่อ Sprint ≥ 3\n- Bug rate < 5% ต่อ Release\n- Code Review ภายใน 24 ชั่วโมง"])
-                    ->label('ตัวชี้วัดผลงาน (KPIs)') ?>
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <p class="text-muted small mb-0">ระบุ KPI หลักที่ใช้วัดความสำเร็จของตำแหน่งนี้</p>
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="kpis-rows" data-placeholder="เช่น ความพึงพอใจของผู้ใช้งาน ≥ 90%">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
+                </div>
+                <?= Html::activeHiddenInput($model, 'kpis', ['id' => 'jd-template-kpis']) ?>
+                <div id="kpis-rows" class="jd-item-rows mb-2">
+                    <?php foreach ($toLines($model->kpis) as $line): ?>
+                    <div class="input-group mb-2 jd-row">
+                        <input type="text" class="form-control jd-row-input" value="<?= Html::encode($line) ?>" placeholder="ตัวชี้วัดผลงาน...">
+                        <button type="button" class="btn btn-outline-danger btn-remove-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="kpis-rows" data-placeholder="เช่น จำนวน Feature ที่ส่งมอบต่อ Sprint ≥ 3">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -193,9 +232,26 @@ $employmentTypeItems = empty($positionTypeFromDb) ? JdTemplate::employmentTypeOp
                 <p class="text-muted small mb-0">ช่วงเงินเดือนนี้ใช้สำหรับการสรรหาและความเป็นธรรมในองค์กร (ไม่แสดงต่อพนักงานทั่วไป)</p>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'benefits')
-                    ->textarea(['rows' => 6, 'class' => 'form-control', 'placeholder' => "เช่น\n- ประกันสุขภาพกลุ่ม\n- กองทุนสำรองเลี้ยงชีพ\n- วันลาพักร้อน 10 วัน/ปี\n- ค่าเดินทาง"])
-                    ->label('สวัสดิการหลัก') ?>
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <label class="form-label mb-0 fw-medium">สวัสดิการหลัก</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="benefits-rows" data-placeholder="เช่น ประกันสุขภาพกลุ่ม">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
+                </div>
+                <?= Html::activeHiddenInput($model, 'benefits', ['id' => 'jd-template-benefits']) ?>
+                <div id="benefits-rows" class="jd-item-rows mb-2">
+                    <?php foreach ($toLines($model->benefits) as $line): ?>
+                    <div class="input-group mb-2 jd-row">
+                        <input type="text" class="form-control jd-row-input" value="<?= Html::encode($line) ?>" placeholder="สวัสดิการ...">
+                        <button type="button" class="btn btn-outline-danger btn-remove-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="benefits-rows" data-placeholder="เช่น กองทุนสำรองเลี้ยงชีพ">
+                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
+                    </button>
+                </div>
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'variable_pay')
@@ -323,3 +379,53 @@ $employmentTypeItems = empty($positionTypeFromDb) ? JdTemplate::employmentTypeOp
 
 <?php ActiveForm::end(); ?>
 <?php \app\widgets\datepicker\Assets::register($this); ?>
+<?php
+$fieldMapJs = json_encode([
+    'core-competency-rows' => 'jd-template-core_competency',
+    'kpis-rows' => 'jd-template-kpis',
+    'benefits-rows' => 'jd-template-benefits',
+]);
+$this->registerJs(<<<JS
+(function(){
+    var fieldMap = {$fieldMapJs};
+
+    function addRow(containerId, placeholder) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var div = document.createElement("div");
+        div.className = "input-group mb-2 jd-row";
+        div.innerHTML = '<input type="text" class="form-control jd-row-input" placeholder="' + (placeholder || "") + '">' +
+            '<button type="button" class="btn btn-outline-danger btn-remove-row" title="ลบ"><i class="bi bi-trash"></i></button>';
+        container.appendChild(div);
+    }
+
+    document.getElementById("jd-template-form").addEventListener("submit", function() {
+        Object.keys(fieldMap).forEach(function(containerId) {
+            var hid = document.getElementById(fieldMap[containerId]);
+            var container = document.getElementById(containerId);
+            if (!hid || !container) return;
+            var vals = [];
+            container.querySelectorAll(".jd-row-input").forEach(function(inp) {
+                var v = (inp.value || "").trim();
+                if (v) vals.push(v);
+            });
+            hid.value = vals.join("\\n");
+        });
+    });
+
+    document.querySelectorAll(".btn-add-row").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            addRow(this.getAttribute("data-target"), this.getAttribute("data-placeholder") || "");
+        });
+    });
+
+    document.addEventListener("click", function(e) {
+        if (e.target.closest(".btn-remove-row")) {
+            var row = e.target.closest(".jd-row");
+            if (row) row.remove();
+        }
+    });
+})();
+JS
+, View::POS_END);
+?>

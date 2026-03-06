@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
-<?= $this->render('view_detail', ['model' => $model]) ?>
+<?= $this->render('view_detail', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl ?? null]) ?>
 
 <div class="d-flex flex-wrap justify-content-center gap-2 gap-md-3">
     <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา', ['/leave/leave/print', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener']) ?>

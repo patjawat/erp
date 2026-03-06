@@ -397,9 +397,16 @@ class EmployeesController extends Controller
             if ($model->join_date) {
                 $model->join_date = AppHelper::DateToDb($model->join_date);
             }
-            // ป้องกันข้อมูลใน JSON เดิมถูกลบ
+            // ป้องกันข้อมูลใน JSON เดิมถูกลบ (data_json จาก DB เป็น string ต้อง decode เป็น array ก่อน)
+            $oldData = $model_old_data_json;
+            if (is_string($oldData)) {
+                $oldData = json_decode($oldData, true) ?? [];
+            }
+            if (!is_array($oldData)) {
+                $oldData = [];
+            }
             $newData = array_filter($model->data_json ?? [], fn($v) => $v !== null && $v !== '');
-            $model->data_json = array_replace_recursive($model_old_data_json ?? [], $newData);
+            $model->data_json = array_replace_recursive($oldData, $newData);
 
             if ($model->save()) {
                 return [

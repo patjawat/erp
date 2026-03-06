@@ -2,6 +2,8 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use app\components\ThaiDateHelper;
+use app\components\ApproveHelper;
+use app\modules\leave\models\Leave;
 
 $this->title = 'การลางาน';
 $this->params['breadcrumbs'][] = $this->title;
@@ -43,64 +45,6 @@ $typeTheme = [
 ?>
 <div class="container-fluid py-3">
 
-    <!-- แถบสถิติการลา -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4 col-lg">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-2">
-                    <span class="erp-icon-box bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
-                        <i data-lucide="clock" style="width:1.125rem;height:1.125rem"></i>
-                    </span>
-                    <div>
-                        <div class="small text-muted">รออนุมัติของฉัน</div>
-                        <div class="fw-bold text-body"><?= (int) $myPendingLeaveCount ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-lg">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-2">
-                    <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
-                        <i data-lucide="calendar" style="width:1.125rem;height:1.125rem"></i>
-                    </span>
-                    <div>
-                        <div class="small text-muted">ลาพักผ่อนคงเหลือ</div>
-                        <div class="fw-bold text-body"><?= (int) $remainingAnnualLeave ?> วัน</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-lg">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-2">
-                    <span class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
-                        <i data-lucide="trending-up" style="width:1.125rem;height:1.125rem"></i>
-                    </span>
-                    <div>
-                        <div class="small text-muted">รวมวันลาที่ใช้ในปี</div>
-                        <div class="fw-bold text-body"><?= (int) $totalDaysUsedThisYear ?> วัน</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php if (!empty($canHr) && (int) $totalLeavePending > 0): ?>
-        <div class="col-6 col-md-4 col-lg">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-2">
-                    <span class="erp-icon-box bg-secondary bg-opacity-10 text-secondary rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
-                        <i data-lucide="inbox" style="width:1.125rem;height:1.125rem"></i>
-                    </span>
-                    <div>
-                        <div class="small text-muted">รออนุมัติทั้งหมด</div>
-                        <div class="fw-bold text-body"><?= (int) $totalLeavePending ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
-
     <div class="row g-4">
         <!-- คอลัมน์ซ้าย: ข้อมูลปีงบประมาณ + การ์ดประเภทลา + เกณฑ์การลา -->
         <div class="col-12 col-lg-4">
@@ -129,10 +73,15 @@ $typeTheme = [
                         </div>
                         <div class="col">
                             <div class="small fw-medium text-body"><?= Html::encode($s['title']) ?></div>
-                            <div class="small text-secondary"><?= (int) $s['days_used'] ?> วัน | <?= (int) $s['times_used'] ?> ครั้ง</div>
+                            <?php
+                                $ent = (int) ($s['entitlement_days'] ?? 0);
+                                $used = (int) ($s['days_used'] ?? 0);
+                                $remain = max(0, $ent - $used);
+                            ?>
+                            <div class="small text-secondary">สิทธิวันลา <?= $ent ?> วัน | <?= (int) ($s['times_used'] ?? 0) ?> ครั้ง</div>
                         </div>
                         <div class="col-auto text-end">
-                            <span class="small text-muted">สิทธิ์ <?= (int) $s['entitlement_days'] ?> วัน</span>
+                            <span class="small fw-semibold text-primary">คงเหลือ <?= $remain ?> วัน</span>
                         </div>
                     </div>
                 </div>
@@ -196,6 +145,8 @@ $typeTheme = [
                                 <th class="small fw-semibold">ช่วงเวลา</th>
                                 <th class="small fw-semibold text-center">จำนวน</th>
                                 <th class="small fw-semibold text-center">สถานะ</th>
+                                <th class="small fw-semibold">ผู้อนุมัติ</th>
+                                <th class="small fw-semibold">สถานะ/ความคืบหน้า</th>
                                 <th class="small fw-semibold text-end">จัดการ</th>
                             </tr>
                         </thead>
@@ -224,6 +175,21 @@ $typeTheme = [
                                     ?>
                                     <span class="badge bg-<?= $statusClass ?> bg-opacity-10 text-<?= $statusClass ?> border border-<?= $statusClass ?>-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($statusLabel) ?></span>
                                 </td>
+                                <td class="small py-3 px-3">
+                                    <?php
+                                    $stackApproves = $item->approves ? array_filter($item->approves, function ($a) {
+                                        return !in_array($a->status ?? '', ['None', 'Pending'], true);
+                                    }) : [];
+                                    usort($stackApproves, function ($x, $y) {
+                                        return (int) $y->level - (int) $x->level;
+                                    });
+                                    echo empty($stackApproves) ? '<span class="text-muted">—</span>' : Leave::renderStackChecker($stackApproves);
+                                    ?>
+                                </td>
+                                <td class="small py-3 px-3">
+                                    <?= $item->viewStatus() ?? '' ?>
+                                    <?= ApproveHelper::viewStepFromSteps($item->approves ?? []) ?>
+                                </td>
                                 <td class="text-end">
                                     <?= Html::a('<i class="bi bi-printer"></i>', ['/leave/leave/print', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ใบลา']) ?>
                                     <?= Html::a('<i class="bi bi-eye"></i>', ['/leave/leave/view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary rounded-pill open-modal', 'data' => ['size' => 'modal-xl'], 'title' => 'ดู']) ?>
@@ -232,7 +198,7 @@ $typeTheme = [
                             <?php endforeach; ?>
                             <?php if ($dataProvider->getCount() === 0): ?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4 small">ยังไม่มีประวัติการลา</td>
+                                <td colspan="9" class="text-center text-muted py-4 small">ยังไม่มีประวัติการลา</td>
                             </tr>
                             <?php endif; ?>
                         </tbody>

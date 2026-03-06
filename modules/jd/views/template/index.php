@@ -91,27 +91,31 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php $form = ActiveForm::begin([
             'method' => 'get',
             'action' => ['index'],
-            'options' => ['class' => 'mb-3'],
+            'options' => ['class' => 'mb-3', 'data-pjax' => 1],
         ]); ?>
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <?= $form->field($searchModel, 'name')->textInput(['class' => 'form-control', 'placeholder' => 'ค้นหาชื่อ template'])->label('ชื่อ') ?>
+            <div class="col-md-4">
+                <?= $form->field($searchModel, 'name')->textInput([
+                    'class' => 'form-control',
+                    'placeholder' => 'ค้นหา ชื่อ template',
+                    'autocomplete' => 'off',
+                ])->label('ค้นหา') ?>
             </div>
             <div class="col-md-3">
                 <?= $form->field($searchModel, 'position_code')->dropDownList(
                     ['' => '-- ทุกตำแหน่ง --'] + \app\components\CategoriseHelper::PositionName(),
-                    ['class' => 'form-control form-select']
+                    ['class' => 'form-select']
                 )->label('ตำแหน่งงาน') ?>
             </div>
             <div class="col-md-2">
                 <?= $form->field($searchModel, 'is_active')->dropDownList(
                     ['' => 'ทั้งหมด', 1 => 'ใช้งาน', 0 => 'ปิดใช้'],
-                    ['class' => 'form-control form-select']
+                    ['class' => 'form-select']
                 )->label('สถานะ') ?>
             </div>
             <div class="col-md-2">
                 <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
-                <?= Html::a('ล้าง', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+                <?= Html::a('ล้าง', ['index'], ['class' => 'btn btn-outline-secondary', 'data-pjax' => '0']) ?>
             </div>
         </div>
         <?php ActiveForm::end(); ?>

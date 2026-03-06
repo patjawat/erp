@@ -1,4 +1,7 @@
 <?php
+/** @var app\modules\leave\models\Leave $model */
+/** @var bool $hideHeading ไม่แสดงหัวข้อ (เมื่อใช้ใน view_detail ที่มี card-header แล้ว) */
+$hideHeading = $hideHeading ?? false;
 $sql = "SELECT x1.*,
        SUM(x1.last_days + x1.on_days) AS total_days
 FROM (
@@ -22,10 +25,12 @@ $querys = Yii::$app->db->createCommand($sql)
     ->bindValue(':emp_id', $model->emp_id)
     ->queryAll();
 ?>
+<?php if (!$hideHeading): ?>
 <div class="d-flex align-items-center gap-2 mb-4">
     <div class="p-2 bg-primary bg-opacity-10 rounded-circle text-primary"><i class="bi bi-file-text fs-5"></i></div>
     <h6 class="fw-bold mb-0 text-body">สถิติการลาในปีงบประมาณนี้ <?= $model->thai_year ?></h6>
 </div>
+<?php endif; ?>
 <table class="table table-striped table-hover align-middle mb-0">
     <thead class="table-light">
         <tr>

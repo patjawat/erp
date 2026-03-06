@@ -30,6 +30,10 @@ class JdTemplateSearch extends JdTemplate
             return $dataProvider;
         }
 
+        if (is_string($this->name)) {
+            $this->name = trim($this->name);
+        }
+
         $query->andFilterWhere([
             'id' => $this->id,
             'is_active' => $this->is_active,

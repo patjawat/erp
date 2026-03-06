@@ -16,13 +16,13 @@ $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' =
 $this->params['breadcrumbs'][] = ['label' => 'แบบฟอร์มใบลา', 'url' => ['/leave/setting/leave-template']];
 $this->params['breadcrumbs'][] = $typeLabel;
 
-$uploadActionUrl = Url::to(['/leave/setting/upload-template', 'code' => $code], true);
+$uploadActionUrl = Url::to(['/leave/setting/upload-template', 'code' => $code]);
 $csrfParam       = Yii::$app->request->csrfParam;
 $csrfToken       = Yii::$app->request->csrfToken;
 $uploadUrlJs     = json_encode($uploadActionUrl);
 $csrfJs          = json_encode($csrfToken);
 $csrfParamJs     = json_encode($csrfParam);
-$deleteUrl       = !$isDefault ? json_encode(Url::to(['/leave/setting/delete-template', 'code' => $code], true)) : 'null';
+$deleteUrl       = !$isDefault ? json_encode(Url::to(['/leave/setting/delete-template', 'code' => $code])) : 'null';
 
 $this->registerCss('
 .lt-sidebar  { position: sticky; top: 1rem; }

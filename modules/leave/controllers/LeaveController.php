@@ -42,16 +42,33 @@ class LeaveController extends Controller
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
+        $previewPdfUrl = $this->getPreviewPdfUrlForLeave($model);
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             $title = $this->request->get('title', $model->employee ? $model->employee->getAvatar(false) : 'รายละเอียดการลา');
             return [
                 'title' => $title,
-                'content' => $this->renderAjax('view', ['model' => $model]),
+                'content' => $this->renderAjax('view', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl]),
                 'footer' => '',
             ];
         }
-        return $this->render('view', ['model' => $model]);
+        return $this->render('view', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl]);
+    }
+
+    /**
+     * คืน URL สำหรับแสดงตัวอย่าง PDF ใบลา (เฉพาะเมื่อมีเทมเพลต) ไม่รวมหน้า toolbar
+     */
+    protected function getPreviewPdfUrlForLeave(Leave $model): ?string
+    {
+        $baseDir = Yii::getAlias('@app') . '/modules/filemanager/fileupload/leave_templates';
+        $ltCode = $model->leaveType->code ?? null;
+        $safe = $ltCode ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $ltCode) : '';
+        $hasPerType = $safe !== '' && is_file($baseDir . '/' . $safe . '/template.pdf');
+        $hasDefault = is_file($baseDir . '/default/template.pdf');
+        if (!$hasPerType && !$hasDefault) {
+            return null;
+        }
+        return Url::to(['/leave/setting/leave-pdf', 'id' => $model->id]);
     }
 
     /**

@@ -4,9 +4,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\bootstrap5\Html;
 use app\components\UserHelper;
-use app\components\ApproveHelper;
 use app\modules\hr\models\Leave;
-use app\modules\approveV2\models\Approve;
 
 $me = UserHelper::GetEmployee();
 
@@ -18,28 +16,6 @@ $newSort = $isAsc ? '-total_days' : 'total_days';
 $sortIcon = $isAsc ? '↑' : ($isDesc ? '↓' : '');
 
 $models = $dataProvider->getModels();
-$leaveIds = array_filter(array_map(function ($m) { return $m->id; }, $models));
-$approvesByLeaveId = [];
-$stepsByLeaveId = [];
-if (!empty($leaveIds)) {
-    $allApproves = Approve::find()
-        ->where(['name' => 'leave', 'from_id' => $leaveIds])
-        ->with('employee')
-        ->orderBy(['from_id' => SORT_ASC, 'id' => SORT_ASC])
-        ->all();
-    foreach ($allApproves as $a) {
-        $stepsByLeaveId[$a->from_id][] = $a;
-        if (!in_array($a->status, ['None', 'Pending'], true)) {
-            if (!isset($approvesByLeaveId[$a->from_id])) {
-                $approvesByLeaveId[$a->from_id] = [];
-            }
-            $approvesByLeaveId[$a->from_id][] = $a;
-        }
-    }
-    foreach (array_keys($approvesByLeaveId) as $lid) {
-        usort($approvesByLeaveId[$lid], function ($x, $y) { return $y->level - $x->level; });
-    }
-}
 
 ?>
 
@@ -55,8 +31,6 @@ if (!empty($leaveIds)) {
                 <th><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
                 <th>ระหว่างวันที่</th>
                 <th class="text-start" scope="col">หน่วยงาน</th>
-                <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
-                <th class="text-start" style="width: 165px;">สถานะ/ความคืบหน้า</th>
                 <th class="text-center">ดำเนินการ</th>
             </tr>
         </thead>
@@ -83,12 +57,6 @@ if (!empty($leaveIds)) {
                     </td>
                     <td><?php echo $item->showLeaveDate() ?></td>
                     <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee ? $item->employee->departmentName() : '-' ?></td>
-                    <td><?php echo Leave::renderStackChecker($approvesByLeaveId[$item->id] ?? []); ?></td>
-                    <td class="fw-light align-middle text-start" style="width:150px;">
-                        <?php echo $item->viewStatus(); ?>
-                        <?php echo ApproveHelper::viewStepFromSteps($stepsByLeaveId[$item->id] ?? []); ?>
-                    </td>
-
                     <td class="text-end">
                         <div class="dropdown">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"

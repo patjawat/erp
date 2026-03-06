@@ -70,6 +70,9 @@ class DefaultController extends Controller
         $dataProvider = $searchModel->search($params);
         $dataProvider->query->andWhere(['leave.emp_id' => $me->id, 'leave.thai_year' => $thaiYear]);
         $dataProvider->query->joinWith(['leaveType', 'leaveStatus']);
+        $dataProvider->query->with(['approves' => function ($q) {
+            $q->orderBy(['level' => SORT_ASC])->with('employee');
+        }]);
         $dataProvider->setSort(['defaultOrder' => ['created_at' => SORT_DESC]]);
         $dataProvider->pagination = ['pageSize' => 10, 'pageParam' => 'leave-page'];
 
@@ -107,7 +110,28 @@ class DefaultController extends Controller
     }
 
     /**
+     * ดึงสิทธิ์วันลา (รวมยอดยกมา) จาก leave_entitlements ตาม emp_id และปีงบประมาณ
+     * คืน [ leave_type_id => days ]
+     */
+    protected function getEntitlementFromLeaveEntitlements($empId, $thaiYear)
+    {
+        $rows = Yii::$app->db->createCommand(
+            'SELECT leave_type_id, days FROM leave_entitlements WHERE emp_id = :emp_id AND thai_year = :thai_year'
+        )->bindValues([':emp_id' => $empId, ':thai_year' => $thaiYear])->queryAll();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $code = $row['leave_type_id'] ?? null;
+            if ($code !== null && $code !== '') {
+                $map[$code] = (int) $row['days'];
+            }
+        }
+        return $map;
+    }
+
+    /**
      * สรุปการใช้และสิทธิ์แยกตามประเภทการลา
+     * สิทธิ์ดึงจาก leave_entitlements (สรุปยอดยกมาจากปีก่อน) ถ้ามี ไม่มีจึงใช้ leave_policies
      * ไม่แสดงลาออก, ชายไม่แสดงลาคลอดบุตร (LT2), หญิงไม่แสดงลาอุปสมบท (LT5, LT7)
      */
     protected function getLeaveTypeSummaries($employee, $thaiYear)
@@ -115,6 +139,8 @@ class DefaultController extends Controller
         $empId = $employee->id;
         $positionType = $employee->position_type ?? null;
         $gender = $employee->gender ?? null;
+
+        $entitlementByType = $this->getEntitlementFromLeaveEntitlements($empId, $thaiYear);
 
         $types = LeaveType::find()
             ->where(['name' => 'leave_type', 'active' => 1])
@@ -149,14 +175,17 @@ class DefaultController extends Controller
             $days = (float) ($usage['days'] ?? 0);
             $times = (int) ($usage['times'] ?? 0);
 
-            $entitlement = 0;
-            $policy = LeavePolicies::find()
-                ->andWhere(['leave_type_id' => $t->code])
-                ->andFilterWhere(['position_type_id' => $positionType])
-                ->orderBy(['year_of_service' => SORT_DESC])
-                ->one();
-            if ($policy) {
-                $entitlement = (int) ($policy->max_days ?? $policy->days ?? 0);
+            // สิทธิ์: จาก leave_entitlements (ยอดยกมา+สิทธิปีนี้) ก่อน ไม่มีจึงใช้ leave_policies
+            $entitlement = isset($entitlementByType[$t->code]) ? (int) $entitlementByType[$t->code] : 0;
+            if ($entitlement === 0) {
+                $policy = LeavePolicies::find()
+                    ->andWhere(['leave_type_id' => $t->code])
+                    ->andFilterWhere(['position_type_id' => $positionType])
+                    ->orderBy(['year_of_service' => SORT_DESC])
+                    ->one();
+                if ($policy) {
+                    $entitlement = (int) ($policy->max_days ?? $policy->days ?? 0);
+                }
             }
 
             $summaries[] = [

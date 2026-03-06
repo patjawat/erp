@@ -11,7 +11,7 @@ $this->title = 'แบบฟอร์มใบลา';
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$uploadActionUrl = Url::to(['/leave/setting/upload-template'], true);
+$uploadActionUrl = Url::to(['/leave/setting/upload-template']);
 $csrfParam       = Yii::$app->request->csrfParam;
 $csrfToken       = Yii::$app->request->csrfToken;
 $uploadUrlJs     = json_encode($uploadActionUrl);

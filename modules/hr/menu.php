@@ -52,19 +52,9 @@ use yii\helpers\Url;
                 ) ?>
             </li>
             <li>
-                <?= Html::a(
-                    '<span class="d-flex align-items-center gap-2"><i data-lucide="file-text" style="width:15px;height:15px" class="text-muted"></i> Template คำอธิบายงาน (JD)</span>',
-                    ['/jobdescription/template/index'],
-                    ['class' => 'dropdown-item']
-                ) ?>
-            </li>
-<<<<<<< HEAD
-=======
-            <li>
                 <?= Html::a('<i class="bi bi-file-earmark-text me-1"></i> Template คำอธิบายงาน (JD)', ['/jd/template/index'], ['class' => 'dropdown-item']) ?>
             </li>
 
->>>>>>> main
         </ul>
     </div>
 </div>
