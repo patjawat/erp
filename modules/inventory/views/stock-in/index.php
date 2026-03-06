@@ -37,9 +37,13 @@ $this->params['breadcrumbs'][] = 'ทะเบียนรับเข้า';
 <?php
 // นับจำนวน order ที่รอรับเข้าคลัง
 $warehouseModel = Warehouse::findOne($warehouse->id);
-if (isset($warehouseModel->data_json['item_type'])) {
-    $item = $warehouseModel->data_json['item_type'];
-
+$dataJson = $warehouseModel->data_json;
+if (is_string($dataJson)) {
+    $dataJson = json_decode($dataJson, true) ?? [];
+}
+if (isset($dataJson['item_type'])) {
+    $item = $dataJson['item_type'];
+    $item = is_array($item) ? $item : (array) $item;
     $item = array_diff($item, ['M25']);
     $query = Order::find()
         ->where(['name' => 'order', 'status' => 5])
