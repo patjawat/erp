@@ -31,32 +31,40 @@ $models = $dataProvider->getModels();
                 <th><?= Html::a("การลา $sortIcon", Url::current(['sort' => $newSort])) ?></th>
                 <th>ระหว่างวันที่</th>
                 <th class="text-start" scope="col">หน่วยงาน</th>
+                <th scope="col" style="width: 127px;">ผู้อนุมัติ</th>
+                <th class="text-start" style="width: 165px;">สถานะ/ความคืบหน้า</th>
                 <th class="text-center">ดำเนินการ</th>
             </tr>
         </thead>
         <tbody class="align-middle table-group-divider" id="pjax-loading" style="background-color: #f0f8ff;">
-            <?php foreach ($models as $key => $item): ?>
+            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                 <tr>
-                    <td class="text-center"><?php echo (($dataProvider->pagination ? $dataProvider->pagination->offset : 0) + 1 + $key) ?></td>
-                    <td class="text-center "><?php echo $item->employee && $item->employee->positionType ? $item->employee->positionType->title : '-' ?></td>
+                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                    <td class="text-center "><?php echo $item->employee->positionType->title ?? '-' ?></td>
                     <td class="text-truncate" style="max-width: 230px;">
                         <a href="<?php echo Url::to(['/me/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                             class="open-modal" data-size="modal-xl">
-                            <?php echo $item->employee ? $item->employee->getAvatar(false) : '-' ?>
+                            <?php echo  $item->employee->getAvatar(false) ?>
                         </a>
                     </td>
                     <td><?= $item->work_shift_name ?></td>
                     <td>
-                        <?= $item->data_json['reason'] ?? '' ?>
+                        <?= $item->data_json['reason'] ?>
                         <div class="d-flex flex-column justofy-content-start align-items-start">
                             <span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i
                                     class="bi bi-exclamation-circle-fill"></i>
-                                <?php echo $item->leaveType ? $item->leaveType->title : '-' ?>
+                                <?php echo $item->leaveType?->title ?? '-' ?>
                                 <code><?php echo $item->total_days ?> </code> วัน</span>
                         </div>
                     </td>
                     <td><?php echo $item->showLeaveDate() ?></td>
-                    <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee ? $item->employee->departmentName() : '-' ?></td>
+                    <td class="text-start text-truncate" style="max-width:150px;"><?php echo $item->employee->departmentName() ?></td>
+                    <td><?php echo $item->stackChecker() ?></td>
+                    <td class="fw-light align-middle text-start" style="width:150px;">
+                        <?php echo $item->viewStatus(); ?>
+                        <?php echo ApproveHelper::viewStep('leave',$item->id); ?>
+                    </td>
+
                     <td class="text-end">
                         <div class="dropdown">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
