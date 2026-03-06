@@ -607,6 +607,30 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
+    //  ภาพทีมผูตรวจสอบ
+    public function stackChecker()
+    {
+        // try {
+        $data = '';
+        $data .= '<div class="avatar-stack">';
+        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+            try {
+                $data .= Html::img('@web/img/loading.gif', [
+                    'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),
+                    'data' => [
+                        'expand' => '-20',
+                        'sizes' => 'auto',
+                        'src' => $item->employee->showAvatar()
+                    ]
+                ]);
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+        }
+        $data .= '</div>';
+        return $data;
+    }
+
     // แสดงสถานะในรูปแบบสี
     public function viewStatus()
     {
@@ -707,17 +731,6 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
-    //  ภาพทีมผูตรวจสอบ
-    public function stackChecker()
-    {
-        $approves = Approve::find()
-            ->where(['from_id' => $this->id, 'name' => 'leave'])
-            ->andWhere(['not in', 'status', ['None', 'Pending']])
-            ->orderBy(['level' => SORT_DESC])
-            ->with('employee')
-            ->all();
-        return static::renderStackChecker($approves);
-    }
 
     /**
      * Render stack checker from pre-loaded Approve models (avoids N+1 in lists).
