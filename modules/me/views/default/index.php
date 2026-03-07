@@ -34,6 +34,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 
 <?php $this->endBlock(); ?>
 
+<div class="container-fluid px-3 px-md-4">
 <?php
 $upcomingHealth = $me->getUpcomingHealthAppointments();
 if (!empty($upcomingHealth)): ?>
@@ -58,7 +59,7 @@ if (!empty($upcomingHealth)): ?>
 </div>
 <?php endif; ?>
 
-<div class="row">
+<div class="row g-3">
     <div class="col-12 col-xl-6">
         <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-center rounded-4"
             style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
@@ -237,7 +238,7 @@ if (!empty($upcomingHealth)): ?>
                         </div>
                     </div>
                 </div>
-                <div class="row g-3">
+                <div class="row g-2">
                     <div class="col-6">
                         <div class="p-3 rounded-4 border border-light" style="background-color: #f8fafc;">
                             <p class="text-muted fw-black text-uppercase mb-1" style="font-size: 0.65rem;">สะสมดาว</p>
@@ -275,23 +276,21 @@ if (!empty($upcomingHealth)): ?>
     </div>
 
     <div class="col-12 col-xl-3">
-        <div class="row g-2">
+        <div class="row g-3">
             <div class="col-6">
-                <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <a href="<?= Url::to(['/me/leave']) ?>">
+                <a href="<?= Url::to(['/me/leave']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">การลางาน</span></div>
-                    </a>
-                </div>
+                    </div>
+                </a>
             </div>
             <div class="col-6">
-                <a href="<?= Url::to(['/me/repair-v2']) ?>">
-                    <div
-                        class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                            style="width: 42px; height: 42px;">
+                <a href="<?= Url::to(['/me/repair-v2']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="wrench"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">แจ้งซ่อม</span></div>
@@ -299,65 +298,54 @@ if (!empty($upcomingHealth)): ?>
                 </a>
             </div>
             <div class="col-6">
-                <a href="<?= Url::to(['/me/booking-vehicle/calendar']) ?>">
-
-                    <div
-                        class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                            style="width: 42px; height: 42px;">
+                <a href="<?= Url::to(['/me/booking-vehicle/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="car-front"></i>
                         </div>
                         <div><span class="text-xs text-muted fw-bold d-block">จองรถ</span></div>
+                    </div>
                 </a>
             </div>
-        </div>
-        <div class="col-6">
-            <a href="<?= Url::to(['/me/booking-meeting/calendar']) ?>">
-
-                <div
-                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                        style="width: 42px; height: 42px;">
-                        <i data-lucide="calendar-days"></i>
+            <div class="col-6">
+                <a href="<?= Url::to(['/me/booking-meeting/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
+                            <i data-lucide="calendar-days"></i>
+                        </div>
+                        <div><span class="text-xs text-muted fw-bold d-block">จองห้องประชุม</span></div>
                     </div>
-                    <div><span class="text-xs text-muted fw-bold d-block">จองห้องประชุม</span></div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6">
-            <a href="<?= Url::to(['/me/development']) ?>">
-
-                <div
-                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                        style="width: 42px; height: 42px;">
-                        <i data-lucide="graduation-cap"></i>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="<?= Url::to(['/me/development']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
+                            <i data-lucide="graduation-cap"></i>
+                        </div>
+                        <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
                     </div>
-                    <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6">
-            <a href="<?= Url::to(['/me/purchase']) ?>">
-                <div
-                    class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
-                    <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2"
-                        style="width: 42px; height: 42px;">
-                        <i data-lucide="shopping-cart"></i>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="<?= Url::to(['/me/purchase']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
+                            <i data-lucide="shopping-cart"></i>
+                        </div>
+                        <div><span class="text-xs text-muted fw-bold d-block">ขอซื้อ/ขอจ้าง</span></div>
                     </div>
-                    <div><span class="text-xs text-muted fw-bold d-block">ขอซื้อ/ขอจ้าง</span></div>
-                </div>
-            </a>
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="row g-3">
-    <div class="col-12 col-xl-12">
-
+    <div class="col-12">
         <div class="row g-3">
             <div class="col-12 col-md-6">
-                <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center justify-content-between my-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
                             style="width: 42px; height: 42px;">
@@ -418,7 +406,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="col-12 col-md-6">
 
-                <div class="mb-3 d-flex align-items-center justify-content-between">
+                <div class="mb-3 d-flex align-items-center justify-content-between my-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="d-flex align-items-center justify-content-center rounded-4 border border-danger-subtle shadow-sm"
                             style="width: 48px; height: 48px; background-color: #fff1f2; color: #f43f5e;"><svg
@@ -465,13 +453,12 @@ if (!empty($upcomingHealth)): ?>
 </div>
 
 
-<div class="row mb-5">
+<div class="row g-3 mb-5">
     <div class="col-12 col-lg-9">
-
         <section class="mt-5">
-            <div class="d-flex justify-content-between">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
+            <div class="d-flex flex-column flex-lg-row flex-wrap justify-content-between gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 42px; height: 42px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -481,27 +468,35 @@ if (!empty($upcomingHealth)): ?>
                                 d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
                         </svg>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">หนังสือราชการที่รอการจัดการ</h3>
                         <p class="text-muted mb-0" style="font-size: 0.75rem;">
                             รายการหนังสือรับเข้าจากระบบสารบรรณที่ส่งถึงคุณ
                         </p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 overflow-auto hide-scrollbar pb-2 mb-2 align-items-center justify-content-between mb-4">
+                <div class="d-flex gap-2 align-items-center flex-shrink-0 flex-wrap">
                     <a href="<?= Url::to(['/me/documents']) ?>"
                         class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm border">
                         ดูทั้งหมด
                     </a>
-
-                    <button
-                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">ด่วนที่สุด</button>
-                    <button
-                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">บันทึกข้อความ</button>
-                    <button
-                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">หนังสือภายนอก</button>
-                    <button
-                        class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">คำสั่ง</button>
+                    <div class="d-none d-lg-flex gap-2">
+                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">ด่วนที่สุด</button>
+                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">บันทึกข้อความ</button>
+                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">หนังสือภายนอก</button>
+                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">คำสั่ง</button>
+                    </div>
+                    <div class="dropdown d-lg-none">
+                        <button type="button" class="btn btn-white text-muted rounded-pill px-3 py-1 border hover-bg-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            ตัวกรอง
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0 py-2">
+                            <li><button type="button" class="dropdown-item">ด่วนที่สุด</button></li>
+                            <li><button type="button" class="dropdown-item">บันทึกข้อความ</button></li>
+                            <li><button type="button" class="dropdown-item">หนังสือภายนอก</button></li>
+                            <li><button type="button" class="dropdown-item">คำสั่ง</button></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -513,6 +508,7 @@ if (!empty($upcomingHealth)): ?>
     <div class="col-12 col-lg-3">
         <?= $this->render('list_member_team', ['me' => $me]) ?>
     </div>
+</div>
 </div>
 
 <?php

@@ -66,7 +66,7 @@ foreach ($items as $it) {
                         'options' => [
                             'class' => 'form-control',
                             'id' => 'stockorder-order_date',
-                            'placeholder' => 'วว/ดด/พพพพ',
+                            'placeholder' => 'วัน/เดือน/พ.ศ.',
                             'value' => $orderDateDisplay,
                         ],
                     ])->label('วันที่รับเข้า') ?>

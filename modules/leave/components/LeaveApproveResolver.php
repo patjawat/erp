@@ -45,7 +45,7 @@ class LeaveApproveResolver
         return Yii::$app->db->createCommand(
             'SELECT id, level, label, approver_type, approver_value, org_node_level
              FROM approve_level_setting
-             WHERE system = :sys AND active = 1
+             WHERE `system` = :sys AND active = 1
              ORDER BY level ASC'
         )->bindValue(':sys', 'leave')->queryAll();
     }

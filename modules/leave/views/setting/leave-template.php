@@ -79,19 +79,16 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php endif; ?>
                     </td>
                     <td class="text-end pe-4">
-                        <div class="d-flex gap-2 justify-content-end">
-                            <?= Html::a(
-                                '<i class="bi bi-pencil me-1"></i> จัดการ',
-                                ['/leave/setting/leave-template', 'code' => 'default'],
-                                ['class' => 'btn btn-primary btn-sm rounded-3']
-                            ) ?>
-                            <?php if ($hasDefault): ?>
-                            <?= Html::a(
-                                '<i class="bi bi-geo-alt me-1"></i> ตำแหน่ง',
-                                ['/leave/setting/positions', 'code' => 'default'],
-                                ['class' => 'btn btn-outline-primary btn-sm rounded-3']
-                            ) ?>
-                            <?php endif; ?>
+                        <div class="dropdown">
+                            <button class="btn btn-primary btn-sm rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical me-1"></i> จัดการ
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><?= Html::a('<i class="bi bi-pencil me-2"></i> แก้ไข', ['/leave/setting/leave-template', 'code' => 'default'], ['class' => 'dropdown-item']) ?></li>
+                                <?php if ($hasDefault): ?>
+                                <li><?= Html::a('<i class="bi bi-geo-alt me-2"></i> ตำแหน่ง', ['/leave/setting/positions', 'code' => 'default'], ['class' => 'dropdown-item']) ?></li>
+                                <?php endif; ?>
+                            </ul>
                         </div>
                     </td>
                 </tr>
@@ -131,19 +128,16 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php endif; ?>
                     </td>
                     <td class="text-end pe-4">
-                        <div class="d-flex gap-2 justify-content-end">
-                            <?= Html::a(
-                                '<i class="bi bi-upload me-1"></i>' . ($hasOwn ? 'แก้ไข' : 'ตั้งค่า'),
-                                ['/leave/setting/leave-template', 'code' => $lt->code],
-                                ['class' => 'btn btn-' . ($hasOwn ? 'outline-primary' : 'outline-secondary') . ' btn-sm rounded-3']
-                            ) ?>
-                            <?php if ($hasOwn || $hasDefault): ?>
-                            <?= Html::a(
-                                '<i class="bi bi-geo-alt me-1"></i> ตำแหน่ง',
-                                ['/leave/setting/positions', 'code' => $lt->code],
-                                ['class' => 'btn btn-outline-primary btn-sm rounded-3']
-                            ) ?>
-                            <?php endif; ?>
+                        <div class="dropdown">
+                            <button class="btn btn-sm <?= $hasOwn ? 'btn-outline-primary' : 'btn-outline-secondary' ?> rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical me-1"></i> จัดการ
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><?= Html::a('<i class="bi bi-pencil me-2"></i> ' . ($hasOwn ? 'แก้ไข' : 'ตั้งค่า'), ['/leave/setting/leave-template', 'code' => $lt->code], ['class' => 'dropdown-item']) ?></li>
+                                <?php if ($hasOwn || $hasDefault): ?>
+                                <li><?= Html::a('<i class="bi bi-geo-alt me-2"></i> ตำแหน่ง', ['/leave/setting/positions', 'code' => $lt->code], ['class' => 'dropdown-item']) ?></li>
+                                <?php endif; ?>
+                            </ul>
                         </div>
                     </td>
                 </tr>

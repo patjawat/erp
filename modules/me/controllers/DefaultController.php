@@ -5,6 +5,7 @@ namespace app\modules\me\controllers;
 use Yii;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
@@ -12,6 +13,7 @@ use app\modules\hr\models\LeaveSearch;
 use app\modules\helpdesk\models\HelpdeskSearch;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\appreciation\models\Appreciation;
+use app\modules\usermanager\models\User;
 
 /**
  * Default controller for the `me` module
@@ -123,6 +125,65 @@ class DefaultController extends Controller
     public function actionTeam()
     {
         return $this->render('team_work', []);
+    }
+
+    /**
+     * หน้าโปรไฟล์ของฉัน (/me/default/profile หรือ /me/profile ถ้ามี rule)
+     */
+    public function actionProfile()
+    {
+        $model = UserHelper::GetEmployee();
+        if ($model === null) {
+            return $this->render('warning');
+        }
+        return $this->render('profile', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * ตั้งค่าบัญชีเข้าใช้งานระบบ (เปลี่ยนชื่อเข้าใช้ / รหัสผ่าน) บันทึกแล้ว redirect ไป /me/profile
+     */
+    public function actionAccount()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['/me/profile']);
+        }
+        $model = User::findOne(Yii::$app->user->id);
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบบัญชี');
+        }
+        $model->password = '';
+        $model->confirm_password = '';
+
+        $post = Yii::$app->request->post('User', []);
+        $newPassword = trim($post['password'] ?? '');
+        $newConfirm = trim($post['confirm_password'] ?? '');
+
+        if ($model->load(Yii::$app->request->post())) {
+            if ($newPassword === '') {
+                $model->password = $model->password_hash;
+                $model->confirm_password = $model->password_hash;
+            }
+            if ($model->validate()) {
+                if ($newPassword !== '') {
+                    $model->setPassword($newPassword);
+                }
+                if ($model->save(false)) {
+                    Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่าบัญชีเรียบร้อย');
+                    return $this->redirect(['/me/profile']);
+                }
+            } else {
+                if ($newPassword === '') {
+                    $model->password = '';
+                    $model->confirm_password = '';
+                }
+            }
+        }
+
+        return $this->render('account', [
+            'model' => $model,
+        ]);
     }
 
     public function actionRepairMe()

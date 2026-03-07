@@ -178,7 +178,7 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                             'id' => 'confirmed_date',
                             'class' => 'form-control form-control-sm',
                             'style' => 'max-width: 180px;',
-                            'placeholder' => 'วว/ดด/พพพพ',
+                            'placeholder' => 'วัน/เดือน/พ.ศ.',
                         ],
                     ]) ?>
                 </div>

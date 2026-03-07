@@ -138,7 +138,7 @@ $substitute = $model->leaveWorkSend();
                 </div>
             </div>
 
-            <?php if (!empty($attachments)): ?>
+            <!-- เอกสารแนบ / ใบรับรองแพทย์ (แสดงเสมอ) -->
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                 <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
                     <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
@@ -147,20 +147,23 @@ $substitute = $model->leaveWorkSend();
                     </h6>
                 </div>
                 <div class="card-body p-3">
-                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
-                        <?php foreach ($attachments as $att): ?>
-                        <li>
-                            <a href="<?= Url::to(['/filemanager/uploads/show', 'id' => $att->id]) ?>" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50">
-                                <i class="bi bi-file-earmark-arrow-down text-primary"></i>
-                                <span class="small"><?= Html::encode($att->file_name) ?></span>
-                                <i class="bi bi-box-arrow-up-right small text-muted"></i>
-                            </a>
-                        </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <?php if (!empty($attachments)): ?>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                            <?php foreach ($attachments as $att): ?>
+                            <li>
+                                <a href="<?= Url::to(['/filemanager/uploads/show', 'id' => $att->id]) ?>" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50">
+                                    <i class="bi bi-file-earmark-arrow-down text-primary"></i>
+                                    <span class="small"><?= Html::encode($att->file_name) ?></span>
+                                    <i class="bi bi-box-arrow-up-right small text-muted"></i>
+                                </a>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p class="mb-0 text-muted small"><i class="bi bi-inbox me-1"></i> ไม่มีไฟล์แนบใบรับรองแพทย์</p>
+                    <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
 
             <?php if ($signatureData !== ''): ?>
             <?php $signatureLabel = ($signatureType === 'system') ? 'ใช้ในระบบ' : 'เซ็นเอง'; ?>
@@ -206,15 +209,15 @@ $substitute = $model->leaveWorkSend();
     <div class="col-lg-5">
         <div class="d-flex flex-column gap-3">
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-primary text-white">
-                <div class="card-body p-4">
-                    <div class="small opacity-75 mb-1">สิทธิคงเหลือ</div>
-                    <h2 class="fw-bold mb-0 display-6">
+                <div class="card-body p-4 text-white">
+                    <div class="small text-white opacity-75 mb-1">สิทธิคงเหลือ</div>
+                    <h2 class="fw-bold mb-0 display-6 text-white">
                         <?= $model->sumLeavePermission()['sum'] ?? 0 ?>
-                        <span class="fs-6 fw-normal opacity-75">วัน</span>
+                        <span class="fs-6 fw-normal text-white opacity-75">วัน</span>
                     </h2>
-                    <div class="mt-3 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center small">
-                        <span class="opacity-75">วันลาพักผ่อนสะสม</span>
-                        <span class="fw-bold"><?= $model->sumLeavePermission()['total'] ?? 0 ?> วัน</span>
+                    <div class="mt-3 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center small text-white">
+                        <span class="text-white opacity-75">วันลาพักผ่อนสะสม</span>
+                        <span class="text-white fw-bold"><?= $model->sumLeavePermission()['total'] ?? 0 ?> วัน</span>
                     </div>
                 </div>
             </div>
@@ -243,32 +246,6 @@ $substitute = $model->leaveWorkSend();
                         'name' => 'leave',
                     ]) ?>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ตัวอย่างใบลา (เต็มความกว้าง) -->
-    <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-            <div class="card-header bg-transparent border-0 py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
-                    <i class="bi bi-file-earmark-pdf text-primary"></i>
-                    ตัวอย่างใบลา
-                </h6>
-                <?= Html::a('<i class="bi bi-printer me-1"></i> เปิดหน้ารูปแบบพิมพ์', ['/leave/leave/print', 'id' => $model->id], ['class' => 'btn btn-outline-primary btn-sm rounded-3', 'target' => '_blank', 'rel' => 'noopener']) ?>
-            </div>
-            <div class="card-body p-0 bg-body-secondary bg-opacity-25">
-                <?php if (!empty($previewPdfUrl)): ?>
-                    <div class="min-vh-100">
-                        <iframe src="<?= Html::encode($previewPdfUrl) ?>#toolbar=0" title="ตัวอย่างใบลา (PDF)" class="w-100 border-0 d-block h-100 min-vh-100"></iframe>
-                    </div>
-                <?php else: ?>
-                    <div class="text-center text-muted py-5 px-4">
-                        <i class="bi bi-file-earmark-pdf display-4 opacity-25 d-block mb-2"></i>
-                        <p class="mb-2">ยังไม่มีเทมเพลต PDF สำหรับใบลานี้</p>
-                        <p class="small mb-0"><?= Html::a('เปิดหน้ารูปแบบพิมพ์ (แบบ HTML)', ['/leave/leave/print', 'id' => $model->id], ['class' => 'text-primary', 'target' => '_blank', 'rel' => 'noopener']) ?></p>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>

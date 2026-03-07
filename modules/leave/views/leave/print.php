@@ -44,9 +44,9 @@ $department = $author['department'] ?? ($model->employee ? $model->employee->dep
             <i class="bi bi-printer text-primary"></i>
             <?= Html::encode($this->title) ?>
         </h4>
-        <div class="d-flex gap-2">
-          
+        <div class="d-flex gap-2 flex-wrap">
                     <?php if ($pdfUrl): ?>
+                        <?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i> เปิดเฉพาะ PDF', ['/leave/leave/pdf', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-3 px-3', 'target' => '_blank', 'rel' => 'noopener']) ?>
                         <button type="button" class="btn btn-primary rounded-3 px-3" id="btn-print-pdf">
                             <i class="bi bi-printer me-1"></i> พิมพ์ใบลา
                         </button>

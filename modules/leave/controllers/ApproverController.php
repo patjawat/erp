@@ -192,6 +192,101 @@ class ApproverController extends Controller
     }
 
     /**
+     * พิมพ์ทะเบียนวันลาเป็น PDF เปิดในแท็บใหม่ (ใช้ตัวกรองเดียวกับ actionIndex)
+     */
+    public function actionPrint()
+    {
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์พิมพ์ข้อมูล');
+        }
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/leave/approver/index']);
+        }
+
+        $searchModel = new LeaveSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $query = $dataProvider->query;
+        $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
+        $dataProvider->pagination = false;
+
+        $start = AppHelper::convertToGregorian($searchModel->date_start);
+        $end = AppHelper::convertToGregorian($searchModel->date_end);
+        $query->andFilterWhere(['>=', 'leave.date_start', $start])
+            ->andFilterWhere(['<=', 'leave.date_end', $end]);
+
+        if (!empty($searchModel->leave_type_id)) {
+            $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
+        }
+        $status = $this->request->get('status');
+        if ($status) {
+            $query->andFilterWhere(['leave.status' => $searchModel->status]);
+        }
+        $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
+        if ($position_type_id) {
+            $query->andFilterWhere(['employees.position_type' => $position_type_id]);
+        }
+        if ($searchModel->q_department) {
+            $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
+            if ($empIds !== null) {
+                $query->andWhere(['in', 'leave.emp_id', $empIds]);
+            }
+        }
+        if (!empty($searchModel->q)) {
+            $query->andFilterWhere([
+                'or',
+                ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ]);
+        }
+
+        $query->orderBy(['leave.date_start' => SORT_DESC]);
+        $models = $dataProvider->getModels();
+
+        $html = $this->renderPartial('print-pdf', [
+            'models' => $models,
+            'searchModel' => $searchModel,
+        ]);
+
+        $config = [
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 12,
+            'margin_bottom' => 12,
+        ];
+        $fontPathTh = Yii::getAlias('@webroot') . '/fonts';
+        $ttfR = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew.ttf';
+        if (is_dir($fontPathTh) && file_exists($ttfR)) {
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $defaultFont = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $config['fontDir'] = array_merge($defaultConfig['fontDir'], [$fontPathTh]);
+            $ttfB = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew Bold.ttf';
+            $ttfBAlt = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew-Bold.ttf';
+            $fontdata = [
+                'R' => 'THSarabunNew.ttf',
+                'B' => file_exists($ttfB) ? 'THSarabunNew Bold.ttf' : (file_exists($ttfBAlt) ? 'THSarabunNew-Bold.ttf' : 'THSarabunNew.ttf'),
+            ];
+            $config['fontdata'] = array_merge($defaultFont['fontdata'], [
+                'thsarabun' => $fontdata,
+            ]);
+            $config['default_font'] = 'thsarabun';
+        }
+
+        $mpdf = new \Mpdf\Mpdf($config);
+        $mpdf->SetTitle('ทะเบียนวันลา');
+        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+        $filename = 'ทะเบียนวันลา_' . date('Y-m-d_His') . '.pdf';
+        Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
+        Yii::$app->response->content = $mpdf->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+        return Yii::$app->response;
+    }
+
+    /**
      * ส่งออก DataProvider (Leave) เป็นไฟล์ Excel
      */
     protected function exportToExcelLeave($dataProvider)

@@ -11,9 +11,11 @@ $this->title = 'ปฏิทินการลา';
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$eventsUrl   = Url::to(['/leave/calendar/events']);
-$eventsUrlJs = json_encode($eventsUrl);
-$myDeptIdJs  = json_encode($myDeptId ?: 0);
+$eventsUrl    = Url::to(['/leave/calendar/events']);
+$createUrl    = Url::to(['/leave/leave/create']);
+$eventsUrlJs  = json_encode($eventsUrl);
+$createUrlJs  = json_encode($createUrl);
+$myDeptIdJs   = json_encode($myDeptId ?: 0);
 
 $this->registerCss('
 /* FullCalendar overrides */
@@ -148,9 +150,12 @@ $this->registerCss('
                     <button id="btn-next" class="btn btn-sm btn-light px-2"><i class="bi bi-chevron-right"></i></button>
                     <span class="text-white fw-bold small" id="cal-title">—</span>
                 </div>
-                <div class="d-flex gap-1 bg-white bg-opacity-25 rounded-2 p-1">
-                    <button class="cal-view-tab active" data-view="dayGridMonth">เดือน</button>
-                    <button class="cal-view-tab" data-view="listMonth">รายการ</button>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="small text-white text-opacity-90 d-none d-md-inline"><i class="bi bi-hand-index me-1"></i> คลิกวันที่เพื่อขอลา</span>
+                    <div class="d-flex gap-1 bg-white bg-opacity-25 rounded-2 p-1">
+                        <button class="cal-view-tab active" data-view="dayGridMonth">เดือน</button>
+                        <button class="cal-view-tab" data-view="listMonth">รายการ</button>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-3 position-relative">
@@ -197,7 +202,8 @@ $this->registerJsFile(
 $this->registerJs(<<<JS
 (function() {
     var EVENTS_URL    = {$eventsUrlJs};
-    var MY_DEPT_ID    = {$myDeptIdJs};
+    var CREATE_URL   = {$createUrlJs};
+    var MY_DEPT_ID   = {$myDeptIdJs};
     var selectedDeptId = MY_DEPT_ID;
     var calendar;
     var currentEvents = [];
@@ -276,6 +282,30 @@ $this->registerJs(<<<JS
                     + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + e.title + '</span>'
                     + '</div>';
                 return { html: html };
+            },
+            dateClick: function(info) {
+                var dateStr = info.dateStr ? info.dateStr.substring(0, 10) : '';
+                if (!dateStr || !CREATE_URL) return;
+                var dateLabel = formatThDate(info.date);
+                var url = CREATE_URL + (CREATE_URL.indexOf('?') >= 0 ? '&' : '?') + 'date=' + encodeURIComponent(dateStr);
+                if (typeof Swal === 'undefined') {
+                    window.location.href = url;
+                    return;
+                }
+                Swal.fire({
+                    title: 'ขอลา',
+                    html: 'คุณต้องการ<b>ขอลาวันที่ ' + dateLabel + '</b> ใช่หรือไม่?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'ใช่ ขอลา',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d'
+                }).then(function(result) {
+                    if (result && result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
             },
             eventClick: function(info) {
                 var e = info.event;

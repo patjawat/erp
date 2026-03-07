@@ -59,7 +59,12 @@ $totalCount = (int) $dataProvider->getTotalCount();
                 <i class="bi bi-ui-checks"></i> ทะเบียนวันลา
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= number_format($totalCount, 0) ?></span> รายการ
             </h6>
-            <div>
+            <div class="d-flex gap-2">
+                <?= Html::a(
+                    '<i class="bi bi-printer me-1"></i> พิมพ์',
+                    array_merge(['/leave/approver/print'], Yii::$app->request->queryParams),
+                    ['class' => 'btn btn-outline-secondary btn-sm', 'target' => '_blank', 'rel' => 'noopener']
+                ) ?>
                 <?= Html::a(
                     '<i class="bi bi-file-earmark-excel me-1"></i> ส่งออก Excel',
                     array_merge(['/leave/approver/export'], Yii::$app->request->queryParams),

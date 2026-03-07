@@ -64,11 +64,36 @@ $models = $dataProvider->getModels();
                         <?= ApproveHelper::viewStepFromSteps($item->approves ?? []) ?>
                     </td>
                     <td class="text-end py-3 px-3">
-                        <?= Html::a(
-                            '<i class="bi bi-eye me-1"></i> แสดง',
-                            ['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],
-                            ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]
-                        ) ?>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i> ดำเนินการ
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <?= Html::a(
+                                        '<i class="bi bi-eye me-2"></i> แสดง',
+                                        ['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]
+                                    ) ?>
+                                </li>
+                                <?php if (!$item->hasApprovalDecision()): ?>
+                                <li>
+                                    <?= Html::a(
+                                        '<i class="bi bi-pencil me-2"></i> แก้ไข',
+                                        ['/leave/leave/update', 'id' => $item->id, 'title' => '<i class="bi bi-pencil"></i> แก้ไข'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
+                                    ) ?>
+                                </li>
+                                <?php endif; ?>
+                                <li>
+                                    <?= Html::a(
+                                        '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา',
+                                        ['/leave/leave/pdf', 'id' => $item->id],
+                                        ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener']
+                                    ) ?>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>

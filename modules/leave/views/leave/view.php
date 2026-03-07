@@ -19,13 +19,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('view_detail', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl ?? null]) ?>
 
 <div class="d-flex flex-wrap justify-content-center gap-2 gap-md-3">
-    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา', ['/leave/leave/print', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener']) ?>
+    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา', ['/leave/leave/pdf', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener']) ?>
     <?php echo ($model->status == 'ReqCancel' && ($me->id != $model->emp_id)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/leave/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
     <?php if ($me->id == $model->emp_id): ?>
-        <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/me/leave/req-cancel', 'id' => $model->id], [
+        <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/leave/leave/req-cancel', 'id' => $model->id], [
             'class' => 'req-cancel-btn btn btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
-        <?php echo $model->levelStatusCount() == 0 ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+        <?php echo !$model->hasApprovalDecision() ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/leave/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
     <?php endif; ?>
     <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>

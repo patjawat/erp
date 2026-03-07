@@ -254,6 +254,9 @@ $config = [
             'rules' => [
                 // กฎสำหรับ Webhook โดยเฉพาะ
                 'POST webhook/receive' => 'dms/webhook/receive',
+                // โปรไฟล์ของฉัน
+                'me/profile' => 'me/default/profile',
+                'me/account' => 'me/default/account',
             ],
         ],
     ],

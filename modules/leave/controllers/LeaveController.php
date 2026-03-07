@@ -93,6 +93,118 @@ class LeaveController extends Controller
     }
 
     /**
+     * หน้าแสดงเฉพาะ PDF ใบลา (สำหรับเปิดในแท็บใหม่เมื่อกดพิมพ์)
+     * ถ้ามีเทมเพลต PDF จะ redirect ไป URL ที่ส่ง PDF inline ให้เบราว์เซอร์แสดงเฉพาะ PDF
+     * ถ้าไม่มีเทมเพลต จะ redirect ไปหน้ารูปแบบพิมพ์ (print)
+     */
+    public function actionPdf($id)
+    {
+        $model = Leave::find()
+            ->andWhere(['id' => (int) $id])
+            ->with(['employee', 'leaveType'])
+            ->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        $pdfUrl = $this->getPreviewPdfUrlForLeave($model);
+        if ($pdfUrl !== null) {
+            return $this->redirect($pdfUrl);
+        }
+        Yii::$app->session->setFlash('info', 'ยังไม่มีเทมเพลต PDF สำหรับใบลานี้ เปิดหน้ารูปแบบพิมพ์แทน');
+        return $this->redirect(['print', 'id' => (int) $id]);
+    }
+
+    /**
+     * แก้ไขใบลา — ฟอร์มและบันทึกอยู่ภายในโมดูล leave (/leave/leave/update)
+     * เฉพาะเจ้าของใบลา และยังไม่มีผู้อนุมัติ/ไม่อนุมัติ (สถานะรอ หน.เห็นชอบ = Pending ยังแก้ไขได้)
+     */
+    public function actionUpdate($id)
+    {
+        $model = Leave::find()->andWhere(['id' => (int) $id])->with(['employee', 'leaveType'])->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        $me = UserHelper::GetEmployee();
+        if (!$me || $me->id != $model->emp_id) {
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ไม่ใช่เจ้าของใบลา</p>', 'footer' => ''];
+            }
+            Yii::$app->session->setFlash('error', 'ไม่ใช่เจ้าของใบลา');
+            return $this->redirect(['/leave/default/index']);
+        }
+        if ($model->hasApprovalDecision()) {
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ใบลานี้มีการอนุมัติ/ไม่อนุมัติแล้ว ไม่สามารถแก้ไขได้</p>', 'footer' => ''];
+            }
+            Yii::$app->session->setFlash('error', 'ใบลานี้มีการอนุมัติ/ไม่อนุมัติแล้ว ไม่สามารถแก้ไขได้');
+            return $this->redirect(['/leave/default/index']);
+        }
+
+        // แปลงวันที่เป็น พ.ศ. สำหรับแสดงในฟอร์ม
+        $model->date_start = AppHelper::convertToThai($model->date_start);
+        $model->date_end   = AppHelper::convertToThai($model->date_end);
+
+        $leaveWorkSendInitText = '';
+        try {
+            $emp = $model->getLeaveWorkSend();
+            if ($emp) {
+                $leaveWorkSendInitText = $emp->getAvatar(false);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end   = AppHelper::convertToGregorian($model->date_end);
+            $oldJson = $model->getOldAttribute('data_json');
+            if (is_string($oldJson)) {
+                $oldJson = json_decode($oldJson, true) ?: [];
+            }
+            $model->data_json = array_merge((array) $oldJson, (array) $model->data_json);
+            if ($model->save(false)) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'success', 'redirect' => Url::to(['/leave/default/index'])];
+                }
+                return $this->redirect(['/leave/default/index']);
+            }
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $title = Yii::$app->request->get('title', 'แก้ไข');
+            return [
+                'title'   => $title,
+                'content' => $this->renderAjax('update', ['model' => $model, 'leaveWorkSendInitText' => $leaveWorkSendInitText]),
+                'footer'  => '',
+            ];
+        }
+        return $this->render('update', ['model' => $model, 'leaveWorkSendInitText' => $leaveWorkSendInitText]);
+    }
+
+    /**
+     * Ajax validation สำหรับฟอร์มแก้ไขใบลา
+     */
+    public function actionUpdateValidation($id)
+    {
+        $model = Leave::findOne((int) $id);
+        if ($model === null) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [];
+        }
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end   = AppHelper::convertToGregorian($model->date_end);
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return \yii\widgets\ActiveForm::validate($model);
+        }
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [];
+    }
+
+    /**
      * AJAX validation สำหรับฟอร์มสร้างใบลา (ใช้กับ Kartik ActiveForm enableAjaxValidation)
      */
     public function actionValidation()
@@ -180,6 +292,26 @@ class LeaveController extends Controller
     }
 
     /**
+     * ขอยกเลิกวันลา (เจ้าของใบลา) — แทนที่ /me/leave/req-cancel ให้ link อยู่ภายในโมดูล leave
+     */
+    public function actionReqCancel($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        $model = Leave::findOne((int) $id);
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+        if (Yii::$app->request->isPost && $me && $me->id == $model->emp_id) {
+            $model->status = 'ReqCancel';
+            if ($model->save(false)) {
+                return ['status' => 'success'];
+            }
+        }
+        return ['status' => 'error'];
+    }
+
+    /**
      * คืนวันลา (ผู้อนุมัติยืนยันการยกเลิก) — แทนที่ /hr/leave/cancel
      */
     public function actionCancel($id)
@@ -234,8 +366,17 @@ class LeaveController extends Controller
         $model->address = $me->fulladdress ?? '';
         $model->work_shift = $me->work_shift ?? 'normal';
 
+        // คลิกจากปฏิทินการลา: เซ็ต date_start และ date_end จาก GET date (Y-m-d)
+        $dateParam = trim((string) Yii::$app->request->get('date', ''));
+        if ($dateParam !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateParam)) {
+            $dateThai = AppHelper::convertToThai($dateParam);
+            if ($dateThai !== '' && $dateThai !== null) {
+                $model->date_start = $dateThai;
+                $model->date_end   = $dateThai;
+            }
+        }
+
         // สร้าง draft ref ล่วงหน้าสำหรับ FileInput AJAX upload
-        // ถ้ามี draft เดิมอยู่แล้วให้ใช้ ref เดิม ไม่งั้นสร้างใหม่
         $existingDraft = Yii::$app->session->get(self::SESSION_KEY);
         $draftRef = $existingDraft['ref'] ?? substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
         if (!isset($existingDraft['ref'])) {
@@ -261,57 +402,48 @@ class LeaveController extends Controller
 
                 $dateStartGregorian = AppHelper::convertToGregorian($dateStart);
                 $dateEndGregorian = AppHelper::convertToGregorian($dateEnd);
-                $dateStartType  = in_array($model->date_start_type, ['0', '0.5']) ? $model->date_start_type : '0';
-                $dateEndType    = in_array($model->date_end_type,   ['0', '0.5']) ? $model->date_end_type   : '0';
-                $workShiftForm  = in_array($model->work_shift, ['normal', 'shift']) ? $model->work_shift : '';
-                $leaveWorkSendId   = (int) ($model->leave_work_send_id ?? 0);
-                $leaveWorkSendName = trim((string) ($model->leave_work_send_name ?? ''));
+                $dateStartType = ($leaveTimeType === 0.5) ? '0.5' : '0';
+                $dateEndType = ($leaveTimeType === 0.5) ? '0.5' : '0';
+                $workShiftForm = $me->work_shift ?? 'normal';
                 $daySummary = $this->getDaySummary($dateStartGregorian, $dateEndGregorian, $me->id);
-            $allDays    = (float) ($daySummary['allDays'] ?? 0);
-            $satsunDays = (float) ($daySummary['satsunDays'] ?? 0);
-            $holidayDays= (float) ($daySummary['holiday'] ?? 0);
-            $empShift   = (string) ($daySummary['shift'] ?? 'normal');
-            $effectiveShift = ($workShiftForm !== '') ? $workShiftForm : $empShift;
-            // formula เดียวกับ actionCalDays (ตาม hr/_form logic)
-            $dstF = (float) $dateStartType;
-            $detF = (float) $dateEndType;
-            if ($leaveTypeId === 'LT2') {
-                $totalDays = $allDays;
-            } elseif ($effectiveShift === 'normal') {
-                $totalDays = $allDays - ($dstF + $detF) - $satsunDays - $holidayDays;
-            } else {
-                $totalDays = $allDays - ($dstF + $detF);
-            }
-            $totalDays = max(0, round($totalDays, 2));
-            // เวร 8: ถ้าผู้ใช้กรอก total_days_manual มา ให้ใช้ค่านั้นแทน
-            if ($effectiveShift === 'shift') {
-                $manualTotal = $model->total_days_manual;
-                if ($manualTotal !== null && $manualTotal !== '' && (float) $manualTotal >= 0) {
-                    $totalDays = max(0, round((float) $manualTotal, 2));
+                $allDays = (float) ($daySummary['allDays'] ?? 0);
+                $satsunDays = (float) ($daySummary['satsunDays'] ?? 0);
+                $holidayDays = (float) ($daySummary['holiday'] ?? 0);
+                $empShift = (string) ($daySummary['shift'] ?? 'normal');
+                $effectiveShift = $workShiftForm ?: $empShift;
+                $dstF = (float) $dateStartType;
+                $detF = (float) $dateEndType;
+                if ($leaveTypeId === 'LT2') {
+                    $totalDays = $allDays;
+                } elseif ($effectiveShift === 'normal') {
+                    $totalDays = $allDays - ($dstF + $detF) - $satsunDays - $holidayDays;
+                } else {
+                    $totalDays = $allDays - ($dstF + $detF);
                 }
-            }
-            $draft = [
-                'ref'                  => $draftRef,
-                'leave_type_id'        => $leaveTypeId,
-                'date_start'           => $dateStart,
-                'date_end'             => $dateEnd,
-                'date_start_g'         => $dateStartGregorian,
-                'date_end_g'           => $dateEndGregorian,
-                'date_start_type'      => $dateStartType,
-                'date_end_type'        => $dateEndType,
-                'leave_time_type'      => $leaveTimeType,
-                'total_days'           => $totalDays,
-                'summary_calendar_days'=> $allDays,
-                'summary_sat_sun'      => $satsunDays,
-                'summary_holiday'      => $holidayDays,
-                'work_shift'           => $effectiveShift,
-                'leave_work_send_id'   => $leaveWorkSendId ?: null,
-                'leave_work_send_name' => $leaveWorkSendName,
-                'reason'               => $reason,
-                'address'              => $address,
-                'contact_phone'        => $contactPhone,
-                'place_go'             => $placeGo,
-            ];
+                $totalDays = max(0, round($totalDays, 2));
+
+                $draft = [
+                    'ref'                  => $draftRef,
+                    'leave_type_id'        => $leaveTypeId,
+                    'date_start'           => $dateStart,
+                    'date_end'             => $dateEnd,
+                    'date_start_g'         => $dateStartGregorian,
+                    'date_end_g'           => $dateEndGregorian,
+                    'date_start_type'      => $dateStartType,
+                    'date_end_type'        => $dateEndType,
+                    'leave_time_type'      => $leaveTimeType,
+                    'total_days'           => $totalDays,
+                    'summary_calendar_days'=> $allDays,
+                    'summary_sat_sun'      => $satsunDays,
+                    'summary_holiday'      => $holidayDays,
+                    'work_shift'           => $effectiveShift,
+                    'leave_work_send_id'   => null,
+                    'leave_work_send_name' => '',
+                    'reason'               => $reason,
+                    'address'              => $address,
+                    'contact_phone'        => $contactPhone,
+                    'place_go'             => $placeGo,
+                ];
                 Yii::$app->session->set(self::SESSION_KEY, $draft);
                 return $this->redirect(['confirm']);
             }
@@ -407,10 +539,10 @@ class LeaveController extends Controller
 
         $approve = $model->Approve();
 
-        // เก็บ approve_N id ทุกระดับ (dynamic ตาม settings)
+        // เก็บ approve_N id ทุกระดับ (dynamic ตาม settings) — ใช้จาก draft ถ้ามี (ฟอร์มสร้างเลือกผู้อนุมัติ)
         $approveIds = [];
         foreach ($approve as $key => $info) {
-            $approveIds[$key] = $info['id'] ?? null;
+            $approveIds[$key] = isset($draft[$key]) ? $draft[$key] : ($info['id'] ?? null);
         }
 
         $model->data_json = array_merge([

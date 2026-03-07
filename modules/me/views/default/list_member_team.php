@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Url;
-use yii\bootstrap\Html;
+use yii\helpers\Html;
 use app\modules\hr\models\Employees;
 
 $listsMemberTeam = Employees::find()
@@ -26,30 +26,44 @@ $listsMemberTeam = Employees::find()
 
     <div class="overflow-auto pe-2" style="max-height: 450px; scrollbar-width: thin;">
         <div class="d-flex flex-column gap-2">
-            <?php foreach($listsMemberTeam as $item): ?>
-            <a href="<?=Url::to(['/hr/employees/view','id' => $item->id])?>">
-                <div class="d-flex align-items-center justify-content-between p-3 rounded-4 border border-light bg-white shadow-sm hover-shadow-md transition-all cursor-pointer">
-                    
+            <?php foreach ($listsMemberTeam as $item): ?>
+            <div class="d-flex align-items-center justify-content-between p-3 rounded-4 border border-light bg-white shadow-sm transition-all">
+                <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
                     <?= $item->getAvatar(false) ?>
-<i class="bi bi-chevron-right"></i>
-        
                 </div>
-            </a>
+                <div class="dropdown flex-shrink-0 ms-2">
+                    <button class="btn btn-light border-0 rounded-pill py-1 px-2 shadow-sm dropdown-toggle" type="button" id="dropdown-member-<?= $item->id ?>" data-bs-toggle="dropdown" aria-expanded="false" title="เลือกเมนูการทำงาน">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2" aria-labelledby="dropdown-member-<?= $item->id ?>">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id]) ?>">
+                                <i class="bi bi-person-circle text-primary"></i>
+                                ข้อมูลพนักงาน
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id]) ?>">
+                                <i class="bi bi-graph-up text-info"></i>
+                                KPI Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id, 'name' => 'health']) ?>">
+                                <i class="bi bi-heart-pulse text-danger"></i>
+                                ข้อมูลสุขภาพ
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <?php endforeach; ?>
         </div>
     </div>
 </section>
 
 <style>
-/* เพิ่มความนุ่มนวลเวลา Hover */
 .transition-all { transition: all 0.2s ease-in-out; }
-.cursor-pointer { cursor: pointer; }
-.hover-shadow-md:hover { 
-    transform: translateX(5px); 
-    background-color: #f8fafc !important;
-    border-color: #e2e8f0 !important;
-}
-/* ปรับแต่ง Scrollbar ให้เข้ากับ Bootstrap 5 */
 .overflow-auto::-webkit-scrollbar { width: 4px; }
 .overflow-auto::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>

@@ -144,7 +144,6 @@ $typeTheme = [
                                 <th class="small fw-semibold">ประเภท</th>
                                 <th class="small fw-semibold">ช่วงเวลา</th>
                                 <th class="small fw-semibold text-center">จำนวน</th>
-                                <th class="small fw-semibold text-center">สถานะ</th>
                                 <th class="small fw-semibold">ผู้อนุมัติ</th>
                                 <th class="small fw-semibold">สถานะ/ความคืบหน้า</th>
                                 <th class="small fw-semibold text-end">จัดการ</th>
@@ -168,13 +167,6 @@ $typeTheme = [
                                 </td>
                                 <td class="small"><?= $item->showLeaveDate() ?></td>
                                 <td class="small text-center"><?= (int) $item->total_days ?></td>
-                                <td class="text-center">
-                                    <?php
-                                    $statusLabel = $item->leaveStatus ? $item->leaveStatus->title : $item->status;
-                                    $statusClass = $item->status === 'Approve' ? 'success' : ($item->status === 'Reject' ? 'danger' : 'warning');
-                                    ?>
-                                    <span class="badge bg-<?= $statusClass ?> bg-opacity-10 text-<?= $statusClass ?> border border-<?= $statusClass ?>-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($statusLabel) ?></span>
-                                </td>
                                 <td class="small py-3 px-3">
                                     <?php
                                     $stackApproves = $item->approves ? array_filter($item->approves, function ($a) {
@@ -191,14 +183,42 @@ $typeTheme = [
                                     <?= ApproveHelper::viewStepFromSteps($item->approves ?? []) ?>
                                 </td>
                                 <td class="text-end">
-                                    <?= Html::a('<i class="bi bi-printer"></i>', ['/leave/leave/print', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary rounded-pill', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ใบลา']) ?>
-                                    <?= Html::a('<i class="bi bi-eye"></i>', ['/leave/leave/view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary rounded-pill open-modal', 'data' => ['size' => 'modal-xl'], 'title' => 'ดู']) ?>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i> ดำเนินการ
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <?= Html::a(
+                                                    '<i class="bi bi-eye me-2"></i> แสดง',
+                                                    ['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> รายละเอียดใบลา'],
+                                                    ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]
+                                                ) ?>
+                                            </li>
+                                            <?php if (!$item->hasApprovalDecision()): ?>
+                                            <li>
+                                                <?= Html::a(
+                                                    '<i class="bi bi-pencil me-2"></i> แก้ไข',
+                                                    ['/leave/leave/update', 'id' => $item->id, 'title' => '<i class="bi bi-pencil"></i> แก้ไข'],
+                                                    ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
+                                                ) ?>
+                                            </li>
+                                            <?php endif; ?>
+                                            <li>
+                                                <?= Html::a(
+                                                    '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา',
+                                                    ['/leave/leave/pdf', 'id' => $item->id],
+                                                    ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener']
+                                                ) ?>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                             <?php if ($dataProvider->getCount() === 0): ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4 small">ยังไม่มีประวัติการลา</td>
+                                <td colspan="8" class="text-center text-muted py-4 small">ยังไม่มีประวัติการลา</td>
                             </tr>
                             <?php endif; ?>
                         </tbody>

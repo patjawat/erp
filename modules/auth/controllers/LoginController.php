@@ -14,6 +14,9 @@ class LoginController extends Controller
     //หน้า login
     public function actionIndex()
     {
+        if (!Yii::$app->user->isGuest) {
+            return $this->redirect(['/me']);
+        }
         $this->layout = '@app/views/layouts/none';
         $model = new LoginForm();
         $model->password = '';

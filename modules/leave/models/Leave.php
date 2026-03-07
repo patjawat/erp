@@ -78,7 +78,7 @@ class Leave extends \yii\db\ActiveRecord
 
             [['leave_type_id'], 'required'],
             [['leave_time_type', 'total_days'], 'number'],
-            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export', 'work_shift_name','position_type_id'], 'safe'],
+            [['date_start_type', 'date_end_type', 'date_filter', 'balance', 'on_holidays', 'data_json', 'date_start', 'date_end', 'leave_start_type', 'leave_end_type', 'created_at', 'updated_at', 'deleted_at', 'emp_id', 'q', 'q_department', 'step', 'export', 'work_shift_name', 'position_type_id', 'ref'], 'safe'],
             [['thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['leave_type_id', 'status'], 'string', 'max' => 255],
             ['date_end', 'default', 'value' => function ($model) {
@@ -762,6 +762,18 @@ class Leave extends \yii\db\ActiveRecord
     public function levelStatusCount()
     {
         return  Approve::find()->where(['from_id' => $this->id, 'name' => 'leave'])->andWhere(['!=', 'status', 'None'])->count();
+    }
+
+    /**
+     * มีผู้อนุมัติ/ไม่อนุมัติไปแล้วอย่างน้อยหนึ่งขั้นหรือยัง (ไม่นับแค่รอดำเนินการ Pending)
+     * ถ้า false = ยังแก้ไขได้ (ทุกขั้นยังเป็น None หรือ Pending เช่น รอ หน.เห็นชอบ)
+     */
+    public function hasApprovalDecision()
+    {
+        return Approve::find()
+            ->where(['from_id' => $this->id, 'name' => 'leave'])
+            ->andWhere(['NOT IN', 'status', ['None', 'Pending']])
+            ->exists();
     }
     public function showLeaveDate()
     {
