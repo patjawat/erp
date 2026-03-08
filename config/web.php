@@ -2,6 +2,12 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+
+// Session ฝั่งเซิร์ฟเวอร์ไม่ลบทิ้งเร็ว (ให้สอดคล้องกับ cookie lifetime)
+$sessionLifetime = $params['session.cookieLifetime'] ?? (3600 * 24 * 3650);
+if (function_exists('ini_set')) {
+    ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
+}
 $db2 = require __DIR__ . '/db2.php';
 $modules = require __DIR__ . '/add_modules.php';
 $version = require __DIR__ . '/version.php';
@@ -198,6 +204,7 @@ $config = [
             'loginUrl' => ['/auth/login'],
             'enableAutoLogin' => true,
             'enableSession' => true,
+            'authTimeout' => null,  // ไม่ให้ logout อัตโนมัติเมื่อ idle
             'identityCookie' => [
                 'name' => '_identity_erp',
                 'httpOnly' => true,

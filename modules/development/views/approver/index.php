@@ -15,7 +15,7 @@ use app\models\Categorise;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 /** @var array $summaryByStatus */
 
-$this->title = 'รายการกิจกรรมอบรม/ประชุม/ดูงาน';
+$this->title = 'ผู้ตรวจสอบ';
 $this->params['breadcrumbs'][] = ['label' => 'ภาพรวมอบรม/ประชุม/ดูงาน', 'url' => ['/development/default/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -44,21 +44,17 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
 ?>
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
-    <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ย้อนกลับก่อนหน้า', Yii::$app->request->referrer ?: ['/development/default/dashboard'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
-    <?= $this->render('_menu', ['active' => 'dashboard']) ?>
+    <?= $this->render('../default/_menu', ['active' => 'approver']) ?>
 </div>
 <?php $this->endBlock(); ?>
 
 <div class="development-list development-list-modern">
 
-
-    <!-- Filter: card ค้นหา -->
     <?php
-    $hasFilter = (string)$searchModel->topic !== '' || (string)$searchModel->development_type_id !== '' || (string)$searchModel->status !== '' || (string)$searchModel->date_start_from !== '' || (string)$searchModel->date_start_to !== '' || (string)$searchModel->emp_id !== '';
     $form = ActiveForm::begin([
         'method' => 'get',
-        'action' => ['/development/default/list'],
-        'options' => ['class' => 'development-list-filter-form mb-4', 'id' => 'development-list-filter-form'],
+        'action' => ['/development/approver/index'],
+        'options' => ['class' => 'development-list-filter-form mb-4', 'id' => 'development-approver-filter-form'],
         'fieldConfig' => [
             'options' => ['class' => 'mb-0'],
             'inputOptions' => ['class' => 'form-control'],
@@ -69,62 +65,57 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
     ?>
     <div class="row justify-content-center">
         <div class="col-12 col-lg-12 col-xl-12">
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-0">
-        <div class="card-body p-4">
-
-            <!-- Header: title + year -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-body mb-0 d-flex align-items-center gap-2">
-            <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-calendar-event"></i></span>
-            <?= Html::encode($this->title) ?>
-        </h4>
-        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-2 mb-0 d-inline-block">ปีงบประมาณ <?= (int) $thaiYear ?></span>
-    </div>
-
-            <!-- Search bar: full width, rounded, with icon -->
-            <div class="mb-4">
-                <div class="input-group input-group-lg rounded-pill border border-2 border-light shadow-sm">
-                    <span class="input-group-text border-0 bg-light rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
-                    <?= $form->field($searchModel, 'topic', [
-                        'template' => '{input}',
-                        'options' => ['class' => 'flex-grow-1'],
-                    ])->textInput([
-                        'placeholder' => 'ค้นหาหัวข้อกิจกรรม บริษัท/หน่วยงาน หรือคำสำคัญ',
-                        'class' => 'form-control form-control-lg border-0 bg-light rounded-0 rounded-end-pill',
-                    ]) ?>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="text-body mb-0 d-flex align-items-center gap-2">
+                            <span class="erp-icon-box bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-person-check"></i></span>
+                            <?= Html::encode($this->title) ?>
+                        </h4>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-2 mb-0 d-inline-block">ปีงบประมาณ <?= (int) $thaiYear ?></span>
+                    </div>
+                    <div class="mb-4">
+                        <div class="input-group input-group-lg rounded-pill border border-2 border-light shadow-sm">
+                            <span class="input-group-text border-0 bg-light rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
+                            <?= $form->field($searchModel, 'topic', [
+                                'template' => '{input}',
+                                'options' => ['class' => 'flex-grow-1'],
+                            ])->textInput([
+                                'placeholder' => 'ค้นหาหัวข้อกิจกรรม บริษัท/หน่วยงาน หรือคำสำคัญ',
+                                'class' => 'form-control form-control-lg border-0 bg-light rounded-0 rounded-end-pill',
+                            ]) ?>
+                        </div>
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $searchModel, 'label' => 'ค้นหาบุคลากร', 'placeholder' => 'บุคลากร']) ?>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <?= $form->field($searchModel, 'development_type_id')->dropDownList(
+                                ['' => 'ทุกประเภท'] + ArrayHelper::map($developmentTypes, 'code', 'title'),
+                                ['class' => 'form-select rounded-pill']
+                            )->label('ประเภท') ?>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <?= $form->field($searchModel, 'status')->dropDownList($statusList, ['class' => 'form-select rounded-pill'])->label('สถานะ') ?>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <?= $form->field($searchModel, 'date_start_from')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                'options' => ['placeholder' => 'เริ่มจากวันที่', 'class' => 'form-control rounded-pill'],
+                            ])->label('วันที่เริ่มตั้งแต่') ?>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <?= $form->field($searchModel, 'date_start_to')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                'options' => ['placeholder' => 'ถึงวันที่', 'class' => 'form-control rounded-pill'],
+                            ])->label('ถึงวันที่') ?>
+                        </div>
+                        <div class="col-12 col-md-3 d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-outline-primary rounded-pill"><i class="bi bi-funnel me-1"></i> กรอง</button>
+                            <?= Html::a('ล้างตัวกรอง', ['/development/approver/index', 'thai_year' => $thaiYear], ['class' => 'btn btn-outline-secondary rounded-pill']) ?>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- Filter row: บุคลากร, ประเภท, สถานะ, วันที่ -->
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-sm-6 col-md-3">
-                    <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $searchModel, 'label' => 'ค้นหาบุคลากร', 'placeholder' => 'บุคลากร']) ?>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($searchModel, 'development_type_id')->dropDownList(
-                        ['' => 'ทุกประเภท'] + ArrayHelper::map($developmentTypes, 'code', 'title'),
-                        ['class' => 'form-select rounded-pill']
-                    )->label('ประเภท') ?>
-                </div>
-                <div class="col-12 col-sm-6 col-md-2">
-                    <?= $form->field($searchModel, 'status')->dropDownList($statusList, ['class' => 'form-select rounded-pill'])->label('สถานะ') ?>
-                </div>
-                <div class="col-12 col-sm-6 col-md-2">
-                    <?= $form->field($searchModel, 'date_start_from')->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                        'options' => ['placeholder' => 'เริ่มจากวันที่', 'class' => 'form-control rounded-pill'],
-                    ])->label('วันที่เริ่มตั้งแต่') ?>
-                </div>
-                <div class="col-12 col-sm-6 col-md-2">
-                    <?= $form->field($searchModel, 'date_start_to')->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                        'options' => ['placeholder' => 'ถึงวันที่', 'class' => 'form-control rounded-pill'],
-                    ])->label('ถึงวันที่') ?>
-                </div>
-                <div class="col-12 col-md-3 d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-outline-primary rounded-pill"><i class="bi bi-funnel me-1"></i> กรอง</button>
-                    <?= Html::a('ล้างตัวกรอง', ['/development/default/list', 'thai_year' => $thaiYear], ['class' => 'btn btn-outline-secondary rounded-pill']) ?>
-                </div>
-            </div>
-        </div>
-    </div>
         </div>
     </div>
     <?php ActiveForm::end(); ?>
@@ -156,7 +147,6 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
     </div>
     <?php endif; ?>
 
-    <!-- Summary: แสดง X จาก Y รายการ • หน้า ... -->
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-3">
         <p class="text-muted small mb-0">
             แสดง <strong><?= $totalCount > 0 ? $from : 0 ?></strong>–<strong><?= $to ?></strong> จาก <strong><?= number_format($totalCount) ?></strong> รายการ
@@ -165,7 +155,6 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
             <?php endif; ?>
         </p>
         <div class="d-flex align-items-center gap-2">
-            <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใหม่', ['/development/default/create', 'thai_year' => $thaiYear], ['class' => 'btn btn-primary btn-sm rounded-pill']) ?>
             <?php
             $exportUrl = Url::to(array_merge(['/development/default/export-excel'], [
                 'thai_year' => $thaiYear,
@@ -175,6 +164,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                     'status' => $searchModel->status,
                     'date_start_from' => $searchModel->date_start_from,
                     'date_start_to' => $searchModel->date_start_to,
+                    'emp_id' => $searchModel->emp_id,
                 ],
             ]));
             ?>
@@ -182,19 +172,18 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                 <i class="bi bi-file-earmark-excel me-1"></i>ส่งออก Excel
             </a>
             <div class="dropdown">
-                <button class="btn btn-light border rounded-pill dropdown-toggle btn-sm" type="button" id="dropdownYearList" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-light border rounded-pill dropdown-toggle btn-sm" type="button" id="dropdownYearApprover" data-bs-toggle="dropdown" aria-expanded="false">
                     ปีงบประมาณ <?= (int) $thaiYear ?>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownYearList">
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownYearApprover">
                     <?php foreach ($listThaiYear as $y): ?>
-                    <li><a class="dropdown-item" href="<?= Url::to(['/development/default/list', 'thai_year' => $y]) ?>">ปี <?= (int) $y ?></a></li>
+                    <li><a class="dropdown-item" href="<?= Url::to(['/development/approver/index', 'thai_year' => $y]) ?>">ปี <?= (int) $y ?></a></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
         </div>
     </div>
 
-    <!-- Card list -->
     <div class="development-activity-cards">
         <?php foreach ($dataProvider->getModels() as $item): ?>
         <?php
@@ -211,7 +200,6 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
         <div class="card border-0 shadow-sm rounded-4 mb-3 development-activity-card">
             <div class="card-body p-4">
                 <div class="d-flex gap-4 align-items-start">
-                    <!-- Avatar: ผู้ขอไปราชการ -->
                     <div class="development-card-avatar flex-shrink-0">
                         <?php if ($avatarUrl): ?>
                         <img src="<?= Html::encode($avatarUrl) ?>" alt="" class="rounded-4" width="72" height="72" style="object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -220,7 +208,6 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                         <div class="development-card-avatar-initials rounded-4"><?= Html::encode($initials) ?></div>
                         <?php endif; ?>
                     </div>
-                    <!-- Content -->
                     <div class="flex-grow-1 min-w-0">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <h5 class="text-primary mb-0 development-card-topic"><?= Html::a(Html::encode($item->topic), ['/development/default/view', 'id' => $item->id], ['class' => 'text-primary text-decoration-none']) ?></h5>
@@ -260,14 +247,13 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body py-5 text-center text-muted">
                 <i class="bi bi-inbox display-4 d-block mb-3 opacity-50"></i>
-                <p class="mb-0">ยังไม่มีข้อมูลกิจกรรมในปีนี้</p>
+                <p class="mb-0">ไม่พบรายการตามตัวกรอง</p>
                 <p class="small mb-0">ลองเปลี่ยนปีงบประมาณหรือล้างตัวกรอง</p>
             </div>
         </div>
         <?php endif; ?>
     </div>
 
-    <!-- Pagination -->
     <?php if ($dataProvider->getCount() > 0 && $totalPages > 1): ?>
     <div class="d-flex justify-content-center mt-4">
         <?= \yii\bootstrap5\LinkPager::widget([

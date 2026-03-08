@@ -249,9 +249,54 @@ $this->registerJs(<<<'JS'
         }
     });
 
-    document.getElementById('leave-confirm-form').addEventListener('submit', function(){
-        if (inputType && inputType.value === 'canvas') updateData();
-    });
+    var confirmForm = document.getElementById('leave-confirm-form');
+    if (confirmForm) {
+        confirmForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (inputType && inputType.value === 'canvas') updateData();
+            if (typeof Swal === 'undefined') { confirmForm.submit(); return; }
+            Swal.fire({
+                title: 'ยืนยันและสร้างใบลา?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then(function(r){
+                if (!r.isConfirmed) return;
+                Swal.fire({
+                    title: 'กำลังบันทึก...',
+                    allowOutsideClick: false,
+                    didOpen: function(){ Swal.showLoading(); }
+                });
+                var formData = new FormData(confirmForm);
+                var saveUrl = confirmForm.getAttribute('action') || '';
+                fetch(saveUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(res){ return res.json(); })
+                .then(function(data){
+                    if (data && data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'บันทึกสำเร็จ',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(function(){
+                            if (data.redirect) window.location.href = data.redirect;
+                            else window.location.href = (document.querySelector('meta[name="base-url"]') && document.querySelector('meta[name="base-url"]').content) || '/leave/default/index';
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: data && data.message ? data.message : 'บันทึกไม่สำเร็จ' });
+                    }
+                })
+                .catch(function(){
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด' });
+                });
+            });
+        });
+    }
 })();
 JS
 , \yii\web\View::POS_END);

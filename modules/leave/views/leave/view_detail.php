@@ -10,7 +10,7 @@ use app\components\UserHelper;
 
 $me = UserHelper::GetEmployee();
 $author = $model->getAvatar($model->emp_id, '');
-$authorAvatar = $author['avatar'] ?? '';
+$authorAvatarUrl = $author['avatar_url'] ?? null;
 $authorName = $author['fullname'] ?? ($model->employee->fullname ?? '');
 $authorDept = $author['department'] ?? ($model->employee ? $model->employee->departmentName() : '');
 $authorPosition = $author['position_name'] ?? ($model->employee ? $model->employee->positionName() : '');
@@ -39,8 +39,8 @@ $substitute = $model->leaveWorkSend();
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-circle overflow-hidden border border-2 border-primary bg-body-secondary flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                <?php if ($authorAvatar): ?>
-                                    <?= $authorAvatar ?>
+                                <?php if (!empty($authorAvatarUrl)): ?>
+                                    <?= Html::img($authorAvatarUrl, ['alt' => $authorName, 'class' => 'w-100 h-100 object-fit-cover']) ?>
                                 <?php else: ?>
                                     <i class="bi bi-person fs-4 text-muted"></i>
                                 <?php endif; ?>
@@ -92,6 +92,33 @@ $substitute = $model->leaveWorkSend();
                 </div>
             </div>
 
+            <!-- เอกสารแนบ / ใบรับรองแพทย์ (แสดงหลังรายละเอียดการลา) — คลิกแสดงใน iframe พร้อมปุ่มย้อนกลับ -->
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
+                    <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-medical text-primary"></i>
+                        เอกสารแนบ / ใบรับรองแพทย์
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    <?php if (!empty($attachments)): ?>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                            <?php foreach ($attachments as $att): ?>
+                            <li>
+                                <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" title="คลิกเพื่อดูในหน้านี้">
+                                    <i class="bi bi-file-earmark-arrow-down text-primary"></i>
+                                    <span class="small"><?= Html::encode($att->file_name) ?></span>
+                                    <i class="bi bi-eye small text-muted"></i>
+                                </a>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p class="mb-0 text-muted small"><i class="bi bi-inbox me-1"></i> ไม่มีไฟล์แนบใบรับรองแพทย์</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <!-- สรุปวันลา -->
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden border-start border-3 border-info">
                 <div class="card-header bg-info bg-opacity-10 border-0 py-2 px-3">
@@ -135,33 +162,6 @@ $substitute = $model->leaveWorkSend();
                     <div class="fw-medium text-body mb-2"><?= Html::encode($model->data_json['address'] ?? '-') ?></div>
                     <div class="small text-muted mb-1">โทรศัพท์</div>
                     <div class="fw-medium text-body"><?= Html::encode($model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '-') ?></div>
-                </div>
-            </div>
-
-            <!-- เอกสารแนบ / ใบรับรองแพทย์ (แสดงเสมอ) -->
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
-                    <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
-                        <i class="bi bi-paperclip text-primary"></i>
-                        เอกสารแนบ / ใบรับรองแพทย์
-                    </h6>
-                </div>
-                <div class="card-body p-3">
-                    <?php if (!empty($attachments)): ?>
-                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
-                            <?php foreach ($attachments as $att): ?>
-                            <li>
-                                <a href="<?= Url::to(['/filemanager/uploads/show', 'id' => $att->id]) ?>" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50">
-                                    <i class="bi bi-file-earmark-arrow-down text-primary"></i>
-                                    <span class="small"><?= Html::encode($att->file_name) ?></span>
-                                    <i class="bi bi-box-arrow-up-right small text-muted"></i>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="mb-0 text-muted small"><i class="bi bi-inbox me-1"></i> ไม่มีไฟล์แนบใบรับรองแพทย์</p>
-                    <?php endif; ?>
                 </div>
             </div>
 
@@ -265,3 +265,59 @@ $substitute = $model->leaveWorkSend();
         </div>
     </div>
 </div>
+
+<!-- Modal แสดงเอกสารแนบใน iframe + ปุ่มย้อนกลับ -->
+<div class="modal fade" id="leave-attachment-modal" tabindex="-1" aria-labelledby="leave-attachment-modal-label" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content rounded-0">
+            <div class="modal-header border-bottom bg-primary py-2 px-3 d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-light btn-sm rounded-pill d-inline-flex align-items-center gap-1" id="leave-attachment-back-btn" aria-label="ย้อนกลับ">
+                    <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                </button>
+                <h5 class="modal-title small fw-semibold mb-0 text-white" id="leave-attachment-modal-label">เอกสารแนบ / ใบรับรองแพทย์</h5>
+            </div>
+            <div class="modal-body p-0 bg-dark bg-opacity-10 position-relative" style="min-height: 70vh;">
+                <iframe id="leave-attachment-iframe" class="border-0 w-100 h-100 position-absolute top-0 start-0" style="min-height: 75vh;" title="แสดงเอกสารแนบ"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+$this->registerJs(<<<'JS'
+(function() {
+    var modal = document.getElementById('leave-attachment-modal');
+    var iframe = document.getElementById('leave-attachment-iframe');
+    var backBtn = document.getElementById('leave-attachment-back-btn');
+    if (!modal || !iframe || !backBtn) return;
+    function closeModal() {
+        if (typeof bootstrap !== 'undefined' && modal) {
+            var bModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+            bModal.hide();
+        }
+        iframe.src = 'about:blank';
+    }
+    document.querySelectorAll('.leave-attachment-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var url = this.getAttribute('data-url') || this.getAttribute('href');
+            if (url) {
+                iframe.src = url;
+                if (typeof bootstrap !== 'undefined') {
+                    var bModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+                    bModal.show();
+                } else {
+                    modal.classList.add('show');
+                    modal.style.display = 'block';
+                    modal.setAttribute('aria-hidden', 'false');
+                }
+            }
+        });
+    });
+    backBtn.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function() { iframe.src = 'about:blank'; });
+    }
+})();
+JS
+);
+?>

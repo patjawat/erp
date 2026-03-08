@@ -51,9 +51,9 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>'
     ],
     [
-         'show' => Yii::$app->user->can('inventory') ? true : false,
-        'label' => 'คลังพัสดุ', 
-        'url' => ['/inventory'], 
+         'show' => !empty(env('INVENTORY_URL')) ? true : (Yii::$app->user->can('inventory') ? true : false),
+        'label' => 'คลังพัสดุ',
+        'url' => !empty(env('INVENTORY_URL')) ? env('INVENTORY_URL') : ['/inventory'],
         'active' => 'inventory',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg>'
     ],
@@ -80,16 +80,16 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
     ],
     [
-        'show' => (Yii::$app->user->can('hr') || Yii::$app->user->can('user')) ? true : false,
+        'show' =>  (Yii::$app->user->can('hr') ? true : false),
         'label' => 'อบรม/ดูงาน',
-        'url' => ['/hr/development'],
+        'url' => !empty(env('DEVELOPMENT_URL')) ? env('DEVELOPMENT_URL') : ['/hr/development'],
         'active' => 'development',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></svg>'
     ],
     [
-        'show' => Yii::$app->user->can('leave') ? true : false,
-        'label' => 'ระบบลา', 
-        'url' => ['/hr/leave/index'], 
+        'show' =>  (Yii::$app->user->can('leave') ? true : false),
+        'label' => 'ระบบลา',
+        'url' => !empty(env('LEAVE_URL')) ? env('LEAVE_URL') : ['/hr/leave/index'],
         'active' => ['leave'],
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>'
     ],

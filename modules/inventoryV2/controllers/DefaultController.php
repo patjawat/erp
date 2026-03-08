@@ -3,6 +3,7 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\WarehouseSearch;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -17,13 +18,45 @@ use yii\web\Controller;
 class DefaultController extends Controller
 {
     /**
-     * Renders the index view for the module
-     * @return string
+     * หน้าแรกโมดูลคลัง: ถ้า user มีสิทธิในคลังหลัก → ไป main-stock/dashboard
+     * ถ้ามีสิทธิในคลังย่อย/สาขา → ไป sub-stock/dashboard ไม่เช่นนั้นแสดง index
+     * @return string|\yii\web\Response
      */
     public function actionIndex()
     {
+        $userId = \Yii::$app->user->isGuest ? null : (string) \Yii::$app->user->id;
+
+        if ($userId !== null) {
+            $mainQuery = Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                ->select('id');
+            if (!\Yii::$app->user->can('admin')) {
+                $mainQuery->andWhere(
+                    new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")
+                );
+            }
+            $mainWarehouseIds = $mainQuery->column();
+
+            if (!empty($mainWarehouseIds)) {
+                return $this->redirect(['/inventory-v2/main-stock/dashboard']);
+            }
+        }
+
+        $subWarehouses = Warehouse::findSubWarehousesForUser();
+        if (!empty($subWarehouses)) {
+            return $this->redirect(['/inventory-v2/sub-stock/dashboard']);
+        }
+
         return $this->render('index');
     }
+
+
+    public function actionOverview()
+    {
+        return $this->render('overview');
+    }
+
 
     /**
      * เมนูนำทาง - แผนผังขั้นตอนการทำงาน (ใช้ view เดียวกับ index)

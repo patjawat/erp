@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/leave/leave/req-cancel', 'id' => $model->id], [
             'class' => 'req-cancel-btn btn btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
-        <?php echo !$model->hasApprovalDecision() ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/leave/leave/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-lg']]) : '' ?>
+        <?php echo !$model->hasApprovalDecision() ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/leave/leave/update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow']) : '' ?>
     <?php endif; ?>
     <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>

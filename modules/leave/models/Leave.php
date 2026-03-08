@@ -235,16 +235,7 @@ class Leave extends \yii\db\ActiveRecord
             }
         }
 
-        // ให้ ผอ. (ตามตั้งค่าองค์กร) เป็นผู้ตรวจสอบทุกระดับ
-        $dirInfo = SiteHelper::viewDirector();
-        $directorId = !empty($dirInfo['id']) ? (int) $dirInfo['id'] : null;
-        if ($directorId) {
-            foreach ($rows as &$row) {
-                $row['emp_id'] = $directorId;
-            }
-            unset($row);
-        }
-
+        // ใช้ผู้อนุมัติตามที่ resolve จาก approve_level_setting (ไม่เขียนทับเป็น ผอ. ทุกระดับ)
         // ผอ. ตามตั้งค่าองค์กร (settings/company) — อิงจาก data_json[director_name] ที่เก็บเป็น id
         $isDirector = \app\components\SiteHelper::isDirectorFromSettings($this->emp_id);
         $approveDate = date('Y-m-d H:i:s');
@@ -342,7 +333,7 @@ class Leave extends \yii\db\ActiveRecord
         $file = '<ul>';
 
         foreach ($listFfiles as $item) {
-            $file .= '<li>' . Html::a($item->file_name, ['/filemanager/uploads/show', 'id' => $item->id], ['target' => '_blank']) . '</li>';
+            $file .= '<li>' . Html::a($item->file_name, ['/leave/leave/show-file', 'id' => $item->id], ['target' => '_blank']) . '</li>';
         }
 
         $file .= '</ul>';
@@ -359,6 +350,62 @@ class Leave extends \yii\db\ActiveRecord
             ->all();
     }
 
+    /**
+     * สถิติการลาในปีงบประมาณนี้ ตามประเภทการลาในใบลาฉบับนี้เท่านั้น: ลามาแล้ว (ก่อนใบนี้), ลาครั้งนี้ (จำนวนวันใบนี้), รวมเป็น
+     * @return array[] แถวเดียว (หรือว่าง) มี code, title, last_days (ลามาแล้ว), on_days (ลาครั้งนี้), total_days (รวมเป็น)
+     */
+    public function getLeaveStatsInFiscalYear(): array
+    {
+        $dateStart = $this->date_start ? date('Y-m-d', strtotime($this->date_start)) : '';
+        $leaveTypeId = (string) ($this->leave_type_id ?? '');
+        if ($leaveTypeId === '') {
+            return [];
+        }
+        $sql = "SELECT x1.code, x1.title, x1.thai_year,
+                       x1.last_days,
+                       x1.on_days,
+                       (x1.last_days + x1.on_days) AS total_days
+                FROM (
+                    SELECT t.code, t.title, l.thai_year,
+                           IFNULL(SUM(CASE WHEN l.leave_type_id = t.code AND l.status = 'Approve' AND l.date_start < :date_start THEN l.total_days ELSE 0 END), 0) AS last_days,
+                           IFNULL(SUM(CASE WHEN l.leave_type_id = t.code AND l.id = :leave_id THEN l.total_days ELSE 0 END), 0) AS on_days
+                    FROM `leave` l
+                    LEFT JOIN categorise t ON t.code = l.leave_type_id AND t.name = 'leave_type'
+                    WHERE l.emp_id = :emp_id AND l.thai_year = :thai_year AND l.leave_type_id = :leave_type_id
+                    GROUP BY t.code, t.title, l.thai_year
+                ) AS x1
+                GROUP BY x1.code, x1.title, x1.thai_year
+                ORDER BY x1.code";
+        return Yii::$app->db->createCommand($sql)
+            ->bindValue(':date_start', $dateStart)
+            ->bindValue(':thai_year', (int) $this->thai_year)
+            ->bindValue(':emp_id', (int) $this->emp_id)
+            ->bindValue(':leave_id', (int) $this->id)
+            ->bindValue(':leave_type_id', $leaveTypeId)
+            ->queryAll();
+    }
+
+    /**
+     * วันลาครั้งสุดท้ายก่อนหน้าการลาครั้งนี้ (ประเภทเดียวกัน ปีงบประมาณเดียวกัน ผู้อนุมัติแล้ว)
+     * @return Leave|null
+     */
+    public function getLastLeaveBeforeThis(): ?Leave
+    {
+        $dateStart = $this->date_start ? date('Y-m-d', strtotime($this->date_start)) : null;
+        if ($dateStart === null) {
+            return null;
+        }
+        return static::find()
+            ->andWhere([
+                'emp_id' => $this->emp_id,
+                'thai_year' => $this->thai_year,
+                'leave_type_id' => $this->leave_type_id,
+                'status' => 'Approve',
+            ])
+            ->andWhere(['<', 'date_start', $dateStart])
+            ->orderBy(['date_start' => SORT_DESC])
+            ->one();
+    }
 
     public function listLeaveType()
     {
@@ -469,30 +516,30 @@ class Leave extends \yii\db\ActiveRecord
             if ($employee) {
                 $msg = '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . ($this->leaveType->title ?? '') . '</span> เขียนเมื่อ' . $this->viewCreated();
                 $msg = 'เขียน ' . $this->viewCreated();
+                $avatarUrl = method_exists($employee, 'showAvatar') ? $employee->showAvatar() : '';
                 return [
                     'avatar' => $employee->getAvatar(false, $msg),
-                    // 'avatar' => $employee->getAvatar(false,$this->viewLeaveType()),
+                    'avatar_url' => $avatarUrl ?: null,
                     'department' => $employee->departmentName(),
                     'fullname' => $employee->fullname,
                     'position_name' => $employee->positionName(),
-                    // 'product_type_name' => $this->data_json['product_type_name']
                 ];
             } else {
                 return [
                     'avatar' => '',
+                    'avatar_url' => null,
                     'department' => '',
                     'fullname' => '',
                     'position_name' => '',
-                    'product_type_name' => ''
                 ];
             }
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
+                'avatar_url' => null,
                 'department' => '',
                 'fullname' => '',
                 'position_name' => '',
-                'product_type_name' => ''
             ];
         }
     }
@@ -575,6 +622,20 @@ class Leave extends \yii\db\ActiveRecord
         return '<span class="badge rounded-pill badge-soft-primary text-primary fs-13 "><i class="bi bi-exclamation-circle-fill"></i> ' . $this->leaveType->title . '</span> เนื่องจาก ' . $this->reason;
     }
 
+    /**
+     * ค่าวันที่อนุมัติ (ดิบ) ของระดับที่กำหนด — ใช้สำหรับจัดรูปแบบใน PDF ตามที่ผู้ใช้เลือก
+     * @param int $level ระดับผู้อนุมัติ 1–8
+     * @return string|null วันที่ในรูปแบบ Y-m-d H:i:s หรือ null
+     */
+    public function getApproveDateRaw($level)
+    {
+        $check = Approve::find()
+            ->where(['name' => 'leave', 'from_id' => $this->id, 'level' => $level])
+            ->andWhere(['IS NOT', 'emp_id', null])
+            ->one();
+        return $check && isset($check->data_json['approve_date']) ? $check->data_json['approve_date'] : null;
+    }
+
     // ผู้ตรวจสอบการลา
     public function checkerName($level)
     {
@@ -597,20 +658,34 @@ class Leave extends \yii\db\ActiveRecord
         }
     }
 
-    //  ภาพทีมผูตรวจสอบ
+    /**
+     * ภาพทีมผู้อนุมัติ (avatar stack)
+     * ใช้ relation approves ที่โหลดไว้แล้วถ้ามี เพื่อหลีกเลี่ยง N+1 ในหน้ารายการ
+     */
     public function stackChecker()
     {
+        if ($this->isRelationPopulated('approves')) {
+            $approves = array_filter($this->approves, function ($a) {
+                return !in_array($a->status, ['None', 'Pending'], true);
+            });
+            usort($approves, function ($a, $b) {
+                return (int) $b->level - (int) $a->level;
+            });
+            $list = array_values($approves);
+            return $list === [] ? '' : static::renderStackChecker($list);
+        }
         $approves = Approve::find()
             ->where(['from_id' => $this->id, 'name' => 'leave'])
             ->andWhere(['not in', 'status', ['None', 'Pending']])
             ->orderBy(['level' => SORT_DESC])
             ->with('employee')
             ->all();
-        return static::renderStackChecker($approves);
+        return $approves === [] ? '' : static::renderStackChecker($approves);
     }
 
     /**
      * Render stack checker from pre-loaded Approve models (avoids N+1 in lists).
+     * ใช้รูปขนาดเล็ก (avatar-sm) — ถ้าโหลดช้าให้ตรวจที่โมเดล Employee::showAvatar() ว่าส่ง thumbnail หรือไม่
      * @param \app\modules\approveV2\models\Approve[] $approves
      * @return string
      */
@@ -619,12 +694,16 @@ class Leave extends \yii\db\ActiveRecord
         $data = '<div class="avatar-stack">';
         foreach ($approves as $item) {
             try {
+                $src = $item->employee ? $item->employee->showAvatar() : '';
                 $data .= Html::img('@web/img/loading.gif', [
                     'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : ''),
+                    'width' => '40',
+                    'height' => '40',
+                    'style' => 'object-fit:cover;',
                     'data' => [
                         'expand' => '-20',
                         'sizes' => 'auto',
-                        'src' => $item->employee ? $item->employee->showAvatar() : '',
+                        'src' => $src,
                     ]
                 ]);
             } catch (\Throwable $th) {

@@ -203,8 +203,9 @@ class SettingController extends Controller
             return $this->redirect(['/leave/setting/leave-template', 'code' => $code]);
         }
 
-        $config      = $this->getLeaveFormConfig($code);
-        $items       = $this->getLeaveFormItems($code);
+        // โหลดและบันทึกตาม effectiveCode เพื่อให้ date_format และตำแหน่งตรงกับ template ที่ใช้พิมพ์ PDF
+        $config      = $this->getLeaveFormConfig($effectiveCode);
+        $items       = $this->getLeaveFormItems($effectiveCode);
         $fieldLabels = $this->getDefaultFields();
 
         $leaveType = $code !== 'default'
@@ -223,14 +224,16 @@ class SettingController extends Controller
         }
 
         return $this->render('positions', [
-            'code'        => $code,
-            'leaveType'   => $leaveType,
-            'config'      => $config,
-            'items'       => $items,
-            'fieldLabels' => $fieldLabels,
-            'templateUrl' => Url::to(['/leave/setting/serve-template', 'code' => $effectiveCode]),
-            'recentLeaves'=> $recentLeaves,
-            'usingDefault'=> ($effectiveCode === 'default' && $code !== 'default'),
+            'code'          => $code,
+            'effectiveCode' => $effectiveCode,
+            'leaveType'     => $leaveType,
+            'config'        => $config,
+            'items'         => $items,
+            'fieldLabels'   => $fieldLabels,
+            'signatureKeys' => $this->getSignatureKeys(),
+            'templateUrl'   => Url::to(['/leave/setting/serve-template', 'code' => $effectiveCode]),
+            'recentLeaves'  => $recentLeaves,
+            'usingDefault'  => ($effectiveCode === 'default' && $code !== 'default'),
         ]);
     }
 
@@ -240,25 +243,37 @@ class SettingController extends Controller
     public function actionSavePositions($code = 'default')
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $positions = Yii::$app->request->post('positions', []);
-        if (empty($positions) && Yii::$app->request->getIsPost()) {
+        $positions  = Yii::$app->request->post('positions', []);
+        $dateFormat = Yii::$app->request->post('date_format');
+        if (Yii::$app->request->getIsPost()) {
             $raw = Yii::$app->request->getRawBody();
-            if ($raw) {
+            if ($raw && is_string($raw) && preg_match('/^\s*\{/', $raw)) {
                 $body = json_decode($raw, true);
-                $positions = $body['positions'] ?? [];
+                if (is_array($body)) {
+                    if (!empty($body['positions'])) {
+                        $positions = $body['positions'];
+                    }
+                    if (isset($body['date_format']) && $body['date_format'] !== '') {
+                        $dateFormat = (string) $body['date_format'];
+                    }
+                }
             }
         }
         if (!is_array($positions)) {
             return ['success' => false, 'message' => 'ข้อมูลไม่ถูกต้อง'];
         }
         $defaults = $this->getDefaultFields();
+        $sigKeys  = $this->getSignatureKeys();
         $config   = $this->getLeaveFormConfig($code);
-        $items    = [];
+        if ($dateFormat !== null && in_array($dateFormat, ['short', 'medium', 'long', 'numeric'], true)) {
+            $config['date_format'] = $dateFormat;
+        }
+        $items = [];
         foreach ($positions as $itemId => $pos) {
             if (!is_array($pos)) continue;
             $key = isset($pos['key']) ? (string) $pos['key'] : '';
             if ($key === '' || !isset($defaults[$key])) continue;
-            $items[] = [
+            $row = [
                 'id'       => $itemId,
                 'key'      => $key,
                 'x'        => (float) ($pos['x'] ?? 0),
@@ -267,6 +282,11 @@ class SettingController extends Controller
                 'bold'     => (int) ($pos['bold'] ?? 0),
                 'enabled'  => (int) ($pos['enabled'] ?? 1),
             ];
+            if (in_array($key, $sigKeys, true)) {
+                $row['width']  = (float) ($pos['width'] ?? $defaults[$key]['width'] ?? 35);
+                $row['height'] = (float) ($pos['height'] ?? $defaults[$key]['height'] ?? 15);
+            }
+            $items[] = $row;
         }
         $config['items'] = $items;
         $cat = $this->getConfigRecord($code);
@@ -283,45 +303,82 @@ class SettingController extends Controller
 
     public function actionLeavePdf($id)
     {
+        // กันไม่ให้ FPDF หรือ code อื่นส่ง output ก่อน headers (แก้ HeadersAlreadySentException)
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        ob_start();
+
         $model = Leave::find()
             ->andWhere(['id' => (int) $id])
             ->with(['employee', 'leaveType'])
             ->one();
         if ($model === null) {
+            ob_end_clean();
             throw new \yii\web\NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
         $me = UserHelper::GetEmployee();
         if (!$me) {
+            ob_end_clean();
             throw new ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
         }
         if ($me->id != $model->emp_id && !Yii::$app->user->can('leave')) {
+            ob_end_clean();
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์พิมพ์ใบลานี้');
         }
 
         // ── Fallback: หา template + positions ที่เหมาะกับประเภทการลานี้ ──
         $tmpl = $this->getTemplateForLeave($model);
         if ($tmpl === null) {
+            ob_end_clean();
             throw new \yii\web\NotFoundHttpException(
                 'ยังไม่มีเทมเพลต PDF กรุณาอัปโหลดที่การตั้งค่าแบบฟอร์มใบลา'
             );
         }
 
+        $dateFmt = $tmpl['date_format'] ?? 'medium';
+        $fmtDate = function ($date) use ($dateFmt) {
+            return $this->formatDateForLeavePdf($date, $dateFmt);
+        };
+
         $author = $model->getAvatar($model->emp_id, '');
         $values = [
             'emp_fullname'     => $author['fullname'] ?? ($model->employee->fullname ?? ''),
             'department'       => $author['department'] ?? ($model->employee ? $model->employee->departmentName() : ''),
+            'emp_position'     => $author['position_name'] ?? ($model->employee ? $model->employee->positionName() : ''),
             'leave_type_title' => $model->leaveType ? $model->leaveType->title : '',
-            'date_start'       => $model->date_start ? ThaiDateHelper::formatThaiDate($model->date_start) : '',
-            'date_end'         => $model->date_end   ? ThaiDateHelper::formatThaiDate($model->date_end)   : '',
+            'date_start'       => $model->date_start ? $fmtDate($model->date_start) : '',
+            'date_end'         => $model->date_end   ? $fmtDate($model->date_end)   : '',
             'total_days'       => (string) ($model->total_days ?? ''),
             'reason'           => $model->data_json['reason'] ?? '',
             'address'          => $model->data_json['address'] ?? '',
             'contact_phone'    => $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '',
             'place_go'         => $model->data_json['place_go'] ?? '',
-            'create_date'      => $model->created_at ? ThaiDateHelper::formatThaiDate($model->created_at, 'long') : '',
+            'create_date'      => $model->created_at ? $fmtDate($model->created_at) : '',
         ];
+        for ($level = 1; $level <= 8; $level++) {
+            $checker = $model->checkerName($level);
+            $approveDateRaw = $model->getApproveDateRaw($level);
+            $values['approve_date_' . $level]     = $approveDateRaw ? $fmtDate($approveDateRaw) : ($checker['approve_date'] ?? '');
+            $values['approve_' . $level . '_name'] = $checker['fullname'] ?? '';
+            $values['approve_' . $level . '_position'] = $checker['position'] ?? '';
+        }
+        $statsRows = $model->getLeaveStatsInFiscalYear();
+        $usedBefore = 0;
+        $totalDays = 0;
+        if (!empty($statsRows)) {
+            $row = $statsRows[0];
+            $usedBefore = (float) ($row['last_days'] ?? 0);
+            $totalDays = (float) ($row['total_days'] ?? 0);
+        }
+        $values['leave_stats_used_before'] = (string) $usedBefore;
+        $values['leave_stats_total'] = (string) $totalDays;
+        $lastLeave = $model->getLastLeaveBeforeThis();
+        $values['last_leave_date_start'] = $lastLeave && $lastLeave->date_start ? $fmtDate($lastLeave->date_start) : '';
+        $values['last_leave_date_end'] = $lastLeave && $lastLeave->date_end ? $fmtDate($lastLeave->date_end) : '';
 
         if (!class_exists(\setasign\Fpdi\Fpdi::class)) {
+            ob_end_clean();
             throw new \yii\web\ServerErrorHttpException('ระบบสร้าง PDF ยังไม่พร้อม');
         }
 
@@ -337,9 +394,11 @@ class SettingController extends Controller
         $pdf->SetTextColor(0, 0, 0);
 
         $ptToMm = 25.4 / 72;
+        $sigKeys = $this->getSignatureKeys();
         foreach ($tmpl['items'] as $item) {
             if (empty($item['enabled'])) continue;
-            $key      = $item['key'] ?? '';
+            $key = $item['key'] ?? '';
+            if (in_array($key, $sigKeys, true)) continue;
             $x        = (float) ($item['x'] ?? 0);
             $y        = (float) ($item['y'] ?? 0);
             $fontSize = (int) ($item['fontSize'] ?? 15);
@@ -351,11 +410,60 @@ class SettingController extends Controller
             $pdf->Write(0, iconv('UTF-8', 'cp874//IGNORE', $text));
         }
 
+        foreach ($tmpl['items'] as $item) {
+            if (empty($item['enabled'])) continue;
+            $key = $item['key'] ?? '';
+            if (!in_array($key, $sigKeys, true)) continue;
+            $x      = (float) ($item['x'] ?? 0);
+            $y      = (float) ($item['y'] ?? 0);
+            $width  = (float) ($item['width'] ?? 35);
+            $height = (float) ($item['height'] ?? 15);
+            $imgPath = null;
+            if ($key === 'signature_applicant') {
+                $sigData = isset($model->data_json['signature_data']) ? trim((string) $model->data_json['signature_data']) : '';
+                if ($sigData !== '' && preg_match('#^data:image/(\w+);base64,(.+)$#', $sigData, $m)) {
+                    $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                    $bin = base64_decode($m[2], true);
+                    if ($bin !== false) {
+                        $tmp = tempnam(sys_get_temp_dir(), 'leave_sig_') . '.' . $ext;
+                        if (@file_put_contents($tmp, $bin)) {
+                            $imgPath = $tmp;
+                        }
+                    }
+                }
+            } else {
+                $level = (int) str_replace('signature_approve_', '', $key);
+                if ($level >= 1) {
+                    $checker = $model->checkerName($level);
+                    $sigPath = isset($checker['signature']) ? $checker['signature'] : '';
+                    if ($sigPath !== '' && is_file($sigPath)) {
+                        $imgPath = $sigPath;
+                    }
+                }
+            }
+            if ($imgPath !== null) {
+                try {
+                    $pdf->Image($imgPath, $x, $y, $width, $height);
+                } catch (\Throwable $e) {
+                }
+                if (strpos($imgPath, sys_get_temp_dir()) === 0) {
+                    @unlink($imgPath);
+                }
+            }
+        }
+
         $filename = 'leave-' . (int) $model->id . '.pdf';
+        $pdfOutput = $pdf->Output('S');
+        $buffered = ob_get_clean();
+        if ($buffered !== false && $buffered !== '' && substr($buffered, 0, 4) === '%PDF') {
+            $body = $buffered;
+        } else {
+            $body = $pdfOutput;
+        }
         Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
         Yii::$app->response->headers->set('Content-Type', 'application/pdf');
         Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
-        Yii::$app->response->content = $pdf->Output('S');
+        Yii::$app->response->content = $body;
         return Yii::$app->response;
     }
 
@@ -398,16 +506,20 @@ class SettingController extends Controller
 
         // ลอง per-type ก่อน
         if ($ltCode && $this->hasTemplateFile($ltCode)) {
+            $config = $this->getLeaveFormConfig($ltCode);
             return [
                 'templatePath' => $this->getTemplatePath($ltCode),
                 'items'        => $this->getLeaveFormItems($ltCode),
+                'date_format'  => $config['date_format'] ?? 'medium',
             ];
         }
         // fallback → default
         if ($this->hasTemplateFile('default')) {
+            $config = $this->getLeaveFormConfig('default');
             return [
                 'templatePath' => $this->getTemplatePath('default'),
                 'items'        => $this->getLeaveFormItems('default'),
+                'date_format'  => $config['date_format'] ?? 'medium',
             ];
         }
         return null;
@@ -426,9 +538,10 @@ class SettingController extends Controller
         $cat = Categorise::findOne(['name' => LEAVE_FORM_TEMPLATE_NAME, 'code' => $code]);
         if (!$cat) {
             $defaults = $this->getDefaultFields();
+            $sigKeys  = $this->getSignatureKeys();
             $items = [];
             foreach ($defaults as $key => $def) {
-                $items[] = [
+                $row = [
                     'id'       => 'legacy_' . $key,
                     'key'      => $key,
                     'x'        => (float) ($def['x']        ?? 0),
@@ -437,12 +550,17 @@ class SettingController extends Controller
                     'bold'     => (int)   ($def['bold']     ?? 0),
                     'enabled'  => (int)   ($def['enabled']  ?? 1),
                 ];
+                if (in_array($key, $sigKeys, true)) {
+                    $row['width']  = (float) ($def['width']  ?? 35);
+                    $row['height'] = (float) ($def['height'] ?? 15);
+                }
+                $items[] = $row;
             }
             $cat = new Categorise();
             $cat->name      = LEAVE_FORM_TEMPLATE_NAME;
             $cat->code      = $code;
             $cat->title     = $code === 'default' ? 'ฟอร์มใบลา (default)' : 'ฟอร์มใบลา (' . $code . ')';
-            $cat->data_json = json_encode(['items' => $items]);
+            $cat->data_json = json_encode(['items' => $items, 'date_format' => 'medium']);
             $cat->save(false);
         }
         return $cat;
@@ -472,11 +590,12 @@ class SettingController extends Controller
         $config   = $this->getLeaveFormConfig($code);
         $defaults = $this->getDefaultFields();
 
+        $sigKeys = $this->getSignatureKeys();
         if (!empty($config['items'])) {
             $list = [];
             foreach ($config['items'] as $item) {
                 $key    = $item['key'] ?? '';
-                $list[] = [
+                $row = [
                     'id'       => $item['id']       ?? uniqid('item_'),
                     'key'      => $key,
                     'x'        => (float) ($item['x']        ?? 0),
@@ -486,14 +605,20 @@ class SettingController extends Controller
                     'enabled'  => isset($item['enabled']) ? (int) $item['enabled'] : 1,
                     'label'    => $defaults[$key]['label'] ?? $key,
                 ];
+                if (in_array($key, $sigKeys, true)) {
+                    $row['width']  = (float) ($item['width']  ?? $defaults[$key]['width']  ?? 35);
+                    $row['height'] = (float) ($item['height'] ?? $defaults[$key]['height'] ?? 15);
+                }
+                $list[] = $row;
             }
             return $list;
         }
 
-        $fields = $config['fields'] ?? $defaults;
+        $fields  = $config['fields'] ?? $defaults;
+        $sigKeys  = $this->getSignatureKeys();
         $items  = [];
         foreach ($fields as $key => $f) {
-            $items[] = [
+            $row = [
                 'id'       => 'legacy_' . $key,
                 'key'      => $key,
                 'x'        => (float) ($f['x']        ?? 0),
@@ -503,6 +628,11 @@ class SettingController extends Controller
                 'enabled'  => isset($f['enabled']) ? (int) $f['enabled'] : 1,
                 'label'    => $defaults[$key]['label'] ?? $key,
             ];
+            if (in_array($key, $sigKeys, true)) {
+                $row['width']  = (float) ($f['width']  ?? 35);
+                $row['height'] = (float) ($f['height'] ?? 15);
+            }
+            $items[] = $row;
         }
         return $items;
     }
@@ -555,6 +685,27 @@ class SettingController extends Controller
         return false;
     }
 
+    /**
+     * แปลงวันที่สำหรับแสดงบน PDF ตามรูปแบบที่เลือก
+     * @param string|int|\DateTime|null $date
+     * @param string $format short=12 ม.ค. 2569, medium=12 มกราคม 2569, long=วันอาทิตย์ที่ 12 มกราคม พ.ศ. 2569, numeric=12/01/2569
+     * @return string
+     */
+    protected function formatDateForLeavePdf($date, string $format): string
+    {
+        if (empty($date)) {
+            return '';
+        }
+        $ts = is_numeric($date) ? (int) $date : strtotime($date);
+        if ($ts === false) {
+            return '';
+        }
+        if ($format === 'numeric') {
+            return date('d/m/', $ts) . (date('Y', $ts) + 543);
+        }
+        return ThaiDateHelper::formatThaiDate($date, $format);
+    }
+
     // ─────────────────────────────────────────────
     //  ค่าเริ่มต้นฟิลด์
     // ─────────────────────────────────────────────
@@ -562,17 +713,66 @@ class SettingController extends Controller
     protected function getDefaultFields(): array
     {
         return [
-            'emp_fullname'     => ['label' => 'ชื่อ-นามสกุลผู้ขอลา',  'x' => 30,  'y' => 50,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'department'       => ['label' => 'หน่วยงาน/แผนก',         'x' => 30,  'y' => 58,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'leave_type_title' => ['label' => 'ประเภทการลา',            'x' => 30,  'y' => 66,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'date_start'       => ['label' => 'วันที่เริ่มลา',          'x' => 30,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'date_end'         => ['label' => 'วันที่สิ้นสุด',          'x' => 80,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'total_days'       => ['label' => 'จำนวนวัน',               'x' => 30,  'y' => 82,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'reason'           => ['label' => 'เหตุผลการลา',            'x' => 30,  'y' => 90,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'address'          => ['label' => 'ที่อยู่ที่ติดต่อได้',    'x' => 30,  'y' => 98,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'contact_phone'    => ['label' => 'เบอร์โทรติดต่อ',         'x' => 30,  'y' => 106, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'place_go'         => ['label' => 'สถานที่ไป',              'x' => 30,  'y' => 114, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'create_date'      => ['label' => 'วันที่ยื่นคำขอ',         'x' => 30,  'y' => 122, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'emp_fullname'         => ['label' => 'ชื่อ-นามสกุลผู้ขอลา',   'x' => 30,  'y' => 50,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'department'           => ['label' => 'หน่วยงาน/แผนก',          'x' => 30,  'y' => 58,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'emp_position'         => ['label' => 'ตำแหน่งผู้ขอลา',          'x' => 120, 'y' => 50,  'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'leave_type_title'     => ['label' => 'ประเภทการลา',             'x' => 30,  'y' => 66,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'date_start'           => ['label' => 'วันที่เริ่มลา',           'x' => 30,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'date_end'             => ['label' => 'วันที่สิ้นสุด',           'x' => 80,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'total_days'           => ['label' => 'จำนวนวัน',                'x' => 30,  'y' => 82,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'reason'               => ['label' => 'เหตุผลการลา',             'x' => 30,  'y' => 90,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'address'              => ['label' => 'ที่อยู่ที่ติดต่อได้',     'x' => 30,  'y' => 98,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'contact_phone'        => ['label' => 'เบอร์โทรติดต่อ',          'x' => 30,  'y' => 106, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'place_go'             => ['label' => 'สถานที่ไป',               'x' => 30,  'y' => 114, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'create_date'           => ['label' => 'วันที่ยื่นคำขอ',          'x' => 30,  'y' => 122, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'leave_stats_used_before' => ['label' => 'ลามาแล้ว', 'x' => 30,  'y' => 132, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'leave_stats_total'       => ['label' => 'รวมเป็น', 'x' => 30,  'y' => 145, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'last_leave_date_start'    => ['label' => 'ลาครั้งก่อน ตั้งแต่วันที่', 'x' => 30,  'y' => 155, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'last_leave_date_end'      => ['label' => 'ลาครั้งก่อน ถึงวันที่',     'x' => 90,  'y' => 155, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'approve_date_1'        => ['label' => 'วันที่อนุมัติระดับ 1',    'x' => 30,  'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_date_2'        => ['label' => 'วันที่อนุมัติระดับ 2',    'x' => 80,  'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_date_3'        => ['label' => 'วันที่อนุมัติระดับ 3',    'x' => 130, 'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_date_4'        => ['label' => 'วันที่อนุมัติระดับ 4',    'x' => 180, 'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_date_5'        => ['label' => 'วันที่อนุมัติระดับ 5',    'x' => 30,  'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_date_6'        => ['label' => 'วันที่อนุมัติระดับ 6',    'x' => 80,  'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_date_7'        => ['label' => 'วันที่อนุมัติระดับ 7',    'x' => 130, 'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_date_8'        => ['label' => 'วันที่อนุมัติระดับ 8',    'x' => 180, 'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_1_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 1',   'x' => 30,  'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_1_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 1', 'x' => 30,  'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'approve_2_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 2',   'x' => 80,  'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_2_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 2', 'x' => 80,  'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'approve_3_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 3',   'x' => 130, 'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_3_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 3', 'x' => 130, 'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'approve_4_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 4',   'x' => 180, 'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_4_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 4', 'x' => 180, 'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
+            'approve_5_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 5',   'x' => 30,  'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_5_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 5', 'x' => 30,  'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
+            'approve_6_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 6',   'x' => 80,  'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_6_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 6', 'x' => 80,  'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
+            'approve_7_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 7',   'x' => 130, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_7_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 7', 'x' => 130, 'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
+            'approve_8_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 8',   'x' => 180, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
+            'approve_8_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 8', 'x' => 180, 'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
+            'signature_applicant'   => ['label' => 'ลายเซ็นผู้ขอลา',         'x' => 30,  'y' => 200, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'signature_approve_1'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 1', 'x' => 30,  'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'signature_approve_2'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 2', 'x' => 80,  'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'signature_approve_3'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 3', 'x' => 130, 'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'signature_approve_4'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 4', 'x' => 180, 'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+            'signature_approve_5'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 5', 'x' => 30,  'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+            'signature_approve_6'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 6', 'x' => 80,  'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+            'signature_approve_7'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 7', 'x' => 130, 'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+            'signature_approve_8'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 8', 'x' => 180, 'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+        ];
+    }
+
+    /** รายการ key ที่เป็นลายเซ็น (ใช้กำหนดขนาด width x height ได้) — รองรับผู้อนุมัติหลายชั้น */
+    protected function getSignatureKeys(): array
+    {
+        return [
+            'signature_applicant',
+            'signature_approve_1', 'signature_approve_2', 'signature_approve_3',
+            'signature_approve_4', 'signature_approve_5', 'signature_approve_6',
+            'signature_approve_7', 'signature_approve_8',
         ];
     }
 }

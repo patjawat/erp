@@ -32,11 +32,11 @@ $menus = [
                 <circle cx="10" cy="8" r="5" />
                 <path d="m16 19 2 2 4-4" />
             </svg>
-            รายการที่รออนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary ms-1"> <?= $total ?> </span>
+            รออนุมัติ <span class="badge rounded-pill badge-soft-primary text-primary ms-1"> <?= $total ?> </span>
         </a>
     <?php endif; ?>
 
-    <a href="<?= Url::to(['/me/store-v2/dashboard']) ?>" class="btn btn-outline-primary">
+    <a href="<?= Url::to(!empty(env('INVENTORY_SUB_URL')) ? env('INVENTORY_SUB_URL') : ['/me/store-v2/dashboard']) ?>" class="btn btn-outline-primary">
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-store-icon lucide-store">
                 <path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5" />
                 <path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244" />

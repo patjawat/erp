@@ -155,6 +155,10 @@ class LeaveController extends Controller
         } catch (\Throwable $e) {
         }
 
+        $thaiYear = (int) ($model->thai_year ?? AppHelper::YearBudget());
+        $roundLabel = 'รอบที่ 1 (1 ม.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
+        $stats = $this->getStatsForCreate($model->emp_id, $thaiYear, $model->employee->gender ?? null);
+
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end   = AppHelper::convertToGregorian($model->date_end);
@@ -177,11 +181,21 @@ class LeaveController extends Controller
             $title = Yii::$app->request->get('title', 'แก้ไข');
             return [
                 'title'   => $title,
-                'content' => $this->renderAjax('update', ['model' => $model, 'leaveWorkSendInitText' => $leaveWorkSendInitText]),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                    'leaveWorkSendInitText' => $leaveWorkSendInitText,
+                    'stats' => $stats,
+                    'roundLabel' => $roundLabel,
+                ]),
                 'footer'  => '',
             ];
         }
-        return $this->render('update', ['model' => $model, 'leaveWorkSendInitText' => $leaveWorkSendInitText]);
+        return $this->render('update', [
+            'model' => $model,
+            'leaveWorkSendInitText' => $leaveWorkSendInitText,
+            'stats' => $stats,
+            'roundLabel' => $roundLabel,
+        ]);
     }
 
     /**
@@ -202,6 +216,57 @@ class LeaveController extends Controller
         }
         Yii::$app->response->format = Response::FORMAT_JSON;
         return [];
+    }
+
+    /**
+     * แสดง/ดาวน์โหลดไฟล์แนบใบรับรองแพทย์ (ส่งด้วย sendFile เพื่อไม่ให้ binary ไปปนกับ HTML)
+     * ตรวจสิทธิ์: ต้องเป็นเจ้าของใบลาหรือมีสิทธิ์ดูใบลานั้น
+     */
+    public function actionShowFile($id)
+    {
+        $upload = Uploads::findOne((int) $id);
+        if ($upload === null || $upload->ref === null || $upload->ref === '') {
+            throw new NotFoundHttpException('ไม่พบไฟล์');
+        }
+        $leave = Leave::find()->andWhere(['ref' => $upload->ref])->one();
+        if ($leave === null) {
+            throw new NotFoundHttpException('ไม่พบรายการ');
+        }
+        $me = UserHelper::GetEmployee();
+        if (!$me || $me->id != $leave->emp_id) {
+            throw new NotFoundHttpException('ไม่มีสิทธิ์ดูไฟล์นี้');
+        }
+        $basePath = FileManagerHelper::getUploadPath() . $upload->ref . '/';
+        $filePath = $basePath . $upload->real_filename;
+        if (!is_file($filePath)) {
+            $filePath = $basePath . 'thumbnail/' . $upload->real_filename;
+        }
+        if (!is_file($filePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์');
+        }
+        $mimeTypes = [
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        $ext = strtolower(pathinfo($upload->file_name ?? $upload->real_filename, PATHINFO_EXTENSION));
+        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+        $fileName = $upload->file_name ?: $upload->real_filename;
+        // ป้องกันไม่ให้มี output ปนกับ binary (แสดง PDF/ไฟล์ถูกต้อง)
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', $mime);
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . addslashes($fileName) . '"');
+        return Yii::$app->response->sendFile($filePath, $fileName, [
+            'inline' => true,
+            'mimeType' => $mime,
+        ]);
     }
 
     /**

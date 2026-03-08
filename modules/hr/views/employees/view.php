@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<div class="row d-flex flex-sm-row-reverse">
+<div class="row d-flex">
     <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 col-sx-12">
         <?= $this->render('avatar',['model' => $model])?>
 

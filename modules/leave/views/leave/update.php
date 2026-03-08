@@ -2,8 +2,8 @@
     'model' => $model,
     'employee' => $model->employee ?? null,
     'types' => [],
-    'stats' => [],
-    'roundLabel' => '',
+    'stats' => $stats ?? [],
+    'roundLabel' => $roundLabel ?? '',
     'draftRef' => null,
     'leaveWorkSendInitText' => $leaveWorkSendInitText ?? '',
 ]) ?>

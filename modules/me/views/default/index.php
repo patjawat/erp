@@ -278,7 +278,7 @@ if (!empty($upcomingHealth)): ?>
     <div class="col-12 col-xl-3">
         <div class="row g-3">
             <div class="col-6">
-                <a href="<?= Url::to(['/me/leave']) ?>" class="text-decoration-none text-body d-block h-100">
+                <a href="<?= Url::to(!empty(env('LEAVE_USER_URL')) ? env('LEAVE_USER_URL') : ['/me/leave']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
@@ -344,67 +344,7 @@ if (!empty($upcomingHealth)): ?>
 <div class="row g-3">
     <div class="col-12">
         <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <div class="d-flex align-items-center justify-content-between my-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                            style="width: 42px; height: 42px;">
-                            <i data-lucide="calendar-range"></i>
-                        </div>
-                        <div class="lh-sm">
-                            <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">การลางาน</h3>
-                            <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                                ดูสิทธิ์ ประวัติการลา และสร้างใบลาใหม่</p>
-                        </div>
-                    </div>
-                    <a href="<?= Url::to(['/me/leave']) ?>"
-                        class="btn btn-primary rounded-4 fw-black shadow-sm d-flex align-items-center gap-2 px-3 py-2 hover-scale">
-                        ดูทั้งหมด <i data-lucide="chevrons-right"></i>
-                    </a>
-                </div>
-                <div
-                    class="card border-0 shadow-sm p-4 d-flex flex-column justify-content-between position-relative overflow-hidden">
-                    <div class="d-flex flex-row justify-content-between">
-                        <div class="d-flex flex-column">
-                            <h6 class="mb-1 text-dark">สิทธิลาพักผ่อน</h6>
-                            <p class="text-muted mb-4">ภาพรวมการใช้สิทธิ์และประวัติการลา</p>
-                        </div>
-                        <div class="bg-primary-subtle text-primary rounded-4 d-flex align-items-center justify-content-center"
-                            style="width: 42px; height: 42px;">
-                            <i data-lucide="calendar-heart"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center gap-1 fw-black text-primary"
-                                style="font-size: 0.75rem;">
-
-                                <?php echo $searchModel->sumLeavePermission()['sum'] ?> /
-                                <?php echo $searchModel->sumLeavePermission()['total'] ?>
-
-                                <?php
-                                $leaveData = $searchModel->sumLeavePermission();
-
-                                // ตรวจสอบว่า total ต้องไม่เป็น 0 หรือ null
-                                $percenUseDay = ($leaveData['total'] > 0)
-                                    ? number_format(($leaveData['sum'] / $leaveData['total']) * 100, 2)
-                                    : "0.00";
-
-                                ?>
-                            </div>
-                            <span class="text-muted fw-bold" style="font-size: 0.65rem;"><?= $percenUseDay ?>%</span>
-                        </div>
-                        <div class="progress rounded-pill mb-4" style="height: 6px; background-color: #f1f5f9;">
-                            <div class="progress-bar rounded-pill bg-primary" role="progressbar"
-                                style="width: <?= $percenUseDay ?>%;">
-                            </div>
-                        </div>
-                        <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบลา', ['/me/leave/create'], ['class' => 'btn w-100 rounded-4 fw-bold py-2 open-modal','data' => ['size' => 'modal-lg'], 'style' => 'font-size: 0.75rem; background-color: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;']) ?>
-
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12">
 
                 <div class="mb-3 d-flex align-items-center justify-content-between my-4">
                     <div class="d-flex align-items-center gap-3">

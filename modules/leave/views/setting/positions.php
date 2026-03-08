@@ -14,6 +14,7 @@ use yii\helpers\Html;
 
 $isDefault = ($code === 'default');
 $typeLabel = $isDefault ? 'Template กลาง (Default)' : ($leaveType ? $leaveType->title : $code);
+$signatureKeys = $signatureKeys ?? [];
 
 $this->title = 'กำหนดตำแหน่งข้อมูลบน PDF — ' . $typeLabel;
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
@@ -25,12 +26,11 @@ $this->params['breadcrumbs'][] = 'กำหนดตำแหน่ง';
 $this->registerCssFile(Url::to('@web/css/thsarabunnew.css'), ['depends' => [\yii\web\YiiAsset::class]]);
 $this->registerCss('.leave-field-chip { font-family: "THSarabunNew", sans-serif; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; color: #0d6efd !important; }');
 
-$scale = 3; // 3 px = 1 mm (A4 210×297 mm → 630×891 px) — ขนาดใหญ่ขึ้นเพื่อลากจัดตำแหน่งได้ง่าย
+$scale = 3; // 3 px = 1 mm (A4 210×297 mm → 630×891 px)
 $pageW = 210;
 $pageH = 297;
 $canvasW = $pageW * $scale;
 $canvasH = $pageH * $scale;
-// ขนาดตัวอักษรบน canvas ให้เล็กกว่าหรือเท่ากับ template (แบบฟอร์มราชการมักใช้ตัวเล็ก) — ตอนพิมพ์ใช้ขนาดจริง
 $pageWpt = 595.276; // 210mm in pt (72pt/inch)
 $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 ?>
@@ -43,7 +43,7 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu', ['active' => 'setting']) ?>
+<?= $this->render('@app/modules/leave/views/menu_admin', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 <?php if (!$isDefault && ($usingDefault ?? false)): ?>
@@ -79,8 +79,18 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
     </div>
     <div class="card-body p-4">
         <div id="positions-alert" class="alert d-none mb-3"></div>
+        <?php $currentDateFormat = $config['date_format'] ?? 'medium'; ?>
         <div class="row g-4">
             <div class="col-12 col-lg-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-body">รูปแบบวันที่บน PDF</label>
+                    <select name="date_format" id="date-format-select" class="form-select mb-3" aria-label="รูปแบบวันที่">
+                        <option value="medium" <?= $currentDateFormat === 'medium' ? 'selected' : '' ?>>12 มกราคม 2569</option>
+                        <option value="short" <?= $currentDateFormat === 'short' ? 'selected' : '' ?>>12 ม.ค. 2569</option>
+                        <option value="numeric" <?= $currentDateFormat === 'numeric' ? 'selected' : '' ?>>12/01/2569</option>
+                        <option value="long" <?= $currentDateFormat === 'long' ? 'selected' : '' ?>>วันอาทิตย์ที่ 12 มกราคม พ.ศ. 2569</option>
+                    </select>
+                </div>
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-body">ตำแหน่งข้อมูลบนเทมเพลต</label>
                     <p class="small text-muted mb-2">เพิ่มได้หลายจุดต่อฟิลด์ (เช่น ชื่อผู้ลา ไว้ที่หัวฟอร์มและที่ช่องเซ็น) เลือกประเภทฟิลด์ ปรับขนาด/ความหนา แล้วลากชิปไปวางบนเทมเพลต</p>
@@ -97,6 +107,9 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                             $bold = !empty($item['bold']);
                             $enabled = isset($item['enabled']) ? (int) $item['enabled'] : 1;
                             $label = $item['label'] ?? $key;
+                            $isSignature = in_array($key, $signatureKeys, true);
+                            $width  = (float) ($item['width'] ?? 35);
+                            $height = (float) ($item['height'] ?? 15);
                         ?>
                         <div class="position-row d-flex align-items-center gap-2 p-2 rounded-3 border border-1 border-secondary border-opacity-25 flex-wrap <?= !$enabled ? 'opacity-75' : '' ?>" data-item-id="<?= Html::encode($itemId) ?>">
                             <div class="d-flex align-items-center gap-1 flex-grow-1" style="min-width: 0;">
@@ -111,11 +124,17 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                                     <label class="form-check-label small text-muted mb-0">แสดง</label>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center gap-1 text-size-wrap <?= $isSignature ? 'd-none' : '' ?>">
                                 <label class="small text-muted mb-0 me-1">ขนาด</label>
                                 <input type="number" min="6" max="24" name="positions[<?= Html::encode($itemId) ?>][fontSize]" value="<?= (int) $fontSize ?>" class="form-control position-font-size" style="width: 3.5rem;" data-item-id="<?= Html::encode($itemId) ?>" aria-label="ขนาดตัวอักษร">
                             </div>
-                            <div class="d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center gap-1 signature-size-wrap <?= !$isSignature ? 'd-none' : '' ?>">
+                                <label class="small text-muted mb-0 me-1">กว้าง (mm)</label>
+                                <input type="number" min="5" max="100" step="0.5" name="positions[<?= Html::encode($itemId) ?>][width]" value="<?= Html::encode($width) ?>" class="form-control position-width" style="width: 3.5rem;" data-item-id="<?= Html::encode($itemId) ?>" aria-label="ความกว้างลายเซ็น">
+                                <label class="small text-muted mb-0 me-1">สูง (mm)</label>
+                                <input type="number" min="5" max="80" step="0.5" name="positions[<?= Html::encode($itemId) ?>][height]" value="<?= Html::encode($height) ?>" class="form-control position-height" style="width: 3.5rem;" data-item-id="<?= Html::encode($itemId) ?>" aria-label="ความสูงลายเซ็น">
+                            </div>
+                            <div class="d-flex align-items-center gap-1 text-bold-wrap <?= $isSignature ? 'd-none' : '' ?>">
                                 <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][bold]" value="0">
                                 <div class="form-check mb-0">
                                     <input type="checkbox" name="positions[<?= Html::encode($itemId) ?>][bold]" value="1" class="form-check-input position-bold" data-item-id="<?= Html::encode($itemId) ?>" <?= $bold ? 'checked' : '' ?> aria-label="ตัวหนา">
@@ -141,11 +160,17 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                                     <label class="form-check-label small text-muted mb-0">แสดง</label>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center gap-1 text-size-wrap">
                                 <label class="small text-muted mb-0 me-1">ขนาด</label>
                                 <input type="number" min="6" max="24" name="positions[__ITEM_ID__][fontSize]" value="15" class="form-control position-font-size" style="width: 3.5rem;" data-item-id="__ITEM_ID__" aria-label="ขนาดตัวอักษร">
                             </div>
-                            <div class="d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center gap-1 signature-size-wrap d-none">
+                                <label class="small text-muted mb-0 me-1">กว้าง (mm)</label>
+                                <input type="number" min="5" max="100" step="0.5" name="positions[__ITEM_ID__][width]" value="35" class="form-control position-width" style="width: 3.5rem;" data-item-id="__ITEM_ID__" aria-label="ความกว้างลายเซ็น">
+                                <label class="small text-muted mb-0 me-1">สูง (mm)</label>
+                                <input type="number" min="5" max="80" step="0.5" name="positions[__ITEM_ID__][height]" value="15" class="form-control position-height" style="width: 3.5rem;" data-item-id="__ITEM_ID__" aria-label="ความสูงลายเซ็น">
+                            </div>
+                            <div class="d-flex align-items-center gap-1 text-bold-wrap">
                                 <input type="hidden" name="positions[__ITEM_ID__][bold]" value="0">
                                 <div class="form-check mb-0">
                                     <input type="checkbox" name="positions[__ITEM_ID__][bold]" value="1" class="form-check-input position-bold" data-item-id="__ITEM_ID__" aria-label="ตัวหนา">
@@ -228,7 +253,8 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 </div>
 
 <?php
-$saveUrl = Url::to(['/leave/setting/save-positions', 'code' => $code]);
+$effectiveCode = $effectiveCode ?? $code;
+$saveUrl = Url::to(['/leave/setting/save-positions', 'code' => $effectiveCode]);
 $csrfParam = Yii::$app->request->csrfParam;
 $csrfToken = Yii::$app->request->csrfToken;
 $scaleJs = $scale;
@@ -236,6 +262,7 @@ $pageWJs = $pageW;
 $pageHJs = $pageH;
 $fieldLabelsJson = json_encode(array_map(function ($v) { return $v['label'] ?? ''; }, $fieldLabels));
 $fieldKeysJson = json_encode(array_keys($fieldLabels));
+$signatureKeysJson = json_encode($signatureKeys);
 $this->registerJs(<<<JS
 (function() {
     var scale = {$scaleJs};
@@ -243,6 +270,7 @@ $this->registerJs(<<<JS
     var pageH = {$pageHJs};
     var fieldLabels = {$fieldLabelsJson};
     var fieldKeys = {$fieldKeysJson};
+    var signatureKeys = {$signatureKeysJson};
     var canvas = document.getElementById('pdf-canvas');
     var fontDisplayScale = parseFloat(canvas.getAttribute('data-font-display-scale')) || (420 / 595.276);
     var form = document.getElementById('positions-form');
@@ -272,6 +300,20 @@ $this->registerJs(<<<JS
 
     function getLabelForKey(key) {
         return fieldLabels[key] !== undefined ? fieldLabels[key] : key;
+    }
+
+    function isSignatureKey(key) {
+        return signatureKeys && signatureKeys.indexOf(key) >= 0;
+    }
+
+    function toggleSignatureRow(row, key) {
+        var isSig = isSignatureKey(key);
+        var textSize = row.querySelector('.text-size-wrap');
+        var sigSize = row.querySelector('.signature-size-wrap');
+        var textBold = row.querySelector('.text-bold-wrap');
+        if (textSize) textSize.classList.toggle('d-none', isSig);
+        if (sigSize) sigSize.classList.toggle('d-none', !isSig);
+        if (textBold) textBold.classList.toggle('d-none', isSig);
     }
 
     function updateChipLabel(chip, key) {
@@ -342,10 +384,12 @@ $this->registerJs(<<<JS
             var fsInput = form.querySelector('input[name="positions[' + itemId + '][fontSize]"]');
             var boldCb = form.querySelector('input[name="positions[' + itemId + '][bold]"][type="checkbox"]');
             var enabledCb = form.querySelector('input[name="positions[' + itemId + '][enabled]"][type="checkbox"]');
+            var widthInput = form.querySelector('input[name="positions[' + itemId + '][width]"]');
+            var heightInput = form.querySelector('input[name="positions[' + itemId + '][height]"]');
             if (!keyInput || !xInput || !yInput) return;
             var key = keyInput.value;
             if (!key) return;
-            positions[itemId] = {
+            var obj = {
                 key: key,
                 x: parseFloat(xInput.value) || 0,
                 y: parseFloat(yInput.value) || 0,
@@ -353,9 +397,16 @@ $this->registerJs(<<<JS
                 bold: (boldCb && boldCb.checked) ? 1 : 0,
                 enabled: (enabledCb && enabledCb.checked) ? 1 : 0
             };
+            if (isSignatureKey(key) && widthInput && heightInput) {
+                obj.width = parseFloat(widthInput.value) || 35;
+                obj.height = parseFloat(heightInput.value) || 15;
+            }
+            positions[itemId] = obj;
         });
         var data = {};
         data.positions = positions;
+        var dateFormatEl = document.getElementById('date-format-select');
+        if (dateFormatEl) data.date_format = dateFormatEl.value;
         data['{$csrfParam}'] = '{$csrfToken}';
 
         btn.disabled = true;
@@ -400,6 +451,8 @@ $this->registerJs(<<<JS
         if (e.target.classList.contains('position-key-select')) {
             var chip = canvas.querySelector('.leave-field-chip[data-item-id="' + itemId + '"]');
             if (chip) updateChipLabel(chip, e.target.value);
+            var row = e.target.closest('.position-row');
+            if (row) toggleSignatureRow(row, e.target.value);
         } else if (e.target.classList.contains('position-font-size') || e.target.classList.contains('position-bold')) {
             var fs = form.querySelector('input[name="positions[' + itemId + '][fontSize]"]');
             var boldCb = form.querySelector('input[name="positions[' + itemId + '][bold]"][type="checkbox"]');
@@ -446,6 +499,7 @@ $this->registerJs(<<<JS
         chip.appendChild(span);
         canvas.appendChild(chip);
         attachChipDrag(chip);
+        toggleSignatureRow(row, fieldKeys[0] || '');
 
         row.querySelector('.position-remove').addEventListener('click', function() {
             row.remove();

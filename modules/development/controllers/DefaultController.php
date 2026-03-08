@@ -74,6 +74,46 @@ class DefaultController extends Controller
     }
 
     /**
+     * รายการของฉัน — เฉพาะกิจกรรมที่ผู้ใช้เป็นผู้ขอ (emp_id = ปัจจุบัน)
+     * @return string|\yii\web\Response
+     */
+    public function actionMine()
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/me']);
+        }
+
+        $thaiYear = (int) (Yii::$app->request->get('thai_year') ?: AppHelper::YearBudget());
+        $searchModel = new DevelopmentSearch(['thai_year' => $thaiYear, 'emp_id' => $me->id]);
+        $params = array_merge(
+            ['DevelopmentSearch' => ['thai_year' => $thaiYear, 'emp_id' => $me->id]],
+            Yii::$app->request->queryParams
+        );
+        $dataProvider = $searchModel->search($params);
+        $dataProvider->query->andWhere([Development::tableName() . '.thai_year' => $thaiYear, Development::tableName() . '.emp_id' => $me->id]);
+        $dataProvider->query->joinWith(['developmentType', 'emp', 'statusCategorise']);
+        $dataProvider->query->orderBy(['development.id' => SORT_DESC]);
+        $dataProvider->pagination = ['pageSize' => 20, 'pageParam' => 'development-page'];
+
+        $summaryByStatus = (clone $dataProvider->query)
+            ->select([Development::tableName() . '.status', 'COUNT(' . Development::tableName() . '.id) as cnt'])
+            ->groupBy(Development::tableName() . '.status')
+            ->orderBy(['cnt' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        return $this->render('mine', [
+            'thaiYear' => $thaiYear,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'employee' => $me,
+            'summaryByStatus' => $summaryByStatus,
+        ]);
+    }
+
+    /**
      * รายการกิจกรรมทั้งหมด (ภายในโมดูล — ไม่เชื่อมระบบเก่า)
      * @return string
      */
@@ -87,10 +127,18 @@ class DefaultController extends Controller
         $dataProvider->query->orderBy(['development.id' => SORT_DESC]);
         $dataProvider->pagination = ['pageSize' => 20, 'pageParam' => 'development-page'];
 
+        $summaryByStatus = (clone $dataProvider->query)
+            ->select([Development::tableName() . '.status', 'COUNT(' . Development::tableName() . '.id) as cnt'])
+            ->groupBy(Development::tableName() . '.status')
+            ->orderBy(['cnt' => SORT_DESC])
+            ->asArray()
+            ->all();
+
         return $this->render('list', [
             'thaiYear' => $thaiYear,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'summaryByStatus' => $summaryByStatus,
         ]);
     }
 

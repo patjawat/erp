@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu', ['active' => 'setting']) ?>
+<?= $this->render('@app/modules/leave/views/menu_admin', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'leave']); ?>

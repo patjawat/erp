@@ -80,8 +80,8 @@ $models = $dataProvider->getModels();
                                 <li>
                                     <?= Html::a(
                                         '<i class="bi bi-pencil me-2"></i> แก้ไข',
-                                        ['/leave/leave/update', 'id' => $item->id, 'title' => '<i class="bi bi-pencil"></i> แก้ไข'],
-                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
+                                        ['/leave/leave/update', 'id' => $item->id],
+                                        ['class' => 'dropdown-item']
                                     ) ?>
                                 </li>
                                 <?php endif; ?>

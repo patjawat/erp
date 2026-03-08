@@ -25,13 +25,15 @@ if ($isUpdate) {
         if ($code !== '') $typeOptions[$code] = $t->title;
     }
 }
-$attrWorkShift   = $isUpdate ? 'data_json[work_shift]' : 'work_shift';
-$attrReason     = $isUpdate ? 'data_json[reason]' : 'reason';
-$attrPhone      = $isUpdate ? 'data_json[phone]' : 'contact_phone';
-$attrPlaceGo    = $isUpdate ? 'data_json[place_go]' : 'place_go';
-$attrAddress    = $isUpdate ? 'data_json[address]' : 'address';
-$attrLeaveSend  = $isUpdate ? 'data_json[leave_work_send_id]' : 'leave_work_send_id';
-$attrLeaveName  = $isUpdate ? 'data_json[leave_work_send_name]' : 'leave_work_send_name';
+$attrWorkShift      = $isUpdate ? 'data_json[work_shift]' : 'work_shift';
+$attrReason         = $isUpdate ? 'data_json[reason]' : 'reason';
+$attrPhone          = $isUpdate ? 'data_json[leave_contact_phone]' : 'contact_phone';
+$attrPlaceGo        = $isUpdate ? 'data_json[place_go]' : 'place_go';
+$attrAddress        = $isUpdate ? 'data_json[address]' : 'address';
+$attrLeaveSend      = $isUpdate ? 'data_json[leave_work_send_id]' : 'leave_work_send_id';
+$attrLeaveName      = $isUpdate ? 'data_json[leave_work_send_name]' : 'leave_work_send_name';
+$attrDateStartType  = $isUpdate ? 'data_json[date_start_type]' : 'date_start_type';
+$attrDateEndType    = $isUpdate ? 'data_json[date_end_type]' : 'date_end_type';
 
 $this->title = $isUpdate ? 'แก้ไขใบลา' : 'สร้างใบลาใหม่';
 $this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
@@ -53,7 +55,7 @@ $phone = $employee->phone ?? '';
         'id' => $isUpdate ? 'form-leave-update' : 'leave-create-form',
         'action' => $isUpdate ? ['/leave/leave/update', 'id' => $model->id] : ['/leave/leave/create'],
         'method' => 'post',
-        'options' => ['class' => 'row g-4'],
+        'options' => ['class' => 'row'],
         'enableAjaxValidation' => true,
         'validationUrl' => $isUpdate ? ['/leave/leave/update-validation', 'id' => $model->id] : ['/leave/leave/validation'],
         'fieldConfig' => [
@@ -103,8 +105,7 @@ $phone = $employee->phone ?? '';
             </div>
         </div>
 
-        <?php if (!$isUpdate): ?>
-        <!-- สถิติการลา -->
+        <!-- สถิติการลา (create และ update แสดงเหมือนกัน) -->
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-body p-3">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
@@ -152,7 +153,6 @@ $phone = $employee->phone ?? '';
                 </div>
             </div>
         </div>
-        <?php endif; ?>
 
         <!-- เอกสารแนบ / ใบรับรองแพทย์ -->
         <div class="card border-0 shadow-sm rounded-3">
@@ -212,7 +212,7 @@ $phone = $employee->phone ?? '';
                         ])->label('ตั้งแต่วันที่') ?>
                     </div>
                     <div class="col-md-5">
-                        <?= $form->field($model, 'date_start_type')->dropDownList(
+                        <?= $form->field($model, $attrDateStartType)->dropDownList(
                             ['0' => 'เต็มวัน', '0.5' => 'ครึ่งวัน'],
                             ['id' => 'leave-date_start_type', 'class' => 'form-select']
                         )->label('ประเภท') ?>
@@ -225,7 +225,7 @@ $phone = $employee->phone ?? '';
                         ])->label('ถึงวันที่') ?>
                     </div>
                     <div class="col-md-5">
-                        <?= $form->field($model, 'date_end_type')->dropDownList(
+                        <?= $form->field($model, $attrDateEndType)->dropDownList(
                             ['0' => 'เต็มวัน', '0.5' => 'ครึ่งวัน'],
                             ['id' => 'leave-date_end_type', 'class' => 'form-select']
                         )->label('ประเภท') ?>
@@ -312,10 +312,6 @@ $phone = $employee->phone ?? '';
                     <?= $form->field($model, $attrLeaveSend)->widget(Select2::class, $leaveSendWidgetOpts)->label('มอบหมายงานให้') ?>
                     <?= $form->field($model, $attrLeaveName)->hiddenInput(['id' => 'leave-work_send_name'])->label(false) ?>
                 </div>
-
-                <?php if ($isUpdate): ?>
-                <?= $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
-                <?php endif; ?>
 
                 <div class="mb-3">
                     <?= $form->field($model, $attrReason)->textarea([

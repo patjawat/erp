@@ -5,7 +5,7 @@ use yii\helpers\Html;
 
 /**
  * เมนูโมดูล Development — ไม่เชื่อมระบบเก่า ให้เริ่มสร้างใหม่ได้จากโมดูลนี้
- * @var string $active ค่า active: 'dashboard' | 'create' | 'setting'
+ * @var string $active ค่า active: 'dashboard' | 'mine' | 'approver' | 'create' | 'setting'
  */
 $active = $active ?? 'dashboard';
 $canManageSetting = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
@@ -20,13 +20,16 @@ $canManageSetting = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
         </svg>
         <span class="d-none d-sm-inline ms-1">ภาพรวม</span>
     </a>
-    <a href="<?= Url::to(['/development/travel-request/index']) ?>" class="btn <?= $active === 'create' ? 'btn-primary' : 'btn-outline-success' ?> rounded-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14"></path>
-            <path d="M12 5v14"></path>
-        </svg>
-        <span class="d-none d-sm-inline ms-1">สร้างใหม่</span>
+    <a href="<?= Url::to(['/development/default/mine']) ?>" class="btn <?= $active === 'mine' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-3">
+        <i class="bi bi-list-ul"></i>
+        <span class="d-none d-sm-inline ms-1">รายการของฉัน</span>
     </a>
+    <?php if ($canManageSetting): ?>
+    <a href="<?= Url::to(['/development/approver/index']) ?>" class="btn <?= $active === 'approver' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-3">
+        <i class="bi bi-person-check"></i>
+        <span class="d-none d-sm-inline ms-1">ผู้ตรวจสอบ</span>
+    </a>
+    <?php endif; ?>
     <?php if ($canManageSetting): ?>
     <a href="<?= Url::to(['/development/setting/index']) ?>" class="btn <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-3">
         <i class="bi bi-gear"></i>

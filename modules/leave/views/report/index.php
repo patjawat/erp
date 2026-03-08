@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('../menu', ['active' => 'report']) ?>
+<?= $this->render('../menu_admin', ['active' => 'report']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

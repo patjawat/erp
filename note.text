@@ -1,0 +1,15 @@
+### query แก้ คลังจ่าย รพสต. ไม่มียอด
+UPDATE stock_events i
+JOIN stock_events o ON o.id = i.category_id
+JOIN employees e ON e.user_id = o.created_by
+JOIN warehouses w 
+  ON JSON_CONTAINS(w.data_json->'$.officer', JSON_QUOTE(CAST(e.user_id AS CHAR)))
+
+SET 
+i.from_warehouse_id = w.id,
+o.from_warehouse_id = w.id
+
+WHERE i.name = 'order_item'
+AND o.code IN (
+'REQ-690613','REQ-690649','REQ-690650','REQ-690652','REQ-690653',
+);
