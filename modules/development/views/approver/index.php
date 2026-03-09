@@ -44,7 +44,8 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
 ?>
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
-    <?= $this->render('../default/_menu', ['active' => 'approver']) ?>
+
+    <?= $this->render('@app/modules/development/views/menu_admin', ['active' => 'approver']) ?>
 </div>
 <?php $this->endBlock(); ?>
 

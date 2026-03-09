@@ -45,7 +45,7 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
     <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ย้อนกลับก่อนหน้า', Yii::$app->request->referrer ?: ['/development/default/dashboard'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
-    <?= $this->render('_menu', ['active' => 'dashboard']) ?>
+    <?= $this->render('@app/modules/development/views/menu_admin', ['active' => 'dashboard']) ?>
 </div>
 <?php $this->endBlock(); ?>
 

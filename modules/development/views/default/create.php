@@ -12,6 +12,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $backUrl = ['/development/default/list', 'thai_year' => $model->thai_year ?: (int) date('Y') + 543];
 ?>
+<?php $this->beginBlock('action'); ?>
+<div class="d-flex flex-wrap gap-2 align-items-center">
+    <?= Html::a('<i class="bi bi-chevron-left me-1"></i>ย้อนกลับ', $backUrl, ['class' => 'btn btn-outline-secondary rounded-pill']) ?>
+</div>
+<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">

@@ -88,7 +88,9 @@ JS;
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill', 'id' => 'summit']) ?>
-    <?= Html::a('<i class="fa-solid fa-trash-can"></i> ลบ', ['/development/default/delete-member', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill delete-item']) ?>
+    <?php if (!$model->isNewRecord): ?>
+    <?= Html::a('<i class="bi bi-trash"></i> ลบ', ['/development/default/delete-member', 'id' => $model->id], ['class' => 'btn btn-outline-danger rounded-pill delete-item']) ?>
+    <?php endif; ?>
 </div>
 <?php ActiveForm::end(); ?>
 </div>

@@ -351,24 +351,386 @@ class DevelopmentController extends Controller
 
 
 
+    /**
+     * ระบบตั้งค่า template รายงานขอไปราชการ — อยู่ภายในโมดูล HR
+     */
     public function actionPdfEditor()
     {
-        $check = Categorise::findOne(['name' => 'form_development_pdf']);
-        if (!$check) {
-            $model =  new Categorise([
-                'name' => 'form_development_pdf',
-                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
-            ]);
-            $model->save();
-        } else {
-            $model = $check;
+        $model = Categorise::findOne(['name' => 'form_development_pdf']);
+        if (!$model) {
+            $model = new Categorise();
+            $model->name = 'form_development_pdf';
+            $model->save(false);
         }
+        $templatePath = $model->ref ? FileManagerHelper::getFileFormRef($model->ref) : null;
+        $hasTemplate = $templatePath && is_file($templatePath);
+        $templateUrl = $hasTemplate ? Url::to(['/hr/development/serve-template']) : null;
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            return ['status' => 'success', 'message' => 'บันทึกพิกัดเรียบร้อยแล้ว'];
+        return $this->render('pdf_template', [
+            'model' => $model,
+            'hasTemplate' => $hasTemplate,
+            'templateUrl' => $templateUrl,
+        ]);
+    }
+
+    /**
+     * ส่งไฟล์ PDF เทมเพลต (ใช้ใน iframe / กำหนดตำแหน่ง)
+     */
+    public function actionServeTemplate()
+    {
+        $layout = Categorise::findOne(['name' => 'form_development_pdf']);
+        if (!$layout || !$layout->ref) {
+            throw new NotFoundHttpException('ไม่พบข้อมูลเทมเพลต');
         }
-        return $this->render('pdf_editor', ['model' => $model]);
+        $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
+        if (!$templateFile || !is_file($templateFile)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต');
+        }
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="template-development.pdf"');
+        Yii::$app->response->content = file_get_contents($templateFile);
+        return Yii::$app->response;
+    }
+
+    /**
+     * กำหนดตำแหน่งข้อมูลบน PDF — อยู่ภายในโมดูล HR (รูปแบบเดียวกับ leave: เลือกชุดข้อมูล, checkbox แสดง, ขนาด, ความหนา, format วันที่, ลากวาง)
+     */
+    public function actionPdfPositions()
+    {
+        $model = Categorise::findOne(['name' => 'form_development_pdf']);
+        if (!$model) {
+            return $this->redirect(['/hr/development/pdf-editor']);
+        }
+        $templatePath = $model->ref ? FileManagerHelper::getFileFormRef($model->ref) : null;
+        if (!$templatePath || !is_file($templatePath)) {
+            Yii::$app->session->setFlash('warning', 'กรุณาอัปโหลดเทมเพลต PDF ก่อน');
+            return $this->redirect(['/hr/development/pdf-editor']);
+        }
+        $config = $this->getDevelopmentFormConfig();
+        $items = $this->getDevelopmentFormItems();
+        $fieldLabels = $this->getDevelopmentDefaultFields();
+        $signatureKeys = $this->getDevelopmentSignatureKeys();
+
+        return $this->render('pdf_positions', [
+            'model' => $model,
+            'config' => $config,
+            'items' => $items,
+            'fieldLabels' => $fieldLabels,
+            'signatureKeys' => $signatureKeys,
+            'templateUrl' => Url::to(['/hr/development/serve-template']),
+        ]);
+    }
+
+    /**
+     * บันทึกตำแหน่งจากฟอร์มกำหนดตำแหน่ง (JSON POST)
+     */
+    public function actionSavePositions()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $positions = Yii::$app->request->post('positions', []);
+        $dateFormat = Yii::$app->request->post('date_format');
+        $body = [];
+        if (Yii::$app->request->getIsPost()) {
+            $raw = Yii::$app->request->getRawBody();
+            if ($raw && is_string($raw) && preg_match('/^\s*\{/', $raw)) {
+                $body = json_decode($raw, true) ?: [];
+                if (!empty($body['positions'])) {
+                    $positions = $body['positions'];
+                }
+                if (isset($body['date_format']) && $body['date_format'] !== '') {
+                    $dateFormat = (string) $body['date_format'];
+                }
+            }
+        }
+        if (!is_array($positions)) {
+            return ['success' => false, 'message' => 'ข้อมูลไม่ถูกต้อง'];
+        }
+        $defaults = $this->getDevelopmentDefaultFields();
+        $sigKeys = $this->getDevelopmentSignatureKeys();
+        $config = $this->getDevelopmentFormConfig();
+        if ($dateFormat !== null && in_array($dateFormat, ['short', 'medium', 'long', 'numeric'], true)) {
+            $config['date_format'] = $dateFormat;
+        }
+        $items = [];
+        foreach ($positions as $itemId => $pos) {
+            if (!is_array($pos)) {
+                continue;
+            }
+            $key = isset($pos['key']) ? (string) $pos['key'] : '';
+            if ($key === '' || !isset($defaults[$key])) {
+                continue;
+            }
+            $row = [
+                'id' => $itemId,
+                'key' => $key,
+                'x' => (float) ($pos['x'] ?? 0),
+                'y' => (float) ($pos['y'] ?? 0),
+                'fontSize' => (int) ($pos['fontSize'] ?? 15),
+                'bold' => (int) ($pos['bold'] ?? 0),
+                'enabled' => (int) ($pos['enabled'] ?? 1),
+            ];
+            if (in_array($key, $sigKeys, true)) {
+                $row['width'] = (float) ($pos['width'] ?? $defaults[$key]['width'] ?? 35);
+                $row['height'] = (float) ($pos['height'] ?? $defaults[$key]['height'] ?? 15);
+            }
+            $items[] = $row;
+        }
+        $config['items'] = $items;
+        // พิกัดและรูปแบบตัวอักษรส่วนรายชื่อคณะเดินทาง
+        $memberKeys = ['member_fullname_start_x', 'member_fullname_start_y', 'member_position_start_x', 'member_position_start_y', 'line_spacing', 'member_font_size', 'member_bold'];
+        foreach ($memberKeys as $key) {
+            $v = $body[$key] ?? Yii::$app->request->post($key);
+            if ($v !== null && $v !== '') {
+                if ($key === 'member_font_size') {
+                    $config[$key] = (int) $v;
+                } elseif ($key === 'member_bold') {
+                    $config[$key] = (int) $v;
+                } else {
+                    $config[$key] = (float) $v;
+                }
+            }
+        }
+        $cat = $this->getDevelopmentConfigRecord();
+        $existing = is_string($cat->data_json) ? json_decode($cat->data_json, true) : $cat->data_json;
+        if (is_array($existing)) {
+            foreach (['member_fullname_start_x', 'member_fullname_start_y', 'member_position_start_x', 'member_position_start_y', 'line_spacing', 'member_font_size', 'member_bold'] as $key) {
+                if (!isset($config[$key]) && isset($existing[$key])) {
+                    $config[$key] = $existing[$key];
+                }
+            }
+        }
+        $cat->data_json = json_encode($config);
+        if ($cat->save(false)) {
+            return ['success' => true];
+        }
+        return ['success' => false, 'message' => 'บันทึกไม่สำเร็จ'];
+    }
+
+    /**
+     * ส่งออกการตั้งค่า PDF template (JSON) — ดาวน์โหลดไฟล์
+     */
+    public function actionExportPdfSettings()
+    {
+        $config = $this->getDevelopmentFormConfig();
+        $json = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $filename = 'development-pdf-settings-' . date('Y-m-d-His') . '.json';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
+        Yii::$app->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        return $json;
+    }
+
+    /**
+     * นำเข้าการตั้งค่า PDF template จากไฟล์ JSON (POST เท่านั้น)
+     */
+    public function actionImportPdfSettings()
+    {
+        if (!Yii::$app->request->isPost) {
+            return $this->redirect(['/hr/development/pdf-positions']);
+        }
+        $file = \yii\web\UploadedFile::getInstanceByName('settings_file');
+        if (!$file || $file->error !== UPLOAD_ERR_OK) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกไฟล์ JSON ที่ส่งออกจากการตั้งค่า');
+            return $this->redirect(['/hr/development/pdf-positions']);
+        }
+        $content = file_get_contents($file->tempName);
+        $data = json_decode($content, true);
+        if (!is_array($data)) {
+            Yii::$app->session->setFlash('error', 'รูปแบบไฟล์ไม่ถูกต้อง (ต้องเป็น JSON)');
+            return $this->redirect(['/hr/development/pdf-positions']);
+        }
+        $defaults = $this->getDevelopmentDefaultFields();
+        $sigKeys = $this->getDevelopmentSignatureKeys();
+        if (!empty($data['items']) && is_array($data['items'])) {
+            $validItems = [];
+            foreach ($data['items'] as $item) {
+                $key = $item['key'] ?? '';
+                if ($key === '' || !isset($defaults[$key])) {
+                    continue;
+                }
+                $row = [
+                    'id' => $item['id'] ?? uniqid('item_'),
+                    'key' => $key,
+                    'x' => (float)($item['x'] ?? 0),
+                    'y' => (float)($item['y'] ?? 0),
+                    'fontSize' => (int)($item['fontSize'] ?? 15),
+                    'bold' => (int)($item['bold'] ?? 0),
+                    'enabled' => isset($item['enabled']) ? (int)$item['enabled'] : 1,
+                ];
+                if (in_array($key, $sigKeys, true)) {
+                    $row['width'] = (float)($item['width'] ?? $defaults[$key]['width'] ?? 35);
+                    $row['height'] = (float)($item['height'] ?? $defaults[$key]['height'] ?? 15);
+                }
+                $validItems[] = $row;
+            }
+            $data['items'] = $validItems;
+        }
+        $allowedKeys = [
+            'items', 'date_format',
+            'member_fullname_start_x', 'member_fullname_start_y',
+            'member_position_start_x', 'member_position_start_y',
+            'line_spacing', 'member_font_size', 'member_bold',
+        ];
+        $imported = array_intersect_key($data, array_fill_keys($allowedKeys, true));
+        if (empty($imported)) {
+            Yii::$app->session->setFlash('error', 'ไฟล์ไม่มีข้อมูลการตั้งค่าที่รองรับ');
+            return $this->redirect(['/hr/development/pdf-positions']);
+        }
+        $existing = $this->getDevelopmentFormConfig();
+        $config = array_merge($existing, $imported);
+        $cat = $this->getDevelopmentConfigRecord();
+        $cat->data_json = json_encode($config);
+        if ($cat->save(false)) {
+            Yii::$app->session->setFlash('success', 'นำเข้าการตั้งค่าเรียบร้อย');
+        } else {
+            Yii::$app->session->setFlash('error', 'บันทึกการตั้งค่าไม่สำเร็จ');
+        }
+        return $this->redirect(['/hr/development/pdf-positions']);
+    }
+
+    /** ชุดฟิลด์เริ่มต้นสำหรับใบขอไปราชการ (ให้เลือกได้ในหน้ากำหนดตำแหน่ง) */
+    protected function getDevelopmentDefaultFields(): array
+    {
+        return [
+            'company_name' => ['label' => 'ส่วนราชการ', 'x' => 30, 'y' => 40, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'doc_number' => ['label' => 'เลขที่', 'x' => 30, 'y' => 40, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'doc_date' => ['label' => 'วันที่', 'x' => 120, 'y' => 40, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'fullname' => ['label' => 'ชื่อ-นามสกุลผู้ขอ', 'x' => 30, 'y' => 55, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'position' => ['label' => 'ตำแหน่ง', 'x' => 30, 'y' => 62, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'fullname_signature' => ['label' => 'ชื่อผู้ขอ (ที่เซ็น)', 'x' => 30, 'y' => 200, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'position_signature' => ['label' => 'ตำแหน่ง (ที่เซ็น)', 'x' => 30, 'y' => 208, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'topic' => ['label' => 'หัวข้อ/เรื่อง', 'x' => 30, 'y' => 75, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'location' => ['label' => 'สถานที่', 'x' => 30, 'y' => 90, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'date_start' => ['label' => 'ตั้งแต่วันที่', 'x' => 30, 'y' => 102, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'date_end' => ['label' => 'ถึงวันที่', 'x' => 100, 'y' => 102, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'vehicle_date_start' => ['label' => 'วันออกเดินทาง', 'x' => 30, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'vehicle_time_start' => ['label' => 'เวลาออก', 'x' => 80, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'vehicle_date_end' => ['label' => 'วันกลับ', 'x' => 100, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'vehicle_time_end' => ['label' => 'เวลากลับ', 'x' => 150, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'claim_type_name' => ['label' => 'ประเภทค่าใช้จ่าย', 'x' => 30, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'total_days' => ['label' => 'จำนวนวัน', 'x' => 30, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'vehicle_type' => ['label' => 'เดินทางโดย', 'x' => 100, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'assigned_to' => ['label' => 'ผู้ปฏิบัติหน้าที่แทน', 'x' => 30, 'y' => 180, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'assigned_to_position' => ['label' => 'ตำแหน่งผู้ปฏิบัติแทน', 'x' => 30, 'y' => 188, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'assigned_to_signature' => ['label' => 'ลายเซ็นผู้ปฏิบัติแทน', 'x' => 30, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'leader_fullname' => ['label' => 'ชื่อผู้อนุมัติ', 'x' => 100, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_date' => ['label' => 'วันที่อนุมัติ', 'x' => 100, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'approve_date' => ['label' => 'วันที่ลงนาม', 'x' => 30, 'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'signature_approver' => ['label' => 'ลายเซ็นผู้อนุมัติ', 'x' => 30, 'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+        ];
+    }
+
+    protected function getDevelopmentSignatureKeys(): array
+    {
+        return ['assigned_to_signature', 'signature_approver'];
+    }
+
+    protected function getDevelopmentConfigRecord(): Categorise
+    {
+        $cat = Categorise::findOne(['name' => 'form_development_pdf']);
+        if (!$cat) {
+            $cat = new Categorise();
+            $cat->name = 'form_development_pdf';
+            $cat->save(false);
+        }
+        $decoded = is_string($cat->data_json) ? json_decode($cat->data_json, true) : $cat->data_json;
+        if (!is_array($decoded) || empty($decoded['items'])) {
+            $defaults = $this->getDevelopmentDefaultFields();
+            $sigKeys = $this->getDevelopmentSignatureKeys();
+            $items = [];
+            foreach ($defaults as $key => $def) {
+                $row = [
+                    'id' => 'legacy_' . $key,
+                    'key' => $key,
+                    'x' => (float) ($def['x'] ?? 0),
+                    'y' => (float) ($def['y'] ?? 0),
+                    'fontSize' => (int) ($def['fontSize'] ?? 15),
+                    'bold' => (int) ($def['bold'] ?? 0),
+                    'enabled' => (int) ($def['enabled'] ?? 1),
+                ];
+                if (in_array($key, $sigKeys, true)) {
+                    $row['width'] = (float) ($def['width'] ?? 35);
+                    $row['height'] = (float) ($def['height'] ?? 15);
+                }
+                $items[] = $row;
+            }
+            $cat->data_json = json_encode([
+                'items' => $items,
+                'date_format' => 'medium',
+                'member_fullname_start_x' => 25,
+                'member_fullname_start_y' => 85,
+                'member_position_start_x' => 100,
+                'member_position_start_y' => 85,
+                'line_spacing' => 5.5,
+                'member_font_size' => 14,
+                'member_bold' => 0,
+            ]);
+            $cat->save(false);
+            $cat->refresh();
+        }
+        return $cat;
+    }
+
+    protected function getDevelopmentFormConfig(): array
+    {
+        $cat = $this->getDevelopmentConfigRecord();
+        $json = $cat->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true);
+        }
+        return is_array($json) ? $json : [];
+    }
+
+    protected function getDevelopmentFormItems(): array
+    {
+        $config = $this->getDevelopmentFormConfig();
+        $defaults = $this->getDevelopmentDefaultFields();
+        $sigKeys = $this->getDevelopmentSignatureKeys();
+        if (!empty($config['items'])) {
+            $list = [];
+            foreach ($config['items'] as $item) {
+                $key = $item['key'] ?? '';
+                if ($key === 'travel_party') {
+                    continue;
+                }
+                $row = [
+                    'id' => $item['id'] ?? uniqid('item_'),
+                    'key' => $key,
+                    'x' => (float) ($item['x'] ?? 0),
+                    'y' => (float) ($item['y'] ?? 0),
+                    'fontSize' => (int) ($item['fontSize'] ?? 15),
+                    'bold' => !empty($item['bold']),
+                    'enabled' => isset($item['enabled']) ? (int) $item['enabled'] : 1,
+                    'label' => $defaults[$key]['label'] ?? $key,
+                ];
+                if (in_array($key, $sigKeys, true)) {
+                    $row['width'] = (float) ($item['width'] ?? $defaults[$key]['width'] ?? 35);
+                    $row['height'] = (float) ($item['height'] ?? $defaults[$key]['height'] ?? 15);
+                }
+                $list[] = $row;
+            }
+            return $list;
+        }
+        $items = [];
+        foreach ($defaults as $key => $f) {
+            $row = [
+                'id' => 'legacy_' . $key,
+                'key' => $key,
+                'x' => (float) ($f['x'] ?? 0),
+                'y' => (float) ($f['y'] ?? 0),
+                'fontSize' => (int) ($f['fontSize'] ?? 15),
+                'bold' => !empty($f['bold']),
+                'enabled' => (int) ($f['enabled'] ?? 1),
+                'label' => $f['label'] ?? $key,
+            ];
+            if (in_array($key, $sigKeys, true)) {
+                $row['width'] = (float) ($f['width'] ?? 35);
+                $row['height'] = (float) ($f['height'] ?? 15);
+            }
+            $items[] = $row;
+        }
+        return $items;
     }
 
 
@@ -386,12 +748,15 @@ class DevelopmentController extends Controller
         // 2. ดึง Path ไฟล์เทมเพลต PDF
         $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
         if (!$templateFile || !file_exists($templateFile)) {
-            Yii::$app->session->setFlash('error', 'ไม่พบไฟล์เทมเพลต PDF ต้นฉบับ');
-            return $this->redirect(['view', 'id' => $id]);
+            Yii::$app->session->setFlash('error', 'ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดเทมเพลตที่หน้าตั้งค่า Template รายงานขอไปราชการ');
+            return $this->redirect(['pdf-editor']);
         }
         // 3. เริ่มต้นสร้าง PDF ด้วย FPDI
+        if (!defined('FPDF_FONTPATH')) {
+            define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
+        }
         $pdf = new Fpdi();
-        // ตั้งค่าฟอนต์ไทย (ต้องมีไฟล์ .php และ .z ในโฟลเดอร์ฟอนต์ของ fpdf)
+        // ตั้งค่าฟอนต์ไทย (ไฟล์ .php อยู่ที่ web/fonts/)
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
         $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
 
@@ -415,20 +780,48 @@ class DevelopmentController extends Controller
 
         $info = $this->GetInfo();
         $dataJson = $layout->data_json ?? [];
+        if (is_string($dataJson)) {
+            $dataJson = json_decode($dataJson, true) ?: [];
+        }
+        // รองรับรูปแบบ items (จากหน้ากำหนดตำแหน่งแบบลากวาง) — แปลง mm เป็นหน่วยที่ writeText ใช้ (คูณด้วย ptToMm = 25.4/71)
+        $sigKeys = $this->getDevelopmentSignatureKeys();
+        if (!empty($dataJson['items'])) {
+            $mmToDesignerUnit = 71 / 25.4; // ให้ writeText: value * (25.4/71) = mm
+            $flat = [];
+            foreach ($dataJson['items'] as $item) {
+                $k = $item['key'] ?? '';
+                if ($k === '' || (isset($item['enabled']) && (int) $item['enabled'] === 0)) {
+                    continue;
+                }
+                $xMm = (float) ($item['x'] ?? 0);
+                $yMm = (float) ($item['y'] ?? 0);
+                $flat[$k . '_x'] = $xMm * $mmToDesignerUnit;
+                $flat[$k . '_y'] = $yMm * $mmToDesignerUnit;
+                $flat[$k . '_fontSize'] = (int) ($item['fontSize'] ?? 15);
+                $flat[$k . '_bold'] = !empty($item['bold']) ? 1 : 0;
+                if (in_array($k, $sigKeys, true)) {
+                    $flat[$k . '_width'] = (float) ($item['width'] ?? 35);
+                    $flat[$k . '_height'] = (float) ($item['height'] ?? 15);
+                }
+            }
+            $dataJson = array_merge($dataJson, $flat);
+        }
 
         $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3, 'status' => 'Pass']);
 
-        // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด
-        $writeText = function ($key, $text, $fontSize = 13, $style = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
+        // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด — ใช้ fontSize และ bold จาก config (หน้ากำหนดตำแหน่ง) ถ้ามี
+        $writeText = function ($key, $text, $fontSizeDefault = 13, $styleDefault = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
             $xKey = $key . '_x';
             $yKey = $key . '_y';
 
             if (isset($dataJson[$xKey]) && isset($dataJson[$yKey])) {
+                $fontSize = (int) ($dataJson[$key . '_fontSize'] ?? $fontSizeDefault);
+                $style = !empty($dataJson[$key . '_bold']) ? 'B' : $styleDefault;
                 $pdf->SetFont('THSarabunNew', $style, $fontSize);
 
-                // แปลงพิกัด Point จากฐานข้อมูล เป็น mm
+                // แปลงพิกัดจากฐานข้อมูลเป็น mm และเพิ่ม offset Y ให้ด้านบนของตัวอักษรตรงกับตำแหน่งที่วาง
                 $x = ((float)$dataJson[$xKey] * $ptToMm) + $offsetX;
-                $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY;
+                $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY + ($fontSize * 0.15);
 
                 $pdf->SetXY($x, $y);
                 $pdf->Write(0, iconv('UTF-8', 'cp874', (string)$text));
@@ -518,6 +911,7 @@ class DevelopmentController extends Controller
         $writeText('position_signature', 'ตำแหน่ง' . $model->createdByEmp?->positionName() ?? '-');
 
         $writeText('topic', $model->topic);
+        $writeText('travel_party', $model->data_json['travel_party'] ?? '-');
         $writeText('location', $model->data_json['location'] ?? '-');
         $writeText('date_start',  ThaiDateHelper::formatThaiDate($model->date_start, 'medium'));
         $writeText('date_end',  ThaiDateHelper::formatThaiDate($model->date_end, 'medium'));
@@ -536,36 +930,64 @@ class DevelopmentController extends Controller
 
 
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
-        // 1. ดึงค่าพิกัดเริ่มต้นจาก JSON
-        $startX = (float)($dataJson['member_fullname_start_x'] ?? 0);
-        $startY = (float)($dataJson['member_fullname_start_y'] ?? 0);
-        $startPositionX = (float)($dataJson['member_position_start_x'] ?? 0);
-        $startPositionY = (float)($dataJson['member_fullname_start_y'] ?? 0);
 
-        // 2. กำหนดระยะห่างระหว่างบรรทัด (หน่วยเป็น mm) 
-        // โดยปกติฟอนต์ขนาด 14-16pt จะใช้ระยะห่างประมาณ 7-8 mm
-        $lineSpacing = 5.5;
+        // --- รูปลายเซ็น (ใช้พิกัดจากฟิลด์ assigned_to_signature และ signature_approver ในหน้ากำหนดตำแหน่ง) ---
+        $drawSignatureImage = function ($key, $filePath) use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
+            if (!$filePath || !is_file($filePath)) {
+                return;
+            }
+            $xKey = $key . '_x';
+            $yKey = $key . '_y';
+            $wKey = $key . '_width';
+            $hKey = $key . '_height';
+            if (!isset($dataJson[$xKey], $dataJson[$yKey])) {
+                return;
+            }
+            $x = ((float)$dataJson[$xKey] * $ptToMm) + $offsetX;
+            $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY;
+            $w = (float)($dataJson[$wKey] ?? 35);
+            $h = (float)($dataJson[$hKey] ?? 15);
+            try {
+                $pdf->Image($filePath, $x, $y, $w, $h);
+            } catch (\Throwable $e) {
+                // ข้ามถ้าแทรกรูปไม่ได้
+            }
+        };
+        $drawSignatureImage('assigned_to_signature', $model->assignedTo?->SignatureFilePath());
+        if ($leader && isset($leader->employee)) {
+            $drawSignatureImage('signature_approver', $leader->employee->SignatureFilePath());
+        }
 
+        // ส่วนคณะเดินทาง (ด้วยข้าพเจ้า): จุดเริ่มต้นคอลัมน์ชื่อ + คอลัมน์ตำแหน่ง + ระยะห่างบรรทัด
+        $startX = (float)($dataJson['member_fullname_start_x'] ?? 25);
+        $startY = (float)($dataJson['member_fullname_start_y'] ?? 85);
+        $startPositionX = (float)($dataJson['member_position_start_x'] ?? 100);
+        $startPositionY = (float)($dataJson['member_position_start_y'] ?? 85);
+        $lineSpacing = (float)($dataJson['line_spacing'] ?? 5.5);
+
+        $members = $model->listMemberForPdf();
+        $memberFontSize = (int)($dataJson['member_font_size'] ?? 14);
+        $memberStyle = !empty($dataJson['member_bold']) ? 'B' : '';
+        $pdf->SetFont('THSarabunNew', $memberStyle, $memberFontSize);
         $index = 0;
-        foreach ($model->listMemberPrint() as $memberItem) {
+        // พิกัดคณะเดินทางจากหน้ากำหนดตำแหน่งเก็บเป็น mm (ลากวางใช้ pxToMm) — FPDF SetXY ใช้ baseline จึงเลื่อน Y ลงเล็กน้อยให้ด้านบนของตัวอักษรตรงกับจุดที่วาง
+        $memberYOffset = $memberFontSize * 0.15; // เลื่อนลงเล็กน้อยให้ด้านบนตัวอักษรใกล้จุดที่วาง
+        foreach ($members as $memberItem) {
+            $emp = $memberItem->emp;
+            $name = $emp ? $emp->fullname() : (trim((string)($memberItem->data_json['label'] ?? '')) ?: ((string)$memberItem->emp_id ?: '-'));
+            $position = $emp ? $emp->positionName() : ($memberItem->data_json['position_name_text'] ?? '-');
 
-            // คำนวณพิกัด: x คงที่, y เพิ่มขึ้นตามลำดับ index
-            $x = ($startX * $ptToMm) + $offsetX;
-            $y = (($startY * $ptToMm) + $offsetY) + ($index * $lineSpacing);
-
-            $xPosition = ($startPositionX * $ptToMm) + $offsetX;
-            $yPosition = (($startPositionY * $ptToMm) + $offsetY) + ($index * $lineSpacing);
+            $x = $startX + $offsetX;
+            $y = $startY + $offsetY + $memberYOffset + ($index * $lineSpacing);
+            $xPosition = $startPositionX + $offsetX;
+            $yPosition = $startPositionY + $offsetY + $memberYOffset + ($index * $lineSpacing);
 
             $pdf->SetXY($x, $y);
+            $displayText = ($index + 1) . '. ' . $name;
+            $pdf->Write(0, iconv('UTF-8', 'cp874//IGNORE', $displayText));
 
-
-            // แสดงลำดับที่และชื่อ
-            $displayText = ($index + 1) . ". " . ($memberItem->emp->fullname ?? '-');
-            $pdf->Write(0, iconv('UTF-8', 'cp874', $displayText));
-
-            $displayTextPosition =  ($memberItem->emp->positionName() ?? '-');
             $pdf->SetXY($xPosition, $yPosition);
-            $pdf->Write(0, iconv('UTF-8', 'cp874', $displayTextPosition));
+            $pdf->Write(0, iconv('UTF-8', 'cp874//IGNORE', $position));
 
             $index++;
         }

@@ -18,6 +18,9 @@ $this->title = 'ตั้งค่าบุคลากร';
 $this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/hr/employees']];
 $this->params['breadcrumbs'][] = $this->title;
 
+$developmentCategoriseNames = ['development_type', 'vehicle_type', 'expense_type'];
+$showDevelopmentMenu = $name && in_array($name, $developmentCategoriseNames, true) && (Yii::$app->user->can('hr') || Yii::$app->user->can('admin'));
+
 $items = [
     ['name' => 'prefix','title' => 'คำนำหน้า'],
     ['name' => 'Nationality','title' => 'สัญชาติ/เชื้อชาติ'],
@@ -33,6 +36,11 @@ $items = [
 ];
 ?>
 <?php Pjax::begin(['id' => 'settings-container'])?>
+<?php if ($showDevelopmentMenu): ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/development/views/menu_admin', ['active' => 'setting']) ?>
+<?php $this->endBlock(); ?>
+<?php endif; ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="bi bi-people-fill"></i> <?=$this->title;?>
 <?php $this->endBlock(); ?>

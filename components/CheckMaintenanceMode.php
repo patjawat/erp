@@ -25,9 +25,8 @@ class CheckMaintenanceMode extends Behavior
         $route = $action->uniqueId; // เช่น 'settings/user/index'
         $controllerId = $action->controller->id; // เช่น 'settings' หรือ 'settings/user'
 
-        // รายการหน้าที่จะไม่เช็ค (เพื่อป้องกัน Redirect Loop)
-        $excluded = ['site/login', 'site/warning', 'site/error'];
-        if (strpos($route, 'settings/') === 0 || in_array($route, ['site/login', 'site/warning'])) {
+        // รายการหน้าที่จะไม่เช็ค (เพื่อป้องกัน Redirect Loop และให้แสดงหน้า error ได้)
+        if (strpos($route, 'settings/') === 0 || in_array($route, ['site/login', 'site/warning', 'site/error'])) {
             return;
         }
         if (!Yii::$app->user->isGuest) {

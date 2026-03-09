@@ -28,6 +28,15 @@ class LoginController extends Controller
                     'redirect' => \yii\helpers\Url::to(['/me']),
                 ];
             }
+            // ส่ง validation errors กลับเป็น JSON เพื่อให้ฟอร์มแสดงข้อความผิดพลาด (เช่น username/password ไม่ถูกต้อง)
+            $validation = [];
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $validation[Html::getInputId($model, $attribute)] = $errors;
+            }
+            return [
+                'success' => false,
+                'validation' => $validation,
+            ];
         }
 
         return $this->render('index', ['model' => $model]);

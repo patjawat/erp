@@ -543,41 +543,36 @@ class Development extends \yii\db\ActiveRecord
     //  ภาพทีมคณะกรรมการ
     public function StackMember()
     {
-        // try {
         $data = '';
-        $data .= '<div class="avatar-stack">';
-        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
-            $emp = Employees::findOne(['id' => $item->emp_id]);
+        $data .= '<div class="avatar-stack d-flex flex-wrap gap-2 align-items-center">';
+        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->with('emp')->all() as $key => $item) {
+            $emp = $item->emp;
             if ($emp) {
-                $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับเข้าคลัง'], ['class' => 'open-modal', 'data' => [
-                    'size' => 'model-md',
+                $data .= Html::a(Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']), ['/me/development-detail/update', 'id' => $item->id, 'title' => '<i class="bi bi-person-circle"></i> คณะเดินทาง'], ['class' => 'open-modal', 'data' => [
+                    'size' => 'modal-md',
                     'bs-toggle' => 'tooltip',
                     'bs-placement' => 'top',
-                    'bs-title' => $emp->fullname
+                    'bs-title' => $emp->fullname()
                 ]]);
             }
         }
         $data .= '</div>';
-
         return $data;
-        // } catch (\Throwable $th) {
-        // }
     }
 
-    //  แสดงรายชื่อคณะเดินทาง
+    /** แสดงรายชื่อคณะเดินทาง (สำหรับใช้ใน view / PDF) — รวมทุกคน ใช้ชื่อจาก emp หรือ label/emp_id */
     public function memberText()
     {
         $data = [];
-        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->all() as $key => $item) {
-            $emp = Employees::findOne(['id' => $item->emp_id]);
-            if ($emp) {
-                $data[] = $emp->fullname;
-            }
+        foreach (DevelopmentDetail::find()->where(['name' => 'member', 'development_id' => $this->id])->with('emp')->orderBy(['id' => SORT_ASC])->all() as $item) {
+            $emp = $item->emp;
+            $name = $emp ? $emp->fullname() : (trim((string)($item->data_json['label'] ?? '')) ?: ((string)$item->emp_id ?: '-'));
+            $data[] = $name;
         }
         return [
             'data' => $data,
             'count' => count($data),
-            'text' => implode(',', $data)
+            'text' => implode(', ', $data)
         ];
     }
 
@@ -649,11 +644,24 @@ class Development extends \yii\db\ActiveRecord
     {
         return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])->all();
     }
-//แสดงรายชื่อคณะเดินทางยกเว้นผู้สร้างใบเดินทาง
-       public function listMemberPrint()
+    /** รายชื่อคณะเดินทาง (ยกเว้นผู้สร้างใบ) — ใช้ในที่อื่นถ้าต้องการไม่รวมผู้ขอ */
+    public function listMemberPrint()
     {
-        return DevelopmentDetail::find()->where(['development_id' => $this->id, 'name' => 'member'])
-        ->andWhere(['<>','emp_id',$this->emp_id])->all();
+        return DevelopmentDetail::find()
+            ->where(['development_id' => $this->id, 'name' => 'member'])
+            ->andWhere(['<>', 'emp_id', $this->emp_id])
+            ->with('emp')
+            ->all();
+    }
+
+    /** รายชื่อคณะเดินทางทั้งหมด (รวมผู้ขอ) — ใช้สำหรับพิมพ์ PDF */
+    public function listMemberForPdf()
+    {
+        return DevelopmentDetail::find()
+            ->where(['development_id' => $this->id, 'name' => 'member'])
+            ->with('emp')
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
     }
 
 

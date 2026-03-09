@@ -65,6 +65,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="col-md-9 fw-bold"><?= $model->topic ?></div>
                     </div>
                     <div class="row mb-3">
+                        <div class="col-md-3 text-muted">คณะเดินทาง:</div>
+                        <div class="col-md-9"><?= isset($model->data_json['travel_party']) ? Html::encode($model->data_json['travel_party']) : 'ไม่ระบุ' ?></div>
+                    </div>
+                    <div class="row mb-3">
                         <div class="col-md-3 text-muted">ระยะเวลา:</div>
                         <div class="col-md-9">
                             <i class="bi bi-calendar3 me-1"></i>

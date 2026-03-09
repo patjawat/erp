@@ -106,6 +106,11 @@ $listDocumentMe  = $emp->listDocumentMe();
                 <?= $form->field($model, 'topic')->textInput(['maxlength' => true, 'placeholder' => 'ระบุหัวข้อการอบรม/ประชุม/ดูงาน']) ?>
             </div>
         </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <?= $form->field($model, 'data_json[travel_party]')->textInput(['maxlength' => true, 'placeholder' => 'เช่น คณะกรรมการโครงการ, หน่วยงานที่เดินทางร่วมกัน'])->label('คณะเดินทาง') ?>
+            </div>
+        </div>
 
         <div class="row">
             <!-- คอลัมน์ซ้าย -->

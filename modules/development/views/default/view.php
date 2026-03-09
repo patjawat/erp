@@ -85,7 +85,8 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('_menu', ['active' => null]) ?>
+<?= $this->render('@app/modules/development/views/menu_admin', ['active' => null]) ?>
+
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid py-3 development-view-layout">
@@ -126,18 +127,31 @@ $printUrl = Url::to(['/development/default/print-official', 'id' => $model->id])
                         </div>
                         <?php if (!empty($members)): ?>
                         <div>
-                            <span class="text-muted small">ผู้ร่วมเดินทาง:</span>
-                            <div class="d-flex flex-wrap gap-2 mt-1">
+                            <span class="text-muted small d-block mb-2">ผู้ร่วมเดินทาง:</span>
+                            <div class="d-flex flex-wrap gap-3">
                                 <?php foreach ($members as $m): ?>
                                     <?php
                                     $name = $m->emp ? trim(($m->emp->fname ?? '') . ' ' . ($m->emp->lname ?? '')) : ($m->data_json['label'] ?? $m->emp_id ?? '');
                                     if ($name === '') {
                                         $name = 'ไม่ระบุ';
                                     }
+                                    $position = $m->data_json['emp_position'] ?? ($m->emp && method_exists($m->emp, 'positionName') ? $m->emp->positionName() : '');
+                                    if ($position === '') {
+                                        $position = '-';
+                                    }
+                                    $avatarUrl = $m->emp && method_exists($m->emp, 'ShowAvatar') ? $m->emp->ShowAvatar() : null;
                                     ?>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
-                                        <i class="bi bi-person me-1"></i><?= Html::encode($name) ?>
-                                    </span>
+                                    <div class="d-flex align-items-center border border-secondary border-opacity-25 rounded-3 p-2">
+                                        <?php if ($avatarUrl): ?>
+                                        <img class="avatar avatar-sm bg-primary text-white lazyload rounded-circle flex-shrink-0" src="<?= \Yii::getAlias('@web/img/loading.gif') ?>" alt="" data-expand="-20" data-sizes="auto" data-src="<?= Html::encode($avatarUrl) ?>">
+                                        <?php else: ?>
+                                        <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem; font-size: 0.875rem;"><i class="bi bi-person"></i></div>
+                                        <?php endif; ?>
+                                        <div class="avatar-detail ms-2 min-w-0">
+                                            <h6 class="mb-0 fs-14" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="ดูเพิ่มเติม..."><?= Html::encode($name) ?></h6>
+                                            <p class="text-muted mb-0 fs-12"><?= Html::encode($position) ?></p>
+                                        </div>
+                                    </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>

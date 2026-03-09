@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('_menu', ['active' => 'dashboard']) ?>
+<?= $this->render('@app/modules/development/views/menu_admin', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 <?php
 
@@ -77,14 +77,14 @@ if (empty($listThaiYear)) {
     $isAdmin = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
     ?>
     <div class="alert border-0 mb-4 <?= $isAdmin ? 'alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25' : 'alert-secondary bg-secondary bg-opacity-10 border-secondary border-opacity-25' ?> rounded-3" role="alert">
-        <div class="d-flex align-items-center gap-2">
-            <span class="small mb-0">
-                <?php if ($isAdmin): ?>
-                <strong>ผู้ดูแลระบบ:</strong> ดูภาพรวม สถิติ และลิงก์ไปทะเบียนทั้งหมด / รายการรออนุมัติได้จากเมนูด้านบน
-                <?php else: ?>
-                <strong>ผู้ใช้งาน:</strong> ดูภาพรวมและสถิติได้ที่นี่ สร้างรายการอบรม/ประชุม/ดูงานจากปุ่ม <strong>สร้างใหม่</strong> หรือ <strong>รายการของฉัน</strong>
-                <?php endif; ?>
-            </span>
+        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
+            <?php if ($isAdmin): ?>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1 align-self-start">ผู้ดูแลระบบ</span>
+            <span class="small mb-0">ดูภาพรวม สถิติ และลิงก์ไปทะเบียนทั้งหมด / รายการรออนุมัติได้จากเมนูด้านบน</span>
+            <?php else: ?>
+            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1 align-self-start">ผู้ใช้งาน</span>
+            <span class="small mb-0">ดูภาพรวมและสถิติได้ที่นี่ สร้างรายการอบรม/ประชุม/ดูงานจากปุ่ม <strong>สร้างใหม่</strong> หรือ <strong>รายการของฉัน</strong></span>
+            <?php endif; ?>
         </div>
     </div>
 

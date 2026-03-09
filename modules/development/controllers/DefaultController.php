@@ -26,12 +26,12 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class DefaultController extends Controller
 {
     /**
-     * จุดเข้าโมดูล — ไปหน้า dashboard
-     * @return \yii\web\Response
+     * จุดเข้าโมดูล — แสดงหน้ารายการของฉัน (อบรม/ประชุม/ดูงาน)
+     * @return \yii\web\Response|string
      */
     public function actionIndex()
     {
-        return $this->redirect(['/development/default/dashboard']);
+        return $this->redirect(['mine']);
     }
 
     /**
@@ -322,6 +322,31 @@ class DefaultController extends Controller
                         'emp_id' => $model->emp_id,
                     ]);
                     $addMember->save(false);
+                    // คณะเดินทางเพิ่มเติมจากฟอร์ม (members_json)
+                    $membersJson = Yii::$app->request->post('members_json');
+                    if (is_string($membersJson)) {
+                        $decoded = json_decode($membersJson, true);
+                        if (is_array($decoded)) {
+                            foreach ($decoded as $m) {
+                                if (empty($m['emp_id']) && empty($m['label'])) {
+                                    continue;
+                                }
+                                $empId = isset($m['emp_id']) ? (int) $m['emp_id'] : null;
+                                if ($empId === (int) $model->emp_id) {
+                                    continue;
+                                }
+                                $detail = new DevelopmentDetail([
+                                    'development_id' => $model->id,
+                                    'name' => 'member',
+                                    'emp_id' => $empId,
+                                ]);
+                                if (!empty($m['label'])) {
+                                    $detail->data_json = ['label' => $m['label']];
+                                }
+                                $detail->save(false);
+                            }
+                        }
+                    }
                     if (method_exists($model, 'createApprove')) {
                         $model->createApprove();
                     }
@@ -409,6 +434,43 @@ class DefaultController extends Controller
     }
 
     /**
+     * เพิ่มสมาชิกคณะเดินทาง (เปิดฟอร์มใน modal)
+     * @param int $id development_id
+     */
+    public function actionAddMember($id)
+    {
+        $development = $this->findDevelopment($id);
+        $model = new DevelopmentDetail([
+            'development_id' => $development->id,
+            'name' => 'member',
+        ]);
+
+        if (Yii::$app->request->isPost) {
+            $model->load(Yii::$app->request->post());
+            $model->development_id = (int) $development->id;
+            $model->name = 'member';
+            if ($model->save(false)) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                    return ['status' => 'success', 'redirect' => \yii\helpers\Url::to(['/development/default/update', 'id' => $development->id])];
+                }
+                return $this->redirect(['/development/default/update', 'id' => $development->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => Yii::$app->request->get('title', 'เพิ่มคณะเดินทาง'),
+                'content' => $this->renderAjax('_form_member', ['model' => $model, 'modal' => true]),
+            ];
+        }
+        return $this->render('_form_member', ['model' => $model]);
+    }
+
+    /**
      * แก้ไขสมาชิกผู้ร่วมเดินทาง (development_detail)
      * @param int $id development_detail id
      */
@@ -453,11 +515,15 @@ class DefaultController extends Controller
         }
         $developmentId = $model->development_id;
         $model->delete();
+        $return = Yii::$app->request->get('return');
+        $redirectUrl = ($return === 'update')
+            ? \yii\helpers\Url::to(['/development/default/update', 'id' => $developmentId])
+            : \yii\helpers\Url::to(['/development/default/view', 'id' => $developmentId]);
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            return ['status' => 'success', 'redirect' => \yii\helpers\Url::to(['/development/default/view', 'id' => $developmentId])];
+            return ['status' => 'success', 'redirect' => $redirectUrl];
         }
-        return $this->redirect(['/development/default/view', 'id' => $developmentId]);
+        return $this->redirect($redirectUrl);
     }
 
     /**
