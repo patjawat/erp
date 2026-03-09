@@ -598,8 +598,6 @@ class DevelopmentController extends Controller
             'doc_date' => ['label' => 'วันที่', 'x' => 120, 'y' => 40, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'fullname' => ['label' => 'ชื่อ-นามสกุลผู้ขอ', 'x' => 30, 'y' => 55, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
             'position' => ['label' => 'ตำแหน่ง', 'x' => 30, 'y' => 62, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
-            'fullname_signature' => ['label' => 'ชื่อผู้ขอ (ที่เซ็น)', 'x' => 30, 'y' => 200, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
-            'position_signature' => ['label' => 'ตำแหน่ง (ที่เซ็น)', 'x' => 30, 'y' => 208, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'topic' => ['label' => 'หัวข้อ/เรื่อง', 'x' => 30, 'y' => 75, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
             'location' => ['label' => 'สถานที่', 'x' => 30, 'y' => 90, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'date_start' => ['label' => 'ตั้งแต่วันที่', 'x' => 30, 'y' => 102, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
@@ -691,7 +689,7 @@ class DevelopmentController extends Controller
             $list = [];
             foreach ($config['items'] as $item) {
                 $key = $item['key'] ?? '';
-                if ($key === 'travel_party') {
+                if ($key === 'travel_party' || $key === 'fullname_signature' || $key === 'position_signature') {
                     continue;
                 }
                 $row = [
@@ -907,8 +905,6 @@ class DevelopmentController extends Controller
         //ด้วยข้าพเจ้า
         $writeText('fullname', $model->createdByEmp?->fullname ?? '-');
         $writeText('position', $model->createdByEmp?->positionName() ?? '-');
-        $writeText('fullname_signature', $model->createdByEmp?->fullname ?? '-');
-        $writeText('position_signature', 'ตำแหน่ง' . $model->createdByEmp?->positionName() ?? '-');
 
         $writeText('topic', $model->topic);
         $writeText('travel_party', $model->data_json['travel_party'] ?? '-');
