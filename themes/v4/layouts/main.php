@@ -308,8 +308,23 @@ AppAsset::register($this);
     erpLucideIcons();
     window.addEventListener('load', erpLucideIcons);
     AOS.init({});
-    if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading();
-    document.addEventListener('DOMContentLoaded', function () { if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading(); });
+    (function () {
+        function hideGlobalLoading() {
+            var el = document.getElementById('erp-global-loading');
+            if (el) el.classList.add('erp-loading-hidden');
+        }
+        if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading();
+        else hideGlobalLoading();
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading();
+            else hideGlobalLoading();
+        });
+        window.addEventListener('load', function () {
+            if (typeof window.erpHidePageLoading === 'function') window.erpHidePageLoading();
+            else hideGlobalLoading();
+        });
+        setTimeout(function () { hideGlobalLoading(); }, 8000);
+    })();
 
     var erpInstallPrompt = null;
     var installBtn = document.getElementById('erp-install-pwa');
