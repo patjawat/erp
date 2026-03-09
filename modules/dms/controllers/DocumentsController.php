@@ -191,8 +191,8 @@ class DocumentsController extends Controller
         ]);
 
         $dataProvider->setSort(['defaultOrder' => [
-            'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
+            'doc_transactions_date' => SORT_ASC,
+            'doc_regis_number' => SORT_ASC,
         ]]);
 
         switch ($searchModel->document_group) {
@@ -232,7 +232,7 @@ class DocumentsController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->mergeCells('A1:I1');
+        $sheet->mergeCells('A1:D1');
 
         $rowTitle = 'A1';
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
@@ -243,63 +243,45 @@ class DocumentsController extends Controller
         $sheet->getStyle($rowTitle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($rowTitle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($rowTitle)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('A')->setWidth(6);
 
-        $rowA1 = 'A2';
-        $sheet->setCellValue($rowA1, 'ลำดับ');
-        $sheet->getStyle($rowA1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowA1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowA1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('A')->setWidth(6);
+        $sheet->setCellValue('A2', 'เลขหนังสือ');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A2')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('A')->setWidth(20);
 
-        $rowB1 = 'B2';
-        $sheet->setCellValue($rowB1, 'สถานะ');
-        $sheet->getStyle($rowB1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowB1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowB1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->setCellValue('B2', 'วันที่รับ');
+        $sheet->getStyle('B2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('B2')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('B')->setWidth(20);
 
-        $rowC1 = 'C2';
-        $sheet->setCellValue($rowC1, 'เลขรับ');
-        $sheet->getStyle($rowC1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowC1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowC1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->setCellValue('C2', 'เลขรับ');
+        $sheet->getStyle('C2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('C2')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
         $sheet->getColumnDimension('C')->setWidth(20);
 
-        $rowD2 = 'D2';
-        $sheet->setCellValue($rowD2, 'เลขหนังสือ');
-        $sheet->getStyle($rowD2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowD2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowD2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('D')->setWidth(20);
-
-        $rowE2 = 'E2';
-        $sheet->setCellValue($rowE2, 'ชื่อเรื่อง');
-        $sheet->getStyle($rowE2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowE2)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowE2)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('E')->setWidth(100);
-
-        $rowF1 = 'F2';
-        $sheet->setCellValue($rowF1, 'วันที่รับ');
-        $sheet->getStyle($rowF1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle($rowF1)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle($rowF1)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
-        $sheet->getColumnDimension('F')->setWidth(20);
+        $sheet->setCellValue('D2', 'ชื่อเรื่อง');
+        $sheet->getStyle('D2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('D2')->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(true)->setItalic(false);
+        $sheet->getColumnDimension('D')->setWidth(100);
 
         $sheet->setTitle('ทะเบียนหนังสือรับ');
 
         $StartRowSheet = 3;
-        foreach ($models as $key => $item) {
+        foreach ($models as $item) {
             $numRow = $StartRowSheet++;
-            $sheet->setCellValue('A' . $numRow, ($key + 1));
-            $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('A' . $numRow, $item->doc_number);
+            $sheet->getStyle('A' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle('A' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('A' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('A' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('B' . $numRow, $item->documentStatus->title ?? '-');
+            $sheet->setCellValue('B' . $numRow, ThaiDateHelper::formatThaiDate($item->doc_transactions_date));
+            $sheet->getStyle('B' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('B' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('B' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
@@ -312,27 +294,12 @@ class DocumentsController extends Controller
             $sheet->getStyle('C' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('C' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
 
-            $sheet->setCellValue('D' . $numRow, $item->doc_number);
+            $sheet->setCellValue('D' . $numRow, $item->topic);
             $sheet->getStyle('D' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle('D' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
             $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $sheet->getStyle('D' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
             $sheet->getStyle('D' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-            $sheet->setCellValue('E' . $numRow, $item->topic);
-            $sheet->getStyle('E' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $sheet->getStyle('E' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('E' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('E' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
-
-
-            $sheet->setCellValue('F' . $numRow,  ThaiDateHelper::formatThaiDate($item->doc_transactions_date));
-            $sheet->getStyle('F' . $numRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('F' . $numRow)->getFont()->setName('TH Sarabun New')->setSize(16)->setBold(false)->setItalic(false);
-            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle('F' . $numRow)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
-            $sheet->getStyle('F' . $numRow)->getFill()->getStartColor()->setRGB('8DB4E2');
         }
 
         $writer = new Xlsx($spreadsheet);
