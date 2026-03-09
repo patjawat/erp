@@ -241,7 +241,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4 text-muted">ผู้อนุมัติ:</div>
+                        <div class="col-md-4 text-muted">ผอ.:</div>
                         <div class="col-md-8">
                             <?php if(isset($model->approvedBy) && $model->approvedBy): ?>
                             <div class="d-flex align-items-center">

@@ -612,16 +612,20 @@ class DevelopmentController extends Controller
             'assigned_to' => ['label' => 'ผู้ปฏิบัติหน้าที่แทน', 'x' => 30, 'y' => 180, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to_position' => ['label' => 'ตำแหน่งผู้ปฏิบัติแทน', 'x' => 30, 'y' => 188, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to_signature' => ['label' => 'ลายเซ็นผู้ปฏิบัติแทน', 'x' => 30, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
-            'leader_fullname' => ['label' => 'ชื่อผู้อนุมัติ', 'x' => 100, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_group_fullname' => ['label' => 'ชื่อ-นามสกุลหัวหน้ากลุ่มงาน', 'x' => 30, 'y' => 195, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_group_position' => ['label' => 'ตำแหน่งหัวหน้ากลุ่มงาน', 'x' => 30, 'y' => 202, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_group_signature' => ['label' => 'ลายเซ็นหัวหน้ากลุ่มงาน', 'x' => 100, 'y' => 195, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'approve_status' => ['label' => 'คำสั่ง (อนุมัติ/ไม่อนุมัติ)', 'x' => 30, 'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_fullname' => ['label' => 'ชื่อผอ.', 'x' => 100, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
             'leader_date' => ['label' => 'วันที่อนุมัติ', 'x' => 100, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
             'approve_date' => ['label' => 'วันที่ลงนาม', 'x' => 30, 'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'signature_approver' => ['label' => 'ลายเซ็นผู้อนุมัติ', 'x' => 30, 'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
+            'signature_approver' => ['label' => 'ลายเซ็นผอ.', 'x' => 30, 'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
         ];
     }
 
     protected function getDevelopmentSignatureKeys(): array
     {
-        return ['assigned_to_signature', 'signature_approver'];
+        return ['assigned_to_signature', 'leader_group_signature', 'signature_approver'];
     }
 
     protected function getDevelopmentConfigRecord(): Categorise
@@ -805,7 +809,15 @@ class DevelopmentController extends Controller
             $dataJson = array_merge($dataJson, $flat);
         }
 
-        $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3, 'status' => 'Pass']);
+        // ผู้อนุมัติระดับ 3 (ทั้งอนุมัติและไม่อนุมัติ) — ใช้แสดงชื่อ วันที่ และคำสั่ง
+        $leader = Approve::find()
+            ->where(['name' => 'development', 'from_id' => $model->id, 'level' => 3])
+            ->andWhere(['in', 'status', ['Pass', 'Reject', 'Approve']])
+            ->orderBy(['updated_at' => SORT_DESC])
+            ->one();
+        if (!$leader) {
+            $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3]);
+        }
 
         // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด — ใช้ fontSize และ bold จาก config (หน้ากำหนดตำแหน่ง) ถ้ามี
         $writeText = function ($key, $text, $fontSizeDefault = 13, $styleDefault = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
@@ -921,9 +933,16 @@ class DevelopmentController extends Controller
         $writeText('assigned_to', ($model->assignedTo?->fullname ?? '-'));
         $writeText('assigned_to_position', ($model->assignedTo?->positionName() ?? '-'));
         $writeText('assigned_to_signature', ($model->assignedTo?->fullname ?? '-'));
-        $writeText('leader_fullname', ($leader->employee->fullname ?? '-'));
-        $writeText('leader_date', (isset($leader->data_json['approve_date']) ? (ThaiDateHelper::formatThaiDate($leader->data_json['approve_date'], 'medium') ?? '-') : ''));
-
+        $leaderGroupEmp = $model->leader_group_id ? \app\modules\hr\models\Employees::findOne($model->leader_group_id) : null;
+        $writeText('leader_group_fullname', $leaderGroupEmp ? ($leaderGroupEmp->fullname() ?? '-') : '-');
+        $writeText('leader_group_position', $leaderGroupEmp && method_exists($leaderGroupEmp, 'positionName') ? ($leaderGroupEmp->positionName() ?? '-') : '-');
+        $approveStatusText = '-';
+        if ($leader) {
+            $approveStatusText = ($leader->status === 'Reject') ? 'ไม่อนุมัติ' : (in_array($leader->status, ['Pass', 'Approve'], true) ? 'อนุมัติ' : '-');
+        }
+        $writeText('approve_status', $approveStatusText);
+        $writeText('leader_fullname', $leader && isset($leader->employee) ? ($leader->employee->fullname ?? '-') : '-');
+        $writeText('leader_date', $leader && isset($leader->data_json['approve_date']) ? (ThaiDateHelper::formatThaiDate($leader->data_json['approve_date'], 'medium') ?? '-') : '-');
 
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
 
@@ -950,6 +969,9 @@ class DevelopmentController extends Controller
             }
         };
         $drawSignatureImage('assigned_to_signature', $model->assignedTo?->SignatureFilePath());
+        if ($leaderGroupEmp) {
+            $drawSignatureImage('leader_group_signature', $leaderGroupEmp->SignatureFilePath());
+        }
         if ($leader && isset($leader->employee)) {
             $drawSignatureImage('signature_approver', $leader->employee->SignatureFilePath());
         }

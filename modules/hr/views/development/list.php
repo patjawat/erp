@@ -12,7 +12,7 @@ use yii\helpers\Html;
             <th>ประเภท</th>
             <th style="width: 200px;">วันที่</th>
             <th scope="col">ผู้ขอ</th>
-            <th scope="col" style="width: 200px;">ผู้อนุมัติ</th>
+            <th scope="col" style="width: 200px;">ผอ.</th>
             <th class="fw-semibold text-center" scope="col">สถานะ</th>
             <th class="fw-semibold text-end" style="width:100px">ดำเนินการ</th>
         </tr>
