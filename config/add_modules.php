@@ -93,4 +93,5 @@ $modules['appreciation'] = ['class' => 'app\modules\appreciation\Module'];  // �
 $modules['notify'] = ['class' => 'app\modules\notify\Module'];  // แจ้งเตือน (การขออนุมัติลา/จัดซื้อ/ลงเวลา ฯลฯ)
 $modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
+$modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริการออนไลน์ (แอปมือถือ)
 return $modules;
