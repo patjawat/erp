@@ -110,7 +110,49 @@ $listDocumentMe  = $emp->listDocumentMe();
             </div>
             <div class="row g-3 mb-0">
                 <div class="col-12">
-                    <?= $form->field($model, 'data_json[travel_party]')->textInput(['maxlength' => true, 'placeholder' => 'เช่น คณะกรรมการโครงการ, หน่วยงานที่เดินทางร่วมกัน'])->label('คณะเดินทาง') ?>
+                    <?= $form->field($model, 'data_json[travel_party]')->textInput(['maxlength' => true, 'placeholder' => 'เช่น คณะกรรมการโครงการ, หน่วยงานที่เดินทางร่วมกัน'])->label('คำอธิบายคณะเดินทาง') ?>
+                </div>
+            </div>
+
+            <!-- สมาชิกคณะเดินทาง (เพิ่มจากฟอร์มได้) -->
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <label class="form-label d-block mb-2">รายชื่อสมาชิกคณะเดินทาง</label>
+                    <div id="travel-party-members-list" class="mb-3" data-emp-search-url="<?= Html::encode(Url::to(['/depdrop/employee-by-id'])) ?>">
+                        <?php
+                        $existingMembers = $model->isNewRecord ? [] : $model->listMember();
+                        foreach ($existingMembers as $detail):
+                            $emp = $detail->emp;
+                            if (!$emp) {
+                                $label = trim((string)($detail->data_json['label'] ?? '')) ?: $detail->emp_id;
+                        ?>
+                        <div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light">
+                            <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
+                            <span class="text-body flex-grow-1"><?= Html::encode($label) ?></span>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <?php
+                                continue;
+                            }
+                        ?>
+                        <div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light">
+                            <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
+                            <div class="flex-grow-1"><?= $emp->getAvatar(false) ?></div>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="flex-grow-1" style="min-width: 260px;">
+                            <select id="member-emp-select-new" class="form-control" style="width: 100%;">
+                                <option value="">เลือกบุคลากรเพื่อเพิ่มในคณะเดินทาง ...</option>
+                            </select>
+                        </div>
+                        <button type="button" id="btn-add-travel-member" class="btn btn-outline-primary rounded-pill align-self-end">
+                            <i class="bi bi-person-plus me-1"></i> เพิ่มสมาชิก
+                        </button>
+                    </div>
+                    <p class="small text-muted mt-1 mb-0">เลือกบุคลากรจากรายการแล้วกด «เพิ่มสมาชิก» หรือเลือกแล้วกด Enter</p>
                 </div>
             </div>
 
@@ -411,6 +453,56 @@ $listDocumentMe  = $emp->listDocumentMe();
 
 $js = <<<JS
 
+\$memberSelectUrl = \$('#travel-party-members-list').data('emp-search-url') || '';
+if (\$memberSelectUrl && \$('#member-emp-select-new').length) {
+    \$('#member-emp-select-new').select2({
+        theme: 'krajee-bs5',
+        allowClear: true,
+        placeholder: 'เลือกบุคลากรเพื่อเพิ่มในคณะเดินทาง ...',
+        minimumInputLength: 1,
+        ajax: {
+            url: \$memberSelectUrl,
+            dataType: 'json',
+            data: function(params) { return { q: params.term }; },
+            processResults: function(data) {
+                return { results: data.results || [], pagination: data.pagination || { more: false } };
+            }
+        },
+        escapeMarkup: function(m) { return m; },
+        templateResult: function(emp) { return emp && emp.text ? emp.text : 'กำลังค้นหา...'; },
+        templateSelection: function(emp) { return emp.text || ''; }
+    });
+    function appendTravelMemberRow(id, avatarHtml) {
+        var exists = \$('#travel-party-members-list input[name="member_emp_ids[]"]').filter(function() { return \$(this).val() === String(id); }).length;
+        if (exists) return;
+        var row = \$('<div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light"></div>');
+        row.append(\$('<input type="hidden" name="member_emp_ids[]">').val(id));
+        row.append(\$('<div class="flex-grow-1"></div>').html(avatarHtml || ('<span class="text-body">' + id + '</span>')));
+        row.append(\$('<button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>'));
+        \$('#travel-party-members-list').append(row);
+    }
+    \$('#member-emp-select-new').on('select2:select', function(e) {
+        var data = e.params.data;
+        var id = data.id;
+        var avatarHtml = (data.text && typeof data.text === 'string') ? data.text : null;
+        appendTravelMemberRow(id, avatarHtml);
+        \$('#member-emp-select-new').val(null).trigger('change');
+    });
+    \$('#btn-add-travel-member').on('click', function() {
+        var sel = \$('#member-emp-select-new').select2('data');
+        if (sel && sel[0] && sel[0].id) {
+            var data = sel[0];
+            var id = data.id;
+            var avatarHtml = (data.text && typeof data.text === 'string') ? data.text : null;
+            appendTravelMemberRow(id, avatarHtml);
+            \$('#member-emp-select-new').val(null).trigger('change');
+        }
+    });
+}
+\$('#travel-party-members-list').on('click', '.btn-remove-member', function() {
+    \$(this).closest('.travel-party-row').remove();
+});
+
     thaiDatepicker('#development-date_start,#development-date_end,#development-vehicle_date_start,#development-vehicle_date_end');
 
       \$('#form-development').on('beforeSubmit', function (e) {
@@ -456,7 +548,7 @@ $js = <<<JS
         return false;
     });
 
-    JS;
+JS;
 $this->registerJS($js, View::POS_END);
 
 ?>

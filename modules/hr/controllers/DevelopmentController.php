@@ -20,6 +20,7 @@ use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\hr\models\Development;
+use app\modules\hr\models\DevelopmentDetail;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -175,6 +176,7 @@ class DevelopmentController extends Controller
             if ($model->load($this->request->post())) {
                 $model->status = 'Pending';
                 if ($model->save()) {
+                    $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
@@ -214,6 +216,7 @@ class DevelopmentController extends Controller
             }
 
             $model->save();
+            $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
 
             return $this->redirect('index');
         }
@@ -223,6 +226,44 @@ class DevelopmentController extends Controller
             'model' => $model,
             'dateStart2' => $dateStart2
         ]);
+    }
+
+    /**
+     * Sync คณะเดินทาง (DevelopmentDetail name=member) กับรายการ member_emp_ids จากฟอร์ม
+     * @param Development $model
+     * @param array $memberEmpIds รหัสพนักงานที่เลือก (จาก member_emp_ids[])
+     */
+    protected function syncTravelPartyMembers(Development $model, $memberEmpIds)
+    {
+        if (!is_array($memberEmpIds)) {
+            $memberEmpIds = [];
+        }
+        $memberEmpIds = array_values(array_unique(array_filter(array_map('trim', $memberEmpIds))));
+
+        $existing = DevelopmentDetail::find()
+            ->where(['development_id' => $model->id, 'name' => 'member'])
+            ->all();
+
+        $existingIds = array_map(function ($d) {
+            return $d->emp_id;
+        }, $existing);
+
+        foreach ($existing as $detail) {
+            if (!in_array($detail->emp_id, $memberEmpIds, true)) {
+                $detail->delete();
+            }
+        }
+
+        foreach ($memberEmpIds as $empId) {
+            if (in_array($empId, $existingIds, true)) {
+                continue;
+            }
+            $detail = new DevelopmentDetail();
+            $detail->development_id = (int) $model->id;
+            $detail->name = 'member';
+            $detail->emp_id = $empId;
+            $detail->save(false);
+        }
     }
 
     // ทดสอบ form

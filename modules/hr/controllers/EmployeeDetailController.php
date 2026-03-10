@@ -110,7 +110,9 @@ class EmployeeDetailController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-
+                if (is_string($model->data_json)) {
+                    $model->data_json = json_decode($model->data_json, true) ?: [];
+                }
                 $array2 = [
                     'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateToDb($model->data_json['date_start']) : '',
                     'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateToDb($model->data_json['date_end']) : '',
@@ -221,7 +223,9 @@ class EmployeeDetailController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
+        if (is_string($model->data_json)) {
+            $model->data_json = json_decode($model->data_json, true) ?: [];
+        }
         $arrayUpdate = [
             'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateFormDb($model->data_json['date_start']) : '',
             'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateFormDb($model->data_json['date_end']) : '',
@@ -229,6 +233,9 @@ class EmployeeDetailController extends Controller
         $model->data_json = ArrayHelper::merge($model->data_json, $arrayUpdate);
 
         if ($this->request->isPost && $model->load($this->request->post())) {
+            if (is_string($model->data_json)) {
+                $model->data_json = json_decode($model->data_json, true) ?: [];
+            }
             $array2 = [
                 'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateToDb($model->data_json['date_start']) : '',
                 'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateToDb($model->data_json['date_end']) : '',
@@ -275,6 +282,10 @@ class EmployeeDetailController extends Controller
         try {
 
             $emp = Employees::findOne($data->emp_id);
+            // data_json from DB is string; decode for ArrayHelper::merge()
+            if (is_string($emp->data_json)) {
+                $emp->data_json = json_decode($emp->data_json, true) ?: [];
+            }
 
             //หาตำแหน่งล่าสุดจากวันที่
             $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $data->emp_id])

@@ -132,6 +132,7 @@ class DevelopmentController extends Controller
                     $addMember->name = 'member';
                     $addMember->emp_id = $me->id;
                     $addMember->save(false);
+                    $this->syncTravelPartyMembers($model, array_merge([$me->id], $this->request->post('member_emp_ids', [])));
                     $model->createApprove();
                 }
 
@@ -194,6 +195,7 @@ class DevelopmentController extends Controller
                 $model->save();
                 AppHelper::checkLocation($model->data_json['location']);
                 AppHelper::checkLocation($model->data_json['location_org']);
+                $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
 
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
@@ -217,6 +219,44 @@ class DevelopmentController extends Controller
             return $this->render('@app/modules/hr/views/development/update', [
                 'model' => $model,
             ]);
+        }
+    }
+
+    /**
+     * Sync คณะเดินทาง (DevelopmentDetail name=member) กับรายการ member_emp_ids จากฟอร์ม
+     * @param Development $model
+     * @param array $memberEmpIds รหัสพนักงานที่เลือก (จาก member_emp_ids[])
+     */
+    protected function syncTravelPartyMembers(Development $model, $memberEmpIds)
+    {
+        if (!is_array($memberEmpIds)) {
+            $memberEmpIds = [];
+        }
+        $memberEmpIds = array_values(array_unique(array_filter(array_map('trim', $memberEmpIds))));
+
+        $existing = DevelopmentDetail::find()
+            ->where(['development_id' => $model->id, 'name' => 'member'])
+            ->all();
+
+        $existingIds = array_map(function ($d) {
+            return $d->emp_id;
+        }, $existing);
+
+        foreach ($existing as $detail) {
+            if (!in_array($detail->emp_id, $memberEmpIds, true)) {
+                $detail->delete();
+            }
+        }
+
+        foreach ($memberEmpIds as $empId) {
+            if (in_array($empId, $existingIds, true)) {
+                continue;
+            }
+            $detail = new DevelopmentDetail();
+            $detail->development_id = (int) $model->id;
+            $detail->name = 'member';
+            $detail->emp_id = $empId;
+            $detail->save(false);
         }
     }
 

@@ -391,11 +391,22 @@ class EmployeesController extends Controller
     {
         $model = $this->findModel($id);
         $model_old_data_json = $model->data_json;
+        $positionAttrs = ['position_type', 'position_name', 'position_level', 'position_number', 'department', 'salary'];
+        $oldPositionValues = [];
+        foreach ($positionAttrs as $attr) {
+            $oldPositionValues[$attr] = $model->$attr;
+        }
         $model->join_date = AppHelper::DateFormDb($model->join_date);
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->join_date) {
                 $model->join_date = AppHelper::DateToDb($model->join_date);
+            }
+            // คืนค่าตำแหน่ง/ประเภทตำแหน่งที่ฟอร์มไม่ได้ส่งมา (ฟิลด์อยู่ใน d-none อาจส่งค่าว่าง)
+            foreach ($positionAttrs as $attr) {
+                if ($model->$attr === '' || $model->$attr === null) {
+                    $model->$attr = $oldPositionValues[$attr];
+                }
             }
             // ป้องกันข้อมูลใน JSON เดิมถูกลบ (data_json จาก DB เป็น string ต้อง decode เป็น array ก่อน)
             $oldData = $model_old_data_json;
