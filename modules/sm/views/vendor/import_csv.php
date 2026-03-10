@@ -10,7 +10,7 @@ $this->title = 'นำเข้าข้อมูลผู้แทนจำห�
 <?php $this->beginBlock('sub-title'); ?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
-<?=$this->render('../default/menu')?>
+<?=$this->render('../default/menu', ['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('navbar_menu'); ?>

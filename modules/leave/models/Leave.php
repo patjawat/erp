@@ -4,6 +4,7 @@ namespace app\modules\leave\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\db\Expression;
 use app\models\Uploads;
 use app\models\Categorise;
@@ -542,6 +543,22 @@ class Leave extends \yii\db\ActiveRecord
                 'position_name' => '',
             ];
         }
+    }
+
+    /**
+     * คืน URL สำหรับเปิด PDF ใบลาโดยตรง (เมื่อมีเทมเพลต) — ใช้กับลิงก์พิมพ์ให้เปิดแท็บใหม่แล้วแสดง PDF เลย
+     */
+    public function getPreviewPdfUrl(): ?string
+    {
+        $baseDir = Yii::getAlias('@app') . '/modules/filemanager/fileupload/leave_templates';
+        $ltCode = $this->leaveType->code ?? null;
+        $safe = $ltCode ? preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $ltCode) : '';
+        $hasPerType = $safe !== '' && is_file($baseDir . '/' . $safe . '/template.pdf');
+        $hasDefault = is_file($baseDir . '/default/template.pdf');
+        if (!$hasPerType && !$hasDefault) {
+            return null;
+        }
+        return Url::to(['/leave/leave/print', 'id' => $this->id]);
     }
 
     // แสดงสถานะในรูปแบบสี

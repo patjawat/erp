@@ -68,11 +68,13 @@ class LeaveController extends Controller
         if (!$hasPerType && !$hasDefault) {
             return null;
         }
-        return Url::to(['/leave/setting/leave-pdf', 'id' => $model->id]);
+        return Url::to(['/leave/leave/print', 'id' => $model->id]);
     }
 
     /**
-     * หน้ารูปแบบพิมพ์ใบลา — แสดง PDF จากเทมเพลตที่อัปโหลด (ถ้ามี) หรือแบบ HTML
+     * พิมพ์ใบลา (PDF) — แสดงผลแบบเดียวกับ /hr/development/print
+     * ถ้ามีเทมเพลต PDF ส่ง PDF โดยตรง (inline) ไม่ redirect
+     * ถ้าไม่มีเทมเพลต แสดงแบบ HTML สำหรับพิมพ์
      */
     public function actionPrint($id)
     {
@@ -83,34 +85,20 @@ class LeaveController extends Controller
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
-        $templatePath = Yii::getAlias('@webroot') . '/uploads/leave_form_template/template.pdf';
-        $hasPdfTemplate = is_file($templatePath);
-        $pdfUrl = $hasPdfTemplate ? \yii\helpers\Url::to(['/leave/setting/leave-pdf', 'id' => $model->id]) : null;
+        if ($this->getPreviewPdfUrlForLeave($model) !== null) {
+            return Yii::$app->runAction('leave/setting/leave-pdf', ['id' => (int) $id]);
+        }
         return $this->render('print', [
             'model' => $model,
-            'pdfUrl' => $pdfUrl,
+            'pdfUrl' => null,
         ]);
     }
 
     /**
-     * หน้าแสดงเฉพาะ PDF ใบลา (สำหรับเปิดในแท็บใหม่เมื่อกดพิมพ์)
-     * ถ้ามีเทมเพลต PDF จะ redirect ไป URL ที่ส่ง PDF inline ให้เบราว์เซอร์แสดงเฉพาะ PDF
-     * ถ้าไม่มีเทมเพลต จะ redirect ไปหน้ารูปแบบพิมพ์ (print)
+     * ใช้ redirect ไป actionPrint — ให้ใช้ /leave/leave/print เป็นจุดเดียว (แสดงผลแบบเดียวกับ /hr/development/print)
      */
     public function actionPdf($id)
     {
-        $model = Leave::find()
-            ->andWhere(['id' => (int) $id])
-            ->with(['employee', 'leaveType'])
-            ->one();
-        if ($model === null) {
-            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
-        }
-        $pdfUrl = $this->getPreviewPdfUrlForLeave($model);
-        if ($pdfUrl !== null) {
-            return $this->redirect($pdfUrl);
-        }
-        Yii::$app->session->setFlash('info', 'ยังไม่มีเทมเพลต PDF สำหรับใบลานี้ เปิดหน้ารูปแบบพิมพ์แทน');
         return $this->redirect(['print', 'id' => (int) $id]);
     }
 

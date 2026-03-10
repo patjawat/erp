@@ -4,6 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 
 $layout = app\components\SiteHelper::getInfo()['layout'];
+$active = $active ?? '';
 ?>
 
 <div class="d-flex gap-2">

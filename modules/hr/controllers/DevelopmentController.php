@@ -177,7 +177,6 @@ class DevelopmentController extends Controller
                 $model->status = 'Pending';
                 if ($model->save()) {
                     $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
-                    $model->syncExpenseRows($this->request->post('expense_rows', []));
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
@@ -199,7 +198,7 @@ class DevelopmentController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = Development::find()->where(['id' => $id])->with('expenses')->one();
+        $model = Development::find()->where(['id' => $id])->one();
         if ($model === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
@@ -223,8 +222,6 @@ class DevelopmentController extends Controller
                 $model->save();
                 $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
             }
-            // บันทึกรายการค่าใช้จ่ายทุกครั้งที่ POST (ไม่ผูกกับ load() เพื่อให้บันทึกได้แม้ฟิลด์หลักมีข้อผิดพลาด)
-            $model->syncExpenseRows($this->request->post('expense_rows', []));
 
             if ($loaded) {
                 return $this->redirect('index');

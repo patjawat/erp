@@ -133,7 +133,6 @@ class DevelopmentController extends Controller
                     $addMember->emp_id = $me->id;
                     $addMember->save(false);
                     $this->syncTravelPartyMembers($model, array_merge([$me->id], $this->request->post('member_emp_ids', [])));
-                    $model->syncExpenseRows($this->request->post('expense_rows', []));
                     $model->createApprove();
                 }
 
@@ -171,7 +170,7 @@ class DevelopmentController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = Development::find()->where(['id' => $id])->with('expenses')->one();
+        $model = Development::find()->where(['id' => $id])->one();
         if ($model === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
@@ -199,7 +198,6 @@ class DevelopmentController extends Controller
                 AppHelper::checkLocation($model->data_json['location']);
                 AppHelper::checkLocation($model->data_json['location_org']);
                 $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
-                $model->syncExpenseRows($this->request->post('expense_rows', []));
 
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {

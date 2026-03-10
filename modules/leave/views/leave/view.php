@@ -18,8 +18,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php Pjax::begin(['id' => 'leave', 'timeout' => 500000]); ?>
 <?= $this->render('view_detail', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl ?? null]) ?>
 
-<div class="d-flex flex-wrap justify-content-center gap-2 gap-md-3">
-    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา', ['/leave/leave/pdf', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener']) ?>
+<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 gap-md-3">
+    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบลา (PDF)', $model->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-pill shadow', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ']) ?>
+    <span class="small text-muted d-none d-md-inline">พิมพ์ได้ทุกสถานะ</span>
     <?php echo ($model->status == 'ReqCancel' && ($me->id != $model->emp_id)) ? Html::a('<i class="fa-solid fa-rotate-left"></i> คืนวันลา', ['/leave/leave/cancel', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow req-cancel-btn', 'data' => ['title' => 'คุณต้องการคืนวันลาใช่หรือไม!']]) : '' ?>
     <?php if ($me->id == $model->emp_id): ?>
         <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/leave/leave/req-cancel', 'id' => $model->id], [

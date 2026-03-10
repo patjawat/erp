@@ -322,6 +322,7 @@ class SettingController extends Controller
             ob_end_clean();
             throw new ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
         }
+        // พิมพ์ได้ทุกสถานะ (ไม่ต้องรอ ผอ. อนุมัติ) — ตรวจเฉพาะว่าเป็นเจ้าของหรือมีสิทธิ์ leave
         if ($me->id != $model->emp_id && !Yii::$app->user->can('leave')) {
             ob_end_clean();
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์พิมพ์ใบลานี้');

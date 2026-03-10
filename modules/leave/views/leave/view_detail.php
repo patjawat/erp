@@ -59,6 +59,14 @@ $substitute = $model->leaveWorkSend();
                             <?= $model->viewStatus() ?>
                         </div>
                     </div>
+                    <div class="mt-2 pt-2 border-top border-opacity-25">
+                        <?= Html::a(
+                            '<i class="bi bi-printer me-1"></i> พิมพ์ใบลา (PDF)',
+                            $model->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $model->id],
+                            ['class' => 'btn btn-sm btn-outline-primary rounded-pill', 'target' => '_blank', 'rel' => 'noopener']
+                        ) ?>
+                        <span class="small text-muted ms-2">พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ</span>
+                    </div>
                 </div>
             </div>
 

@@ -87,9 +87,9 @@ $models = $dataProvider->getModels();
                                 <?php endif; ?>
                                 <li>
                                     <?= Html::a(
-                                        '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา',
-                                        ['/leave/leave/pdf', 'id' => $item->id],
-                                        ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener']
+                                        '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา (PDF)',
+                                        $item->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $item->id],
+                                        ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ']
                                     ) ?>
                                 </li>
                             </ul>
