@@ -146,6 +146,71 @@ class Development extends \yii\db\ActiveRecord
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id'])->andOnCondition(['name' => 'expense_type']);
     }
 
+    /**
+     * Sync รายการค่าใช้จ่าย (DevelopmentDetail name=expense_type) กับ expense_rows จากฟอร์ม
+     * ใช้จากทั้ง hr/DevelopmentController และ me/DevelopmentController
+     * @param array $rows แต่ละแถว: id (optional), category_id, price, note
+     */
+    public function syncExpenseRows($rows)
+    {
+        if (!is_array($rows)) {
+            $rows = [];
+        }
+
+        $submittedIds = [];
+        $hasValidRow = false;
+        foreach ($rows as $row) {
+            $categoryId = isset($row['category_id']) ? trim((string) $row['category_id']) : '';
+            if ($categoryId === '') {
+                continue;
+            }
+            $hasValidRow = true;
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+            if ($id > 0) {
+                $submittedIds[] = $id;
+            }
+
+            $price = isset($row['price']) ? $row['price'] : null;
+            if ($price !== null && $price !== '') {
+                $price = (float) str_replace(',', '', $price);
+            } else {
+                $price = null;
+            }
+            $note = isset($row['note']) ? trim((string) $row['note']) : '';
+
+            if ($id > 0) {
+                $detail = DevelopmentDetail::findOne(['id' => $id, 'development_id' => $this->id, 'name' => 'expense_type']);
+                if ($detail) {
+                    $detail->category_id = $categoryId;
+                    $detail->price = $price;
+                    $current = is_array($detail->data_json) ? $detail->data_json : (is_string($detail->data_json) ? (json_decode($detail->data_json, true) ?: []) : []);
+                    $detail->data_json = array_merge($current, ['note' => $note]);
+                    $detail->save(false);
+                }
+            } else {
+                $detail = new DevelopmentDetail();
+                $detail->development_id = (int) $this->id;
+                $detail->name = 'expense_type';
+                $detail->category_id = $categoryId;
+                $detail->price = $price;
+                $detail->data_json = ['note' => $note];
+                $detail->save(false);
+            }
+        }
+
+        // ลบรายการที่ไม่ได้ส่งมา เฉพาะเมื่อมีข้อมูล expense_rows จากฟอร์มจริง (ป้องกันกรณี Ajax ไม่ส่ง expense_rows มาแล้วลบข้อมูลเดิมหมด)
+        if ($hasValidRow) {
+            $existing = DevelopmentDetail::find()
+                ->where(['development_id' => $this->id, 'name' => 'expense_type'])
+                ->all();
+            foreach ($existing as $detail) {
+                if (!in_array((int) $detail->id, $submittedIds, true)) {
+                    $detail->delete();
+                }
+            }
+        }
+    }
+
     public function getCreatedBy()
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);

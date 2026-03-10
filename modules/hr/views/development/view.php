@@ -28,260 +28,251 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
-
-    <!-- ข้อมูลทั่วไป -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card h-100 bg-light">
-                <div class="card-body text-center">
-                    <div class="avatar-circle mb-3 mx-auto">
-                        <?= isset($model->createdByEmp) ? Html::img($model->createdByEmp->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload', 'data' => ['sizes' => 'auto', 'src' => $model->createdByEmp->showAvatar()]]) : Html::img('/path/to/default/avatar.png', ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload']) ?>
-                    </div>
-                    <h5><?= $model->createdByEmp->fullname ?? 'ไม่ระบุ' ?></h5>
-                    <p class="text-muted mb-1"><?= $model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>
-                    <p class="text-muted"><?= $model->createdByEmp->department->name ?? 'ไม่ระบุแผนก' ?></p>
-                    <p>ผู้บันทึกข้อมูล <?=$model->viewCreated()['full']?></p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-9">
-            <div class="card h-100">
-                <div class="card-header p-2">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
-                    
-                        <div>
-                            <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
+<div class="container-fluid py-3">
+    <div class="row g-3">
+        <!-- คอลัมน์ซ้าย: เนื้อหาหลัก -->
+        <div class="col-12 col-lg-8">
+            <!-- ข้อมูลทั่วไป -->
+            <div class="row g-3">
+                <div class="col-12 col-md-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="avatar-circle mb-3 mx-auto">
+                                <?= isset($model->createdByEmp) ? Html::img($model->createdByEmp->showAvatar(), ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload', 'data' => ['sizes' => 'auto', 'src' => $model->createdByEmp->showAvatar()]]) : Html::img('/path/to/default/avatar.png', ['class' => 'avatar avatar-xl border border-primary-subtl border-1 lazyload']) ?>
+                            </div>
+                            <h5><?= $model->createdByEmp->fullname ?? 'ไม่ระบุ' ?></h5>
+                            <p class="text-muted mb-1"><?= $model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง' ?></p>
+                            <p class="text-muted"><?= $model->createdByEmp->department->name ?? 'ไม่ระบุแผนก' ?></p>
+                            <p>ผู้บันทึกข้อมูล <?=$model->viewCreated()['full']?></p>
                         </div>
                     </div>
+                </div>
+                <div class="col-12 col-md-9">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header p-2">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <strong><i class="bi bi-info-circle me-2"></i>รายละเอียดการพัฒนา</strong>
+                                <div>
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข'.$this->title,['/me/development/update','id' => $model->id,'title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร','title' => '<i class="bi bi-mortarboard-fill me-2"></i>แบบฟอร์มบันทึกข้อมูลการพัฒนาบุคลากร'],['class' => 'btn btn-primary rounded-pill shadow open-modal-x','data' => ['size' => 'modal-xl']])?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2 mb-0">
+                                <div class="col-12 col-md-3 text-muted">เลขที่เอกสาร:</div>
+                                <div class="col-12 col-md-9"><?= $model->document_id ?? 'ไม่ระบุ' ?></div>
+                                <div class="col-12 col-md-3 text-muted">หัวข้อ:</div>
+                                <div class="col-12 col-md-9 fw-bold"><?= $model->topic ?></div>
+                                <div class="col-12 col-md-3 text-muted">คณะเดินทาง:</div>
+                                <div class="col-12 col-md-9"><?= isset($model->data_json['travel_party']) ? Html::encode($model->data_json['travel_party']) : 'ไม่ระบุ' ?></div>
+                                <div class="col-12 col-md-3 text-muted">ระยะเวลา:</div>
+                                <div class="col-12 col-md-9">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    <?=$model->showDateRange()?>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1 ms-2">
+                                        <?= isset($model->data_json['time_slot']) ? $model->data_json['time_slot'] : 'ไม่ระบุ' ?>
+                                    </span>
+                                </div>
+                                <div class="col-12 col-md-3 text-muted">ประเภทการพัฒนา:</div>
+                                <div class="col-12 col-md-9">
+                                    <?= isset($model->data_json['development_type_name']) ? $model->data_json['development_type_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                                <div class="col-12 col-md-3 text-muted">ระดับการพัฒนา:</div>
+                                <div class="col-12 col-md-9">
+                                    <?= isset($model->data_json['development_level_name']) ? $model->data_json['development_level_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                                <div class="col-12 col-md-3 text-muted">ลักษณะ:</div>
+                                <div class="col-12 col-md-9">
+                                    <?= isset($model->data_json['development_go_type_name']) ? $model->data_json['development_go_type_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                                <div class="col-12 col-md-3 text-muted">การเบิกเงิน:</div>
+                                <div class="col-12 col-md-9">
+                                    <?= isset($model->data_json['claim_type_name']) ? $model->data_json['claim_type_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- สถานที่และหน่วยงาน -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header p-2">
+                    <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">เลขที่เอกสาร:</div>
-                        <div class="col-md-9"><?= $model->document_id ?? 'ไม่ระบุ' ?></div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">หัวข้อ:</div>
-                        <div class="col-md-9 fw-bold"><?= $model->topic ?></div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">คณะเดินทาง:</div>
-                        <div class="col-md-9"><?= isset($model->data_json['travel_party']) ? Html::encode($model->data_json['travel_party']) : 'ไม่ระบุ' ?></div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">ระยะเวลา:</div>
-                        <div class="col-md-9">
-                            <i class="bi bi-calendar3 me-1"></i>
-                            <?=$model->showDateRange()?>
-                            <span class="badge bg-secondary ms-2">
-                                <?= isset($model->data_json['time_slot']) ? $model->data_json['time_slot'] : 'ไม่ระบุ' ?>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">ประเภทการพัฒนา:</div>
-                        <div class="col-md-9">
-                            <?= isset($model->data_json['development_type_name']) ? $model->data_json['development_type_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">ระดับการพัฒนา:</div>
-                        <div class="col-md-9">
-                            <?= isset($model->data_json['development_level_name']) ? $model->data_json['development_level_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3 text-muted">ลักษณะ:</div>
-                        <div class="col-md-9">
-                            <?= isset($model->data_json['development_go_type_name']) ? $model->data_json['development_go_type_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 text-muted">การเบิกเงิน:</div>
-                        <div class="col-md-9">
-                            <?= isset($model->data_json['claim_type_name']) ? $model->data_json['claim_type_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- สถานที่และหน่วยงาน -->
-    <div class="card mt-4">
-        <div class="card-header p-2">
-            <strong><i class="bi bi-geo-alt me-2"></i>สถานที่และหน่วยงาน</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">สถานที่จัด:</div>
-                        <div class="col-md-8">
-                            <?= isset($model->data_json['location']) ? $model->data_json['location'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">จังหวัด:</div>
-                        <div class="col-md-8">
-                            <?= isset($model->data_json['province_name']) ? $model->data_json['province_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 text-muted">ประเภทสถานที่:</div>
-                        <div class="col-md-8">
-                            <?php
-                                    $locationType = isset($model->data_json['location_org_type']) ? $model->data_json['location_org_type'] : 'ไม่ระบุ';
-                                    $typeClass = [
-                                        'ในจังหวัด' => 'bg-success',
-                                        'ต่างจังหวัด' => 'bg-info',
-                                        'ต่างประเทศ' => 'bg-warning',
-                                    ][$locationType] ?? 'bg-secondary';
-                                    ?>
-                            <span class="badge <?= $typeClass ?>"><?= $locationType ?></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">หน่วยงานที่จัด:</div>
-                        <div class="col-md-8">
-                            <?= isset($model->data_json['location_org']) ? $model->data_json['location_org'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ผู้ที่เกี่ยวข้อง -->
-    <div class="card mt-4">
-        <div class="card-header p-2">
-            <strong><i class="bi bi-people me-2"></i>บุคลากรที่เกี่ยวข้อง</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">หัวหน้า:</div>
-                        <div class="col-md-8">
-                            <?php if($model->leader): ?>
-                            <?= $model->leader->getAvatar(false) ?>
-
-                            <?php else: ?>
-                            <span class="text-muted">ไม่ระบุ</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">ผู้ปฏิบัติหน้าที่แทน:</div>
-                        <div class="col-md-8">
-                            <?php if($model->assignedTo): ?>
-                            <?= $model->assignedTo->getAvatar(false) ?>
-
-                            <?php else: ?>
-                            <span class="text-muted">ไม่ระบุ</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ข้อมูลการเดินทาง -->
-    <div class="card mt-4">
-        <div class="card-header p-2">
-            <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">วันที่เดินทาง:</div>
-                        <div class="col-md-8">
-                            <i class="bi bi-calendar3 me-1"></i>
-                            <?=$model->showVehicleDateRange()?>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">พาหนะเดินทาง:</div>
-                        <div class="col-md-8">
-                            <i class="bi bi-car-front-fill me-1"></i>
-                            <?= isset($model->data_json['vehicle_type_name']) ? $model->data_json['vehicle_type_name'] : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- ค่าใช้จ่าย -->
-<?=$this->render('expense_type',['model' => $model]);?>
-<!-- คณะเดินทาง -->
-<?=$this->render('member',['model' => $model]);?>
-    <!-- การอนุมัติ -->
-    <?php if ($model->status != 'Pending'): ?>
-    <div class="card mt-4">
-        <div class="card-header p-2">
-            <strong><i class="bi bi-clipboard-check me-2"></i>ข้อมูลการอนุมัติ</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">วันที่อนุมัติ:</div>
-                        <div class="col-md-8">
-                            <?php $model->created_at ? Yii::$app->formatter->asDate($model->created_at, 'php:d/m/Y H:i:s') : 'ไม่ระบุ' ?>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">ผอ.:</div>
-                        <div class="col-md-8">
-                            <?php if(isset($model->approvedBy) && $model->approvedBy): ?>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-small me-2">
-                                    <i class="bi bi-person-check"></i>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">สถานที่จัด:</div>
+                                <div class="col-12 col-md-8">
+                                    <?= isset($model->data_json['location']) ? $model->data_json['location'] : 'ไม่ระบุ' ?>
                                 </div>
-                                <?= $model->approvedBy->fullname ?>
+                                <div class="col-12 col-md-4 text-muted">จังหวัด:</div>
+                                <div class="col-12 col-md-8">
+                                    <?= isset($model->data_json['province_name']) ? $model->data_json['province_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                                <div class="col-12 col-md-4 text-muted">ประเภทสถานที่:</div>
+                                <div class="col-12 col-md-8">
+                                    <?php
+                                    $locationType = isset($model->data_json['location_org_type']) ? $model->data_json['location_org_type'] : 'ไม่ระบุ';
+                                    $typeBadgeClass = [
+                                        'ในจังหวัด' => 'badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1',
+                                        'ต่างจังหวัด' => 'badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill fw-medium px-2 py-1',
+                                        'ต่างประเทศ' => 'badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium px-2 py-1',
+                                    ][$locationType] ?? 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1';
+                                    ?>
+                                    <span class="<?= $typeBadgeClass ?>"><?= $locationType ?></span>
+                                </div>
                             </div>
-                            <?php else: ?>
-                            <span class="text-muted">ไม่ระบุ</span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">หน่วยงานที่จัด:</div>
+                                <div class="col-12 col-md-8">
+                                    <?= isset($model->data_json['location_org']) ? $model->data_json['location_org'] : 'ไม่ระบุ' ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ผู้ที่เกี่ยวข้อง -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header p-2">
+                    <strong><i class="bi bi-people me-2"></i>บุคลากรที่เกี่ยวข้อง</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">หัวหน้า:</div>
+                                <div class="col-12 col-md-8">
+                                    <?php if($model->leader): ?>
+                                    <?= $model->leader->getAvatar(false) ?>
+
+                                    <?php else: ?>
+                                    <span class="text-muted">ไม่ระบุ</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">ผู้ปฏิบัติหน้าที่แทน:</div>
+                                <div class="col-12 col-md-8">
+                                    <?php if($model->assignedTo): ?>
+                                    <?= $model->assignedTo->getAvatar(false) ?>
+
+                                    <?php else: ?>
+                                    <span class="text-muted">ไม่ระบุ</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ข้อมูลการเดินทาง -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header p-2">
+                    <strong><i class="bi bi-car-front me-2"></i>ข้อมูลการเดินทาง</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">วันที่เดินทาง:</div>
+                                <div class="col-12 col-md-8">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    <?=$model->showVehicleDateRange()?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">พาหนะเดินทาง:</div>
+                                <div class="col-12 col-md-8">
+                                    <i class="bi bi-car-front-fill me-1"></i>
+                                    <?= isset($model->data_json['vehicle_type_name']) ? $model->data_json['vehicle_type_name'] : 'ไม่ระบุ' ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ค่าใช้จ่าย -->
+            <?=$this->render('expense_type',['model' => $model]);?>
+            <!-- คณะเดินทาง -->
+            <?php // $this->render('member',['model' => $model]);?>
+        </div>
+
+        <!-- คอลัมน์ขวา: รายการผู้อนุมัติ และข้อมูลการอนุมัติ -->
+        <div class="col-12 col-lg-4">
+            <div class="d-flex flex-column gap-3">
+                <?php if ($model->status != 'Pending'): ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header p-2">
+                        <strong><i class="bi bi-clipboard-check me-2"></i>ข้อมูลการอนุมัติ</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <span class="text-muted small">วันที่อนุมัติ</span>
+                                <div><?php echo $model->created_at ? Yii::$app->formatter->asDate($model->created_at, 'php:d/m/Y H:i:s') : 'ไม่ระบุ'; ?></div>
+                            </div>
+                            <div class="col-12">
+                                <span class="text-muted small">ผอ.</span>
+                                <div>
+                                    <?php if(isset($model->approvedBy) && $model->approvedBy): ?>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-small me-2">
+                                            <i class="bi bi-person-check"></i>
+                                        </div>
+                                        <?= $model->approvedBy->fullname ?>
+                                    </div>
+                                    <?php else: ?>
+                                    <span class="text-muted">ไม่ระบุ</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php if ($model->status == 'Rejected'): ?>
+                            <div class="col-12">
+                                <span class="text-muted small">เหตุผลที่ไม่อนุมัติ</span>
+                                <div class="alert alert-danger mb-0 mt-1">
+                                    <?= isset($model->data_json['reject_reason']) ? $model->data_json['reject_reason'] : 'ไม่ระบุเหตุผล' ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ($model->status == 'Approved' || $model->status == 'Completed'): ?>
+                            <div class="col-12">
+                                <span class="text-muted small">หมายเหตุ</span>
+                                <div><?= isset($model->data_json['approve_note']) ? $model->data_json['approve_note'] : 'ไม่มีหมายเหตุ' ?></div>
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <?php if ($model->status == 'Rejected'): ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">เหตุผลที่ไม่อนุมัติ:</div>
-                        <div class="col-md-8">
-                            <div class="alert alert-danger">
-                                <?= isset($model->data_json['reject_reason']) ? $model->data_json['reject_reason'] : 'ไม่ระบุเหตุผล' ?>
-                            </div>
-                        </div>
+                <?php endif; ?>
+
+                <!-- รายการผู้อนุมัติ / สถานะการอนุมัติ (รูปแบบเดียวกับระบบลา) -->
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden flex-grow-1">
+                    <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
+                        <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
+                            <i class="bi bi-clipboard-check text-primary"></i>
+                            สถานะการอนุมัติ
+                        </h6>
                     </div>
-                    <?php endif; ?>
-                    <?php if ($model->status == 'Approved' || $model->status == 'Completed'): ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4 text-muted">หมายเหตุ:</div>
-                        <div class="col-md-8">
-                            <?= isset($model->data_json['approve_note']) ? $model->data_json['approve_note'] : 'ไม่มีหมายเหตุ' ?>
-                        </div>
+                    <div class="card-body p-3">
+                        <?= $this->render('timeline_approve', ['model' => $model]) ?>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-    <?php endif; ?>
-
-
 
     <!-- ประวัติการแก้ไข -->
     <!-- <div class="card mt-4">
@@ -383,6 +374,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
         </div> -->
+</div>
 
 <style>
 .avatar-circle {
@@ -434,5 +426,3 @@ $this->params['breadcrumbs'][] = $this->title;
     background-color: #dee2e6;
 }
 </style>
-
-<?php  echo $this->render('timeline_approve', ['model' => $model]) ?>

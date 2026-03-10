@@ -145,7 +145,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                     ])->label('สถานภาพสมรส') ?>
                 </div>
                 <div class="col-4">
-                    <?= $form->field($model, 'data_json[blood]')->widget(Select2::classname(), [
+                    <?= $form->field($model, 'data_json[blood_group]')->widget(Select2::classname(), [
                         'data' => $model->ListBlood(),
                         'options' => ['placeholder' => 'เลือก ...'],
                         'pluginOptions' => [

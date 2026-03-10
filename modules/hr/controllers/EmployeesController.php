@@ -425,6 +425,23 @@ class EmployeesController extends Controller
                     'container' => ''
                 ];
             }
+
+            // บันทึกไม่สำเร็จ (เช่น validation) ส่ง errors กลับเพื่อให้แสดงในฟอร์ม
+            $errors = $model->getErrors();
+            $msg = 'กรุณาตรวจสอบข้อมูลในฟอร์ม';
+            if (!empty($errors)) {
+                $lines = [];
+                foreach ($errors as $attr => $messages) {
+                    $label = $model->getAttributeLabel($attr);
+                    $lines[] = $label . ': ' . implode(', ', $messages);
+                }
+                $msg .= "\n" . implode("\n", $lines);
+            }
+            return [
+                'status' => 'error',
+                'message' => $msg,
+                'errors' => $errors,
+            ];
         }
 
         if ($this->request->isAjax) {

@@ -11,6 +11,7 @@ use kartik\widgets\ActiveForm;
 use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\DevelopmentDetail;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\Development $model */
@@ -54,6 +55,9 @@ $listDocumentMe  = $emp->listDocumentMe();
 </style>
 
 <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
+<?php if (!$model->isNewRecord): ?>
+<input type="hidden" name="development_id" value="<?= (int) $model->id ?>">
+<?php endif; ?>
 
 <div class="container-fluid px-3 px-sm-4 pb-4">
     <!-- ข้อมูลอ้างอิงเอกสาร -->
@@ -433,6 +437,91 @@ $listDocumentMe  = $emp->listDocumentMe();
         </div>
     </div>
 
+    <!-- รายการค่าใช้จ่าย -->
+    <?php
+    $expenseTypeList = (new DevelopmentDetail())->listExpenseType();
+    $expenseRows = $model->isNewRecord ? [] : $model->expenses;
+    ?>
+    <div class="card mb-3 border-0 shadow-sm">
+        <div class="card-header p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <strong><i class="fa-solid fa-money-bill-1 me-2"></i> รายการค่าใช้จ่าย</strong>
+            <button type="button" id="btn-add-expense-row" class="btn btn-outline-primary btn-sm rounded-pill">
+                <i class="bi bi-plus-circle me-1"></i> เพิ่มรายการ
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 1%;">ลำดับ</th>
+                            <th>รายการ</th>
+                            <th style="width: 140px;">จำนวนเงิน (บาท)</th>
+                            <th>หมายเหตุ</th>
+                            <th style="width: 80px;" class="text-center">ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="align-middle table-group-divider" id="expense-rows-tbody">
+                        <?php foreach ($expenseRows as $idx => $exp): ?>
+                        <tr class="expense-row">
+                            <td class="text-muted expense-row-num"><?= $idx + 1 ?></td>
+                            <td>
+                                <input type="hidden" name="expense_rows[<?= $idx ?>][id]" value="<?= (int) $exp->id ?>">
+                                <select name="expense_rows[<?= $idx ?>][category_id]" class="form-select">
+                                    <option value="">-- เลือกรายการ --</option>
+                                    <?php foreach ($expenseTypeList as $code => $title): ?>
+                                    <option value="<?= Html::encode($code) ?>" <?= ($exp->category_id === (string)$code) ? 'selected' : '' ?>><?= Html::encode($title) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" name="expense_rows[<?= $idx ?>][price]" class="form-control text-end" step="0.01" min="0" placeholder="0.00" value="<?= $exp->price !== null ? Html::encode($exp->price) : '' ?>">
+                            </td>
+                            <td>
+                                <?php
+                                    $expNote = '';
+                                    if (is_array($exp->data_json)) {
+                                        $expNote = $exp->data_json['note'] ?? '';
+                                    } elseif (is_string($exp->data_json)) {
+                                        $arr = json_decode($exp->data_json, true);
+                                        $expNote = is_array($arr) ? ($arr['note'] ?? '') : '';
+                                    }
+                                    ?>
+                                <input type="text" name="expense_rows[<?= $idx ?>][note]" class="form-control" placeholder="หมายเหตุ" value="<?= Html::encode($expNote) ?>">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-expense-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <tr id="expense-row-template" class="expense-row d-none" data-template="1">
+                            <td class="text-muted expense-row-num"></td>
+                            <td>
+                                <input type="hidden" data-name="expense_rows[__INDEX__][id]" value="">
+                                <select data-name="expense_rows[__INDEX__][category_id]" class="form-select">
+                                    <option value="">-- เลือกรายการ --</option>
+                                    <?php foreach ($expenseTypeList as $code => $title): ?>
+                                    <option value="<?= Html::encode($code) ?>"><?= Html::encode($title) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" data-name="expense_rows[__INDEX__][price]" class="form-control text-end" step="0.01" min="0" placeholder="0.00" value="">
+                            </td>
+                            <td>
+                                <input type="text" data-name="expense_rows[__INDEX__][note]" class="form-control" placeholder="หมายเหตุ" value="">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-expense-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted mb-0 mt-2">กด «เพิ่มรายการ» เพื่อเพิ่มรายการค่าใช้จ่าย เช่น ค่าเบี้ยเลี้ยง ค่าที่พัก</p>
+        </div>
+    </div>
+
     <div class="row g-3 mt-4">
         <div class="col-12 text-center">
             <?php echo Html::submitButton('<i class="bi bi-check2-circle me-2"></i> บันทึกข้อมูล', ['class' => 'btn btn-primary rounded-pill px-4 py-2 shadow me-2', 'id' => 'summit']) ?>
@@ -503,50 +592,91 @@ if (\$memberSelectUrl && \$('#member-emp-select-new').length) {
     \$(this).closest('.travel-party-row').remove();
 });
 
+// รายการค่าใช้จ่าย: เพิ่มแถว
+var expenseRowIndex = \$('#expense-rows-tbody .expense-row:not([data-template])').length;
+\$('#btn-add-expense-row').on('click', function() {
+    var \$tpl = \$('#expense-row-template');
+    if (!\$tpl.length) return;
+    var \$row = \$tpl.clone().removeAttr('id').removeClass('d-none').removeAttr('data-template');
+    \$row.find('[data-name]').each(function() {
+        var n = \$(this).data('name');
+        if (n) \$(this).attr('name', n.replace(/__INDEX__/g, expenseRowIndex));
+    });
+    \$row.find('.expense-row-num').text(\$('#expense-rows-tbody .expense-row:not([data-template])').length + 1);
+    \$tpl.before(\$row);
+    expenseRowIndex++;
+});
+\$('#expense-rows-tbody').on('click', '.btn-remove-expense-row', function() {
+    var \$row = \$(this).closest('tr.expense-row');
+    if (\$row.attr('data-template')) return;
+    \$row.remove();
+    \$('#expense-rows-tbody .expense-row:not([data-template])').each(function(i) {
+        \$(this).find('.expense-row-num').first().text(i + 1);
+    });
+});
+
     thaiDatepicker('#development-date_start,#development-date_end,#development-vehicle_date_start,#development-vehicle_date_end');
 
-      \$('#form-development').on('beforeSubmit', function (e) {
+      \$(document).on('beforeSubmit', '#form-development', function (e) {
         var form = \$(this);
+        var inModal = form.closest('.modal').length > 0;
 
         Swal.fire({
-        title: "ยืนยัน?",
-        text: "บันทึกขออบรม/ประชุม/ดูงาน!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        cancelButtonText: "ยกเลิก!",
-        confirmButtonText: "ใช่, ยืนยัน!"
+          title: "ยืนยัน?",
+          text: "บันทึกขออบรม/ประชุม/ดูงาน!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          cancelButtonText: "ยกเลิก!",
+          confirmButtonText: "ใช่, ยืนยัน!"
         }).then((result) => {
-        if (result.isConfirmed) {
-            
-            \$.ajax({
-                url: form.attr('action'),
-                type: 'post',
-                data: form.serialize(),
-                dataType: 'json',
-                boforeSubmit: function(){
-                    beforLoadModal()
-                },
-                success: function (response) {
-                    if(response.status == 'success') {
-                        closeModal()
-                        Swal.fire({
-                            title: "สำเร็จ!",
-                            text: "บันทึกข้อมูลเรียบร้อยแล้ว",
-                            icon: "success",
-                            timer: 1000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    }
-                }
+          if (!result.isConfirmed) return;
+          if (inModal) {
+            var formData = form.serialize();
+            var expenseRows = [];
+            \$('#expense-rows-tbody .expense-row:not([data-template])').each(function() {
+              var \$r = \$(this);
+              expenseRows.push({
+                id: (\$r.find('input[name*="[id]"]').val() || '').trim(),
+                category_id: (\$r.find('select[name*="[category_id]"]').val() || '').trim(),
+                price: (\$r.find('input[name*="[price]"]').val() || '').trim(),
+                note: (\$r.find('input[name*="[note]"]').val() || '').trim()
+              });
             });
-        }
+            for (var i = 0; i < expenseRows.length; i++) {
+              formData += '&expense_rows[' + i + '][id]=' + encodeURIComponent(expenseRows[i].id);
+              formData += '&expense_rows[' + i + '][category_id]=' + encodeURIComponent(expenseRows[i].category_id);
+              formData += '&expense_rows[' + i + '][price]=' + encodeURIComponent(expenseRows[i].price);
+              formData += '&expense_rows[' + i + '][note]=' + encodeURIComponent(expenseRows[i].note);
+            }
+            \$.ajax({
+              url: form.attr('action'),
+              type: 'post',
+              data: formData,
+              dataType: 'json',
+              beforeSend: function() {
+                if (typeof beforLoadModal === 'function') beforLoadModal();
+              },
+              success: function (response) {
+                if (response && response.status == 'success') {
+                  if (typeof closeModal === 'function') closeModal();
+                  Swal.fire({ title: "สำเร็จ!", text: "บันทึกข้อมูลเรียบร้อยแล้ว", icon: "success", timer: 1000, showConfirmButton: false }).then(function() { window.location.reload(); });
+                } else if (response && response.redirect) {
+                  window.location.href = response.redirect;
+                } else {
+                  window.location.reload();
+                }
+              }
+            });
+          } else {
+            \$(document).off('beforeSubmit', '#form-development');
+            form.off('submit');
+            form[0].submit();
+          }
         });
         return false;
-    });
+      });
 
 JS;
 $this->registerJS($js, View::POS_END);

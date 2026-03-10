@@ -264,6 +264,13 @@ class Employees extends Yii\db\ActiveRecord
     public function afterFind()
     {
         try {
+            // decode data_json จาก DB (string) เป็น array เพื่อให้อ่านค่าและแสดงในฟอร์มได้ถูกต้อง
+            if (is_string($this->data_json)) {
+                $this->data_json = json_decode($this->data_json, true) ?? [];
+            }
+            if (!is_array($this->data_json)) {
+                $this->data_json = [];
+            }
             if ($this->UpdateFormDetail()['new_fullname']) {  // ถ้ามีการเปลี่ยนชื่อ
                 $this->fullname = $this->UpdateFormDetail()['new_fullname'];
             } else {

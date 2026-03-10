@@ -177,6 +177,7 @@ class DevelopmentController extends Controller
                 $model->status = 'Pending';
                 if ($model->save()) {
                     $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
+                    $model->syncExpenseRows($this->request->post('expense_rows', []));
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
@@ -198,7 +199,10 @@ class DevelopmentController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = $this->findModel($id);
+        $model = Development::find()->where(['id' => $id])->with('expenses')->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
         $dateStart2 = $model->date_start;
 
         $model->date_start = $model->date_start ? AppHelper::convertToThai($model->date_start) : null;
@@ -206,19 +210,25 @@ class DevelopmentController extends Controller
         $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToThai($model->vehicle_date_start) : null;
         $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToThai($model->vehicle_date_end) : null;
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            try {
-                $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
-                $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
-                $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
-                $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
-            } catch (\Throwable $th) {
+        if ($this->request->isPost) {
+            $loaded = $model->load($this->request->post());
+            if ($loaded) {
+                try {
+                    $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+                    $model->date_end = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
+                    $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
+                    $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
+                } catch (\Throwable $th) {
+                }
+                $model->save();
+                $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
             }
+            // บันทึกรายการค่าใช้จ่ายทุกครั้งที่ POST (ไม่ผูกกับ load() เพื่อให้บันทึกได้แม้ฟิลด์หลักมีข้อผิดพลาด)
+            $model->syncExpenseRows($this->request->post('expense_rows', []));
 
-            $model->save();
-            $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
-
-            return $this->redirect('index');
+            if ($loaded) {
+                return $this->redirect('index');
+            }
         }
 
         // return $this->render('_form_dev', [
