@@ -169,12 +169,6 @@ $this->params['mobileSubtitle'] = 'กรอกข้อมูลเพื่อ
 <?php
 $js = <<<'JS'
 (function() {
-    var form = document.getElementById('mobile-booking-vehicle-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
-        });
-    }
     var btn = document.getElementById('btn-check-vehicles');
     var empty = document.getElementById('vehicle-list-empty');
     var list = document.getElementById('vehicle-list');

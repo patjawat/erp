@@ -254,12 +254,6 @@ $js = <<<'JS'
     if (startEl) startEl.addEventListener('change', updateDays);
     if (endEl) endEl.addEventListener('change', updateDays);
 
-    var formLeave = document.getElementById('mobile-leave-request-form');
-    if (formLeave) {
-        formLeave.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
-        });
-    }
     if (btnAttach && attachInput) {
         btnAttach.addEventListener('click', function() { attachInput.click(); });
         attachInput.addEventListener('change', function() {

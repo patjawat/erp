@@ -6,14 +6,10 @@ use app\widgets\datepicker\DatepickerThai;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
-/** @var array $rooms รายการห้องจาก booking (code => title) */
-/** @var array $saveErrors */
 $this->params['current_page']   = $current_page ?? 'services';
 $this->params['mobileTitle']    = 'จองห้องประชุม';
 $this->params['mobileSubtitle'] = 'เลือกวันที่และห้อง แล้วตรวจสอบเวลาว่าง';
 
-$rooms = $rooms ?? [];
-$saveErrors = $saveErrors ?? [];
 $weekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 $today = (int) date('j');
 $month = (int) date('n');
@@ -122,25 +118,6 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
     <p class="small text-body-secondary mb-0">เลือกวันที่และห้อง แล้วตรวจสอบเวลาว่าง</p>
 </div>
 
-<?php if (Yii::$app->session->hasFlash('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-        <?= Yii::$app->session->getFlash('success') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
-    </div>
-<?php endif; ?>
-<?php if (Yii::$app->session->hasFlash('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-        <?= Yii::$app->session->getFlash('error') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
-    </div>
-<?php endif; ?>
-<?php if (!empty($saveErrors)): ?>
-    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-        <ul class="mb-0 small"><?php foreach ($saveErrors as $msg): ?><li><?= Html::encode($msg) ?></li><?php endforeach; ?></ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
-    </div>
-<?php endif; ?>
-
 <!-- Calendar -->
 <div class="meeting-calendar mb-3">
     <div class="meeting-calendar-header">
@@ -175,11 +152,11 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
     <div class="card-body">
         <div class="mb-3">
             <label class="form-label fw-medium">ห้องประชุม <span class="text-danger">*</span></label>
-            <select name="room_id" id="booking-room" class="form-select" required>
+            <select name="room_id" id="booking-room" class="form-select">
                 <option value="">— เลือกห้อง —</option>
-                <?php foreach ($rooms as $code => $title): ?>
-                    <option value="<?= Html::encode($code) ?>"><?= Html::encode($title) ?></option>
-                <?php endforeach; ?>
+                <option value="1">ห้องประชุม A (10 ที่นั่ง)</option>
+                <option value="2">ห้องประชุม B (20 ที่นั่ง)</option>
+                <option value="3">ห้องประชุม C (30 ที่นั่ง)</option>
             </select>
         </div>
         <div class="mb-3">
@@ -206,7 +183,7 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
         </div>
         <div class="mb-3">
             <label class="form-label fw-medium">หัวข้อประชุม <span class="text-danger">*</span></label>
-            <input type="text" name="meeting_title" class="form-control" placeholder="ระบุหัวข้อการประชุม" autocomplete="off" required>
+            <input type="text" name="meeting_title" class="form-control" placeholder="ระบุหัวข้อการประชุม" autocomplete="off">
         </div>
         <div class="mb-0">
             <label class="form-label fw-medium">จำนวนผู้เข้าร่วม</label>
@@ -239,33 +216,61 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
             <i data-lucide="calendar-search" style="width: 2rem; height: 2rem; opacity: 0.4;" class="mb-2 d-block mx-auto"></i>
             เลือกวันที่และช่วงเวลา แล้วกด "ตรวจสอบเวลาว่าง" เพื่อดูห้องว่าง
         </div>
-        <div id="room-list-loading" class="room-list-empty d-none">
-            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-            <span>กำลังตรวจสอบ...</span>
+        <div id="room-list" class="d-none">
+            <div class="room-item mb-2" data-room-id="1">
+                <div class="card room-card">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="room-icon available flex-shrink-0">
+                            <i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold">ห้องประชุม A</div>
+                            <div class="small text-body-secondary">ความจุ 10 ที่นั่ง</div>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0">ว่าง</span>
+                    </div>
+                </div>
+            </div>
+            <div class="room-item mb-2" data-room-id="2">
+                <div class="card room-card">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="room-icon occupied flex-shrink-0">
+                            <i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold">ห้องประชุม B</div>
+                            <div class="small text-body-secondary">ความจุ 20 ที่นั่ง</div>
+                        </div>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0">ไม่ว่าง</span>
+                    </div>
+                </div>
+            </div>
+            <div class="room-item mb-2" data-room-id="3">
+                <div class="card room-card">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="room-icon available flex-shrink-0">
+                            <i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold">ห้องประชุม C</div>
+                            <div class="small text-body-secondary">ความจุ 30 ที่นั่ง</div>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0">ว่าง</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="room-list" class="d-none"></div>
     </div>
 </div>
 
 <?php
-$availabilityUrl = \yii\helpers\Url::to(['/mobile/default/meeting-room-availability']);
-$js = <<<JS
+$js = <<<'JS'
 (function() {
     var daysEl = document.getElementById('meeting-calendar-days');
     var dateInput = document.getElementById('booking-meeting-date');
-    var timeStartInput = document.querySelector('input[name="time_start"]');
-    var timeEndInput = document.querySelector('input[name="time_end"]');
     var btnCheck = document.getElementById('btn-check-availability');
     var emptyEl = document.getElementById('room-list-empty');
-    var loadingEl = document.getElementById('room-list-loading');
     var listEl = document.getElementById('room-list');
-    var availabilityUrl = "{$availabilityUrl}";
-
-    function escapeHtml(s) {
-        var div = document.createElement('div');
-        div.textContent = s;
-        return div.innerHTML;
-    }
 
     if (daysEl) {
         daysEl.addEventListener('click', function(e) {
@@ -280,64 +285,11 @@ $js = <<<JS
         });
     }
 
-    var formMeeting = document.getElementById('mobile-booking-meeting-form');
-    if (formMeeting) {
-        formMeeting.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
-        });
-    }
-    if (btnCheck && emptyEl && loadingEl && listEl) {
+    if (btnCheck && emptyEl && listEl) {
         btnCheck.addEventListener('click', function() {
-            var meetingDate = dateInput ? dateInput.value.trim() : '';
-            var timeStart = timeStartInput ? timeStartInput.value.trim() : '';
-            var timeEnd = timeEndInput ? timeEndInput.value.trim() : '';
-            if (!meetingDate || !timeStart || !timeEnd) {
-                alert('กรุณาเลือกวันที่ และเวลาเริ่ม–สิ้นสุด');
-                return;
-            }
             emptyEl.classList.add('d-none');
-            listEl.classList.add('d-none');
-            loadingEl.classList.remove('d-none');
-            listEl.innerHTML = '';
-
-            var params = new URLSearchParams({ meeting_date: meetingDate, time_start: timeStart, time_end: timeEnd });
-            fetch(availabilityUrl + '?' + params.toString(), {
-                method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-            }).then(function(r) { return r.json(); }).then(function(data) {
-                loadingEl.classList.add('d-none');
-                if (data.ok && data.rooms && data.rooms.length) {
-                    var html = '';
-                    data.rooms.forEach(function(r) {
-                        var cap = r.capacity != null ? 'ความจุ ' + r.capacity + ' ที่นั่ง' : '';
-                        var iconCls = r.available ? 'room-icon available' : 'room-icon occupied';
-                        var badgeCls = r.available
-                            ? 'badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0'
-                            : 'badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0';
-                        var badgeText = r.available ? 'ว่าง' : 'ไม่ว่าง';
-                        html += '<div class="room-item mb-2" data-room-code="' + escapeHtml(r.code) + '">' +
-                            '<div class="card room-card">' +
-                            '<div class="card-body d-flex align-items-center gap-3">' +
-                            '<div class="' + iconCls + ' flex-shrink-0"><i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i></div>' +
-                            '<div class="flex-grow-1 min-w-0">' +
-                            '<div class="fw-semibold">' + escapeHtml(r.title) + '</div>' +
-                            '<div class="small text-body-secondary">' + escapeHtml(cap) + '</div>' +
-                            '</div>' +
-                            '<span class="' + badgeCls + '">' + badgeText + '</span>' +
-                            '</div></div></div>';
-                    });
-                    listEl.innerHTML = html;
-                    listEl.classList.remove('d-none');
-                    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-                } else {
-                    emptyEl.classList.remove('d-none');
-                    if (data.message) emptyEl.innerHTML = '<span class="text-danger">' + escapeHtml(data.message) + '</span>';
-                }
-            }).catch(function() {
-                loadingEl.classList.add('d-none');
-                emptyEl.classList.remove('d-none');
-                emptyEl.innerHTML = '<span class="text-danger">ไม่สามารถโหลดข้อมูลได้</span>';
-            });
+            listEl.classList.remove('d-none');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         });
     }
 })();

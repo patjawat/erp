@@ -208,12 +208,6 @@ $js = <<<'JS'
         if (galleryInput) galleryInput.files = dt.files;
     }
 
-    var formMaint = document.getElementById('mobile-maintenance-form');
-    if (formMaint) {
-        formMaint.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
-        });
-    }
     if (btnCamera && cameraInput) {
         btnCamera.addEventListener('click', function() { cameraInput.click(); });
         cameraInput.addEventListener('change', function() {

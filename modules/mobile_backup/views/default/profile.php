@@ -5,9 +5,7 @@ use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
-/** @var bool $isRoomOwner */
 $this->params['current_page']   = $current_page ?? 'profile';
-$isRoomOwner = $isRoomOwner ?? false;
 $this->params['mobileTitle']    = 'ส่วนตัว';
 $this->params['mobileSubtitle'] = 'โปรไฟล์และตั้งค่า';
 
@@ -62,18 +60,11 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
     <!-- Menu: My Requests, Approval Tasks, Notifications, Settings -->
     <div class="card profile-card">
         <div class="card-body p-0">
-            <a href="<?= Html::encode(Url::to(['/mobile/default/my-requests'])) ?>" class="profile-menu-item">
+            <a href="#" class="profile-menu-item">
                 <i data-lucide="clipboard-list"></i>
                 <span class="flex-grow-1">คำขอของฉัน</span>
                 <i data-lucide="chevron-right" class="chevron"></i>
             </a>
-            <?php if ($isRoomOwner): ?>
-            <a href="<?= Html::encode(Url::to(['/mobile/default/room-manage'])) ?>" class="profile-menu-item">
-                <i data-lucide="layout-grid"></i>
-                <span class="flex-grow-1">จัดการห้องประชุม</span>
-                <i data-lucide="chevron-right" class="chevron"></i>
-            </a>
-            <?php endif; ?>
             <a href="#" class="profile-menu-item">
                 <i data-lucide="check-square"></i>
                 <span class="flex-grow-1">งานที่ต้องอนุมัติ</span>

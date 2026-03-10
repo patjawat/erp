@@ -149,24 +149,24 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
                     <i data-lucide="history" style="width: 1.125rem; height: 1.125rem; color: var(--mobile-primary);"></i>
                     คำขอล่าสุด
                 </h3>
-                <a href="<?= Html::encode(Url::to(['/mobile/default/my-requests'])) ?>" class="small text-primary text-decoration-none">ดูทั้งหมด</a>
+                <a href="#" class="small text-primary text-decoration-none">ดูทั้งหมด</a>
             </div>
-            <a href="<?= Html::encode(Url::to(['/mobile/default/my-requests', 'type' => 'vehicle'])) ?>" class="home-request-item d-flex align-items-center gap-2 text-decoration-none text-dark">
+            <div class="home-request-item d-flex align-items-center gap-2">
                 <i data-lucide="car" class="text-body-secondary" style="width: 1.25rem; height: 1.25rem;"></i>
                 <div class="flex-grow-1 min-w-0">
                     <span class="small fw-medium">จองรถราชการ</span>
                     <p class="mb-0 small text-body-secondary">รออนุมัติ · 10 มี.ค. 2568</p>
                 </div>
                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium px-2 py-1">รอดำเนินการ</span>
-            </a>
-            <a href="<?= Html::encode(Url::to(['/mobile/default/my-requests', 'type' => 'meeting'])) ?>" class="home-request-item d-flex align-items-center gap-2 text-decoration-none text-dark">
+            </div>
+            <div class="home-request-item d-flex align-items-center gap-2">
                 <i data-lucide="calendar" class="text-body-secondary" style="width: 1.25rem; height: 1.25rem;"></i>
                 <div class="flex-grow-1 min-w-0">
                     <span class="small fw-medium">จองห้องประชุม</span>
                     <p class="mb-0 small text-body-secondary">ห้อง A · 15 มี.ค. 2568</p>
                 </div>
                 <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">อนุมัติแล้ว</span>
-            </a>
+            </div>
             <p class="small text-body-secondary mb-0 mt-1">ติดตามสถานะคำขอล่าสุดของคุณได้ที่นี่</p>
         </div>
     </div>

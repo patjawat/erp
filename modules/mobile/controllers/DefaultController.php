@@ -5,6 +5,10 @@ namespace app\modules\mobile\controllers;
 use Yii;
 use yii\web\Controller;
 use yii\filters\AccessControl;
+use app\components\AppHelper;
+use app\modules\booking\models\Meeting;
+use app\modules\booking\models\Room;
+use yii\web\Response;
 
 /**
  * Default controller for the `mobile` module.
@@ -109,8 +113,21 @@ class DefaultController extends Controller
     public function actionProfile()
     {
         $this->view->title = 'ส่วนตัว';
+        $isRoomOwner = false;
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = (string) Yii::$app->user->identity->employee->id;
+            $allRooms = Room::find()->where(['name' => 'meeting_room'])->all();
+            foreach ($allRooms as $r) {
+                $data = is_array($r->data_json) ? $r->data_json : (is_string($r->data_json) ? json_decode($r->data_json, true) : []);
+                if (!empty($data['owner']) && (string) $data['owner'] === $empId) {
+                    $isRoomOwner = true;
+                    break;
+                }
+            }
+        }
         return $this->render('profile', [
             'current_page' => 'profile',
+            'isRoomOwner' => $isRoomOwner,
         ]);
     }
 
@@ -126,14 +143,123 @@ class DefaultController extends Controller
     }
 
     /**
-     * จองห้องประชุม (mobile-first: calendar, rooms, form).
+     * จองห้องประชุม (mobile-first: calendar, rooms, form). บันทึกลง modules/booking Meeting.
      */
     public function actionBookingMeeting()
     {
         $this->view->title = 'จองห้องประชุม';
+        $rooms = [];
+        $empId = null;
+        $saveSuccess = false;
+        $saveErrors = [];
+
+        try {
+            $meeting = new Meeting();
+            $rooms = $meeting->listRooms();
+            if (!empty(Yii::$app->user->identity->employee)) {
+                $empId = Yii::$app->user->identity->employee->id;
+            }
+        } catch (\Throwable $e) {
+            $rooms = [];
+        }
+
+        if (Yii::$app->request->isPost && Yii::$app->request->post('action') === 'submit') {
+            if (!$empId) {
+                Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงานที่ล็อกอิน กรุณาติดต่อ HR');
+                return $this->redirect(['booking-meeting']);
+            }
+            $roomId = Yii::$app->request->post('room_id');
+            $meetingDate = Yii::$app->request->post('meeting_date');
+            $timeStart = Yii::$app->request->post('time_start');
+            $timeEnd = Yii::$app->request->post('time_end');
+            $title = Yii::$app->request->post('meeting_title');
+            $attendees = (int) Yii::$app->request->post('attendees', 1);
+            $dateGregorian = $meetingDate ? AppHelper::convertToGregorian($meetingDate) : null;
+            if (!$roomId || !$dateGregorian || !$timeStart || !$timeEnd || !$title) {
+                Yii::$app->session->setFlash('error', 'กรุณากรอกห้อง วันที่ เวลา และหัวข้อประชุมให้ครบ');
+            } else {
+                $model = new Meeting();
+                $model->room_id = $roomId;
+                $model->date_start = $dateGregorian;
+                $model->date_end = $dateGregorian;
+                $model->time_start = substr($timeStart, 0, 5);
+                $model->time_end = substr($timeEnd, 0, 5);
+                $model->title = $title;
+                $model->emp_number = $attendees > 0 ? $attendees : 1;
+                $model->emp_id = (string) $empId;
+                $model->thai_year = (int) AppHelper::YearBudget($dateGregorian);
+                $model->status = 'Pending';
+                $urgentList = $model->listUrgent();
+                $model->urgent = !empty($urgentList) ? (string) array_key_first($urgentList) : 'ปกติ';
+                try {
+                    $model->code = \mdm\autonumber\AutoNumber::generate('MTG' . date('ymd') . '-???');
+                } catch (\Throwable $e) {
+                    $model->code = 'MTG' . date('Ymd') . '-' . substr(uniqid(), -4);
+                }
+                if ($model->save()) {
+                    Yii::$app->session->setFlash('success', 'บันทึกคำจองห้องประชุมเรียบร้อย (รหัส ' . $model->code . ')');
+                    return $this->redirect(['booking-meeting']);
+                }
+                $saveErrors = $model->getFirstErrors();
+            }
+        }
+
         return $this->render('booking-meeting', [
             'current_page' => 'services',
+            'rooms' => $rooms,
+            'saveSuccess' => $saveSuccess,
+            'saveErrors' => $saveErrors,
         ]);
+    }
+
+    /**
+     * API คืนค่าสถานะห้องประชุมตามวันที่และเวลา (สำหรับปุ่มตรวจสอบเวลาว่าง).
+     * GET/POST: meeting_date (d/m/Y), time_start, time_end
+     */
+    public function actionMeetingRoomAvailability()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $meetingDate = Yii::$app->request->get('meeting_date') ?: Yii::$app->request->post('meeting_date');
+        $timeStart = Yii::$app->request->get('time_start') ?: Yii::$app->request->post('time_start');
+        $timeEnd = Yii::$app->request->get('time_end') ?: Yii::$app->request->post('time_end');
+        if (!$meetingDate || !$timeStart || !$timeEnd) {
+            return ['ok' => false, 'message' => 'กรุณาระบุวันที่และเวลา', 'rooms' => []];
+        }
+        $dateGregorian = AppHelper::convertToGregorian($meetingDate);
+        if (!$dateGregorian) {
+            return ['ok' => false, 'message' => 'รูปแบบวันที่ไม่ถูกต้อง', 'rooms' => []];
+        }
+        $timeStart = substr($timeStart, 0, 5);
+        $timeEnd = substr($timeEnd, 0, 5);
+        $excludeId = (int) (Yii::$app->request->get('exclude_id') ?: Yii::$app->request->post('exclude_id'));
+        $rooms = [];
+        try {
+            $roomModels = Room::find()->where(['name' => 'meeting_room'])->orderBy(['title' => SORT_ASC])->all();
+            foreach ($roomModels as $room) {
+                $code = $room->code;
+                $title = $room->title;
+                $capacity = isset($room->data_json['seat_capacity']) ? (int) $room->data_json['seat_capacity'] : null;
+                $overlapQuery = Meeting::find()
+                    ->andWhere(['room_id' => $code])
+                    ->andWhere(['<=', 'date_start', $dateGregorian])
+                    ->andWhere(['>=', 'date_end', $dateGregorian])
+                    ->andWhere(['<', 'time_start', $timeEnd])
+                    ->andWhere(['>', 'time_end', $timeStart]);
+                if ($excludeId > 0) {
+                    $overlapQuery->andWhere(['!=', 'id', $excludeId]);
+                }
+                $hasOverlap = $overlapQuery->exists();
+                $rooms[] = [
+                    'code' => $code,
+                    'title' => $title,
+                    'capacity' => $capacity,
+                    'available' => !$hasOverlap,
+                ];
+            }
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message' => $e->getMessage(), 'rooms' => []];
+        }
+        return ['ok' => true, 'rooms' => $rooms];
     }
 
     /**
@@ -156,6 +282,200 @@ class DefaultController extends Controller
         return $this->render('maintenance-request', [
             'current_page' => 'services',
         ]);
+    }
+
+    /**
+     * คำขอของฉัน — ดูคำขอทั้งหมด (จองห้อง, ขอลา, จองรถ, แจ้งซ่อม).
+     */
+    public function actionMyRequests($type = 'all')
+    {
+        $this->view->title = 'คำขอของฉัน';
+        $empId = null;
+        $meetings = [];
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = Yii::$app->user->identity->employee->id;
+            try {
+                $meetings = Meeting::find()
+                    ->where(['emp_id' => (string) $empId])
+                    ->orderBy(['created_at' => SORT_DESC])
+                    ->limit(100)
+                    ->all();
+            } catch (\Throwable $e) {
+                $meetings = [];
+            }
+        }
+        return $this->render('my-requests', [
+            'current_page' => 'profile',
+            'type' => $type,
+            'meetings' => $meetings,
+        ]);
+    }
+
+    /**
+     * หน้ารายละเอียดคำขอจองห้องประชุม (ภายใต้ mobile เพื่อให้ UX/UI เหมือนแอป).
+     * เฉพาะผู้ขอ (emp_id) เท่านั้นที่ดูได้
+     */
+    public function actionMeetingView($id)
+    {
+        $id = (int) $id;
+        $meeting = Meeting::findOne($id);
+        if (!$meeting) {
+            \Yii::$app->session->setFlash('error', 'ไม่พบรายการจองนี้');
+            return $this->redirect(['/mobile/default/my-requests', 'type' => 'meeting']);
+        }
+        $empId = null;
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = (string) Yii::$app->user->identity->employee->id;
+        }
+        if ($meeting->emp_id !== $empId) {
+            \Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์ดูรายการนี้');
+            return $this->redirect(['/mobile/default/my-requests']);
+        }
+        $this->view->title = 'รายละเอียดการจองห้องประชุม';
+        return $this->render('meeting-view', [
+            'current_page' => 'profile',
+            'meeting' => $meeting,
+        ]);
+    }
+
+    /**
+     * แก้ไขการจองห้องประชุม (เฉพาะผู้ขอ และเฉพาะสถานะ Pending).
+     */
+    public function actionMeetingUpdate($id)
+    {
+        $id = (int) $id;
+        $meeting = Meeting::findOne($id);
+        if (!$meeting) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการจองนี้');
+            return $this->redirect(['/mobile/default/my-requests', 'type' => 'meeting']);
+        }
+        $empId = null;
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = (string) Yii::$app->user->identity->employee->id;
+        }
+        if ($meeting->emp_id !== $empId) {
+            Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์แก้ไขรายการนี้');
+            return $this->redirect(['/mobile/default/my-requests']);
+        }
+        if ((string) $meeting->status !== 'Pending') {
+            Yii::$app->session->setFlash('error', 'แก้ไขได้เฉพาะคำขอที่รอการอนุมัติเท่านั้น');
+            return $this->redirect(['/mobile/default/meeting-view', 'id' => $meeting->id]);
+        }
+
+        $rooms = [];
+        try {
+            $m = new Meeting();
+            $rooms = $m->listRooms();
+        } catch (\Throwable $e) {
+            $rooms = [];
+        }
+        $saveErrors = [];
+
+        if (Yii::$app->request->isPost && Yii::$app->request->post('action') === 'submit') {
+            $roomId = Yii::$app->request->post('room_id');
+            $meetingDate = Yii::$app->request->post('meeting_date');
+            $timeStart = Yii::$app->request->post('time_start');
+            $timeEnd = Yii::$app->request->post('time_end');
+            $title = Yii::$app->request->post('meeting_title');
+            $attendees = (int) Yii::$app->request->post('attendees', 1);
+            $dateGregorian = $meetingDate ? AppHelper::convertToGregorian($meetingDate) : null;
+            if (!$roomId || !$dateGregorian || !$timeStart || !$timeEnd || !$title) {
+                $saveErrors['form'] = 'กรุณากรอกห้อง วันที่ เวลา และหัวข้อประชุมให้ครบ';
+            } else {
+                $meeting->room_id = $roomId;
+                $meeting->date_start = $dateGregorian;
+                $meeting->date_end = $dateGregorian;
+                $meeting->time_start = substr($timeStart, 0, 5);
+                $meeting->time_end = substr($timeEnd, 0, 5);
+                $meeting->title = $title;
+                $meeting->emp_number = $attendees > 0 ? $attendees : 1;
+                $meeting->thai_year = (int) AppHelper::YearBudget($dateGregorian);
+                if ($meeting->save(false)) {
+                    Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขคำจองห้องประชุมเรียบร้อย');
+                    return $this->redirect(['/mobile/default/meeting-view', 'id' => $meeting->id]);
+                }
+                $saveErrors = $meeting->getFirstErrors();
+            }
+        }
+
+        $this->view->title = 'แก้ไขการจองห้องประชุม';
+        return $this->render('meeting-update', [
+            'current_page' => 'profile',
+            'meeting' => $meeting,
+            'rooms' => $rooms,
+            'saveErrors' => $saveErrors,
+        ]);
+    }
+
+    /**
+     * ผู้ดูแลห้องประชุม — รายการจองห้องที่ผู้ใช้เป็นผู้ดูแล (room.data_json.owner)
+     */
+    public function actionRoomManage()
+    {
+        $this->view->title = 'จัดการห้องประชุม';
+        $empId = null;
+        $ownedRoomCodes = [];
+        $meetings = [];
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = (string) Yii::$app->user->identity->employee->id;
+            $allRooms = Room::find()->where(['name' => 'meeting_room'])->all();
+            foreach ($allRooms as $r) {
+                $data = is_array($r->data_json) ? $r->data_json : (is_string($r->data_json) ? json_decode($r->data_json, true) : []);
+                if (!empty($data['owner']) && (string) $data['owner'] === $empId) {
+                    $ownedRoomCodes[] = $r->code;
+                }
+            }
+            if (!empty($ownedRoomCodes)) {
+                $meetings = Meeting::find()
+                    ->where(['room_id' => $ownedRoomCodes])
+                    ->orderBy(['date_start' => SORT_DESC, 'time_start' => SORT_DESC])
+                    ->limit(100)
+                    ->all();
+            }
+        }
+        return $this->render('room-manage', [
+            'current_page' => 'profile',
+            'meetings' => $meetings,
+            'ownedRoomCodes' => $ownedRoomCodes,
+        ]);
+    }
+
+    /**
+     * อนุมัติ/ยกเลิกการจอง (ผู้ดูแลห้องเท่านั้น). POST: id, status (Pass|Cancel)
+     */
+    public function actionMeetingConfirm()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['ok' => false, 'message' => 'Invalid request'];
+        }
+        $id = (int) Yii::$app->request->post('id');
+        $status = (string) Yii::$app->request->post('status');
+        if (!in_array($status, ['Pass', 'Cancel'], true)) {
+            return ['ok' => false, 'message' => 'สถานะไม่ถูกต้อง'];
+        }
+        $meeting = Meeting::findOne($id);
+        if (!$meeting) {
+            return ['ok' => false, 'message' => 'ไม่พบรายการจอง'];
+        }
+        $empId = null;
+        if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
+            $empId = (string) Yii::$app->user->identity->employee->id;
+        }
+        $room = $meeting->room_id ? Room::findOne(['name' => 'meeting_room', 'code' => $meeting->room_id]) : null;
+        if (!$room) {
+            return ['ok' => false, 'message' => 'ไม่พบข้อมูลห้อง'];
+        }
+        $data = is_array($room->data_json) ? $room->data_json : (is_string($room->data_json) ? json_decode($room->data_json, true) : []);
+        $ownerId = isset($data['owner']) ? (string) $data['owner'] : null;
+        if ($ownerId !== $empId) {
+            return ['ok' => false, 'message' => 'คุณไม่มีสิทธิ์จัดการห้องนี้'];
+        }
+        $meeting->status = $status;
+        if ($meeting->save(false)) {
+            return ['ok' => true, 'message' => $status === 'Pass' ? 'อนุมัติการจองแล้ว' : 'ยกเลิกการจองแล้ว'];
+        }
+        return ['ok' => false, 'message' => 'บันทึกไม่สำเร็จ'];
     }
 
     /**
