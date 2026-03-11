@@ -155,7 +155,8 @@ class ImportProductController extends Controller
             } else {
                 //ถ้าไม่ซ้ำให้สาร้างใหม่
                 $newProduct = new Product;
-                $newProduct->group_id = 4;
+                // $newProduct->group_id = 4;
+                $newProduct->group_id = 'MATER';
                 $newProduct->name = 'asset_item';
                 $newProduct->category_id = $categoryId;
                 $newProduct->title = $title;

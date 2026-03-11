@@ -157,8 +157,8 @@ class ImportController extends Controller
                     'serial_number' => $data[7],
                     'vendor_id' => $data[10],
                     'budget_type' => $data[9],
-                    'inspection_date' => DateHelper::convertToDatabaseDate($data[11]),
-                    'receive_date' => DateHelper::convertToDatabaseDate($data[13]),
+                    'inspection_date' => $this->normalizeDateForDb($data[11] ?? ''),
+                    'receive_date' => $this->normalizeDateForDb($data[13] ?? ''),
                     'expire_date' => $data[14],
                     'location' => $data[16],
                     'fsn_old' => $data[0],
@@ -166,7 +166,7 @@ class ImportController extends Controller
                 ];
                 $model->price = $data[8];
                 $model->purchase = $this->findPurchase($data[10]);
-                $model->receive_date = DateHelper::convertToDatabaseDate($data[13]);
+                $model->receive_date = $this->normalizeDateForDb($data[13] ?? '');
                 $model->on_year = $data[12];
                 $model->license_plate = $data[17];
                 $model->asset_status = 1;
@@ -215,7 +215,94 @@ class ImportController extends Controller
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
     }
 
-public function findPurchase($tite = null)
+    /**
+     * แปลงค่าจาก CSV เป็นวันที่รูปแบบ DB (Y-m-d) หรือ null ถ้าวันที่ invalid
+     * รองรับหลายรูปแบบ:
+     * - ปี ค.ศ.-เดือน-วัน (Y-m-d): 2025-01-01, 2025/1/1
+     * - ปี พ.ศ.-เดือน-วัน: 2568-01-01, 2568/1/1
+     * - วัน/เดือน/ปี ค.ศ. (d-m-y): 01-01-2025, 1/1/2025
+     * - วัน/เดือน/ปี พ.ศ.: 01-01-2568, 1/1/2568
+     */
+    protected function normalizeDateForDb($dateStr)
+    {
+        if ($dateStr === null || $dateStr === '') {
+            return null;
+        }
+        $dateStr = trim($dateStr);
+        $delimiter = (strpos($dateStr, '/') !== false) ? '/' : '-';
+        $parts = array_map('trim', explode($delimiter, $dateStr));
+        if (count($parts) !== 3) {
+            return null;
+        }
+        $p0 = $parts[0];
+        $p1 = $parts[1];
+        $p2 = $parts[2];
+        $n0 = (int)$p0;
+        $n1 = (int)$p1;
+        $n2 = (int)$p2;
+
+        // ปี ค.ศ.-เดือน-วัน (Y-m-d): ส่วนแรกเป็นปี ค.ศ. 4 หลัก 1900-2100
+        if ($n0 >= 1900 && $n0 <= 2100 && strlen($p0) >= 4) {
+            $y = $n0;
+            $m = $n1;
+            $d = $n2;
+            if (checkdate($m, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            }
+            return null;
+        }
+        // ปี พ.ศ.-เดือน-วัน: ส่วนแรกเป็นปี พ.ศ. 4 หลัก (ประมาณ 2400-2600)
+        if ($n0 >= 2400 && $n0 <= 2600 && strlen($p0) >= 4) {
+            $y = $n0 - 543;
+            $m = $n1;
+            $d = $n2;
+            if (checkdate($m, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            }
+            return null;
+        }
+        // วัน/เดือน/ปี ค.ศ. (d-m-y): ส่วนท้ายเป็นปี ค.ศ. 4 หลัก
+        if ($n2 >= 1900 && $n2 <= 2100 && strlen($p2) >= 4) {
+            $y = $n2;
+            $m = $n1;
+            $d = $n0;
+            if (checkdate($m, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            }
+            return null;
+        }
+        // วัน/เดือน/ปี พ.ศ. (d-m-y BE): ส่วนท้ายเป็นปี พ.ศ. 4 หลัก
+        if ($n2 >= 2400 && $n2 <= 2600 && strlen($p2) >= 4) {
+            $y = $n2 - 543;
+            $m = $n1;
+            $d = $n0;
+            if (checkdate($m, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            }
+            return null;
+        }
+        // Fallback: ใช้ DateHelper (d-m-y อาจเป็น 2 หลักหรือรูปแบบอื่น)
+        $dbDate = DateHelper::convertToDatabaseDate($dateStr);
+        if ($dbDate === null) {
+            return null;
+        }
+        if (!is_string($dbDate) || strpos($dbDate, '-') === false) {
+            return null;
+        }
+        $p = explode('-', $dbDate);
+        if (count($p) !== 3) {
+            return null;
+        }
+        $y = (int)$p[0];
+        $m = (int)$p[1];
+        $d = (int)$p[2];
+        if ($y < 1900 || $y > 2100 || !checkdate($m, $d, $y)) {
+            return null;
+        }
+        return $dbDate;
+    }
+
+    public function findPurchase($tite = null)
     {
         $model = Categorise::find()->where(['name' => 'purchase', 'title' => $tite])->one();
         if ($model) {
