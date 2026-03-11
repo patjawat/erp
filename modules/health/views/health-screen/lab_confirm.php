@@ -1,5 +1,7 @@
 <?php
 
+use app\modules\health\models\HealthChronicDisease;
+use app\modules\health\models\HealthFamilyDisease;
 use app\modules\health\models\HealthLab;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
@@ -33,80 +35,173 @@ $labListData = ArrayHelper::map($labList, 'lab_code', 'lab_name');
 <?php $this->endBlock(); ?>
 
 
+<?php
+$data = is_array($model->data_json) ? $model->data_json : [];
+$familyDiseaseList = HealthFamilyDisease::getActiveList();
+$chronicDiseaseList = HealthChronicDisease::getActiveList();
+$foodTasteMap = ['sweet' => 'หวาน', 'salty' => 'เค็ม', 'fatty' => 'มัน', 'sour' => 'เปรี้ยว', 'none' => 'ไม่ชอบทุกข้อ'];
+$ftRaw = $data['food_taste'] ?? '';
+$foodTasteDisplay = '-';
+if (is_array($ftRaw)) {
+    $foodTasteDisplay = implode(', ', array_map(function ($v) use ($foodTasteMap) {
+        return $foodTasteMap[$v] ?? $v;
+    }, $ftRaw)) ?: '-';
+} elseif ($ftRaw !== '' && isset($foodTasteMap[$ftRaw])) {
+    $foodTasteDisplay = $foodTasteMap[$ftRaw];
+}
+$condomMap = ['always' => 'ใช้ทุกครั้ง', 'requested' => 'ใช้เมื่อถูกร้องขอ', 'none' => 'ไม่ใช้', 'no_extramarital' => 'ไม่เคยมีเพศสัมพันธ์กับผู้ที่ไม่ใช่สามีหรือภรรยาของตนเอง', 'no_answer' => 'ไม่ตอบ'];
+$drivingMap = ['none' => 'ไม่ขับขี่ไม่โดยสาร', 'always' => 'ทุกครั้ง', 'sometimes' => 'บางครั้ง', 'rarely' => 'นานๆ ครั้ง'];
+$valueMapChronic = [0 => ['label' => 'ไม่มี', 'color' => 'success'], 1 => ['label' => 'มี', 'color' => 'danger'], 2 => ['label' => 'ไม่เคยตรวจ', 'color' => 'secondary']];
+?>
 <?php $form = ActiveForm::begin(['id' => 'lab-form']); ?>
-<?= $this->render('patient_profile', ['model' => $model]) ?>
+<div class="container-fluid px-3 px-md-4 pb-4">
+    <?= $this->render('patient_profile', ['model' => $model]) ?>
 
-<div class="card border-0 shadow-sm rounded-3 mb-4">
-    <div class="card-body py-3">
-        <div class="row align-items-end">
-            <div class="col-md-4">
-                <?= $form->field($model, 'appointment_date')->textInput([
-                    'class' => 'form-control',
-                    'placeholder' => 'เลือกวันที่นัดหมาย',
-                ])->label('วันที่การนัดหมาย') ?>
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm border-top border-4 border-info">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                    <h6 class="mb-0 fw-bold text-info"><i class="fas fa-clipboard-check me-2"></i>สรุปข้อมูลการคัดกรอง</h6>
+                    <button type="button" class="btn btn-sm btn-outline-info border-0 rounded-pill" data-bs-toggle="collapse" data-bs-target="#screening-summary-body" aria-expanded="true">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="collapse show" id="screening-summary-body">
+                    <div class="card-body pt-0">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <tbody class="table-group-divider">
+                                        <tr><td class="text-muted small" style="width:120px;">บุหรี่</td><td class="fw-medium"><?= Html::encode(['smoke' => 'สูบ', 'none' => 'ไม่สูบ', 'quit' => 'เคยสูบแต่เลิกแล้ว'][$data['smoking_status'] ?? ''] ?? '-') ?></td></tr>
+                                        <tr><td class="text-muted small">แอลกอฮอล์</td><td class="fw-medium"><?= Html::encode(['drink' => 'ดื่ม', 'none' => 'ไม่ดื่ม', 'quit' => 'เคยดื่มแต่เลิกแล้ว'][$data['alcohol_status'] ?? ''] ?? '-') ?></td></tr>
+                                        <tr><td class="text-muted small">ออกกำลังกาย</td><td class="fw-medium"><?= Html::encode([
+                                            'everyday' => 'ออกกำลังทุกวัน', '3_times_week' => 'ออก 3 ครั้ง/สัปดาห์', 'less_than_3' => 'น้อยกว่า 3 ครั้ง/สัปดาห์', 'none' => 'ไม่ออกกำลังกาย'
+                                        ][$data['exercise_status'] ?? ''] ?? '-') ?></td></tr>
+                                        <tr><td class="text-muted small">รสอาหาร</td><td class="fw-medium"><?= Html::encode($foodTasteDisplay) ?></td></tr>
+                                        <tr><td class="text-muted small">ขับขี่ปลอดภัย</td><td class="fw-medium"><?= Html::encode($drivingMap[$data['driving_safety'] ?? ''] ?? '-') ?></td></tr>
+                                        <tr><td class="text-muted small">เพศสัมพันธ์</td><td class="fw-medium"><?= Html::encode($condomMap[$data['condom_usage'] ?? ''] ?? '-') ?></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="small">
+                                    <div class="mb-2"><strong class="text-primary">ส่วนที่ 3: ประวัติการเจ็บป่วยในครอบครัว</strong></div>
+                                    <?php
+                                    $fh = $data['family_history'] ?? [];
+                                    $fh = is_array($fh) ? $fh : ($fh !== '' && $fh !== null ? [$fh] : []);
+                                    $fhLabels = array_filter(array_map(function ($code) use ($familyDiseaseList) {
+                                        return $familyDiseaseList[$code] ?? $code;
+                                    }, $fh));
+                                    echo $fhLabels ? implode(', ', $fhLabels) : '<span class="text-muted">-</span>';
+                                    ?>
+                                    <div class="mb-2 mt-3"><strong class="text-info">ส่วนที่ 4: พี่น้อง (สายตรง) มีประวัติการเจ็บป่วยด้วย</strong></div>
+                                    <?php
+                                    $sh = $data['sibling_history'] ?? [];
+                                    $sh = is_array($sh) ? $sh : ($sh !== '' && $sh !== null ? [$sh] : []);
+                                    $shLabels = array_filter(array_map(function ($code) use ($familyDiseaseList) {
+                                        return $familyDiseaseList[$code] ?? $code;
+                                    }, $sh));
+                                    echo $shLabels ? implode(', ', $shLabels) : '<span class="text-muted">-</span>';
+                                    ?>
+                                    <?php
+                                    $chronicSelected = [];
+                                    if (!empty($chronicDiseaseList)) {
+                                        foreach ($chronicDiseaseList as $attr => $label) {
+                                            $val = (int)($data[$attr] ?? 0);
+                                            if ($val === 0) continue;
+                                            $chronicSelected[] = Html::encode($label);
+                                        }
+                                    }
+                                    if (!empty($chronicSelected)): ?>
+                                    <div class="mb-2 mt-3"><strong class="text-danger">ส่วนที่ 5: โรคประจำตัว</strong></div>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <?php foreach ($chronicSelected as $name): ?>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1"><?= $name ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between align-items-center py-3">
-        <h6 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>บันทึกรายการ LAB และค่าใช้จ่าย</h6>
-        <!-- <span class="badge bg-light text-dark">พนักงาน: <?= Html::encode($model->emp_id) ?></span> -->
-        
-    </div>
-    <div class="card-body p-2">
-
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 table-hover align-middle" id="lab-table">
-                <thead>
-                    <tr>
-                        <th style="width: 35%">รายการ Lab</th>
-                        <th style="width: 15%">จำนวน</th>
-                        <th style="width: 20%">ราคา/หน่วย</th>
-                        <th style="width: 20%" class="text-end">ราคารวม</th>
-                        <th class="text-center" style="width: 100px;">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="align-middle table-group-divider" id="lab-tbody">
-                    <?php foreach ($labItems as $i => $item): ?>
-                        <tr class="lab-row">
-                            <td>
-                                <?= $form->field($item, "[$i]lab_code")->dropDownList($labListData, [
-                                    'prompt' => 'เลือกรายการ...',
-                                    'class' => 'form-select lab-select'
-                                ])->label(false) ?>
-                            </td>
-                            <td><?= $form->field($item, "[$i]qty")->textInput(['type' => 'number', 'min' => 1, 'class' => 'form-control qty-input'])->label(false) ?></td>
-                            <td><?= $form->field($item, "[$i]lab_price")->textInput(['type' => 'number', 'step' => '0.01', 'class' => 'form-control price-input'])->label(false) ?></td>
-                            <td class="text-end"><input type="text" class="form-control-plaintext fw-bold line-total text-end pe-3" readonly value="0.00"></td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-row border-0"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-                <tfoot>
-                    <tr class="table-secondary">
-                        <td colspan="3" class="text-end fw-bold">รวมเป็นเงินทั้งสิ้น</td>
-                        <td class="text-end">
-                            <p class="mb-0 fw-bold text-primary" id="grand-total">0.00</p>
-                        </td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
-            <button type="button" class="btn btn-outline-success btn-sm rounded-pill" id="add-row">
-                <i class="fas fa-plus me-1"></i> เพิ่มรายการตรวจ
-            </button>
-            <div class="text-end">
-                <?= Html::submitButton('บันทึกข้อมูลและสรุปยอด', ['class' => 'btn btn-primary px-5 shadow-sm rounded-pill']) ?>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body py-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-sm-6 col-md-4">
+                            <?= $form->field($model, 'appointment_date')->textInput([
+                                'class' => 'form-control',
+                                'placeholder' => 'เลือกวันที่นัดหมาย',
+                            ])->label('วันที่การนัดหมาย') ?>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary-gradient text-white d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>บันทึกรายการ LAB และค่าใช้จ่าย</h6>
+                </div>
+                <div class="card-body p-2 p-md-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="lab-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 35%">รายการ Lab</th>
+                                    <th style="width: 15%">จำนวน</th>
+                                    <th style="width: 20%">ราคา/หน่วย</th>
+                                    <th style="width: 20%" class="text-end">ราคารวม</th>
+                                    <th class="text-center" style="width: 100px;">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="align-middle table-group-divider" id="lab-tbody">
+                                <?php foreach ($labItems as $i => $item): ?>
+                                    <tr class="lab-row">
+                                        <td>
+                                            <?= $form->field($item, "[$i]lab_code")->dropDownList($labListData, [
+                                                'prompt' => 'เลือกรายการ...',
+                                                'class' => 'form-select lab-select'
+                                            ])->label(false) ?>
+                                        </td>
+                                        <td><?= $form->field($item, "[$i]qty")->textInput(['type' => 'number', 'min' => 1, 'class' => 'form-control qty-input'])->label(false) ?></td>
+                                        <td><?= $form->field($item, "[$i]lab_price")->textInput(['type' => 'number', 'step' => '0.01', 'class' => 'form-control price-input'])->label(false) ?></td>
+                                        <td class="text-end"><input type="text" class="form-control-plaintext fw-bold line-total text-end pe-3" readonly value="0.00"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-row border-0"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-secondary">
+                                    <td colspan="3" class="text-end fw-bold">รวมเป็นเงินทั้งสิ้น</td>
+                                    <td class="text-end">
+                                        <p class="mb-0 fw-bold text-primary" id="grand-total">0.00</p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="row g-3 mt-2 mb-2">
+                        <div class="col-12 col-md-6 d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill" id="add-row">
+                                <i class="fas fa-plus me-1"></i> เพิ่มรายการตรวจ
+                            </button>
+                        </div>
+                        <div class="col-12 col-md-6 text-md-end">
+                            <?= Html::submitButton('บันทึกข้อมูลและสรุปยอด', ['class' => 'btn btn-primary px-5 shadow-sm rounded-pill']) ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <?php ActiveForm::end(); ?>

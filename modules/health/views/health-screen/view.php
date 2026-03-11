@@ -63,6 +63,16 @@ $sumIcon    = $model::getFinalSummaryDisplay($finalSummary, 'icon');
                 <table class="table table-hover align-middle mb-0">
                     <tbody class="align-middle table-group-divider">
                         <?php
+                        $foodTasteMap = ['sweet' => 'หวาน', 'salty' => 'เค็ม', 'fatty' => 'มัน', 'sour' => 'เปรี้ยว', 'none' => 'ไม่ชอบทุกข้อ'];
+                        $ftRaw = $data['food_taste'] ?? '';
+                        $foodTasteDisplay = '-';
+                        if (is_array($ftRaw)) {
+                            $foodTasteDisplay = implode(', ', array_map(function ($v) use ($foodTasteMap) {
+                                return $foodTasteMap[$v] ?? $v;
+                            }, $ftRaw)) ?: '-';
+                        } elseif ($ftRaw !== '' && isset($foodTasteMap[$ftRaw])) {
+                            $foodTasteDisplay = $foodTasteMap[$ftRaw];
+                        }
                         $behaviorItems = [
                             ['icon' => 'fas fa-smoking',         'label' => 'บุหรี่',        'value' => ['smoke' => 'สูบ', 'none' => 'ไม่สูบ', 'quit' => 'เคยสูบแต่เลิกแล้ว'][$data['smoking_status'] ?? ''] ?? '-'],
                             ['icon' => 'fas fa-glass-whiskey',   'label' => 'แอลกอฮอล์',    'value' => ['drink' => 'ดื่ม', 'none' => 'ไม่ดื่ม', 'quit' => 'เคยดื่มแต่เลิกแล้ว'][$data['alcohol_status'] ?? ''] ?? '-'],
@@ -72,7 +82,7 @@ $sumIcon    = $model::getFinalSummaryDisplay($finalSummary, 'icon');
                                 'less_than_3'  => 'น้อยกว่า 3 ครั้ง/สัปดาห์',
                                 'none'         => 'ไม่ออกกำลังกาย',
                             ][$data['exercise_status'] ?? ''] ?? '-'],
-                            ['icon' => 'fas fa-utensils',        'label' => 'รสอาหาร',       'value' => ['sweet' => 'หวาน', 'salty' => 'เค็ม', 'fatty' => 'มัน', 'sour' => 'เปรี้ยว', 'none' => 'ไม่ชอบทุกข้อ'][$data['food_taste'] ?? ''] ?? '-'],
+                            ['icon' => 'fas fa-utensils',        'label' => 'รสอาหาร',       'value' => $foodTasteDisplay],
                             ['icon' => 'fas fa-car',             'label' => 'ขับขี่ปลอดภัย', 'value' => ['none' => 'ไม่ขับขี่', 'always' => 'ทุกครั้ง', 'sometimes' => 'บางครั้ง', 'rarely' => 'นานๆ ครั้ง'][$data['driving_safety'] ?? ''] ?? '-'],
                         ];
                         foreach ($behaviorItems as $bi): ?>

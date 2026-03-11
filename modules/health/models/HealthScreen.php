@@ -62,7 +62,7 @@ public $q_department;
             'id' => 'ID',
             'thai_year' => 'ปีงบประมาณ',
             'emp_id' => 'รหัสพนักงาน',
-            'date_checkup' => 'วันที่คัดกรอง',
+            'date_checkup' => 'วันที่ตรวจสุขภาพ',
             'data_json' => 'ข้อมูล JSON',
             'weight' => 'น้ำหนัก',
             'height' => 'ส่วนสูง',
@@ -250,12 +250,6 @@ public function labTotalPrice()
                 'desc'  => 'ควรพบแพทย์เพื่อวินิจฉัยและรักษา'
             ],
         ];
-
-        if ($value === null) {
-            return \yii\helpers\ArrayHelper::map($items, function ($key, $item) {
-                return $key;
-            }, 'label');
-        }
 
         $data = $items[$value] ?? [
             'label' => 'ไม่ระบุ',

@@ -20,8 +20,8 @@ $exerciseOptions = [
 ];
 $foodTasteOptions = ['sweet' => 'หวาน', 'salty' => 'เค็ม', 'fatty' => 'มัน', 'sour' => 'เปรี้ยว', 'none' => 'ไม่ชอบทุกข้อ'];
 $miniSections = [
-    ['title' => '1.5. ขับขี่ปลอดภัย', 'key' => 'driving_safety',  'opt' => ['none' => 'ไม่ขับขี่ไม่โดยสาร', 'always' => 'ทุกครั้ง', 'sometimes' => 'บางครั้ง', 'rarely' => 'นานๆ ครั้ง'], 'color' => 'primary'],
-    ['title' => '1.6. เพศสัมพันธ์',   'key' => 'condom_usage',    'opt' => ['always' => 'ใช้ทุกครั้ง', 'requested' => 'ใช้เมื่อถูกร้องขอ', 'none' => 'ไม่ใช้', 'no_answer' => 'ไม่ตอบ'], 'color' => 'danger'],
+    ['title' => '1.5. ขับขี่ปลอดภัย', 'key' => 'driving_safety',  'opt' => ['none' => 'ไม่ขับขี่ไม่โดยสาร', 'always' => 'ขับขี่/โดยสาร และใส่หมวกกันน็อก/คาดเข็มขัดนิรภัยทุกครั้ง', 'sometimes' => 'ขับขี่/โดยสาร และใส่หมวกกันน็อก/คาดเข็มขัดนิรภัยบางครั้ง', 'rarely' => 'ขับขี่/โดยสาร และใส่หมวกกันน็อก/คาดเข็มขัดนิรภัยนาน ๆ ครั้ง (ใส่เฉพาะเมื่อมีด่านตรวจ)'], 'color' => 'primary', 'widget' => 'radio'],
+    ['title' => '1.6. เพศสัมพันธ์',   'key' => 'condom_usage',    'opt' => ['always' => 'ใช้ทุกครั้ง', 'requested' => 'ใช้เมื่อถูกร้องขอ', 'none' => 'ไม่ใช้', 'no_extramarital' => 'ไม่เคยมีเพศสัมพันธ์กับผู้ที่ไม่ใช่สามีหรือภรรยาของตนเอง', 'no_answer' => 'ไม่ตอบ'], 'color' => 'danger', 'widget' => 'radio'],
 ];
 // โหลดจาก DB (fallback เป็นค่า hardcode ถ้าตารางยังไม่มี)
 $familyDiseaseList  = HealthFamilyDisease::getActiveList();
@@ -38,18 +38,8 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
 
 <div class="health-form-container p-3">
 
-    <?php if ($model->isNewRecord): ?>
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-primary-gradient text-white py-2">
-                <h6 class="mb-0 text-white small fw-normal"><i class="fas fa-user-circle me-1"></i> เลือกพนักงาน</h6>
-            </div>
-            <div class="card-body">
-                <?php echo $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => true]) ?>
-            </div>
-        </div>
-    <?php else: ?>
+
         <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
-    <?php endif; ?>
 
     <?= $form->field($model, 'bmi')->hiddenInput()->label(false) ?>
 
@@ -138,8 +128,8 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
                             $extraClass = $isNone ? ' ft-none' : ' ft-item';
                             $id = 'ft_' . $value;
                             return "<input type='checkbox' class='btn-check food-taste-cb{$extraClass}'"
-                                 . " id='{$id}' name='{$name}' value='{$value}' autocomplete='off'{$isChecked}>"
-                                 . "<label class='btn {$btnClass} rounded-pill' for='{$id}'>{$label}</label>";
+                                . " id='{$id}' name='{$name}' value='{$value}' autocomplete='off'{$isChecked}>"
+                                . "<label class='btn {$btnClass} rounded-pill' for='{$id}'>{$label}</label>";
                         },
                         'separator' => ' ',
                         'tag'       => 'div',
@@ -154,15 +144,24 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
                 <div class="card border-0 shadow-sm border-top border-4 border-<?= $sec['color'] ?> h-100">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3"><?= $sec['title'] ?></h6>
-                        <?= $form->field($model, "data_json[{$sec['key']}]", [
-                            'enableAjaxValidation' => true,
-                            'template'     => "{input}\n{error}",
-                            'options'      => ['class' => 'form-group mb-0'],
-                            'errorOptions' => ['class' => 'invalid-feedback d-block'],
-                        ])->dropDownList($sec['opt'], [
-                            'prompt' => '-- เลือก --',
-                            'class'  => 'form-select',
-                        ])->label(false) ?>
+                        <?php if (($sec['widget'] ?? 'select') === 'radio'): ?>
+                            <?= $form->field($model, "data_json[{$sec['key']}]", [
+                                'enableAjaxValidation' => true,
+                                'template'     => "{input}\n{error}",
+                                'options'      => ['class' => 'form-group mb-0'],
+                                'errorOptions' => ['class' => 'invalid-feedback d-block'],
+                            ])->radioList($sec['opt'], ['inline' => false])->label(false) ?>
+                        <?php else: ?>
+                            <?= $form->field($model, "data_json[{$sec['key']}]", [
+                                'enableAjaxValidation' => true,
+                                'template'     => "{input}\n{error}",
+                                'options'      => ['class' => 'form-group mb-0'],
+                                'errorOptions' => ['class' => 'invalid-feedback d-block'],
+                            ])->dropDownList($sec['opt'], [
+                                'prompt' => '-- เลือก --',
+                                'class'  => 'form-select',
+                            ])->label(false) ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -235,41 +234,67 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
         </div>
     </div>
 
-    <?php if (!empty($chronicDiseaseList)): ?>
-    <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
-        <div class="card-header bg-white d-flex justify-content-between">
-            <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: โรคประจำตัว</h5>
-            <div class="d-flex align-items-center gap-2 small text-muted">
-                <span class="d-flex align-items-center gap-1"><span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ไม่มี</span></span>
-                <span class="d-flex align-items-center gap-1"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1">มี</span></span>
-                <span class="d-flex align-items-center gap-1"><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1">ไม่เคยตรวจ</span></span>
-            </div>
+    <div class="card border-0 shadow-sm border-top border-4 border-info mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0 fw-bold text-info">ส่วนที่ 4: พี่น้อง (สายตรง) มีประวัติการเจ็บป่วยด้วย</h5>
         </div>
-        <div class="card-body p-0">
-            <div class="row g-0">
-                <?php foreach ($chronicDiseaseList as $attr => $label):
-                    if (!isset($tmpData[$attr])) {
-                        $tmpData[$attr] = 0;
-                    }
-                ?>
-                    <div class="col-md-6 border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-medium text-dark small"><?= Html::encode($label) ?></span>
-                        <?= $form->field($model, "data_json[$attr]", ['options' => ['class' => 'mb-0']])->radioList([0 => '', 1 => '', 2 => ''], [
-                            'item' => function ($index, $label, $name, $checked, $value) use ($tmpData, $attr) {
-                                $isChecked = ($tmpData[$attr] == $value);
-                                $colors = [0 => 'btn-outline-success', 1 => 'btn-outline-danger', 2 => 'btn-outline-secondary'];
-                                return Html::radio($name, $isChecked, ['value' => $value, 'class' => 'btn-check', 'id' => "rd_{$name}_{$value}"])
-                                    . Html::label('', "rd_{$name}_{$value}", [
-                                        'class' => 'btn btn-xs rounded-circle p-0 ms-2 ' . $colors[$value],
-                                        'style' => 'width:18px; height:18px;',
-                                    ]);
-                            },
-                        ])->label(false) ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+        <div class="card-body">
+            <?= $form->field($model, 'data_json[sibling_history]', [
+                'enableAjaxValidation' => true,
+                'template'     => "{input}\n{error}",
+                'options'      => ['class' => 'form-group mb-0'],
+                'errorOptions' => ['class' => 'invalid-feedback d-block px-3'],
+            ])->checkboxList($familyDiseaseList, [
+                'item' => function ($index, $label, $name, $checked, $value) {
+                    $checkedAttr = $checked ? 'checked' : '';
+                    return "
+                    <div class='col-6 col-md-3 mb-2'>
+                        <div class='form-check'>
+                            <input type='checkbox' class='form-check-input' name='{$name}' value='{$value}' id='s_{$value}' {$checkedAttr}>
+                            <label class='form-check-label fw-normal' for='s_{$value}'>{$label}</label>
+                        </div>
+                    </div>";
+                },
+                'class' => 'row g-0 px-3',
+            ])->label(false) ?>
         </div>
     </div>
+
+    <?php if (!empty($chronicDiseaseList)): ?>
+        <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 5: โรคประจำตัว</h5>
+                <div class="d-flex align-items-center gap-2 small text-muted">
+                    <span class="d-flex align-items-center gap-1"><span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ไม่มี</span></span>
+                    <span class="d-flex align-items-center gap-1"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1">มี</span></span>
+                    <span class="d-flex align-items-center gap-1"><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1">ไม่เคยตรวจ</span></span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <?php foreach ($chronicDiseaseList as $attr => $label):
+                        if (!isset($tmpData[$attr])) {
+                            $tmpData[$attr] = 0;
+                        }
+                    ?>
+                        <div class="col-md-6 border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
+                            <span class="fw-medium text-dark small"><?= Html::encode($label) ?></span>
+                            <?= $form->field($model, "data_json[$attr]", ['options' => ['class' => 'mb-0']])->radioList([0 => '', 1 => '', 2 => ''], [
+                                'item' => function ($index, $label, $name, $checked, $value) use ($tmpData, $attr) {
+                                    $isChecked = ($tmpData[$attr] == $value);
+                                    $colors = [0 => 'btn-outline-success', 1 => 'btn-outline-danger', 2 => 'btn-outline-secondary'];
+                                    return Html::radio($name, $isChecked, ['value' => $value, 'class' => 'btn-check', 'id' => "rd_{$name}_{$value}"])
+                                        . Html::label('', "rd_{$name}_{$value}", [
+                                            'class' => 'btn btn-xs rounded-circle p-0 ms-2 ' . $colors[$value],
+                                            'style' => 'width:18px; height:18px;',
+                                        ]);
+                                },
+                            ])->label(false) ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
     <?php endif; ?>
 
     <div class="text-center pb-5">
