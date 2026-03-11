@@ -357,6 +357,7 @@ class SettingController extends Controller
             'vehicle_date_start' => ['label' => 'วันออกเดินทาง',   'x' => 30,  'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'vehicle_date_end'   => ['label' => 'วันกลับ',          'x' => 100, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'total_days'      => ['label' => 'จำนวนวัน',            'x' => 30,  'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'distance'        => ['label' => 'ระยะทาง',            'x' => 100, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'vehicle_type'    => ['label' => 'เดินทางโดย',          'x' => 100, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'signature_approver' => ['label' => 'ลายเซ็นผู้อนุมัติ', 'x' => 30,  'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
         ];

@@ -200,6 +200,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-md-6">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 text-muted">ระยะทาง:</div>
+                                <div class="col-12 col-md-8">
+                                    <?= isset($model->data_json['distance']) && (string) $model->data_json['distance'] !== '' ? Html::encode($model->data_json['distance']) . ' กม.' : 'ไม่ระบุ' ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

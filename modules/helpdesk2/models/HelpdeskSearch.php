@@ -56,27 +56,27 @@ class HelpdeskSearch extends Helpdesk
             return $dataProvider;
         }
 
-        // grid filtering conditions
+        // grid filtering conditions (qualify columns used after joinWith('emp') to avoid ambiguous status/name)
         $query->andFilterWhere([
-            'id' => $this->id,
-            'emp_id' => $this->emp_id,
-            'repair_group' => $this->repair_group,
-            'status' => $this->status,
-            'thai_year' => $this->thai_year,
-            'device_type_id' => $this->device_type_id,
-            'asset_number' => $this->asset_number,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'created_by' => $this->created_by,
-            'updated_by' => $this->updated_by,
+            'helpdesk.id' => $this->id,
+            'helpdesk.emp_id' => $this->emp_id,
+            'helpdesk.repair_group' => $this->repair_group,
+            'helpdesk.status' => $this->status,
+            'helpdesk.thai_year' => $this->thai_year,
+            'helpdesk.device_type_id' => $this->device_type_id,
+            'helpdesk.asset_number' => $this->asset_number,
+            'helpdesk.created_at' => $this->created_at,
+            'helpdesk.updated_at' => $this->updated_at,
+            'helpdesk.created_by' => $this->created_by,
+            'helpdesk.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'repair_number', $this->repair_number])
-            ->andFilterWhere(['like', 'code', $this->code])
-            ->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+        $query->andFilterWhere(['like', 'helpdesk.ref', $this->ref])
+            ->andFilterWhere(['like', 'helpdesk.repair_number', $this->repair_number])
+            ->andFilterWhere(['like', 'helpdesk.code', $this->code])
+            ->andFilterWhere(['like', 'helpdesk.name', $this->name])
+            ->andFilterWhere(['like', 'helpdesk.title', $this->title])
+            ->andFilterWhere(['like', 'helpdesk.data_json', $this->data_json]);
 
         return $dataProvider;
     }

@@ -656,6 +656,7 @@ class DevelopmentController extends Controller
             'vehicle_time_end' => ['label' => 'เวลากลับ', 'x' => 150, 'y' => 112, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'claim_type_name' => ['label' => 'ประเภทค่าใช้จ่าย', 'x' => 30, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'total_days' => ['label' => 'จำนวนวัน', 'x' => 30, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'distance' => ['label' => 'ระยะทาง', 'x' => 100, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'vehicle_type' => ['label' => 'เดินทางโดย', 'x' => 100, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to' => ['label' => 'ผู้ปฏิบัติหน้าที่แทน', 'x' => 30, 'y' => 180, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to_position' => ['label' => 'ตำแหน่งผู้ปฏิบัติแทน', 'x' => 30, 'y' => 188, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
@@ -835,8 +836,8 @@ class DevelopmentController extends Controller
         }
         // รองรับรูปแบบ items (จากหน้ากำหนดตำแหน่งแบบลากวาง) — แปลง mm เป็นหน่วยที่ writeText ใช้ (คูณด้วย ptToMm = 25.4/71)
         $sigKeys = $this->getDevelopmentSignatureKeys();
+        $mmToDesignerUnit = 71 / 25.4; // ให้ writeText: value * (25.4/71) = mm
         if (!empty($dataJson['items'])) {
-            $mmToDesignerUnit = 71 / 25.4; // ให้ writeText: value * (25.4/71) = mm
             $flat = [];
             foreach ($dataJson['items'] as $item) {
                 $k = $item['key'] ?? '';
@@ -855,7 +856,25 @@ class DevelopmentController extends Controller
                 }
             }
             $dataJson = array_merge($dataJson, $flat);
+        } else {
+            // โค้ดเก่า/ไม่มี items: เติมพิกัด default ให้ทุกฟิลด์เพื่อให้ PDF แสดงครบ
+            $defaults = $this->getDevelopmentDefaultFields();
+            foreach ($defaults as $key => $def) {
+                $xKey = $key . '_x';
+                $yKey = $key . '_y';
+                if (!isset($dataJson[$xKey]) || !isset($dataJson[$yKey])) {
+                    $dataJson[$xKey] = (float) ($def['x'] ?? 0) * $mmToDesignerUnit;
+                    $dataJson[$yKey] = (float) ($def['y'] ?? 0) * $mmToDesignerUnit;
+                    $dataJson[$key . '_fontSize'] = (int) ($def['fontSize'] ?? 15);
+                    $dataJson[$key . '_bold'] = !empty($def['bold']) ? 1 : 0;
+                    if (in_array($key, $sigKeys, true)) {
+                        $dataJson[$key . '_width'] = (float) ($def['width'] ?? 35);
+                        $dataJson[$key . '_height'] = (float) ($def['height'] ?? 15);
+                    }
+                }
+            }
         }
+        // เมื่อมี items จากหน้ากำหนดตำแหน่ง จะไม่เติม default ให้ฟิลด์ที่ไม่อยู่ในรายการ (ฟิลด์ที่ลบแล้วจะไม่แสดงใน PDF)
 
         // ผู้อนุมัติระดับ 3 (ทั้งอนุมัติและไม่อนุมัติ) — ใช้แสดงชื่อ วันที่ และคำสั่ง
         $leader = Approve::find()
@@ -977,6 +996,8 @@ class DevelopmentController extends Controller
         $writeText('vehicle_time_end',  $model->data_json['vehicle_time_end']);
         $writeText('claim_type_name',  $model->data_json['claim_type_name']);
         $writeText('total_days',  $this->getTotalDays($model->date_start, $model->date_end));
+        $distanceVal = isset($model->data_json['distance']) && (string) $model->data_json['distance'] !== '' ? ($model->data_json['distance'] . ' กม.') : '-';
+        $writeText('distance', $distanceVal);
         $writeText('vehicle_type', ($model->vehicleType?->title ?? '-'));
         $writeText('assigned_to', ($model->assignedTo?->fullname ?? '-'));
         $writeText('assigned_to_position', ($model->assignedTo?->positionName() ?? '-'));

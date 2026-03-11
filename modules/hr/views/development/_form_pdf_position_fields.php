@@ -277,6 +277,21 @@
 
 
 
+            <div class="card border rounded-3 mb-2 field-card" data-field="distance" data-title="ระยะทาง">
+                <div class="card-body p-2">
+                    <div class="small fw-semibold mb-2 text-primary">ระยะทาง (กม.)</div>
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <?= $form->field($model, 'data_json[distance_x]', [
+                            'addon' => ['prepend' => ['content' => 'X']]
+                        ])->textInput(['type' => 'number', 'class' => 'form-control coord-x'])->label(false) ?>
+
+                        <?= $form->field($model, 'data_json[distance_y]', [
+                            'addon' => ['prepend' => ['content' => 'Y']]
+                        ])->textInput(['type' => 'number', 'class' => 'form-control coord-y'])->label(false) ?>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border rounded-3 mb-2 field-card" data-field="vehicle_type" data-title="เดินทางไปราชการโดย">
                 <div class="card-body p-2">
                     <div class="small fw-semibold mb-2 text-primary">พาหนะเดินทาง</div>

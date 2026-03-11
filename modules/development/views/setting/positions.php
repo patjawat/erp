@@ -73,7 +73,7 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-body">ตำแหน่งข้อมูลบนเทมเพลต</label>
-                    <p class="small text-muted mb-2">เพิ่มได้หลายจุดต่อฟิลด์ (เช่น ชื่อผู้ขอ ไว้ที่หัวฟอร์มและที่ช่องเซ็น) เลือกประเภทฟิลด์ ปรับขนาด/ความหนา แล้วลากชิปไปวางบนเทมเพลต</p>
+                    <p class="small text-muted mb-2">เพิ่มได้หลายจุดต่อฟิลด์ (เช่น ชื่อผู้ขอ ไว้ที่หัวฟอร์มและที่ช่องเซ็น) เลือกประเภทฟิลด์ ปรับขนาด/ความหนา แล้วลากชิปไปวางบนเทมเพลต <strong>ยกเลิกเลือก «แสดงเมื่อพิมพ์» = ไม่แสดงข้อมูลฟิลด์นั้นในเอกสารเมื่อพิมพ์</strong></p>
                 </div>
                 <form id="positions-form">
                     <div id="positions-rows" class="d-flex flex-column gap-2 mb-3">
@@ -99,9 +99,9 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                                     <?php endforeach; ?>
                                 </select>
                                 <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][enabled]" value="0">
-                                <div class="form-check mb-0 flex-shrink-0">
-                                    <input type="checkbox" name="positions[<?= Html::encode($itemId) ?>][enabled]" value="1" class="form-check-input field-enabled-cb" data-item-id="<?= Html::encode($itemId) ?>" <?= $enabled ? 'checked' : '' ?> aria-label="แสดงบนเทมเพลต">
-                                    <label class="form-check-label small text-muted mb-0">แสดง</label>
+                                <div class="form-check mb-0 flex-shrink-0" title="ยกเลิกเลือก = ไม่แสดงข้อมูลฟิลด์นี้ใน PDF เมื่อพิมพ์">
+                                    <input type="checkbox" name="positions[<?= Html::encode($itemId) ?>][enabled]" value="1" class="form-check-input field-enabled-cb" data-item-id="<?= Html::encode($itemId) ?>" <?= $enabled ? 'checked' : '' ?> aria-label="แสดงข้อมูลเมื่อพิมพ์">
+                                    <label class="form-check-label small text-muted mb-0">แสดงเมื่อพิมพ์</label>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-1 text-size-wrap <?= $isSignature ? 'd-none' : '' ?>">
@@ -135,9 +135,9 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                             <div class="d-flex align-items-center gap-1 flex-grow-1" style="min-width: 0;">
                                 <select name="positions[__ITEM_ID__][key]" class="form-select position-key-select" style="width: auto; min-width: 10rem;" aria-label="ประเภทฟิลด์" data-item-id="__ITEM_ID__"></select>
                                 <input type="hidden" name="positions[__ITEM_ID__][enabled]" value="0">
-                                <div class="form-check mb-0 flex-shrink-0">
-                                    <input type="checkbox" name="positions[__ITEM_ID__][enabled]" value="1" class="form-check-input field-enabled-cb" data-item-id="__ITEM_ID__" aria-label="แสดงบนเทมเพลต">
-                                    <label class="form-check-label small text-muted mb-0">แสดง</label>
+                                <div class="form-check mb-0 flex-shrink-0" title="ยกเลิกเลือก = ไม่แสดงข้อมูลฟิลด์นี้ใน PDF เมื่อพิมพ์">
+                                    <input type="checkbox" name="positions[__ITEM_ID__][enabled]" value="1" class="form-check-input field-enabled-cb" data-item-id="__ITEM_ID__" aria-label="แสดงข้อมูลเมื่อพิมพ์">
+                                    <label class="form-check-label small text-muted mb-0">แสดงเมื่อพิมพ์</label>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-1 text-size-wrap">
@@ -393,7 +393,8 @@ $this->registerJs(<<<JS
     });
 
     rowsContainer.addEventListener('input', function(e) {
-        var itemId = e.target.getAttribute('data-item-id');
+        var row = e.target.closest('.position-row');
+        var itemId = e.target.getAttribute('data-item-id') || (row ? row.getAttribute('data-item-id') : null);
         if (!itemId) return;
         if (e.target.classList.contains('position-font-size') || e.target.classList.contains('position-bold')) {
             var fs = form.querySelector('input[name="positions[' + itemId + '][fontSize]"]');
@@ -402,12 +403,12 @@ $this->registerJs(<<<JS
         }
     });
     rowsContainer.addEventListener('change', function(e) {
-        var itemId = e.target.getAttribute('data-item-id');
+        var row = e.target.closest('.position-row');
+        var itemId = e.target.getAttribute('data-item-id') || (row ? row.getAttribute('data-item-id') : null);
         if (!itemId) return;
         if (e.target.classList.contains('position-key-select')) {
             var chip = canvas.querySelector('.leave-field-chip[data-item-id="' + itemId + '"]');
             if (chip) updateChipLabel(chip, e.target.value);
-            var row = e.target.closest('.position-row');
             if (row) toggleSignatureRow(row, e.target.value);
         } else if (e.target.classList.contains('position-font-size') || e.target.classList.contains('position-bold')) {
             var fs = form.querySelector('input[name="positions[' + itemId + '][fontSize]"]');
@@ -415,7 +416,6 @@ $this->registerJs(<<<JS
             updateChipFont(itemId, fs ? parseInt(fs.value, 10) : 15, boldCb ? boldCb.checked : false);
         } else if (e.target.classList.contains('field-enabled-cb')) {
             var chip = canvas.querySelector('.leave-field-chip[data-item-id="' + itemId + '"]');
-            var row = e.target.closest('.position-row');
             if (chip) chip.classList.toggle('d-none', !e.target.checked);
             if (row) row.classList.toggle('opacity-75', !e.target.checked);
         }
