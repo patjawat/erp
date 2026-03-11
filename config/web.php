@@ -318,6 +318,7 @@ $config = [
             'depdrop/*',
             'auth/*',
             'mobile/auth/*',
+            'health/health-screen/validator',
             'gii/*',
             // 'hr/*',
             // 'sm/*',
