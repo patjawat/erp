@@ -24,31 +24,12 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        $userId = \Yii::$app->user->isGuest ? null : (string) \Yii::$app->user->id;
+      return $this->render('index');
+    }
 
-        if ($userId !== null) {
-            $mainQuery = Warehouse::find()
-                ->where(['warehouse_type' => 'MAIN'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->select('id');
-            if (!\Yii::$app->user->can('admin')) {
-                $mainQuery->andWhere(
-                    new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")
-                );
-            }
-            $mainWarehouseIds = $mainQuery->column();
-
-            if (!empty($mainWarehouseIds)) {
-                return $this->redirect(['/inventory-v2/main-stock/dashboard']);
-            }
-        }
-
-        $subWarehouses = Warehouse::findSubWarehousesForUser();
-        if (!empty($subWarehouses)) {
-            return $this->redirect(['/inventory-v2/sub-stock/dashboard']);
-        }
-
-        return $this->render('index');
+        public function actionMainStock()
+    {
+      return $this->render('main-stock');
     }
 
 

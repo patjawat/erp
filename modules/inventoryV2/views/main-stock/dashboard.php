@@ -52,7 +52,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
     <div class="row mb-3">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-                <?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm me-auto']) ?>
+                
                 <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse" class="d-inline">
                     <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3" id="warehouseFilter" style="min-width: 200px;">
                         <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังทั้งหมด</option>
@@ -63,6 +63,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 </form>
                 <?= Html::a('<i class="bi bi-boxes me-1"></i> ยอดคงเหลือตามคลัง', ['/inventory-v2/report/balance-by-warehouse'], ['class' => 'btn btn-outline-primary rounded-pill px-3']) ?>
                 <?= Html::a('<i class="bi bi-plus-lg me-1"></i> รับสินค้า', ['/inventory-v2/receive/create'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
+                <?= Html::a('<i class="bi bi-plus-lg me-1"></i> ตั้งค่า', ['/inventory-v2/default/overview'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
             </div>
         </div>
     </div>
