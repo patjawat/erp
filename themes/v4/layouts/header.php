@@ -145,16 +145,16 @@ $(function () {
     });
 
     /* ======================
-     * Theme (Bootstrap 5.3)
+     * Theme (Bootstrap 5.3 data-bs-theme)
      * ====================== */
     const theme = localStorage.getItem('theme') || '$colorName';
-    $('html').attr('theme-mode', theme);
+    $('html').attr('data-bs-theme', theme);
 
     $('#toggleTheme').on('click', function () {
-        const current = $('html').attr('theme-mode');
+        const current = $('html').attr('data-bs-theme');
         const next = current === 'dark' ? '$colorName' : 'dark';
 
-        $('html').attr('theme-mode', next);
+        $('html').attr('data-bs-theme', next);
         localStorage.setItem('theme', next);
     });
 
