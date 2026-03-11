@@ -658,6 +658,7 @@ class DevelopmentController extends Controller
             'total_days' => ['label' => 'จำนวนวัน', 'x' => 30, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'distance' => ['label' => 'ระยะทาง', 'x' => 100, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'vehicle_type' => ['label' => 'เดินทางโดย', 'x' => 100, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'requester_signature' => ['label' => 'ลายเซ็นต์ผู้ขอ', 'x' => 30, 'y' => 170, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
             'assigned_to' => ['label' => 'ผู้ปฏิบัติหน้าที่แทน', 'x' => 30, 'y' => 180, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to_position' => ['label' => 'ตำแหน่งผู้ปฏิบัติแทน', 'x' => 30, 'y' => 188, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'assigned_to_signature' => ['label' => 'ลายเซ็นผู้ปฏิบัติแทน', 'x' => 30, 'y' => 220, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
@@ -674,7 +675,7 @@ class DevelopmentController extends Controller
 
     protected function getDevelopmentSignatureKeys(): array
     {
-        return ['assigned_to_signature', 'leader_group_signature', 'signature_approver'];
+        return ['requester_signature', 'assigned_to_signature', 'leader_group_signature', 'signature_approver'];
     }
 
     protected function getDevelopmentConfigRecord(): Categorise
@@ -839,6 +840,7 @@ class DevelopmentController extends Controller
         $mmToDesignerUnit = 71 / 25.4; // ให้ writeText: value * (25.4/71) = mm
         if (!empty($dataJson['items'])) {
             $flat = [];
+            $positionsByKey = []; // รองรับฟิลด์เดียวกันหลายจุด (เช่น ชื่อผู้ปฏิบัติแทน 2 จุด)
             foreach ($dataJson['items'] as $item) {
                 $k = $item['key'] ?? '';
                 if ($k === '' || (isset($item['enabled']) && (int) $item['enabled'] === 0)) {
@@ -846,16 +848,31 @@ class DevelopmentController extends Controller
                 }
                 $xMm = (float) ($item['x'] ?? 0);
                 $yMm = (float) ($item['y'] ?? 0);
-                $flat[$k . '_x'] = $xMm * $mmToDesignerUnit;
-                $flat[$k . '_y'] = $yMm * $mmToDesignerUnit;
-                $flat[$k . '_fontSize'] = (int) ($item['fontSize'] ?? 15);
-                $flat[$k . '_bold'] = !empty($item['bold']) ? 1 : 0;
+                $pos = [
+                    'x' => $xMm * $mmToDesignerUnit,
+                    'y' => $yMm * $mmToDesignerUnit,
+                    'fontSize' => (int) ($item['fontSize'] ?? 15),
+                    'bold' => !empty($item['bold']) ? 1 : 0,
+                ];
                 if (in_array($k, $sigKeys, true)) {
-                    $flat[$k . '_width'] = (float) ($item['width'] ?? 35);
-                    $flat[$k . '_height'] = (float) ($item['height'] ?? 15);
+                    $pos['width'] = (float) ($item['width'] ?? 35);
+                    $pos['height'] = (float) ($item['height'] ?? 15);
+                }
+                $positionsByKey[$k][] = $pos;
+                // เก็บจุดแรกใน flat ด้วย (สำหรับ backward compatibility)
+                if (!isset($flat[$k . '_x'])) {
+                    $flat[$k . '_x'] = $pos['x'];
+                    $flat[$k . '_y'] = $pos['y'];
+                    $flat[$k . '_fontSize'] = $pos['fontSize'];
+                    $flat[$k . '_bold'] = $pos['bold'];
+                    if (isset($pos['width'])) {
+                        $flat[$k . '_width'] = $pos['width'];
+                        $flat[$k . '_height'] = $pos['height'];
+                    }
                 }
             }
             $dataJson = array_merge($dataJson, $flat);
+            $dataJson['_positionsByKey'] = $positionsByKey;
         } else {
             // โค้ดเก่า/ไม่มี items: เติมพิกัด default ให้ทุกฟิลด์เพื่อให้ PDF แสดงครบ
             $defaults = $this->getDevelopmentDefaultFields();
@@ -886,20 +903,29 @@ class DevelopmentController extends Controller
             $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3]);
         }
 
-        // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด — ใช้ fontSize และ bold จาก config (หน้ากำหนดตำแหน่ง) ถ้ามี
+        // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด — รองรับฟิลด์เดียวกันหลายจุด (เขียนข้อความเดียวกันทุกจุด)
         $writeText = function ($key, $text, $fontSizeDefault = 13, $styleDefault = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
+            $positionsByKey = $dataJson['_positionsByKey'] ?? null;
+            if (!empty($positionsByKey[$key])) {
+                foreach ($positionsByKey[$key] as $pos) {
+                    $fontSize = (int) ($pos['fontSize'] ?? $fontSizeDefault);
+                    $style = !empty($pos['bold']) ? 'B' : $styleDefault;
+                    $pdf->SetFont('THSarabunNew', $style, $fontSize);
+                    $x = ((float)$pos['x'] * $ptToMm) + $offsetX;
+                    $y = ((float)$pos['y'] * $ptToMm) + $offsetY + ($fontSize * 0.15);
+                    $pdf->SetXY($x, $y);
+                    $pdf->Write(0, iconv('UTF-8', 'cp874', (string)$text));
+                }
+                return;
+            }
             $xKey = $key . '_x';
             $yKey = $key . '_y';
-
             if (isset($dataJson[$xKey]) && isset($dataJson[$yKey])) {
                 $fontSize = (int) ($dataJson[$key . '_fontSize'] ?? $fontSizeDefault);
                 $style = !empty($dataJson[$key . '_bold']) ? 'B' : $styleDefault;
                 $pdf->SetFont('THSarabunNew', $style, $fontSize);
-
-                // แปลงพิกัดจากฐานข้อมูลเป็น mm และเพิ่ม offset Y ให้ด้านบนของตัวอักษรตรงกับตำแหน่งที่วาง
                 $x = ((float)$dataJson[$xKey] * $ptToMm) + $offsetX;
                 $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY + ($fontSize * 0.15);
-
                 $pdf->SetXY($x, $y);
                 $pdf->Write(0, iconv('UTF-8', 'cp874', (string)$text));
             }
@@ -907,20 +933,7 @@ class DevelopmentController extends Controller
 
         // --- เริ่มพิมพ์ฟิลด์ต่างๆ ---
 
-        // --- ลายเซ็นต์ผู้ขอ ---
-        // try {
-
-        // $createdSig = $model->createdByEmp?->SignatureFilePath();
-        // if ($createdSig) {
-        //     // พิกัด XY ดึงมาจาก data_json ตามที่คุณทำไว้
-        //     $key = 'fullname_signature_img';
-        //     $x = ((float)$dataJson[$key . '_x'] * $ptToMm) + $offsetX;
-        //     $y = ((float)$dataJson[$key . '_y'] * $ptToMm) + $offsetY;
-        //     $pdf->Image($createdSig, $x, $y, 20, 0);
-        // }
-        // } catch (\Throwable $th) {
-
-        // }
+        // --- รูปลายเซ็น (จะวาดหลัง writeText ทั้งหมด ด้านล่าง) ---
 
         // --- ลายเซ็นต์ผู้ปฏิบัติหน้าที่แทน ---
         // try {
@@ -1015,9 +1028,24 @@ class DevelopmentController extends Controller
 
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
 
-        // --- รูปลายเซ็น (ใช้พิกัดจากฟิลด์ assigned_to_signature และ signature_approver ในหน้ากำหนดตำแหน่ง) ---
+        // --- รูปลายเซ็น — รองรับฟิลด์เดียวกันหลายจุด (วาดรูปที่ทุกจุด) ---
         $drawSignatureImage = function ($key, $filePath) use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
             if (!$filePath || !is_file($filePath)) {
+                return;
+            }
+            $positionsByKey = $dataJson['_positionsByKey'] ?? null;
+            if (!empty($positionsByKey[$key])) {
+                foreach ($positionsByKey[$key] as $pos) {
+                    $x = ((float)$pos['x'] * $ptToMm) + $offsetX;
+                    $y = ((float)$pos['y'] * $ptToMm) + $offsetY;
+                    $w = (float)($pos['width'] ?? 35);
+                    $h = (float)($pos['height'] ?? 15);
+                    try {
+                        $pdf->Image($filePath, $x, $y, $w, $h);
+                    } catch (\Throwable $e) {
+                        // ข้ามถ้าแทรกรูปไม่ได้
+                    }
+                }
                 return;
             }
             $xKey = $key . '_x';
@@ -1037,6 +1065,7 @@ class DevelopmentController extends Controller
                 // ข้ามถ้าแทรกรูปไม่ได้
             }
         };
+        $drawSignatureImage('requester_signature', $model->createdByEmp?->SignatureFilePath());
         $drawSignatureImage('assigned_to_signature', $model->assignedTo?->SignatureFilePath());
         if ($leaderGroupEmp) {
             $drawSignatureImage('leader_group_signature', $leaderGroupEmp->SignatureFilePath());

@@ -359,12 +359,13 @@ class SettingController extends Controller
             'total_days'      => ['label' => 'จำนวนวัน',            'x' => 30,  'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'distance'        => ['label' => 'ระยะทาง',            'x' => 100, 'y' => 132, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
             'vehicle_type'    => ['label' => 'เดินทางโดย',          'x' => 100, 'y' => 122, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'requester_signature' => ['label' => 'ลายเซ็นต์ผู้ขอ',   'x' => 30,  'y' => 170, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
             'signature_approver' => ['label' => 'ลายเซ็นผู้อนุมัติ', 'x' => 30,  'y' => 250, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
         ];
     }
 
     protected function getSignatureKeys(): array
     {
-        return ['signature_approver'];
+        return ['requester_signature', 'signature_approver'];
     }
 }
