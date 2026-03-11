@@ -77,9 +77,11 @@ $total = $notify['total'];
             </button>
             <button type="button" class="header-btn" id="toggleTheme"><i data-lucide="moon"></i> </button>
             <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><i data-lucide="maximize"></i> </button>
+            <?php if(yii::$app->user->can('admin')):?>
             <a href="<?= Url::to(['/settings']) ?>" class="header-btn">
                 <i data-lucide="settings"></i>
             </a>
+            <?php endif;?>
 
         </div>
         <div class="header-divider"></div>

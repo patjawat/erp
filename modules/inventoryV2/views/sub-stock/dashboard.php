@@ -38,35 +38,35 @@ if ($currentWarehouseId && $warehouses) {
         </svg>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted mb-0"><?= Html::encode($currentWarehouseName) ?> — ภาพรวมคลังย่อย รอตรวจรับ ต่ำกว่าจุดวิกฤต และแนวโน้มการจ่ายมาคลังย่อย</p>
+    <p class="text-muted small mb-0"><?= Html::encode($currentWarehouseName) ?> — ภาพรวมคลังย่อย รอตรวจรับ ต่ำกว่าจุดวิกฤต และแนวโน้มการจ่ายมาคลังย่อย</p>
 </div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-                <form method="get" action="<?= Url::to(['/inventory-v2/sub-stock/dashboard']) ?>" id="form-sub-warehouse" class="d-inline">
-                    <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3" id="subWarehouseFilter" style="min-width: 200px;">
-                        <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังย่อยทั้งหมด</option>
-                        <?php foreach ($warehouses as $w): ?>
-                            <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-                <?= Html::a('<i class="bi bi-boxes me-1"></i> สถานะวัสดุคงคลัง', array_merge(['/inventory-v2/report/balance-by-warehouse'], count($subWarehouseIds ?? []) === 1 ? ['warehouse_id' => $subWarehouseIds[0]] : []), ['class' => 'btn btn-outline-primary rounded-pill px-3']) ?>
-                <?= Html::a('<i class="bi bi-box-arrow-up-right me-1"></i> บันทึกการจ่าย/ใช้งาน', ['/inventory-v2/sub-stock/issue'], ['class' => 'btn btn-success rounded-pill px-4']) ?>
-                <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้างใบขอเบิก', ['/inventory-v2/requisition/create'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
-            </div>
+<div class="container-fluid px-3 px-md-4">
+    <div class="row g-3 align-items-center justify-content-between">
+        <div class="col-12 col-lg-auto">
+            <form method="get" action="<?= Url::to(['/inventory-v2/sub-stock/dashboard']) ?>" id="form-sub-warehouse" class="d-inline">
+                <label for="subWarehouseFilter" class="form-label visually-hidden">เลือกคลังย่อย</label>
+                <select name="warehouse_id" class="form-select form-select-sm border shadow-sm rounded-pill px-3" id="subWarehouseFilter" style="min-width: 180px;">
+                    <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังย่อยทั้งหมด</option>
+                    <?php foreach ($warehouses as $w): ?>
+                        <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+        </div>
+        <div class="col-12 col-lg-auto">
+            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_sub', ['active' => 'dashboard', 'subWarehouseIds' => $subWarehouseIds ?? []]) ?>
         </div>
     </div>
+</div>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4 sub-stock-dashboard">
-
+<div class="container-fluid py-4 px-3 px-md-4 sub-stock-dashboard">
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-info border-3">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -83,7 +83,7 @@ if ($currentWarehouseId && $warehouses) {
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
                     <div class="card-body p-3">
@@ -102,7 +102,7 @@ if ($currentWarehouseId && $warehouses) {
                 </div>
             </a>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-success border-3">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -119,7 +119,7 @@ if ($currentWarehouseId && $warehouses) {
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-warning border-3">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">

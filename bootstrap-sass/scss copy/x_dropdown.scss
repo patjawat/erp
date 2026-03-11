@@ -1,0 +1,217 @@
+@import "./variables";
+// @import "../node_modules/bootstrap/scss/bootstrap";
+.dropdown-toggle{
+    display: flex;
+    align-items: center;
+    .bx-chevron-down{
+      margin-top: 1px;
+    }
+    &:after{
+      display: none;
+    }
+  }
+  
+  .header-item{
+    &.btn{
+      border-radius: 0;
+    }
+  }
+  
+  .dropdown{
+    &.show{
+      .header-item{
+        background: rgba($black, 0.07);
+      }
+    }
+  }
+  
+  
+  .dropdown-item{
+    color: $menu-item;
+    padding: .6rem 1.25rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .custom-dropdown-item{
+    color: $menu-item;
+    padding: .5rem 1.5rem;
+    display: flex;
+    clear: both;
+    align-items: center;
+    justify-content: space-between;
+    .bx-chevron-right{
+      position: relative;
+      left: 15px;
+    }
+    &:hover{
+      background-color: $light;
+    }
+  }
+  
+  .dropdown-icon-item{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 3px;
+    line-height: 34px;
+    padding: 15px 0 9px;
+    color: $menu-item;
+    img{
+      height: 24px;
+    }
+    span{
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    &:hover{
+      background: $menu-item-bg-hover;
+      color: $primary;
+    }
+  }
+  
+  .dropdown-divider {
+    border-top-color: $light;
+  }
+  
+  
+  .dropdown-menu {
+    box-shadow: $box-shadow;
+    -webkit-animation-name: DropDownSlide;
+    animation-name: DropDownSlide;
+    -webkit-animation-duration: .3s;
+    animation-duration: .3s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    font-size: px-rem-converter(14);
+    border: none;
+    margin: 0;
+    z-index: 12;
+    &.show {
+      top: 100%!important
+    }  
+    &.top-0{
+      top: 0% !important;
+    }
+  }
+  
+  .dropdown-menu-right {
+    right: 0!important;
+    left: auto!important
+  }
+  
+  .ddropdown-menu-bottom-right{
+    bottom: 0!important; 
+    right: 0 !important;
+    &.show{
+      top: auto !important;
+      left: auto!important;
+    }
+  }
+  .dropend, .dropstart, .dropup {
+    .dropdown-menu {
+      top: auto!important;
+      -webkit-animation: none!important;
+      animation: none!important
+    }
+  }
+  
+  @-webkit-keyframes DropDownSlide {
+    to {
+        -webkit-transform: translateY(0);
+        transform: translateY(0)
+    }
+  
+    0% {
+        -webkit-transform: translateY(10px);
+        transform: translateY(10px)
+    }
+  }
+  
+  @keyframes DropDownSlide {
+    to {
+        -webkit-transform: translateY(0);
+        transform: translateY(0)
+    }
+  
+    0% {
+        -webkit-transform: translateY(10px);
+        transform: translateY(10px)
+    }
+  }
+  
+  
+  .dropdown-mega {
+    position: static
+  }
+  
+  .dropdown-megamenu {
+    padding: 20px;
+    left: 20px!important;
+    right: 20px!important
+  }
+  
+  .dropdown-mega-menu-xl {
+    width: 40rem;
+    @include media-breakpoint-down(md){
+      width: 100%;
+    }
+  }
+  
+  .dropdown-mega-menu-lg {
+    width: 30rem;
+    @include media-breakpoint-down(md){
+      width: 100%;
+    }
+  }
+  
+  // .megamenu-list{
+  //   li{
+  //     padding: 5px 0;
+  //     a{
+  //       color: $menu-item;
+  //       &:hover{
+  //         color: $primary;
+  //       }
+  //     }
+  //   }
+  // }
+  .megamenu-list {
+    li {
+        padding: 5px 20px;
+        position: relative;
+  
+        a {
+            color: $menu-item;
+  
+            &:hover {
+                color: $primary;
+            }
+        }
+  
+        &:before {
+            content: "\ea1d";
+            position: absolute;
+            left: 0;
+            font-family: $boxIcons;
+        }
+    }
+  }
+  
+  @media (min-width: 600px) {
+    .dropdown-menu-lg {
+        width: 320px;
+    }
+  }
+  @media (max-width: 600px) {
+    .navbar-header {
+      .dropdown {
+        position: static;
+        .dropdown-menu {
+          left: 10px!important;
+          right: 10px!important;
+        } 
+      }
+    }
+  }

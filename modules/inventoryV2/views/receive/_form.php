@@ -45,7 +45,7 @@ foreach ($items as $it) {
         </div>
 
         <div class="card-body">
-            <div class="row g-3 mb-4 p-3 rounded border">
+            <div class="row g-2 mb-4 px-3 rounded border">
                 <div class="col-md-3">
                     <?= $form->field($model, 'main_warehouse_id')->dropDownList($listWarehouse, [
                         'prompt' => '-- เลือกคลัง --',
@@ -77,7 +77,15 @@ foreach ($items as $it) {
                         ['class' => 'form-select border-primary', 'prompt' => '-- เลือกประเภทการรับเข้า --']
                     )->label('ประเภทการรับเข้า') ?>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
+                    <?= Html::activeHiddenInput($model, 'order_type', ['value' => 'IN']) ?>
+                    <?= $form->field($model, 'order_no')->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'เว้นว่างได้ — สร้างเลขที่อัตโนมัติ',
+                        'id' => 'stockorder-order_no',
+                    ])->label('เลขที่ใบรับเข้า (เว้นว่างได้ — ระบบสร้างเลขที่อัตโนมัติ)') ?>
+                </div>
+                <div class="col-md-12">
                     <?= $form->field($model, 'contact_id')->widget(TomSelectWidget::class, [
                         'items' => $listVendors,
                         'options' => ['class' => 'form-select', 'id' => 'stockorder-contact_id'],
@@ -87,14 +95,7 @@ foreach ($items as $it) {
                         ],
                     ])->label('ผู้ขาย') ?>
                 </div>
-                <div class="col-md-2">
-                    <?= Html::activeHiddenInput($model, 'order_type', ['value' => 'IN']) ?>
-                    <?= $form->field($model, 'order_no')->textInput([
-                        'maxlength' => true,
-                        'placeholder' => 'เว้นว่างได้ถ้าไม่ใช่การจัดซื้อ',
-                        'id' => 'stockorder-order_no',
-                    ])->label('เลขที่ใบรับเข้า')->hint('กรณีไม่ใช่การจัดซื้อ ไม่มีเลขใบรับสินค้า สามารถเว้นว่างได้ ระบบจะสร้างเลขที่ให้อัตโนมัติ', ['class' => 'form-text text-muted small']) ?>
-                </div>
+                
             </div>
 
             <div class="row g-2 mb-1 align-items-end">
@@ -287,7 +288,7 @@ $js = <<< JS
                 input.prop('required', true);
                 input.attr('placeholder', '');
             } else {
-                input.attr('placeholder', 'เว้นว่างได้ถ้าไม่ใช่การจัดซื้อ');
+                input.attr('placeholder', 'เว้นว่างได้ — สร้างเลขที่อัตโนมัติ');
             }
         }
     }

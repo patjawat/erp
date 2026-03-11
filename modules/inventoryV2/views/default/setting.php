@@ -33,52 +33,45 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/inventoryV2/menu', ['active' => 'setting']) ?>
+<div class="container-fluid px-3 px-md-4">
+    <div class="row g-3">
+        <div class="col-12">
+            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_setting', ['active' => 'setting']) ?>
+        </div>
+    </div>
+</div>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4" style="font-family: 'Sarabun', sans-serif;">
-
-    <!-- ลิงก์ด่วน -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body py-3">
-            <div class="row g-2">
-                <div class="col-auto">
-                    <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="btn btn-sm btn-outline-info">
-                        <i class="bi bi-tags"></i> จัดการรายการพัสดุ
-                    </a>
+<div class="container-fluid py-4 px-3 px-md-4" style="font-family: 'Sarabun', sans-serif;">
+    <!-- การค้นหา -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-2 px-3">
+                    <h6 class="mb-0"><i class="bi bi-search me-2"></i>การค้นหา</h6>
                 </div>
-                <div class="col-auto">
-                    <a href="<?= Url::to(['/inventory-v2/default/index']) ?>" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-map"></i> เมนูนำทางระบบคลัง
-                    </a>
+                <div class="card-body">
+                    <?= $this->render('_search_warehouse', ['model' => $searchModel]) ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- การค้นหา -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white py-2">
-            <h6 class="mb-0"><i class="bi bi-search me-2"></i>การค้นหา</h6>
-        </div>
-        <div class="card-body">
-            <?= $this->render('_search_warehouse', ['model' => $searchModel]) ?>
-        </div>
-    </div>
-
     <!-- รายการคลัง -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center py-2">
-            <h6 class="mb-0">
-                <i class="bi bi-ui-checks me-2"></i>รายการคลัง
-                <span class="badge text-bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
-            </h6>
-            <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [
-                'class' => 'btn btn-light btn-sm open-modal',
-                'data' => ['size' => 'modal-xl'],
-            ]) ?>
-        </div>
-        <div class="card-body">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center py-2 px-3">
+                    <h6 class="mb-0">
+                        <i class="bi bi-ui-checks me-2"></i>รายการคลัง
+                        <span class="badge text-bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
+                    </h6>
+                    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [
+                        'class' => 'btn btn-light btn-sm open-modal',
+                        'data' => ['size' => 'modal-xl'],
+                    ]) ?>
+                </div>
+                <div class="card-body">
             <?php if ($dataProvider->getTotalCount() === 0): ?>
                 <p class="text-muted mb-0">ไม่พบรายการคลังสินค้า</p>
             <?php else: ?>
@@ -158,6 +151,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 <?php endif; ?>
             <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>

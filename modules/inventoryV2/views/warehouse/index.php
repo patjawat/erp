@@ -20,9 +20,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/inventoryV2/menu', ['active' => 'setting']) ?>
+<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/main-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
 <?php $this->endBlock(); ?>
-
 <?php Pjax::begin(['id' => 'pjax-warehouse']); ?>
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">

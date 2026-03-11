@@ -48,33 +48,30 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-    <!-- Toolbar: ย้อนกลับ + filter + action -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-                
-                <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse" class="d-inline">
-                    <select name="warehouse_id" class="form-select border shadow-sm rounded-pill px-3" id="warehouseFilter" style="min-width: 200px;">
-                        <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังทั้งหมด</option>
-                        <?php foreach ($warehouses as $w): ?>
-                            <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-                <?= Html::a('<i class="bi bi-boxes me-1"></i> ยอดคงเหลือตามคลัง', ['/inventory-v2/report/balance-by-warehouse'], ['class' => 'btn btn-outline-primary rounded-pill px-3']) ?>
-                <?= Html::a('<i class="bi bi-plus-lg me-1"></i> รับสินค้า', ['/inventory-v2/receive/create'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
-                <?= Html::a('<i class="bi bi-plus-lg me-1"></i> ตั้งค่า', ['/inventory-v2/default/overview'], ['class' => 'btn btn-primary rounded-pill px-4']) ?>
-            </div>
+<div class="container-fluid px-3 px-md-4">
+    <div class="row g-3 align-items-center justify-content-between">
+        <div class="col-12 col-lg-auto">
+            <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse" class="d-inline">
+                <label for="warehouseFilter" class="form-label visually-hidden">เลือกคลัง</label>
+                <select name="warehouse_id" class="form-select form-select-sm border shadow-sm rounded-pill px-3" id="warehouseFilter" style="min-width: 180px;">
+                    <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังทั้งหมด</option>
+                    <?php foreach ($warehouses as $w): ?>
+                        <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+        </div>
+        <div class="col-12 col-lg-auto">
+            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'dashboard']) ?>
         </div>
     </div>
-
+</div>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4 main-stock-dashboard">
-
+<div class="container-fluid py-4 px-3 px-md-4 main-stock-dashboard">
     <!-- KPI Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-primary border-3">
                     <div class="card-body p-3">
@@ -88,7 +85,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 </div>
             </a>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <a href="<?= Url::to(['/inventory-v2/report/insufficient-to-disburse']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-warning border-3">
                     <div class="card-body p-3">
@@ -102,7 +99,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 </div>
             </a>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
                     <div class="card-body p-3">
@@ -116,7 +113,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 </div>
             </a>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-dark border-3 text-white">
                 <div class="card-body p-3">
                     <p class="small mb-1 fw-bold">มูลค่าพัสดุในคลัง</p>
@@ -128,7 +125,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-secondary border-3">
                 <div class="card-body p-3">
                     <p class="text-muted small mb-1 fw-bold">รายการพัสดุที่มีสต็อก</p>

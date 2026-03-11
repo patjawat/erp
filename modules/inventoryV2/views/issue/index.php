@@ -26,7 +26,7 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/main-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid py-4">
