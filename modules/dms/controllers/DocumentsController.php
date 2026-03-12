@@ -494,9 +494,7 @@ class DocumentsController extends Controller
                     // throw $th;
                 }
 
-                if (!is_numeric($model->document_org)) {
-                    $model->document_org = $this->UpdateDocOrg($model);
-                }
+                $this->UpdateDocOrg($model);
 
                 if ($model->save(false)) {
 
@@ -777,24 +775,67 @@ class DocumentsController extends Controller
     }
 
 
-    // ตรวจสอบว่ามีอุปกรณ์รายการใหม่หรือไม่
+    /**
+     * ปรับ document_org ให้เป็น string (code หรือ comma-separated codes)
+     * รองรับทั้งค่าเดียว (string) และหลายหน่วยงาน (array จาก Select2 multiple)
+     */
     protected function UpdateDocOrg($model)
     {
-        // try {
-        $title = $model->document_org;
-        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
-        if (!$check) {
-            $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
-            $newModel = new Categorise();
-            $newModel->code = ($maxCode + 1);
-            $newModel->name = 'document_org';
-            $newModel->title = $title;
-            $newModel->save(false);
-            return $newModel->code;
+        $raw = $model->document_org;
+        if (is_array($raw)) {
+            $codes = [];
+            foreach ($raw as $item) {
+                $item = trim((string) $item);
+                if ($item === '') {
+                    continue;
+                }
+                $codes[] = is_numeric($item) ? $item : $this->getOrCreateDocOrgCode($item);
+            }
+            $model->document_org = implode(',', $codes);
+            return;
         }
 
-        // } catch (\Throwable $th) {
-        // }
+        $title = trim((string) $raw);
+        if ($title === '') {
+            return;
+        }
+        if (is_numeric($title)) {
+            return;
+        }
+
+        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
+        if ($check) {
+            $model->document_org = (string) $check->code;
+            return;
+        }
+
+        $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
+        $newModel = new Categorise();
+        $newModel->code = (int) $maxCode + 1;
+        $newModel->name = 'document_org';
+        $newModel->title = $title;
+        $newModel->save(false);
+        $model->document_org = (string) $newModel->code;
+    }
+
+    /** หา code จาก title หรือสร้างรายการใหม่ใน categorise แล้วคืน code */
+    protected function getOrCreateDocOrgCode($title)
+    {
+        $title = trim((string) $title);
+        if ($title === '' || is_numeric($title)) {
+            return $title;
+        }
+        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
+        if ($check) {
+            return (string) $check->code;
+        }
+        $maxCode = Categorise::find()->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])->where(['like', 'name', 'document_org'])->scalar();
+        $newModel = new Categorise();
+        $newModel->code = (int) $maxCode + 1;
+        $newModel->name = 'document_org';
+        $newModel->title = $title;
+        $newModel->save(false);
+        return (string) $newModel->code;
     }
 
     // ตรวจสอบความถูกต้อง
