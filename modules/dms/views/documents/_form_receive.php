@@ -189,7 +189,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'pluginOptions' => [
                                         'allowClear' => true,
                                         'dropdownParent' => '#main-modal',
-                                        // 'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                        'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
                                     ],
                                     'pluginEvents' => [
                                         'select2:select' => 'function(result) { 

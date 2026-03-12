@@ -75,7 +75,6 @@ $total = $notify['total'];
             <button class="header-btn" id="toggleNavbar">
                 <i data-lucide="menu"></i>
             </button>
-            <button type="button" class="header-btn" id="toggleTheme"><i data-lucide="moon"></i> </button>
             <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><i data-lucide="maximize"></i> </button>
             <?php if(yii::$app->user->can('admin')):?>
             <a href="<?= Url::to(['/settings']) ?>" class="header-btn">
@@ -144,19 +143,9 @@ $(function () {
         }
     });
 
-    /* ======================
-     * Theme (Bootstrap 5.3 data-bs-theme)
-     * ====================== */
-    const theme = localStorage.getItem('theme') || '$colorName';
-    $('html').attr('data-bs-theme', theme);
-
-    $('#toggleTheme').on('click', function () {
-        const current = $('html').attr('data-bs-theme');
-        const next = current === 'dark' ? '$colorName' : 'dark';
-
-        $('html').attr('data-bs-theme', next);
-        localStorage.setItem('theme', next);
-    });
+    /* โหมดสีใช้ data-bs-theme จาก layout (ยกเลิก dark mode แล้ว) */
+    $('html').attr('data-bs-theme', '$colorName');
+    localStorage.removeItem('theme');
 
     /* ======================
      * Fullscreen
