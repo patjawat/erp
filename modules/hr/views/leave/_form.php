@@ -74,6 +74,8 @@ $resultsJs = <<<JS
 
 <?php if (!$model->isNewRecord): ?>
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
+     <?php echo $form->field($model, 'data_json[phone]')->texthidden()->label(false) ?>
+     <?php echo $form->field($model, 'data_json[address]')->texthidden()->label(false) ?>
 <?php endif ?>
 <div class="row d-flex justify-content-center">
     <div class="col-lg-12 col-md-12">
@@ -155,6 +157,22 @@ $resultsJs = <<<JS
                     ],
                 ])->label('ประเภท');
                 ?>
+                 <?php
+                                echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                                    'data' => [
+                                        'ภายในจังหวัด' => 'ภายในจังหวัด',
+                                        'ต่างจังหวัด' => 'ต่างจังหวัด',
+                                        'ต่างประเทศ' => 'ต่างประเทศ',
+                                    ],
+                                    // 'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'dropdownParent' => '#main-modal',
+                                        'width' => '100%',
+                                    ],
+                                ])->label('สถานที่ไป');
+                                ?>
+
             </div>
             <div class="col-6">
                 <?php
@@ -192,57 +210,7 @@ $resultsJs = <<<JS
                     'id' => 'summaryDay',
                     'style' => 'background-color: antiquewhite;font-weight: 800;
                     '])->label('สรุปวันลา') ?>
-            </div>
-        </div>
-
-        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
-                    type="button" role="tab" aria-controls="pills-home"
-                    aria-selected="true">รายละเอียดเพิ่มเติม</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
-                    type="button" role="tab" aria-controls="pills-profile"
-                    aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
-            </li>
-
-        </ul>
-        <div class="tab-content" id="pills-tabContent">
-            <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
-                tabindex="0">
-                <?php $isDirectorApplicant = !empty($model->emp_id) && \app\components\SiteHelper::isDirectorFromSettings($model->emp_id); ?>
-                <!-- Start row -->
-                <div class="row">
-                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
-                        <div class="d-flex gap-3">
-                            <div class="w-50">
-
-                                <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
-                            </div>
-                            <div class="w-50">
-                                <?php
-                                echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                                    'data' => [
-                                        'ภายในจังหวัด' => 'ภายในจังหวัด',
-                                        'ต่างจังหวัด' => 'ต่างจังหวัด',
-                                        'ต่างประเทศ' => 'ต่างประเทศ',
-                                    ],
-                                    // 'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'dropdownParent' => '#main-modal',
-                                        'width' => '100%',
-                                    ],
-                                ])->label('สถานที่ไป');
-                                ?>
-                            </div>
-                        </div>
-                        <?php echo $form->field($model, 'data_json[address]')->textArea(['style' => 'height:117px;'])->label('ระหว่างลาติดต่อ') ?>
-                    </div>
-                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
-
-                        <?php
+           <?php
                         try {
                             $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
                         } catch (\Throwable $th) {
@@ -278,13 +246,42 @@ $resultsJs = <<<JS
                                 'templateResult' => new JsExpression('formatRepo'),
                             ],
                         ])->label('มอบหมายงานให้')
-                        ?>
+                        ?>    
+        </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
+                    type="button" role="tab" aria-controls="pills-home"
+                    aria-selected="true">รายละเอียดเพิ่มเติม</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
+                    type="button" role="tab" aria-controls="pills-profile"
+                    aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
+            </li>
+
+        </ul>
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
+                tabindex="0">
+                <?php $isDirectorApplicant = !empty($model->emp_id) && \app\components\SiteHelper::isDirectorFromSettings($model->emp_id); ?>
+                <!-- Start row -->
+                <div class="row">
+                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
+       
+                                 <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+                    </div>
+                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
+
+                     
                         <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
 
 
                     </div>
                 </div>
-                <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+              
                 <!-- End Row -->
             </div>
             <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"

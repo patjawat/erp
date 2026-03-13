@@ -34,6 +34,8 @@ class UpdateController extends Controller
                     'run-update-table' => ['post'],
                     'run-docker-pull' => ['post'],
                     'ajax-docker-pull' => ['post'],
+                    'ajax-docker-pull-only' => ['post'],
+                    'ajax-docker-recreate' => ['post'],
                     'ajax-migrate' => ['post'],
                     'ajax-update-table' => ['post'],
                 ],
@@ -192,6 +194,55 @@ class UpdateController extends Controller
         $logs[] = implode("\n", $out2);
         if ($ret2 !== 0) $allOk = false;
         return ['success' => $allOk, 'message' => $allOk ? 'สำเร็จ' : 'มีข้อผิดพลาด', 'output' => implode("\n---\n", $logs)];
+    }
+
+    /**
+     * AJAX: ดึง image ล่าสุดเท่านั้น (docker pull) — ให้เสร็จก่อนค่อยทำขั้นถัดไป (เฉพาะ admin)
+     */
+    public function actionAjaxDockerPullOnly()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!Yii::$app->user->can('admin')) {
+            return ['success' => false, 'message' => 'ไม่มีสิทธิ์', 'output' => ''];
+        }
+        $config = Yii::$app->params['dockerUpdate'] ?? [];
+        $image = $config['image'] ?? 'patjawat/erp:latest';
+        $output = [];
+        $returnVar = -1;
+        exec('docker pull ' . escapeshellarg($image) . ' 2>&1', $output, $returnVar);
+        $message = implode("\n", $output);
+        return [
+            'success' => $returnVar === 0,
+            'message' => $returnVar === 0 ? 'สำเร็จ' : 'มีข้อผิดพลาด',
+            'output' => $message,
+        ];
+    }
+
+    /**
+     * AJAX: รีสตาร์ท container เท่านั้น (docker-compose up -d --no-deps --force-recreate) — เรียกหลัง pull เสร็จ (เฉพาะ admin)
+     */
+    public function actionAjaxDockerRecreate()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!Yii::$app->user->can('admin')) {
+            return ['success' => false, 'message' => 'ไม่มีสิทธิ์', 'output' => ''];
+        }
+        $config = Yii::$app->params['dockerUpdate'] ?? [];
+        $composePath = isset($config['composePath']) ? rtrim($config['composePath'], '/') : null;
+        $serviceName = $config['serviceName'] ?? 'app';
+        if (empty($composePath) || !is_dir($composePath)) {
+            return ['success' => false, 'message' => 'ไม่ได้ตั้งค่า composePath', 'output' => ''];
+        }
+        $output = [];
+        $returnVar = -1;
+        $composeDir = escapeshellarg($composePath);
+        exec('cd ' . $composeDir . ' && docker-compose up -d --no-deps --force-recreate ' . escapeshellarg($serviceName) . ' 2>&1', $output, $returnVar);
+        $message = implode("\n", $output);
+        return [
+            'success' => $returnVar === 0,
+            'message' => $returnVar === 0 ? 'สำเร็จ' : 'มีข้อผิดพลาด',
+            'output' => $message,
+        ];
     }
 
     /**
