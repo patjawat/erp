@@ -28,15 +28,34 @@ $this->params['breadcrumbs'][] = ['label' => 'ครุภัณฑ์', 'url' =
 
 
 
+<div class="container-fluid px-2 px-md-3 pb-3">
 <?= $this->render('@app/modules/am/views/asset/_title', ['model' => $model]) ?>
 
-<div class="card mt-4">
-    <div class="card-header">
-        <?= $this->render('@app/modules/am/views/asset/_view_menu', ['model' => $model, 'menu' => 'detail']) ?>
+<div class="row g-3 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <?= $this->render('@app/modules/am/views/asset/_view_menu', ['model' => $model, 'menu' => 'detail']) ?>
+            </div>
+            <div class="card-body">
+                <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
+                <div class="pt-3 mt-3 border-top border-light-subtle">
+                    <?= Html::a('<i data-lucide="trending-down" class="me-1"></i> ค่าเสื่อม (ชุดใหม่)', ['depreciation-v2', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <?= $this->render('@app/modules/am/views/asset/_details', ['model' => $model]) ?>
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header border-bottom">
+                <h6 class="text-uppercase text-secondary mb-0">QR Code & ประวัติวงจรชีวิต</h6>
+            </div>
+            <div class="card-body">
+                <?= $this->render('@app/modules/am/views/asset/_lifecycle_section', ['model' => $model]) ?>
+            </div>
+        </div>
     </div>
+</div>
 </div>
 
 

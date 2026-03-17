@@ -20,168 +20,7 @@ use kartik\editors\Summernote;
 
 <?= $form->field($model, 'asset_item_id')->hiddenInput()->label(false); ?>
 <div class="row">
-    <div class="col-8">
-        <div class="card">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i data-lucide="file-text"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">ข้อมูลทั่วไป</h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'data_json[lan_number]')->textInput(['maxlength' => true])->label('เลขที่ โฉนด') ?>
-                    </div>
-                    <div class="col-md-6">
-                        <?php
-                        echo $form->field($model, 'code', [
-                            'addon' => [
-                                'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
-                            ]
-                        ])->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'ค้นหาเลข FSN',
-                            'readonly' => false,  // Make field readonly
-                            // 'class' => 'form-control bg-primary text-white'  // Add background color
-                            'class' => 'form-control'  // Add background color
-                        ])->label('หมายเลขครุภัณฑ์'); ?>
-                    </div>
-                    <div class="col-md-12">
-                        <?= $form->field($model, 'data_json[land_document_ref]')->textInput(['maxlength' => true])->label('ที่เอกสาร (ถ้ามี)') ?>
-                    </div>
-                    <div class="col-12 border-top my-2"></div>
-                    <div class="col-12"><label class="form-label fw-medium">เนื้อที่</label></div>
-
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'data_json[land_size]', [
-                            'addon' => ['append' => ['content' => 'ไร่']],
-                        ])->textInput()->label(false) ?>
-                    </div>
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'data_json[land_size_ngan]', [
-                            'addon' => ['append' => ['content' => 'งาน']],
-                        ])->textInput()->label(false) ?>
-                    </div>
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'data_json[land_size_tarangwa]', [
-                            'addon' => ['append' => ['content' => 'ตารางวา']],
-                        ])->textInput()->label(false) ?>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-
-
-
-
-                    <div class="col-md-12">
-                        <?= $form->field($model, 'data_json[asset_options]')->widget(Summernote::class, [
-                            'useKrajeePresets' => true,
-                            'pluginOptions' => [
-                                'height' => 287, // ความสูงเริ่มต้น (px)
-                                'minHeight' => 150, // ความสูงต่ำสุด
-                                'maxHeight' => 500, // ความสูงสูงสุด
-                            ]
-                        ])->label('คุณลักษณะเฉพาะ / รายละเอียดเพิ่มเติม'); ?>
-                    </div>
-
-                </div>
-
-
-
-
-
-
-
-            </div>
-        </div>
-
-        <!-- ข้อมูลสถานที่และวันที่ -->
-        <div class="card">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i data-lucide="calendar-plus"></i>
-
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">ข้อมูลสถานที่และวันที่</h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-12">
-                        <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
-                    </div>
-
-                    <div class="col-md-6">
-                        <?php
-                        $url = \yii\helpers\Url::to(['/depdrop/employee']);
-                        $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
-                        echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                            // 'data' => $model->ListEmployees(),
-                            'initValueText' => $owner,
-                            'options' => ['placeholder' => 'กรุณาเลือก'],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'minimumInputLength' => 1,
-                                'language' => [
-                                    'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-                                ],
-                                'ajax' => [
-                                    'url' => $url,
-                                    'dataType' => 'json',
-                                    'data' => new JsExpression('function(params) { return {q:params.term}; }')
-                                ],
-                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                'templateResult' => new JsExpression('function(city) { return city.text; }'),
-                                'templateSelection' => new JsExpression('function (city) { return city.text; }'),
-                            ],
-                            'pluginEvents' => [
-                                // "select2:select" => "function(result) { 
-                                //     var data = $(this).select2('data')[0]
-                                //     $('#asset-data_json-method_get_text').val(data.text)
-                                //  }",
-                            ]
-                        ])->label('ผู้รับผิดชอบ');
-                        ?>
-                    </div>
-                    <div class="col-md-6">
-                        <?php
-                        echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
-                            'data' => $model->ListAssetStatus(),
-                            'options' => ['placeholder' => 'กรุณาเลือก...'],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function(result) { 
-                                            var data = $(this).select2('data')[0]
-                                            $('#asset-data_json-method_get_text').val(data.text)
-                                         }",
-                            ]
-                        ])->label('สถานะ'); ?>
-                    </div>
-                </div>
-
-
-                                <!-- ปุ่มดำเนินการ -->
-                <div class="row mt-4">
-                    <div class="col-12 d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
-                            <i class="bi bi-x-circle me-2"></i>ล้างข้อมูล
-                        </button>
-                        <div>
-                            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
-                            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
-
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-
-    </div>
-    <div class="col-4">
+     <div class="col-4">
         <div class="card">
             <div class="card-header border-bottom d-flex align-items-center gap-2">
                 <div class="erp-icon-box bg-primary bg-opacity-10">
@@ -350,6 +189,168 @@ use kartik\editors\Summernote;
             </div>
         </div>
     </div>
+    <div class="col-8">
+        <div class="card">
+            <div class="card-header border-bottom d-flex align-items-center gap-2">
+                <div class="erp-icon-box bg-primary bg-opacity-10">
+                    <i data-lucide="file-text"></i>
+                </div>
+                <h6 class="text-uppercase text-secondary m-0">ข้อมูลทั่วไป</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'data_json[lan_number]')->textInput(['maxlength' => true])->label('เลขที่ โฉนด') ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        echo $form->field($model, 'code', [
+                            'addon' => [
+                                'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
+                            ]
+                        ])->textInput([
+                            'maxlength' => true,
+                            'placeholder' => 'ค้นหาเลข FSN',
+                            'readonly' => false,  // Make field readonly
+                            // 'class' => 'form-control bg-primary text-white'  // Add background color
+                            'class' => 'form-control'  // Add background color
+                        ])->label('หมายเลขครุภัณฑ์'); ?>
+                    </div>
+                    <div class="col-md-12">
+                        <?= $form->field($model, 'data_json[land_document_ref]')->textInput(['maxlength' => true])->label('ที่เอกสาร (ถ้ามี)') ?>
+                    </div>
+                    <div class="col-12 border-top my-2"></div>
+                    <div class="col-12"><label class="form-label fw-medium">เนื้อที่</label></div>
+
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'data_json[land_size]', [
+                            'addon' => ['append' => ['content' => 'ไร่']],
+                        ])->textInput()->label(false) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'data_json[land_size_ngan]', [
+                            'addon' => ['append' => ['content' => 'งาน']],
+                        ])->textInput()->label(false) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'data_json[land_size_tarangwa]', [
+                            'addon' => ['append' => ['content' => 'ตารางวา']],
+                        ])->textInput()->label(false) ?>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+
+
+
+
+                    <div class="col-md-12">
+                        <?= $form->field($model, 'data_json[asset_options]')->widget(Summernote::class, [
+                            'useKrajeePresets' => true,
+                            'pluginOptions' => [
+                                'height' => 287, // ความสูงเริ่มต้น (px)
+                                'minHeight' => 150, // ความสูงต่ำสุด
+                                'maxHeight' => 500, // ความสูงสูงสุด
+                            ]
+                        ])->label('คุณลักษณะเฉพาะ / รายละเอียดเพิ่มเติม'); ?>
+                    </div>
+
+                </div>
+
+
+
+
+
+
+
+            </div>
+        </div>
+
+        <!-- ข้อมูลสถานที่และวันที่ -->
+        <div class="card">
+            <div class="card-header border-bottom d-flex align-items-center gap-2">
+                <div class="erp-icon-box bg-primary bg-opacity-10">
+                    <i data-lucide="calendar-plus"></i>
+
+                </div>
+                <h6 class="text-uppercase text-secondary m-0">ข้อมูลสถานที่และวันที่</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
+                    </div>
+
+                    <div class="col-md-6">
+                        <?php
+                        $url = \yii\helpers\Url::to(['/depdrop/employee']);
+                        $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
+                        echo $form->field($model, 'owner')->widget(Select2::classname(), [
+                            // 'data' => $model->ListEmployees(),
+                            'initValueText' => $owner,
+                            'options' => ['placeholder' => 'กรุณาเลือก'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'minimumInputLength' => 1,
+                                'language' => [
+                                    'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+                                ],
+                                'ajax' => [
+                                    'url' => $url,
+                                    'dataType' => 'json',
+                                    'data' => new JsExpression('function(params) { return {q:params.term}; }')
+                                ],
+                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                                'templateResult' => new JsExpression('function(city) { return city.text; }'),
+                                'templateSelection' => new JsExpression('function (city) { return city.text; }'),
+                            ],
+                            'pluginEvents' => [
+                                // "select2:select" => "function(result) { 
+                                //     var data = $(this).select2('data')[0]
+                                //     $('#asset-data_json-method_get_text').val(data.text)
+                                //  }",
+                            ]
+                        ])->label('ผู้รับผิดชอบ');
+                        ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php
+                        echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+                            'data' => $model->ListAssetStatus(),
+                            'options' => ['placeholder' => 'กรุณาเลือก...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                            'pluginEvents' => [
+                                "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                            ]
+                        ])->label('สถานะ'); ?>
+                    </div>
+                </div>
+
+
+                                <!-- ปุ่มดำเนินการ -->
+                <div class="row mt-4">
+                    <div class="col-12 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                            <i class="bi bi-x-circle me-2"></i>ล้างข้อมูล
+                        </button>
+                        <div>
+                            <?= Html::a('<i class="bi bi-arrow-left"></i> ย้อนกลับ', Yii::$app->request->referrer ?: ['/am/asset/view', 'id' => $model->id], ['class' => 'btn btn-secondary shadow']) ?>
+                            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
+
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+    </div>
+   
 </div>
 
 <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => true])->label(false) ?>

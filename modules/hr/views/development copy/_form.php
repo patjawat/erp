@@ -111,12 +111,12 @@ $listDocumentMe  = $emp->listDocumentMe();
                 <div class="row g-2">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                            <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.']) ?>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                            <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.']) ?>
                         </div>
                     </div>
                 </div>
@@ -370,7 +370,7 @@ $listDocumentMe  = $emp->listDocumentMe();
             <div class="col-md-6">
                 <div class="row g-2">
                     <div class="col-md-8">
-                        <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันไป') ?>
+                        <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.'])->label('วันไป') ?>
                     </div>
                     <div class="col-md-4">
                         <?= $form->field($model, 'data_json[vehicle_time_start]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลา') ?>
@@ -378,7 +378,7 @@ $listDocumentMe  = $emp->listDocumentMe();
                 </div>
                 <div class="row g-2">
                     <div class="col-md-8">
-                        <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป'])->label('วันกลับ') ?>
+                        <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.'])->label('วันกลับ') ?>
                     </div>
                     <div class="col-md-4">
                         <?= $form->field($model, 'data_json[vehicle_time_end]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลา') ?>

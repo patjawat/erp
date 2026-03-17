@@ -23,26 +23,29 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
 
 
 <?= $this->render('@app/modules/helpdesk2/views/service/summary_status', ['model' => $searchModel]) ?>
-<div class="row">
-    <div class="col-8">
-        <?php echo $this->render('@app/modules/helpdesk2/views/service/_chart_summary',[ 'searchModel' => $searchModel,])?>
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <?php echo $this->render('@app/modules/helpdesk2/views/service/_chart_summary', ['searchModel' => $searchModel]) ?>
     </div>
-    <div class="col-4"> <?php echo  $this->render('@app/modules/helpdesk2/views/service/progress', ['model' => $searchModel]) ?></div>
+    <div class="col-12 col-lg-4">
+        <?php echo $this->render('@app/modules/helpdesk2/views/service/progress', ['model' => $searchModel]) ?>
+    </div>
 </div>
+
 <?php // echo $this->render('@app/modules/helpdesk/views/repair/list_order', ['searchModel' => $searchModel,'dataProvider' => $dataProvider])?>
-<div class="row">
-    <div class="col-8">
-        <div class="card">
+
+<div class="row g-3 mt-1">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <h4 class="card-title">ปริมาณการมอบหมายงาน</h4>
+                <h4 class="card-title mb-3">ปริมาณการมอบหมายงาน</h4>
                 <div id="viewUserJob"></div>
-                <?php  echo $this->render('@app/modules/helpdesk2/views/service/user_job', ['searchModel' =>  $searchModel]) ?>
-                
+                <?php echo $this->render('@app/modules/helpdesk2/views/service/user_job', ['searchModel' => $searchModel]) ?>
             </div>
         </div>
     </div>
-    <div class="col-4">
-        <?php  echo $this->render('@app/modules/helpdesk2/views/service/view_rating', ['repair_group' =>  $searchModel->repair_group]) ?>
+    <div class="col-12 col-lg-4">
+        <?php echo $this->render('@app/modules/helpdesk2/views/service/view_rating', ['repair_group' => $searchModel->repair_group]) ?>
     </div>
 </div>
 

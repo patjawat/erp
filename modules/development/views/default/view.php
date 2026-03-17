@@ -72,7 +72,7 @@ if (empty($approvalItems)) {
     $approvalItems[] = ['label' => 'ไม่มีการขออนุมัติเงิน/รถ', 'checked' => true];
 }
 
-$printUrl = Url::to(['/development/default/print-official', 'id' => $model->id]);
+$printUrl = Url::to(['/hr/development/print', 'id' => $model->id]);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">

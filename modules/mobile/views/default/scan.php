@@ -126,7 +126,8 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
 </div>
 
 <?php
-$assetUrlTemplate = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID__']);
+$assetUrlById   = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID__']);
+$assetUrlByCode = \yii\helpers\Url::to(['/mobile/default/asset', 'code' => '__CODE__']);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
@@ -137,7 +138,8 @@ $assetUrlTemplate = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID
     var readerId = 'qr-reader';
     var html5QrCode = null;
     var lastRedirect = '';
-    var assetUrlTemplate = <?= json_encode($assetUrlTemplate) ?>;
+    var assetUrlById   = <?= json_encode($assetUrlById) ?>;
+    var assetUrlByCode = <?= json_encode($assetUrlByCode) ?>;
 
     function hideLoading() {
         if (loadingEl) loadingEl.style.display = 'none';
@@ -156,19 +158,23 @@ $assetUrlTemplate = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID
     }
     /**
      * แปลงข้อความจาก QR เป็น URL สำหรับ redirect
-     * รองรับ /q/asset/{id}, /q/document/{id}, /q/stock/{id} ให้ไปยังหน้าที่ตรงกับแอปมือถือ
+     * - /q/asset/{id} → หน้าครุภัณฑ์ด้วย id
+     * - ข้อความธรรมดา (รหัสครุภัณฑ์) → หน้าครุภัณฑ์ด้วย code (สแกนสติกเกอร์ QR บนครุภัณฑ์)
+     * - URL ภายนอก → ใช้ตามนั้น
      */
     function toRedirectUrl(text) {
-        var t = (text || '').trim();
-        if (!t) return null;
-        if (/^https?:\/\//i.test(t)) return t;
-        if (t.indexOf('/') !== 0) t = '/' + t;
+        var raw = (text || '').trim();
+        if (!raw) return null;
+        if (/^https?:\/\//i.test(raw)) return raw;
+        var t = raw.indexOf('/') !== 0 ? '/' + raw : raw;
         var path = t.replace(/\?.*$/, '');
         var idMatch = path.match(/^\/q\/asset\/([^\/]+)/);
-        if (idMatch && assetUrlTemplate) return assetUrlTemplate.replace('__ID__', encodeURIComponent(idMatch[1]));
+        if (idMatch && assetUrlById) return assetUrlById.replace('__ID__', encodeURIComponent(idMatch[1]));
         if (path.match(/^\/q\/document\//)) return t;
         if (path.match(/^\/q\/stock\//)) return t;
-        return t;
+        // รหัสครุภัณฑ์โดยตรง (จากสติกเกอร์ QR ของระบบ) → เปิดหน้าครุภัณฑ์ด้วย code
+        if (assetUrlByCode && raw.length <= 80 && raw.indexOf(' ') < 0) return assetUrlByCode.replace('__CODE__', encodeURIComponent(raw));
+        return null;
     }
     function redirectTo(url) {
         if (lastRedirect === url) return;

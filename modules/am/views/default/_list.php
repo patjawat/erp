@@ -46,7 +46,7 @@ use app\components\widgets\DataSummaryWidget;
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                     <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                    <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
+                    <li><?= Html::a('<i class="fa-solid fa-download me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                     <li>
                         <?= Html::a(
                             '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',

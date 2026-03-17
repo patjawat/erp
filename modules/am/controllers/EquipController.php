@@ -17,6 +17,7 @@ use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
+use app\modules\am\services\AssetNumberGenerator;
 
 /**
  * AssetController implements the CRUD actions for Asset model.
@@ -92,13 +93,25 @@ class EquipController extends Controller
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
         ]);
 
-        // ค้นหาตามอายุ
-        if ($searchModel->price1 && !$searchModel->price2) {
-            $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
+        // ที่ยังไม่กำหนดหน่วยงาน
+        if (!empty($searchModel->no_department)) {
+            $dataProvider->query->andWhere(['or', ['asset.department' => null], ['asset.department' => 0], ['asset.department' => '']]);
         }
-        // ค้นหาระหว่างช่วงอายุ
-        if ($searchModel->price1 && $searchModel->price2) {
-            $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
+        // ที่ยังไม่มีผู้รับผิดชอบ
+        if (!empty($searchModel->no_owner)) {
+            $dataProvider->query->andWhere(['or', ['asset.owner' => null], ['asset.owner' => '']]);
+        }
+        // ช่วงราคา: ราคาต่ำสุดขึ้นไป / ระหว่าง / ราคาสูงสุดลงมา
+        if ($searchModel->price1 !== '' && $searchModel->price1 !== null && $searchModel->price2 !== '' && $searchModel->price2 !== null) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('asset.price BETWEEN ' . (float) $searchModel->price1 . ' AND ' . (float) $searchModel->price2));
+        } elseif ($searchModel->price1 !== '' && $searchModel->price1 !== null) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('asset.price >= ' . (float) $searchModel->price1));
+        } elseif ($searchModel->price2 !== '' && $searchModel->price2 !== null) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('asset.price <= ' . (float) $searchModel->price2));
+        }
+        // ราคาต่ำกว่าเกณฑ์
+        if ($searchModel->price_below !== '' && $searchModel->price_below !== null) {
+            $dataProvider->query->andWhere(new \yii\db\Expression('asset.price < ' . (float) $searchModel->price_below));
         }
 
         $dataProvider->setSort([
@@ -192,8 +205,7 @@ class EquipController extends Controller
     public function actionDepreciation($id)
     {
         $model = $this->findModel($id);
-        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา' . $model->data_json['asset_name'] : '-';
-        $title = $this->request->get('title') . isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
+        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา ' . $model->data_json['asset_name'] : '-';
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -202,11 +214,25 @@ class EquipController extends Controller
                     'model' => $model,
                 ]),
             ];
-        } else {
-            return $this->render('depreciation_list', [
-                'model' => $model,
-            ]);
         }
+        return $this->render('view_depreciation', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * ค่าเสื่อมชุดใหม่ (อิง useful_life, residual = 1 บาท ตามมาตรฐาน) — เลือกแสดงรายปีหรือรายเดือนได้
+     */
+    public function actionDepreciationV2($id)
+    {
+        $model = $this->findModel($id);
+        $scheduleData = \app\modules\am\services\DepreciationScheduleService::buildSchedule($model);
+        $scheduleDataMonthly = \app\modules\am\services\DepreciationScheduleService::buildMonthlySchedule($model);
+        return $this->render('depreciation_v2', [
+            'model' => $model,
+            'scheduleData' => $scheduleData,
+            'scheduleDataMonthly' => $scheduleDataMonthly,
+        ]);
     }
 
     /**
@@ -224,6 +250,7 @@ class EquipController extends Controller
             'asset_status' => 0,
             'price' => 0,
             'ref' => substr(Yii::$app->security->generateRandomString(), 10),
+            'depreciation_method' => 'straight_line',
         ]);
 
         // ถ้ามี id แสดงว่าเป็นการ clone
@@ -432,6 +459,21 @@ class EquipController extends Controller
     }
 
 
+    /**
+     * GET /am/equip/next-asset-number?category_id=XXX
+     * Returns next asset number for AJAX preview. Consumes sequence.
+     */
+    public function actionNextAssetNumber()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $categoryId = trim((string) Yii::$app->request->get('category_id', ''));
+        if ($categoryId === '') {
+            return ['asset_number' => '', 'error' => 'category_id required'];
+        }
+        $assetNumber = AssetNumberGenerator::generate($categoryId);
+        return ['asset_number' => $assetNumber];
+    }
+
     public function actionNextCode()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -440,7 +482,6 @@ class EquipController extends Controller
         $result = [];
 
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
-            // ตรวจสอบค่า
             if ($model->fsn_number === '') {
                 $model->addError('fsn_number', 'ต้องระบุ หมายเลข FSN ก่อน');
             }
@@ -454,12 +495,11 @@ class EquipController extends Controller
                 'status' => 'error',
                 'data' => $result
             ];
-        } else {
-            return [
-                'status' => 'success',
-                'data' => AssetHelper::nextAssetCode($model->fsn_number)
-            ];
         }
+        return [
+            'status' => 'success',
+            'data' => AssetNumberGenerator::generate($model->fsn_number)
+        ];
     }
 
 

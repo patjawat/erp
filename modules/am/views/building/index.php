@@ -27,23 +27,54 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+<div class="card border-0 shadow-sm rounded-2 mb-4">
+    <div class="card-header border-bottom bg-white d-flex justify-content-between align-items-center">
+        <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2">
+            <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+                <i data-lucide="search"></i>
+            </div>
+            การค้นหา
+        </h6>
+        <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-file-excel me-1"></i> Excel
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><?= Html::a('<i class="fa-solid fa-download me-2"></i> ดาวน์โหลด Template', ['/am/building/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/building/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+            </ul>
+        </div>
     </div>
     <div class="card-body">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white">
+<div class="card border-0 shadow-sm rounded-2 mb-4">
+    <div class="card-header border-bottom bg-white">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white">
-                <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
-                <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
+            <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2 flex-wrap">
+                <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+                    <i data-lucide="list-checks"></i>
+                </div>
+                ทะเบียน<?= $this->title ?>
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                    <?= $dataProvider->getTotalCount() ?>
+                </span>
+                <span class="text-muted fw-normal text-uppercase">รายการ</span>
+                <span class="text-muted fw-normal">|</span>
+                <span class="text-muted fw-normal">มูลค่ารวม</span>
+                <span class="fw-semibold text-dark">
+                    <?= number_format($totalValue ?? 0, 2) ?>
+                </span>
+                <span class="text-muted fw-normal">บาท</span>
             </h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+                </div>
+            </div>
         </div>
     </div>
     <div class="card-body p-0">
@@ -122,6 +153,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <path d="M12 21v-1"></path>
                                     </svg>
                                 </a>
+                                <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
+                                    'class' => 'btn btn-icon btn-ghost-danger',
+                                    'title' => 'ลบ',
+                                    'data' => [
+                                        'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
+                                        'method' => 'post',
+                                    ],
+                                ]) ?>
                             </div>
                         </td>
 

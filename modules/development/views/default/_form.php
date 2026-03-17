@@ -92,10 +92,10 @@ $formAction = $isNewRecord
                     <p class="text-muted small fw-medium mb-2 mb-md-3"><i class="bi bi-calendar3 me-1"></i> วันที่และประเภท</p>
                     <div class="row g-2 g-md-3">
                         <div class="col-12 col-sm-6">
-                            <?= $form->field($model, 'date_start')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'วว/ดด/ปปปป']]) ?>
+                            <?= $form->field($model, 'date_start')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'ว/ด/พ.ศ.']]) ?>
                         </div>
                         <div class="col-12 col-sm-6">
-                            <?= $form->field($model, 'date_end')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'วว/ดด/ปปปป']]) ?>
+                            <?= $form->field($model, 'date_end')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'ว/ด/พ.ศ.']]) ?>
                         </div>
                     </div>
                     <?php
@@ -245,7 +245,7 @@ $formAction = $isNewRecord
                     <p class="text-muted small fw-medium mb-2"><i class="bi bi-signpost-2 me-1"></i> วันเดินทางไป</p>
                     <div class="row g-2 g-md-3">
                         <div class="col-12 col-sm-8">
-                            <?= $form->field($model, 'vehicle_date_start')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'วว/ดด/ปปปป']])->label('วันไป') ?>
+                            <?= $form->field($model, 'vehicle_date_start')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'ว/ด/พ.ศ.']])->label('วันไป') ?>
                         </div>
                         <div class="col-12 col-sm-4">
                             <?= $form->field($model, 'data_json[vehicle_time_start]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99', 'options' => ['class' => 'form-control', 'placeholder' => '00:00']])->label('เวลา') ?>
@@ -256,7 +256,7 @@ $formAction = $isNewRecord
                     <p class="text-muted small fw-medium mb-2"><i class="bi bi-signpost-2-fill me-1"></i> วันเดินทางกลับ</p>
                     <div class="row g-2 g-md-3">
                         <div class="col-12 col-sm-8">
-                            <?= $form->field($model, 'vehicle_date_end')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'วว/ดด/ปปปป']])->label('วันกลับ') ?>
+                            <?= $form->field($model, 'vehicle_date_end')->widget(DatepickerThai::class, ['options' => ['placeholder' => 'ว/ด/พ.ศ.']])->label('วันกลับ') ?>
                         </div>
                         <div class="col-12 col-sm-4">
                             <?= $form->field($model, 'data_json[vehicle_time_end]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99', 'options' => ['class' => 'form-control', 'placeholder' => '00:00']])->label('เวลา') ?>

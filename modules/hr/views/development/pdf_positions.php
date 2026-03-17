@@ -10,11 +10,17 @@ use yii\helpers\Html;
 /** @var string $templateUrl */
 /** @var array $signatureKeys */
 
+use app\modules\hr\helpers\PdfCoordinateHelper;
+
 $signatureKeys = $signatureKeys ?? [];
-$memberStartX   = (float)($config['member_fullname_start_x'] ?? 25);
-$memberStartY   = (float)($config['member_fullname_start_y'] ?? 85);
-$positionStartX = (float)($config['member_position_start_x'] ?? 100);
-$positionStartY = (float)($config['member_position_start_y'] ?? 85);
+$memberStartXRaw   = (float)($config['member_fullname_start_x'] ?? 25);
+$memberStartYRaw   = (float)($config['member_fullname_start_y'] ?? 85);
+$positionStartXRaw = (float)($config['member_position_start_x'] ?? 100);
+$positionStartYRaw = (float)($config['member_position_start_y'] ?? 85);
+$memberStartX   = $memberStartXRaw <= 1 ? $memberStartXRaw : $memberStartXRaw / PdfCoordinateHelper::A4_WIDTH_MM;
+$memberStartY   = $memberStartYRaw <= 1 ? $memberStartYRaw : $memberStartYRaw / PdfCoordinateHelper::A4_HEIGHT_MM;
+$positionStartX = $positionStartXRaw <= 1 ? $positionStartXRaw : $positionStartXRaw / PdfCoordinateHelper::A4_WIDTH_MM;
+$positionStartY = $positionStartYRaw <= 1 ? $positionStartYRaw : $positionStartYRaw / PdfCoordinateHelper::A4_HEIGHT_MM;
 $lineSpacing    = (float)($config['line_spacing'] ?? 5.5);
 $memberFontSize = (int)($config['member_font_size'] ?? 14);
 $memberBold     = !empty($config['member_bold']);
@@ -26,14 +32,57 @@ $this->params['breadcrumbs'][] = 'กำหนดตำแหน่ง';
 
 $this->registerCssFile(Url::to('@web/css/thsarabunnew.css'), ['depends' => [\yii\web\YiiAsset::class]]);
 $this->registerCss('.leave-field-chip { font-family: "THSarabunNew", sans-serif; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; color: #0d6efd !important; }');
+/* Zero-margin canvas + A4 aspect ratio. Ratio = (ElementLeft - ContainerLeft) / ContainerWidth. */
+$this->registerCss(<<<CSS
+.pdf-a4-scroll {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+.pdf-a4-container {
+    aspect-ratio: 1 / 1.414;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+.pdf-a4-container .pdf-a4-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    display: block;
+}
+.pdf-a4-container .pdf-a4-inner iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+.pdf-a4-container .pdf-a4-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    display: block;
+    box-sizing: border-box;
+}
+/* Chips: top-left of field. left: (ratio*100)%; top: (ratio*100)%; */
+CSS
+);
 
-$scale = 3;
-$pageW = 210;
-$pageH = 297;
-$canvasW = $pageW * $scale;
-$canvasH = $pageH * $scale;
-$pageWpt = 595.276;
-$fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
+$fontDisplayScale = 0.55;
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
@@ -92,25 +141,25 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                         <h6 class="mb-0 small fw-semibold text-primary"><i class="bi bi-people me-1"></i> ส่วนคณะเดินทาง (รายชื่อ)</h6>
                     </div>
                     <div class="card-body p-3">
-                        <p class="small text-muted mb-2">กำหนดจุดเริ่มต้นคอลัมน์ «ชื่อ» และ «ตำแหน่ง» ของรายชื่อคณะเดินทาง (ด้วยข้าพเจ้า) — ลากชิป «ชื่อ(คณะเดินทาง)» และ «ตำแหน่ง(คณะเดินทาง)» บนเทมเพลตด้านขวาได้ หรือกรอกตัวเลขด้านล่าง</p>
+                        <p class="small text-muted mb-2">กำหนดจุดเริ่มต้นคอลัมน์ «ชื่อ» และ «ตำแหน่ง» ของรายชื่อคณะเดินทาง — ลากชิปบนเทมเพลตหรือกรอกค่าสัมพัทธ์ (0–1)</p>
                         <div class="row g-2 mb-2">
                             <div class="col-6">
-                                <label class="form-label small mb-0">ชื่อ (X)</label>
-                                <input type="number" step="0.1" id="member_fullname_start_x" class="form-control" value="<?= Html::encode($memberStartX) ?>" aria-label="จุดเริ่มต้นชื่อ X">
+                                <label class="form-label small mb-0">ชื่อ X (ratio 0–1)</label>
+                                <input type="number" step="0.0001" min="0" max="1" id="member_fullname_start_x" class="form-control" value="<?= Html::encode(round($memberStartX, 4)) ?>" aria-label="จุดเริ่มต้นชื่อ X สัมพัทธ์">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small mb-0">ชื่อ (Y)</label>
-                                <input type="number" step="0.1" id="member_fullname_start_y" class="form-control" value="<?= Html::encode($memberStartY) ?>" aria-label="จุดเริ่มต้นชื่อ Y">
+                                <label class="form-label small mb-0">ชื่อ Y (ratio 0–1)</label>
+                                <input type="number" step="0.0001" min="0" max="1" id="member_fullname_start_y" class="form-control" value="<?= Html::encode(round($memberStartY, 4)) ?>" aria-label="จุดเริ่มต้นชื่อ Y สัมพัทธ์">
                             </div>
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-6">
-                                <label class="form-label small mb-0">ตำแหน่ง (X)</label>
-                                <input type="number" step="0.1" id="member_position_start_x" class="form-control" value="<?= Html::encode($positionStartX) ?>" aria-label="จุดเริ่มต้นตำแหน่ง X">
+                                <label class="form-label small mb-0">ตำแหน่ง X (ratio 0–1)</label>
+                                <input type="number" step="0.0001" min="0" max="1" id="member_position_start_x" class="form-control" value="<?= Html::encode(round($positionStartX, 4)) ?>" aria-label="จุดเริ่มต้นตำแหน่ง X สัมพัทธ์">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small mb-0">ตำแหน่ง (Y)</label>
-                                <input type="number" step="0.1" id="member_position_start_y" class="form-control" value="<?= Html::encode($positionStartY) ?>" aria-label="จุดเริ่มต้นตำแหน่ง Y">
+                                <label class="form-label small mb-0">ตำแหน่ง Y (ratio 0–1)</label>
+                                <input type="number" step="0.0001" min="0" max="1" id="member_position_start_y" class="form-control" value="<?= Html::encode(round($positionStartY, 4)) ?>" aria-label="จุดเริ่มต้นตำแหน่ง Y สัมพัทธ์">
                             </div>
                         </div>
                         <div class="row g-2 mb-2">
@@ -143,6 +192,8 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                             $key = $item['key'];
                             $x = (float) ($item['x'] ?? 0);
                             $y = (float) ($item['y'] ?? 0);
+                            $normX = $x <= 1 ? $x : $x / PdfCoordinateHelper::A4_WIDTH_MM;
+                            $normY = $y <= 1 ? $y : $y / PdfCoordinateHelper::A4_HEIGHT_MM;
                             $fontSize = (int) ($item['fontSize'] ?? 15);
                             $bold = !empty($item['bold']);
                             $enabled = isset($item['enabled']) ? (int) $item['enabled'] : 1;
@@ -181,8 +232,8 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                                     <label class="form-check-label small text-muted mb-0">หนา</label>
                                 </div>
                             </div>
-                            <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][x]" value="<?= Html::encode($x) ?>" data-pos-x data-item-id="<?= Html::encode($itemId) ?>">
-                            <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][y]" value="<?= Html::encode($y) ?>" data-pos-y data-item-id="<?= Html::encode($itemId) ?>">
+                            <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][x]" value="<?= Html::encode(round($normX, 4)) ?>" data-pos-x data-item-id="<?= Html::encode($itemId) ?>">
+                            <input type="hidden" name="positions[<?= Html::encode($itemId) ?>][y]" value="<?= Html::encode(round($normY, 4)) ?>" data-pos-y data-item-id="<?= Html::encode($itemId) ?>">
                             <button type="button" class="btn btn-outline-danger btn-sm position-remove" data-item-id="<?= Html::encode($itemId) ?>" aria-label="ลบตำแหน่ง"><i class="bi bi-trash"></i></button>
                         </div>
                         <?php endforeach; ?>
@@ -262,53 +313,62 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                 </div>
             </div>
             <div class="col-12 col-lg-8">
-                <p class="small text-muted mb-2">พื้นที่เทมเพลต (A4) — พื้นหลังเป็น PDF ลากชิปไปวางให้ตรงตำแหน่ง</p>
-                <div class="border rounded-3 overflow-auto bg-secondary bg-opacity-10 d-flex justify-content-center p-3" style="max-height: min(920px, 85vh);">
-                    <div id="pdf-canvas-wrapper" class="position-relative shadow-sm" style="width: <?= (int) $canvasW ?>px; height: <?= (int) $canvasH ?>px;">
-                        <iframe src="<?= Html::encode($templateUrl) ?>#toolbar=0" class="position-absolute top-0 start-0 w-100 h-100 border-0" style="pointer-events: none; z-index: 0;" title="เทมเพลต PDF (พื้นหลัง)"></iframe>
-                        <div id="pdf-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 1; background: transparent;" data-font-display-scale="<?= Html::encode($fontDisplayScale) ?>">
-                        <?php foreach ($items as $item): ?>
-                        <?php
-                            $itemId = $item['id'];
-                            $key = $item['key'];
-                            $enabled = isset($item['enabled']) ? (int) $item['enabled'] : 1;
-                            $x = (float) ($item['x'] ?? 0);
-                            $y = (float) ($item['y'] ?? 0);
-                            $fontSize = (int) ($item['fontSize'] ?? 15);
-                            $bold = !empty($item['bold']);
-                            $label = $item['label'] ?? $key;
-                            $left = round($x * $scale);
-                            $top = round($y * $scale);
-                            $chipFontSizePt = round($fontSize * $fontDisplayScale, 1);
-                            $chipFontWeight = $bold ? 'bold' : 'normal';
-                        ?>
-                        <div class="position-absolute leave-field-chip text-primary user-select-none <?= !$enabled ? 'd-none' : '' ?>"
-                             data-item-id="<?= Html::encode($itemId) ?>"
-                             data-field-key="<?= Html::encode($key) ?>"
-                             style="left: <?= (int) $left ?>px; top: <?= (int) $top ?>px; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: <?= Html::encode($chipFontSizePt) ?>pt; font-weight: <?= Html::encode($chipFontWeight) ?>;"
-                             title="<?= Html::encode($label) ?>"
-                             draggable="false">
-                            <span class="chip-label text-truncate d-inline-block" style="max-width: 140px;"><?= Html::encode($label) ?></span>
-                        </div>
-                        <?php endforeach; ?>
-                        <?php
-                        $memberNameLeft = round((float)$memberStartX * $scale);
-                        $memberNameTop  = round((float)$memberStartY * $scale);
-                        $memberPosLeft  = round((float)$positionStartX * $scale);
-                        $memberPosTop   = round((float)$positionStartY * $scale);
-                        ?>
-                        <div class="position-absolute leave-field-chip member-position-chip text-info user-select-none border border-info border-opacity-50 rounded-1 px-1"
-                             data-member-field="fullname"
-                             style="left: <?= (int) $memberNameLeft ?>px; top: <?= (int) $memberNameTop ?>px; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: 11px;"
-                             title="จุดเริ่มต้นคอลัมน์ชื่อคณะเดินทาง — ลากวางได้">
-                            <span class="chip-label">ชื่อ(คณะเดินทาง)</span>
-                        </div>
-                        <div class="position-absolute leave-field-chip member-position-chip text-info user-select-none border border-info border-opacity-50 rounded-1 px-1"
-                             data-member-field="position"
-                             style="left: <?= (int) $memberPosLeft ?>px; top: <?= (int) $memberPosTop ?>px; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: 11px;"
-                             title="จุดเริ่มต้นคอลัมน์ตำแหน่งคณะเดินทาง — ลากวางได้">
-                            <span class="chip-label">ตำแหน่ง(คณะเดินทาง)</span>
-                        </div>
+                <p class="small text-muted mb-2">พื้นที่เทมเพลต (A4 อัตราส่วน 1:1.414) — ค่าบันทึกเป็น ratio (0–1) เท่านั้น ไม่ใช้ px เพื่อ WYSIWYG ทุกความละเอียดจอ</p>
+                <div class="pdf-a4-scroll border rounded-3 overflow-auto bg-secondary bg-opacity-10 d-flex justify-content-center p-3" style="max-height: min(920px, 85vh);">
+                    <div id="pdf-canvas-container" class="pdf-a4-container position-relative shadow-sm">
+                        <div class="pdf-a4-inner">
+                            <iframe src="<?= Html::encode($templateUrl) ?>#toolbar=0" class="position-absolute top-0 start-0 w-100 h-100 border-0" style="pointer-events: none; z-index: 0;" title="เทมเพลต PDF (พื้นหลัง)"></iframe>
+                            <div id="pdf-canvas" class="pdf-a4-canvas" data-font-display-scale="<?= Html::encode($fontDisplayScale) ?>">
+                            <?php foreach ($items as $item): ?>
+                            <?php
+                                $itemId = $item['id'];
+                                $key = $item['key'];
+                                $enabled = isset($item['enabled']) ? (int) $item['enabled'] : 1;
+                                $x = (float) ($item['x'] ?? 0);
+                                $y = (float) ($item['y'] ?? 0);
+                                $normX = $x <= 1 ? $x : $x / PdfCoordinateHelper::A4_WIDTH_MM;
+                                $normY = $y <= 1 ? $y : $y / PdfCoordinateHelper::A4_HEIGHT_MM;
+                                $fontSize = (int) ($item['fontSize'] ?? 15);
+                                $bold = !empty($item['bold']);
+                                $label = $item['label'] ?? $key;
+                                $chipFontSizePt = round($fontSize * $fontDisplayScale, 1);
+                                $chipFontWeight = $bold ? 'bold' : 'normal';
+                                $leftPct = round($normX * 100, 2);
+                                $topPct = round($normY * 100, 2);
+                            ?>
+                            <div class="position-absolute leave-field-chip text-primary user-select-none <?= !$enabled ? 'd-none' : '' ?>"
+                                 data-item-id="<?= Html::encode($itemId) ?>"
+                                 data-field-key="<?= Html::encode($key) ?>"
+                                 style="left: <?= $leftPct ?>%; top: <?= $topPct ?>%; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: <?= Html::encode($chipFontSizePt) ?>pt; font-weight: <?= Html::encode($chipFontWeight) ?>;"
+                                 title="<?= Html::encode($label) ?>"
+                                 draggable="false">
+                                <span class="chip-label text-truncate d-inline-block" style="max-width: 140px;"><?= Html::encode($label) ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                            <?php
+                            $memberNameLeftPct = round($memberStartX * 100, 2);
+                            $memberNameTopPct  = round($memberStartY * 100, 2);
+                            $memberPosLeftPct  = round($positionStartX * 100, 2);
+                            $memberPosTopPct   = round($positionStartY * 100, 2);
+                            ?>
+                            <div class="position-absolute leave-field-chip member-position-chip text-info user-select-none border border-info border-opacity-50 rounded-1 px-1"
+                                 data-member-field="fullname"
+                                 style="left: <?= $memberNameLeftPct ?>%; top: <?= $memberNameTopPct ?>%; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: 11px;"
+                                 title="จุดเริ่มต้นคอลัมน์ชื่อคณะเดินทาง — ลากวางได้">
+                                <span class="chip-label">ชื่อ(คณะเดินทาง)</span>
+                            </div>
+                            <div class="position-absolute leave-field-chip member-position-chip text-info user-select-none border border-info border-opacity-50 rounded-1 px-1"
+                                 data-member-field="position"
+                                 style="left: <?= $memberPosLeftPct ?>%; top: <?= $memberPosTopPct ?>%; cursor: grab; font-family: 'THSarabunNew', sans-serif; font-size: 11px;"
+                                 title="จุดเริ่มต้นคอลัมน์ตำแหน่งคณะเดินทาง — ลากวางได้">
+                                <span class="chip-label">ตำแหน่ง(คณะเดินทาง)</span>
+                            </div>
+                            <div id="pdf-debug-crosshair" class="position-absolute d-none" style="left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;" aria-hidden="true">
+                                <div style="width: 20px; height: 2px; background: red; margin: 0 auto;"></div>
+                                <div style="width: 2px; height: 20px; background: red; margin: -11px auto 0; position: relative; left: 9px;"></div>
+                                <div class="small text-danger fw-bold" style="font-size: 10px; margin-top: 2px; white-space: nowrap;">(0.5, 0.5)</div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -321,54 +381,78 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
 $saveUrl = Url::to(['/hr/development/save-positions']);
 $csrfParam = Yii::$app->request->csrfParam;
 $csrfToken = Yii::$app->request->csrfToken;
-$scaleJs = $scale;
-$pageWJs = $pageW;
-$pageHJs = $pageH;
 $fieldLabelsJson = json_encode(array_map(function ($v) { return $v['label'] ?? ''; }, $fieldLabels));
 $fieldKeysJson = json_encode(array_keys($fieldLabels));
 $signatureKeysJson = json_encode($signatureKeys);
 $this->registerJs(<<<JS
 (function() {
-    var scale = {$scaleJs};
-    var pageW = {$pageWJs};
-    var pageH = {$pageHJs};
+    /**
+     * WYSIWYG Coordinate — mathematical parity with PDF.
+     * - Top-left: saved X,Y = top-left of text field relative to top-left of container.
+     * - UI to DB: RatioX = (ElementLeft - ContainerLeft) / ContainerWidth (use getBoundingClientRect).
+     * - DB to PDF: PDF_X = RatioX * 210 (mm), PDF_Y = RatioY * 297 (mm). No extra line-height offset.
+     */
     var fieldLabels = {$fieldLabelsJson};
     var fieldKeys = {$fieldKeysJson};
     var signatureKeys = {$signatureKeysJson};
     var canvas = document.getElementById('pdf-canvas');
-    var fontDisplayScale = parseFloat(canvas.getAttribute('data-font-display-scale')) || (420 / 595.276);
+    var fontDisplayScale = parseFloat(canvas.getAttribute('data-font-display-scale')) || 0.55;
     var form = document.getElementById('positions-form');
     var btn = document.getElementById('btn-save-positions');
     var alertEl = document.getElementById('positions-alert');
     var rowsContainer = document.getElementById('positions-rows');
     var rowTpl = document.getElementById('position-row-tpl');
     var addBtn = document.getElementById('btn-add-position');
+    var debugCoord = typeof window !== 'undefined' && (window.location.search.indexOf('debug=1') !== -1 || window.location.search.indexOf('debug=coord') !== -1);
     if (!canvas || !form || !btn || !rowsContainer || !rowTpl) return;
 
     function nextItemId() {
         return 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
     }
 
-    function pxToMm(px, isY) {
-        var v = px / scale;
-        var max = isY ? pageH : pageW;
-        return Math.round(Math.max(0, Math.min(max, v)) * 10) / 10;
+    function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+    /** Ratio from top-left of element relative to container. Uses getBoundingClientRect for parity. */
+    function rectToRatio(containerRect, elementLeft, elementTop) {
+        var cw = containerRect.width;
+        var ch = containerRect.height;
+        if (cw <= 0 || ch <= 0) return { x: 0, y: 0 };
+        var relX = elementLeft - containerRect.left;
+        var relY = elementTop - containerRect.top;
+        return {
+            x: clamp01(relX / cw),
+            y: clamp01(relY / ch)
+        };
     }
 
-    function updateHiddenInput(itemId, x, y) {
+    function pxToRatio(leftPx, topPx) {
+        var cr = canvas.getBoundingClientRect();
+        if (cr.width <= 0 || cr.height <= 0) return { x: 0, y: 0 };
+        return {
+            x: clamp01(leftPx / cr.width),
+            y: clamp01(topPx / cr.height)
+        };
+    }
+
+    /** Store ratio as decimal 0.0000–1.0000 (4 dp). Never store px. */
+    function ratioToStored(ratio) {
+        return Math.round(ratio * 10000) / 10000;
+    }
+
+    function updateHiddenInput(itemId, normX, normY) {
         var xInput = form.querySelector('input[name="positions[' + itemId + '][x]"]');
         var yInput = form.querySelector('input[name="positions[' + itemId + '][y]"]');
-        if (xInput) xInput.value = x;
-        if (yInput) yInput.value = y;
+        if (xInput) xInput.value = ratioToStored(normX);
+        if (yInput) yInput.value = ratioToStored(normY);
     }
 
-    function updateMemberInputs(field, xMm, yMm) {
+    function updateMemberInputs(field, normX, normY) {
         var xId = field === 'fullname' ? 'member_fullname_start_x' : 'member_position_start_x';
         var yId = field === 'fullname' ? 'member_fullname_start_y' : 'member_position_start_y';
         var xEl = document.getElementById(xId);
         var yEl = document.getElementById(yId);
-        if (xEl) xEl.value = Math.round(xMm * 10) / 10;
-        if (yEl) yEl.value = Math.round(yMm * 10) / 10;
+        if (xEl) xEl.value = ratioToStored(normX);
+        if (yEl) yEl.value = ratioToStored(normY);
     }
 
     function getLabelForKey(key) {
@@ -408,7 +492,7 @@ $this->registerJs(<<<JS
         var itemId = chip.getAttribute('data-item-id');
         var memberField = chip.getAttribute('data-member-field');
         var dragging = false;
-        var startX, startY, startLeft, startTop;
+        var startX, startY, startLeftPx, startTopPx;
 
         chip.addEventListener('mousedown', function(e) {
             if (e.button !== 0) return;
@@ -416,8 +500,10 @@ $this->registerJs(<<<JS
             dragging = true;
             startX = e.clientX;
             startY = e.clientY;
-            startLeft = parseInt(chip.style.left, 10) || 0;
-            startTop = parseInt(chip.style.top, 10) || 0;
+            var canvasRect = canvas.getBoundingClientRect();
+            var chipRect = chip.getBoundingClientRect();
+            startLeftPx = chipRect.left - canvasRect.left;
+            startTopPx = chipRect.top - canvasRect.top;
             chip.style.cursor = 'grabbing';
         });
 
@@ -425,19 +511,23 @@ $this->registerJs(<<<JS
             if (!dragging || !chip.parentNode) return;
             var dx = e.clientX - startX;
             var dy = e.clientY - startY;
-            var newLeft = Math.max(0, Math.min(canvas.offsetWidth - chip.offsetWidth, startLeft + dx));
-            var newTop = Math.max(0, Math.min(canvas.offsetHeight - chip.offsetHeight, startTop + dy));
-            chip.style.left = newLeft + 'px';
-            chip.style.top = newTop + 'px';
+            var cr = canvas.getBoundingClientRect();
+            var w = cr.width;
+            var h = cr.height;
+            var newLeftPx = Math.max(0, Math.min(w - chip.offsetWidth, startLeftPx + dx));
+            var newTopPx = Math.max(0, Math.min(h - chip.offsetHeight, startTopPx + dy));
+            var ratio = pxToRatio(newLeftPx, newTopPx);
+            chip.style.left = (ratio.x * 100) + '%';
+            chip.style.top = (ratio.y * 100) + '%';
             if (memberField) {
-                updateMemberInputs(memberField, pxToMm(newLeft, false), pxToMm(newTop, true));
+                updateMemberInputs(memberField, ratio.x, ratio.y);
             } else if (itemId) {
-                updateHiddenInput(itemId, pxToMm(newLeft, false), pxToMm(newTop, true));
+                updateHiddenInput(itemId, ratio.x, ratio.y);
             }
             startX = e.clientX;
             startY = e.clientY;
-            startLeft = newLeft;
-            startTop = newTop;
+            startLeftPx = newLeftPx;
+            startTopPx = newTopPx;
         });
 
         document.addEventListener('mouseup', function() {
@@ -450,6 +540,11 @@ $this->registerJs(<<<JS
 
     canvas.querySelectorAll('.leave-field-chip').forEach(attachChipDrag);
 
+    if (debugCoord) {
+        var crosshair = document.getElementById('pdf-debug-crosshair');
+        if (crosshair) crosshair.classList.remove('d-none');
+    }
+
     function syncMemberChipsFromInputs() {
         var mX = document.getElementById('member_fullname_start_x');
         var mY = document.getElementById('member_fullname_start_y');
@@ -457,13 +552,14 @@ $this->registerJs(<<<JS
         var pY = document.getElementById('member_position_start_y');
         var chipName = canvas.querySelector('.member-position-chip[data-member-field="fullname"]');
         var chipPos = canvas.querySelector('.member-position-chip[data-member-field="position"]');
+        var toRatio = function(v) { return clamp01(parseFloat(v) || 0); };
         if (chipName && mX && mY) {
-            chipName.style.left = (parseFloat(mX.value) || 0) * scale + 'px';
-            chipName.style.top = (parseFloat(mY.value) || 0) * scale + 'px';
+            chipName.style.left = (toRatio(mX.value) * 100) + '%';
+            chipName.style.top = (toRatio(mY.value) * 100) + '%';
         }
         if (chipPos && pX && pY) {
-            chipPos.style.left = (parseFloat(pX.value) || 0) * scale + 'px';
-            chipPos.style.top = (parseFloat(pY.value) || 0) * scale + 'px';
+            chipPos.style.left = (toRatio(pX.value) * 100) + '%';
+            chipPos.style.top = (toRatio(pY.value) * 100) + '%';
         }
     }
     ['member_fullname_start_x', 'member_fullname_start_y', 'member_position_start_x', 'member_position_start_y'].forEach(function(id) {
@@ -489,8 +585,8 @@ $this->registerJs(<<<JS
             if (!key) return;
             var obj = {
                 key: key,
-                x: parseFloat(xInput.value) || 0,
-                y: parseFloat(yInput.value) || 0,
+                x: ratioToStored(parseFloat(xInput.value) || 0),
+                y: ratioToStored(parseFloat(yInput.value) || 0),
                 fontSize: parseInt(fsInput ? fsInput.value : 15, 10) || 15,
                 bold: (boldCb && boldCb.checked) ? 1 : 0,
                 enabled: (enabledCb && enabledCb.checked) ? 1 : 0
@@ -510,10 +606,10 @@ $this->registerJs(<<<JS
         var pX = document.getElementById('member_position_start_x');
         var pY = document.getElementById('member_position_start_y');
         var spacing = document.getElementById('line_spacing');
-        if (mX) data.member_fullname_start_x = parseFloat(mX.value) || 25;
-        if (mY) data.member_fullname_start_y = parseFloat(mY.value) || 85;
-        if (pX) data.member_position_start_x = parseFloat(pX.value) || 100;
-        if (pY) data.member_position_start_y = parseFloat(pY.value) || 85;
+        if (mX) data.member_fullname_start_x = ratioToStored(parseFloat(mX.value) || 0.119);
+        if (mY) data.member_fullname_start_y = ratioToStored(parseFloat(mY.value) || 0.286);
+        if (pX) data.member_position_start_x = ratioToStored(parseFloat(pX.value) || 0.476);
+        if (pY) data.member_position_start_y = ratioToStored(parseFloat(pY.value) || 0.286);
         if (spacing) data.line_spacing = parseFloat(spacing.value) || 5.5;
         var memberFontSizeEl = document.getElementById('member_font_size');
         var memberBoldEl = document.getElementById('member_bold');
@@ -619,8 +715,8 @@ $this->registerJs(<<<JS
         chip.className = 'position-absolute leave-field-chip text-primary user-select-none';
         chip.setAttribute('data-item-id', itemId);
         chip.setAttribute('data-field-key', fieldKeys[0] || '');
-        chip.style.left = '0px';
-        chip.style.top = '0px';
+        chip.style.left = '0%';
+        chip.style.top = '0%';
         chip.style.cursor = 'grab';
         chip.style.fontSize = (15 * fontDisplayScale).toFixed(1) + 'pt';
         chip.style.fontWeight = 'normal';

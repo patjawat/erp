@@ -66,8 +66,8 @@ use yii\helpers\Html;
                                     '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(PDF)',
                                     ['/hr/development/print', 'id' => $item->id],
                                     [
-                                        'class' => 'dropdown-item', // เอา open-modalx ออกถ้าต้องการให้เปิดหน้าใหม่จริงๆ
-                                        'target' => '_blank',       // แก้ตรงนี้: target (ไม่มีขีดล่าง) => _blank (มีขีดล่าง)
+                                        'class' => 'dropdown-item',
+                                        'target' => '_blank',
                                     ]
                                 ) ?>
                             </li>

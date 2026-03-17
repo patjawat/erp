@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 ?>
-<div class="d-flex gap-2">
+<div class="d-flex flex-wrap gap-2">
 
     <?php if(Yii::$app->user->can('asset')):?>
         <div class="dropdown">

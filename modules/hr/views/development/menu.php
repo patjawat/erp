@@ -27,7 +27,8 @@ $isSettingActive = ($active === 'setting-template');
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-2 border-0 py-2" aria-labelledby="hrDevelopmentSettingMenu">
             <li>
-                <?= Html::a('<i class="bi bi-file-earmark-pdf me-2"></i> Template รายงานขอไปราชการ', ['/hr/development/pdf-editor'], ['class' => 'dropdown-item py-2 px-3']) ?>
+                <!-- <?= Html::a('<i class="bi bi-file-earmark-pdf me-2"></i> Template รายงานขอไปราชการ', ['/hr/development/pdf-editor'], ['class' => 'dropdown-item py-2 px-3']) ?> -->
+                <?= Html::a('<i class="bi bi-file-earmark-pdf me-2"></i> Template รายงานขอไปราชการ', ['//pdf-template'], ['class' => 'dropdown-item py-2 px-3']) ?>
             </li>
         </ul>
     </div>

@@ -1,13 +1,18 @@
 <?php
 
 use yii\helpers\Url;
+use yii\helpers\Html;
 ?>
 
-<div class="bg-light p-2 rounded-3 d-flex gap-2">
+<div class="bg-light p-2 rounded-3 d-flex flex-wrap gap-2">
     <a href="<?= Url::to(['view-asset', 'id' => $model->id]) ?>" class="btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'detail'  ? 'btn-primary' : 'bg-body' ?>">
         <i data-lucide="file-text"></i>
         รายละเอียด
     </a>
+    <?= Html::a('<i data-lucide="arrow-left-right"></i> โอนย้าย', ['/am/asset/transfer', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?= Html::a('<i data-lucide="wrench"></i> ส่งซ่อม', ['/am/asset/repair', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?= Html::a('<i data-lucide="trash-2"></i> จำหน่าย', ['/am/asset/dispose', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?= Html::a('<i data-lucide="qr-code"></i> พิมพ์ QR', ['/am/asset/print-qr', 'ids' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
     <?php if ($model->asset_group_id == 4): ?>
         <a href="<?= Url::to(['repair-history', 'id' => $model->id]) ?>" class="btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'repair_history'  ? 'btn-primary' : 'bg-body' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

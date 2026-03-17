@@ -10,6 +10,7 @@ use yii\helpers\FileHelper;
 use app\models\Categorise;
 use app\components\UserHelper;
 use app\components\ThaiDateHelper;
+use app\components\SiteHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
 use yii\helpers\Url;
@@ -29,8 +30,8 @@ class SettingController extends Controller
         if (!parent::beforeAction($action)) {
             return false;
         }
-        // serve PDF ไม่ต้องเช็ค permission (ใช้ใน iframe — เฉพาะ login แล้ว)
-        if (in_array($action->id, ['leave-pdf', 'serve-template'])) {
+        // serve PDF / print-data ไม่ต้องเช็ค permission ที่นี่ (leave-print-data ตรวจใน action ว่าเป็นเจ้าของหรือมีสิทธิ์)
+        if (in_array($action->id, ['leave-pdf', 'serve-template', 'leave-print-data'])) {
             return true;
         }
         if (!Yii::$app->user->can('leave')) {
@@ -311,7 +312,7 @@ class SettingController extends Controller
 
         $model = Leave::find()
             ->andWhere(['id' => (int) $id])
-            ->with(['employee', 'leaveType'])
+            ->with(['employee', 'leaveType', 'leaveStatus'])
             ->one();
         if ($model === null) {
             ob_end_clean();
@@ -338,45 +339,7 @@ class SettingController extends Controller
         }
 
         $dateFmt = $tmpl['date_format'] ?? 'medium';
-        $fmtDate = function ($date) use ($dateFmt) {
-            return $this->formatDateForLeavePdf($date, $dateFmt);
-        };
-
-        $author = $model->getAvatar($model->emp_id, '');
-        $values = [
-            'emp_fullname'     => $author['fullname'] ?? ($model->employee->fullname ?? ''),
-            'department'       => $author['department'] ?? ($model->employee ? $model->employee->departmentName() : ''),
-            'emp_position'     => $author['position_name'] ?? ($model->employee ? $model->employee->positionName() : ''),
-            'leave_type_title' => $model->leaveType ? $model->leaveType->title : '',
-            'date_start'       => $model->date_start ? $fmtDate($model->date_start) : '',
-            'date_end'         => $model->date_end   ? $fmtDate($model->date_end)   : '',
-            'total_days'       => (string) ($model->total_days ?? ''),
-            'reason'           => $model->data_json['reason'] ?? '',
-            'address'          => $model->data_json['address'] ?? '',
-            'contact_phone'    => $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '',
-            'place_go'         => $model->data_json['place_go'] ?? '',
-            'create_date'      => $model->created_at ? $fmtDate($model->created_at) : '',
-        ];
-        for ($level = 1; $level <= 8; $level++) {
-            $checker = $model->checkerName($level);
-            $approveDateRaw = $model->getApproveDateRaw($level);
-            $values['approve_date_' . $level]     = $approveDateRaw ? $fmtDate($approveDateRaw) : ($checker['approve_date'] ?? '');
-            $values['approve_' . $level . '_name'] = $checker['fullname'] ?? '';
-            $values['approve_' . $level . '_position'] = $checker['position'] ?? '';
-        }
-        $statsRows = $model->getLeaveStatsInFiscalYear();
-        $usedBefore = 0;
-        $totalDays = 0;
-        if (!empty($statsRows)) {
-            $row = $statsRows[0];
-            $usedBefore = (float) ($row['last_days'] ?? 0);
-            $totalDays = (float) ($row['total_days'] ?? 0);
-        }
-        $values['leave_stats_used_before'] = (string) $usedBefore;
-        $values['leave_stats_total'] = (string) $totalDays;
-        $lastLeave = $model->getLastLeaveBeforeThis();
-        $values['last_leave_date_start'] = $lastLeave && $lastLeave->date_start ? $fmtDate($lastLeave->date_start) : '';
-        $values['last_leave_date_end'] = $lastLeave && $lastLeave->date_end ? $fmtDate($lastLeave->date_end) : '';
+        $values = $this->getLeavePdfValues($model, $dateFmt);
 
         if (!class_exists(\setasign\Fpdi\Fpdi::class)) {
             ob_end_clean();
@@ -420,7 +383,7 @@ class SettingController extends Controller
             $width  = (float) ($item['width'] ?? 35);
             $height = (float) ($item['height'] ?? 15);
             $imgPath = null;
-            if ($key === 'signature_applicant') {
+            if ($key === 'emp_sign' || $key === 'signature_applicant') {
                 $sigData = isset($model->data_json['signature_data']) ? trim((string) $model->data_json['signature_data']) : '';
                 if ($sigData !== '' && preg_match('#^data:image/(\w+);base64,(.+)$#', $sigData, $m)) {
                     $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
@@ -432,11 +395,31 @@ class SettingController extends Controller
                         }
                     }
                 }
-            } else {
-                $level = (int) str_replace('signature_approve_', '', $key);
-                if ($level >= 1) {
-                    $checker = $model->checkerName($level);
-                    $sigPath = isset($checker['signature']) ? $checker['signature'] : '';
+                if ($imgPath === null && $model->employee && method_exists($model->employee, 'signature')) {
+                    $sigPath = $model->employee->signature();
+                    if ($sigPath !== '' && is_file($sigPath)) {
+                        $imgPath = $sigPath;
+                    }
+                }
+            } elseif ($key === 'leader_sign') {
+                $c = $model->checkerName(2);
+                if (!empty($c['signature']) && is_file($c['signature'])) {
+                    $imgPath = $c['signature'];
+                }
+            } elseif ($key === 'hr_sign') {
+                $c = $model->checkerName(3);
+                if (!empty($c['signature']) && is_file($c['signature'])) {
+                    $imgPath = $c['signature'];
+                }
+            } elseif ($key === 'direc_sign') {
+                $c = $model->checkerName(4);
+                if (!empty($c['signature']) && is_file($c['signature'])) {
+                    $imgPath = $c['signature'];
+                }
+            } elseif ($key === 'send_sign') {
+                $sendEmp = $model->leaveWorkSend();
+                if ($sendEmp && method_exists($sendEmp, 'signature')) {
+                    $sigPath = $sendEmp->signature();
                     if ($sigPath !== '' && is_file($sigPath)) {
                         $imgPath = $sigPath;
                     }
@@ -466,6 +449,128 @@ class SettingController extends Controller
         Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
         Yii::$app->response->content = $body;
         return Yii::$app->response;
+    }
+
+    /**
+     * คืนข้อมูลสำหรับเติมใน PDF ใบลาเป็น JSON (ให้ editor ที่ pdf-template ดึงไปแสดงตอนกำหนดตำแหน่ง).
+     */
+    public function actionLeavePrintData($id)
+    {
+        $model = Leave::find()
+            ->andWhere(['id' => (int) $id])
+            ->with(['employee', 'leaveType', 'leaveStatus'])
+            ->one();
+        if ($model === null) {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['error' => 'ไม่พบรายการ'];
+        }
+        $me = UserHelper::GetEmployee();
+        $isOwner = ($me && (int) $me->id === (int) $model->emp_id);
+        $canLeave = Yii::$app->user->can('leave');
+        $canAdmin = Yii::$app->user->can('admin');
+        if (!$isOwner && !$canLeave && !$canAdmin) {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['error' => 'คุณไม่มีสิทธิ์ดูข้อมูลใบลานี้'];
+        }
+        $values = $this->getLeavePdfValues($model, 'medium');
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return $values;
+    }
+
+    /**
+     * สร้างชุดค่า key => value สำหรับเติมใน PDF ใบลา (ใช้ทั้ง actionLeavePdf และ actionLeavePrintData).
+     */
+    protected function getLeavePdfValues(Leave $model, string $dateFormat = 'medium'): array
+    {
+        $fmtDate = function ($date) use ($dateFormat) {
+            return $this->formatDateForLeavePdf($date, $dateFormat);
+        };
+        $info = class_exists(SiteHelper::class) ? SiteHelper::getInfo() : [];
+        $directorView = class_exists(SiteHelper::class) && method_exists(SiteHelper::class, 'viewDirector') ? SiteHelper::viewDirector() : [];
+        $companyName = (string) ($info['company_name'] ?? '');
+        $directorFullname = (string) ($directorView['fullname'] ?? $info['director_fullname'] ?? '');
+        $author = $model->getAvatar($model->emp_id, '');
+        $emp = $model->employee;
+        $empPositionText = $emp ? ('ตำแหน่ง' . $emp->positionName()) : '';
+        $levelName = $emp && method_exists($emp, 'positionLevelName') ? ($emp->positionLevelName() ? 'ระดับ' . $emp->positionLevelName() : '') : '';
+        $lastDaysData = $model->LastDays();
+        $lastLeave = is_object($lastDaysData['data'] ?? null) ? $lastDaysData['data'] : $model->getLastLeaveBeforeThis();
+        $lastDateStart = $lastLeave && $lastLeave->date_start ? $fmtDate($lastLeave->date_start) : '-';
+        $lastDateEnd = $lastLeave && $lastLeave->date_end ? $fmtDate($lastLeave->date_end) : '-';
+        $leaveSummary = $model->getLeaveSummary();
+        $lastLeaveDays = $leaveSummary['last_leave_days'] ?? null;
+        $totalLeaveDays = $leaveSummary['total_leave_days'] ?? null;
+        if ($lastLeaveDays === null || $totalLeaveDays === null) {
+            $statsRows = $model->getLeaveStatsInFiscalYear();
+            $lastLeaveDays = !empty($statsRows) ? (float) ($statsRows[0]['last_days'] ?? 0) : 0;
+            $totalLeaveDays = !empty($statsRows) ? (float) ($statsRows[0]['total_days'] ?? 0) : (float) ($model->total_days ?? 0);
+        }
+        $leader = $model->checkerName(2);
+        $hr = $model->checkerName(3);
+        $direc = $model->checkerName(4);
+        $sendEmp = $model->leaveWorkSend();
+        $ent = method_exists($model, 'Entitlements') ? $model->Entitlements() : null;
+        $entitlementsDays = $ent && isset($ent->days) ? (string) $ent->days : '0';
+        $values = [
+            'org_name'        => $companyName,
+            'org_position'    => 'ผู้อำนวยการ' . $companyName,
+            'director'        => $directorFullname,
+            'title'           => $model->leaveType ? $model->leaveType->title : '',
+            'createDate'      => $model->created_at ? $fmtDate($model->created_at) : '',
+            'level_name'      => $levelName,
+            'department'      => $author['department'] ?? ($emp ? $emp->departmentName() : ''),
+            'emp_department'  => $emp ? $emp->departmentName() : '',
+            'dateStart'       => $model->date_start ? $fmtDate($model->date_start) : '',
+            'dateEnd'         => $model->date_end ? $fmtDate($model->date_end) : '',
+            'lastDateStart'   => $lastDateStart,
+            'lastDateEnd'     => $lastDateEnd,
+            'last_days'       => (string) $lastLeaveDays,
+            'days'            => (string) ($model->total_days ?? ''),
+            'total_days'      => (string) $totalLeaveDays,
+            'ld'              => $entitlementsDays,
+            'sum'             => $entitlementsDays,
+            'reason'          => (string) ($model->data_json['reason'] ?? $model->reason ?? ''),
+            'leaveType'       => $model->leaveType ? $model->leaveType->title : '',
+            'address'         => isset($model->data_json['address']) ? strip_tags((string) $model->data_json['address']) : '',
+            'status'          => $model->status === 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต',
+            'emp_fullname'    => $author['fullname'] ?? ($emp ? $emp->fullname : ''),
+            'emp_position'    => $empPositionText,
+            'phone'           => $emp && method_exists($emp, 'getAttribute') ? (string) ($emp->getAttribute('phone') ?? $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '-') : (string) ($model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '-'),
+            'leader_fullname' => (string) ($leader['fullname'] ?? ''),
+            'leader_position' => isset($leader['position']) ? 'ตำแหน่ง' . $leader['position'] : '',
+            'leader_date'     => (string) ($leader['approve_date'] ?? ''),
+            'hr_fullname'     => (string) ($hr['fullname'] ?? ''),
+            'hr_position'     => isset($hr['position']) ? 'ตำแหน่ง' . $hr['position'] : '',
+            'hr_date'         => (string) ($hr['approve_date'] ?? ''),
+            'direc_fullname'  => (string) ($direc['fullname'] ?? ''),
+            'direc_position'  => isset($direc['position']) ? 'ตำแหน่ง' . $direc['position'] : '',
+            'direc_date'      => (string) ($direc['approve_date'] ?? ''),
+            'send_fullname'   => $sendEmp ? (string) $sendEmp->fullname : '',
+            'send_position'   => $sendEmp && method_exists($sendEmp, 'positionName') ? 'ตำแหน่ง' . $sendEmp->positionName() : '',
+        ];
+        $values['create_date'] = $values['createDate'];
+        $values['leave_type_title'] = $values['leaveType'];
+        $values['date_start'] = $values['dateStart'];
+        $values['date_end'] = $values['dateEnd'];
+        $values['contact_phone'] = $values['phone'];
+        $values['leave_stats_used_before'] = $values['last_days'];
+        $values['leave_stats_total'] = $values['total_days'];
+        $values['last_leave_date_start'] = $values['lastDateStart'];
+        $values['last_leave_date_end'] = $values['lastDateEnd'];
+        for ($level = 1; $level <= 8; $level++) {
+            $c = $model->checkerName($level);
+            $approveDateRaw = $model->getApproveDateRaw($level);
+            $values['approve_' . $level . '_name'] = (string) ($c['fullname'] ?? '');
+            $values['approve_' . $level . '_position'] = (string) ($c['position'] ?? '');
+            $values['approve_date_' . $level] = $approveDateRaw ? $fmtDate($approveDateRaw) : (string) ($c['approve_date'] ?? '');
+        }
+        $values['approver_fullname'] = $values['approve_1_name'] ?? '';
+        $values['approver_position'] = $values['approve_1_position'] ?? '';
+        $values['approver_approve_date'] = $values['approve_date_1'] ?? '';
+        $values['approver_signature'] = '';
+        $values['approval_status'] = $values['status'];
+        $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');
+        return $values;
     }
 
     // ─────────────────────────────────────────────
@@ -711,70 +816,61 @@ class SettingController extends Controller
     //  ค่าเริ่มต้นฟิลด์
     // ─────────────────────────────────────────────
 
+    /**
+     * ชุดข้อมูลการลา — ตรงกับ modules/hr/controllers/DocumentController (LT1/LT4)
+     * ใช้ key เดียวกับ Word template เพื่อให้เทมเพลต PDF ใช้ชุดข้อมูลเดียวกัน
+     */
     protected function getDefaultFields(): array
     {
+        $sig = ['width' => 35, 'height' => 15];
         return [
-            'emp_fullname'         => ['label' => 'ชื่อ-นามสกุลผู้ขอลา',   'x' => 30,  'y' => 50,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'department'           => ['label' => 'หน่วยงาน/แผนก',          'x' => 30,  'y' => 58,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'emp_position'         => ['label' => 'ตำแหน่งผู้ขอลา',          'x' => 120, 'y' => 50,  'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
-            'leave_type_title'     => ['label' => 'ประเภทการลา',             'x' => 30,  'y' => 66,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'date_start'           => ['label' => 'วันที่เริ่มลา',           'x' => 30,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'date_end'             => ['label' => 'วันที่สิ้นสุด',           'x' => 80,  'y' => 74,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'total_days'           => ['label' => 'จำนวนวัน',                'x' => 30,  'y' => 82,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'reason'               => ['label' => 'เหตุผลการลา',             'x' => 30,  'y' => 90,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'address'              => ['label' => 'ที่อยู่ที่ติดต่อได้',     'x' => 30,  'y' => 98,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'contact_phone'        => ['label' => 'เบอร์โทรติดต่อ',          'x' => 30,  'y' => 106, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'place_go'             => ['label' => 'สถานที่ไป',               'x' => 30,  'y' => 114, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'create_date'           => ['label' => 'วันที่ยื่นคำขอ',          'x' => 30,  'y' => 122, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
-            'leave_stats_used_before' => ['label' => 'ลามาแล้ว', 'x' => 30,  'y' => 132, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'leave_stats_total'       => ['label' => 'รวมเป็น', 'x' => 30,  'y' => 145, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'last_leave_date_start'    => ['label' => 'ลาครั้งก่อน ตั้งแต่วันที่', 'x' => 30,  'y' => 155, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'last_leave_date_end'      => ['label' => 'ลาครั้งก่อน ถึงวันที่',     'x' => 90,  'y' => 155, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'approve_date_1'        => ['label' => 'วันที่อนุมัติระดับ 1',    'x' => 30,  'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_date_2'        => ['label' => 'วันที่อนุมัติระดับ 2',    'x' => 80,  'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_date_3'        => ['label' => 'วันที่อนุมัติระดับ 3',    'x' => 130, 'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_date_4'        => ['label' => 'วันที่อนุมัติระดับ 4',    'x' => 180, 'y' => 218, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_date_5'        => ['label' => 'วันที่อนุมัติระดับ 5',    'x' => 30,  'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_date_6'        => ['label' => 'วันที่อนุมัติระดับ 6',    'x' => 80,  'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_date_7'        => ['label' => 'วันที่อนุมัติระดับ 7',    'x' => 130, 'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_date_8'        => ['label' => 'วันที่อนุมัติระดับ 8',    'x' => 180, 'y' => 236, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_1_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 1',   'x' => 30,  'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_1_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 1', 'x' => 30,  'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'approve_2_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 2',   'x' => 80,  'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_2_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 2', 'x' => 80,  'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'approve_3_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 3',   'x' => 130, 'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
-            'approve_3_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 3', 'x' => 130, 'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
-            'approve_4_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 4',   'x' => 180, 'y' => 210, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_4_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 4', 'x' => 180, 'y' => 214, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
-            'approve_5_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 5',   'x' => 30,  'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_5_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 5', 'x' => 30,  'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
-            'approve_6_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 6',   'x' => 80,  'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_6_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 6', 'x' => 80,  'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
-            'approve_7_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 7',   'x' => 130, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_7_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 7', 'x' => 130, 'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
-            'approve_8_name'        => ['label' => 'ชื่อผู้อนุมัติระดับ 8',   'x' => 180, 'y' => 228, 'fontSize' => 12, 'bold' => 0, 'enabled' => 0],
-            'approve_8_position'    => ['label' => 'ตำแหน่งผู้อนุมัติระดับ 8', 'x' => 180, 'y' => 232, 'fontSize' => 11, 'bold' => 0, 'enabled' => 0],
-            'signature_applicant'   => ['label' => 'ลายเซ็นผู้ขอลา',         'x' => 30,  'y' => 200, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
-            'signature_approve_1'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 1', 'x' => 30,  'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
-            'signature_approve_2'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 2', 'x' => 80,  'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
-            'signature_approve_3'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 3', 'x' => 130, 'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1, 'width' => 35, 'height' => 15],
-            'signature_approve_4'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 4', 'x' => 180, 'y' => 230, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
-            'signature_approve_5'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 5', 'x' => 30,  'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
-            'signature_approve_6'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 6', 'x' => 80,  'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
-            'signature_approve_7'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 7', 'x' => 130, 'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
-            'signature_approve_8'   => ['label' => 'ลายเซ็นผู้อนุมัติระดับ 8', 'x' => 180, 'y' => 248, 'fontSize' => 15, 'bold' => 0, 'enabled' => 0, 'width' => 35, 'height' => 15],
+            'org_name'         => ['label' => 'ชื่อหน่วยงาน',           'x' => 30,  'y' => 30,  'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'org_position'     => ['label' => 'ผู้อำนวยการหน่วยงาน',     'x' => 30,  'y' => 36,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'director'         => ['label' => 'ชื่อผู้อำนวยการ',         'x' => 30,  'y' => 42,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'title'            => ['label' => 'ประเภทการลา (หัวเรื่อง)',  'x' => 90,  'y' => 42,  'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'createDate'       => ['label' => 'วันที่ยื่นคำขอ',          'x' => 150, 'y' => 42,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'level_name'       => ['label' => 'ระดับตำแหน่ง',           'x' => 30,  'y' => 50,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'department'       => ['label' => 'หน่วยงาน/แผนก',          'x' => 30,  'y' => 56,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'emp_department'   => ['label' => 'หน่วยงานผู้ขอลา',         'x' => 30,  'y' => 56,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'dateStart'        => ['label' => 'วันที่เริ่มลา',           'x' => 30,  'y' => 64,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'dateEnd'          => ['label' => 'วันที่สิ้นสุด',           'x' => 90,  'y' => 64,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'lastDateStart'    => ['label' => 'ลาครั้งก่อน ตั้งแต่วันที่', 'x' => 30,  'y' => 72,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'lastDateEnd'      => ['label' => 'ลาครั้งก่อน ถึงวันที่',    'x' => 100, 'y' => 72,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'last_days'        => ['label' => 'ลามาแล้ว',               'x' => 30,  'y' => 80,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'days'             => ['label' => 'จำนวนวันที่ลา',           'x' => 80,  'y' => 80,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'total_days'       => ['label' => 'รวมเป็น',               'x' => 130, 'y' => 80,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'ld'               => ['label' => 'วันลาสะสมประจำปี',       'x' => 30,  'y' => 88,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'sum'              => ['label' => 'รวมวันลาที่ใช้ได้',       'x' => 100, 'y' => 88,  'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'reason'           => ['label' => 'เหตุผลการลา',             'x' => 30,  'y' => 96,  'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'leaveType'        => ['label' => 'ประเภทการลา',             'x' => 30,  'y' => 104, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'address'          => ['label' => 'ที่อยู่ที่ติดต่อได้',     'x' => 30,  'y' => 112, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'status'           => ['label' => 'สถานะ (อนุญาต/ไม่อนุญาต)', 'x' => 150, 'y' => 112, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'emp_fullname'     => ['label' => 'ชื่อ-นามสกุลผู้ขอลา',     'x' => 30,  'y' => 120, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1],
+            'emp_position'     => ['label' => 'ตำแหน่งผู้ขอลา',          'x' => 30,  'y' => 126, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'phone'            => ['label' => 'เบอร์โทรติดต่อ',          'x' => 120, 'y' => 126, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'emp_sign'         => ['label' => 'ลายเซ็นผู้ขอลา',          'x' => 30,  'y' => 135, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1] + $sig,
+            'send_fullname'    => ['label' => 'ชื่อผู้ปฏิบัติหน้าที่แทน', 'x' => 30,  'y' => 145, 'fontSize' => 14, 'bold' => 0, 'enabled' => 1],
+            'send_position'    => ['label' => 'ตำแหน่งผู้ปฏิบัติหน้าที่แทน', 'x' => 30,  'y' => 151, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'send_sign'        => ['label' => 'ลายเซ็นผู้ปฏิบัติหน้าที่แทน', 'x' => 30,  'y' => 158, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1] + $sig,
+            'leader_fullname'  => ['label' => 'ชื่อหัวหน้ากลุ่มงาน/ระดับ 2', 'x' => 30,  'y' => 195, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'leader_position'  => ['label' => 'ตำแหน่งหัวหน้ากลุ่มงาน',   'x' => 30,  'y' => 200, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'leader_date'      => ['label' => 'วันที่อนุมัติ (ระดับ 2)',  'x' => 30,  'y' => 205, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'leader_sign'      => ['label' => 'ลายเซ็นหัวหน้ากลุ่มงาน',   'x' => 30,  'y' => 212, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1] + $sig,
+            'hr_fullname'      => ['label' => 'ชื่อเจ้าหน้าที่ HR (ระดับ 3)', 'x' => 100, 'y' => 195, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'hr_position'      => ['label' => 'ตำแหน่งเจ้าหน้าที่ HR',    'x' => 100, 'y' => 200, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'hr_date'          => ['label' => 'วันที่อนุมัติ (ระดับ 3)',  'x' => 100, 'y' => 205, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'hr_sign'          => ['label' => 'ลายเซ็นเจ้าหน้าที่ HR',    'x' => 100, 'y' => 212, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1] + $sig,
+            'direc_fullname'   => ['label' => 'ชื่อผู้อำนวยการ',         'x' => 160, 'y' => 195, 'fontSize' => 12, 'bold' => 0, 'enabled' => 1],
+            'direc_position'   => ['label' => 'ตำแหน่งผู้อำนวยการ',      'x' => 160, 'y' => 200, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'direc_date'       => ['label' => 'วันที่อนุมัติ (ระดับ 4)',  'x' => 160, 'y' => 205, 'fontSize' => 11, 'bold' => 0, 'enabled' => 1],
+            'direc_sign'       => ['label' => 'ลายเซ็นผู้อำนวยการ',      'x' => 160, 'y' => 212, 'fontSize' => 15, 'bold' => 0, 'enabled' => 1] + $sig,
         ];
     }
 
-    /** รายการ key ที่เป็นลายเซ็น (ใช้กำหนดขนาด width x height ได้) — รองรับผู้อนุมัติหลายชั้น */
+    /** รายการ key ที่เป็นลายเซ็น (ตรง DocumentController + รองรับ key เก่า signature_applicant) */
     protected function getSignatureKeys(): array
     {
-        return [
-            'signature_applicant',
-            'signature_approve_1', 'signature_approve_2', 'signature_approve_3',
-            'signature_approve_4', 'signature_approve_5', 'signature_approve_6',
-            'signature_approve_7', 'signature_approve_8',
-        ];
+        return ['emp_sign', 'signature_applicant', 'leader_sign', 'hr_sign', 'direc_sign', 'send_sign'];
     }
 }
 

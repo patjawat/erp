@@ -8,6 +8,7 @@ use yii\filters\AccessControl;
 use app\components\AppHelper;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
+use app\modules\am\models\Asset;
 use yii\web\Response;
 
 /**
@@ -479,14 +480,24 @@ class DefaultController extends Controller
     }
 
     /**
-     * ดูข้อมูลครุภัณฑ์ (จาก QR หรือเปิดโดย id).
+     * ดูข้อมูลครุภัณฑ์ (จาก QR สแกนได้รหัส หรือเปิดโดย id).
+     * รองรับ: ?id=123 หรือ ?code=AM-001 (รหัสครุภัณฑ์จาก QR)
      */
-    public function actionAsset($id = null)
+    public function actionAsset($id = null, $code = null)
     {
         $this->view->title = 'ข้อมูลครุภัณฑ์';
+        $asset = null;
+        if ($id && is_numeric($id)) {
+            $asset = Asset::findOne(['id' => (int) $id]);
+        }
+        if ($asset === null && $code !== null && $code !== '') {
+            $asset = Asset::findOne(['code' => trim((string) $code)]);
+        }
         return $this->render('asset', [
             'current_page' => 'services',
-            'id' => $id,
+            'id' => $asset ? $asset->id : $id,
+            'code' => $code,
+            'asset' => $asset,
         ]);
     }
 }

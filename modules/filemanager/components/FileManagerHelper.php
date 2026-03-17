@@ -182,6 +182,60 @@ class FileManagerHelper extends Component
         }
     }
 
+    /**
+     * บันทึกไฟล์ PDF ที่อัปโหลดลงโฟลเดอร์ filemanager (ใช้จาก request หรือเรียกโดยตรง).
+     * ถ้ามี ref+name เดิมอยู่จะลบของเดิมแล้วสร้างใหม่.
+     *
+     * @param UploadedFile $file ไฟล์จาก getInstanceByName
+     * @param string $ref โฟลเดอร์ใน fileupload เช่น pdf_templates
+     * @param string $name ชื่อ slot เช่น template_123
+     * @return Uploads|null โมเดล Uploads ที่สร้างใหม่ หรือ null ถ้าล้มเหลว
+     */
+    public static function savePdfFile(UploadedFile $file, string $ref, string $name): ?Uploads
+    {
+        if (!$file || strtolower($file->extension) !== 'pdf') {
+            return null;
+        }
+        self::CreateDir($ref);
+        $fileName = $file->baseName . '.' . $file->extension;
+        $realFileName = md5($file->baseName . time()) . '.' . $file->extension;
+        $savePath = self::getUploadPath() . $ref . '/' . $realFileName;
+
+        if (!$file->saveAs($savePath)) {
+            return null;
+        }
+        $pdfVersion = null;
+        $handle = fopen($savePath, 'rb');
+        if ($handle) {
+            $header = fread($handle, 20);
+            if (preg_match('/%PDF-(\d\.\d)/', $header, $matches)) {
+                $pdfVersion = floatval($matches[1]);
+            }
+            fclose($handle);
+        }
+        if ($pdfVersion !== null && $pdfVersion > 1.4) {
+            $convertedFile = self::getUploadPath() . $ref . '/converted_' . $realFileName;
+            $cmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=" . escapeshellarg($convertedFile) . " " . escapeshellarg($savePath);
+            exec($cmd, $output, $resultCode);
+            if ($resultCode === 0 && file_exists($convertedFile)) {
+                @unlink($savePath);
+                rename($convertedFile, $savePath);
+            }
+        }
+        $checkOld = Uploads::find()->where(['ref' => $ref, 'name' => $name])->one();
+        if ($checkOld) {
+            self::Deletefile($checkOld->id);
+        }
+        $model = new Uploads;
+        $model->ref = $ref;
+        $model->name = $name;
+        $model->file_name = $fileName;
+        $model->real_filename = $realFileName;
+        $model->type = 'pdf';
+        $model->save(false);
+        return $model;
+    }
+
     public static function UploadPdf($isAjax = false)
     {
         if (Yii::$app->request->isPost) {
@@ -195,62 +249,21 @@ class FileManagerHelper extends Component
                 $ref = $Uploads['ref'];
                 $name = $Uploads['name'];
             }
-            self::CreateDir($ref);
 
             if ($file && strtolower($file->extension) === 'pdf') {
-                $fileName = $file->baseName . '.' . $file->extension;
-                $realFileName = md5($file->baseName . time()) . '.' . $file->extension;
-                $savePath = self::getUploadPath() . $ref . '/' . $realFileName;
-
-                if ($file->saveAs($savePath)) {
-                    // ตรวจสอบ PDF version
-                    $pdfVersion = null;
-                    $handle = fopen($savePath, 'rb');
-                    if ($handle) {
-                        $header = fread($handle, 20);
-                        if (preg_match('/%PDF-(\d\.\d)/', $header, $matches)) {
-                            $pdfVersion = floatval($matches[1]);
-                        }
-                        fclose($handle);
-                    }
-
-                    // ถ้า version > 1.4 ให้แปลงไฟล์
-                    if ($pdfVersion !== null && $pdfVersion > 1.4) {
-                        $convertedFile = self::getUploadPath() . $ref . '/converted_' . $realFileName;
-                        $cmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=" . escapeshellarg($convertedFile) . " " . escapeshellarg($savePath);
-                        exec($cmd, $output, $resultCode);
-                        if ($resultCode === 0 && file_exists($convertedFile)) {
-                            // ลบไฟล์เดิมและเปลี่ยนชื่อไฟล์ใหม่
-                            @unlink($savePath);
-                            rename($convertedFile, $savePath);
-                        }
-                    }
-
-                    $checkOld = Uploads::find()->where(['ref' => $ref, 'name' => $name])->one();
-                    if ($checkOld) {
-                        self::Deletefile($checkOld->id);
-                    }
-
-                    $model = new Uploads;
-                    $model->ref = $ref;
-                    $model->name = $name;
-                    $model->file_name = $fileName;
-                    $model->real_filename = $realFileName;
-                    $model->type = 'pdf';
-                    $model->save(false);
-
+                $model = self::savePdfFile($file, $ref, $name);
+                if ($model) {
                     return [
                         'success' => 'true',
                         'data' => $model,
                         'file_url' => Url::to(['/filemanager/uploads/show', 'id' => $model->id], true),
                     ];
                 }
-            } else {
-                return [
-                    'success' => 'false',
-                    'error' => 'Only PDF files are allowed.',
-                ];
             }
+            return [
+                'success' => 'false',
+                'error' => 'Only PDF files are allowed.',
+            ];
         }
     }
 
@@ -430,7 +443,7 @@ class FileManagerHelper extends Component
     {
         $models = Uploads::find()->all();
         foreach ($models as $model) {
-            $filepath = self::getUploadPath() . $model->ref . '/' . $filename;
+            $filepath = self::getUploadPath() . $model->ref . '/' . $model->real_filename;
             if (self::isImage($filepath)) {
 
                 // return  self::createThumbnail($ref, $realFileName);

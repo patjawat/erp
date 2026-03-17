@@ -3,6 +3,7 @@
 namespace app\modules\sm\models;
 
 use Yii;
+use yii\helpers\Json;
 
 /**
  * This is the model class for table "categorise".
@@ -67,8 +68,22 @@ class Vendor extends \yii\db\ActiveRecord
         ];
     }
 
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            if (is_array($this->data_json)) {
+                $this->data_json = Json::encode($this->data_json);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public function afterFind()
     {
+        if (is_string($this->data_json)) {
+            $this->data_json = json_decode($this->data_json, true) ?: [];
+        }
         $this->phone = isset($this->data_json['phone']) ? $this->data_json['phone'] : '-';
         $this->address = isset($this->data_json['address']) ? $this->data_json['address'] : '-';
         $this->email = isset($this->data_json['email']) ? $this->data_json['email'] : '-';

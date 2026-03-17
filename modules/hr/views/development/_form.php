@@ -97,6 +97,13 @@ $listDocumentMe  = $emp->listDocumentMe();
                             ])->label('หนังสืออ้างอิง');
                             ?>
                 </div>
+                <div class="col-12">
+                    <?= $form->field($model, 'data_json[custom_text]')->textarea([
+                        'class' => 'form-control',
+                        'rows' => 2,
+                        'placeholder' => 'ข้อความที่ต้องการให้แสดงบน PDF ตามตำแหน่งที่ตั้งค่าในเทมเพลต',
+                    ])->label('ข้อความกำหนดเอง') ?>
+                </div>
             </div>
         </div>
     </div>

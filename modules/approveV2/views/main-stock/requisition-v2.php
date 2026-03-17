@@ -91,13 +91,13 @@ $subWarehouses = $subWarehouses ?? [];
             <div class="col-auto">
                 <label class="form-label small text-muted mb-0">วันที่ขอเบิก (จาก)</label>
                 <?= $form->field($searchModel, 'date_start', ['options' => ['class' => 'mb-0']])->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                    'options' => ['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป', 'style' => 'min-width: 110px;'],
+                    'options' => ['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.', 'style' => 'min-width: 110px;'],
                 ])->label(false) ?>
             </div>
             <div class="col-auto">
                 <label class="form-label small text-muted mb-0">ถึง</label>
                 <?= $form->field($searchModel, 'date_end', ['options' => ['class' => 'mb-0']])->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                    'options' => ['class' => 'form-control form-control-sm', 'placeholder' => 'วว/ดด/ปปปป', 'style' => 'min-width: 110px;'],
+                    'options' => ['class' => 'form-control form-control-sm', 'placeholder' => 'ว/ด/พ.ศ.', 'style' => 'min-width: 110px;'],
                 ])->label(false) ?>
             </div>
             <div class="col-auto">

@@ -20,37 +20,26 @@ use app\modules\am\components\AssetHelper;
 $listAssetitem = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_item_id'])->all(), 'code', 'title');
 $listAssetType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->all(), 'code', 'title');
 
+$hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !empty($model->no_department) || !empty($model->no_owner)
+    || !empty($model->method_get) || !empty($model->budget_type) || !empty($model->on_year) || !empty($model->q_receive_date)
+    || !empty($model->po_number) || (isset($model->price1) && $model->price1 !== '') || (isset($model->price2) && $model->price2 !== '') || !empty($model->price_below);
+
 ?>
-<style>
-    .field-assetsearch-q {
-        margin-bottom: 0px !important;
-    }
 
-    .right-setting {
-        width: 500px !important;
-    }
-
-    .select2-container--krajee-bs5 .select2-selection--single {
-        height: calc(2.25rem + 2px);
-        line-height: 1.5;
-        padding: 0.375rem 1.5rem 0.375rem 0.5rem !important;
-    }
 </style>
 
 <?php $form = ActiveForm::begin([
     'method' => 'get',
     'options' => [
-        'data-pjax' => 0
+        'data-pjax' => 0,
+        'class' => 'equip-search-form',
     ],
-    //  'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<div class="row">
-    <div class="col-lg-3 col-md-4 col-sm-12">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false)->label(false) ?>
-    </div>
-
-    <div class="col-lg-3 col-md-3 col-sm-12">
+<!-- ตัวกรองหลัก: แสดงเสมอ | ปุ่ม action อยู่ด้านขวา -->
+<div class="row g-3 align-items-end">
+ 
+    <div class="col-12 col-sm-6 col-md-3 col-lg-3">
         <?php
 
         echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
@@ -70,8 +59,7 @@ $listAssetType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_ty
         ])->label(false);
         ?>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
-
+    <div class="col-12 col-sm-6 col-md-4 col-lg-4">
         <?php
         echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
             'options' => [
@@ -95,7 +83,7 @@ $listAssetType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_ty
 
         ])->label(false); ?>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-12">
+    <div class="col-12 col-sm-6 col-md-4 col-lg-4">
         <?php
         echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
             'data' => $model->ListAssetStatus(),
@@ -112,146 +100,160 @@ $listAssetType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_ty
         ])->label(false);
         ?>
     </div>
-    <div class="col-lg-1 col-md-1 col-sm-12">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
-            </button>
-            <div class="dropdown">
-                <button class="btn btn-success shadow dropdown-toggle" type="button"
-                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-file-excel"></i> Excel
+       <div class="col-12 col-sm-6 col-md-4 col-lg-8">
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหารหัส / ชื่อครุภัณฑ์...'])->label(false) ?>
+    </div>
+    <div class="col-12 col-lg-auto">
+        <div class="row g-2 justify-content-end">
+            <div class="col-12 col-sm-auto">
+                <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary w-100 w-sm-auto']) ?>
+            </div>
+            <div class="col-12 col-sm-auto">
+                <button class="btn btn-outline-primary w-100 w-sm-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                    aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
+                    <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                    <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                    <li><?= Html::a('<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า', 'https://docs.google.com/spreadsheets/d/1YjAwT8Qklc6gEx30T_fXa_XkfncrCRe3pt9FwC6QYok/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank']) ?></li>
-                    <li>
-                        <?= Html::a(
-                            '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
-                            '#',
-                            ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
-                        ) ?>
+            </div>
+            <div class="col-12 col-sm-auto">
+                <div class="dropdown">
+                    <button class="btn btn-success shadow dropdown-toggle w-100 w-sm-auto" type="button"
+                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                        <li><?= Html::a('<i class="fa-solid fa-download me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                        <li>
+                            <?= Html::a(
+                                '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
+                                '#',
+                                ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
+                            ) ?>
 
-                    </li>
-                </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 
-<div class="collapse" id="collapseFilter">
-    <div class="row">
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+<!-- ตัวกรองเพิ่มเติม: แสดงเมื่อกด "ตัวกรองเพิ่มเติม" (หรือเปิดอัตโนมัติถ้ามีค่ากรองอยู่) -->
+<div class="collapse mt-3 pt-3 border-top <?= $hasAdvancedFilters ? 'show' : '' ?>" id="collapseFilter">
+    <p class="text-muted small mb-3"><i class="fa-solid fa-info-circle me-1"></i> หน่วยงาน · ผู้รับผิดชอบ · วิธีได้มา · ช่วงราคา</p>
+
+    <!-- กลุ่ม: หน่วยงาน & ผู้รับผิดชอบ -->
+    <div class="mb-3">
+        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">หน่วยงาน & ผู้รับผิดชอบ</span>
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                 'name' => 'department',
                 'id' => 'treeID',
                 'query' => Organization::find()->addOrderBy('root, lft'),
-                'value' => null,  // ไม่ตั้งค่าเริ่มต้น
+                'value' => null,
                 'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
                 'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
                 'fontAwesome' => true,
                 'asDropdown' => true,
                 'multiple' => false,
-                'options' => [
-                    'class' => 'close',
-                    'allowClear' => true,
-                ],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'placeholder' => 'เลือกหน่วยงาน...',
-                ],
-            ])->label(false);
-            ?>
-
+                'options' => ['class' => 'close', 'allowClear' => true],
+                'pluginOptions' => ['allowClear' => true, 'placeholder' => 'เลือกหน่วยงาน...'],
+            ])->label('หน่วยงาน'); ?>
+            </div>
+            <div class="col-12 col-md-6">
+                <?php
+                $url = \yii\helpers\Url::to(['/depdrop/employee']);
+                $ownerEmp = !empty($model->owner) ? Employees::findOne(['cid' => $model->owner]) : null;
+                $owner = $ownerEmp ? $ownerEmp->fullname : '';
+                echo $form->field($model, 'owner')->widget(Select2::classname(), [
+                    'initValueText' => $owner,
+                    'options' => ['placeholder' => 'ผู้รับผิดชอบ'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'minimumInputLength' => 1,
+                        'language' => ['errorLoading' => new JsExpression("function () { return 'กำลังโหลด...'; }")],
+                        'ajax' => ['url' => $url, 'dataType' => 'json', 'data' => new JsExpression('function(params) { return {q:params.term}; }')],
+                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                        'templateResult' => new JsExpression('function(city) { return city.text; }'),
+                        'templateSelection' => new JsExpression('function (city) { return city.text; }'),
+                    ],
+                ])->label('ผู้รับผิดชอบ'); ?>
+            </div>
         </div>
+    </div>
 
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
+    <!-- กลุ่ม: กรองเฉพาะ -->
+    <div class="mb-3">
+        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">กรองเฉพาะ</span>
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                        <input type="hidden" name="AssetSearch[no_department]" value="0">
+                        <?= Html::checkbox('AssetSearch[no_department]', !empty($model->no_department), ['value' => '1', 'id' => 'assetsearch-no_department', 'class' => 'form-check-input']) ?>
+                        <label class="form-check-label" for="assetsearch-no_department">ที่ยังไม่กำหนดหน่วยงาน</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="hidden" name="AssetSearch[no_owner]" value="0">
+                        <?= Html::checkbox('AssetSearch[no_owner]', !empty($model->no_owner), ['value' => '1', 'id' => 'assetsearch-no_owner', 'class' => 'form-check-input']) ?>
+                        <label class="form-check-label" for="assetsearch-no_owner">ที่ยังไม่มีผู้รับผิดชอบ</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- กลุ่ม: วิธีได้มา & งบประมาณ -->
+    <div class="mb-3">
+        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">วิธีได้มา & งบประมาณ</span>
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-md-4 col-lg">
+                <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
                 'data' => $model->ListMethodget(),
                 'options' => ['placeholder' => 'วิธีได้มาทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label(false);
-            ?>
-        </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
-                'data' => $model->ListBudgetdetail(),
-                'options' => ['placeholder' => 'ประเภทเงินทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label(false);
-            ?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
-                'data' => $model->ListOnYear(),
-                'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                ],
-            ])->label(false);
-            ?>
-        </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?php
-            $url = \yii\helpers\Url::to(['/depdrop/employee']);
-            $owner = empty($model->owner) ? '' : Employees::findOne(['cid' => $model->owner])->fullname;
-            echo $form->field($model, 'owner')->widget(Select2::classname(), [
-                // 'data' => $model->ListEmployees(),
-                'initValueText' => $owner,
-                'options' => ['placeholder' => 'ผู้รับผิดชอบ'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'minimumInputLength' => 1,
-                    'language' => [
-                        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-                    ],
-                    'ajax' => [
-                        'url' => $url,
-                        'dataType' => 'json',
-                        'data' => new JsExpression('function(params) { return {q:params.term}; }')
-                    ],
-                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                    'templateResult' => new JsExpression('function(city) { return city.text; }'),
-                    'templateSelection' => new JsExpression('function (city) { return city.text; }'),
-                ],
-                'pluginEvents' => [
-                    // "select2:select" => "function(result) { 
-                    //     var data = $(this).select2('data')[0]
-                    //     $('#asset-data_json-method_get_text').val(data.text)
-                    //  }",
-                ]
-            ])->label(false); ?>
-        </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'q_receive_date')->textInput(['placeholder' => 'วันที่รับเข้า'])->label(false); ?>
-        </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-            <?= $form->field($model, 'po_number')->textInput(['placeholder' => 'เลขที่สั่งซื้อ'])->label(false) ?>
+                'pluginOptions' => ['allowClear' => true],
+            ])->label('วิธีได้มา'); ?>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg">
+                <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
+                    'data' => $model->ListBudgetdetail(),
+                    'options' => ['placeholder' => 'ประเภทเงินทั้งหมด'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('ประเภทเงิน'); ?>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg">
+                <?= $form->field($model, 'on_year')->widget(Select2::classname(), [
+                    'data' => $model->ListOnYear(),
+                    'options' => ['placeholder' => 'ปีงบประมาณทั้งหมด'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('ปีงบประมาณ'); ?>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg">
+                <?= $form->field($model, 'q_receive_date')->textInput(['placeholder' => 'วันที่รับเข้า'])->label('วันที่รับเข้า'); ?>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg">
+                <?= $form->field($model, 'po_number')->textInput(['placeholder' => 'เลขที่สั่งซื้อ'])->label('เลขที่สั่งซื้อ'); ?>
+            </div>
         </div>
     </div>
 
-
-    <div class="row">
-        <div class="col-lg-3 col-md-3 col-sm-12">
-
-            <?= $form->field($model, 'price1')->textInput(['type' => 'number', 'placeholer' => 'ระบุราคาต่ำสุด'])->label('ระบุราคาต่ำสุด') ?>
+    <!-- กลุ่ม: ช่วงราคา -->
+    <div>
+        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">ช่วงราคา (บาท)</span>
+        <div class="row g-3">
+            <div class="col-12 col-sm-4">
+                <?= $form->field($model, 'price1')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'placeholder' => 'ราคาต่ำสุด'])->label('ราคาต่ำสุด (ขึ้นไป)'); ?>
+            </div>
+            <div class="col-12 col-sm-4">
+                <?= $form->field($model, 'price2')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'placeholder' => 'ราคาสูงสุด'])->label('ราคาสูงสุด (ลงมา)'); ?>
+            </div>
+            <div class="col-12 col-sm-4">
+                <?= $form->field($model, 'price_below')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'placeholder' => 'เช่น 5000'])->label('ที่ราคาต่ำกว่าเกณฑ์'); ?>
+            </div>
         </div>
-        <div class="col-lg-3 col-md-3 col-sm-12">
-
-            <?= $form->field($model, 'price2')->textInput(['type' => 'number', 'placeholer' => 'ระบุราคาสูงสุด'])->label('ระบุราคาสูงสุด') ?>
-        </div>
-
     </div>
-
 </div>
 
 <?php ActiveForm::end(); ?>

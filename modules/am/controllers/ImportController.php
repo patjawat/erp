@@ -21,6 +21,33 @@ use Google\Service\AdExchangeBuyerII\Date;
 class ImportController extends Controller
 {
     /**
+     * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าข้อมูลครุภัณฑ์
+     * หัวคอลัมน์และแถวตัวอย่างโหลดจาก modules/am/data/equip_import_columns.php
+     */
+    public function actionDownloadTemplate()
+    {
+        $config = require \Yii::getAlias('@app/modules/am/data/equip_import_columns.php');
+        $headers = $config['headers'];
+        $example = $config['sample'];
+
+        $bom = "\xEF\xBB\xBF";
+        $fp = fopen('php://temp', 'r+');
+        fwrite($fp, $bom);
+        fputcsv($fp, $headers);
+        fputcsv($fp, $example);
+        rewind($fp);
+        $csv = stream_get_contents($fp);
+        fclose($fp);
+
+        $filename = 'template_import_ครุภัณฑ์_' . date('Ymd') . '.csv';
+        \Yii::$app->response->sendContentAsFile($csv, $filename, [
+            'mimeType' => 'text/csv',
+            'inline' => false,
+        ]);
+        \Yii::$app->end();
+    }
+
+    /**
      * หน้าอัปโหลด CSV
      */
     public function actionIndex($order_id = null)
@@ -155,20 +182,25 @@ class ImportController extends Controller
                     'color_name' => $data[5],
                     'unit' => $data[6],
                     'serial_number' => $data[7],
-                    'vendor_id' => $data[10],
-                    'budget_type' => $data[9],
+                    'budget_type' => $this->resolveBudgetTypeFromImport($data[9] ?? ''),
                     'inspection_date' => $this->normalizeDateForDb($data[11] ?? ''),
-                    'receive_date' => $this->normalizeDateForDb($data[13] ?? ''),
-                    'expire_date' => $data[14],
+                    'expire_date' => $this->normalizeDateForDb($data[14] ?? ''),
                     'location' => $data[16],
                     'fsn_old' => $data[0],
-                    'vendor_id' => $this->findVendor($data[18]),
+                    'vendor_id' => $this->resolveVendorFromImport($data[18] ?? '', $data[19] ?? ''),
+                    'vendor_name' => trim((string) ($data[19] ?? '')),
+                    'order_number' => trim((string) ($data[21] ?? '')),
+                    'note' => trim((string) ($data[22] ?? '')),
                 ];
                 $model->price = $data[8];
-                $model->purchase = $this->findPurchase($data[10]);
+                $model->purchase = $this->resolvePurchaseFromImport($data[10] ?? '');
                 $model->receive_date = $this->normalizeDateForDb($data[13] ?? '');
                 $model->on_year = $data[12];
+                if (!empty($data[15])) {
+                    $model->on_year = $data[15]; // ปีงบประมาณ (ซ้ำ) ถ้ามีให้ใช้ค่านี้แทน
+                }
                 $model->license_plate = $data[17];
+                $model->useful_life = (int) ($data[20] ?? 0); // อายุการใช้งาน (ปี)
                 $model->asset_status = 1;
                 $model->asset_group_id = 4;
 
@@ -228,7 +260,7 @@ class ImportController extends Controller
         if ($dateStr === null || $dateStr === '') {
             return null;
         }
-        $dateStr = trim($dateStr);
+        $dateStr = trim((string) $dateStr);
         $delimiter = (strpos($dateStr, '/') !== false) ? '/' : '-';
         $parts = array_map('trim', explode($delimiter, $dateStr));
         if (count($parts) !== 3) {
@@ -237,13 +269,33 @@ class ImportController extends Controller
         $p0 = $parts[0];
         $p1 = $parts[1];
         $p2 = $parts[2];
-        $n0 = (int)$p0;
-        $n1 = (int)$p1;
-        $n2 = (int)$p2;
+        // keep only digits for numeric checks
+        $d0 = preg_replace('/\D+/', '', (string) $p0);
+        $d1 = preg_replace('/\D+/', '', (string) $p1);
+        $d2 = preg_replace('/\D+/', '', (string) $p2);
+        $n0 = (int) $d0;
+        $n1 = (int) $d1;
+        $n2 = (int) $d2;
+
+        // Fix malformed years e.g. "20925" -> "2025"
+        $fixYear = function ($yearDigits) {
+            $y = preg_replace('/\D+/', '', (string) $yearDigits);
+            if ($y === '') {
+                return null;
+            }
+            if (strlen($y) === 5 && str_starts_with($y, '20')) {
+                return (int) ('20' . substr($y, -2));
+            }
+            if (strlen($y) > 4) {
+                return (int) substr($y, -4);
+            }
+            return (int) $y;
+        };
 
         // ปี ค.ศ.-เดือน-วัน (Y-m-d): ส่วนแรกเป็นปี ค.ศ. 4 หลัก 1900-2100
-        if ($n0 >= 1900 && $n0 <= 2100 && strlen($p0) >= 4) {
-            $y = $n0;
+        $y0 = $fixYear($p0);
+        if ($y0 !== null && $y0 >= 1900 && $y0 <= 2100 && strlen($d0) >= 4) {
+            $y = $y0;
             $m = $n1;
             $d = $n2;
             if (checkdate($m, $d, $y)) {
@@ -252,8 +304,9 @@ class ImportController extends Controller
             return null;
         }
         // ปี พ.ศ.-เดือน-วัน: ส่วนแรกเป็นปี พ.ศ. 4 หลัก (ประมาณ 2400-2600)
-        if ($n0 >= 2400 && $n0 <= 2600 && strlen($p0) >= 4) {
-            $y = $n0 - 543;
+        $y0 = $fixYear($p0);
+        if ($y0 !== null && $y0 >= 2400 && $y0 <= 2600 && strlen($d0) >= 4) {
+            $y = $y0 - 543;
             $m = $n1;
             $d = $n2;
             if (checkdate($m, $d, $y)) {
@@ -262,8 +315,9 @@ class ImportController extends Controller
             return null;
         }
         // วัน/เดือน/ปี ค.ศ. (d-m-y): ส่วนท้ายเป็นปี ค.ศ. 4 หลัก
-        if ($n2 >= 1900 && $n2 <= 2100 && strlen($p2) >= 4) {
-            $y = $n2;
+        $y2 = $fixYear($p2);
+        if ($y2 !== null && $y2 >= 1900 && $y2 <= 2100 && strlen($d2) >= 4) {
+            $y = $y2;
             $m = $n1;
             $d = $n0;
             if (checkdate($m, $d, $y)) {
@@ -272,8 +326,9 @@ class ImportController extends Controller
             return null;
         }
         // วัน/เดือน/ปี พ.ศ. (d-m-y BE): ส่วนท้ายเป็นปี พ.ศ. 4 หลัก
-        if ($n2 >= 2400 && $n2 <= 2600 && strlen($p2) >= 4) {
-            $y = $n2 - 543;
+        $y2 = $fixYear($p2);
+        if ($y2 !== null && $y2 >= 2400 && $y2 <= 2600 && strlen($d2) >= 4) {
+            $y = $y2 - 543;
             $m = $n1;
             $d = $n0;
             if (checkdate($m, $d, $y)) {
@@ -308,8 +363,40 @@ class ImportController extends Controller
         if ($model) {
             return $model->code;
         } else {
-            return 0;
+            return '';
         }
+    }
+
+    /**
+     * นำชื่อหรือรหัส (จาก CSV) ไปค้นใน categorise (name=budget_type) แล้วคืน code
+     */
+    protected function resolveBudgetTypeFromImport($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $cat = Categorise::find()
+            ->andWhere(['name' => 'budget_type'])
+            ->andWhere(['or', ['code' => $value], ['title' => $value]])
+            ->one();
+        return $cat ? (string) $cat->code : '';
+    }
+
+    /**
+     * นำชื่อหรือรหัส (จาก CSV) ไปค้นใน categorise (name=purchase) แล้วคืน code
+     */
+    protected function resolvePurchaseFromImport($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $cat = Categorise::find()
+            ->andWhere(['name' => 'purchase'])
+            ->andWhere(['or', ['code' => $value], ['title' => $value]])
+            ->one();
+        return $cat ? (string) $cat->code : '';
     }
 
     public function findVendor($tite = null)
@@ -324,6 +411,38 @@ class ImportController extends Controller
             return $model->code;    
 
     }
+    }
+
+    /**
+     * เงื่อนไข: ถ้าไม่มีรหัส → ค้นจากชื่อ; ถ้ายังไม่มีชื่อในทะเบียน → สร้างใหม่ทันที
+     * คืนค่าเป็น vendor code (Categorise.name = vendor)
+     */
+    protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
+    {
+        $vendorCode = trim((string) $vendorCode);
+        $vendorName = trim((string) $vendorName);
+
+        if ($vendorCode !== '') {
+            $byCode = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->one();
+            if ($byCode) {
+                if ($vendorName !== '' && $byCode->title !== $vendorName) {
+                    $byCode->title = $vendorName;
+                    $byCode->save(false);
+                }
+                return $byCode->code;
+            }
+            // ไม่พบรหัสในทะเบียน → สร้างใหม่ทันที
+            $newVender = new Categorise(['name' => 'vendor', 'title' => ($vendorName !== '' ? $vendorName : $vendorCode)]);
+            $newVender->code = $vendorCode;
+            $newVender->save(false);
+            return $newVender->code;
+        }
+
+        if ($vendorName !== '') {
+            return $this->findVendor($vendorName); // find หรือ create ตามชื่อ
+        }
+
+        return '';
     }
 
 

@@ -358,7 +358,7 @@ $toLines = function ($text) {
             <div class="col-md-2">
                 <?= $form->field($model, 'jd_approved_at')->widget(DatepickerThai::class, [
                     'options' => [
-                        'placeholder' => 'วว/ดด/ปปปป',
+                        'placeholder' => 'ว/ด/พ.ศ.',
                         'value' => $model->jd_approved_at ? AppHelper::convertToThai($model->jd_approved_at) : '',
                     ],
                 ])->label('วันที่อนุมัติ') ?>

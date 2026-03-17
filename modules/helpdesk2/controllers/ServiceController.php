@@ -5,13 +5,17 @@ namespace app\modules\helpdesk2\controllers;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Response;
+use yii\db\Expression;
+use yii\data\ActiveDataProvider;
 use app\models\Categorise;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\helpdesk2\models\HelpdeskSearch;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -19,6 +23,217 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 class ServiceController extends \yii\web\Controller
 {
+    /**
+     * NEW version of repair request form.
+     * Route: /helpdesk/service/create-v2
+     */
+    public function actionCreateV2()
+    {
+        $me = UserHelper::GetEmployee();
+        $model = new Helpdesk([
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            'emp_id' => $me->id,
+            'asset_number' => $this->request->get('asset_number'),
+            'name' => 'repair',
+        ]);
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            try {
+                $model->request_repair_date = AppHelper::convertToGregorian($model->request_repair_date);
+            } catch (\Throwable $th) {
+            }
+
+            $saveMode = (string) $this->request->post('save_mode', 'submit');
+            $dataJson = $model->data_json;
+            if (!is_array($dataJson)) {
+                $dataJson = [];
+            }
+            if ($saveMode === 'draft') {
+                $dataJson['draft'] = 1;
+            } else {
+                unset($dataJson['draft']);
+            }
+            $model->data_json = $dataJson;
+
+            // default status
+            $model->status = $model->status ?: 'pending';
+
+            // generate repair number (only if not already set)
+            if (empty($model->repair_number)) {
+                switch ((string) $model->repair_group) {
+                    case '1':
+                        $depCode = 'GEN';
+                        break;
+                    case '2':
+                        $depCode = 'IT';
+                        break;
+                    case '3':
+                        $depCode = 'MED';
+                        break;
+                    default:
+                        $depCode = '';
+                        break;
+                }
+                $model->repair_number = $model->HelpdeskGenNumber($depCode);
+            }
+
+            if ($model->save()) {
+                return $this->redirect(['view-v2', 'id' => $model->id]);
+            }
+        }
+
+        return $this->render('create-v2', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Ajax validator for create-v2 form.
+     */
+    public function actionCreateV2Validator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new Helpdesk();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->title == '' ? $model->addError('title', 'ต้องระบุหัวข้อ/อาการ...') : null;
+            ($model->data_json['urgency'] ?? '') === '' ? $model->addError('data_json[urgency]', 'ต้องระบุความเร่งด่วน...') : null;
+            ($model->data_json['location'] ?? '') === '' ? $model->addError('data_json[location]', 'ต้องระบุสถานที่...') : null;
+            $model->repair_group == '' ? $model->addError('repair_group', 'ต้องระบุแผนกช่าง...') : null;
+
+            $result = [];
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+
+        return $this->asJson([]);
+    }
+
+    /**
+     * NEW technician workflow (do not modify existing pages).
+     * Route: /helpdesk/service/update-v2?id=XX
+     */
+    public function actionUpdateV2($id)
+    {
+        if (Yii::$app->user->isGuest) {
+            throw new ForbiddenHttpException('Permission denied.');
+        }
+
+        $me = UserHelper::GetEmployee();
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            // Keep system-compatible main status, store technician result in data_json.
+            $dataJson = $model->data_json;
+            if (!is_array($dataJson)) {
+                $dataJson = [];
+            }
+
+            // แปลงเวลาเริ่ม/เสร็จจาก ว/ด/พ.ศ. เวลา เป็น Y-m-d H:i ก่อนบันทึก
+            foreach (['start_at', 'finish_at'] as $key) {
+                $v = $dataJson[$key] ?? '';
+                if (is_string($v) && preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/', $v, $m)) {
+                    $dataJson[$key] = sprintf('%04d-%02d-%02d %02d:%02d', (int) $m[3] - 543, (int) $m[2], (int) $m[1], (int) $m[4], (int) $m[5]);
+                }
+            }
+
+            $techStatus = (string) ($dataJson['tech_status_v2'] ?? '');
+            if ($techStatus === 'completed') {
+                $model->status = 'success';
+            } elseif ($techStatus === 'cannot_repair') {
+                $model->status = 'cancel';
+            } else {
+                $model->status = 'in_progress';
+            }
+            $model->data_json = $dataJson;
+
+            if ($model->save()) {
+                // Write technician log to timeline (service_record)
+                $logTitle = (string) ($model->data_json['work_performed_v2'] ?? '');
+                $logTitle = $logTitle !== '' ? $logTitle : 'อัปเดตการซ่อม (v2)';
+
+                $log = new HelpdeskDetail();
+                $log->helpdesk_id = $model->id;
+                $log->name = 'service_record';
+                $log->emp_id = $me->id ?? null;
+                $log->status = 'อัปเดตงานซ่อม';
+                $log->title = $logTitle;
+                $log->data_json = [
+                    'tech_status_v2' => $techStatus,
+                    'date_start' => $model->date_start,
+                    'date_end' => $model->date_end,
+                ];
+                $log->save(false);
+
+                return $this->redirect(['view-v2', 'id' => $model->id]);
+            }
+        }
+
+        return $this->render('update-v2', [
+            'model' => $model,
+            'me' => $me,
+        ]);
+    }
+
+    /**
+     * Technician worklist (V2).
+     * Route: /helpdesk/service/technician-v2
+     */
+    public function actionTechnicianV2()
+    {
+        if (Yii::$app->user->isGuest) {
+            throw new ForbiddenHttpException('Forbidden');
+        }
+
+        $searchModel = new HelpdeskSearch();
+        $searchModel->load($this->request->get());
+
+        $query = Helpdesk::find()
+            ->where(['name' => 'repair'])
+            ->andWhere(['status' => ['pending', 'receive', 'in_progress']]);
+
+        if (trim((string) ($searchModel->q ?? '')) !== '') {
+            $q = trim($searchModel->q);
+            $query->andWhere([
+                'or',
+                ['like', 'repair_number', $q],
+                ['like', 'title', $q],
+                ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(helpdesk.data_json, '$.location'))"), $q],
+            ]);
+        }
+        if (trim((string) ($searchModel->status ?? '')) !== '') {
+            $query->andWhere(['status' => $searchModel->status]);
+        }
+        if (trim((string) ($searchModel->urgency ?? '')) !== '') {
+            $query->andFilterWhere(['=', new Expression("JSON_EXTRACT(helpdesk.data_json, '$.urgency')"), $searchModel->urgency]);
+        }
+        if (trim((string) ($searchModel->device_type_id ?? '')) !== '') {
+            $query->andWhere(['device_type_id' => $searchModel->device_type_id]);
+        }
+
+        $query->orderBy(['updated_at' => SORT_DESC]);
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+                'params' => $this->request->queryParams,
+                'pageParam' => 'page',
+            ],
+            'sort' => false,
+        ]);
+
+        return $this->render('technician-v2', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     public function actionView($id)
     {
         $model = $this->findModel($id);

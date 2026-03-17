@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <line x1="8" x2="16" y1="21" y2="21"></line>
             <line x1="12" x2="12" y1="17" y2="21"></line>
         </svg>
-     ทะเบียน<?= $this->title ?>     
+     ทะเบียน<?= $this->title ?>
     </h4>
 </div>
 <?php $this->endBlock(); ?>
@@ -36,52 +36,46 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 <?php Pjax::begin(['id' => 'title-container', 'timeout' => 50000]); ?>
-
-
-
 <?php $this->beginBlock('navbar_menu'); ?>
 <?= $this->render('../default/menu', ['active' => 'asset']) ?>
 <?php $this->endBlock(); ?>
-
-
 <?php Pjax::end(); ?>
 
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-  
-    </div>
-    <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
-</div>
-
-
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="text-white">
-                <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
-                <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
-            </h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+<div class="container-fluid px-2 px-md-3 pb-3">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary-gradient text-white d-flex justify-content-between align-items-center">
+                    <h6 class="text-white mb-0"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+                </div>
+                <div class="card-body">
+                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary-gradient text-white">
+                    <div class="d-flex flex-wrap flex-md-nowrap justify-content-between align-items-center gap-2">
+                        <h6 class="text-white mb-0">
+                            <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
+                            <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?></span> รายการ
+                        </h6>
+                        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <?= $this->render('@app/modules/am/views/asset/_list', [
+                        'tabs' => $tabs,
+                        'searchModel' => $searchModel,
+                        'dataProvider' => $dataProvider,
+                    ]) ?>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card-body p-0">
-<?= $this->render('@app/modules/am/views/asset/_list', [
-    'tabs' => $tabs,
-    'searchModel' => $searchModel,
-    'dataProvider' => $dataProvider,
-]) ?>
-  </div>
 </div>
 
-
-
-
-
-
-</div>
 <span id="totalCount" class="d-none"><?= $dataProvider->getTotalCount(); ?></span>
 
 <?php
@@ -91,11 +85,11 @@ $('#am-container').on('pjax:success', function() {
     // Your code goes here ...
     console.log('success',$('#totalCount').text());
     $('#showTotalCount').text($('#totalCount').text())
-    $.pjax.reload({ container:'#title-container', history:false,replace: false});         
+    $.pjax.reload({ container:'#title-container', history:false,replace: false});
 });
 
 
-$('.delete-asset').click(function (e) { 
+$('.delete-asset').click(function (e) {
     e.preventDefault();
     let url = $(this).attr('href');
 

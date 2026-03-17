@@ -74,9 +74,10 @@ $resultsJs = <<<JS
 
 <?php if (!$model->isNewRecord): ?>
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
-     <?php echo $form->field($model, 'data_json[phone]')->texthidden()->label(false) ?>
-     <?php echo $form->field($model, 'data_json[address]')->texthidden()->label(false) ?>
+
 <?php endif ?>
+     <?php echo $form->field($model, 'data_json[phone]')->hiddenInput()->label(false) ?>
+     <?php echo $form->field($model, 'data_json[address]')->hiddenInput()->label(false) ?>
 <div class="row d-flex justify-content-center">
     <div class="col-lg-12 col-md-12">
         <!-- Row -->

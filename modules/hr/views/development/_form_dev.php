@@ -111,10 +111,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="row g-4">
                     <div class="col-md-6 col-lg-4">
-                        <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control bg-light border-0 rounded-3 py-2 fw-bold', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                        <?= $form->field($model, 'date_start')->textInput(['class' => 'form-control bg-light border-0 rounded-3 py-2 fw-bold', 'placeholder' => 'ว/ด/พ.ศ.']) ?>
                     </div>
                     <div class="col-md-6 col-lg-4">
-                        <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control bg-light border-0 rounded-3 py-2 fw-bold', 'placeholder' => 'วว/ดด/ปปปป']) ?>
+                        <?= $form->field($model, 'date_end')->textInput(['class' => 'form-control bg-light border-0 rounded-3 py-2 fw-bold', 'placeholder' => 'ว/ด/พ.ศ.']) ?>
                     </div>
                     <div class="col-md-6 col-lg-4">
                         <?php
@@ -255,14 +255,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-6">
                                 <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 11px;">วัน-เวลาเดินทางไป</label>
                                 <div class="d-flex gap-2">
-                                    <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control', 'placeholder' => 'วว/ดด/ปปปป'])->label(false) ?>
+                                    <?= $form->field($model, 'vehicle_date_start')->textInput(['class' => 'form-control', 'placeholder' => 'ว/ด/พ.ศ.'])->label(false) ?>
                                     <?= $form->field($model, 'data_json[vehicle_time_start]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label(false) ?>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 11px;">วัน-เวลาเดินทางกลับ</label>
                                 <div class="d-flex gap-2">
-                                        <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control', 'placeholder' => 'วว/ดด/ปปปป'])->label(false) ?>
+                                        <?= $form->field($model, 'vehicle_date_end')->textInput(['class' => 'form-control', 'placeholder' => 'ว/ด/พ.ศ.'])->label(false) ?>
                                         <?= $form->field($model, 'data_json[vehicle_time_end]')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label(false) ?>
 
                                 </div>
