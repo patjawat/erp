@@ -56,6 +56,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
             <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ตัวอย่าง (ข้อมูลตัวอย่าง)', ['print-sample', 'template_id' => $template->id], ['class' => 'btn btn-outline-secondary rounded-3', 'target' => '_blank', 'title' => 'เปิด PDF ด้วยข้อมูลตัวอย่าง เพื่อตรวจตำแหน่ง']) ?>
             <?= Html::a('<i class="bi bi-list-ul me-1"></i> ไปพิมพ์รายการจริง', ['/hr/development/index'], ['class' => 'btn btn-success rounded-3', 'target' => '_blank', 'title' => 'ไปที่รายการขอไปราชการ แล้วกดปุ่มพิมพ์ที่รายการที่ต้องการ จะได้ PDF ข้อมูลจริงจาก DB']) ?>
             <?= Html::a('<i class="bi bi-download me-1"></i> ส่งออก config', ['export-config', 'id' => $template->id], ['class' => 'btn btn-outline-info rounded-3', 'title' => 'ดาวน์โหลดไฟล์ JSON ตำแหน่งฟิลด์ไปแชร์หรือเก็บไว้']) ?>
+            <?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i> ดาวน์โหลดไฟล์ PDF เทมเพลต', ['download-template-file', 'id' => $template->id], ['class' => 'btn btn-outline-primary rounded-3', 'title' => 'ดาวน์โหลดไฟล์ PDF ต้นฉบับของเทมเพลตนี้', 'target' => '_blank']) ?>
             <button type="button" id="btn-save-layout" class="btn btn-primary rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึกตำแหน่ง</button>
         </div>
     </div>

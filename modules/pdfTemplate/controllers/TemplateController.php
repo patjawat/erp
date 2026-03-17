@@ -210,6 +210,32 @@ class TemplateController extends Controller
     }
 
     /**
+     * ดาวน์โหลดไฟล์ PDF ต้นฉบับของเทมเพลต (สำหรับใช้เป็นแม่แบบภายนอก / เก็บสำรอง)
+     */
+    public function actionDownloadTemplateFile(int $id): Response
+    {
+        $template = $this->findTemplate($id);
+        $filePath = null;
+
+        if ($template->upload_id) {
+            $filePath = FileManagerHelper::getFilePath($template->upload_id);
+        } elseif ($template->file_path) {
+            $filePath = Yii::getAlias('@webroot') . '/' . ltrim($template->file_path, '/');
+        }
+
+        if (!$filePath || !is_file($filePath)) {
+            Yii::$app->session->setFlash('error', 'ไม่พบไฟล์ PDF เทมเพลต');
+            return $this->redirect(['editor', 'template_id' => $template->id]);
+        }
+
+        $filename = 'pdf-template-' . preg_replace('/[^a-z0-9_-]/i', '-', $template->name) . '.pdf';
+        return Yii::$app->response->sendFile($filePath, $filename, [
+            'mimeType' => 'application/pdf',
+            'inline' => false,
+        ]);
+    }
+
+    /**
      * นำเข้า config ตำแหน่งฟิลด์จากไฟล์ JSON (ที่ส่งออกจากเทมเพลตอื่น).
      * GET: แสดงฟอร์มเลือกเทมเพลต + อัปโหลดไฟล์. POST: รับ template_id + ไฟล์ แล้วบันทึก layout
      */
