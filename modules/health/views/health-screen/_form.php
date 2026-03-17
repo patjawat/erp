@@ -210,7 +210,7 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
 
     <div class="card border-0 shadow-sm border-top border-4 border-primary mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ประวัติการเจ็บป่วยในครอบครัว</h5>
+            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: บิดาหรือมารดามีประวัติการเจ็บป่วยด้วย</h5>
         </div>
         <div class="card-body">
             <?= $form->field($model, 'data_json[family_history]', [
