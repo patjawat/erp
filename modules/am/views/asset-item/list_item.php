@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> จำนวน <span class="badge rounded-pill text-bg-primary"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
+        <h5 class="card-title"><i class="bi bi-ui-checks text-primary"></i> จำนวน <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h5>
         <table class="table">
             <thead>
                 <tr>
@@ -128,7 +128,8 @@ if ($('#asset_type_id').data('depdrop')) {
         }, 200);
 
 
-            // ✅ STEP 3: อื่นๆ
+            // ✅ STEP 3: อื่นๆ + เก็บ asset_item_id เพื่อตอนบันทึกจะได้อัปเดต FSN ใน list-item
+            $('#asset-asset_item_id').val(code);
             $('#asset-asset_name').val(title);
             if (fsn) {
                 $('#asset-fsn_number').val(fsn);

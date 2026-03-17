@@ -8,7 +8,8 @@ use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use chillerlan\QRCode\QRCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\am\models\AssetItem;
@@ -18,6 +19,8 @@ use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Organization;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\am\services\AssetNumberGenerator;
+use app\modules\am\models\AssetDetail;
 
 /**
  * This is the model class for table "asset".
@@ -46,9 +49,18 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property int|null $type_name ชื่อประเภทครุภัณฑ์
  * @property int|null $vendor_name ผู้ขาย/ผู้จำหน่าย/ผู้บริจาค
  * @property int|null $purchase_text การได้มา
+ * @property int|null $useful_life อายุการใช้งาน (ปี)
+ * @property float|null $residual_value มูลค่าซาก
+ * @property string|null $depreciation_method วิธีคำนวณค่าเสื่อม
+ * @property string|null $lifecycle_status received|active|repair|disposed
+ * @property string|null $qr_code_path Path to saved QR image
  */
 class Asset extends \yii\db\ActiveRecord
 {
+    const LIFECYCLE_RECEIVED = 'received';
+    const LIFECYCLE_ACTIVE = 'active';
+    const LIFECYCLE_REPAIR = 'repair';
+    const LIFECYCLE_DISPOSED = 'disposed';
     /**
      * {@inheritdoc}
      */
@@ -91,11 +103,11 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price', 'asset_status'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type'], 'safe'],
-            [['price'], 'number'],
+            [['price', 'asset_status','useful_life'], 'required'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_method', 'lifecycle_status', 'qr_code_path'], 'safe'],
+            [['price', 'residual_value'], 'number'],
             [['code'], 'unique'],
-            [['life', 'department', 'depre_type', 'created_by', 'updated_by'], 'integer'],
+            [['life', 'department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
             [['ref', 'code'], 'string', 'max' => 255],
         ];
     }
@@ -122,12 +134,33 @@ class Asset extends \yii\db\ActiveRecord
             'asset_status' => 'สถานะ',
             'license_plate' => 'เลขทะเบียนรถ',
             'car_type' => 'ประเภทการใช้งานรถยนต์',
+            'useful_life' => 'อายุการใช้งาน (ปี)',
+            'residual_value' => 'มูลค่าซาก',
+            'depreciation_method' => 'วิธีคำนวณค่าเสื่อม',
             'data_json' => 'Data Json',
             'updated_at' => 'วันเวลาแก้ไข',
             'created_at' => 'วันเวลาสร้าง',
             'created_by' => 'ผู้สร้าง',
             'updated_by' => 'ผู้แก้ไข',
+            'lifecycle_status' => 'สถานะวงจรชีวิต',
+            'qr_code_path' => 'QR Code',
         ];
+    }
+
+    /** ประวัติวงจรชีวิต (โอนย้าย/ซ่อม/จำหน่าย เก็บใน asset_detail name=lifecycle) */
+    public function getTransactions()
+    {
+        return $this->hasMany(AssetDetail::class, ['asset_id' => 'id'])
+            ->andWhere(['name' => AssetDetail::NAME_LIFECYCLE])
+            ->orderBy(['created_at' => SORT_DESC]);
+    }
+
+    public function getRepairTransactions()
+    {
+        return $this->hasMany(AssetDetail::class, ['asset_id' => 'id'])
+            ->andWhere(['name' => AssetDetail::NAME_LIFECYCLE])
+            ->andWhere("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.transaction_type')) IN ('REPAIR', 'RETURN')")
+            ->orderBy(['created_at' => SORT_DESC]);
     }
 
     public function listAssetType()
@@ -153,16 +186,20 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
-    //ทะยยอย update  FSN ตามการเลือกของผู้ใช้จากคุรุภัณฑ์ที่เลือก
+    // อัปเดตรหัส FSN ลง AssetItem เพื่อให้ /am/asset-item/list-item แสดงรหัสล่าสุด และเมื่อเลือกรายการเดิมจะดึง FSN มาใช้ได้
     public function updateFsn()
     {
-        $checkAssetFsn = AssetItem::find()
-            ->where(['id' => $this->asset_item_id])
-            ->andWhere(['or', ['fsn' => ''], ['fsn' => null]])
-            ->one();
-        if (!empty($checkAssetFsn)) {
-            $checkAssetFsn->fsn = $this->fsn_number;
-            $checkAssetFsn->save();
+        if (empty($this->asset_item_id)) {
+            return;
+        }
+        $value = trim((string) ($this->code ?? $this->fsn_number ?? ''));
+        if ($value === '') {
+            return;
+        }
+        $assetItem = AssetItem::find()->where(['id' => $this->asset_item_id])->one();
+        if ($assetItem !== null) {
+            $assetItem->fsn = $value;
+            $assetItem->save(false);
         }
     }
 
@@ -204,9 +241,29 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
-    // ค่าเสื่อม
+    /**
+     * Calculate annual depreciation using model's residual_value (for backward compatibility).
+     * For Thai government accounting standard (residual = 1 baht), use AssetDepreciationService::getAnnualDepreciationForAsset() or generateDepreciationSchedule().
+     * Straight line: (purchase_price - residual_value) / useful_life.
+     * @return float|null Annual depreciation amount or null
+     */
+    public function calculateDepreciation()
+    {
+        $price = (float) $this->price;
+        $residual = $this->residual_value !== null && $this->residual_value !== '' ? (float) $this->residual_value : 0;
+        $years = $this->useful_life ? (int) $this->useful_life : null;
 
-    // อายุ
+        if ($years === null || $years <= 0) {
+            return null;
+        }
+
+        $method = $this->depreciation_method ?? 'straight_line';
+        if ($method === 'straight_line') {
+            return ($price - $residual) / $years;
+        }
+        // Extensible for declining_balance etc. later
+        return ($price - $residual) / $years;
+    }
 
     public function behaviors()
     {
@@ -291,8 +348,13 @@ class Asset extends \yii\db\ActiveRecord
                 ];
                 $this->data_json = ArrayHelper::merge($this->data_json, $array2);
 
-                // สร้างรหัสอัตโนมัติ
-                if ($this->fsn_auto == '1') {
+                // Auto-fill asset number (code) when empty – do not overwrite existing
+                $categoryForCode = $this->asset_item_id ?: $this->fsn_number;
+                if ((trim((string) $this->code) === '') && $categoryForCode !== '' && $categoryForCode !== null) {
+                    $this->code = AssetNumberGenerator::generate($categoryForCode);
+                }
+                // Legacy: สร้างรหัสอัตโนมัติ when fsn_auto and code still empty
+                if ($this->fsn_auto == '1' && trim((string) $this->code) === '' && $this->asset_item_id) {
                     $year = substr(AppHelper::YearBudget(), -2, 2);
                     $number = $this->asset_item_id . '/' . $year . '.';
                     $this->code = \mdm\autonumber\AutoNumber::generate($number . '?');
@@ -306,7 +368,75 @@ class Asset extends \yii\db\ActiveRecord
             // throw $th;
         }
 
+        if ($this->lifecycle_status === null || $this->lifecycle_status === '') {
+            $this->lifecycle_status = $insert ? self::LIFECYCLE_RECEIVED : self::LIFECYCLE_ACTIVE;
+        }
         return parent::beforeSave($insert);
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $code = trim((string) ($this->code ?? ''));
+        if ($code !== '' && ($this->qr_code_path === null || $this->qr_code_path === '')) {
+            $path = $this->generateQrCodeFile();
+            if ($path !== null) {
+                static::updateAll(['qr_code_path' => $path], ['id' => $this->id]);
+            }
+        }
+        if ($insert && $this->hasAttribute('lifecycle_status')) {
+            try {
+                $schema = Yii::$app->db->getTableSchema(AssetDetail::tableName(), true);
+                if ($schema !== null && $schema->getColumn('asset_id') !== null) {
+                    $d = new AssetDetail();
+                    $d->name = AssetDetail::NAME_LIFECYCLE;
+                    $d->asset_id = $this->id;
+                    $d->code = $this->code;
+                    $d->data_json = [
+                        'transaction_type' => AssetDetail::TYPE_RECEIVE,
+                        'to_location' => isset($this->data_json['location']) ? (string) $this->data_json['location'] : null,
+                        'to_department' => $this->department,
+                        'remark' => 'รับเข้า',
+                    ];
+                    $d->save(false);
+                }
+            } catch (\Throwable $e) {
+                // ignore if table/column not available
+            }
+        }
+    }
+
+    /**
+     * Generate QR image file (asset number). Saves under web/uploads/asset-qr. Returns web path or null.
+     */
+    public function generateQrCodeFile()
+    {
+        $code = trim((string) ($this->code ?? ''));
+        if ($code === '') {
+            return null;
+        }
+        $dir = Yii::getAlias('@webroot/uploads/asset-qr');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $safe = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $code);
+        $filename = $this->id . '_' . $safe . '.png';
+        $fullPath = $dir . '/' . $filename;
+        try {
+            $result = Builder::create()
+                ->writer(new PngWriter())
+                ->data($code)
+                ->size(200)
+                ->build();
+            $png = $result->getString();
+            if ($png !== '' && $png !== false) {
+                file_put_contents($fullPath, $png);
+                return '/uploads/asset-qr/' . $filename;
+            }
+        } catch (\Throwable $e) {
+            // skip on error
+        }
+        return null;
     }
 
     public function landSize()
@@ -462,10 +592,23 @@ class Asset extends \yii\db\ActiveRecord
         return '<span class="badge bg-' . $data['color'] . ' bg-opacity-10 text-success border border-' . $data['color'] . '-subtle rounded-pill fw-medium px-2 py-1">' . $this->statusName() . '</span>';
     }
 
+    /** สร้าง QR Code (data URI) สำหรับแสดงใน img - ใช้ endroid/qr-code */
     public function QrCode()
     {
-        $qr = new QRCode();
-        return $qr->render($this->code);
+        $code = trim((string) ($this->code ?? ''));
+        if ($code === '') {
+            return null;
+        }
+        try {
+            $result = Builder::create()
+                ->writer(new PngWriter())
+                ->data($code)
+                ->size(200)
+                ->build();
+            return $result->getDataUri();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
     // หน่วยงาน
     public function ListDepartment()

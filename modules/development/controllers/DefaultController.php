@@ -527,26 +527,13 @@ class DefaultController extends Controller
     }
 
     /**
-     * พิมพ์ใบขอไปราชการ (แบบฟอร์ม HTML สำหรับพิมพ์หรือบันทึกเป็น PDF)
+     * พิมพ์ใบขอไปราชการ — redirect ไป PDF จาก HR (เทมเพลต pdf-template ข้อมูลจริง)
      * @param int $id รหัส development
-     * @return string
-     * @throws NotFoundHttpException
+     * @return \yii\web\Response
      */
     public function actionPrintOfficial($id)
     {
-        $model = Development::find()
-            ->andWhere([Development::tableName() . '.id' => $id])
-            ->joinWith(['developmentType', 'createdByEmp', 'assignedTo', 'vehicleType'])
-            ->one();
-        if (!$model) {
-            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
-        }
-        $info = SiteHelper::getInfo();
-        $this->layout = '@app/views/layouts/print';
-        return $this->render('print-official', [
-            'model' => $model,
-            'info' => $info,
-        ]);
+        return $this->redirect(['/hr/development/print', 'id' => (int) $id], 302);
     }
 
     /**

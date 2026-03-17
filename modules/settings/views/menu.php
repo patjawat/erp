@@ -25,6 +25,12 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <?=Html::a('<i class="fa-solid fa-folder me-1"></i> ตั้งค่าประเภททรัพย์สิน',['/am/setting'],['class' => 'nav-link ' . (isset($active) && $active =='line' ? 'am-setting' : '')])?>
 </li>
 <li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-hashtag me-1"></i> รูปแบบ FSN ครุภัณฑ์',['/am/setting/fsn-format'],['class' => 'nav-link ' . (isset($active) && $active == 'fsn-format' ? 'active' : '')])?>
+</li>
+<li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-file-pdf me-1"></i> เทมเพลต PDF',['/pdf-template/template'],['class' => 'nav-link ' . (isset($active) && $active == 'pdf-template' ? 'active' : '')])?>
+</li>
+<li class="nav-item">
     <?=Html::a('<i class="fa-solid fa-arrows-rotate me-1"></i> อัปเดตระบบ',['/settings/update'],['class' => 'nav-link ' . (isset($active) && $active == 'update' ? 'active' : '')])?>
 </li>
 <?php endif;?>

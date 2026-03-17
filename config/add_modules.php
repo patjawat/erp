@@ -61,6 +61,7 @@ $modules['old'] = ['class' => 'app\modules\old\Module'];  // theme dev
 $modules['hr'] = ['class' => 'app\modules\hr\Module'];  // HRMS
 $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานและโครงการ (Project mansgement)
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
+$modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การสำรวจครุภัณฑ์ประจำปี
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
 $modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คลัง
 $modules['inventory-v2'] = ['class' => 'app\modules\inventoryV2\Module'];  // คลัง
@@ -94,4 +95,6 @@ $modules['notify'] = ['class' => 'app\modules\notify\Module'];  // แจ้ง�
 $modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
 $modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริการออนไลน์ (แอปมือถือ)
+$modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PDF Template positioning (resolution-independent), URL: /pdf-template
+$modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 return $modules;

@@ -10,6 +10,14 @@ use app\modules\am\components\AssetHelper;
 $this->title = 'นำเข้าไฟล์ CSV';
 ?>
 
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <?= Html::a(
+        '<i class="fa-solid fa-download me-2"></i>ดาวน์โหลดเทมเพลต CSV',
+        ['/am/import/download-template'],
+        ['class' => 'btn btn-outline-primary', 'target' => '_blank']
+    ) ?>
+    <small class="text-muted">ใช้เทมเพลตเพื่อดูรูปแบบคอลัมน์และนำเข้าข้อมูลครุภัณฑ์</small>
+</div>
 
 <?php $form = ActiveForm::begin([
     'options' => ['enctype' => 'multipart/form-data', 'id' => 'upload-form'],

@@ -1,23 +1,73 @@
 <?php
 
 /** @var yii\web\View $this */
+/** @var array $dashboard */
+/** @var array|null $lifecycleStats */
+/** @var app\modules\am\models\AssetDetail[] $recentTransfers */
 
 use yii\web\View;
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\db\Expression;
 use app\models\Categorise;
 use app\modules\am\models\Asset;
+use app\modules\hr\models\Organization;
 
 $this->title = 'ระบบบริหารทรัพย์สิน';
 $this->params['breadcrumbs'][] = 'ระบบบริหารทรัพย์สิน';
 $this->params['breadcrumbs'][] = ['label' => 'ภาพรวม', 'url' => ['/am']];
 
-$countLan = Asset::find()->where(['asset_group_id' => 1, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
-$countBuilding = Asset::find()->where(['asset_group_id' => 2, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
-$countEquip = Asset::find()->where(['asset_group_id' => 4, 'asset_status' => 1])->andWhere('deleted_at IS NULL')->count();
-?>
+$kpis = $dashboard['kpis'] ?? [];
+$health = $dashboard['health'] ?? [];
+$replacement = $dashboard['replacementForecast'] ?? [];
+$categoryDist = $dashboard['categoryDistribution'] ?? [];
+$deptDist = $dashboard['departmentDistribution'] ?? [];
+$riskAlerts = $dashboard['riskAlerts'] ?? [];
+$ageAnalysis = $dashboard['ageAnalysis'] ?? [];
+$recentActivities = $dashboard['recentActivities'] ?? [];
 
+$categoryLabels = [];
+$categoryValues = [];
+foreach ($categoryDist as $row) {
+    $code = $row['label'] ?? '';
+    $cat = Categorise::find()->where(['name' => 'asset_type', 'code' => $code])->one();
+    $categoryLabels[] = $cat ? $cat->title : $code;
+    $categoryValues[] = (int) ($row['value'] ?? 0);
+}
+
+$deptLabels = [];
+$deptValues = [];
+foreach ($deptDist as $row) {
+    $id = (int) ($row['dept_id'] ?? 0);
+    $org = $id ? Organization::findOne($id) : null;
+    $deptLabels[] = $org ? $org->name : ($id ? "หน่วยงาน #{$id}" : 'ไม่ระบุ');
+    $deptValues[] = (int) ($row['value'] ?? 0);
+}
+
+$ageLabels = [];
+$ageValues = [];
+foreach ($ageAnalysis as $row) {
+    $ageLabels[] = $row['age_bucket'] ?? '';
+    $ageValues[] = (int) ($row['value'] ?? 0);
+}
+
+$healthLabels = ['ใช้งานดี', 'ใกล้ครบอายุ', 'ครบอายุแล้ว', 'ส่งซ่อม', 'รอจำหน่าย'];
+$healthValues = [
+    $health['healthy'] ?? 0,
+    $health['near_eol'] ?? 0,
+    $health['expired'] ?? 0,
+    $health['under_repair'] ?? 0,
+    $health['pending_disposal'] ?? 0,
+];
+
+$replacementLabels = $replacement['labels'] ?? [];
+$replacementCounts = $replacement['counts'] ?? [];
+
+$recentList = is_array($recentTransfers) ? array_slice($recentTransfers, 0, 5) : [];
+$transfers = $recentActivities['transfers'] ?? [];
+$repairs = $recentActivities['repairs'] ?? [];
+$disposals = $recentActivities['disposals'] ?? [];
+?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
   <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
@@ -36,255 +86,405 @@ $countEquip = Asset::find()->where(['asset_group_id' => 4, 'asset_status' => 1])
 <?= $this->render('@app/modules/am/menu', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
-<?php
-$querys = Yii::$app->db->createCommand("SELECT data_json->'$.asset_name',on_year FROM `asset` WHERE asset_group_id = 3
-GROUP BY on_year
-ORDER BY on_year DESC LIMIT 10")->queryAll();
-?>
-
-
-
-
-<div class="row">
-  <div class="col-8">
-
-    <?= $this->render('@app/modules/am/views/default/car_summary_count') ?>
-
-
-
-
-    <div class="card">
-      <div class="card-body">
-        มูลค่าครุภัณฑ์ (ย้อนหลัง 10 ปี)
-        <div id="line-chart" style="width:100%;height:550px;"></div>
+<div class="container-fluid px-2 px-md-3 pb-4">
+  <!-- Section 1 — Executive KPI -->
+  <section class="mb-4">
+    <div class="row g-3">
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
+              <i class="fa-solid fa-boxes-stacked fa-lg"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['total_assets'] ?? 0) ?></div>
+              <div class="small text-secondary">ครุภัณฑ์ทั้งหมด</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-2">
+              <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['exceeding_useful_life'] ?? 0) ?></div>
+              <div class="small text-secondary">เกินอายุการใช้งาน</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-2">
+              <i class="fa-solid fa-wrench fa-lg"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['under_repair'] ?? 0) ?></div>
+              <div class="small text-secondary">ส่งซ่อม</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-secondary bg-opacity-10 text-secondary p-2">
+              <i class="fa-solid fa-trash-can fa-lg"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['waiting_disposal'] ?? 0) ?></div>
+              <div class="small text-secondary">รอจำหน่าย</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-info bg-opacity-10 text-info p-2">
+              <i class="fa-solid fa-coins fa-lg"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['estimated_replacement_cost'] ?? 0, 0) ?></div>
+              <div class="small text-secondary">มูลค่าแทนที่ (บาท)</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-body">
-        มูลค่าประเภทงบการเงิน (ย้อนหลัง 10 ปี)
-        <div id="line-stack" style="width:100%;height:550px;"></div>
+  </section>
+
+  <?php if (!empty($lifecycleStats)): ?>
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+              <i data-lucide="arrow-right-left"></i>
+            </div>
+            <h6 class="text-uppercase text-secondary m-0">โอนย้ายล่าสุด</h6>
+          </div>
+          <?= Html::a('โอนย้าย', ['/am/asset/transfer'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+        </div>
+        <div class="card-body p-0">
+          <?php if (!empty($recentList)): ?>
+          <ul class="list-group list-group-flush">
+            <?php foreach ($recentList as $t): ?>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><?= Html::encode($t->assetById ? $t->assetById->code : '-') ?></span>
+              <small class="text-muted"><?= Yii::$app->formatter->asDatetime($t->created_at) ?></small>
+            </li>
+            <?php endforeach; ?>
+          </ul>
+          <?php else: ?>
+          <p class="text-muted mb-0 p-3">ยังไม่มีประวัติโอนย้าย</p>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+            <i data-lucide="refresh-cw"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">วงจรชีวิตครุภัณฑ์</h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            <?= Html::a('รับครุภัณฑ์หลายเครื่อง', ['/am/asset/bulk-create'], ['class' => 'btn btn-primary']) ?>
+            <?= Html::a('โอนย้าย', ['/am/asset/transfer'], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('ส่งซ่อม', ['/am/asset/repair'], ['class' => 'btn btn-outline-warning']) ?>
+            <?= Html::a('จำหน่าย', ['/am/asset/dispose'], ['class' => 'btn btn-outline-danger']) ?>
+            <?= Html::a('พิมพ์ QR', ['/am/asset/print-qr'], ['class' => 'btn btn-outline-primary']) ?>
+          </div>
+          <p class="small text-body-secondary mb-0">รับครุภัณฑ์ทีละหลายเครื่อง → โอนย้าย / ส่งซ่อม / จำหน่าย / พิมพ์สติกเกอร์ QR</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <div class="row g-3">
+    <!-- Section 2 — Asset Health (Donut) -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-success bg-opacity-10 text-success">
+            <i data-lucide="activity"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">สถานะสุขภาพครุภัณฑ์</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-health-donut" style="min-height: 280px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Section 3 — Replacement Forecast (Stacked Bar) -->
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-warning bg-opacity-10 text-warning">
+            <i data-lucide="bar-chart-2"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">คาดการณ์การแทนที่ (ครุภัณฑ์ใกล้ครบอายุ)</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-replacement-bar" style="min-height: 280px;"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="col-4">
-    <div class="card">
-      <div class="card-body">
-        ร้อยละของรายการครุภัณฑ์ และสิ่งก่อสร้าง (ย้อนหลัง 5 ปี)
-        <div id="pie-chart-container" style="width:100%;height:550px;"></div>
+  <div class="row g-3 mt-0">
+    <!-- Section 4a — Category Distribution -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+            <i data-lucide="layers"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">การกระจายตามประเภท</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-category-hbar" style="min-height: 300px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Section 4b — Department Distribution -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-info bg-opacity-10 text-info">
+            <i data-lucide="building-2"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">การกระจายตามหน่วยงาน</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-department-bar" style="min-height: 300px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5 — Risk Monitoring -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <div class="erp-icon-box bg-danger bg-opacity-10 text-danger">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <h6 class="text-uppercase text-secondary m-0">การติดตามความเสี่ยง</h6>
+          </div>
+          <?= Html::a('ทะเบียนครุภัณฑ์', ['/am/equip/index'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+        </div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25">
+                <div class="fw-bold text-warning"><?= number_format($riskAlerts['no_department_count'] ?? 0) ?></div>
+                <div class="small text-secondary">ยังไม่กำหนดหน่วยงาน</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 rounded bg-info bg-opacity-10 border border-info border-opacity-25">
+                <div class="fw-bold text-info"><?= count($riskAlerts['many_transfers'] ?? []) ?></div>
+                <div class="small text-secondary">โอนย้ายบ่อย (≥3 ครั้ง)</div>
+              </div>
+            </div>
+          </div>
+          <?php $manyTransfers = $riskAlerts['many_transfers'] ?? []; ?>
+          <?php if (!empty($manyTransfers)): ?>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light"><tr><th>รหัสครุภัณฑ์</th><th>จำนวนครั้งโอน</th><th></th></tr></thead>
+              <tbody class="table-group-divider">
+                <?php foreach (array_slice($manyTransfers, 0, 5) as $r): $asset = Asset::findOne($r['asset_id'] ?? 0); ?>
+                <tr>
+                  <td><?= $asset ? Html::a(Html::encode($asset->code), ['/am/equip/view-asset', 'id' => $asset->id], ['class' => 'text-primary']) : '-' ?></td>
+                  <td><?= (int) ($r['transfer_count'] ?? 0) ?></td>
+                  <td><?= $asset ? Html::a('ดู', ['/am/equip/view-asset', 'id' => $asset->id], ['class' => 'btn btn-sm btn-outline-secondary']) : '' ?></td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php else: ?>
+          <p class="text-muted small mb-0">ไม่มีรายการโอนย้ายบ่อยในขณะนี้</p>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6 — Age Analysis -->
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+            <i data-lucide="calendar"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">การวิเคราะห์อายุครุภัณฑ์</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-age-bar" style="min-height: 260px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Section 7 — Recent Activities -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
+              <i data-lucide="list"></i>
+            </div>
+            <h6 class="text-uppercase text-secondary m-0">กิจกรรมล่าสุด</h6>
+          </div>
+          <?= Html::a('โอนย้าย', ['/am/asset/transfer'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+        </div>
+        <div class="card-body p-0">
+          <ul class="nav nav-tabs px-3 pt-2 border-0" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-transfers">โอนย้าย</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-repairs">ส่งซ่อม</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-disposals">จำหน่าย</a></li>
+          </ul>
+          <div class="tab-content p-3">
+            <div class="tab-pane fade show active" id="tab-transfers">
+              <?php if (!empty($transfers)): ?>
+              <ul class="list-group list-group-flush list-group-flush">
+                <?php foreach (array_slice($transfers, 0, 5) as $r): $a = Asset::findOne($r['asset_id'] ?? 0); ?>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                  <span><?= $a ? Html::encode($a->code) : '-' ?></span>
+                  <small class="text-muted"><?= Yii::$app->formatter->asDatetime($r['created_at'] ?? '') ?></small>
+                </li>
+                <?php endforeach; ?>
+              </ul>
+              <?php else: ?>
+              <p class="text-muted small mb-0">ยังไม่มีโอนย้ายล่าสุด</p>
+              <?php endif; ?>
+            </div>
+            <div class="tab-pane fade" id="tab-repairs">
+              <?php if (!empty($repairs)): ?>
+              <ul class="list-group list-group-flush">
+                <?php foreach (array_slice($repairs, 0, 5) as $r): $a = Asset::findOne($r['asset_id'] ?? 0); ?>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                  <span><?= $a ? Html::encode($a->code) : '-' ?></span>
+                  <small class="text-muted"><?= Yii::$app->formatter->asDatetime($r['created_at'] ?? '') ?></small>
+                </li>
+                <?php endforeach; ?>
+              </ul>
+              <?php else: ?>
+              <p class="text-muted small mb-0">ยังไม่มีส่งซ่อมล่าสุด</p>
+              <?php endif; ?>
+            </div>
+            <div class="tab-pane fade" id="tab-disposals">
+              <?php if (!empty($disposals)): ?>
+              <ul class="list-group list-group-flush">
+                <?php foreach (array_slice($disposals, 0, 5) as $r): $a = Asset::findOne($r['asset_id'] ?? 0); ?>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                  <span><?= $a ? Html::encode($a->code) : '-' ?></span>
+                  <small class="text-muted"><?= Yii::$app->formatter->asDatetime($r['created_at'] ?? '') ?></small>
+                </li>
+                <?php endforeach; ?>
+              </ul>
+              <?php else: ?>
+              <p class="text-muted small mb-0">ยังไม่มีจำหน่ายล่าสุด</p>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
-</div>
-
 
 <?php
-$seriesData = [];
-$data = [];
-$dataLabel = [];
+$healthLabelsJs = Json::encode($healthLabels);
+$healthValuesJs = Json::encode($healthValues);
+$replacementLabelsJs = Json::encode($replacementLabels);
+$replacementCountsJs = Json::encode($replacementCounts);
+$categoryLabelsJs = Json::encode($categoryLabels);
+$categoryValuesJs = Json::encode($categoryValues);
+$deptLabelsJs = Json::encode($deptLabels);
+$deptValuesJs = Json::encode($deptValues);
+$ageLabelsJs = Json::encode($ageLabels);
+$ageValuesJs = Json::encode($ageValues);
+$js = <<<JS
+(function() {
+  if (typeof ApexCharts === 'undefined') return;
 
-?>
-<?php
-krsort($querys);
-foreach ($querys as $item1) {
-  $data[] = $item1['on_year'];
-}
+  // Section 2 — Health Donut (Green / Orange / Red / Warning / Secondary)
+  var healthOpt = {
+    series: $healthValuesJs,
+    chart: { type: 'donut', height: 280 },
+    labels: $healthLabelsJs,
+    colors: ['#22c55e', '#f97316', '#ef4444', '#eab308', '#6b7280'],
+    legend: { position: 'bottom' },
+    plotOptions: { pie: { donut: { size: '65%' } } },
+    dataLabels: { enabled: true }
+  };
+  var healthEl = document.getElementById('chart-health-donut');
+  if (healthEl) { new ApexCharts(healthEl, healthOpt).render(); }
 
-foreach (Categorise::find()->where(['name' => 'budget_type'])->all() as $item2) {
-  $value = [];
-  foreach ($querys as $item1) {
-    $price = Asset::find()
-      ->where(['on_year' => $item1['on_year']])
-      ->andWhere(new Expression('JSON_EXTRACT(asset.data_json, "$.budget_type") = "' . $item2->code . '"'))
-      ->sum('price');
-    $p = isset($price) ? $price : 0;
-    $value[] = $p;
-  }
+  // Section 3 — Replacement Stacked Bar
+  var repOpt = {
+    series: [{ name: 'จำนวนรายการ', data: $replacementCountsJs }],
+    chart: { type: 'bar', height: 280, stacked: false },
+    plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+    xaxis: { categories: $replacementLabelsJs },
+    yaxis: { title: { text: 'จำนวน' } },
+    colors: ['#3b82f6'],
+    dataLabels: { enabled: true }
+  };
+  var repEl = document.getElementById('chart-replacement-bar');
+  if (repEl) { new ApexCharts(repEl, repOpt).render(); }
 
-  $dataLabel[] = $item2->title;
-  $seriesData[] = [
-    'type' => 'line',
-    'stack' => 'Total',
-    'name' => $item2->title,
-    'data' => $value,
-  ];
-}
-?>
+  // Section 4a — Category Horizontal Bar
+  var catOpt = {
+    series: [{ name: 'จำนวน', data: $categoryValuesJs }],
+    chart: { type: 'bar', height: 300 },
+    plotOptions: { bar: { borderRadius: 4, barHeight: '70%', horizontal: true } },
+    xaxis: { categories: $categoryLabelsJs },
+    dataLabels: { enabled: true },
+    colors: ['#8b5cf6']
+  };
+  var catEl = document.getElementById('chart-category-hbar');
+  if (catEl) { new ApexCharts(catEl, catOpt).render(); }
 
+  // Section 4b — Department Bar
+  var deptOpt = {
+    series: [{ name: 'จำนวน', data: $deptValuesJs }],
+    chart: { type: 'bar', height: 300 },
+    plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+    xaxis: { categories: $deptLabelsJs, labels: { rotate: -45, maxWidth: 120 } },
+    dataLabels: { enabled: true },
+    colors: ['#0ea5e9']
+  };
+  var deptEl = document.getElementById('chart-department-bar');
+  if (deptEl) { new ApexCharts(deptEl, deptOpt).render(); }
 
-<?php
-// echo "<pre>";
-// print_r($seriesData);
-// echo "</pre>";
-// $a = ;
-krsort($priceLastOfYear);
-$getCategories = [];
-$getTotal = [];
-foreach ($priceLastOfYear as $item) {
-  $getCategories[] = $item['on_year'];
-  $getTotal[] = (float) $item['total'];
-}
-
-?>
-
-<?php
-
-$categories = Json::encode($getCategories);
-$total = Json::encode($getTotal);
-$series = Json::encode($seriesData);
-$yData = Json::encode($data);
-$getDataLabel = Json::encode($dataLabel);
-// $dataLabel = Json::encode($data['name']);
-
-$js = <<< JS
-
-var options = {
-  labels: ['ครุภัณฑ์', 'สิ่งก่อสร้าง'],
-  series: [$totalGroup3, $totalGroup2],
-  chart: {
-  type: 'donut',
-},
-responsive: [{
-  breakpoint: 480,
-  options: {
-    chart: {
-      width: 200
-    },
-    legend: {
-      position: 'bottom'
-    }
-  }
-}]
-};
-
-var chart = new ApexCharts(document.querySelector("#pie-chart-container"), options);
-chart.render();
-//=====================================
+  // Section 6 — Age Bar
+  var ageOpt = {
+    series: [{ name: 'จำนวน', data: $ageValuesJs }],
+    chart: { type: 'bar', height: 260 },
+    plotOptions: { bar: { borderRadius: 4, columnWidth: '55%' } },
+    xaxis: { categories: $ageLabelsJs },
+    yaxis: { title: { text: 'จำนวน' } },
+    colors: ['#14b8a6'],
+    dataLabels: { enabled: true }
+  };
+  var ageEl = document.getElementById('chart-age-bar');
+  if (ageEl) { new ApexCharts(ageEl, ageOpt).render(); }
+})();
 JS;
-$this->registerJS($js, View::POS_END);
-
-$js = <<< JS
- var optionsline = {
-          series: [{
-          name: 'มูลค่า',
-          data: $total
-        }],
-          annotations: {
-          points: [{
-            x: 'Bananas',
-            seriesIndex: 0,
-            label: {
-              borderColor: '#775DD0',
-              offsetY: 0,
-              style: {
-                color: '#fff',
-                background: '#775DD0',
-              },
-              text: 'Bananas are good',
-            }
-          }]
-        },
-        chart: {
-          height: 350,
-          type: 'bar',
-        },
-        plotOptions: {
-          bar: {
-            borderRadius: 10,
-            columnWidth: '50%',
-          }
-        },
-        dataLabels: {
-          enabled: false
-        },
-        stroke: {
-          width: 2
-        },
-
-        grid: {
-          row: {
-            colors: ['#fff', '#f2f2f2']
-          }
-        },
-        xaxis: {
-          labels: {
-            rotate: -45
-          },
-          categories: $categories,
-          tickPlacement: 'on'
-        },
-        yaxis: {
-          title: {
-            text: 'มูลค่า (บาท)',
-          },
-        },
-        fill: {
-          type: 'gradient',
-          gradient: {
-            shade: 'light',
-            type: "horizontal",
-            shadeIntensity: 0.25,
-            gradientToColors: undefined,
-            inverseColors: true,
-            opacityFrom: 0.85,
-            opacityTo: 0.85,
-            stops: [50, 0, 100]
-          },
-        }
-        };
-
-        var chart01 = new ApexCharts(document.querySelector("#line-chart"),optionsline);
-        chart01.render();
-
-
-
-//=====================================
-
-var dom = document.getElementById('line-stack');
-var myChart = echarts.init(dom, null, {
-  renderer: 'canvas',
-  useDirtyRect: false
-});
-var app = {};
-
-var option;
-
-option = {
-  tooltip: {
-    trigger: 'axis'
-  },
-  legend: {
-    data: $getDataLabel
-  },
-  grid: {
-    left: '3%',
-    right: '4%',
-    bottom: '3%',
-    containLabel: true
-  },
-  toolbox: {
-    feature: {
-      saveAsImage: {}
-    }
-  },
-  xAxis: {
-    type: 'category',
-    boundaryGap: false,
-    data: $yData
-  },
-  yAxis: {
-    type: 'value'
-  },
-  series: $series
-};
-
-if (option && typeof option === 'object') {
-  myChart.setOption(option);
-}
-window.addEventListener('resize', myChart.resize);
-
-
-JS;
-$this->registerJS($js, View::POS_END);
+$this->registerJs($js, View::POS_END);
 ?>

@@ -13,11 +13,16 @@ use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use app\modules\sm\models\Vendor;
 use ruskid\csvimporter\CSVReader;
-use yii\validators\DateValidator;
 use yii\web\NotFoundHttpException;
 use ruskid\csvimporter\CSVImporter;
 use app\modules\hr\models\UploadCsv;
 use app\modules\sm\models\VendorSearch;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use app\modules\sm\services\VendorImportService;
+use app\modules\sm\services\VendorImportValidationService;
 use ruskid\csvimporter\MultipleImportStrategy;
 
 /**
@@ -60,9 +65,28 @@ class VendorController extends Controller
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.address'))"), $searchModel->q],
             ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.phone'))"), $searchModel->q],
         ]);
+
+        $baseQuery = clone $dataProvider->query;
+        $baseQuery->andWhere(['name' => 'vendor']);
+
+        $missingJson = function (string $jsonPath) {
+            $expr = "NULLIF(TRIM(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$jsonPath'))), '') IS NULL";
+            return new Expression($expr);
+        };
+
+        $completeness = [
+            'total' => (int) (clone $baseQuery)->count(),
+            'missing_code' => (int) (clone $baseQuery)->andWhere(['or', ['code' => null], ['code' => '']])->count(),
+            'missing_title' => (int) (clone $baseQuery)->andWhere(['or', ['title' => null], ['title' => '']])->count(),
+            'missing_tax_id' => (int) (clone $baseQuery)->andWhere($missingJson('$.tax_id'))->count(),
+            'missing_contact_name' => (int) (clone $baseQuery)->andWhere($missingJson('$.contact_name'))->count(),
+            'missing_phone' => (int) (clone $baseQuery)->andWhere($missingJson('$.phone'))->count(),
+            'missing_email' => (int) (clone $baseQuery)->andWhere($missingJson('$.email'))->count(),
+        ];
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'completeness' => $completeness,
         ]);
     }
 
@@ -114,6 +138,7 @@ class VendorController extends Controller
             }
         } else {
             $model->loadDefaultValues();
+            $model->code = $this->getNextVendorCode();
         }
 
         if ($this->request->isAjax) {
@@ -331,6 +356,205 @@ class VendorController extends Controller
     }
 
     /**
+     * ดาวน์โหลดเทมเพลต CSV/Excel สำหรับนำเข้า Vendor (แบบใหม่)
+     * @param string $format csv|xlsx
+     */
+    public function actionDownloadTemplate($format = 'csv')
+    {
+        $service = new VendorImportService();
+        if ($format === 'xlsx') {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $headers = VendorImportService::TEMPLATE_HEADERS;
+            foreach ($headers as $c => $h) {
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($c + 1) . '1', $h);
+            }
+            $example = ['V001', 'บริษัท ตัวอย่าง จำกัด', 'คุณสมชาย', '02-1234567', 'contact@example.com', '123 ถ.สุขุมวิท กทม.', '1234567890123', 'active', 'บัญชีตัวอย่าง', '123-4-56789-0', 'ธนาคารกรุงเทพ', 'ผู้จัดการ', '02-1234568'];
+            foreach ($example as $c => $v) {
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($c + 1) . '2', $v);
+            }
+            $filename = 'template_vendor_' . date('Ymd') . '.xlsx';
+            $path = Yii::getAlias('@runtime') . '/' . $filename;
+            (new Xlsx($spreadsheet))->save($path);
+            return Yii::$app->response->sendFile($path, $filename, ['inline' => false]);
+        }
+        $csv = $service->generateCsvTemplate();
+        $filename = 'template_vendor_' . date('Ymd') . '.csv';
+        Yii::$app->response->sendContentAsFile($csv, $filename, ['mimeType' => 'text/csv', 'inline' => false]);
+        Yii::$app->end();
+    }
+
+    /**
+     * ส่งออกข้อมูล Vendor เป็น Excel
+     */
+    public function actionExportVendor()
+    {
+        $models = Vendor::find()->where(['name' => 'vendor'])->orderBy(['id' => SORT_ASC])->all();
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $headers = ['รหัส', 'ชื่อ', 'ผู้ติดต่อ', 'โทรศัพท์', 'อีเมล', 'ที่อยู่', 'ชื่อบัญชี', 'เลขบัญชี', 'ธนาคาร', 'สถานะ'];
+        foreach ($headers as $c => $h) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($c + 1) . '1', $h);
+        }
+        $row = 2;
+        foreach ($models as $m) {
+            $sheet->setCellValue('A' . $row, $m->code);
+            $sheet->setCellValue('B' . $row, $m->title);
+            $sheet->setCellValue('C' . $row, $m->contact_name ?? '');
+            $sheet->setCellValue('D' . $row, $m->phone ?? '');
+            $sheet->setCellValue('E' . $row, $m->email ?? '');
+            $sheet->setCellValue('F' . $row, is_array($m->data_json) ? ($m->data_json['address'] ?? '') : '');
+            $sheet->setCellValue('G' . $row, $m->account_name ?? '');
+            $sheet->setCellValue('H' . $row, $m->account_number ?? '');
+            $sheet->setCellValue('I' . $row, $m->bank_name ?? '');
+            $sheet->setCellValue('J' . $row, !empty($m->active) ? 'ใช้งาน' : 'ไม่ใช้งาน');
+            $row++;
+        }
+        $filename = 'ข้อมูลผู้แทนจำหน่าย_' . date('Ymd-His') . '.xlsx';
+        $path = Yii::getAlias('@runtime') . '/' . $filename;
+        (new Xlsx($spreadsheet))->save($path);
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_RAW;
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+
+        $response->sendFile($path, $filename, [
+            'inline' => false,
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->on(Response::EVENT_AFTER_SEND, function () use ($path) {
+            @unlink($path);
+        });
+        return $response;
+    }
+
+    /**
+     * Modal นำเข้าข้อมูล Vendor (แบบใหม่ แบบเดียว AM equip)
+     */
+    public function actionImport()
+    {
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้า Vendor (ผู้แทนจำหน่าย)',
+                'content' => $this->renderAjax('import', []),
+            ];
+        }
+        return $this->render('import', []);
+    }
+
+    /**
+     * AJAX: อัปโหลดไฟล์ → แสดง preview + validation
+     */
+    public function actionPreview()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $file = UploadedFile::getInstanceByName('importFile');
+        if (!$file) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+        $ext = strtolower($file->extension);
+        if (!in_array($ext, ['csv', 'xlsx', 'xls'], true)) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะ .csv และ .xlsx'];
+        }
+        $filePath = Yii::getAlias('@runtime') . '/vendor_import_' . time() . '_' . Yii::$app->security->generateRandomString(8) . '.' . $ext;
+        $file->saveAs($filePath);
+
+        try {
+            $service = new VendorImportService();
+            $parsed = $service->parseFile($filePath);
+            $rows = $parsed['rows'];
+            if (empty($rows)) {
+                @unlink($filePath);
+                return ['status' => 'error', 'message' => 'ไม่มีข้อมูลในไฟล์'];
+            }
+            $validated = $service->validateRows($rows);
+            $validated['filePath'] = $filePath;
+            $validated['status'] = 'success';
+            return $validated;
+        } catch (\Throwable $e) {
+            @unlink($filePath);
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * POST: นำเข้าข้อมูลจริง (ใช้ filePath จาก preview)
+     */
+    public function actionDoImport()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $filePath = $this->request->post('filePath');
+        if (!$filePath || !is_file($filePath)) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+        try {
+            $service = new VendorImportService();
+            $parsed = $service->parseFile($filePath);
+            $rows = $parsed['rows'];
+            $validated = $service->validateRows($rows);
+            if ($validated['error'] > 0) {
+                return [
+                    'status' => 'error',
+                    'message' => 'มีข้อมูลไม่ผ่านการตรวจสอบ ' . $validated['error'] . ' แถว กรุณาแก้ไขหรือนำเข้าเฉพาะแถวที่ถูกต้อง',
+                ];
+            }
+            $validRows = array_filter($validated['rows'], function ($r) {
+                return !empty($r['valid']);
+            });
+            $result = $service->import(array_values($validRows));
+            @unlink($filePath);
+            return [
+                'status' => 'success',
+                'message' => $result['message'],
+                'imported' => $result['imported'],
+            ];
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * ส่งออกเฉพาะแถวที่ error เป็น CSV
+     */
+    public function actionExportErrors()
+    {
+        $filePath = $this->request->post('filePath');
+        $rowsJson = $this->request->post('errorRows');
+        if (!$filePath || !$rowsJson) {
+            return $this->redirect(['index']);
+        }
+        $errorRows = json_decode($rowsJson, true);
+        if (!is_array($errorRows)) {
+            return $this->redirect(['index']);
+        }
+        $service = new VendorImportService();
+        $headers = VendorImportService::TEMPLATE_HEADERS;
+        $bom = "\xEF\xBB\xBF";
+        $fp = fopen('php://temp', 'r+');
+        fwrite($fp, $bom);
+        fputcsv($fp, array_merge(['ลำดับ', 'ข้อผิดพลาด'], $headers));
+        foreach ($errorRows as $item) {
+            $row = $item['row'] ?? [];
+            $err = isset($item['errors']) ? implode('; ', $item['errors']) : '';
+            $line = array_merge(
+                [$item['rowNumber'] ?? '', $err],
+                array_map(function ($k) use ($row) {
+                    return $row[$k] ?? '';
+                }, $headers)
+            );
+            fputcsv($fp, $line);
+        }
+        rewind($fp);
+        $csv = stream_get_contents($fp);
+        fclose($fp);
+        $filename = 'vendor_import_errors_' . date('Ymd-His') . '.csv';
+        Yii::$app->response->sendContentAsFile($csv, $filename, ['mimeType' => 'text/csv', 'inline' => false]);
+        Yii::$app->end();
+    }
+
+    /**
      * Deletes an existing Vendor model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
@@ -351,9 +575,29 @@ class VendorController extends Controller
      * @return Vendor the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
+    /**
+     * ดึงรหัสผู้แทนจำหน่ายถัดไป (เช่น V001 -> V002)
+     * @return string
+     */
+    protected function getNextVendorCode()
+    {
+        $last = Vendor::find()
+            ->where(['name' => 'vendor'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if (!$last || !$last->code) {
+            return 'V001';
+        }
+        if (preg_match('/^V(\d+)$/i', trim($last->code), $m)) {
+            $next = (int) $m[1] + 1;
+            return 'V' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        }
+        return 'V001';
+    }
+
     protected function findModel($id)
     {
-        if (($model = Vendor::findOne(['id' => $id])) !== null) {
+        if (($model = Vendor::findOne(['name' => 'vendor','id' => $id])) !== null) {
             return $model;
         }
 

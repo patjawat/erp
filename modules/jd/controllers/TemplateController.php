@@ -107,7 +107,7 @@ class TemplateController extends Controller
     }
 
     /**
-     * แปลงช่องวันที่อนุมัติ JD จากรูปแบบไทย (วว/ดด/ปปปป) เป็น Y-m-d H:i:s
+     * แปลงช่องวันที่อนุมัติ JD จากรูปแบบไทย (ว/ด/พ.ศ.) เป็น Y-m-d H:i:s
      */
     private static function normalizeJdApprovedAt(JdTemplate $model): void
     {

@@ -24,14 +24,16 @@ use iamsaint\datetimepicker\Datetimepicker;
             <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>
 
             <div class="row">
-                <div class="col-6">
-                    <?= $form->field($model, 'title')->textInput(['maxlength' => true])->label('ตัวแทนจำหน่าย') ?>
+                <div class="col-12">
+                    <?= $form->field($model, 'title')->textInput(['maxlength' => true])->label('ชื่อตัวแทนจำหน่าย') ?>
 
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('เลขประจำตัวผู้เสียภาษี')  ?>
+                    <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('รหัสตัวแทนจำหน่าย')  ?>
                 </div>
-
+                <div class="col-6">
+                    <?= $form->field($model, 'data_json[tax_id]')->textInput(['maxlength' => true])->label('เลขประจำตัวผู้เสียภาษี') ?>
+                    </div>
                 <div class="col-12">
                     <?= $form->field($model, 'data_json[address]')->textArea(['maxlength' => true])->label('ที่อยู่') ?>
                 </div>

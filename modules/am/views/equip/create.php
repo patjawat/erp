@@ -21,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ]
     ) ?>
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-        i data-lucide="circle-plus"></i>   สร้างใหม่</h4>
+        <i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่</h4>
 </div>
 
 <?php $this->endBlock(); ?>

@@ -42,8 +42,15 @@ class UserController extends Controller
     {
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $dataProvider->query->joinWith(['employee']);
-        $dataProvider->pagination = ['pageSize' => 20];
+        $dataProvider->query
+            ->joinWith(['employee'])
+            ->distinct()
+            ->orderBy([User::tableName() . '.id' => SORT_DESC]);
+        // อย่า overwrite pagination object และอย่าเข้าถึง ->offset/->limit ใน controller
+        // เพราะจะทำให้ getPage() ถูกเรียกก่อน totalCount ถูก set (ใน prepareModels) และ Yii จะ clamp page กลับเป็น 0
+        if ($dataProvider->pagination !== false && $dataProvider->pagination !== null) {
+            $dataProvider->pagination->pageSize = 20;
+        }
         // $dataProvider->query->andFilterWhere(['username' => $searchModel->q]);
         $dataProvider->query->andFilterWhere(['or',
         ['like', 'username', $searchModel->q],
@@ -51,18 +58,10 @@ class UserController extends Controller
         ['like', 'user.email', $searchModel->q]
 
     ]);
-        if (Yii::$app->request->isAjax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-            return $this->renderAjax('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }else {
-            return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
-        }
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     public function actionView($id)

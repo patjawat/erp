@@ -30,6 +30,9 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use app\modules\hr\models\DevelopmentSearch;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\helpers\PdfCoordinateHelper;
+use app\modules\pdfTemplate\models\PdfTemplate;
+use app\modules\pdfTemplate\services\PdfTemplateService;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -442,6 +445,27 @@ class DevelopmentController extends Controller
     }
 
     /**
+     * ดาวน์โหลดไฟล์เทมเพลต PDF ต้นฉบับ (attachment)
+     */
+    public function actionDownloadTemplate()
+    {
+        $layout = Categorise::findOne(['name' => 'form_development_pdf']);
+        if (!$layout || !$layout->ref) {
+            throw new NotFoundHttpException('ไม่พบข้อมูลเทมเพลต');
+        }
+        $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
+        if (!$templateFile || !is_file($templateFile)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต');
+        }
+        $filename = 'template-report-official-travel-' . date('Y-m-d') . '.pdf';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        Yii::$app->response->content = file_get_contents($templateFile);
+        return Yii::$app->response;
+    }
+
+    /**
      * กำหนดตำแหน่งข้อมูลบน PDF — อยู่ภายในโมดูล HR (รูปแบบเดียวกับ leave: เลือกชุดข้อมูล, checkbox แสดง, ขนาด, ความหนา, format วันที่, ลากวาง)
      */
     public function actionPdfPositions()
@@ -471,7 +495,8 @@ class DevelopmentController extends Controller
     }
 
     /**
-     * บันทึกตำแหน่งจากฟอร์มกำหนดตำแหน่ง (JSON POST)
+     * บันทึกตำแหน่งจากฟอร์มกำหนดตำแหน่ง (JSON POST).
+     * เก็บพิกัด X,Y เป็นค่าสัมพัทธ์ (0.00–1.00) ไม่ขึ้นกับความละเอียดจอ — resolution-independent.
      */
     public function actionSavePositions()
     {
@@ -512,8 +537,8 @@ class DevelopmentController extends Controller
             $row = [
                 'id' => $itemId,
                 'key' => $key,
-                'x' => (float) ($pos['x'] ?? 0),
-                'y' => (float) ($pos['y'] ?? 0),
+                'x' => PdfCoordinateHelper::validateAndNormalizeCoordinate((float) ($pos['x'] ?? 0)),
+                'y' => PdfCoordinateHelper::validateAndNormalizeCoordinate((float) ($pos['y'] ?? 0)),
                 'fontSize' => (int) ($pos['fontSize'] ?? 15),
                 'bold' => (int) ($pos['bold'] ?? 0),
                 'enabled' => (int) ($pos['enabled'] ?? 1),
@@ -525,7 +550,7 @@ class DevelopmentController extends Controller
             $items[] = $row;
         }
         $config['items'] = $items;
-        // พิกัดและรูปแบบตัวอักษรส่วนรายชื่อคณะเดินทาง
+        // พิกัดและรูปแบบตัวอักษรส่วนรายชื่อคณะเดินทาง — เก็บเป็นค่าสัมพัทธ์ 0–1
         $memberKeys = ['member_fullname_start_x', 'member_fullname_start_y', 'member_position_start_x', 'member_position_start_y', 'line_spacing', 'member_font_size', 'member_bold'];
         foreach ($memberKeys as $key) {
             $v = $body[$key] ?? Yii::$app->request->post($key);
@@ -534,6 +559,12 @@ class DevelopmentController extends Controller
                     $config[$key] = (int) $v;
                 } elseif ($key === 'member_bold') {
                     $config[$key] = (int) $v;
+                } elseif (in_array($key, ['member_fullname_start_x', 'member_position_start_x'], true)) {
+                    $val = (float) $v;
+                    $config[$key] = $val <= 1.0 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($val) : PdfCoordinateHelper::validateAndNormalizeCoordinate($val / PdfCoordinateHelper::A4_WIDTH_MM);
+                } elseif (in_array($key, ['member_fullname_start_y', 'member_position_start_y'], true)) {
+                    $val = (float) $v;
+                    $config[$key] = $val <= 1.0 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($val) : PdfCoordinateHelper::validateAndNormalizeCoordinate($val / PdfCoordinateHelper::A4_HEIGHT_MM);
                 } else {
                     $config[$key] = (float) $v;
                 }
@@ -597,11 +628,13 @@ class DevelopmentController extends Controller
                 if ($key === '' || !isset($defaults[$key])) {
                     continue;
                 }
+                $x = (float)($item['x'] ?? 0);
+                $y = (float)($item['y'] ?? 0);
                 $row = [
                     'id' => $item['id'] ?? uniqid('item_'),
                     'key' => $key,
-                    'x' => (float)($item['x'] ?? 0),
-                    'y' => (float)($item['y'] ?? 0),
+                    'x' => $x <= 1 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($x) : PdfCoordinateHelper::validateAndNormalizeCoordinate($x / PdfCoordinateHelper::A4_WIDTH_MM),
+                    'y' => $y <= 1 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($y) : PdfCoordinateHelper::validateAndNormalizeCoordinate($y / PdfCoordinateHelper::A4_HEIGHT_MM),
                     'fontSize' => (int)($item['fontSize'] ?? 15),
                     'bold' => (int)($item['bold'] ?? 0),
                     'enabled' => isset($item['enabled']) ? (int)$item['enabled'] : 1,
@@ -614,11 +647,28 @@ class DevelopmentController extends Controller
             }
             $data['items'] = $validItems;
         }
+        foreach (['member_fullname_start_x', 'member_position_start_x'] as $kx) {
+            if (isset($data[$kx])) {
+                $v = (float)$data[$kx];
+                $data[$kx] = $v <= 1 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($v) : PdfCoordinateHelper::validateAndNormalizeCoordinate($v / PdfCoordinateHelper::A4_WIDTH_MM);
+            }
+        }
+        foreach (['member_fullname_start_y', 'member_position_start_y'] as $ky) {
+            if (isset($data[$ky])) {
+                $v = (float)$data[$ky];
+                $data[$ky] = $v <= 1 ? PdfCoordinateHelper::validateAndNormalizeCoordinate($v) : PdfCoordinateHelper::validateAndNormalizeCoordinate($v / PdfCoordinateHelper::A4_HEIGHT_MM);
+            }
+        }
         $allowedKeys = [
-            'items', 'date_format',
-            'member_fullname_start_x', 'member_fullname_start_y',
-            'member_position_start_x', 'member_position_start_y',
-            'line_spacing', 'member_font_size', 'member_bold',
+            'items',
+            'date_format',
+            'member_fullname_start_x',
+            'member_fullname_start_y',
+            'member_position_start_x',
+            'member_position_start_y',
+            'line_spacing',
+            'member_font_size',
+            'member_bold',
         ];
         $imported = array_intersect_key($data, array_fill_keys($allowedKeys, true));
         if (empty($imported)) {
@@ -635,6 +685,145 @@ class DevelopmentController extends Controller
             Yii::$app->session->setFlash('error', 'บันทึกการตั้งค่าไม่สำเร็จ');
         }
         return $this->redirect(['/hr/development/pdf-positions']);
+    }
+
+    /** คืน data_json ของ Development เป็น array */
+    protected function developmentDataJson(Development $model): array
+    {
+        $v = $model->data_json;
+        return is_array($v) ? $v : (json_decode((string) $v, true) ?: []);
+    }
+
+    /**
+     * รายการผู้อนุมัติจากตาราง approve (ชื่อนามสกุล ตำแหน่ง วันที่อนุมัติ path ลายเซ็น) สำหรับใส่ใน PDF.
+     * คืน array แบบแบน: approver_1_fullname, approver_1_position, approver_1_approve_date, approver_1_signature, ...
+     */
+    protected function getDevelopmentApproversData(Development $model): array
+    {
+        $out = [];
+        $approves = Approve::find()
+            ->where(['from_id' => (string) $model->id, 'name' => 'development'])
+            ->andWhere(['not in', 'status', ['None', 'Pending']])
+            ->orderBy(['level' => SORT_ASC])
+            ->with('employee')
+            ->all();
+        $n = 1;
+        foreach ($approves as $a) {
+            $emp = $a->employee;
+            $fullname = $emp ? (!empty($emp->fullname) ? $emp->fullname : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname)) : '-';
+            $position = $emp && method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $dataJson = is_array($a->data_json) ? $a->data_json : (json_decode((string) $a->data_json, true) ?: []);
+            $approveDate = isset($dataJson['approve_date']) ? (string) $dataJson['approve_date'] : '';
+            $signaturePath = $emp && method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
+            if ($signaturePath !== '' && !is_file($signaturePath)) {
+                $signaturePath = '';
+            }
+            $out['approver_' . $n . '_fullname'] = $fullname;
+            $out['approver_' . $n . '_position'] = $position;
+            $out['approver_' . $n . '_approve_date'] = $approveDate;
+            $out['approver_' . $n . '_signature'] = $signaturePath;
+            $out['approver_' . $n . '_status'] = (string) ($a->status ?? '');
+            $n++;
+            if ($n > 4) {
+                break;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * รายการคณะเดินทางเป็น array สำหรับ loop ใน PDF: [ ['fullname' => ..., 'position' => ...], ... ]
+     */
+    protected function getDevelopmentTravelPartyMembersArray(Development $model): array
+    {
+        $list = [];
+        foreach ($model->listMemberForPdf() as $detail) {
+            $emp = $detail->emp;
+            $dataJson = is_array($detail->data_json) ? $detail->data_json : (json_decode((string) $detail->data_json, true) ?: []);
+            $label = trim((string) ($dataJson['label'] ?? ''));
+            $fullname = $emp ? (!empty($emp->fullname) ? $emp->fullname : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname)) : ($label ?: '-');
+            $position = $emp && method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $list[] = ['fullname' => $fullname, 'position' => $position];
+        }
+        return $list;
+    }
+
+    /** รวมค่าใช้จ่ายจากรายการ expense_type (qty * price) สำหรับใส่ใน PDF */
+    protected function getDevelopmentTotalExpense(Development $model): string
+    {
+        $total = 0;
+        foreach ($model->getExpenses()->all() as $detail) {
+            $qty = isset($detail->qty) ? (float) $detail->qty : 0;
+            $price = isset($detail->price) ? (float) $detail->price : 0;
+            $total += $qty * $price;
+        }
+        return number_format($total, 0);
+    }
+
+    /**
+     * นับจำนวนวันจาก date_start ถึง date_end (รวมวันต้นและวันปลาย) สำหรับใส่ใน PDF ฟิลด์ «นับวัน».
+     * ตัวอย่าง 16/01/2569 ถึง 18/01/2569 = 3 วัน
+     * @return string จำนวนวัน เช่น "1", "3" หรือ "-" ถ้าไม่มีข้อมูล
+     */
+    protected function getDevelopmentTripDays(Development $model): string
+    {
+        $dateStart = $model->date_start ? trim((string) $model->date_start) : '';
+        $dateEnd = $model->date_end ? trim((string) $model->date_end) : '';
+        if ($dateStart === '' || $dateEnd === '') {
+            return '-';
+        }
+        if (strpos($dateStart, '/') !== false) {
+            $dateStart = AppHelper::convertToGregorian($dateStart) ?: $dateStart;
+        }
+        if (strpos($dateEnd, '/') !== false) {
+            $dateEnd = AppHelper::convertToGregorian($dateEnd) ?: $dateEnd;
+        }
+        try {
+            $s = new \DateTime($dateStart);
+            $e = new \DateTime($dateEnd);
+            $days = $s->diff($e)->days + 1;
+            return (string) (int) $days;
+        } catch (\Throwable $e) {
+            return '-';
+        }
+    }
+
+    /**
+     * คืนยอดแสดงตามประเภท (ค่าลงทะเบียน, ค่าที่พัก, ค่ายานพาหนะ, ค่าเบี้ยเลี้ยง, ค่าอื่น ๆ) สำหรับใส่ใน PDF.
+     * registration_amount ใช้จาก data_json แล้วบวกจากรายการ expense_type ที่ชื่อประเภทมี "ลงทะเบียน"
+     */
+    protected function getDevelopmentExpenseAmountsByCategory(Development $model, array $dataJson): array
+    {
+        $reg = isset($dataJson['registration_amount']) && $dataJson['registration_amount'] !== '' && $dataJson['registration_amount'] !== null
+            ? (float) $dataJson['registration_amount']
+            : 0.0;
+        $acc = 0.0;
+        $veh = 0.0;
+        $all = 0.0;
+        $oth = 0.0;
+        $details = $model->getExpenses()->with('expenseType')->all();
+        foreach ($details as $detail) {
+            $amount = (float) ($detail->qty ?? 0) * (float) ($detail->price ?? 0);
+            $title = $detail->expenseType ? (string) $detail->expenseType->title : '';
+            if (stripos($title, 'ลงทะเบียน') !== false) {
+                $reg += $amount;
+            } elseif (stripos($title, 'ที่พัก') !== false) {
+                $acc += $amount;
+            } elseif (stripos($title, 'ยานพาหนะ') !== false || stripos($title, 'พาหนะ') !== false) {
+                $veh += $amount;
+            } elseif (stripos($title, 'เบี้ยเลี้ยง') !== false) {
+                $all += $amount;
+            } else {
+                $oth += $amount;
+            }
+        }
+        return [
+            'registration_amount' => number_format($reg, 0),
+            'accommodation_amount' => number_format($acc, 0),
+            'vehicle_amount' => number_format($veh, 0),
+            'allowance_amount' => number_format($all, 0),
+            'other_amount' => number_format($oth, 0),
+        ];
     }
 
     /** ชุดฟิลด์เริ่มต้นสำหรับใบขอไปราชการ (ให้เลือกได้ในหน้ากำหนดตำแหน่ง) */
@@ -786,10 +975,207 @@ class DevelopmentController extends Controller
     }
 
 
+    /**
+     * พิมพ์ใบขอไปราชการเป็น PDF (ใช้เทมเพลตจากโมดูล pdf-template + ข้อมูลจริงจาก DB).
+     *
+     * @param int $id Development ID
+     * @return \yii\web\Response binary PDF
+     * @throws NotFoundHttpException เมื่อไม่พบรายการหรือไม่มีเทมเพลต
+     */
     public function actionPrint($id)
     {
-        // 1. ดึงข้อมูลหลักและค่าเลย์เอาต์
+        $model = Development::find()->where(['id' => (int) $id])->with('createdByEmp', 'assignedTo', 'document')->one();
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบรายการขอไปราชการ');
+        }
+
+        $pdfTemplate = PdfTemplate::findForContext(PdfTemplate::CONTEXT_DEVELOPMENT);
+        if (!$pdfTemplate) {
+            throw new NotFoundHttpException('ยังไม่มีเทมเพลต PDF กรุณาเพิ่มและตั้งค่าเทมเพลตที่ /pdf-template');
+        }
+
+        $templateService = new PdfTemplateService();
+        $templatePath = $templateService->getTemplateFilePath($pdfTemplate);
+        if ($templatePath === null || !is_file($templatePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
+        }
+
+        $dataJson = $this->developmentDataJson($model);
+        $emp = $model->createdByEmp;
+        $officerName = '-';
+        $officerPosition = '-';
+        $officerSignature = '';
+        if ($emp) {
+            $officerName = !empty($emp->fullname) ? $emp->fullname : (method_exists($emp, 'fullname') ? $emp->fullname() : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname));
+            $officerPosition = method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $sig = method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
+            $officerSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
+        }
+
+        $assignee = $model->assignedTo;
+        $assignedToFullname = '-';
+        $assignedToPosition = '-';
+        $assignedToSignature = '';
+        if ($assignee) {
+            $assignedToFullname = !empty($assignee->fullname) ? $assignee->fullname : ($assignee->prefix . ' ' . $assignee->fname . ' ' . $assignee->lname);
+            $assignedToPosition = method_exists($assignee, 'positionName') ? ($assignee->positionName() ?? '-') : '-';
+            $sig = method_exists($assignee, 'SignatureFilePath') ? ($assignee->SignatureFilePath() ?? '') : '';
+            $assignedToSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
+        }
+
+        $info = SiteHelper::getInfo();
+        $doc = $model->document;
+        $data = array_merge([
+            'organization_name' => (string) ($info['company_name'] ?? '-'),
+            'reference_document' => $doc ? (string) ($doc->topic ?? '') : '',
+            'document_number' => (string) ($dataJson['doc_number'] ?? $info['doc_number'] ?? '-'),
+            'thai_year' => (string) (int) $model->thai_year,
+            'custom_text' => (string) ($dataJson['custom_text'] ?? ''),
+            'officer_name' => $officerName,
+            'officer_position' => $officerPosition,
+            'officer_signature' => $officerSignature,
+            'assigned_to_fullname' => $assignedToFullname,
+            'assigned_to_position' => $assignedToPosition,
+            'assigned_to_signature' => $assignedToSignature,
+            'document_date' => date('Y-m-d'),
+            'topic' => (string) ($model->topic ?? ''),
+            'location' => (string) ($dataJson['location'] ?? '-'),
+            'location_org' => (string) ($dataJson['location_org'] ?? ''),
+            'province_name' => (string) ($dataJson['province_name'] ?? ''),
+            'vehicle_type_title' => $model->vehicleType ? (string) $model->vehicleType->title : '-',
+            'license_plate' => (string) ($dataJson['license_plate'] ?? ''),
+            'distance' => (string) ($dataJson['distance'] ?? ''),
+            'total_expense' => $this->getDevelopmentTotalExpense($model),
+        ], $this->getDevelopmentExpenseAmountsByCategory($model, $dataJson), [
+            'date_start' => $model->date_start ? (string) $model->date_start : '',
+            'date_end' => $model->date_end ? (string) $model->date_end : '',
+            'vehicle_date_start' => $model->vehicle_date_start ? (string) $model->vehicle_date_start : '',
+            'vehicle_date_end' => $model->vehicle_date_end ? (string) $model->vehicle_date_end : '',
+            'vehicle_time_start' => (string) ($dataJson['vehicle_time_start'] ?? ''),
+            'vehicle_time_end' => (string) ($dataJson['vehicle_time_end'] ?? ''),
+            'trip_days' => $this->getDevelopmentTripDays($model),
+            'travel_party' => (string) ($dataJson['travel_party'] ?? ''),
+            '__from_hr_print' => true,
+        ], $this->getDevelopmentApproversData($model), [
+            'travel_party_members' => $this->getDevelopmentTravelPartyMembersArray($model),
+        ]);
+
+        Yii::info('HR actionPrint: id=' . $id . ', officer=' . $data['officer_name'] . ', topic=' . ($data['topic'] ?? ''), __METHOD__);
+
+        $pdfBinary = $templateService->generatePdfWithData((int) $pdfTemplate->id, $data);
+
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="report-' . $model->id . '.pdf"');
+        Yii::$app->response->headers->set('X-PDF-Source', 'hr-development-print');
+        Yii::$app->response->headers->set('X-PDF-Officer', substr($data['officer_name'], 0, 50));
+        Yii::$app->response->content = $pdfBinary;
+        return Yii::$app->response;
+    }
+
+    /**
+     * คืนข้อมูลที่จะใส่ใน PDF เป็น JSON (ให้ editor ที่ /pdf-template ดึงไปแสดงตอนตั้งค่า).
+     */
+    public function actionPrintData($id)
+    {
+        $model = Development::find()->where(['id' => (int) $id])->with('createdByEmp', 'assignedTo', 'document')->one();
+        if (!$model) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['error' => 'ไม่พบรายการ'];
+        }
+        $dataJson = $this->developmentDataJson($model);
+        $emp = $model->createdByEmp;
+        $officerName = '-';
+        $officerPosition = '-';
+        $officerSignature = '';
+        if ($emp) {
+            $officerName = !empty($emp->fullname) ? $emp->fullname : (method_exists($emp, 'fullname') ? $emp->fullname() : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname));
+            $officerPosition = method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $sig = method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
+            $officerSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
+        }
+        $assignee = $model->assignedTo;
+        $assignedToFullname = '-';
+        $assignedToPosition = '-';
+        $assignedToSignature = '';
+        if ($assignee) {
+            $assignedToFullname = !empty($assignee->fullname) ? $assignee->fullname : ($assignee->prefix . ' ' . $assignee->fname . ' ' . $assignee->lname);
+            $assignedToPosition = method_exists($assignee, 'positionName') ? ($assignee->positionName() ?? '-') : '-';
+            $sig = method_exists($assignee, 'SignatureFilePath') ? ($assignee->SignatureFilePath() ?? '') : '';
+            $assignedToSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
+        }
+        $info = SiteHelper::getInfo();
+        $doc = $model->document;
+        $data = array_merge([
+            'organization_name' => (string) ($info['company_name'] ?? '-'),
+            'reference_document' => $doc ? (string) ($doc->topic ?? '') : '',
+            'document_number' => (string) ($dataJson['doc_number'] ?? $info['doc_number'] ?? '-'),
+            'thai_year' => (string) (int) $model->thai_year,
+            'custom_text' => (string) ($dataJson['custom_text'] ?? ''),
+            'officer_name' => $officerName,
+            'officer_position' => $officerPosition,
+            'officer_signature' => $officerSignature,
+            'assigned_to_fullname' => $assignedToFullname,
+            'assigned_to_position' => $assignedToPosition,
+            'assigned_to_signature' => $assignedToSignature,
+            'document_date' => date('Y-m-d'),
+            'topic' => (string) ($model->topic ?? ''),
+            'location' => (string) ($dataJson['location'] ?? '-'),
+            'location_org' => (string) ($dataJson['location_org'] ?? ''),
+            'province_name' => (string) ($dataJson['province_name'] ?? ''),
+            'vehicle_type_title' => $model->vehicleType ? (string) $model->vehicleType->title : '-',
+            'license_plate' => (string) ($dataJson['license_plate'] ?? ''),
+            'distance' => (string) ($dataJson['distance'] ?? ''),
+            'total_expense' => $this->getDevelopmentTotalExpense($model),
+        ], $this->getDevelopmentExpenseAmountsByCategory($model, $dataJson), [
+            'date_start' => $model->date_start ? (string) $model->date_start : '',
+            'date_end' => $model->date_end ? (string) $model->date_end : '',
+            'vehicle_date_start' => $model->vehicle_date_start ? (string) $model->vehicle_date_start : '',
+            'vehicle_date_end' => $model->vehicle_date_end ? (string) $model->vehicle_date_end : '',
+            'vehicle_time_start' => (string) ($dataJson['vehicle_time_start'] ?? ''),
+            'vehicle_time_end' => (string) ($dataJson['vehicle_time_end'] ?? ''),
+            'trip_days' => $this->getDevelopmentTripDays($model),
+            'travel_party' => (string) ($dataJson['travel_party'] ?? ''),
+        ], $this->getDevelopmentApproversData($model), [
+            'travel_party_members' => $this->getDevelopmentTravelPartyMembersArray($model),
+        ]);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        Yii::$app->response->headers->set('Access-Control-Allow-Origin', Yii::$app->request->origin ?? '*');
+        return $data;
+    }
+
+    public function actionPrintBackup($id)
+    {
         $model = $this->findModel($id);
+
+        // ถ้ามีเทมเพลตจากโมดูล pdf-template ให้ใช้พิมพ์จากนั้น (ตั้งค่าได้ที่ /pdf-template)
+        $pdfTemplate = PdfTemplate::find()->orderBy(['id' => SORT_ASC])->one();
+        if ($pdfTemplate) {
+            $pdfTemplateService = new PdfTemplateService();
+            $templatePath = $pdfTemplateService->getTemplateFilePath($pdfTemplate);
+            if ($templatePath && is_file($templatePath)) {
+                $info = $this->GetInfo();
+                $data = [
+                    'officer_name' => $model->createdByEmp ? $model->createdByEmp->fullname : '-',
+                    'document_date' => ThaiDateHelper::formatThaiDate(date('Y-m-d'), 'medium'),
+                    'topic' => (string) $model->topic,
+                    'location' => (string) ($this->developmentDataJson($model)['location'] ?? '-'),
+                    'date_start' => ThaiDateHelper::formatThaiDate($model->date_start ?? '', 'medium'),
+                    'date_end' => ThaiDateHelper::formatThaiDate($model->date_end ?? '', 'medium'),
+                ];
+                try {
+                    $pdfBinary = $pdfTemplateService->generatePdfWithData((int) $pdfTemplate->id, $data);
+                    Yii::$app->response->format = Response::FORMAT_RAW;
+                    Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+                    Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="report-' . $model->id . '.pdf"');
+                    Yii::$app->response->content = $pdfBinary;
+                    return Yii::$app->response;
+                } catch (\Throwable $e) {
+                    // ถ้าเจนจาก pdf-template ไม่ได้ ใช้ flow เดิมด้านล่าง
+                }
+            }
+        }
+
         $formName = 'form_development_pdf';
         $layout = Categorise::findOne(['name' => $formName]);
 
@@ -797,10 +1183,9 @@ class DevelopmentController extends Controller
             throw new NotFoundHttpException("ไม่พบข้อมูลเลย์เอาต์สำหรับฟอร์ม: $formName");
         }
 
-        // 2. ดึง Path ไฟล์เทมเพลต PDF
-        $templateFile = FileManagerHelper::getFileFormRef($layout->ref);
-        if (!$templateFile || !file_exists($templateFile)) {
-            Yii::$app->session->setFlash('error', 'ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดเทมเพลตที่หน้าตั้งค่า Template รายงานขอไปราชการ');
+        $templateFile = $layout->ref ? FileManagerHelper::getFileFormRef($layout->ref) : null;
+        if (!$templateFile || !is_file($templateFile)) {
+            Yii::$app->session->setFlash('error', 'ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดเทมเพลตที่หน้าตั้งค่า Template รายงานขอไปราชการ หรือใช้เทมเพลตจาก /pdf-template');
             return $this->redirect(['pdf-editor']);
         }
         // 3. เริ่มต้นสร้าง PDF ด้วย FPDI
@@ -817,40 +1202,45 @@ class DevelopmentController extends Controller
         $tplIdx = $pdf->importPage(1);
         $size = $pdf->getTemplateSize($tplIdx);
 
-        // เพิ่มหน้าตามขนาดต้นฉบับ (ปกติเป็น A4: 210x297 mm)
+        // เพิ่มหน้าตามขนาดต้นฉบับ (ปกติเป็น A4: 210×297 mm) — FPDI SetXY ใช้หน่วย mm
         $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
         $pdf->useTemplate($tplIdx);
-        /**
-         * ตัวคูณแปลงค่าจาก Point (ที่เซฟจาก Designer) เป็น Millimeters
-         * สูตร: (25.4 mm / 72 dpi) = 0.352777...
-         */
-        $ptToMm = 25.4 / 71;
 
-        // Offset สำหรับปรับจูนหน้างาน (ถ้าพิมพ์แล้วเบี้ยวทั้งแผ่นให้แก้ตรงนี้)
+        $paperW = (float) ($size['width'] ?? PdfCoordinateHelper::A4_WIDTH_MM);
+        $paperH = (float) ($size['height'] ?? PdfCoordinateHelper::A4_HEIGHT_MM);
         $offsetX = 0;
         $offsetY = 0;
+
+        if (Yii::$app->request->get('debug')) {
+            $cx = $paperW * 0.5;
+            $cy = $paperH * 0.5;
+            $pdf->SetDrawColor(255, 0, 0);
+            $pdf->SetLineWidth(0.3);
+            $pdf->Line($cx - 5, $cy, $cx + 5, $cy);
+            $pdf->Line($cx, $cy - 5, $cx, $cy + 5);
+        }
 
         $info = $this->GetInfo();
         $dataJson = $layout->data_json ?? [];
         if (is_string($dataJson)) {
             $dataJson = json_decode($dataJson, true) ?: [];
         }
-        // รองรับรูปแบบ items (จากหน้ากำหนดตำแหน่งแบบลากวาง) — แปลง mm เป็นหน่วยที่ writeText ใช้ (คูณด้วย ptToMm = 25.4/71)
+        // แปลงค่าสัมพัทธ์ (0–1) หรือ legacy mm เป็น mm สำหรับ FPDI
         $sigKeys = $this->getDevelopmentSignatureKeys();
-        $mmToDesignerUnit = 71 / 25.4; // ให้ writeText: value * (25.4/71) = mm
         if (!empty($dataJson['items'])) {
             $flat = [];
-            $positionsByKey = []; // รองรับฟิลด์เดียวกันหลายจุด (เช่น ชื่อผู้ปฏิบัติแทน 2 จุด)
+            $positionsByKey = [];
             foreach ($dataJson['items'] as $item) {
                 $k = $item['key'] ?? '';
                 if ($k === '' || (isset($item['enabled']) && (int) $item['enabled'] === 0)) {
                     continue;
                 }
-                $xMm = (float) ($item['x'] ?? 0);
-                $yMm = (float) ($item['y'] ?? 0);
+                $storedX = (float) ($item['x'] ?? 0);
+                $storedY = (float) ($item['y'] ?? 0);
+                $mm = PdfCoordinateHelper::normalizedOrMmToMm($storedX, $storedY, $paperW, $paperH);
                 $pos = [
-                    'x' => $xMm * $mmToDesignerUnit,
-                    'y' => $yMm * $mmToDesignerUnit,
+                    'x' => $mm['x'],
+                    'y' => $mm['y'],
                     'fontSize' => (int) ($item['fontSize'] ?? 15),
                     'bold' => !empty($item['bold']) ? 1 : 0,
                 ];
@@ -859,7 +1249,6 @@ class DevelopmentController extends Controller
                     $pos['height'] = (float) ($item['height'] ?? 15);
                 }
                 $positionsByKey[$k][] = $pos;
-                // เก็บจุดแรกใน flat ด้วย (สำหรับ backward compatibility)
                 if (!isset($flat[$k . '_x'])) {
                     $flat[$k . '_x'] = $pos['x'];
                     $flat[$k . '_y'] = $pos['y'];
@@ -874,14 +1263,14 @@ class DevelopmentController extends Controller
             $dataJson = array_merge($dataJson, $flat);
             $dataJson['_positionsByKey'] = $positionsByKey;
         } else {
-            // โค้ดเก่า/ไม่มี items: เติมพิกัด default ให้ทุกฟิลด์เพื่อให้ PDF แสดงครบ
             $defaults = $this->getDevelopmentDefaultFields();
             foreach ($defaults as $key => $def) {
                 $xKey = $key . '_x';
                 $yKey = $key . '_y';
                 if (!isset($dataJson[$xKey]) || !isset($dataJson[$yKey])) {
-                    $dataJson[$xKey] = (float) ($def['x'] ?? 0) * $mmToDesignerUnit;
-                    $dataJson[$yKey] = (float) ($def['y'] ?? 0) * $mmToDesignerUnit;
+                    $defMm = PdfCoordinateHelper::normalizedOrMmToMm((float)($def['x'] ?? 0), (float)($def['y'] ?? 0), $paperW, $paperH);
+                    $dataJson[$xKey] = $defMm['x'];
+                    $dataJson[$yKey] = $defMm['y'];
                     $dataJson[$key . '_fontSize'] = (int) ($def['fontSize'] ?? 15);
                     $dataJson[$key . '_bold'] = !empty($def['bold']) ? 1 : 0;
                     if (in_array($key, $sigKeys, true)) {
@@ -903,16 +1292,16 @@ class DevelopmentController extends Controller
             $leader = Approve::findOne(['name' => 'development', 'from_id' => $model->id, 'level' => 3]);
         }
 
-        // ฟังก์ชันช่วยเขียนข้อความลงในพิกัด — รองรับฟิลด์เดียวกันหลายจุด (เขียนข้อความเดียวกันทุกจุด)
-        $writeText = function ($key, $text, $fontSizeDefault = 13, $styleDefault = '') use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
+        // เขียนข้อความลงพิกัด (หน่วย mm). Stored ratio = top-left of text; SetXY uses same (no line-height offset) for UI/PDF parity.
+        $writeText = function ($key, $text, $fontSizeDefault = 13, $styleDefault = '') use ($pdf, $dataJson, $offsetX, $offsetY) {
             $positionsByKey = $dataJson['_positionsByKey'] ?? null;
             if (!empty($positionsByKey[$key])) {
                 foreach ($positionsByKey[$key] as $pos) {
                     $fontSize = (int) ($pos['fontSize'] ?? $fontSizeDefault);
                     $style = !empty($pos['bold']) ? 'B' : $styleDefault;
                     $pdf->SetFont('THSarabunNew', $style, $fontSize);
-                    $x = ((float)$pos['x'] * $ptToMm) + $offsetX;
-                    $y = ((float)$pos['y'] * $ptToMm) + $offsetY + ($fontSize * 0.15);
+                    $x = (float)$pos['x'] + $offsetX;
+                    $y = (float)$pos['y'] + $offsetY;
                     $pdf->SetXY($x, $y);
                     $pdf->Write(0, iconv('UTF-8', 'cp874', (string)$text));
                 }
@@ -924,8 +1313,8 @@ class DevelopmentController extends Controller
                 $fontSize = (int) ($dataJson[$key . '_fontSize'] ?? $fontSizeDefault);
                 $style = !empty($dataJson[$key . '_bold']) ? 'B' : $styleDefault;
                 $pdf->SetFont('THSarabunNew', $style, $fontSize);
-                $x = ((float)$dataJson[$xKey] * $ptToMm) + $offsetX;
-                $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY + ($fontSize * 0.15);
+                $x = (float)$dataJson[$xKey] + $offsetX;
+                $y = (float)$dataJson[$yKey] + $offsetY;
                 $pdf->SetXY($x, $y);
                 $pdf->Write(0, iconv('UTF-8', 'cp874', (string)$text));
             }
@@ -1029,15 +1418,15 @@ class DevelopmentController extends Controller
         $writeText('approve_date', (ThaiDateHelper::formatThaiDate($model->approveDate()) ?? '-'));
 
         // --- รูปลายเซ็น — รองรับฟิลด์เดียวกันหลายจุด (วาดรูปที่ทุกจุด) ---
-        $drawSignatureImage = function ($key, $filePath) use ($pdf, $dataJson, $ptToMm, $offsetX, $offsetY) {
+        $drawSignatureImage = function ($key, $filePath) use ($pdf, $dataJson, $offsetX, $offsetY) {
             if (!$filePath || !is_file($filePath)) {
                 return;
             }
             $positionsByKey = $dataJson['_positionsByKey'] ?? null;
             if (!empty($positionsByKey[$key])) {
                 foreach ($positionsByKey[$key] as $pos) {
-                    $x = ((float)$pos['x'] * $ptToMm) + $offsetX;
-                    $y = ((float)$pos['y'] * $ptToMm) + $offsetY;
+                    $x = (float)$pos['x'] + $offsetX;
+                    $y = (float)$pos['y'] + $offsetY;
                     $w = (float)($pos['width'] ?? 35);
                     $h = (float)($pos['height'] ?? 15);
                     try {
@@ -1055,8 +1444,8 @@ class DevelopmentController extends Controller
             if (!isset($dataJson[$xKey], $dataJson[$yKey])) {
                 return;
             }
-            $x = ((float)$dataJson[$xKey] * $ptToMm) + $offsetX;
-            $y = ((float)$dataJson[$yKey] * $ptToMm) + $offsetY;
+            $x = (float)$dataJson[$xKey] + $offsetX;
+            $y = (float)$dataJson[$yKey] + $offsetY;
             $w = (float)($dataJson[$wKey] ?? 35);
             $h = (float)($dataJson[$hKey] ?? 15);
             try {
@@ -1074,11 +1463,23 @@ class DevelopmentController extends Controller
             $drawSignatureImage('signature_approver', $leader->employee->SignatureFilePath());
         }
 
-        // ส่วนคณะเดินทาง (ด้วยข้าพเจ้า): จุดเริ่มต้นคอลัมน์ชื่อ + คอลัมน์ตำแหน่ง + ระยะห่างบรรทัด
-        $startX = (float)($dataJson['member_fullname_start_x'] ?? 25);
-        $startY = (float)($dataJson['member_fullname_start_y'] ?? 85);
-        $startPositionX = (float)($dataJson['member_position_start_x'] ?? 100);
-        $startPositionY = (float)($dataJson['member_position_start_y'] ?? 85);
+        // ส่วนคณะเดินทาง: แปลงค่าสัมพัทธ์ (0–1) หรือ legacy mm เป็น mm
+        $memberNameMm = PdfCoordinateHelper::normalizedOrMmToMm(
+            (float)($dataJson['member_fullname_start_x'] ?? 25 / PdfCoordinateHelper::A4_WIDTH_MM),
+            (float)($dataJson['member_fullname_start_y'] ?? 85 / PdfCoordinateHelper::A4_HEIGHT_MM),
+            $paperW,
+            $paperH
+        );
+        $memberPosMm = PdfCoordinateHelper::normalizedOrMmToMm(
+            (float)($dataJson['member_position_start_x'] ?? 100 / PdfCoordinateHelper::A4_WIDTH_MM),
+            (float)($dataJson['member_position_start_y'] ?? 85 / PdfCoordinateHelper::A4_HEIGHT_MM),
+            $paperW,
+            $paperH
+        );
+        $startX = $memberNameMm['x'];
+        $startY = $memberNameMm['y'];
+        $startPositionX = $memberPosMm['x'];
+        $startPositionY = $memberPosMm['y'];
         $lineSpacing = (float)($dataJson['line_spacing'] ?? 5.5);
 
         $members = $model->listMemberForPdf();
@@ -1086,17 +1487,15 @@ class DevelopmentController extends Controller
         $memberStyle = !empty($dataJson['member_bold']) ? 'B' : '';
         $pdf->SetFont('THSarabunNew', $memberStyle, $memberFontSize);
         $index = 0;
-        // พิกัดคณะเดินทางจากหน้ากำหนดตำแหน่งเก็บเป็น mm (ลากวางใช้ pxToMm) — FPDF SetXY ใช้ baseline จึงเลื่อน Y ลงเล็กน้อยให้ด้านบนของตัวอักษรตรงกับจุดที่วาง
-        $memberYOffset = $memberFontSize * 0.15; // เลื่อนลงเล็กน้อยให้ด้านบนตัวอักษรใกล้จุดที่วาง
         foreach ($members as $memberItem) {
             $emp = $memberItem->emp;
             $name = $emp ? $emp->fullname() : (trim((string)($memberItem->data_json['label'] ?? '')) ?: ((string)$memberItem->emp_id ?: '-'));
             $position = $emp ? $emp->positionName() : ($memberItem->data_json['position_name_text'] ?? '-');
 
             $x = $startX + $offsetX;
-            $y = $startY + $offsetY + $memberYOffset + ($index * $lineSpacing);
+            $y = $startY + $offsetY + ($index * $lineSpacing);
             $xPosition = $startPositionX + $offsetX;
-            $yPosition = $startPositionY + $offsetY + $memberYOffset + ($index * $lineSpacing);
+            $yPosition = $startPositionY + $offsetY + ($index * $lineSpacing);
 
             $pdf->SetXY($x, $y);
             $displayText = ($index + 1) . '. ' . $name;
@@ -1125,7 +1524,7 @@ class DevelopmentController extends Controller
     // ส่งออกรายการวันลา
     public function actionExportExcel()
     {
-         $me = UserHelper::GetEmployee();
+        $me = UserHelper::GetEmployee();
         $leaveFilterStatusModel = Categorise::findOne(['name' => 'hr_development_filter_status', 'emp_id' => $me->id]);
         $searchModel = new DevelopmentSearch([
             'q_status' => $leaveFilterStatusModel->data_json ?? [],

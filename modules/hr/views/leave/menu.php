@@ -55,13 +55,13 @@ $listAssetGroups = Categorise::find()
             <li>
                 <?= Html::a('<i class="fa-solid fa-caret-right  me-1"></i> วันหยุด', ['/hr/holiday'], ['class' => 'dropdown-item']) ?>
             </li>
-            <li>
+            <!-- <li>
                 <?= Html::a('<i class="fa-solid fa-caret-right  me-1"></i> แบบฟอร์มใบลา', ['/formtemplate/leave-template'], ['class' => 'dropdown-item']) ?>
-            </li>
+            </li> -->
 <li>
     <?= Html::a(
     '<i class="bi bi-file-earmark-pdf me-1"></i> ตั้งค่าเทมเพลตใบลา (ใหม่)',
-    ['/hr/leave-setting/leave-template-index'],
+    ['/pdf-template'],
     ['class' => 'dropdown-item']
 ) ?>
 </li>

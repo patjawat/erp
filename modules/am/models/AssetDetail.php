@@ -22,6 +22,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property string|null $code
  * @property int|null $user_id
  * @property int|null $emp_id
+ * @property int|null $asset_id
  * @property string|null $name
  * @property string|null $data_json
  * @property string|null $updated_at
@@ -36,6 +37,14 @@ class AssetDetail extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    /** ประเภทรายการวงจรชีวิต (เก็บใน asset_detail ใช้ name = self::NAME_LIFECYCLE, ข้อมูลใน data_json) */
+    const NAME_LIFECYCLE = 'lifecycle';
+    const TYPE_RECEIVE = 'RECEIVE';
+    const TYPE_TRANSFER = 'TRANSFER';
+    const TYPE_REPAIR = 'REPAIR';
+    const TYPE_RETURN = 'RETURN';
+    const TYPE_DISPOSE = 'DISPOSE';
+
     public $ma; // การบำรุงรักษา
     public $accessories_item; //ครุภัณฑ์ภายใน
     public static function tableName()
@@ -49,7 +58,7 @@ class AssetDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'emp_id', 'created_by', 'updated_by'], 'integer'],
+            [['user_id', 'emp_id', 'asset_id', 'created_by', 'updated_by'], 'integer'],
             [[
                 'data_json',
                 'updated_at',
@@ -174,6 +183,31 @@ class AssetDetail extends \yii\db\ActiveRecord
     public function getAsset()
     {
         return $this->hasOne(Asset::class, ['code' => 'code']);
+    }
+
+    /** สำหรับ lifecycle record ที่มี asset_id */
+    public function getAssetById()
+    {
+        return $this->hasOne(Asset::class, ['id' => 'asset_id']);
+    }
+
+    /** คืนค่า transaction_type จาก data_json (สำหรับ name = lifecycle) */
+    public function getTransactionType()
+    {
+        $dj = is_array($this->data_json) ? $this->data_json : (is_string($this->data_json) ? (json_decode($this->data_json, true) ?: []) : []);
+        return $dj['transaction_type'] ?? null;
+    }
+
+    public static function lifecycleTypeLabel($type)
+    {
+        $labels = [
+            self::TYPE_RECEIVE => 'รับเข้า',
+            self::TYPE_TRANSFER => 'โอนย้าย',
+            self::TYPE_REPAIR => 'ส่งซ่อม',
+            self::TYPE_RETURN => 'รับคืน',
+            self::TYPE_DISPOSE => 'จำหน่าย',
+        ];
+        return $labels[$type] ?? $type;
     }
 
     public function getAssetItem()

@@ -4,6 +4,7 @@ namespace app\modules\helpdesk2\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -527,6 +528,109 @@ class Helpdesk extends \yii\db\ActiveRecord
     public static function listRepairGroup()
     {
         return ArrayHelper::map(CategoriseHelper::Categorise('repair_group'), 'code', 'title');
+    }
+
+    /** ช่องทางซ่อม: ส่งซ่อมภายนอก / ซ่อมภายใน (ซ่อมเอง) */
+    public static function listRepairChannel()
+    {
+        return [
+            'internal' => 'ซ่อมภายใน (ซ่อมเอง)',
+            'external' => 'ส่งซ่อมภายนอก',
+        ];
+    }
+
+    /** แสดงข้อความช่องทางซ่อมจาก data_json[repair_channel] */
+    public function viewRepairChannelLabel()
+    {
+        $code = (string) ($this->data_json['repair_channel'] ?? '');
+        $list = static::listRepairChannel();
+        return $list[$code] ?? '-';
+    }
+
+    /** เป็นส่งซ่อมภายนอกหรือไม่ */
+    public function isExternalRepair()
+    {
+        return (string) ($this->data_json['repair_channel'] ?? '') === 'external';
+    }
+
+    /** แสดงรายละเอียดส่งซ่อมภายนอก */
+    public function getExternalRepairDetailHtml()
+    {
+        if (!$this->isExternalRepair()) {
+            return '';
+        }
+        $d = $this->data_json;
+        $rows = [];
+        if (!empty($d['external_vendor'])) {
+            $rows[] = ['label' => 'ร้าน/ผู้รับซ่อม', 'value' => $d['external_vendor']];
+        }
+        if (!empty($d['external_contact'])) {
+            $rows[] = ['label' => 'ผู้ติดต่อ / เบอร์โทร', 'value' => $d['external_contact']];
+        }
+        if (!empty($d['external_items'])) {
+            $rows[] = ['label' => 'รายการที่ส่งซ่อม', 'value' => $d['external_items']];
+        }
+        if (!empty($d['external_location'])) {
+            $rows[] = ['label' => 'สถานที่/ที่อยู่', 'value' => $d['external_location']];
+        }
+        if (!empty($d['external_notes'])) {
+            $rows[] = ['label' => 'หมายเหตุ/ขั้นตอน', 'value' => $d['external_notes']];
+        }
+        if (empty($rows)) {
+            return '<p class="text-muted small mb-0">ยังไม่กรอกรายละเอียดส่งซ่อมภายนอก</p>';
+        }
+        $html = '<ul class="list-unstyled mb-0 small">';
+        foreach ($rows as $r) {
+            $html .= '<li class="mb-2"><span class="text-muted">' . Html::encode($r['label']) . ':</span> ';
+            $html .= '<span class="fw-medium">' . nl2br(Html::encode($r['value'])) . '</span></li>';
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+
+    /** แสดงรายการไฟล์บิล/ใบเสร็จ (ส่งซ่อมภายนอก) */
+    public function getExternalRepairBillsHtml()
+    {
+        if (!$this->ref) {
+            return '<p class="text-muted small mb-0">ไม่มีบิลแนบ</p>';
+        }
+        $models = Uploads::find()->where(['ref' => $this->ref, 'name' => 'external_repair_bill'])->all();
+        if (empty($models)) {
+            return '<p class="text-muted small mb-0">ไม่มีบิลแนบ</p>';
+        }
+        $html = '<ul class="list-unstyled mb-0 small">';
+        foreach ($models as $m) {
+            $url = Url::to(['/filemanager/uploads/show', 'id' => $m->id], true);
+            $label = Html::encode($m->real_filename ?: 'ไฟล์แนบ');
+            $html .= '<li class="mb-1"><a href="' . Html::encode($url) . '" target="_blank" rel="noopener" class="text-primary"><i class="bi bi-file-earmark-pdf me-1"></i>' . $label . '</a></li>';
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+
+    /** แสดงรูปภาพงานซ่อม (ช่างแนบ) */
+    public function getRepairWorkPhotosHtml()
+    {
+        if (!$this->ref) {
+            return '<p class="text-muted small mb-0">ไม่มีรูปภาพงานซ่อม</p>';
+        }
+        $models = Uploads::find()->where(['ref' => $this->ref, 'name' => 'repair_work_photo'])->all();
+        if (empty($models)) {
+            return '<p class="text-muted small mb-0">ไม่มีรูปภาพงานซ่อม</p>';
+        }
+        $html = '';
+        foreach ($models as $m) {
+            $imgUrl = FileManagerHelper::getImg($m->id);
+            $viewUrl = Url::to(['/filemanager/uploads/show', 'id' => $m->id], true);
+            $html .= '<a href="' . Html::encode($viewUrl) . '" target="_blank" rel="noopener" class="d-inline-block me-2 mb-2">';
+            $html .= Html::img($imgUrl, [
+                'class' => 'img-thumbnail',
+                'style' => 'max-width: 120px; max-height: 120px; object-fit: cover;',
+                'alt' => 'รูปงานซ่อม',
+            ]);
+            $html .= '</a>';
+        }
+        return $html;
     }
 
     // ผู้ร่วมดำเนินการ

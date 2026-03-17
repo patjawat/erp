@@ -11,6 +11,13 @@ use yii\data\ActiveDataProvider;
  */
 class AssetSearch extends Asset
 {
+    /** 1 = เฉพาะที่ยังไม่กำหนดหน่วยงาน */
+    public $no_department;
+    /** 1 = เฉพาะที่ยังไม่มีผู้รับผิดชอบ */
+    public $no_owner;
+    /** ราคาต่ำกว่าเกณฑ์ (บาท) - แสดงครุภัณฑ์ที่ price < ค่านี้ */
+    public $price_below;
+
     /**
      * {@inheritdoc}
      */
@@ -18,8 +25,9 @@ class AssetSearch extends Asset
     {
         return [
             [['id', 'life', 'department', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group_id','asset_type','q','purchase','on_year','owner','price1','price2','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id','asset_name'], 'safe'],
-            [['price'], 'number'],
+            [['q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group_id','asset_type','q','purchase','on_year','owner','price1','price2','price_below','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id','asset_name','no_department','no_owner'], 'safe'],
+            [['price', 'price_below'], 'number'],
+        [['no_department', 'no_owner'], 'boolean'],
         ];
     }
 

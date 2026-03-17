@@ -50,9 +50,13 @@ use yii\helpers\Html;
                     </div>
                 </div>
 
-                <div class="d-flex gap-3">
-                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ทะเบียนคุม', ['/am/asset/depreciation', 'id' => $model->id], ['class' => 'btn btn-white border w-50 text-secondary fw-medium" open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'btn btn-warning w-50 fw-medium shadow-sm open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ทะเบียนคุม', ['/am/asset/depreciation', 'id' => $model->id], ['class' => 'btn btn-white border text-secondary fw-medium open-modal w-100', 'data' => ['size' => 'modal-lg']]) ?>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'btn btn-warning fw-medium shadow-sm open-modal w-100', 'data' => ['size' => 'modal-lg']]) ?>
+                    </div>
                 </div>
             </div>
         </div>

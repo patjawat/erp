@@ -295,7 +295,7 @@ if (empty($listThaiYear)) {
                                         'class' => 'btn btn-sm btn-outline-primary rounded-pill',
                                         'title' => 'ดูรายละเอียด',
                                     ]) ?>
-                                    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบขอไปราชการ', ['/development/default/print-official', 'id' => $item->id], [
+                                    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบขอไปราชการ', ['/hr/development/print', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-secondary rounded-pill',
                                         'target' => '_blank',
                                         'title' => 'พิมพ์ใบขอไปราชการ',

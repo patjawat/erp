@@ -40,7 +40,7 @@ $members = $draft['members'] ?? [];
                     <?= DatepickerThai::widget([
                         'name' => 'date_start',
                         'value' => $draft['date_start'] ?? '',
-                        'options' => ['id' => 'travel-date_start', 'class' => 'form-control', 'placeholder' => 'วว/ดด/ปปปป'],
+                        'options' => ['id' => 'travel-date_start', 'class' => 'form-control', 'placeholder' => 'ว/ด/พ.ศ.'],
                     ]) ?>
                 </div>
                 <div class="col-md-3">
@@ -48,7 +48,7 @@ $members = $draft['members'] ?? [];
                     <?= DatepickerThai::widget([
                         'name' => 'date_end',
                         'value' => $draft['date_end'] ?? '',
-                        'options' => ['id' => 'travel-date_end', 'class' => 'form-control', 'placeholder' => 'วว/ดด/ปปปป'],
+                        'options' => ['id' => 'travel-date_end', 'class' => 'form-control', 'placeholder' => 'ว/ด/พ.ศ.'],
                     ]) ?>
                 </div>
                 <div class="col-md-6 d-flex align-items-end">

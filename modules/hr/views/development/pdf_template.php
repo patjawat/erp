@@ -67,6 +67,11 @@ $this->registerCss('
         <?php if ($hasTemplate): ?>
         <div class="d-flex gap-2 align-items-center">
             <?= Html::a(
+                '<i class="bi bi-download me-1"></i> ดาวน์โหลดเทมเพลตต้นฉบับ',
+                ['/hr/development/download-template'],
+                ['class' => 'btn btn-outline-primary btn-sm rounded-3 fw-medium', 'target' => '_blank']
+            ) ?>
+            <?= Html::a(
                 '<i class="bi bi-geo-alt me-1"></i> กำหนดตำแหน่งข้อมูล',
                 ['/hr/development/pdf-positions'],
                 ['class' => 'btn btn-primary btn-sm rounded-3 fw-medium']
@@ -95,6 +100,11 @@ $this->registerCss('
                 <button type="button" id="leave-pdf-upload-btn" class="btn btn-primary rounded-3 w-100 btn-sm" disabled>
                     <i class="bi bi-cloud-upload me-1"></i> อัปโหลดใหม่
                 </button>
+                <?= Html::a(
+                    '<i class="bi bi-download me-1"></i> ดาวน์โหลดเทมเพลตต้นฉบับ',
+                    ['/hr/development/download-template'],
+                    ['class' => 'btn btn-outline-secondary rounded-3 w-100 btn-sm mt-2', 'target' => '_blank']
+                ) ?>
                 <div id="leave-pdf-upload-msg" class="mt-2"></div>
                 <hr class="my-3">
                 <div class="rounded-3 bg-primary bg-opacity-10 p-2">

@@ -1,6 +1,6 @@
 <div class="card">
     <div class="card-header border-bottom">
-        <div class="row">
+        <div class="row g-3">
             <div class="col-12 col-md-6">
                 <div class="d-flex align-items-center gap-2">
                     <div class="erp-icon-box bg-primary bg-opacity-10">
@@ -23,7 +23,7 @@
     <div class="card-body">
 
 
-        <div class="row g-5">
+        <div class="row g-3">
             <div class="col-12 col-md-6">
                 <dl class="row mb-0 text-sm" style="font-size: 0.9rem;">
                     <dt class="col-sm-4 text-secondary fw-normal mb-3">รหัสทรัพย์สิน</dt>
@@ -67,7 +67,7 @@
 
         <div class="border-top pt-4 mt-2">
             <h6 class="fw-bold text-dark mb-3">คุณลักษณะเฉพาะ / รายละเอียดเพิ่มเติม</h6>
-            <div class="p-3 bg-light rounded text-secondary small">
+            <div class="p-3 border rounded text-secondary small">
                 <?= $model->data_json['asset_options'] ?? '-' ?>
             </div>
         </div>

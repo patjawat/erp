@@ -14,9 +14,209 @@ use yii\web\Response;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use app\models\Categorise;
+use app\modules\am\models\AmAssetNumberFormat;
+use app\modules\am\models\AmAssetSequence;
+use app\modules\am\services\AssetNumberGenerator;
 
 class SettingController extends \yii\web\Controller
 {
+    /**
+     * หน้าการกำหนดรูปแบบและลำดับ FSN ครุภัณฑ์
+     */
+    public function actionFsnFormat()
+    {
+        $formats = [];
+        $sequences = [];
+        $tableFormatsExists = Yii::$app->db->getSchema()->getTableSchema('am_asset_number_formats') !== null;
+        $tableSeqsExists = Yii::$app->db->getSchema()->getTableSchema('am_asset_sequences') !== null;
+
+        if ($tableFormatsExists) {
+            $formats = AmAssetNumberFormat::find()->orderBy(['id' => SORT_ASC])->all();
+        }
+        if ($tableSeqsExists) {
+            $sequences = AmAssetSequence::find()
+                ->orderBy(['year' => SORT_DESC, 'category_id' => SORT_ASC])
+                ->limit(200)
+                ->all();
+        }
+
+        return $this->render('fsn-format', [
+            'formats' => $formats,
+            'sequences' => $sequences,
+            'tableFormatsExists' => $tableFormatsExists,
+            'tableSeqsExists' => $tableSeqsExists,
+        ]);
+    }
+
+    /**
+     * ตั้งค่ารูปแบบที่ใช้งาน (ใช้รูปแบบนี้เท่านั้น)
+     */
+    public function actionSetActiveFormat($id)
+    {
+        $tableExists = Yii::$app->db->getSchema()->getTableSchema(AmAssetNumberFormat::tableName()) !== null;
+        if (!$tableExists) {
+            Yii::$app->session->setFlash('error', 'ตารางรูปแบบยังไม่มีในระบบ');
+            return $this->redirect(['fsn-format']);
+        }
+        $model = AmAssetNumberFormat::findOne($id);
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรูปแบบนี้');
+            return $this->redirect(['fsn-format']);
+        }
+        $model->setAsActive();
+        Yii::$app->session->setFlash('success', 'ตั้งค่ารูปแบบ «' . $model->name . '» เป็นรูปแบบที่ใช้สร้างหมายเลขครุภัณฑ์แล้ว');
+        return $this->redirect(['fsn-format']);
+    }
+
+    /**
+     * เพิ่มรูปแบบ FSN ใหม่
+     */
+    public function actionFsnFormatCreate()
+    {
+        $this->ensureFsnFormatTable();
+        $model = new AmAssetNumberFormat(['is_active' => 0]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->is_active = !empty($this->request->post('set_active')) ? 1 : 0;
+            if ($model->save()) {
+                if ($model->is_active) {
+                    $model->setAsActive();
+                }
+                Yii::$app->session->setFlash('success', 'เพิ่มรูปแบบ «' . $model->name . '» แล้ว');
+                return $this->redirect(['fsn-format']);
+            }
+        }
+        return $this->render('fsn-format/form', ['model' => $model]);
+    }
+
+    /**
+     * แก้ไขรูปแบบ FSN
+     */
+    public function actionFsnFormatUpdate($id)
+    {
+        $this->ensureFsnFormatTable();
+        $model = $this->findFormatModel($id);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $setActive = !empty($this->request->post('set_active'));
+            if ($setActive) {
+                $model->is_active = 1;
+            }
+            if ($model->save()) {
+                if ($setActive) {
+                    $model->setAsActive();
+                }
+                Yii::$app->session->setFlash('success', 'บันทึกรูปแบบ «' . $model->name . '» แล้ว');
+                return $this->redirect(['fsn-format']);
+            }
+        }
+        return $this->render('fsn-format/form', ['model' => $model]);
+    }
+
+    /**
+     * ลบรูปแบบ FSN
+     */
+    public function actionFsnFormatDelete($id)
+    {
+        $this->ensureFsnFormatTable();
+        $model = $this->findFormatModel($id);
+        $name = $model->name;
+        $wasActive = (int) $model->is_active === 1;
+        $count = AmAssetNumberFormat::find()->count();
+        if ($count <= 1) {
+            Yii::$app->session->setFlash('error', 'ต้องมีอย่างน้อย 1 รูปแบบ ไม่สามารถลบได้');
+            return $this->redirect(['fsn-format']);
+        }
+        if ($model->delete()) {
+            if ($wasActive) {
+                $first = AmAssetNumberFormat::find()->orderBy(['id' => SORT_ASC])->one();
+                if ($first) {
+                    $first->setAsActive();
+                }
+            }
+            Yii::$app->session->setFlash('success', 'ลบรูปแบบ «' . $name . '» แล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ลบรูปแบบไม่สำเร็จ');
+        }
+        return $this->redirect(['fsn-format']);
+    }
+
+    protected function findFormatModel($id)
+    {
+        $model = AmAssetNumberFormat::findOne($id);
+        if ($model !== null) {
+            return $model;
+        }
+        throw new NotFoundHttpException('ไม่พบรูปแบบนี้');
+    }
+
+    private function ensureFsnFormatTable()
+    {
+        if (Yii::$app->db->getSchema()->getTableSchema('am_asset_number_formats') === null) {
+            throw new NotFoundHttpException('ตารางรูปแบบยังไม่มีในระบบ กรุณารัน migration');
+        }
+    }
+
+    /**
+     * เพิ่มลำดับ (ต่อปีต่อหมวด)
+     */
+    public function actionFsnSequenceCreate()
+    {
+        $this->ensureSequenceTable();
+        $model = new AmAssetSequence(['current_sequence' => 0]);
+        $model->year = (int) (\app\components\AppHelper::YearBudget());
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', 'เพิ่มลำดับสำหรับหมวด «' . $model->category_id . '» ปี ' . $model->year . ' แล้ว');
+            return $this->redirect(['fsn-format']);
+        }
+        return $this->render('fsn-sequence/form', ['model' => $model]);
+    }
+
+    /**
+     * แก้ไขลำดับ
+     */
+    public function actionFsnSequenceUpdate($id)
+    {
+        $this->ensureSequenceTable();
+        $model = $this->findSequenceModel($id);
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกลำดับแล้ว');
+            return $this->redirect(['fsn-format']);
+        }
+        return $this->render('fsn-sequence/form', ['model' => $model]);
+    }
+
+    /**
+     * ลบลำดับ
+     */
+    public function actionFsnSequenceDelete($id)
+    {
+        $this->ensureSequenceTable();
+        $model = $this->findSequenceModel($id);
+        $categoryId = $model->category_id;
+        $year = $model->year;
+        if ($model->delete()) {
+            Yii::$app->session->setFlash('success', 'ลบลำดับหมวด «' . $categoryId . '» ปี ' . $year . ' แล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ลบลำดับไม่สำเร็จ');
+        }
+        return $this->redirect(['fsn-format']);
+    }
+
+    protected function findSequenceModel($id)
+    {
+        $model = AmAssetSequence::findOne($id);
+        if ($model !== null) {
+            return $model;
+        }
+        throw new NotFoundHttpException('ไม่พบรายการลำดับนี้');
+    }
+
+    private function ensureSequenceTable()
+    {
+        if (Yii::$app->db->getSchema()->getTableSchema('am_asset_sequences') === null) {
+            throw new NotFoundHttpException('ตารางลำดับยังไม่มีในระบบ กรุณารัน migration');
+        }
+    }
+
     public function actionIndex()
     {
         $searchModel = new AssetTypeSearch();

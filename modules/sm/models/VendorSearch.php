@@ -3,21 +3,25 @@
 namespace app\modules\sm\models;
 
 use yii\base\Model;
+use yii\db\Expression;
 use yii\data\ActiveDataProvider;
 use app\modules\sm\models\Vendor;
 
 /**
- * SupVendorSearch represents the model behind the search form of `app\modules\sm\models\SupVendor`.
+ * VendorSearch represents the model behind the search form of Vendor.
  */
 class VendorSearch extends Vendor
 {
+    /** @var int|string 1 = แสดงเฉพาะรายการที่ข้อมูลไม่ครบถ้วน */
+    public $incomplete_only = 0;
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'active'], 'integer'],
+            [['id', 'active', 'incomplete_only'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','address','contact_name','tel','email','q'], 'safe'],
         ];
     }
@@ -70,6 +74,23 @@ class VendorSearch extends Vendor
             ->andFilterWhere(['like', 'title', $this->title])
             ->andFilterWhere(['like', 'description', $this->description])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
+
+        if ((int) $this->incomplete_only === 1) {
+            $emptyJson = function ($path) {
+                return new Expression("(NULLIF(TRIM(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$path'))), '') IS NULL)");
+            };
+            $query->andWhere([
+                'or',
+                ['or', ['code' => null], ['code' => '']],
+                ['or', ['title' => null], ['title' => '']],
+                $emptyJson('$.tax_id'),
+                $emptyJson('$.contact_name'),
+                $emptyJson('$.phone'),
+                $emptyJson('$.email'),
+            ]);
+        }
+
+        $query->orderBy(['id' => SORT_DESC]);
 
         return $dataProvider;
     }

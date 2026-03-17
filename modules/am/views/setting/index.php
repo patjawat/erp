@@ -44,6 +44,15 @@ $this->params['breadcrumbs'][] = $this->title;
 </style>
 
 <div class="" style="background-color:eee;">
+        <div class="card border-0 shadow-sm rounded-2 mb-3">
+            <div class="card-body d-flex flex-wrap align-items-center gap-2">
+            <?= \yii\helpers\Html::a(
+                '<i class="fa-solid fa-hashtag me-1"></i> การกำหนดรูปแบบ ลำดับ FSN ครุภัณฑ์',
+                ['/am/setting/fsn-format'],
+                ['class' => 'btn btn-outline-primary']
+            ) ?>
+            </div>
+        </div>
         <div class="card mb-0">
             <div class="card-body">
             <?=app\components\AppHelper::Btn([
