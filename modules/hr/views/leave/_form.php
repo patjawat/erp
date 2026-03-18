@@ -72,38 +72,39 @@ $resultsJs = <<<JS
 
 <?php if (!$model->isNewRecord): ?>
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
-    <?php endif ?>
-    <?php echo $form->field($model, 'data_json[phone]')->hiddenInput()->label(false) ?>
-    <?php echo $form->field($model, 'data_json[address]')->hiddenInput()->label(false) ?>
-    <div class="row d-flex justify-content-center">
-        <div class="col-lg-12 col-md-12">
-            <!-- Row -->
-            <div class="row">
-                <div class="col-6">
+    <!-- // ไม่มีอะไรเลย -->
+<?php endif ?>
+     <?php echo $form->field($model, 'data_json[phone]')->hiddenInput()->label(false) ?>
+     <?php echo $form->field($model, 'data_json[address]')->hiddenInput()->label(false) ?>
+<div class="row d-flex justify-content-center">
+    <div class="col-lg-12 col-md-12">
+        <!-- Row -->
+        <div class="row">
+            <div class="col-6">
 
-                    <div class="d-flex justify-content-between gap-3">
-                        <div class="w-50">
-                            <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                                'options' => ['placeholder' => 'เลือกวันที่'],
-                            ]); ?>
-                            <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
-                                'options' => ['placeholder' => 'เลือกวันที่'],
-                            ]); ?>
-                        </div>
-                        <div class="w-50">
-                            <?= $form->field($model, 'date_start_type')->widget(Select2::classname(), [
-                                'data' => [
-                                    '0' => 'เต็มวัน',
-                                    '0.5' => 'ครึงวัน',
-                                ],
-                                // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                    'dropdownParent' => '#main-modal',
-                                    'width' => '100%',
-                                ],
-                                'pluginEvents' => [
-                                    'select2:unselect' => 'function() {
+                <div class="d-flex justify-content-between gap-3">
+                    <div class="w-50">
+                        <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                        ]); ?>
+                        <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                        ]); ?>
+                    </div>
+                    <div class="w-50">
+                        <?= $form->field($model, 'date_start_type')->widget(Select2::classname(), [
+                            'data' => [
+                                '0' => 'เต็มวัน',
+                                '0.5' => 'ครึงวัน',
+                            ],
+                            // 'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'dropdownParent' => '#main-modal',
+                                'width' => '100%',
+                            ],
+                            'pluginEvents' => [
+                                'select2:unselect' => 'function() {
                                     calDays();
                                     }',
                                     'select2:select' => 'function() {
