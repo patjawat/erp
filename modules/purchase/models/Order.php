@@ -1066,6 +1066,18 @@ function cutDecimal($number, $precision = 5)
         return CategoriseHelper::Vendor();
     }
 
+    /** รายชื่อผู้ขอ (บุคลากร) สำหรับ dropdown ค้นหา */
+    public static function listRequesters()
+    {
+        return ArrayHelper::map(
+            Employees::find()->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all(),
+            'id',
+            function ($emp) {
+                return $emp->prefix . $emp->fname . ' ' . $emp->lname;
+            }
+        );
+    }
+
     // ร้อยละดำเนินการ
     function OrderProgress()
     {

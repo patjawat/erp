@@ -62,6 +62,18 @@ class OrderController extends Controller
             $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
         }
         $dataProvider->query->andFilterWhere(['name' => 'order']);
+        if (!empty($searchModel->emp_id)) {
+            $emp = Employees::findOne($searchModel->emp_id);
+            if ($emp && $emp->user_id) {
+                $dataProvider->query->andFilterWhere([
+                    'or',
+                    ['emp_id' => $searchModel->emp_id],
+                    ['created_by' => $emp->user_id],
+                ]);
+            } else {
+                $dataProvider->query->andFilterWhere(['emp_id' => $searchModel->emp_id]);
+            }
+        }
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'pr_number', $searchModel->q],
