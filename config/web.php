@@ -216,9 +216,9 @@ $config = [
             'class' => 'dektrium\rbac\components\DbManager',
             // 'class' => 'yii\rbac\DbManager',
         ],
-        // 'errorHandler' => [
-        //     'errorAction' => 'site/error',
-        // ],
+        'errorHandler' => [
+            'errorAction' => 'site/error',
+        ],
         'mailer' => [  // กำหนดการส่ง Email ผ่าน SMTP ของ Google
             'class' => 'yii\swiftmailer\Mailer',
             'viewPath' => '@app/mail',
