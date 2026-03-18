@@ -10,6 +10,7 @@ use yii\bootstrap5\LinkPager;
 use app\modules\sm\models\Order;
 use app\widgets\datepicker\DatepickerThai;
 use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
+use app\modules\helpdesk2\models\HelpdeskDetail;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
@@ -90,7 +91,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">สถานที่:</span>
-                        <span class="fw-medium"><?= $model->data_json['location'] ?></span>
+                        <span class="fw-medium"><?= Html::encode((is_array($model->data_json) ? ($model->data_json['location'] ?? '-') : '-')) ?></span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">ความเร่งด่วน:</span>
@@ -124,22 +125,42 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                 <h6 class="text-uppercase text-secondary m-0">ทีมช่างผู้รับผิดชอบ</h6>
             </div>
             <div class="card-body p-4">
+                <?php
+                $team = HelpdeskDetail::find()
+                    ->where(['name' => 'repair_team', 'helpdesk_id' => $model->id])
+                    ->all();
+                ?>
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <select class="form-select">
-                            <option>ค้นหาชื่อช่างหรือรหัสพนักงาน...</option>
-                            <option>สมชาย ขยันซ่อม (ช่างอาคาร)</option>
-                            <option>วิชัย งานดี (ช่างเทคนิค)</option>
-                        </select>
+                        <div class="text-muted small">
+                            มอบหมายช่างโดยการกดปุ่มด้านล่าง แล้วเลือกจากรายการช่าง
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <button class="btn btn-outline-primary w-100">+ เพิ่มรายชื่อ</button>
+                        <?= Html::a(
+                            '+ เพิ่มรายชื่อ',
+                            ['/helpdesk/team/create', 'helpdesk_id' => $model->id, 'title' => 'มอบหมายช่าง'],
+                            ['class' => 'btn btn-outline-primary w-100 open-modal', 'data' => ['size' => 'modal-md']]
+                        ) ?>
                     </div>
                 </div>
+
                 <div class="mt-3">
-                    <div class="d-inline-block bg-light border rounded-pill px-3 py-1 me-2 mb-2">
-                        <small>สมชาย ขยันซ่อม <i class="bi bi-x-circle-fill ms-2 text-muted" style="cursor:pointer"></i></small>
-                    </div>
+                    <?php if (empty($team)): ?>
+                        <div class="text-muted small">ยังไม่มีช่างที่ถูกมอบหมาย</div>
+                    <?php else: ?>
+                        <?php foreach ($team as $t): ?>
+                            <?php $emp = $t->emp; ?>
+                            <div class="d-inline-block bg-light border rounded-pill px-3 py-1 me-2 mb-2">
+                                <small>
+                                    <?= Html::encode($emp?->fullname ?? '-') ?>
+                                    <?php if ($emp): ?>
+                                        <span class="text-muted"> (<?= Html::encode($emp->departmentName() ?? '-') ?>)</span>
+                                    <?php endif; ?>
+                                </small>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

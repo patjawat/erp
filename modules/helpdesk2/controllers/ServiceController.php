@@ -757,6 +757,7 @@ class ServiceController extends \yii\web\Controller
         }
 
         $senderEmp = Employees::find()->where(['user_id' => $model->created_by])->one();
+        $technicianEmp = $model->emp;
 
         $noticeDate = null;
         if (!empty($model->created_at)) {
@@ -776,6 +777,7 @@ class ServiceController extends \yii\web\Controller
             'title' => (string) ($model->title ?? ''),
             'device_type_name' => (string) ($model->deviceType?->title ?? ''),
             'asset_number' => (string) ($model->asset_number ?? ''),
+            'asset_code' => (string) ($model->asset?->code ?? $model->asset_number ?? ''),
             'notice_date' => (string) ($noticeDate ?? ''),
             'request_repair_date' => (string) ($model->request_repair_date ?? ''),
             'receive_date' => (string) ($model->receive_date ?? ''),
@@ -786,12 +788,20 @@ class ServiceController extends \yii\web\Controller
             'org_name' => (string) ($senderEmp ? $senderEmp->departmentName() : ''),
             'requester_fullname' => (string) ($senderEmp ? $senderEmp->fullname : ''),
             'requester_position' => (string) ($senderEmp && is_array($senderEmp->data_json) ? (($senderEmp->data_json['position_name_text'] ?? '') . ($senderEmp->data_json['position_level_text'] ?? '')) : ''),
-            'requester_phone' => (string) ($senderEmp->phone ?? ''),
+            // helpdesk2 stores phone/note in data_json
+            'phone' => (string) (is_array($model->data_json) ? ($model->data_json['phone'] ?? '') : ''),
+            'requester_phone' => (string) (is_array($model->data_json) ? ($model->data_json['phone'] ?? '') : ''),
+            'note' => (string) (is_array($model->data_json) ? ($model->data_json['note'] ?? '') : ''),
+            // technician info (from assigned emp_id)
+            'technician_fullname' => (string) ($technicianEmp ? $technicianEmp->fullname : ''),
+            'technician_position' => (string) ($technicianEmp && is_array($technicianEmp->data_json) ? (($technicianEmp->data_json['position_name_text'] ?? '') . ($technicianEmp->data_json['position_level_text'] ?? '')) : ''),
+            'technician_department' => (string) ($technicianEmp ? $technicianEmp->departmentName() : ''),
             'sender_signature' => $senderEmp ? $senderEmp->signature() : null,
             'location' => is_array($model->data_json) ? (string) ($model->data_json['location'] ?? '') : '',
             'problem_detail' => is_array($model->data_json) ? (string) ($model->data_json['problem_detail'] ?? '') : '',
             'solution_detail' => is_array($model->data_json) ? (string) ($model->data_json['solution_detail'] ?? '') : '',
-            'remark' => is_array($model->data_json) ? (string) ($model->data_json['remark'] ?? '') : '',
+            // keep legacy key: map remark => note
+            'remark' => is_array($model->data_json) ? (string) ($model->data_json['note'] ?? '') : '',
         ];
 
         $service = new PdfTemplateService();

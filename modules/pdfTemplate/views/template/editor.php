@@ -288,6 +288,13 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     var csrfToken = <?= json_encode($csrfToken) ?>;
     var initialLayout = <?= $layoutJson ?>;
     var fieldDefs = <?= $fieldDefsJson ?>;
+    // Map field source key -> Thai label (for overlay when no realData)
+    var fieldDefMap = {};
+    (fieldDefs || []).forEach(function (fd) {
+        var src = fd && (fd.source || fd.field || '');
+        var lbl = fd && (fd.label || src);
+        if (src) fieldDefMap[String(src)] = String(lbl);
+    });
     var pageW = <?= json_encode($pageW) ?>;
     var pageH = <?= json_encode($pageH) ?>;
 
@@ -519,7 +526,8 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 text = resolveValue(state.realData, path);
                 if (!text) text = item.field_name || item.field;
             } else {
-                text = isList ? 'รายการคณะเดินทาง (loop)' : (isApproverField ? (item.field_name || item.field) : (item.field_name || item.field || 'ฟิลด์'));
+                var fallbackLabel = fieldDefMap[path] || item.field_name || item.field || 'ฟิลด์';
+                text = isList ? 'รายการคณะเดินทาง (loop)' : (isApproverField ? fallbackLabel : fallbackLabel);
             }
             div.textContent = text || 'ฟิลด์';
             if (item.font_bold) div.style.fontWeight = 'bold';
@@ -885,9 +893,11 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 .then(function(res) {
                     var list = document.getElementById('field-list');
                     list.innerHTML = '';
+                    fieldDefMap = {};
                     (res.fields || []).forEach(function(fd) {
                         var src = fd.source || fd.field || '';
                         var lbl = fd.label || src;
+                        if (src) fieldDefMap[String(src)] = String(lbl);
                         var div = document.createElement('div');
                         div.className = 'field-list-item border rounded-2 p-2 mb-1 small';
                         div.setAttribute('data-source', src);

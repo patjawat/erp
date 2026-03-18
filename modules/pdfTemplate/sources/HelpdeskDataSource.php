@@ -46,6 +46,7 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'title', 'label' => 'หัวข้อ/ปัญหา'],
             ['source' => 'device_type_name', 'label' => 'ประเภทอุปกรณ์'],
             ['source' => 'asset_number', 'label' => 'หมายเลขครุภัณฑ์'],
+            ['source' => 'asset_code', 'label' => 'รหัสครุภัณฑ์'],
             ['source' => 'org_name', 'label' => 'หน่วยงานที่แจ้งซ่อม'],
 
             // วันที่และสถานะ
@@ -61,14 +62,18 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'requester_fullname', 'label' => 'ชื่อผู้แจ้งซ่อม'],
             ['source' => 'requester_position', 'label' => 'ตำแหน่งผู้แจ้งซ่อม'],
             ['source' => 'requester_phone', 'label' => 'เบอร์ติดต่อผู้แจ้งซ่อม'],
+            // ข้อมูลที่ระบบ helpdesk2 เก็บใน data_json
+            ['source' => 'phone', 'label' => 'โทร'],
+            ['source' => 'note', 'label' => 'หมายเหตุเพิ่มเติม'],
             ['source' => 'sender_signature', 'label' => 'ลายเซ็นผู้ส่งซ่อม'],
 
             // ช่างผู้ดำเนินการ
             ['source' => 'technician_fullname', 'label' => 'ชื่อช่างผู้ดำเนินการ'],
             ['source' => 'technician_position', 'label' => 'ตำแหน่งช่างผู้ดำเนินการ'],
+            ['source' => 'technician_department', 'label' => 'แผนกช่าง'],
 
             // รายละเอียดปัญหาและการแก้ไข
-            ['source' => 'location', 'label' => 'สถานที่/ตำแหน่งอุปกรณ์'],
+            ['source' => 'location', 'label' => 'สถานที่'],
             ['source' => 'problem_detail', 'label' => 'รายละเอียดปัญหา'],
             ['source' => 'solution_detail', 'label' => 'รายละเอียดการแก้ไข'],
             ['source' => 'remark', 'label' => 'หมายเหตุ'],
