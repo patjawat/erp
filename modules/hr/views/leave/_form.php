@@ -74,11 +74,6 @@ $resultsJs = <<<JS
 
 <?php if (!$model->isNewRecord): ?>
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> dev
 <?php endif ?>
      <?php echo $form->field($model, 'data_json[phone]')->hiddenInput()->label(false) ?>
      <?php echo $form->field($model, 'data_json[address]')->hiddenInput()->label(false) ?>
