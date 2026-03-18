@@ -18,6 +18,9 @@ use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskSearch;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\pdfTemplate\models\PdfTemplate;
+use app\modules\pdfTemplate\services\PdfTemplateService;
+use app\modules\hr\models\Employees;
 
 
 
@@ -738,6 +741,68 @@ class ServiceController extends \yii\web\Controller
             // 5️⃣ Output PDF
             $pdf->Output('I', 'filled.pdf');
         }
+    }
+
+    /**
+     * พิมพ์ใบส่งซ่อม (PDF) ด้วยระบบ pdf-template (ตั้งค่าได้ที่ /pdf-template/template)
+     * Context: helpdesk2.repair.notice
+     */
+    public function actionPrintSendRepairPdf($id)
+    {
+        $model = $this->findModel($id);
+
+        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE])->one();
+        if (!$template) {
+            throw new NotFoundHttpException('ยังไม่ได้ตั้งค่าเทมเพลตใบส่งซ่อม กรุณาเลือกที่ /pdf-template/template');
+        }
+
+        $senderEmp = Employees::find()->where(['user_id' => $model->created_by])->one();
+
+        $noticeDate = null;
+        if (!empty($model->created_at)) {
+            $noticeDate = substr((string) $model->created_at, 0, 10);
+        }
+
+        $sendRepairDate = null;
+        if (is_array($model->data_json) && !empty($model->data_json['send_repair_date'])) {
+            $sendRepairDate = (string) $model->data_json['send_repair_date'];
+        }
+        if (!$sendRepairDate && !empty($model->created_at)) {
+            $sendRepairDate = substr((string) $model->created_at, 0, 10);
+        }
+
+        $data = [
+            'repair_number' => (string) ($model->repair_number ?? ''),
+            'title' => (string) ($model->title ?? ''),
+            'device_type_name' => (string) ($model->deviceType?->title ?? ''),
+            'asset_number' => (string) ($model->asset_number ?? ''),
+            'notice_date' => (string) ($noticeDate ?? ''),
+            'request_repair_date' => (string) ($model->request_repair_date ?? ''),
+            'receive_date' => (string) ($model->receive_date ?? ''),
+            'send_repair_date' => (string) ($sendRepairDate ?? ''),
+            'repair_result' => (string) ($model->repair_result ?? ''),
+            'repair_type' => (string) ($model->repair_type ?? ''),
+            'status_title' => (string) ($model->repairStatus?->title ?? ''),
+            'org_name' => (string) ($senderEmp ? $senderEmp->departmentName() : ''),
+            'requester_fullname' => (string) ($senderEmp ? $senderEmp->fullname : ''),
+            'requester_position' => (string) ($senderEmp && is_array($senderEmp->data_json) ? (($senderEmp->data_json['position_name_text'] ?? '') . ($senderEmp->data_json['position_level_text'] ?? '')) : ''),
+            'requester_phone' => (string) ($senderEmp->phone ?? ''),
+            'sender_signature' => $senderEmp ? $senderEmp->signature() : null,
+            'location' => is_array($model->data_json) ? (string) ($model->data_json['location'] ?? '') : '',
+            'problem_detail' => is_array($model->data_json) ? (string) ($model->data_json['problem_detail'] ?? '') : '',
+            'solution_detail' => is_array($model->data_json) ? (string) ($model->data_json['solution_detail'] ?? '') : '',
+            'remark' => is_array($model->data_json) ? (string) ($model->data_json['remark'] ?? '') : '',
+        ];
+
+        $service = new PdfTemplateService();
+        $pdfBinary = $service->generatePdfWithData((int) $template->id, $data);
+
+        $filename = 'send-repair-' . (int) $model->id . '.pdf';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
+        Yii::$app->response->content = $pdfBinary;
+        return Yii::$app->response;
     }
 
 

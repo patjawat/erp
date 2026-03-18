@@ -46,8 +46,8 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                         <?= $model->viewCreateDateTime() ?>
                         <?php if (RepairFormSetting::isEnabled()): ?>
                         <?= Html::a(
-                            '<i class="bi bi-printer me-1"></i> พิมพ์ใบส่งซ่อม',
-                            ['/helpdesk/setting/print-form', 'id' => $model->id],
+                            '<i class="bi bi-file-earmark-pdf me-1"></i> พิมพ์ใบส่งซ่อม (PDF)',
+                            ['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id],
                             ['class' => 'btn btn-outline-primary btn-sm rounded-3', 'target' => '_blank', 'rel' => 'noopener']
                         ) ?>
                         <?php endif; ?>

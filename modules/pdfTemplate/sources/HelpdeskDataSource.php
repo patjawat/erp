@@ -49,6 +49,7 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'org_name', 'label' => 'หน่วยงานที่แจ้งซ่อม'],
 
             // วันที่และสถานะ
+            ['source' => 'notice_date', 'label' => 'วันที่แจ้งซ่อม'],
             ['source' => 'request_repair_date', 'label' => 'วันที่ต้องการให้ซ่อม'],
             ['source' => 'receive_date', 'label' => 'วันที่รับเรื่อง'],
             ['source' => 'send_repair_date', 'label' => 'วันที่ส่งซ่อม'],
@@ -60,6 +61,7 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'requester_fullname', 'label' => 'ชื่อผู้แจ้งซ่อม'],
             ['source' => 'requester_position', 'label' => 'ตำแหน่งผู้แจ้งซ่อม'],
             ['source' => 'requester_phone', 'label' => 'เบอร์ติดต่อผู้แจ้งซ่อม'],
+            ['source' => 'sender_signature', 'label' => 'ลายเซ็นผู้ส่งซ่อม'],
 
             // ช่างผู้ดำเนินการ
             ['source' => 'technician_fullname', 'label' => 'ชื่อช่างผู้ดำเนินการ'],
