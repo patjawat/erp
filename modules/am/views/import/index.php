@@ -124,15 +124,10 @@ $js = <<<JS
                     html += '</tr></thead><tbody class="table-group-divider align-middle">';
 
                     res.preview.slice(1).forEach(function(row){
-                        // ตรวจสอบว่าเป็น duplicate มั้ย
                         var isDuplicate = res.duplicates.some(function(dup){
                             return JSON.stringify(dup) === JSON.stringify(row);
                         });
-
-                        if (isDuplicate) {
-                                duplicateRows.push(row); // เก็บแถวที่ซ้ำ
-                        }
-
+                        if (isDuplicate) duplicateRows.push(row);
                         html += '<tr' + (isDuplicate ? ' class="table-danger"' : '') + '>';
                         row.forEach(function(cell){ html += '<td>' + cell + '</td>'; });
                         html += '</tr>';
@@ -142,19 +137,13 @@ $js = <<<JS
                     $('#preview-table').html(html);
                     $('#filePath').val(res.filePath);
 
-                    // ✅ ควบคุมปุ่มกับ alert
-                        if (duplicateRows.length > 0) {
-                            // ถ้ามีซ้ำ → ซ่อนปุ่ม import แล้วแสดง container แจ้งเตือน
-                            $('#import-btn').hide();
-                            $('#container-duplicate').removeClass('d-none')
-                                                    .find('div:last')
-                                                    .text('รหัสทรัพย์สินซ้ำ ' + duplicateRows.length + ' รายการ');
-                        } else {
-                            // ถ้าไม่มีซ้ำ → แสดงปุ่ม import แล้วซ่อน container แจ้งเตือน
-                            $('#import-btn').removeClass('d-none').show();
-                            $('#container-duplicate').addClass('d-none');
-                        }
-                    console.log("duplicate rows:", duplicateRows); // ✅ ใช้งานนอก loop ได้
+                    if (duplicateRows.length > 0) {
+                        $('#import-btn').hide();
+                        $('#container-duplicate').removeClass('d-none').find('div:last').text('รหัสทรัพย์สินซ้ำ ' + duplicateRows.length + ' รายการ');
+                    } else {
+                        $('#import-btn').removeClass('d-none').show();
+                        $('#container-duplicate').addClass('d-none');
+                    }
 
                 } else {
                     alert('เกิดข้อผิดพลาดในการอัปโหลด');

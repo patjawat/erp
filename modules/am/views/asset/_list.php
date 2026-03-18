@@ -19,6 +19,9 @@ use app\components\widgets\DataSummaryWidget;
                 <th>หมวดหมู่ / ยี่ห้อ</th>
                 <th>หน่วยงานรับผิดชอบ</th>
                 <th>วันที่รับ</th>
+                <th>ผู้ขาย/ผู้จำหน่าย/ผู้บริจาค</th>
+                <th>ประเภทเงิน</th>
+                <th>วิธีการได้มา</th>
                 <th class="text-end">ราคา</th>
                 <th class="text-center" style="width: 130px;">สถานะ</th>
                 <th class="text-center" style="width:200px;">จัดการ</th>
@@ -48,12 +51,15 @@ use app\components\widgets\DataSummaryWidget;
                 </td>
                 <td>
                     <div class="text-dark fw-medium"><?= $item->assetType?->title ?? '-' ?></div>
-                    <div class="text-muted" style="font-size: 0.9rem;"><?= $model->data_json['brand'] ?? '-' ?></div>
+                    <div class="text-muted" style="font-size: 0.9rem;"><?= $item->data_json['brand'] ?? '-' ?></div>
                 </td>
                 <td class="text-secondary py-2">
                     <?= $item->departmentName() ?>
                 </td>
                 <td class="text-secondary py-2"> <?= Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium') ?></td>
+                <td class="text-secondary py-2"><?= $item->vendorName() ?: ($item->data_json['vendor_name'] ?? '-') ?></td>
+                <td class="text-secondary py-2"><?= $item->budgetTypeName() ?></td>
+                <td class="text-secondary py-2"><?= $item->methodGetName() ?></td>
                 <td class="text-end fw-semibold"><?= number_format($item->price ?? 0, 2) ?? 0.00 ?></td>
                 <td class="text-center py-2">
                     <?= $item->viewstatus() ?>

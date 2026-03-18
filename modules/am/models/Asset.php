@@ -461,6 +461,16 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
+    /** วิธีการได้มา (ชื่อจาก categorise name=method_get) */
+    public function methodGetName()
+    {
+        try {
+            $cat = CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'] ?? null, 'method_get');
+            return $cat ? $cat->title : '-';
+        } catch (\Throwable $th) {
+            return '-';
+        }
+    }
 
     public function getAssetGroup()
     {

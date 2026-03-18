@@ -117,26 +117,20 @@ class ImportController extends Controller
             $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
             $model->csvFile->saveAs($filePath);
 
-            // อ่าน CSV แถวแรก 10 แถว
+            // อ่าน CSV — ไม่แจ้งเตือนรหัสซ้ำใน preview; การตรวจหมายเลขครุภัณฑ์ซ้ำทำตอนนำเข้าจริง
             $previewData = [];
-            $previewDataDuplicate = [];
 
             if (($handle = fopen($filePath, "r")) !== false) {
                 $row = 0;
                 while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $checkCodeDuplicate = Asset::find()->where(['code' => $data[0]])->count();
-                    $previewData[] = $data; // เก็บข้อมูลทุกแถว
+                    $previewData[] = $data;
                     $row++;
-
-                    if ($row != 1 && $checkCodeDuplicate >= 1) {
-                        $previewDataDuplicate[] = $data; // เก็บเฉพาะแถวที่ซ้ำ
-                    }
                 }
                 fclose($handle);
                 return [
                     'status' => 'success',
-                    'preview' => $previewData,          // มี header เสมอ
-                    'duplicates' => $previewDataDuplicate, // ไม่มี header
+                    'preview' => $previewData,
+                    'duplicates' => [], // ยกเลิกการแจ้งเตือนรหัสซ้ำใน preview
                     'filePath' => $filePath,
                 ];
             } else {
@@ -164,17 +158,42 @@ class ImportController extends Controller
         $rowsData = [];
         $errorRows = [];
         $rowNumber = 0;
+        $codesInFile = []; // หมายเลขครุภัณฑ์ที่เจอในไฟล์นี้ (ไม่ให้ซ้ำในไฟล์) — หมายเลข FSN ซ้ำได้
 
         if (($handle = fopen($filePath, "r")) !== false) {
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $rowNumber++;
                 if ($rowNumber == 1) continue; // ข้าม header
 
+                $code = trim((string) ($data[0] ?? ''));
+                if ($code !== '') {
+                    if (Asset::find()->where(['code' => $code])->exists()) {
+                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในระบบ']]];
+                        continue;
+                    }
+                    if (isset($codesInFile[$code])) {
+                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในไฟล์นี้']]];
+                        continue;
+                    }
+                    $codesInFile[$code] = true;
+                }
+
+                // มีรหัสผู้ขายแต่ชื่อว่าง และไม่เจอรหัสในฐานข้อมูล → ไม่นำเข้าแถวนี้
+                $vendorCode = trim((string) ($data[18] ?? ''));
+                $vendorName = trim((string) ($data[19] ?? ''));
+                if ($vendorCode !== '' && $vendorName === '') {
+                    $vendorExists = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->exists();
+                    if (!$vendorExists) {
+                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['vendor' => ['ไม่พบรหัสผู้ขาย/ผู้บริจาคในระบบ — ไม่นำเข้าแถวนี้']]];
+                        continue;
+                    }
+                }
+
                 $model = new Asset();
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
                 $model->code = $data[0];
-                $model->fsn_number = $data[1];
+                $model->fsn_number = $data[1]; // หมายเลข FSN ซ้ำได้
                 $model->asset_name = $data[2];
                 $model->data_json = [
                     'brand' => $data[3],
@@ -399,23 +418,42 @@ class ImportController extends Controller
         return $cat ? (string) $cat->code : '';
     }
 
+    /**
+     * ดึงรหัสผู้แทนจำหน่ายถัดไป ตามกฎผู้แทนจำหน่าย (V001, V002, V003 ...)
+     * @return string
+     */
+    protected function getNextVendorCode()
+    {
+        $last = Categorise::find()
+            ->where(['name' => 'vendor'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if (!$last || !$last->code) {
+            return 'V001';
+        }
+        if (preg_match('/^V(\d+)$/i', trim($last->code), $m)) {
+            $next = (int) $m[1] + 1;
+            return 'V' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        }
+        return 'V001';
+    }
+
     public function findVendor($tite = null)
     {
         $model = Categorise::find()->where(['name' => 'vendor', 'title' => $tite])->one();
-        if(!$model){
-            $newVender = new Categorise(['name'=>'vendor','title'=>$tite]);
-            $newVender-> code = \mdm\autonumber\AutoNumber::generate('vendor-?');
-            $newVender-> save(false);
+        if (!$model) {
+            $newVender = new Categorise(['name' => 'vendor', 'title' => $tite]);
+            $newVender->code = $this->getNextVendorCode();
+            $newVender->save(false);
             return $newVender->code;
-        }else{
-            return $model->code;    
-
-    }
+        }
+        return $model->code;
     }
 
     /**
-     * เงื่อนไข: ถ้าไม่มีรหัส → ค้นจากชื่อ; ถ้ายังไม่มีชื่อในทะเบียน → สร้างใหม่ทันที
-     * คืนค่าเป็น vendor code (Categorise.name = vendor)
+     * รหัส/ชื่อผู้ขายจาก CSV → vendor code ใน categorise (name='vendor') โครงสร้างเดียวกับ /sm/vendor
+     * - มีรหัส: ค้น WHERE name='vendor' AND code=รหัส ถ้าเจอคืน code (ไม่แก้ไข) ถ้าไม่เจอสร้างใหม่
+     * - รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — ค้น/สร้างผู้ขายอัตโนมัติจากชื่อ (findVendor)
      */
     protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
     {
@@ -425,21 +463,27 @@ class ImportController extends Controller
         if ($vendorCode !== '') {
             $byCode = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->one();
             if ($byCode) {
+                // รหัสมีในระบบแล้ว — อัปเดต title เฉพาะเมื่อ CSV ส่งชื่อมาและไม่ตรง
                 if ($vendorName !== '' && $byCode->title !== $vendorName) {
                     $byCode->title = $vendorName;
                     $byCode->save(false);
                 }
                 return $byCode->code;
             }
-            // ไม่พบรหัสในทะเบียน → สร้างใหม่ทันที
-            $newVender = new Categorise(['name' => 'vendor', 'title' => ($vendorName !== '' ? $vendorName : $vendorCode)]);
+            // มีรหัสแต่ชื่อว่างและไม่เจอใน DB → caller จะข้ามแถว ไม่สร้าง vendor
+            if ($vendorName === '') {
+                return '';
+            }
+            // ไม่พบรหัสในทะเบียนแต่มีชื่อ → สร้างใหม่
+            $newVender = new Categorise(['name' => 'vendor', 'title' => $vendorName]);
             $newVender->code = $vendorCode;
             $newVender->save(false);
             return $newVender->code;
         }
 
+        // รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — นำเข้า/สร้างผู้ขายอัตโนมัติตามโครงสร้างระบบผู้แทนจำหน่าย (categorise name=vendor เหมือน /sm/vendor)
         if ($vendorName !== '') {
-            return $this->findVendor($vendorName); // find หรือ create ตามชื่อ
+            return $this->findVendor($vendorName); // ค้นจาก title หรือสร้างใหม่ (code อัตโนมัติ)
         }
 
         return '';

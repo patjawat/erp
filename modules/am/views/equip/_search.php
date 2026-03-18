@@ -121,16 +121,10 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
                         <i class="fa-solid fa-file-excel"></i> Excel
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                        <li><?= Html::a('<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                        <li><?= Html::a('<i class="fa-solid fa-download me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
-                        <li>
-                            <?= Html::a(
-                                '<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel',
-                                '#',
-                                ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]
-                            ) ?>
-
-                        </li>
+                        <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel', '#', ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]) ?></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                     </ul>
                 </div>
             </div>
