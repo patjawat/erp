@@ -124,6 +124,9 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                         </select>
                     </div>
                     <?php endif; ?>
+                    <div class="mb-2">
+                        <input type="text" id="field-filter" class="form-control" placeholder="ค้นหาฟิลด์..." autocomplete="off">
+                    </div>
                 <div id="field-list">
                     <?php foreach ($fieldDefinitions as $fd):
                         $src = $fd['source'] ?? $fd['field'] ?? '';
@@ -296,6 +299,22 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     if (!wrap || !canvas || !overlay) return;
 
     var state = { layout: [], nextId: 1, selectedId: null, realData: null, pdfDoc: null, numPages: 1, currentPage: 1 };
+
+    function normalizeText(s) {
+        return (s || '').toString().toLowerCase().trim();
+    }
+
+    function filterFieldList(query) {
+        var q = normalizeText(query);
+        var items = document.querySelectorAll('#field-list .field-list-item');
+        items.forEach(function (el) {
+            var label = normalizeText(el.getAttribute('data-label') || el.textContent);
+            var src = normalizeText(el.getAttribute('data-source') || el.getAttribute('data-field'));
+            el.style.display = (!q || label.includes(q) || src.includes(q)) ? '' : 'none';
+        });
+    }
+
+    // (removed) data source filter
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
@@ -877,9 +896,20 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                         div.textContent = lbl;
                         list.appendChild(div);
                     });
+                    var q = document.getElementById('field-filter') ? document.getElementById('field-filter').value : '';
+                    filterFieldList(q);
                 })
                 .catch(function() {});
         });
+    }
+
+    // Filters UI: field list only
+    var fieldFilter = document.getElementById('field-filter');
+    if (fieldFilter) {
+        fieldFilter.addEventListener('input', function () {
+            filterFieldList(this.value);
+        });
+        filterFieldList(fieldFilter.value || '');
     }
 
     btnSave.addEventListener('click', function() {

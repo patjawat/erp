@@ -25,6 +25,10 @@ class PdfTemplate extends ActiveRecord
     const CONTEXT_LEAVE = 'leave';
     /** ใบลาพักผ่อน (LT4) — ใช้เทมเพลตแยกจาก ลาป่วย/คลอด/กิจ */
     const CONTEXT_LEAVE_REST = 'leave.rest';
+    /** ใบงานซ่อม (Helpdesk2) */
+    const CONTEXT_HELPDESK2_REPAIR = 'helpdesk2.repair';
+    /** ใบส่งซ่อม (Helpdesk2) */
+    const CONTEXT_HELPDESK2_REPAIR_NOTICE = 'helpdesk2.repair.notice';
 
     public static function tableName(): string
     {

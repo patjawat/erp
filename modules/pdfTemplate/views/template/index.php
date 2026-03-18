@@ -8,11 +8,13 @@ use yii\helpers\Url;
 /** @var int|null $developmentTemplateId */
 /** @var int|null $leaveTemplateId */
 /** @var int|null $leaveRestTemplateId */
+/** @var int|null $repairNoticeTemplateId */
 
 $this->title = 'Template รายงานขอไปราชการ';
 $developmentTemplateId = $developmentTemplateId ?? null;
 $leaveTemplateId = $leaveTemplateId ?? null;
 $leaveRestTemplateId = $leaveRestTemplateId ?? null;
+$repairNoticeTemplateId = $repairNoticeTemplateId ?? null;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="card border-0 shadow-sm rounded-3">
@@ -90,6 +92,27 @@ $this->params['breadcrumbs'][] = $this->title;
                     </select>
                 </div>
                 <button type="submit" class="btn btn-info rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
+                <?php \yii\widgets\ActiveForm::end(); ?>
+            </div>
+        </div>
+
+        <div class="card border rounded-3 mb-4">
+            <div class="card-header bg-warning bg-opacity-10 py-2">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-wrench-adjustable-circle me-1"></i> ตั้งค่าเทมเพลตสำหรับใบส่งซ่อม</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารจากระบบงานซ่อม (Helpdesk2) — ใบส่งซ่อม</p>
+                <?php $formRepairNotice = \yii\widgets\ActiveForm::begin(['action' => ['set-template-for-context'], 'method' => 'post', 'options' => ['class' => 'd-flex flex-wrap align-items-end gap-2']]); ?>
+                <input type="hidden" name="context" value="helpdesk2.repair.notice">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <select name="template_id" class="form-select">
+                        <option value="">— ยังไม่เลือก —</option>
+                        <?php foreach ($templates as $t): ?>
+                        <option value="<?= (int) $t->id ?>"<?= $repairNoticeTemplateId === (int) $t->id ? ' selected' : '' ?>><?= Html::encode($t->name) ?> (id=<?= (int) $t->id ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-warning rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
                 <?php \yii\widgets\ActiveForm::end(); ?>
             </div>
         </div>

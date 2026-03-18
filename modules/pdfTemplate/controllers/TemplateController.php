@@ -50,11 +50,13 @@ class TemplateController extends Controller
         $developmentTemplate = PdfTemplate::findForContext(PdfTemplate::CONTEXT_DEVELOPMENT);
         $leaveTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE])->one();
         $leaveRestTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE_REST])->one();
+        $repairNoticeTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE])->one();
         return $this->render('index', [
             'templates' => $templates,
             'developmentTemplateId' => $developmentTemplate ? (int) $developmentTemplate->id : null,
             'leaveTemplateId' => $leaveTemplate ? (int) $leaveTemplate->id : null,
             'leaveRestTemplateId' => $leaveRestTemplate ? (int) $leaveRestTemplate->id : null,
+            'repairNoticeTemplateId' => $repairNoticeTemplate ? (int) $repairNoticeTemplate->id : null,
         ]);
     }
 
@@ -65,7 +67,12 @@ class TemplateController extends Controller
     {
         $context = Yii::$app->request->post('context', '');
         $templateId = (int) Yii::$app->request->post('template_id', 0);
-        $allowed = [PdfTemplate::CONTEXT_DEVELOPMENT, PdfTemplate::CONTEXT_LEAVE, PdfTemplate::CONTEXT_LEAVE_REST];
+        $allowed = [
+            PdfTemplate::CONTEXT_DEVELOPMENT,
+            PdfTemplate::CONTEXT_LEAVE,
+            PdfTemplate::CONTEXT_LEAVE_REST,
+            PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE,
+        ];
         if (!in_array($context, $allowed, true)) {
             Yii::$app->session->setFlash('error', 'ไม่รู้จัก context');
             return $this->redirect(['index']);
@@ -82,6 +89,7 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_DEVELOPMENT => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบขอไปราชการแล้ว',
             PdfTemplate::CONTEXT_LEAVE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ) แล้ว',
             PdfTemplate::CONTEXT_LEAVE_REST => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลาพักผ่อนแล้ว',
+            PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบส่งซ่อมแล้ว',
         ];
         $msg = $messages[$context] ?? 'บันทึกการตั้งค่าเทมเพลตแล้ว';
         Yii::$app->session->setFlash('success', $msg);
