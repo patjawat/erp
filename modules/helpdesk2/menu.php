@@ -56,13 +56,13 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
                 <li>
                     <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทอุปกรณ์', ['/helpdesk/device-type'], ['class' => 'dropdown-item']) ?>
                 </li>
-                <li>
+                <!-- <li>
                     <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> แบบฟอร์มแจ้งซ่อม', ['/helpdesk/service/form-layout-service-setting'], ['class' => 'dropdown-item']) ?>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <?= Html::a('<i class="bi bi-file-earmark-pdf me-2"></i> แบบฟอร์มใบส่งซ่อม (PDF)', ['/helpdesk/setting/index'], ['class' => 'dropdown-item']) ?>
-                </li>
+                </li> -->
 
             </ul>
         </div>
