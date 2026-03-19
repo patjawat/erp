@@ -77,11 +77,41 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
                        <td class="text-start"><?php echo $item->repair_number?></td>
                         <td><?=$item->deviceType->title ?? '-'?></td>
                         <td><?=$item->title?></td>
-                        <td><?=$item->data_json['location']?></td>
+                        <td><?= Html::encode((is_array($item->data_json) ? ($item->data_json['location'] ?? '-') : '-')) ?></td>
                         <td><?=$item->getUserReq()['avatar']?></td>
                         <td><?=$item->getUserReq()['department']?></td>
-                        <td><?=$item->viewUrgent()['view']?></td>
-                        <td class="text-center"><?=$item->repairStatus?->title ?? '-'?></td>
+                        <?php
+                        $badgeClass = static function (string $color): string {
+                            return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
+                        };
+
+                        $urgencyCode = is_array($item->data_json ?? null) ? ($item->data_json['urgency'] ?? null) : null;
+                        $priorityMap = [
+                            '1' => ['label' => 'ต่ำ', 'color' => 'primary'],
+                            '2' => ['label' => 'ปานกลาง', 'color' => 'info'],
+                            '3' => ['label' => 'สูง', 'color' => 'warning'],
+                            '4' => ['label' => 'วิกฤต', 'color' => 'danger'],
+                            'low' => ['label' => 'ต่ำ', 'color' => 'primary'],
+                            'medium' => ['label' => 'ปานกลาง', 'color' => 'info'],
+                            'high' => ['label' => 'สูง', 'color' => 'warning'],
+                            'critical' => ['label' => 'วิกฤต', 'color' => 'danger'],
+                        ];
+                        $pInfo = is_scalar($urgencyCode) ? ($priorityMap[(string) $urgencyCode] ?? ['label' => 'ไม่ระบุ', 'color' => 'secondary']) : ['label' => 'ไม่ระบุ', 'color' => 'secondary'];
+                        $priorityBadge = Html::tag('span', Html::encode($pInfo['label']), ['class' => $badgeClass($pInfo['color'])]);
+
+                        $statusCode = (string) ($item->status ?? 'pending');
+                        $statusMeta = [
+                            'pending' => ['label' => 'เปิดงาน', 'color' => 'warning'],
+                            'receive' => ['label' => 'รับเรื่อง', 'color' => 'info'],
+                            'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info'],
+                            'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success'],
+                            'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger'],
+                        ];
+                        $sInfo = $statusMeta[$statusCode] ?? ['label' => ($item->repairStatus?->title ?? 'ไม่ทราบสถานะ'), 'color' => 'secondary'];
+                        $statusBadge = Html::tag('span', Html::encode($sInfo['label']), ['class' => $badgeClass($sInfo['color'])]);
+                        ?>
+                        <td><?= $priorityBadge ?></td>
+                        <td class="text-center"><?= $statusBadge ?></td>
                         <td>
                             <?php if($item->status == 'pending'):?>
                             <?=Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับงานซ่อม',['/helpdesk/service/receive','id' => $item->id],['class' => 'receive-order']);?>

@@ -54,6 +54,7 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'request_repair_date', 'label' => 'วันที่ต้องการให้ซ่อม'],
             ['source' => 'receive_date', 'label' => 'วันที่รับเรื่อง'],
             ['source' => 'send_repair_date', 'label' => 'วันที่ส่งซ่อม'],
+            ['source' => 'urgency', 'label' => 'ความเร่งด่วน'],
             ['source' => 'repair_type', 'label' => 'ประเภทการซ่อม'],
             ['source' => 'repair_result', 'label' => 'ผลการซ่อม'],
             ['source' => 'status_title', 'label' => 'สถานะงานซ่อม'],

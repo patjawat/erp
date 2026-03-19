@@ -1,297 +1,357 @@
 <?php
-
-use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use yii\bootstrap5\LinkPager;
-use app\modules\sm\models\Order;
-use app\widgets\datepicker\DatepickerThai;
 use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
-use app\modules\helpdesk2\models\HelpdeskDetail;
 
-/** @var yii\web\View $this */
-/** @var app\modules\sm\models\OrderSearch $searchModel */
-/** @var yii\data\ActiveDataProvider $dataProvider */
-$this->title = '';
-$this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
-$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนงานซ่อม', 'url' => ['index']];
-$this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
+/** @var app\modules\helpdesk2\models\Helpdesk $model */
+
+$ticketId = $model->id ?? '-';
+$titleText = 'Ticket #' . $ticketId;
+
+$dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+$statusCode = (string) ($model->status ?? 'pending');
+$urgencyCode = $dataJson['urgency'] ?? null;
+$createdAt = $model->created_at ?? null;
+
+$badgeClass = static function (string $color): string {
+    return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
+};
+
+$statusMeta = [
+    'pending' => ['label' => 'เปิดงาน', 'color' => 'warning', 'icon' => 'fa-solid fa-circle-info'],
+    'receive' => ['label' => 'รับเรื่อง', 'color' => 'info', 'icon' => 'fa-solid fa-inbox'],
+    'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info', 'icon' => 'fa-solid fa-gears'],
+    'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success', 'icon' => 'fa-regular fa-circle-check'],
+    'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger', 'icon' => 'fa-solid fa-ban'],
+];
+
+$statusInfo = $statusMeta[$statusCode] ?? ['label' => 'ไม่ทราบสถานะ', 'color' => 'secondary', 'icon' => 'fa-solid fa-circle'];
+$statusBadge = Html::tag('span', '<i class="' . $statusInfo['icon'] . ' me-1"></i>' . Html::encode($statusInfo['label']), [
+    'class' => $badgeClass($statusInfo['color']),
+]);
+
+$priorityMap = [
+    '1' => ['label' => 'ต่ำ', 'color' => 'primary'],
+    '2' => ['label' => 'ปานกลาง', 'color' => 'info'],
+    '3' => ['label' => 'สูง', 'color' => 'warning'],
+    '4' => ['label' => 'วิกฤต', 'color' => 'danger'],
+    'low' => ['label' => 'ต่ำ', 'color' => 'primary'],
+    'medium' => ['label' => 'ปานกลาง', 'color' => 'info'],
+    'high' => ['label' => 'สูง', 'color' => 'warning'],
+    'critical' => ['label' => 'วิกฤต', 'color' => 'danger'],
+];
+
+$priorityInfo = is_scalar($urgencyCode) ? ($priorityMap[(string) $urgencyCode] ?? ['label' => 'ไม่ระบุ', 'color' => 'secondary']) : ['label' => 'ไม่ระบุ', 'color' => 'secondary'];
+$priorityBadge = Html::tag('span', Html::encode('ความสำคัญ: ' . $priorityInfo['label']), [
+    'class' => $badgeClass($priorityInfo['color']),
+]);
+
+$slaBadgeHtml = '';
+try {
+    $slaBadgeHtml = HelpdeskSlaHelper::renderBadge($model);
+} catch (\Throwable $e) {
+    $slaBadgeHtml = '';
+}
+if ($slaBadgeHtml === '') {
+    $slaBadgeHtml = Html::tag('span', '<i class="fa-regular fa-clock me-1"></i>ไม่มี SLA', [
+        'class' => $badgeClass('secondary'),
+    ]);
+}
+
+$descriptionSummary = Html::encode($model->title ?: '—');
+$descriptionExtra = '';
+if (!empty($dataJson['repair_note']) && is_string($dataJson['repair_note'])) {
+    $descriptionExtra = Html::encode($dataJson['repair_note']);
+} elseif (!empty($dataJson['description']) && is_string($dataJson['description'])) {
+    $descriptionExtra = Html::encode($dataJson['description']);
+}
+
+$locationLabel = '-';
+if (!empty($dataJson['location']) && is_string($dataJson['location'])) {
+    $locationLabel = Html::encode($dataJson['location']);
+}
+
+$assetCodeLabel = Html::encode($model->asset_number ?: ($dataJson['asset_code'] ?? '-'));
+$requestRepairDateLabel = '-';
+if (!empty($model->request_repair_date)) {
+    try {
+        $requestRepairDateLabel = Html::encode((string) \Yii::$app->thaiFormatter->asDate($model->request_repair_date, 'long'));
+    } catch (\Throwable $e) {
+        $requestRepairDateLabel = Html::encode((string) \Yii::$app->formatter->asDate($model->request_repair_date));
+    }
+}
+
+// Mock data (used when controller doesn't provide $logs/$comments).
+$mockTimeline = [
+    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-22 minutes')), 'message' => 'อัปเดตสถานะงานซ่อม'],
+    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-2 hours')), 'message' => 'รับเรื่องเรียบร้อยแล้ว รอช่างดำเนินการตรวจสอบ'],
+    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-5 hours')), 'message' => 'สร้างงานซ่อมใหม่'],
+];
+
+$mockComments = [
+    (object) [
+        'is_staff' => false,
+        'user' => (object) ['name' => 'ผู้แจ้ง (ตัวอย่าง)'],
+        'created_at' => date('Y-m-d H:i:s', strtotime('-18 minutes')),
+        'message' => 'ช่วยตรวจอาการให้ละเอียดด้วยครับ/ค่ะ',
+    ],
+    (object) [
+        'is_staff' => true,
+        'user' => (object) ['name' => 'เจ้าหน้าที่ (ตัวอย่าง)'],
+        'created_at' => date('Y-m-d H:i:s', strtotime('-12 minutes')),
+        'message' => 'รับเรื่องแล้วครับ/ค่ะ กำลังประสานช่างตรวจสอบ',
+    ],
+];
+
+$timelineItems = isset($logs) ? $logs : $mockTimeline;
+$commentsItems = isset($comments) ? $comments : $mockComments;
+
+$mockAttachments = [
+    ['type' => 'pdf', 'label' => 'ไฟล์ใบส่งซ่อม (PDF)', 'url' => '#'],
+    ['type' => 'image', 'label' => 'รูปอาการเสีย (JPG)', 'url' => '#'],
+    ['type' => 'image', 'label' => 'รูปหลังการซ่อม (JPG)', 'url' => '#'],
+];
 
 ?>
 
-
-<!-- Header -->
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body">
-        <div class="row g-3 align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="fw-bold mb-1">เลขที่ใบสั่งซ่อม: <span class="text-primary"><?= $model->repair_number ?></span></h3>
-                <p class="text-muted mb-0">ปรับปรุงล่าสุดเมื่อ: <?= $model->viewUpdated()['date'] ?> | <?= $model->viewUpdated()['time'] ?></p>
-            </div>
-            <div class="col-12 col-md-6 text-start text-md-end mt-2 mt-md-0">
-                <span class="me-2">สถานะ <?= $model->viewStatus() ?></span>
-                <?= HelpdeskSlaHelper::renderBadge($model) ?>
-                <button class="btn btn-outline-secondary me-2"><i class="bi bi-printer"></i></button>
-                <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> ยกเลิกงาน</button>
-            </div>
+<div class="container-fluid py-3">
+    <div class="row g-3">
+        <!-- RIGHT -->
+        <div class="col-lg-4">
+            <?= $this->render('_sidebar', [
+                'model' => $model,
+                'statusInfo' => $statusInfo,
+                'priorityInfo' => $priorityInfo,
+                'statusBadge' => $statusBadge,
+                'priorityBadge' => $priorityBadge,
+                'slaBadgeHtml' => $slaBadgeHtml,
+            ]); ?>
         </div>
+        <!-- LEFT -->
+        <div class="col-lg-8">
+            <?= $this->render('_header', [
+                'model' => $model,
+                'titleText' => $titleText,
+                'statusBadge' => $statusBadge,
+                'priorityBadge' => $priorityBadge,
+                'slaBadgeHtml' => $slaBadgeHtml,
+            ]); ?>
 
-    </div>
-</div>
-
-<div class="row g-3 mt-3">
-    <!-- 1. ข้อมูลผู้แจ้งและอุปกรณ์ (Context) -->
-    <div class="col-12 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-bottom d-flex align-items-center justify-content-between gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="erp-icon-box bg-primary bg-opacity-10">
-                        <i class="bi bi-person-circle"></i>
-                    </div>
-                    <h6 class="text-uppercase text-secondary m-0">ข้อมูลผู้แจ้งซ่อม</h6>
-                </div>
-                <div class="small text-muted">
-                    <?= $model->viewCreateDateTime() ?>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-light rounded-3 p-3 me-3">
-                        <?php
-                        echo Html::img('@web/img/loading.gif', [
-                            'class' => 'rounded-4 me-3 shadow lazyload',
-                            'width' => '40',
-                            'height' => '40',
-                            'data' => [
-                                'expand' => '-20',
-                                'sizes' => 'auto',
-                                'src' => $model->emp->getImg()
-                            ]
-                        ]); ?>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-0"><?= $model->emp->fullname ?></h6>
-                        <small class="text-muted"><?= $model->emp->departmentName() ?></small>
-                    </div>
-                </div>
-
-                <div class="p-3 bg-light rounded-3 mb-4">
-                    <p class="fw-bold text-danger mb-1"><i class="fa-solid fa-triangle-exclamation"></i> อาการเสียที่ระบุ:</p>
-                    <p class="mb-0 text-dark"><?= $model->title ?></p>
-                </div>
-
-                <div class="section-title"><i class="bi bi-geo-alt"></i> สถานที่/ทรัพย์สิน</div>
-                <ul class="list-group list-group-flush small">
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">รหัสทรัพย์สิน:</span>
-                        <span class="fw-medium"><?= $model->asset_name ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">สถานที่:</span>
-                        <span class="fw-medium"><?= Html::encode((is_array($model->data_json) ? ($model->data_json['location'] ?? '-') : '-')) ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">ความเร่งด่วน:</span>
-                        <span class="fw-medium"><?= $model->viewUrgent()['view'] ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">ช่องทางซ่อม:</span>
-                        <span class="fw-medium"><?= Html::encode($model->viewRepairChannelLabel()) ?></span>
-                    </li>
-                </ul>
-                <div>
-
-                    <div class="section-title">
-                        <div class="d-flex justify-content-between">
-                            <div><i class="bi bi-geo-alt"></i> วันที่รับเรื่อง </div>
-                            <?= $model->viewReceiveDate() ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. ทีมช่างผู้รับผิดชอบ -->
-    <div class="col-12 col-xl-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-people"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">ทีมช่างผู้รับผิดชอบ</h6>
-            </div>
-            <div class="card-body p-4">
-                <?php
-                $team = HelpdeskDetail::find()
-                    ->where(['name' => 'repair_team', 'helpdesk_id' => $model->id])
-                    ->all();
-                ?>
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <div class="text-muted small">
-                            มอบหมายช่างโดยการกดปุ่มด้านล่าง แล้วเลือกจากรายการช่าง
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <?= Html::a(
-                            '+ เพิ่มรายชื่อ',
-                            ['/helpdesk/team/create', 'helpdesk_id' => $model->id, 'title' => 'มอบหมายช่าง'],
-                            ['class' => 'btn btn-outline-primary w-100 open-modal', 'data' => ['size' => 'modal-md']]
-                        ) ?>
-                    </div>
-                </div>
-
-                <div class="mt-3">
-                    <?php if (empty($team)): ?>
-                        <div class="text-muted small">ยังไม่มีช่างที่ถูกมอบหมาย</div>
-                    <?php else: ?>
-                        <?php foreach ($team as $t): ?>
-                            <?php $emp = $t->emp; ?>
-                            <div class="d-inline-block bg-light border rounded-pill px-3 py-1 me-2 mb-2">
-                                <small>
-                                    <?= Html::encode($emp?->fullname ?? '-') ?>
-                                    <?php if ($emp): ?>
-                                        <span class="text-muted"> (<?= Html::encode($emp->departmentName() ?? '-') ?>)</span>
+            <!-- Description -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header fw-bold">รายละเอียดงานซ่อม</div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="erp-icon-box bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3 p-2">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold mb-1"><?= $descriptionSummary ?></div>
+                                    <?php if ($descriptionExtra !== ''): ?>
+                                        <div class="text-muted"><?= nl2br($descriptionExtra) ?></div>
+                                    <?php else: ?>
+                                        <div class="text-muted">ไม่มีรายละเอียดเพิ่มเติม</div>
                                     <?php endif; ?>
-                                </small>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">รหัสครุภัณฑ์</span>
+                                <span class="fw-medium"><?= $assetCodeLabel ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">สถานที่</span>
+                                <span class="fw-medium"><?= $locationLabel ?></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">วันที่ต้องการให้ซ่อม</span>
+                                <span class="fw-medium"><?= $requestRepairDateLabel ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">อัปเดต</span>
+                                <span class="fw-medium"><?= Html::encode($createdAt ? \Yii::$app->formatter->asDatetime($createdAt) : '-') ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <?= $this->render('_timeline', ['items' => $timelineItems]); ?>
+
+            <!-- Comments -->
+            <?= $this->render('_comments', ['comments' => $commentsItems]); ?>
+
+            <!-- Attachments -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header fw-bold d-flex align-items-center justify-content-between gap-2">
+                    <span>ไฟล์แนบ</span>
+                    <span class="text-muted small">ตัวอย่าง UI พร้อมแนบไฟล์</span>
+                </div>
+                <div class="card-body p-4">
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($mockAttachments as $a): ?>
+                            <?php
+                            $iconClass = 'fa-regular fa-file';
+                            if (($a['type'] ?? '') === 'pdf') {
+                                $iconClass = 'fa-solid fa-file-pdf';
+                            } elseif (($a['type'] ?? '') === 'image') {
+                                $iconClass = 'fa-regular fa-file-image';
+                            }
+                            ?>
+                            <li class="list-group-item px-0">
+                                <div class="d-flex align-items-center justify-content-between gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-2 text-secondary">
+                                            <i class="<?= $iconClass ?>"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium"><?= Html::encode($a['label']) ?></div>
+                                            <div class="text-muted small">ขนาดไฟล์: —</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <?= Html::a(
+                                            'เปิดดู',
+                                            $a['url'],
+                                            ['class' => 'btn btn-outline-primary']
+                                        ) ?>
+                                    </div>
+                                </div>
+                            </li>
                         <?php endforeach; ?>
-                    <?php endif; ?>
+                    </ul>
                 </div>
             </div>
         </div>
+
+
     </div>
-
-    <!-- 3. อะไหล่และค่าใช้จ่าย (Resources) -->
-    <div class="col-12 col-xl-3">
-        <div class="card border-0 shadow-sm mb-4 h-100">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-currency-dollar"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">บันทึกค่าใช้จ่าย</h6>
-            </div>
-            <div class="card-body">
-
-                <!-- ส่วนกรอกอะไหล่ -->
-                <div class="mb-3">
-                    <label class="form-label small">รายการอะไหล่/วัสดุ</label>
-                    <div class="input-group input-group-sm mb-2">
-                        <input type="text" class="form-control" placeholder="ชื่อรายการ">
-                        <input type="number" class="form-control" style="max-width: 60px;" placeholder="จำนวน">
-                        <button class="btn btn-primary" type="button"><i class="bi bi-plus-lg"></i></button>
-                    </div>
-                </div>
-
-                <div class="section-title small text-muted mb-2">รายการที่เลือก</div>
-                <div class="cost-item shadow-none">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="small fw-bold text-dark">ลูกล้อบานเลื่อน (คู่)</span>
-                        <button class="btn btn-link btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-1">
-                        <span class="text-muted" style="font-size: 0.75rem;">ราคา 175.00 x 2</span>
-                        <span class="text-primary small fw-bold">350.00 ฿</span>
-                    </div>
-                </div>
-
-                <div class="cost-item shadow-none">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="small fw-bold text-dark">น้ำยาหล่อลื่น WD-40</span>
-                        <button class="btn btn-link btn-sm text-danger p-0"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-1">
-                        <span class="text-muted" style="font-size: 0.75rem;">ราคา 120.00 x 1</span>
-                        <span class="text-primary small fw-bold">120.00 ฿</span>
-                    </div>
-                </div>
-
-                <!-- ส่วนกรอกค่าแรง -->
-                <div class="mt-4 mb-3">
-                    <label class="form-label small">ค่าแรงปฏิบัติงาน (ถ้ามี)</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white">฿</span>
-                        <input type="number" class="form-control" placeholder="0.00">
-                    </div>
-                </div>
-
-                <hr class="my-3 border-dashed">
-
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted small">รวมค่าอะไหล่:</span>
-                    <span class="fw-medium small">470.00 ฿</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted small">ภาษี (7%):</span>
-                    <span class="fw-medium small">32.90 ฿</span>
-                </div>
-                <div class="d-flex justify-content-between border-top pt-2">
-                    <span class="fw-bold">ยอดสุทธิ:</span>
-                    <span class="fw-bold text-success fs-5">502.90 ฿</span>
-                </div>
-            </div>
-        </div>
-
-        <?php if ($model->isExternalRepair()): ?>
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-building"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">รายละเอียดส่งซ่อมภายนอก</h6>
-            </div>
-            <div class="card-body">
-                <?= $model->getExternalRepairDetailHtml() ?>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-receipt"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">สรุปค่าใช้จ่ายแนบบิล</h6>
-            </div>
-            <div class="card-body">
-                <?= $model->getExternalRepairBillsHtml() ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-camera"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">รูปภาพงานซ่อม</h6>
-            </div>
-            <div class="card-body">
-                <?= $model->getRepairWorkPhotosHtml() ?>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">การตรวจรับงาน</h6>
-            </div>
-            <div class="card-body">
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="check1">
-                    <label class="form-check-label small" for="check1">ทดสอบการใช้งานหลังซ่อม</label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="check2">
-                    <label class="form-check-label small" for="check2">ทำความสะอาดพื้นที่งาน</label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
 </div>
+
+<?php
+$js = <<<JS
+// Support legacy callbacks from team form (view.php)
+window.loadFormTeam = function () { window.location.reload(); };
+window.loadListTeam = function () { window.location.reload(); };
+
+// Open "assign team" form in main modal
+$('body').on('click', 'a.btn-assign-team', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  var title = $(this).data('title') || 'มอบหมายช่าง';
+  var size = $(this).data('size') || 'modal-md';
+
+  if (typeof beforLoadModal === 'function') { beforLoadModal(); }
+
+  $.ajax({
+    type: 'get',
+    url: url,
+    dataType: 'json',
+    success: function (response) {
+      var modal = $('#main-modal');
+      modal.find('#main-modal-label').html(response.title || title);
+      modal.find('.modal-body').html(response.content || '');
+      modal.find('.modal-footer').html(response.footer || '');
+      modal.find('.modal-dialog')
+        .removeClass('modal-sm modal-md modal-lg modal-xl modal-xxl')
+        .addClass(size);
+      modal.modal('show');
+    },
+    error: function () {
+      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดฟอร์มมอบหมายช่างได้', icon: 'error' });
+    }
+  });
+});
+
+$('body').on('click', 'a.receive-order', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+
+  Swal.fire({
+    title: 'ยืนยันการรับงาน',
+    text: 'ต้องการรับงานซ่อมรายการนี้ใช่หรือไม่?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยันรับงาน',
+    cancelButtonText: 'ยกเลิก',
+    reverseButtons: false
+  }).then(function (result) {
+    if (!result.isConfirmed) {
+      return;
+    }
+    $.ajax({
+      type: 'get',
+      url: url,
+      dataType: 'json',
+      success: function () {
+        Swal.fire({
+          title: 'รับงานแล้ว',
+          icon: 'success',
+          timer: 900,
+          showConfirmButton: false
+        }).then(function () {
+          window.location.reload();
+        });
+      },
+      error: function () {
+        Swal.fire({
+          title: 'ไม่สำเร็จ',
+          text: 'ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง',
+          icon: 'error'
+        });
+      }
+    });
+  });
+});
+
+$('body').on('click', 'a.btn-send-repair', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+
+  Swal.fire({
+    title: 'ยืนยันการส่งซ่อม',
+    text: 'ต้องการส่งซ่อม/เริ่มดำเนินการรายการนี้ใช่หรือไม่?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยันส่งซ่อม',
+    cancelButtonText: 'ยกเลิก',
+    reverseButtons: false
+  }).then(function (result) {
+    if (!result.isConfirmed) {
+      return;
+    }
+    $.ajax({
+      type: 'get',
+      url: url,
+      dataType: 'json',
+      success: function () {
+        Swal.fire({
+          title: 'ส่งซ่อมแล้ว',
+          icon: 'success',
+          timer: 900,
+          showConfirmButton: false
+        }).then(function () {
+          window.location.reload();
+        });
+      },
+      error: function () {
+        Swal.fire({
+          title: 'ไม่สำเร็จ',
+          text: 'ไม่สามารถส่งซ่อมได้ กรุณาลองใหม่อีกครั้ง',
+          icon: 'error'
+        });
+      }
+    });
+  });
+});
+JS;
+$this->registerJs($js);
+?>
+

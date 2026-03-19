@@ -238,6 +238,14 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
+    /**
+     * ผู้แจ้งซ่อม (lookup จาก `created_by` -> employees.user_id)
+     */
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['user_id' => 'created_by']);
+    }
     public function getEmpTeam()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
@@ -316,9 +324,18 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         try {
             $emp = $this->employee;
-            $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+            // แสดงเฉพาะรูปในกรอบ (ไม่ใช้ getAvatar ที่แนบชื่อ/วันที่/ตำแหน่งข้างรูป)
+            $avatarOnly = Html::img('@web/img/loading.gif', [
+                'class' => 'avatar-md lazyload object-fit-cover d-block m-0',
+                'alt' => '',
+                'data' => [
+                    'expand' => '-20',
+                    'sizes' => 'auto',
+                    'src' => $emp->ShowAvatar(),
+                ],
+            ]);
             return [
-                'avatar' => $emp->getAvatar(false, $createDate),
+                'avatar' => $avatarOnly,
                 'fullname' => $emp->fullname,
                 'department' => $emp->departmentName(),
             ];
@@ -679,7 +696,11 @@ class Helpdesk extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach ($this->data_json['join'] as $key => $avatar) {
+            $join = $this->data_json['join'] ?? [];
+            if (!is_iterable($join)) {
+                return '';
+            }
+            foreach ($join as $key => $avatar) {
                 $emp = Employees::findOne(['user_id' => $avatar]);
                 $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
                 $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);

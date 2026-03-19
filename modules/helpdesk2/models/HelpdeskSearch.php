@@ -11,6 +11,15 @@ use app\modules\helpdesk2\models\Helpdesk;
  */
 class HelpdeskSearch extends Helpdesk
 {
+    /** @var string|null ช่วงวันที่แจ้ง (พ.ศ.) สำหรับหน้าช่าง V2 */
+    public $created_date_from;
+    /** @var string|null */
+    public $created_date_to;
+    /** @var string|null ค้นข้อความในสถานที่ (data_json.location) */
+    public $q_location;
+    /** @var string|null ค้นชื่อ/นามสกุลผู้แจ้ง */
+    public $q_requester;
+
     /**
      * {@inheritdoc}
      */
@@ -18,8 +27,23 @@ class HelpdeskSearch extends Helpdesk
     {
         return [
             [['id', 'created_by', 'updated_by'], 'integer'],
-            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item','emp_id','date_filter','date_filter','device_type_id','repair_number','q_department'], 'safe'],
+            [['ref', 'code', 'date_start', 'date_end', 'name', 'title', 'data_json','created_at', 'updated_at','repair_group','status','q','urgency','thai_year','auth_item','emp_id','date_filter','date_filter','device_type_id','repair_number','q_department', 'created_date_from', 'created_date_to', 'q_location', 'q_requester'], 'safe'],
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return array_merge(parent::attributeLabels(), [
+            'title' => 'อาการ',
+            'device_type_id' => 'อุปกรณ์',
+            'created_date_from' => 'วันที่แจ้ง (ตั้งแต่)',
+            'created_date_to' => 'วันที่แจ้ง (ถึง)',
+            'q_location' => 'สถานที่',
+            'q_requester' => 'ผู้แจ้ง',
+        ]);
     }
 
     /**
