@@ -2,19 +2,11 @@
 
 use yii\helpers\Html;
 
-$statusMap = $searchModel->listStatus();
 $statusSummaryMap = [];
 foreach (($statusSummary ?? []) as $row) {
     $statusSummaryMap[$row['status']] = (int) $row['total'];
 }
 $cancelledCount = (int) ($statusSummaryMap['Cancel'] ?? 0);
-$statusIcons = [
-    'Pending' => 'bi bi-hourglass-split',
-    'Pass' => 'bi bi-check-circle',
-    'Approve' => 'bi bi-patch-check',
-    'Success' => 'bi bi-check2-circle',
-    'Cancel' => 'bi bi-x-circle',
-];
 $pageTitle = $title ?? 'ทะเบียนการขอใช้รถยนต์ทั่วไป';
 ?>
 
@@ -32,6 +24,43 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
         </div>
     </div>
 </div>
+
+<?php
+$models = $dataProvider->getModels();
+$distanceSum = 0.0;
+$distanceLoggedCount = 0;
+$oilPriceSum = 0.0;
+$oilLiterSum = 0.0;
+$oilLoggedCount = 0;
+$loggedItemsCount = 0;
+$notLoggedItemsCount = 0;
+
+foreach ($models as $model) {
+    $distanceVal = $model->distance_km ?? null;
+    $oilPriceVal = $model->oil_price ?? null;
+    $oilLiterVal = $model->oil_liter ?? null;
+
+    $hasDistance = ($distanceVal !== null && (float) $distanceVal > 0);
+    $hasOil = ($oilPriceVal !== null && (float) $oilPriceVal > 0) || ($oilLiterVal !== null && (float) $oilLiterVal > 0);
+
+    if ($hasDistance) {
+        $distanceLoggedCount++;
+        $distanceSum += (float) $distanceVal;
+    }
+
+    if ($hasOil) {
+        $oilLoggedCount++;
+        $oilPriceSum += (float) $oilPriceVal;
+        $oilLiterSum += (float) $oilLiterVal;
+    }
+
+    if ($hasDistance || $hasOil) {
+        $loggedItemsCount++;
+    } else {
+        $notLoggedItemsCount++;
+    }
+}
+?>
 
 <div class="row g-2 mb-3">
     <div class="col-12 col-md-6 col-xl-3">
@@ -57,37 +86,51 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
     </div>
     <div class="col-12 col-md-6 col-xl-3">
         <div class="border border-primary-subtle rounded-3 p-3 h-100">
-            <div class="small text-muted mb-2">สรุปผลการจอง</div>
+            <div class="small text-muted mb-2">สรุปผลการบันทึก</div>
             <div class="d-flex flex-wrap gap-1">
-                <?php foreach ($statusSummaryMap as $statusCode => $count): ?>
-                    <?php
-                    $iconClass = $statusIcons[$statusCode] ?? 'bi bi-record-circle';
-                    $label = $statusMap[$statusCode] ?? $statusCode;
-                    $badgeClass = 'bg-primary bg-opacity-10 text-primary border border-primary-subtle';
-                    if ($statusCode === 'Cancel') {
-                        $badgeClass = 'bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle';
-                    } elseif (in_array($statusCode, ['Pass', 'Success'], true)) {
-                        $badgeClass = 'bg-success bg-opacity-10 text-success border border-success-subtle';
-                    } elseif ($statusCode === 'Approve') {
-                        $badgeClass = 'bg-success bg-opacity-10 text-success border border-success-subtle';
-                    } elseif ($statusCode === 'Pending') {
-                        $badgeClass = 'bg-danger bg-opacity-10 text-danger border border-danger-subtle';
-                    }
-                    ?>
-                    <span class="badge <?= Html::encode($badgeClass) ?> rounded-pill fw-medium px-2 py-1">
-                        <i class="<?= Html::encode($iconClass) ?> me-1 fs-6"></i>
-                        <?= Html::encode($label) ?> <?= number_format($count) ?>
-                    </span>
-                <?php endforeach; ?>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">
+                    <i class="bi bi-check2-circle me-1 fs-6"></i>บันทึกแล้ว <?= number_format((int) $loggedItemsCount) ?>
+                </span>
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium px-2 py-1">
+                    <i class="bi bi-slash-circle me-1 fs-6"></i>ยังไม่บันทึก <?= number_format((int) $notLoggedItemsCount) ?>
+                </span>
             </div>
         </div>
     </div>
 </div>
 
 <div>
+    <div class="row g-2 mb-3">
+        <div class="col-12 col-md-6">
+            <div class="border border-info-subtle rounded-3 p-3 h-100">
+                <div class="small text-muted">สรุประยะทางที่บันทึกการใช้งาน</div>
+                <div class="fs-5 fw-bold text-info">
+                    <?= number_format($distanceSum, 2) ?> กม.
+                </div>
+                <div class="small text-muted">
+                    จากรายการที่บันทึกระยะทาง <?= (int) $distanceLoggedCount ?> รายการ
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="border border-warning-subtle rounded-3 p-3 h-100">
+                <div class="small text-muted">สรุปค่าน้ำมันที่บันทึกการใช้งาน</div>
+                <div class="fs-5 fw-bold text-warning">
+                    <?= number_format($oilPriceSum, 2) ?> บาท
+                </div>
+                <div class="small text-muted">
+                    <?= number_format($oilLiterSum, 2) ?> ลิตร
+                </div>
+                <div class="small text-muted">
+                    จากรายการที่บันทึกค่าน้ำมัน <?= (int) $oilLoggedCount ?> รายการ
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="overflow-auto" style="max-height: 68vh;">
         <div class="row g-2">
-            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+            <?php foreach ($models as $key => $item): ?>
                 <?php
                 $vehicle = $item->vehicle;
 
@@ -146,6 +189,20 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
                 $queueNo = ($dataProvider->pagination->offset + 1) + $key;
                 $statusView = $item->viewStatus()['view'] ?? '-';
 
+                $distanceKmVal = $item->distance_km ?? null;
+                $oilPriceVal = $item->oil_price ?? null;
+                $oilLiterVal = $item->oil_liter ?? null;
+
+                $distanceKmText = $distanceKmVal !== null && (float) $distanceKmVal > 0
+                    ? number_format((float) $distanceKmVal, 2)
+                    : '-';
+                $oilPriceText = $oilPriceVal !== null && (float) $oilPriceVal > 0
+                    ? number_format((float) $oilPriceVal, 2)
+                    : '-';
+                $oilLiterText = $oilLiterVal !== null && (float) $oilLiterVal > 0
+                    ? number_format((float) $oilLiterVal, 2)
+                    : '-';
+
                 $locationTitle = $vehicle?->locationOrg?->title ?? '-';
                 $reason = $vehicle?->reason ?? '-';
                 $urgent = $vehicle?->viewUrgent() ?? '';
@@ -178,7 +235,7 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
                             </div>
 
                             <div class="row g-2 align-items-start">
-                                <div class="col-12 col-lg-3">
+                                <div class="col-12 col-lg-2">
                                     <div class="d-flex align-items-center">
                                         <?= Html::img('@web/img/loading.gif', [
                                             'class' => 'rounded-3 me-2 shadow-sm lazyload',
@@ -203,13 +260,13 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
                                     </span>
                                 </div>
 
-                                <div class="col-12 col-lg-3">
+                                <div class="col-12 col-lg-2">
                                     <div class="small text-muted mb-1">รายละเอียด</div>
                                     <div class="small text-muted text-truncate"><?= Html::encode($reason) ?></div>
                                     <div class="small mt-1">ความเร่งด่วน <?= Html::encode((string) $urgent) ?></div>
                                 </div>
 
-                                <div class="col-12 col-lg-3">
+                                <div class="col-12 col-lg-2">
                                     <div class="small text-muted mb-1">สถานที่ไป</div>
                                     <div class="fw-bold text-truncate small">
                                         <i class="bi bi-geo-alt text-danger me-1"></i><?= Html::encode($locationTitle) ?>
@@ -231,7 +288,27 @@ $pageTitle = $title ?? 'ทะเบียนการขอใช้รถย�
                                     <!-- ปุ่ม action จะอยู่ในคอลัมน์ "ข้อมูลการจัดสรร" (ให้ตำแหน่งตรงกับหน้า index) -->
                                 </div>
 
-                                <div class="col-12 col-lg-3">
+                                <div class="col-12 col-lg-2">
+                                    <div class="small text-muted mb-1">บันทึกสรุปการใช้รถ</div>
+                                    <?php if (!$hasDistance && !$hasOil): ?>
+                                        <div class="mt-2">
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium px-2 py-1">
+                                                <i class="bi bi-slash-circle me-1"></i>ยังไม่สรุปการเดินทาง
+                                            </span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="small text-muted mt-2 mb-1">บันทึกสรุปการใช้รถ</div>
+                                        <div class="small fw-medium text-dark text-truncate">
+                                            <i class="bi bi-signpost-2 me-1 text-primary"></i>ระยะทาง <?= Html::encode($distanceKmText) ?> กม.
+                                        </div>
+                                        <div class="small text-muted text-truncate">
+                                            <i class="bi bi-currency-baht me-1 text-warning"></i>ค่าน้ำมัน <?= Html::encode($oilPriceText) ?> บาท
+                                            (<?= Html::encode($oilLiterText) ?> ลิตร)
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="col-12 col-lg-4">
                                     <div class="small text-muted mb-1">ข้อมูลการจัดสรร</div>
 
                                     <div class="mt-2 d-flex flex-wrap align-items-start gap-2">

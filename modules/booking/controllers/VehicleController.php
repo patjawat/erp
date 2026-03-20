@@ -119,6 +119,23 @@ class VehicleController extends Controller
 
         $query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
         $query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // Filter: ยังไม่บันทึกการเดินทาง (distance_km/oil_price/oil_liter ยังไม่มี > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $recordedExistsSubQuery = (new Query())
+                ->select(new \yii\db\Expression('1'))
+                ->from('vehicle_detail vd')
+                ->where('vd.vehicle_id = vehicle.id')
+                ->andWhere([
+                    'or',
+                    ['and', ['IS NOT', 'vd.distance_km', null], ['>', 'vd.distance_km', 0]],
+                    ['and', ['IS NOT', 'vd.oil_price', null], ['>', 'vd.oil_price', 0]],
+                    ['and', ['IS NOT', 'vd.oil_liter', null], ['>', 'vd.oil_liter', 0]],
+                ]);
+
+            $query->andWhere(['not exists', $recordedExistsSubQuery]);
+        }
+
         $query->orderBy([
             'date_start' => SORT_DESC,
             'location' =>  SORT_DESC,
@@ -199,6 +216,22 @@ class VehicleController extends Controller
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
 
+        // Filter: ยังไม่บันทึกการเดินทาง (distance_km/oil_price/oil_liter ไม่มีค่า > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $recordedExistsSubQuery = (new Query())
+                ->select(new \yii\db\Expression('1'))
+                ->from('vehicle_detail vd')
+                ->where('vd.vehicle_id = vehicle.id')
+                ->andWhere([
+                    'or',
+                    ['and', ['IS NOT', 'vd.distance_km', null], ['>', 'vd.distance_km', 0]],
+                    ['and', ['IS NOT', 'vd.oil_price', null], ['>', 'vd.oil_price', 0]],
+                    ['and', ['IS NOT', 'vd.oil_liter', null], ['>', 'vd.oil_liter', 0]],
+                ]);
+
+            $query->andWhere(['not exists', $recordedExistsSubQuery]);
+        }
+
 
         return $this->render('index', [
             'type' => $type,
@@ -233,6 +266,16 @@ class VehicleController extends Controller
 
 
         $query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // Filter: ยังไม่บันทึกการเดินทาง (vehicle_detail ไม่มี distance_km/oil_price/oil_liter > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $query->andWhere([
+                'and',
+                ['or', ['vehicle_detail.distance_km' => null], ['<=', 'vehicle_detail.distance_km', 0]],
+                ['or', ['vehicle_detail.oil_price' => null], ['<=', 'vehicle_detail.oil_price', 0]],
+                ['or', ['vehicle_detail.oil_liter' => null], ['<=', 'vehicle_detail.oil_liter', 0]],
+            ]);
+        }
 
         // UI parity กับหน้า /booking/vehicle/index: summary card ต้องมี status/จำนวนรอจัดสรร/จำนวนจัดสรรแล้ว
         $statusSummary = (clone $query)

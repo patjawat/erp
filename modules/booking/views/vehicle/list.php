@@ -3,19 +3,36 @@
 use yii\web\View;
 use yii\helpers\Html;
 
-$statusMap = $searchModel->listStatus();
 $statusSummaryMap = [];
 foreach (($statusSummary ?? []) as $row) {
     $statusSummaryMap[$row['status']] = (int) $row['total'];
 }
 $cancelledCount = (int) ($statusSummaryMap['Cancel'] ?? 0);
-$statusIcons = [
-    'Pending' => 'bi bi-hourglass-split',
-    'Pass' => 'bi bi-check-circle',
-    'Approve' => 'bi bi-patch-check',
-    'Success' => 'bi bi-check2-circle',
-    'Cancel' => 'bi bi-x-circle',
-];
+$models = $dataProvider->getModels();
+$loggedItemsCount = 0;
+$notLoggedItemsCount = 0;
+foreach ($models as $model) {
+    $hasLogged = false;
+    foreach ($model->vehicleDetails as $detail) {
+        $dist = $detail->distance_km ?? null;
+        $oilPrice = $detail->oil_price ?? null;
+        $oilLiter = $detail->oil_liter ?? null;
+
+        if (
+            ($dist !== null && (float) $dist > 0) ||
+            ($oilPrice !== null && (float) $oilPrice > 0) ||
+            ($oilLiter !== null && (float) $oilLiter > 0)
+        ) {
+            $hasLogged = true;
+            break;
+        }
+    }
+    if ($hasLogged) {
+        $loggedItemsCount++;
+    } else {
+        $notLoggedItemsCount++;
+    }
+}
 ?>
 <div class="card shadow-sm mb-3">
     <div class="card-body">
@@ -56,28 +73,14 @@ $statusIcons = [
     </div>
     <div class="col-12 col-md-6 col-xl-3">
         <div class="border border-primary-subtle rounded-3 p-3 h-100">
-            <div class="small text-muted mb-2">สรุปผลการจอง</div>
+            <div class="small text-muted mb-2">บันทึกสรุปการเดินทาง</div>
             <div class="d-flex flex-wrap gap-1">
-                <?php foreach ($statusSummaryMap as $statusCode => $count): ?>
-                    <?php
-                    $iconClass = $statusIcons[$statusCode] ?? 'bi bi-record-circle';
-                    $label = $statusMap[$statusCode] ?? $statusCode;
-                    $badgeClass = 'bg-primary bg-opacity-10 text-primary border border-primary-subtle';
-                    if ($statusCode === 'Cancel') {
-                        $badgeClass = 'bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle';
-                    } elseif (in_array($statusCode, ['Pass', 'Success'], true)) {
-                        $badgeClass = 'bg-success bg-opacity-10 text-success border border-success-subtle';
-                    } elseif ($statusCode === 'Approve') {
-                        $badgeClass = 'bg-success bg-opacity-10 text-success border border-success-subtle';
-                    } elseif ($statusCode === 'Pending') {
-                        $badgeClass = 'bg-danger bg-opacity-10 text-danger border border-danger-subtle';
-                    }
-                    ?>
-                    <span class="badge <?= Html::encode($badgeClass) ?> rounded-pill fw-medium px-2 py-1">
-                        <i class="<?= Html::encode($iconClass) ?> me-1 fs-6"></i>
-                        <?= Html::encode($label) ?> <?= number_format($count) ?>
-                    </span>
-                <?php endforeach; ?>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">
+                    <i class="bi bi-check2-circle me-1 fs-6"></i>บันทึก <?= number_format((int) $loggedItemsCount) ?> รายการ
+                </span>
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium px-2 py-1">
+                    <i class="bi bi-slash-circle me-1 fs-6"></i>ยังไม่บันทึก <?= number_format((int) $notLoggedItemsCount) ?> รายการ
+                </span>
             </div>
         </div>
     </div>
@@ -86,7 +89,7 @@ $statusIcons = [
 <div>
     <div class="overflow-auto" style="max-height: 68vh;">
         <div class="row g-2">
-            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+            <?php foreach ($models as $key => $item): ?>
                 <?php
                 $created = $item->viewCreated();
                 $requester = $item->userRequest();
