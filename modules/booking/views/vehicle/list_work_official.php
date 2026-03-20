@@ -1,6 +1,5 @@
 <?php
 
-use yii\web\View;
 use yii\helpers\Html;
 
 $statusMap = $searchModel->listStatus();
@@ -16,12 +15,14 @@ $statusIcons = [
     'Success' => 'bi bi-check2-circle',
     'Cancel' => 'bi bi-x-circle',
 ];
+$pageTitle = $title ?? 'ทะเบียนการขอใช้รถยนต์ทั่วไป';
 ?>
+
 <div class="card shadow-sm mb-3">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h6 class="m-0">
-                <i class="bi bi-ui-checks"></i> ทะเบียนการขอใช้รถยนต์
+                <i class="bi bi-ui-checks"></i> <?= Html::encode($pageTitle) ?>
                 <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1">
                     <?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
@@ -88,69 +89,90 @@ $statusIcons = [
         <div class="row g-2">
             <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                 <?php
-                $created = $item->viewCreated();
-                $requester = $item->userRequest();
+                $vehicle = $item->vehicle;
+
+                $created = $vehicle?->viewCreated();
+                $requester = $vehicle?->userRequest() ?? [];
+
                 $daysPassed = 0;
                 try {
-                    $createdAt = new \DateTime((string) $item->created_at);
+                    $createdAt = new \DateTime((string) ($vehicle?->created_at ?? ''));
                     $now = new \DateTime();
                     $daysPassed = (int) $createdAt->diff($now)->days;
                 } catch (\Throwable $th) {
                     $daysPassed = 0;
                 }
 
+                $carImgPlaceholder = \Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+
                 $hasAssignedDriver = false;
-                $assignedDriverIds = [];
                 $assignedPlates = [];
                 $assignedCarImages = [];
-                $carImgPlaceholder = \Yii::getAlias('@web') . '/img/placeholder-img.jpg';
-                foreach ($item->vehicleDetails as $detail) {
-                    if (!empty($detail->driver_id)) {
-                        $assignedDriverIds[(string) $detail->driver_id] = true;
-                    }
 
-                    $plate = trim((string) ($detail->license_plate ?? ''));
-                    if ($plate !== '' && $plate !== ' ') {
-                        $assignedPlates[$plate] = true;
-                        if (!isset($assignedCarImages[$plate])) {
-                            $assignedCarImages[$plate] = !empty($detail->car)
-                                ? ($detail->car->ShowImg()['image'] ?? $carImgPlaceholder)
-                                : $carImgPlaceholder;
-                        }
-                    }
+                $plate = trim((string) ($item->license_plate ?? ''));
+                $plateOk = $plate !== '' && $plate !== ' ';
 
-                    if (!empty($detail->driver_id) || ($plate !== '' && $plate !== ' ')) {
-                        $hasAssignedDriver = true;
-                    }
+                if ($plateOk) {
+                    $assignedPlates[$plate] = true;
+                    $assignedCarImages[$plate] = !empty($item->car)
+                        ? ($item->car->ShowImg()['image'] ?? $carImgPlaceholder)
+                        : $carImgPlaceholder;
                 }
 
-                $driverCount = count($assignedDriverIds);
+                if (!empty($item->driver_id) || $plateOk) {
+                    $hasAssignedDriver = true;
+                }
+
+                $driverCount = !empty($item->driver_id) ? 1 : 0;
+
                 $plateCount = count($assignedPlates);
                 $plateKeys = array_keys($assignedPlates);
-                $plateSummary = $plateCount > 0 ? ($plateKeys[0] . ($plateCount > 1 ? ' +' . ($plateCount - 1) : '')) : '-';
+                $plateSummary = $plateCount > 0 ? ($plateKeys[0]) : '-';
+
                 $carCount = count($assignedCarImages);
                 $carKeys = array_keys($assignedCarImages);
 
-                $isOvernight = (string) $item->go_type === '2';
-                $isWaitingStatus = in_array((string) $item->status, ['Pending', 'Pass', 'Approve'], true);
-                $requestStartTs = strtotime((string) $item->date_start . ' ' . (string) $item->time_start);
+                $isOvernight = (string) ($vehicle?->go_type ?? '') === '2';
+                $waitingStatusValue = $vehicle?->status ?? $item->status;
+                $isWaitingStatus = in_array((string) $waitingStatusValue, ['Pending', 'Pass', 'Approve'], true);
+
+                $startDate = (string) ($vehicle?->date_start ?? $item->date_start ?? '');
+                $startTime = (string) ($vehicle?->time_start ?? $item->time_start ?? '');
+                $requestStartTs = strtotime(trim($startDate . ' ' . $startTime));
                 $isStartPassed = $requestStartTs !== false ? $requestStartTs < time() : false;
+
                 $isAllocationOverdue = $isOvernight && $isWaitingStatus && !$hasAssignedDriver && $isStartPassed;
+
+                $queueNo = ($dataProvider->pagination->offset + 1) + $key;
+                $statusView = $item->viewStatus()['view'] ?? '-';
+
+                $locationTitle = $vehicle?->locationOrg?->title ?? '-';
+                $reason = $vehicle?->reason ?? '-';
+                $urgent = $vehicle?->viewUrgent() ?? '';
+
+                $showDateRange = $vehicle?->showDateRange() ?? '-';
+                $showTimeFull = $vehicle?->viewTime()['full'] ?? '-';
+
+                $workUpdateUrl = ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => 'บันทึกภาระกิจการใช้รถยนต์'];
+                $viewUrl = ['view', 'id' => $item->id];
+                $cancelUrl = ['/booking/vehicle-detail/cancel', 'id' => $item->id];
+                $printUrl = $vehicle?->id ? ['/booking/vehicle/print', 'id' => $vehicle->id] : null;
                 ?>
+
                 <div class="col-12">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-2">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
                                 <div class="fw-bold text-primary small">
-                                    #<?= (($dataProvider->pagination->offset + 1) + $key) ?> · รหัสขอใช้รถ <?= Html::encode($item->code) ?>
+                                    #<?= (int) $queueNo ?> · รหัสขอใช้รถ <?= Html::encode($vehicle?->code ?? '-') ?>
                                 </div>
                                 <div>
-                                    <?php if ($item->is_shared == 1): ?>
+                                    <?php if (($vehicle?->is_shared ?? 0) == 1): ?>
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill fw-medium px-2 py-1">
                                             <i class="fa-solid fa-user-group me-1"></i>จัดสรรร่วม
                                         </span>
                                     <?php else: ?>
-                                        <?= $item->viewStatus()['view'] ?? '-' ?>
+                                        <?= $statusView ?>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -165,12 +187,12 @@ $statusIcons = [
                                             'data' => [
                                                 'expand' => '-20',
                                                 'sizes' => 'auto',
-                                                'src' => $requester['photo']
-                                            ]
+                                                'src' => $requester['photo'] ?? '',
+                                            ],
                                         ]); ?>
                                         <div>
-                                            <div class="fw-bold mb-0 small"><?= Html::encode($requester['fullname']) ?></div>
-                                            <small class="text-primary d-block"><?= Html::encode($requester['department']) ?></small>
+                                            <div class="fw-bold mb-0 small"><?= Html::encode($requester['fullname'] ?? '-') ?></div>
+                                            <small class="text-primary d-block"><?= Html::encode($requester['department'] ?? '-') ?></small>
                                         </div>
                                     </div>
                                     <div class="small text-muted mt-1">
@@ -183,19 +205,19 @@ $statusIcons = [
 
                                 <div class="col-12 col-lg-3">
                                     <div class="small text-muted mb-1">รายละเอียด</div>
-                                    <div class="text-primary text-truncate"><?= Html::encode($item->reason) ?></div>
-                                    <div class="small mt-1">ความเร่งด่วน <?= $item->viewUrgent() ?></div>
+                                    <div class="small text-muted text-truncate"><?= Html::encode($reason) ?></div>
+                                    <div class="small mt-1">ความเร่งด่วน <?= Html::encode((string) $urgent) ?></div>
                                 </div>
 
                                 <div class="col-12 col-lg-3">
-                                    <div class="text-muted mb-1">สถานที่ไป</div>
+                                    <div class="small text-muted mb-1">สถานที่ไป</div>
                                     <div class="fw-bold text-truncate small">
-                                        <i class="bi bi-geo-alt text-danger me-1"></i><?= Html::encode($item->locationOrg?->title ?? '-') ?>
+                                        <i class="bi bi-geo-alt text-danger me-1"></i><?= Html::encode($locationTitle) ?>
                                     </div>
 
                                     <div class="small text-muted mt-2 mb-1">วันเวลาที่ต้องการใช้รถ</div>
                                     <div class="fw-medium text-dark small">
-                                        <?= $item->showDateRange() ?> <?= $item->viewTime()['full'] ?>
+                                        <?= Html::encode($showDateRange) ?> <?= Html::encode($showTimeFull) ?>
                                     </div>
 
                                     <?php if ($isAllocationOverdue): ?>
@@ -205,6 +227,8 @@ $statusIcons = [
                                             </span>
                                         </div>
                                     <?php endif; ?>
+
+                                    <!-- ปุ่ม action จะอยู่ในคอลัมน์ "ข้อมูลการจัดสรร" (ให้ตำแหน่งตรงกับหน้า index) -->
                                 </div>
 
                                 <div class="col-12 col-lg-3">
@@ -212,7 +236,7 @@ $statusIcons = [
 
                                     <div class="mt-2 d-flex flex-wrap align-items-start gap-2">
                                         <div class="d-flex flex-column flex-grow-1 min-w-0">
-                                            <div class="small text-muted">รถยนต์ : <span class="fw-bold"><?= Html::encode($plateSummary) ?></span></div>
+                                            <div class="small text-muted">รถยนต์</div>
                                             <div class="d-flex flex-wrap gap-1 align-items-center mt-1">
                                                 <?php
                                                 $thumbKeys = array_slice($carKeys, 0, 3);
@@ -236,40 +260,47 @@ $statusIcons = [
                                                     </span>
                                                 <?php endif; ?>
                                             </div>
+
+                                            <div class="small fw-medium text-dark text-truncate mt-1">
+                                                <i class="bi bi-car-front me-1 text-primary"></i><?= Html::encode($plateSummary) ?>
+                                            </div>
                                         </div>
 
-                                            <div class="d-flex flex-wrap gap-1 mt-1 align-items-center">
-                                                <?php foreach ($item->vehicleDetails as $detail): ?>
-                                                    <?php if (!empty($detail->driver)): ?>
-                                                        <?= Html::a(
-                                                            Html::img('@web/img/loading.gif', [
-                                                                'class' => 'avatar-sm rounded-circle shadow lazyload',
-                                                                'data' => [
-                                                                    'expand' => '-20',
-                                                                    'sizes' => 'auto',
-                                                                    'src' => $detail->driver->showAvatar(),
-                                                                ],
-                                                            ]),
-                                                            ['/booking/vehicle/work-update', 'id' => $detail->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'],
-                                                            ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]
-                                                        ) ?>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
+                                        <div class="d-flex flex-column ms-auto">
+                                            <div class="small text-muted">พขร</div>
+                                            <div class="small text-muted mt-1">
+                                                <?= $driverCount > 0 ? ($driverCount . ' คน') : '-' ?>
                                             </div>
+                                        </div>
                                     </div>
 
-
+                                    <div class="d-flex flex-wrap gap-1 mt-1 align-items-center">
+                                        <?php if (!empty($item->driver)): ?>
+                                            <?= Html::a(
+                                                Html::img('@web/img/loading.gif', [
+                                                    'class' => 'avatar-sm rounded-circle shadow lazyload',
+                                                    'data' => [
+                                                        'expand' => '-20',
+                                                        'sizes' => 'auto',
+                                                        'src' => $item->driver->showAvatar(),
+                                                    ],
+                                                ]),
+                                                $workUpdateUrl,
+                                                ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]
+                                            ) ?>
+                                        <?php endif; ?>
+                                    </div>
 
                                     <div class="d-flex flex-wrap gap-1 justify-content-end mt-2">
-                                        <?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/booking/vehicle/view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                                        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i>แก้ไข', ['/booking/vehicle/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการจงรถ'], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                        <?= Html::a('<i class="fa-solid fa-print me-1"></i>พิมพ์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'btn btn-sm btn-outline-dark', 'target' => '_blank']) ?>
-                                        <?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i>ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-danger cancel-order', 'data' => ['size' => 'modal-lg']]) ?>
+                                        <?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', $viewUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i>บันทึก', $workUpdateUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                        <?php if (!empty($printUrl)): ?>
+                                            <?= Html::a('<i class="fa-solid fa-print me-1"></i>พิมพ์', $printUrl, ['class' => 'btn btn-sm btn-outline-dark', 'title' => 'ใบขอใช้รถยนต์', 'target' => '_blank']) ?>
+                                        <?php endif; ?>
+                                        <?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i>ยกเลิก', $cancelUrl, ['class' => 'btn btn-sm btn-outline-danger cancel-order', 'data' => ['size' => 'modal-lg']]) ?>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- moved "วันเวลาที่ต้องการใช้รถ" ไปอยู่กับช่อง "สถานที่ไป" แล้ว -->
                         </div>
                     </div>
                 </div>
@@ -291,10 +322,4 @@ $statusIcons = [
         </div>
     </div>
 </div>
-<?php
-$js = <<< JS
 
-
-JS;
-$this->registerJS($js, View::POS_END);
-?>

@@ -47,6 +47,13 @@ class VehicleSearch extends Vehicle
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+            ],
+            'sort' => [
+                'defaultOrder' => ['date_start' => SORT_DESC, 'id' => SORT_DESC],
+                'attributes' => ['id', 'date_start', 'date_end', 'status', 'code', 'created_at'],
+            ],
         ]);
 
         $this->load($params);
@@ -82,7 +89,7 @@ class VehicleSearch extends Vehicle
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'location', $this->location])
             ->andFilterWhere(['like', 'reason', $this->reason])
-            ->andFilterWhere(['like', 'vehicle.status', $this->status])
+            ->andFilterWhere(['vehicle.status' => $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])

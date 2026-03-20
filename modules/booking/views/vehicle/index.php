@@ -1,6 +1,8 @@
 <?php
 
 
+use yii\widgets\Pjax;
+
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
@@ -25,19 +27,33 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?php Pjax::begin([
+    'id' => 'vehicle-index-pjax',
+    'timeout' => 10000,
+    'enablePushState' => true,
+]); ?>
 <div class="card">
-    <div class="card-header bg-primary-gradient text-white">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+    <div class="card-header">
+        <h6 class="mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel,'action' => $action]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
     </div>
 </div>
 
-<?php echo $this->render('@app/modules/booking/views/vehicle/list', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ])?>
+<?php
+$cacheKey = ['booking-vehicle-index-list', Yii::$app->request->queryParams];
+if ($this->beginCache($cacheKey, ['duration' => 60])):
+?>
+    <?php echo $this->render('@app/modules/booking/views/vehicle/list', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            'statusSummary' => $statusSummary ?? [],
+            'waitingAllocationCount' => $waitingAllocationCount ?? 0,
+            'allocatedCount' => $allocatedCount ?? 0,
+            ]) ?>
+<?php $this->endCache(); endif; ?>
+<?php Pjax::end(); ?>
 
 <?php
 $js = <<<JS

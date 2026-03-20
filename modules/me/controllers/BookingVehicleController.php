@@ -65,9 +65,15 @@ class BookingVehicleController extends Controller
         ]);
 
         if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+            $hasCustomDate = trim((string) $searchModel->date_start) !== '' || trim((string) $searchModel->date_end) !== '';
+            $hasCustomThaiYear = trim((string) $searchModel->thai_year) !== '';
+
+            // ถ้าผู้ใช้ระบุช่วงวัน หรือระบุปีงบประมาณเอง ให้ไม่ทับด้วย date_filter
+            if (!$hasCustomDate && !$hasCustomThaiYear) {
+                $range = DateFilterHelper::getRange($searchModel->date_filter);
+                $searchModel->date_start = AppHelper::convertToThai($range[0]);
+                $searchModel->date_end = AppHelper::convertToThai($range[1]);
+            }
         }
         if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
             $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');

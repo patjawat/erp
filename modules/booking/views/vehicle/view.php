@@ -17,15 +17,53 @@ $this->params['breadcrumbs'][] = $this->title;
  <h4 class="h3 fw-bold text-dark mb-1"> <?php echo $model->locationOrg?->title ?? '-' ?> </h4>
         <h6 class="text-muted mb-0"><?= $model->reason ?></h6> -->
 
-<div class="p-4 bg-light bg-opacity-25 d-flex justify-content-between align-items-center">
-    <div>
-        <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">สถานที่ปลายทาง</label>
-        <h4 class="fw-bold text-dark mb-1"> <?php echo $model->locationOrg?->title ?? '-' ?></h4>
-        <div class="text-muted small mt-2">Ref: <?= $model->code ?></div>
-    </div>
-    <div class="d-flex flex-column justify-content-center">
-        <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">สถานะคำขอ</label>
-        <?= $model->viewStatus()['view'] ?>
+<?php
+$viewCreated = $model->viewCreated();
+$daysPassed = 0;
+try {
+    $createdAt = new \DateTime((string) $model->created_at);
+    $now = new \DateTime();
+    $daysPassed = (int) $createdAt->diff($now)->days;
+} catch (\Throwable $th) {
+    $daysPassed = 0;
+}
+?>
+
+<div class="p-4 bg-light bg-opacity-25">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-lg-4">
+            <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">สถานะคำขอ</label>
+            <?= $model->viewStatus()['view'] ?>
+            <div class="mt-2">
+                <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">วันเวลาที่จอง</label>
+                <div class="fw-bold text-dark"><?= Html::encode($viewCreated['full'] ?? '-') ?></div>
+            </div>
+            <div class="mt-2">
+                <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill fw-medium px-2 py-1">
+                    ผ่านมาแล้ว <?= (int) $daysPassed ?> วัน
+                </span>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">ผู้ขอใช้บริการ</label>
+            <div class="d-flex align-items-center mb-3">
+                <?php echo $model->userRequest()['avatar']; ?>
+            </div>
+            <a href="<?php echo $model->data_json['phone'] ?? '-'; ?>" class="btn btn-outline-primary w-100 rounded-3 py-2 shadow-sm d-flex align-items-center justify-content-center">
+                <i data-lucide="phone" class="size-18 me-2"></i> โทรติดต่อ: <?php echo $model->data_json['phone'] ?? '-'; ?>
+            </a>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <label class="small text-muted text-uppercase fw-bold mb-1 d-block" style="letter-spacing: 1px;">สถานที่ปลายทาง</label>
+            <h4 class="fw-bold text-dark mb-1"><?php echo $model->locationOrg?->title ?? '-' ?></h4>
+            <div class="text-muted small mt-2">Ref: <?= Html::encode($model->code) ?></div>
+            <div class="mt-3">
+                <label class="small fw-bold text-muted text-uppercase mb-1 d-block">วัตถุประสงค์การใช้รถ</label>
+                <p class="text-dark mb-0 small leading-relaxed"><?= Html::encode($model->reason) ?></p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -37,38 +75,15 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="p-3 rounded-3 bg-white border border-light shadow-sm">
                 <small class="text-muted d-block mb-1">วัน/เวลาไป</small>
                 <div class="fw-bold text-dark"><?= AppHelper::convertToThai($model->date_start) ?></div>
-                <div class="text-primary fw-bold"><?= $model->time_start ?> น.</div>
+                <div class="text-primary fw-bold"><?= Html::encode($model->time_start) ?> น.</div>
             </div>
         </div>
         <div class="col-6">
             <div class="p-3 rounded-3 bg-white border border-light shadow-sm">
                 <small class="text-muted d-block mb-1">วัน/เวลาคืน</small>
                 <div class="fw-bold text-dark"><?= AppHelper::convertToThai($model->date_end) ?></div>
-                <div class="text-primary fw-bold"><?= $model->time_end ?> น.</div>
+                <div class="text-primary fw-bold"><?= Html::encode($model->time_end) ?> น.</div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="p-4">
-    <h6 class="fw-bold text-dark mb-3"><i data-lucide="user" class="me-2 text-primary size-18"></i>ข้อมูลผู้ขอใช้บริการ</h6>
-    <div class="d-flex align-items-center mb-3">
-        <?php echo $model->userRequest()['avatar']; ?>
-    </div>
-    <a href="<?php echo $model->data_json['phone'] ?? '-'; ?>" class="btn btn-outline-primary w-100 rounded-3 py-2 shadow-sm d-flex align-items-center justify-content-center">
-        <i data-lucide="phone" class="size-18 me-2"></i> โทรติดต่อ: <?php echo $model->data_json['phone'] ?? '-'; ?>
-    </a>
-</div>
-
-
-
-<div class="row g-4">
-    <div class="col-12 mt-4">
-        <div class="p-3 bg-light rounded-4 border-0">
-            <label class="small fw-bold text-muted text-uppercase mb-1 d-block">วัตถุประสงค์การใช้รถ</label>
-            <p class="text-dark mb-0 small leading-relaxed">
-                <?= $model->reason ?>
-            </p>
         </div>
     </div>
 </div>

@@ -8,6 +8,7 @@ use DatePeriod;
 use DateInterval;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\db\Query;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
@@ -75,20 +76,87 @@ class VehicleController extends Controller
             'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'code', $searchModel->q],
-            ['like', 'reason', $searchModel->q],
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+
+        // ลด N+1: preload relations ที่ใช้ใน list.php
+        $query->with([
+            'employee',
+            'locationOrg',
+            'vehicleStatus',
+            'vehicleDetails.driver',
+            'vehicleDetails.car',
         ]);
 
+        // select เฉพาะ field ที่ใช้จริงบนหน้ารายการ
+        $query->select([
+            'id',
+            'code',
+            'vehicle_type_id',
+            'urgent',
+            'location',
+            'reason',
+            'status',
+            'date_start',
+            'time_start',
+            'date_end',
+            'time_end',
+            'go_type',
+            'emp_id',
+            'is_shared',
+            'created_at',
+        ]);
 
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
-        $dataProvider->query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        $dataProvider->query->orderBy([
+        $q = trim((string) $searchModel->q);
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'code', $q],
+                ['like', 'reason', $q],
+            ]);
+        }
+
+
+        $query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
+        $query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $query->orderBy([
             'date_start' => SORT_DESC,
             'location' =>  SORT_DESC,
         ]);
+
+        // สรุปสถานะสำหรับงานจัดสรร (ใช้ query เดียวกับรายการหลัก)
+        $summaryBaseQuery = clone $query;
+
+        $statusSummary = (clone $summaryBaseQuery)
+            ->select(['status', 'COUNT(*) AS total'])
+            ->groupBy(['status'])
+            ->asArray()
+            ->all();
+
+        $assignedExistsSubQuery = (new Query())
+            ->select(new \yii\db\Expression('1'))
+            ->from('vehicle_detail vd')
+            ->where('vd.vehicle_id = vehicle.id')
+            ->andWhere([
+                'or',
+                ['IS NOT', 'vd.driver_id', null],
+                [
+                    'and',
+                    ['IS NOT', 'vd.license_plate', null],
+                    ['<>', 'vd.license_plate', ''],
+                    ['<>', 'vd.license_plate', ' '],
+                ],
+            ]);
+
+        $waitingAllocationCount = (int) (clone $summaryBaseQuery)
+            ->andWhere(['IN', 'status', ['Pending', 'Pass', 'Approve']])
+            ->andWhere(['not exists', $assignedExistsSubQuery])
+            ->count();
+
+        $allocatedCount = (int) (clone $summaryBaseQuery)
+            ->andWhere(['exists', $assignedExistsSubQuery])
+            ->count();
+
         return $this->render('index', [
             'type' => $type,
             'icon' => '<i class="fa-solid fa-car-on"></i>',
@@ -96,7 +164,10 @@ class VehicleController extends Controller
             'icon' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'action' => ''
+            'action' => '',
+            'statusSummary' => $statusSummary,
+            'waitingAllocationCount' => $waitingAllocationCount,
+            'allocatedCount' => $allocatedCount,
         ]);
     }
 
@@ -112,7 +183,9 @@ class VehicleController extends Controller
             'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -146,24 +219,70 @@ class VehicleController extends Controller
         $searchModel = new VehicleDetailSearch();
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
-        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'official']);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => 'official']);
 
-        $dataProvider->query->andFilterWhere([
+        $query->andFilterWhere([
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
 
 
-        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        return $this->render('work', [
+        $query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // UI parity กับหน้า /booking/vehicle/index: summary card ต้องมี status/จำนวนรอจัดสรร/จำนวนจัดสรรแล้ว
+        $statusSummary = (clone $query)
+            ->select(['vehicle_detail.status AS status', 'COUNT(*) AS total'])
+            ->groupBy(['vehicle_detail.status'])
+            ->asArray()
+            ->all();
+
+        $waitingAllocationCount = (int) (clone $query)
+            ->andWhere(['IN', 'vehicle_detail.status', ['Pending', 'Pass', 'Approve']])
+            ->andWhere(['vehicle_detail.driver_id' => null])
+            ->andWhere([
+                'or',
+                ['vehicle_detail.license_plate' => null],
+                ['vehicle_detail.license_plate' => ''],
+                ['vehicle_detail.license_plate' => ' '],
+            ])
+            ->count();
+
+        $allocatedCount = (int) (clone $query)
+            ->andWhere([
+                'or',
+                ['IS NOT', 'vehicle_detail.driver_id', null],
+                [
+                    'and',
+                    ['IS NOT', 'vehicle_detail.license_plate', null],
+                    ['<>', 'vehicle_detail.license_plate', ''],
+                    ['<>', 'vehicle_detail.license_plate', ' '],
+                ],
+            ])
+            ->count();
+
+        // เพิ่ม eager load เพื่อให้ card-based list โหลดข้อมูลที่ใช้จริงได้ลื่นขึ้น
+        $query->with([
+            'vehicle.employee',
+            'vehicle.locationOrg',
+            'vehicle',
+            'driver',
+            'vehicleDetailStatus',
+        ]);
+
+        return $this->render('work-official/index', [
             'vehicle_type' => 'official',
             'icon' => '<i class="fa-solid fa-car-on"></i>',
             'title' => 'ทะเบียนการจัดสรรรถทั่วไป (พขร.)',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'statusSummary' => $statusSummary,
+            'waitingAllocationCount' => $waitingAllocationCount,
+            'allocatedCount' => $allocatedCount,
         ]);
     }
 
@@ -173,17 +292,19 @@ class VehicleController extends Controller
         $searchModel = new VehicleDetailSearch([]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
-        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'ambulance']);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => 'ambulance']);
 
-        $dataProvider->query->andFilterWhere([
+        $query->andFilterWhere([
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
 
-        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
             'vehicle_type' => 'ambulance',
             'title' => 'ทะเบียนการจัดสรรรถพยาบาล (พขร.)',
@@ -248,10 +369,12 @@ class VehicleController extends Controller
 
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $todays]);
-        $dataProvider->query->andWhere(['vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle_detail.date_start' => $todays]);
+        $query->andWhere(['vehicle_type_id' => $vehicle_type]);
+        $query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
         if ($this->request->isAJax) {
@@ -288,10 +411,12 @@ class VehicleController extends Controller
         $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
+        $query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
 

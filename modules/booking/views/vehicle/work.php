@@ -34,66 +34,104 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card shadow-sm">
     <div class="card-header bg-primary-gradient">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> การจัดสรร <span class="badge text-bg-light"><?= $dataProvider->getTotalCount() ?> </span> รายการ</h6>
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> การจัดสรร
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1 ms-1">
+                    <?= $dataProvider->getTotalCount() ?> รายการ
+                </span>
+            </h6>
         </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover table-striped mb-0">
-            <thead class="">
-                <tr>
-                    <th class="text-center" style="width:30px">ลำดับ</th>
-                    <th>เลขที่</th>
-                    <th>ผู้ขอ</th>
-                    <th>วัน/เวลา/สถานที่</th>
-                    <th>พขร</th>
-                    <th>ทะเบียนรถ</th>
-                    <th class="fw-semibold text-end">เลขไมล์ออกเดินทาง</th>
-                    <th class="fw-semibold  text-end">เลขไมล์หลังเดินทาง</th>
-                    <th class="fw-semibold text-center">สถานะ</th>
-                    <th class="fw-semibold text-end" style="width:150px;">ดำเนินการ</th>
-                </tr>
-            </thead>
-            <tbody class="align-middle table-group-divider">
+    <div class="card-body p-2">
+        <div class="overflow-auto" style="max-height: 68vh;">
+            <div class="row g-2">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr>
-                        <td class="text-center">
-                            <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                    <?php
+                    $vehicle = $item->vehicle;
+                    $requester = $vehicle?->userRequest() ?? [];
+                    $driver = $item->showDriver();
+                    $statusView = $item->viewStatus()['view'] ?? '-';
+                    $queueNo = ($dataProvider->pagination->offset + 1) + $key;
+                    $showDate = $vehicle ? $vehicle->showDateRange() : '-';
+                    $showTime = $vehicle ? ($vehicle->viewTime()['full'] ?? '-') : '-';
+                    $goType = $vehicle ? $vehicle->viewGoType() : '-';
+                    $locTitle = $vehicle?->locationOrg?->title ?? '-';
+                    $reason = $vehicle?->reason ?? '-';
+                    $cancelUrl = ['/booking/vehicle-detail/cancel', 'id' => $item->id];
+                    $workUpdateUrl = ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => 'บันทึกภาระกิจการใช้รถยนต์'];
+                    $viewUrl = ['view', 'id' => $item->id];
+                    ?>
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                                    <div class="fw-bold text-primary small">
+                                        #<?= (int) $queueNo ?> · <?= Html::encode($vehicle->code ?? '-') ?>
+                                    </div>
+                                    <div><?= $statusView ?></div>
+                                </div>
 
-                        <td>
-                            <p class="mb-0 fs-13"><?= $item->vehicle->code ?></p>
-                        </td>
-                        <td> <?= $item->vehicle->userRequest()['avatar'] ?></td>
-                        <td>
-                            <div style="width:300px" class="avatar-detail text-truncate">
-                                <p class="mb-0"><?= $item->vehicle->showDateRange() ?> เวลา <?= $item->vehicle->viewTime()['full'] ?></p>
-                                <p class="fs-13 mb-0"><?php echo $item->vehicle->viewGoType() ?> : <?php echo $item->vehicle->locationOrg?->title ?? '-' ?></p>
-                                <p class="text-muted mb-0 fs-12"> <?= $item->vehicle->reason; ?></p>
+                                <div class="row g-2 align-items-start">
+                                    <div class="col-12 col-lg-3">
+                                        <div class="d-flex align-items-center">
+                                            <?php
+                                            $photoSrc = $requester['photo'] ?? '';
+                                            if ($photoSrc !== ''):
+                                            ?>
+                                                <img src="<?= Html::encode($photoSrc) ?>" width="32" height="32" class="rounded-3 me-2 shadow-sm" alt="" />
+                                            <?php endif; ?>
+                                            <div>
+                                                <div class="fw-bold mb-0 small"><?= Html::encode($requester['fullname'] ?? '-') ?></div>
+                                                <small class="text-primary d-block"><?= Html::encode($requester['department'] ?? '-') ?></small>
+                                            </div>
+                                        </div>
+                                    </div>
 
+                                    <div class="col-12 col-lg-4">
+                                        <div class="small text-muted">
+                                            <i class="bi bi-calendar-check me-1"></i><?= Html::encode($showDate) ?> เวลา <?= Html::encode($showTime) ?>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            <?= Html::encode($goType) ?> : <?= Html::encode($locTitle) ?>
+                                        </div>
+                                        <div class="small text-truncate mt-1" style="max-width: 100%;">
+                                            <?= Html::encode($reason) ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-3">
+                                        <div class="fw-bold text-truncate small mb-1">
+                                            <i class="bi bi-people me-1"></i><?= Html::encode($driver['fullname'] ?? '-') ?>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-car-front me-1"></i>ทะเบียนรถ: <?= Html::encode($item->car?->license_plate ?? '-') ?>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            ไมล์ออก: <?= Html::encode((string) ($item->mileage_start ?? '-')) ?>
+                                        </div>
+                                        <div class="small text-muted">
+                                            ไมล์หลัง: <?= Html::encode((string) ($item->mileage_end ?? '-')) ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-2">
+                                        <div class="d-flex flex-column justify-content-between" style="min-height: 120px;">
+                                            <div class="small text-muted mb-1 text-end">
+                                                ดำเนินการ
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                                <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>บันทึก', $workUpdateUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                                <?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', $viewUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                                <?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i>ยกเลิก', $cancelUrl, ['class' => 'btn btn-sm btn-outline-danger cancel-order', 'data' => ['size' => 'modal-lg']]) ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </td>
-                        <td><?= $item->showDriver()['avatar'] ?></td>
-                        <td><?=$item->car?->license_plate?></td>
-
-                        <td class="text-end"><?= $item->mileage_start ?></td>
-                        <td class="text-end"><?= $item->mileage_end ?></td>
-                        <td class="text-center"><?= $item->viewStatus()['view'] ?? '-' ?></td>
-                        <td class="text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    จัดการ
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> บันทึกการใช้รถ', ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> บันทึกภาระกิจการใช้รถยนต์'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i>แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i> ยกเลิก', ['/booking/vehicle-detail/cancel', 'id' => $item->id], ['class' => 'dropdown-item cancel-order', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
-            </tbody>
-        </table>
+            </div>
+        </div>
     </div>
 </div>
 
