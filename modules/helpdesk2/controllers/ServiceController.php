@@ -358,17 +358,37 @@ class ServiceController extends \yii\web\Controller
         } catch (\Throwable $e) {
             // ไม่ให้กระทบการเปิดหน้า ถ้าสร้าง seed ไม่สำเร็จ
         }
+        // Timeline: service_record logs (แสดงใน view-v2/_timeline)
+        $logs = [];
+        try {
+            $serviceRecords = HelpdeskDetail::find()
+                ->where(['helpdesk_id' => $model->id, 'name' => 'service_record'])
+                ->orderBy(['created_at' => SORT_ASC])
+                ->all();
+
+            foreach ($serviceRecords as $r) {
+                $logs[] = (object) [
+                    'created_at' => $r->created_at ?? null,
+                    'message' => (string) ($r->title ?? $r->status ?? $r->code ?? ''),
+                ];
+            }
+        } catch (\Throwable $e) {
+            $logs = [];
+        }
+
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('view-v2', [
                     'model' => $model,
+                    'logs' => $logs,
                 ])
             ];
         } else {
             return $this->render('view-v2', [
                 'model' => $model,
+                'logs' => $logs,
             ]);
         }
     }

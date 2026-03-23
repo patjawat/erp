@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use yii\helpers\Url;
 use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 
@@ -154,7 +155,23 @@ foreach ($detailRows as $d) {
 $isReceived = in_array($statusCode, ['receive', 'in_progress', 'success', 'cancel'], true);
 $isStarted = in_array($statusCode, ['in_progress', 'success'], true);
 $isClosed = in_array($statusCode, ['success', 'cancel'], true);
+$isFinished = ($statusCode === 'success');
 $hasExternal = $model->isExternalRepair();
+
+$receiveUrl = Url::to(['/helpdesk/service/receive', 'id' => $model->id]);
+$sendRepairUrl = Url::to(['/helpdesk/service/send-repair', 'id' => $model->id]);
+$recordMethodUrl = Url::to(['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number]);
+$partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
+$expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
+$finishUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $model->id]);
+
+$requiredDone = 0;
+$requiredDone += $isReceived ? 1 : 0;
+$requiredDone += $isStarted ? 1 : 0;
+$requiredDone += ($serviceRecordCount > 0) ? 1 : 0;
+$requiredDone += $isFinished ? 1 : 0;
+$requiredTotal = 4;
+$requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
 
 ?>
 
@@ -180,6 +197,82 @@ $hasExternal = $model->isExternalRepair();
                 'priorityBadge' => $priorityBadge,
                 'slaBadgeHtml' => $slaBadgeHtml,
             ]); ?>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header fw-bold d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span><i class="bi bi-signpost-split me-1"></i> ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)</span>
+                    <?= Html::tag('span', 'คืบหน้า ' . $requiredProgress . '%', ['class' => $badgeClass($requiredProgress >= 100 ? 'success' : 'info')]) ?>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-primary mb-3" role="alert">
+                        เริ่มจากรับงาน → ส่งซ่อม/เริ่มงาน → บันทึกวิธีดำเนินการ → ปิดงานให้เสร็จสมบูรณ์
+                    </div>
+
+                    <div class="progress mb-3" role="progressbar" aria-label="workflow-progress" aria-valuenow="<?= $requiredProgress ?>" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width: <?= $requiredProgress ?>%"></div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2">
+                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="fw-medium">1) รับงาน</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
+                                    <?php if (!$isReceived): ?>
+                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="fw-medium">2) ส่งซ่อม / เริ่มดำเนินการ</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= Html::tag('span', $isStarted ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
+                                    <?php if (!$isStarted): ?>
+                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="fw-medium">3) บันทึกวิธีดำเนินการซ่อม</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= Html::tag('span', $serviceRecordCount > 0 ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($serviceRecordCount > 0 ? 'success' : 'secondary')]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="fw-medium">4) อะไหล่ / ค่าใช้จ่าย (ถ้ามี)</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
+                                    <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
+                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="fw-medium">5) ปิดงาน</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= Html::tag('span', $isFinished ? 'ปิดงานแล้ว' : ($isClosed ? 'จบงาน (ยกเลิก)' : 'ยังไม่ปิดงาน'), ['class' => $badgeClass($isFinished ? 'success' : ($isClosed ? 'danger' : 'secondary'))]) ?>
+                                    <?php if (!$isFinished): ?>
+                                        <?= Html::a('<i class="fa-solid fa-flag-checkered me-1"></i> สรุปผลและปิดงาน', $finishUrl, ['class' => 'btn btn-sm btn-primary']) ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
                 <div class="card shadow-sm mt-3">
                 <div class="card-header fw-bold d-flex flex-wrap align-items-center gap-2">
