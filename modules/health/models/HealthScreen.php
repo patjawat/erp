@@ -62,7 +62,7 @@ public $q_department;
             'id' => 'ID',
             'thai_year' => 'ปีงบประมาณ',
             'emp_id' => 'รหัสพนักงาน',
-            'date_checkup' => 'วันที่ตรวจสุขภาพ',
+            'date_checkup' => 'วันที่คัดกรอง',
             'data_json' => 'ข้อมูล JSON',
             'weight' => 'น้ำหนัก',
             'height' => 'ส่วนสูง',
