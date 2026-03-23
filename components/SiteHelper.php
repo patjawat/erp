@@ -16,6 +16,39 @@ class SiteHelper extends Component
         public static function getInfo()
         {
                 $model = Categorise::findOne(['name' => 'site']);
+                // หากยังไม่ได้ตั้งค่า "site" ในตาราง categorise ให้คืนค่า default เพื่อไม่ให้ระบบพัง
+                if (!$model) {
+                        $defaultLayout = 'vertical';
+                        return [
+                                'layout' => $defaultLayout,
+                                'director' => null,
+                                'logo' => null,
+                                'company_name' => null,
+                                'hoscode' => null,
+                                'doc_number' => null,
+                                'director_name' => null,
+                                'director_position' => null,
+                                'director_type' => null,
+                                'leader' => null,
+                                'leader_fullname' => null,
+                                'leader_position' => '',
+                                'leader_signature_path' => null,
+                                'address' => null,
+                                'province' => null,
+                                'phone' => null,
+                                'website' => '-',
+                                'line_liff_home' => null,
+                                'line_liff_profile' => null,
+                                'line_liff_login' => null,
+                                'line_liff_register' => null,
+                                'line_liff_user_connect' => null,
+                                'line_qrcode' => null,
+                                'pdpa_url' => null,
+                                'active_pdpa' => 0,
+                                'manual' => 0,
+                        ];
+                }
+
                 $siteUrl = isset($model->data_json['website']) ? $model->data_json['website'] : '-';
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
                 $director =  Employees::find()->where(['id' => $model->data_json['director_name'] ?? 0])->one();
