@@ -57,6 +57,18 @@ $workflowSteps = [
 <?php echo $this->render('@app/modules/helpdesk2/menu', ['active' => $active]) ?>
 <?php $this->endBlock(); ?>
 
+<?php
+$this->registerCss(<<<CSS
+.helpdesk2-service-list .btn.btn-sm {
+    --bs-btn-padding-y: 0.25rem !important;
+    --bs-btn-padding-x: 0.5rem !important;
+    --bs-btn-font-size: 0.8203125rem !important;
+    --bs-btn-border-radius: var(--bs-border-radius-sm) !important;
+}
+CSS);
+?>
+
+<div class="helpdesk2-service-list">
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
@@ -401,6 +413,7 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
         </div>
 
 
+ </div>
 <?php
 $js = <<< JS
 $('body').on('click', '.receive-order', function (e) {

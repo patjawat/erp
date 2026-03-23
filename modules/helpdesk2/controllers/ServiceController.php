@@ -340,6 +340,24 @@ class ServiceController extends \yii\web\Controller
      public function actionViewV2($id)
     {
         $model = $this->findModel($id);
+        // ถ้ายังไม่มีชุดข้อมูลบันทึกการซ่อม ให้สร้างรายการเริ่มต้นอัตโนมัติ
+        try {
+            $hasServiceRecord = HelpdeskDetail::find()
+                ->where(['helpdesk_id' => $model->id, 'name' => 'service_record'])
+                ->exists();
+            if (!$hasServiceRecord) {
+                $me = UserHelper::GetEmployee();
+                $seed = new HelpdeskDetail();
+                $seed->helpdesk_id = $model->id;
+                $seed->name = 'service_record';
+                $seed->emp_id = $me->id ?? null;
+                $seed->status = 'เริ่มบันทึก';
+                $seed->title = 'สร้างชุดข้อมูลบันทึกการซ่อมเริ่มต้น (V2)';
+                $seed->save(false);
+            }
+        } catch (\Throwable $e) {
+            // ไม่ให้กระทบการเปิดหน้า ถ้าสร้าง seed ไม่สำเร็จ
+        }
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [

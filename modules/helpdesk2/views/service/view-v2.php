@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
+use app\modules\helpdesk2\models\HelpdeskDetail;
 
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
 
@@ -111,6 +112,50 @@ $mockAttachments = [
     ['type' => 'image', 'label' => 'รูปหลังการซ่อม (JPG)', 'url' => '#'],
 ];
 
+$detailRows = HelpdeskDetail::find()
+    ->where(['helpdesk_id' => $model->id])
+    ->orderBy(['id' => SORT_ASC])
+    ->all();
+$serviceRecordCount = 0;
+$partCount = 0;
+$expenseCount = 0;
+$totalExpense = 0.0;
+foreach ($detailRows as $d) {
+    $nameCode = strtolower((string) ($d->name ?? ''));
+    $titleTextRaw = strtolower((string) ($d->title ?? ''));
+    $dj = is_array($d->data_json ?? null) ? $d->data_json : [];
+    if ($nameCode === 'service_record') {
+        $serviceRecordCount++;
+    }
+    if (str_contains($nameCode, 'part') || str_contains($titleTextRaw, 'อะไหล่')) {
+        $partCount++;
+    }
+    if (
+        str_contains($nameCode, 'expense')
+        || str_contains($titleTextRaw, 'ค่าใช้จ่าย')
+        || isset($dj['amount'])
+        || isset($dj['price'])
+        || isset($dj['total'])
+    ) {
+        $expenseCount++;
+    }
+    $amount = 0.0;
+    foreach (['total', 'amount', 'price', 'cost'] as $k) {
+        if (isset($dj[$k]) && is_numeric($dj[$k])) {
+            $amount = (float) $dj[$k];
+            break;
+        }
+    }
+    if ($amount <= 0 && is_numeric($d->code ?? null)) {
+        $amount = (float) $d->code;
+    }
+    $totalExpense += $amount;
+}
+$isReceived = in_array($statusCode, ['receive', 'in_progress', 'success', 'cancel'], true);
+$isStarted = in_array($statusCode, ['in_progress', 'success'], true);
+$isClosed = in_array($statusCode, ['success', 'cancel'], true);
+$hasExternal = $model->isExternalRepair();
+
 ?>
 
 <div class="container-fluid py-3">
@@ -135,6 +180,78 @@ $mockAttachments = [
                 'priorityBadge' => $priorityBadge,
                 'slaBadgeHtml' => $slaBadgeHtml,
             ]); ?>
+
+                <div class="card shadow-sm mt-3">
+                <div class="card-header fw-bold d-flex flex-wrap align-items-center gap-2">
+                    <span class="flex-grow-1 min-w-0"><i class="bi bi-journal-check me-1"></i> มาตรฐานการบันทึกงานซ่อม</span>
+                    <div class="d-flex flex-wrap gap-2 ms-auto">
+                        <?= Html::a(
+                            '<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ',
+                            ['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number],
+                            ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']
+                        ) ?>
+                        <?php if ((string) $model->status === 'pending'): ?>
+                            <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', ['/helpdesk/service/receive', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                        <?php endif; ?>
+                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', ['/helpdesk/service/send-repair', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
+                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', ['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', ['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <?= Html::tag('span', ($isReceived ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'รับเรื่อง', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($isStarted ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'เริ่มดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($serviceRecordCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกงานซ่อม', ['class' => $badgeClass($serviceRecordCount > 0 ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($partCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกอะไหล่', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($expenseCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกค่าใช้จ่าย', ['class' => $badgeClass($expenseCount > 0 ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($isClosed ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'ปิดงาน', ['class' => $badgeClass($isClosed ? 'success' : 'secondary')]) ?>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
+                                <div class="small text-muted mb-2">วิธีดำเนินการซ่อม</div>
+                                <div class="fw-medium mb-2">ช่องทางซ่อม: <?= Html::encode($model->viewRepairChannelLabel()) ?></div>
+                                <?php if ($hasExternal): ?>
+                                    <div class="small text-muted mb-1">รายละเอียดส่งซ่อมภายนอก</div>
+                                    <?= $model->getExternalRepairDetailHtml() ?>
+                                <?php else: ?>
+                                    <div class="small text-muted">งานนี้เป็นซ่อมภายใน ให้บันทึกขั้นตอนใน Timeline และแนบรูปงานซ่อม</div>
+                                    <div class="mt-2"><?= $model->getRepairWorkPhotosHtml() ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
+                                <div class="small text-muted mb-2">สรุปอะไหล่และค่าใช้จ่าย</div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">รายการบันทึกซ่อม</span>
+                                    <span class="fw-medium"><?= number_format($serviceRecordCount) ?> รายการ</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">รายการอะไหล่</span>
+                                    <span class="fw-medium"><?= number_format($partCount) ?> รายการ</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">รายการค่าใช้จ่าย</span>
+                                    <span class="fw-medium"><?= number_format($expenseCount) ?> รายการ</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">ค่าใช้จ่ายรวม</span>
+                                    <span class="fw-bold text-danger"><?= number_format($totalExpense, 2) ?> บาท</span>
+                                </div>
+                                <?php if ($hasExternal): ?>
+                                    <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                        <div class="small text-muted mb-1">บิล/หลักฐานส่งซ่อมภายนอก</div>
+                                        <?= $model->getExternalRepairBillsHtml() ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Description -->
             <div class="card shadow-sm mt-3">
@@ -235,11 +352,59 @@ $mockAttachments = [
     </div>
 </div>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="repair-method-offcanvas" aria-labelledby="repair-method-offcanvas-label">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="repair-method-offcanvas-label">บันทึกวิธีดำเนินการซ่อม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="repair-method-offcanvas-content" class="text-muted small">กำลังโหลดฟอร์ม...</div>
+    </div>
+</div>
+
 <?php
 $js = <<<JS
 // Support legacy callbacks from team form (view.php)
 window.loadFormTeam = function () { window.location.reload(); };
 window.loadListTeam = function () { window.location.reload(); };
+window.loadFormServiceRecord = function () { window.location.reload(); };
+window.loadTimeline = function () { window.location.reload(); };
+
+$('body').off('click.repairMethodClose').on('click.repairMethodClose', '#repair-method-offcanvas [data-bs-dismiss="offcanvas"]', function () {
+  // รีเซ็ตข้อความโหลด และเรียก hide ซ้ำเพื่อกันกรณี bootstrap ไม่ซ่อนจริง
+  try {
+    var offcanvasEl = document.getElementById('repair-method-offcanvas');
+    if (offcanvasEl && offcanvasEl.__repairOffcanvasInstance) {
+      offcanvasEl.__repairOffcanvasInstance.hide();
+    }
+  } catch (e) {}
+
+  $('#repair-method-offcanvas-content').html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
+});
+
+$('body').on('click', 'a.btn-open-repair-method', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  var offcanvasEl = document.getElementById('repair-method-offcanvas');
+  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+  offcanvasEl.__repairOffcanvasInstance = offcanvas;
+  $('#repair-method-offcanvas-content').html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
+  offcanvas.show();
+
+  $.ajax({
+    type: 'get',
+    url: url,
+    dataType: 'json',
+    success: function (response) {
+      $('#repair-method-offcanvas-label').html(response.title || 'บันทึกวิธีดำเนินการซ่อม');
+      $('#repair-method-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์ม</div>');
+    },
+    error: function () {
+      $('#repair-method-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดฟอร์มได้</div>');
+      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดฟอร์มบันทึกวิธีดำเนินการซ่อมได้', icon: 'error' });
+    }
+  });
+});
 
 // Open "assign team" form in main modal
 $('body').on('click', 'a.btn-assign-team', function (e) {
