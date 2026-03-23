@@ -326,8 +326,8 @@ class Helpdesk extends \yii\db\ActiveRecord
             $emp = $this->employee;
             // แสดงเฉพาะรูปในกรอบ (ไม่ใช้ getAvatar ที่แนบชื่อ/วันที่/ตำแหน่งข้างรูป)
             $avatarOnly = Html::img('@web/img/loading.gif', [
-                'class' => 'avatar-md lazyload object-fit-cover d-block m-0',
-                'alt' => '',
+                'class' => 'avatar-md lazyload object-fit-cover d-block m-0 rounded-circle border border-secondary border-opacity-25 shadow-sm',
+                'alt' => (string) ($emp->fullname ?? 'ผู้แจ้ง'),
                 'data' => [
                     'expand' => '-20',
                     'sizes' => 'auto',
