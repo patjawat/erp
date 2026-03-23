@@ -6,11 +6,43 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\widgets\DetailView;
 use app\components\UserHelper;
+use app\modules\hr\models\Organization;
+use app\modules\dms\models\DocumentsDetail;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
 $this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
+
+$currentDeptIds = DocumentsDetail::find()
+    ->where(['document_id' => $model->id, 'name' => 'department'])
+    ->select('to_id')
+    ->column();
+$currentDeptIdsStr = array_map('strval', $currentDeptIds ?: []);
+$deptOptions = Organization::find()
+    ->where(['active' => 1])
+    ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+    ->all();
+
+$emp = UserHelper::GetEmployee();
+$isDeptHeadOrDeputy = false;
+if ($emp && (int) ($emp->department ?? 0) > 0) {
+    $org = Organization::findOne((int) $emp->department);
+    if ($org) {
+        $orgData = $org->data_json;
+        if (is_string($orgData)) {
+            $decoded = json_decode($orgData, true);
+            $orgData = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($orgData)) {
+            $orgData = [];
+        }
+        $leader1 = isset($orgData['leader1']) && is_numeric($orgData['leader1']) ? (int) $orgData['leader1'] : 0;
+        $leader2 = isset($orgData['leader2']) && is_numeric($orgData['leader2']) ? (int) $orgData['leader2'] : 0;
+        $isDeptHeadOrDeputy = in_array((int) $emp->id, [$leader1, $leader2], true);
+    }
+}
+$canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
 ?>
 
 <div class="container-fluid p-0 min-vh-100 overflow-x-hidden">
@@ -72,11 +104,11 @@ $this->title = $model->topic;
                     </div>
                     <div class="mt-2">
                         <?php if ($model->doc_speed == 'ด่วนที่สุด'): ?>
-                            <span class="badge bg-danger mb-1"><i
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1"><i
                                     class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
                         <?php endif; ?>
                         <?php if ($model->secret == 'ลับที่สุด'): ?>
-                            <span class="badge bg-danger mb-1"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
                         <?php endif; ?>
                     </div>
 
@@ -90,8 +122,40 @@ $this->title = $model->topic;
 
                         <div class="small mb-3">
                             <span class="text-muted fw-bold">ถึงหน่วยงาน:</span>
-                            <div class="d-inline-block gap-2"><?= $model->viewTagsDepartment() ?></div>
+                            <div id="to-dept-tags" class="d-inline-block gap-2"><?= $model->viewTagsDepartment() ?></div>
                         </div>
+
+                        <?php if ($canManageDepartmentExtra): ?>
+                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                                    <div class="small text-muted fw-bold">
+                                        <i class="fas fa-plus me-1"></i> เลือกถึงหน่วยงานเพิ่มเติม
+                                    </div>
+                                    <button type="button" id="btn-update-to-dept" class="btn btn-sm btn-primary shadow-sm">
+                                        บันทึก
+                                    </button>
+                                </div>
+                                <div class="w-100">
+                                    <?= \kartik\tree\TreeViewInput::widget([
+                                        'query' => Organization::find()->addOrderBy('root, lft'),
+                                        'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                        'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                        'fontAwesome' => true,
+                                        'asDropdown' => true,
+                                        'multiple' => true,
+                                        'name' => 'tags_department',
+                                        'value' => implode(',', $currentDeptIdsStr),
+                                        'options' => [
+                                            'id' => 'to-dept-tree',
+                                            'disabled' => false,
+                                        ],
+                                        // ลดความสูงเพื่อให้เหมาะกับหน้าจอฝั่งขวา (เมื่อเปิด dropdown)
+                                        'treeOptions' => ['style' => 'height: 220px;'],
+                                    ]) ?>
+                                </div>
+                                <div class="text-muted small mt-2" id="to-dept-status"></div>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="card border-light bg-light bg-opacity-50 mb-3">
                             <div class="card-body p-3">
@@ -181,6 +245,7 @@ $this->title = $model->topic;
 $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
 $listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
 $saveCommentTemplate = Url::to(['/me/documents/save-comment-template']);
+$updateToDepartmentsUrl = Url::to(['/dms/documents/update-to-departments', 'id' => $model->id]);
 $js = <<<JS
 (function(){
 
@@ -350,6 +415,54 @@ $(document).ready(function() {
                 error: function() {
                     alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
                 }
+            });
+        }
+    });
+});
+
+// Update เพิ่มเติม "ถึงหน่วยงาน" (department tags)
+$(document).on('click', '#btn-update-to-dept', function (e) {
+    e.preventDefault();
+    var selectedVal = $('input[name="tags_department"]').val() || '';
+    var selected = selectedVal
+        ? selectedVal.toString().split(',').map(function (s) { return s.trim(); }).filter(Boolean)
+        : [];
+    if (!selected.length) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณาเลือกหน่วยงานอย่างน้อย 1 รายการ',
+            showConfirmButton: true
+        });
+        return;
+    }
+
+    $('#to-dept-status').html('กำลังบันทึก...');
+    $.ajax({
+        url: "$updateToDepartmentsUrl",
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            tags_department: selected
+        },
+        success: function (res) {
+            if (res.status === 'success') {
+                $('#to-dept-tags').html(res.html);
+                $('#to-dept-status').html('<span class="text-success">บันทึกสำเร็จ</span>');
+            } else {
+                $('#to-dept-status').html('<span class="text-danger">บันทึกไม่สำเร็จ</span>');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สำเร็จ',
+                    text: res.message || 'ไม่สามารถอัปเดตถึงหน่วยงานได้'
+                });
+            }
+        },
+        error: function () {
+            $('#to-dept-status').html('<span class="text-danger">เกิดข้อผิดพลาด</span>');
+            Swal.fire({
+                icon: 'error',
+                title: 'ไม่สำเร็จ',
+                text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'
             });
         }
     });
