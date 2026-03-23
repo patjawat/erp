@@ -29,6 +29,8 @@ class PdfTemplate extends ActiveRecord
     const CONTEXT_HELPDESK2_REPAIR = 'helpdesk2.repair';
     /** ใบส่งซ่อม (Helpdesk2) */
     const CONTEXT_HELPDESK2_REPAIR_NOTICE = 'helpdesk2.repair.notice';
+    /** ขอใช้รถยนต์ส่วนกลาง (Booking / Vehicle) */
+    const CONTEXT_BOOKING_VEHICLE_CENTRAL = 'booking.vehicle.central';
 
     public static function tableName(): string
     {

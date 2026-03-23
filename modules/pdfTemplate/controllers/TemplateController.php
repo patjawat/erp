@@ -51,12 +51,14 @@ class TemplateController extends Controller
         $leaveTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE])->one();
         $leaveRestTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE_REST])->one();
         $repairNoticeTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE])->one();
+        $bookingVehicleCentralTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
         return $this->render('index', [
             'templates' => $templates,
             'developmentTemplateId' => $developmentTemplate ? (int) $developmentTemplate->id : null,
             'leaveTemplateId' => $leaveTemplate ? (int) $leaveTemplate->id : null,
             'leaveRestTemplateId' => $leaveRestTemplate ? (int) $leaveRestTemplate->id : null,
             'repairNoticeTemplateId' => $repairNoticeTemplate ? (int) $repairNoticeTemplate->id : null,
+            'bookingVehicleCentralTemplateId' => $bookingVehicleCentralTemplate ? (int) $bookingVehicleCentralTemplate->id : null,
         ]);
     }
 
@@ -72,6 +74,7 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_LEAVE,
             PdfTemplate::CONTEXT_LEAVE_REST,
             PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE,
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL,
         ];
         if (!in_array($context, $allowed, true)) {
             Yii::$app->session->setFlash('error', 'ไม่รู้จัก context');
@@ -90,6 +93,7 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_LEAVE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ) แล้ว',
             PdfTemplate::CONTEXT_LEAVE_REST => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลาพักผ่อนแล้ว',
             PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบส่งซ่อมแล้ว',
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL => 'บันทึกการตั้งค่าเทมเพลตสำหรับขอใช้รถยนต์ส่วนกลางแล้ว',
         ];
         $msg = $messages[$context] ?? 'บันทึกการตั้งค่าเทมเพลตแล้ว';
         Yii::$app->session->setFlash('success', $msg);
@@ -309,6 +313,7 @@ class TemplateController extends Controller
         $fieldDefinitions = $dataSources ? $registry->getFieldDefinitions($selectedSourceId) : $this->getDefaultFieldDefinitions();
         $developmentPrintDataUrl = \yii\helpers\Url::to(['/hr/development/print-data']);
         $leavePrintDataUrl = \yii\helpers\Url::to(['/leave/setting/leave-print-data']);
+        $bookingPrintDataUrl = \yii\helpers\Url::to(['/booking/vehicle/print-data']);
         return $this->render('editor', [
             'template' => $template,
             'layout' => $layout,
@@ -319,6 +324,7 @@ class TemplateController extends Controller
             'fieldsForSourceUrl' => \yii\helpers\Url::to(['fields-for-source', 'template_id' => $template_id]),
             'developmentPrintDataUrl' => $developmentPrintDataUrl,
             'leavePrintDataUrl' => $leavePrintDataUrl,
+            'bookingPrintDataUrl' => $bookingPrintDataUrl,
         ]);
     }
 
