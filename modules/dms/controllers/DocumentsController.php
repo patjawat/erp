@@ -17,8 +17,10 @@ use app\components\UserHelper;
 use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
+use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -34,6 +36,32 @@ use yii\helpers\ArrayHelper;  // ค่าที่นำเข้าจาก c
  */
 class DocumentsController extends Controller
 {
+    private function isDeptHeadOrDeputy(?int $departmentId, ?int $empId): bool
+    {
+        if (($departmentId ?? 0) <= 0 || ($empId ?? 0) <= 0) {
+            return false;
+        }
+
+        $org = Organization::findOne((int) $departmentId);
+        if (!$org) {
+            return false;
+        }
+
+        $dataJson = $org->data_json;
+        if (is_string($dataJson)) {
+            $decoded = json_decode($dataJson, true);
+            $dataJson = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($dataJson)) {
+            $dataJson = [];
+        }
+
+        $leader1 = isset($dataJson['leader1']) && is_numeric($dataJson['leader1']) ? (int) $dataJson['leader1'] : 0;
+        $leader2 = isset($dataJson['leader2']) && is_numeric($dataJson['leader2']) ? (int) $dataJson['leader2'] : 0;
+
+        return in_array((int) $empId, [$leader1, $leader2], true);
+    }
+
     /**
      * @inheritDoc
      */
@@ -214,6 +242,58 @@ class DocumentsController extends Controller
         }
 
         $this->ExportExcel($dataProvider, $searchModel, $title);
+    }
+
+    /**
+     * Update/เพิ่ม "ถึงหน่วยงาน" (department tags) สำหรับเอกสารเดิม
+     * Route: /dms/documents/update-to-departments?id=XX
+     *
+     * ใช้ field เดิม `tags_department` (comma-separated ids) โดยอาศัยเมธอด
+     * `Documents::UpdateDocumentTags()` เพื่อเขียน documents_detail ตามของเดิม
+     */
+    public function actionUpdateToDepartments($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $emp = UserHelper::GetEmployee();
+        $canByRole = Yii::$app->user->can('document');
+        $canByOrg = $emp ? $this->isDeptHeadOrDeputy((int) $emp->department, (int) $emp->id) : false;
+        if (!$canByRole && !$canByOrg) {
+            Yii::$app->response->statusCode = 403;
+            return [
+                'status' => 'error',
+                'message' => 'คุณไม่มีสิทธิ์อัปเดตถึงหน่วยงานเพิ่มเติม',
+            ];
+        }
+
+        $model = $this->findModel((int) $id);
+
+        $tagsDepartment = $this->request->post('tags_department', '');
+        if (is_array($tagsDepartment)) {
+            $tagsDepartment = implode(',', $tagsDepartment);
+        }
+
+        $model->tags_department = (string) $tagsDepartment;
+
+        try {
+            $model->UpdateDocumentTags();
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่สามารถอัปเดตถึงหน่วยงานได้',
+            ];
+        }
+
+        // สถานะ DS2 เมื่อมีการส่งต่อหน่วยงาน (อิง logic เดิมใน actionUpdate)
+        if ($model->status !== 'DS3' && $model->status !== 'DS4' && $model->tags_department !== '') {
+            $model->status = 'DS2';
+            $model->save(false);
+        }
+
+        return [
+            'status' => 'success',
+            'html' => $model->viewTagsDepartment(),
+        ];
     }
     protected function ExportExcel($dataProvider, $searchModel, $title)
     {
@@ -1055,8 +1135,6 @@ class DocumentsController extends Controller
                 $filepath = Yii::getAlias('@runtime/webhooks/files/') . $file_name;
             } else if (!$fileUpload) {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            } else if (!$fileUpload && !file_exists($filepath)) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             } else {
                 $filename = $fileUpload->real_filename;
                 $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
@@ -1085,7 +1163,6 @@ class DocumentsController extends Controller
 
     public function actionUploadFile($ref)
     {
-        $model = $this->findModel($id);
         if ($this->request->isAJax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 

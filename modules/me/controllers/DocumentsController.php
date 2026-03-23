@@ -17,9 +17,45 @@ use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentsDetailSearch;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Organization;
+use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 
 class DocumentsController extends \yii\web\Controller
 {
+    private function isDeptHeadOrDeputy(int $departmentId, int $empId): bool
+    {
+        if ($departmentId <= 0 || $empId <= 0) {
+            return false;
+        }
+
+        $org = Organization::findOne($departmentId);
+        if (!$org) {
+            return false;
+        }
+
+        $dataJson = $org->data_json;
+        if (is_string($dataJson)) {
+            $decoded = json_decode($dataJson, true);
+            $dataJson = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($dataJson)) {
+            $dataJson = [];
+        }
+
+        $leader1 = $dataJson['leader1'] ?? null;
+        $leader2 = $dataJson['leader2'] ?? null;
+
+        $allowed = [];
+        foreach ([$leader1, $leader2] as $v) {
+            if (is_numeric($v) && (int) $v > 0) {
+                $allowed[] = (int) $v;
+            }
+        }
+
+        return in_array($empId, $allowed, true);
+    }
+
     public function actionIndex()
     {
         $emp = UserHelper::GetEmployee();
@@ -27,13 +63,15 @@ class DocumentsController extends \yii\web\Controller
             'date_filter' => 'today'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith([
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith([
             'documentTags' => function ($query) {
                 $query->alias('d_tags')
                     ->andOnCondition(['d_tags.name' => 'tags']);
             }
         ]);
-        $dataProvider->query->joinWith([
+        $query->joinWith([
             'docRead' => function ($query) {
                 $query->alias('d_read')
                     ->andOnCondition(['d_read.name' => 'read']);
@@ -81,6 +119,20 @@ class DocumentsController extends \yii\web\Controller
     {
         $emp = UserHelper::GetEmployee();
         $department = $emp->department;
+        if (!$this->isDeptHeadOrDeputy((int) $department, (int) $emp->id)) {
+            $searchModel = new DocumentSearch([
+                'date_filter' => 'today'
+            ]);
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->andWhere('1=0');
+
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'action' => 'department',
+                'to' => 'ถึงหน่วยงาน',
+            ]);
+        }
 
         $searchModel = new DocumentSearch([
             'date_filter' => 'today'
@@ -88,13 +140,15 @@ class DocumentsController extends \yii\web\Controller
 
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith([
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith([
             'documentDepartment' => function ($query) {
                 $query->alias('d_department')
                     ->andOnCondition(['d_department.name' => 'department']);
             }
         ]);
-        $dataProvider->query->joinWith([
+        $query->joinWith([
             'docRead' => function ($query) {
                 $query->alias('d_read')
                     ->andOnCondition(['d_read.name' => 'read']);
@@ -231,6 +285,12 @@ class DocumentsController extends \yii\web\Controller
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
+        if ($detail && $detail->name === 'department') {
+            $deptId = (int) $detail->to_id;
+            if (!$this->isDeptHeadOrDeputy($deptId, (int) $emp->id)) {
+                throw new ForbiddenHttpException('ไม่อนุญาตให้เข้าถึงเอกสารของหน่วยงานนี้');
+            }
+        }
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
         
