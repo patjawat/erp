@@ -82,6 +82,17 @@ if (!empty($model->request_repair_date)) {
     }
 }
 
+$repairChannel = (string) ($dataJson['repair_channel'] ?? '');
+$repairModeMap = [
+    'internal' => ['label' => 'ซ่อมภายใน', 'color' => 'success', 'hint' => 'เบิกอะไหล่จากคลังและบันทึกงานซ่อมโดยทีมช่างภายใน'],
+    'external' => ['label' => 'ซ่อมภายนอก', 'color' => 'warning', 'hint' => 'บันทึกค่าใช้จ่ายรวมและแนบบิลจากผู้รับซ่อมภายนอก'],
+    'hybrid' => ['label' => 'ซ่อมผสม (ภายใน+ภายนอก)', 'color' => 'primary', 'hint' => 'บันทึกได้ทั้งเบิกอะไหล่ภายในและค่าใช้จ่ายซ่อมภายนอก'],
+];
+$repairModeInfo = $repairModeMap[$repairChannel] ?? ['label' => 'ยังไม่เลือกโหมดซ่อม', 'color' => 'secondary', 'hint' => 'แนะนำให้เลือกโหมดในฟอร์มสรุปงาน เพื่อให้การบันทึกต้นทุนครบถ้วน'];
+$costLabor = is_numeric($dataJson['cost_labor'] ?? null) ? (float) $dataJson['cost_labor'] : 0.0;
+$costParts = is_numeric($dataJson['cost_parts'] ?? null) ? (float) $dataJson['cost_parts'] : 0.0;
+$costTotalForm = is_numeric($dataJson['cost_total'] ?? null) ? (float) $dataJson['cost_total'] : 0.0;
+
 // Mock data (used when controller doesn't provide $logs/$comments).
 $mockTimeline = [
     (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-22 minutes')), 'message' => 'อัปเดตสถานะงานซ่อม'],
@@ -128,30 +139,30 @@ foreach ($detailRows as $d) {
     if ($nameCode === 'service_record') {
         $serviceRecordCount++;
     }
-    if (str_contains($nameCode, 'part') || str_contains($titleTextRaw, 'อะไหล่')) {
+    $isPartRecord = ($nameCode === 'part_record') || ($nameCode === 'repair_part') || str_contains($nameCode, 'part');
+    if ($isPartRecord) {
         $partCount++;
     }
-    if (
-        str_contains($nameCode, 'expense')
-        || str_contains($titleTextRaw, 'ค่าใช้จ่าย')
-        || isset($dj['amount'])
-        || isset($dj['price'])
-        || isset($dj['total'])
-    ) {
+
+    // นับเฉพาะค่าใช้จ่ายจริง ลดการนับซ้ำจาก service_record ทั่วไป
+    $isExpenseRecord = ($nameCode === 'expense_record')
+        || ($nameCode !== 'service_record' && str_contains($nameCode, 'expense'));
+    if ($isExpenseRecord) {
         $expenseCount++;
-    }
-    $amount = 0.0;
-    foreach (['total', 'amount', 'price', 'cost'] as $k) {
-        if (isset($dj[$k]) && is_numeric($dj[$k])) {
-            $amount = (float) $dj[$k];
-            break;
+        $amount = 0.0;
+        foreach (['total', 'amount', 'price', 'cost'] as $k) {
+            if (isset($dj[$k]) && is_numeric($dj[$k])) {
+                $amount = (float) $dj[$k];
+                break;
+            }
         }
+        if ($amount <= 0 && is_numeric($d->code ?? null)) {
+            $amount = (float) $d->code;
+        }
+        $totalExpense += $amount;
     }
-    if ($amount <= 0 && is_numeric($d->code ?? null)) {
-        $amount = (float) $d->code;
-    }
-    $totalExpense += $amount;
 }
+$totalCostDisplay = max($totalExpense, $costTotalForm, ($costLabor + $costParts));
 $isReceived = in_array($statusCode, ['receive', 'in_progress', 'success', 'cancel'], true);
 $isStarted = in_array($statusCode, ['in_progress', 'success'], true);
 $isClosed = in_array($statusCode, ['success', 'cancel'], true);
@@ -164,6 +175,7 @@ $recordMethodUrl = Url::to(['/helpdesk/service-record/create', 'helpdesk_id' => 
 $partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
 $expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
 $finishUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $model->id]);
+$externalBillUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $model->id]);
 
 $requiredDone = 0;
 $requiredDone += $isReceived ? 1 : 0;
@@ -285,8 +297,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
                                 </div>
                             </div>
                         </div>
@@ -331,8 +343,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                             <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', ['/helpdesk/service/receive', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
                         <?php endif; ?>
                         <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', ['/helpdesk/service/send-repair', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
-                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', ['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', ['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
+                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', ['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
                     </div>
                 </div>
                 <div class="card-body p-4">
@@ -371,7 +383,11 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                         </div>
                         <div class="col-md-6">
                             <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                                <div class="small text-muted mb-2">สรุปอะไหล่และค่าใช้จ่าย</div>
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                    <div class="small text-muted mb-0">สรุปอะไหล่และค่าใช้จ่าย</div>
+                                    <?= Html::tag('span', Html::encode($repairModeInfo['label']), ['class' => $badgeClass($repairModeInfo['color'])]) ?>
+                                </div>
+                                <div class="small text-muted mb-3"><?= Html::encode($repairModeInfo['hint']) ?></div>
                                 <div class="d-flex justify-content-between py-1">
                                     <span class="text-muted">รายการบันทึกซ่อม</span>
                                     <span class="fw-medium"><?= number_format($serviceRecordCount) ?> รายการ</span>
@@ -386,7 +402,15 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                 </div>
                                 <div class="d-flex justify-content-between py-1">
                                     <span class="text-muted">ค่าใช้จ่ายรวม</span>
-                                    <span class="fw-bold text-danger"><?= number_format($totalExpense, 2) ?> บาท</span>
+                                    <span class="fw-bold text-danger"><?= number_format($totalCostDisplay, 2) ?> บาท</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">ค่าแรง (ฟอร์มสรุป)</span>
+                                    <span class="fw-medium"><?= number_format($costLabor, 2) ?> บาท</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">ค่าอะไหล่ (ฟอร์มสรุป)</span>
+                                    <span class="fw-medium"><?= number_format($costParts, 2) ?> บาท</span>
                                 </div>
                                 <?php if ($hasExternal): ?>
                                     <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
@@ -394,6 +418,15 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                         <?= $model->getExternalRepairBillsHtml() ?>
                                     </div>
                                 <?php endif; ?>
+                                <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                                    <div class="small text-muted mb-2">ลงบันทึกตามรูปแบบการซ่อม</div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่ (ซ่อมภายใน)', $partsUrl, ['class' => 'btn btn-outline-secondary btn-open-part-pos']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย (ซ่อมภายนอก)', $expenseUrl, ['class' => 'btn btn-outline-warning btn-open-expense-pos']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิล/แก้โหมดซ่อม', $externalBillUrl, ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    </div>
+                                    <div class="small text-muted mt-2">รองรับได้ทั้งซ่อมภายใน, ซ่อมภายนอก หรือทำทั้งสองแบบในงานเดียว</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -509,6 +542,26 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
     </div>
 </div>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="expense-pos-offcanvas" aria-labelledby="expense-pos-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="expense-pos-offcanvas-label">บันทึกค่าใช้จ่าย (POS)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="expense-pos-offcanvas-content" class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="part-pos-offcanvas" aria-labelledby="part-pos-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="part-pos-offcanvas-label">เบิกอะไหล่จากคลัง</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="part-pos-offcanvas-content" class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>
+    </div>
+</div>
+
 <?php
 $js = <<<JS
 // Support legacy callbacks from team form (view.php)
@@ -549,6 +602,52 @@ $('body').on('click', 'a.btn-open-repair-method', function (e) {
     error: function () {
       $('#repair-method-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดฟอร์มได้</div>');
       Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดฟอร์มบันทึกวิธีดำเนินการซ่อมได้', icon: 'error' });
+    }
+  });
+});
+
+$('body').off('click.expensePosOpen').on('click.expensePosOpen', 'a.btn-open-expense-pos', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  var offcanvasEl = document.getElementById('expense-pos-offcanvas');
+  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+  $('#expense-pos-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>');
+  offcanvas.show();
+
+  $.ajax({
+    type: 'get',
+    url: url,
+    dataType: 'json',
+    success: function (response) {
+      $('#expense-pos-offcanvas-label').html(response.title || 'บันทึกค่าใช้จ่าย (POS)');
+      $('#expense-pos-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มค่าใช้จ่าย</div>');
+    },
+    error: function () {
+      $('#expense-pos-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูบันทึกค่าใช้จ่ายได้</div>');
+      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูบันทึกค่าใช้จ่ายได้', icon: 'error' });
+    }
+  });
+});
+
+$('body').off('click.partPosOpen').on('click.partPosOpen', 'a.btn-open-part-pos', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  var offcanvasEl = document.getElementById('part-pos-offcanvas');
+  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+  $('#part-pos-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
+  offcanvas.show();
+
+  $.ajax({
+    type: 'get',
+    url: url,
+    dataType: 'json',
+    success: function (response) {
+      $('#part-pos-offcanvas-label').html(response.title || 'เบิกอะไหล่จากคลัง');
+      $('#part-pos-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
+    },
+    error: function () {
+      $('#part-pos-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
+      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูเบิกอะไหล่ได้', icon: 'error' });
     }
   });
 });
@@ -663,6 +762,40 @@ $('body').on('click', 'a.btn-send-repair', function (e) {
     });
   });
 });
+
+function setExpenseOffcanvasWidth() {
+  var el = document.getElementById('expense-pos-offcanvas');
+  if (!el) return;
+  el.classList.remove('w-50', 'w-75', 'w-100');
+  var w = window.innerWidth || document.documentElement.clientWidth || 0;
+  if (w >= 1200) {
+    el.classList.add('w-50');
+  } else if (w >= 768) {
+    el.classList.add('w-75');
+  } else {
+    el.classList.add('w-100');
+  }
+}
+
+setExpenseOffcanvasWidth();
+window.addEventListener('resize', setExpenseOffcanvasWidth);
+
+function setPartOffcanvasWidth() {
+  var el = document.getElementById('part-pos-offcanvas');
+  if (!el) return;
+  el.classList.remove('w-50', 'w-75', 'w-100');
+  var w = window.innerWidth || document.documentElement.clientWidth || 0;
+  if (w >= 1200) {
+    el.classList.add('w-50');
+  } else if (w >= 768) {
+    el.classList.add('w-75');
+  } else {
+    el.classList.add('w-100');
+  }
+}
+
+setPartOffcanvasWidth();
+window.addEventListener('resize', setPartOffcanvasWidth);
 JS;
 $this->registerJs($js);
 ?>
