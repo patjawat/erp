@@ -102,6 +102,7 @@ class ExpensesController extends Controller
                         'name' => 'expense_record',
                     ]);
 
+                    $savedCount = 0;
                     foreach ($rows as $row) {
                         $title = trim((string) ($row['title'] ?? ''));
                         if ($title === '') {
@@ -130,7 +131,27 @@ class ExpensesController extends Controller
                         if (!$item->save()) {
                             throw new \RuntimeException('ไม่สามารถบันทึกรายการค่าใช้จ่ายได้');
                         }
+                        $savedCount++;
                         $this->CheckUpdateServiceRecordStatus($item);
+                    }
+
+                    try {
+                        $sumTotal = 0.0;
+                        foreach ($rows as $r) {
+                            $sumTotal += (float) ($r['total'] ?? 0);
+                        }
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $helpdeskId;
+                        $log->name = 'service_record';
+                        $log->status = 'ขั้นตอน 4: บันทึกค่าใช้จ่าย';
+                        $log->title = 'บันทึกค่าใช้จ่ายแล้ว ' . $savedCount . ' รายการ';
+                        $log->data_json = [
+                            'expense_count' => $savedCount,
+                            'expense_total' => $sumTotal,
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกหลัก
                     }
                     $tx->commit();
                     return ['status' => 'success'];

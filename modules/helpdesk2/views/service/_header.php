@@ -26,19 +26,9 @@ use yii\helpers\Html;
             <div class="d-flex flex-column align-items-end gap-2">
                 <div class="d-flex gap-2">
                     <?= Html::a(
-                        '<i class="fa-regular fa-circle-check me-2"></i>อนุมัติ',
-                        ['approve', 'id' => $model->id],
-                        ['class' => 'btn btn-success']
-                    ) ?>
-                    <?= Html::a(
-                        '<i class="fa-solid fa-wrench me-2"></i>ส่งซ่อม',
-                        ['send-repair', 'id' => $model->id],
-                        ['class' => 'btn btn-warning text-dark btn-send-repair']
-                    ) ?>
-                    <?= Html::a(
-                        '<i class="fa-solid fa-xmark me-2"></i>ปิดงาน',
-                        ['close', 'id' => $model->id],
-                        ['class' => 'btn btn-danger']
+                        '<i class="fa-solid fa-print me-1"></i>พิมพ์ใบส่งซ่อม',
+                        ['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id],
+                        ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']
                     ) ?>
                 </div>
             </div>

@@ -81,15 +81,7 @@ use kartik\widgets\ActiveForm;
     <?= Html::label('รวมรายการ', 'expense-line-total-display', ['class' => 'form-label']) ?>
     <input type="text" id="expense-line-total-display" class="form-control fw-bold text-danger" value="0.00" readonly>
   </div>
-  <div class="col-6">
-    <?= Html::label('ประเภท', 'expense-type', ['class' => 'form-label']) ?>
-    <select id="expense-type" class="form-select">
-      <option value="internal">ซ่อมภายใน</option>
-      <option value="external">ซ่อมภายนอก</option>
-      <option value="hybrid">ซ่อมผสม</option>
-    </select>
-  </div>
-  <div class="col-6">
+  <div class="col-12">
     <?= Html::label('หมายเหตุ', 'expense-note', ['class' => 'form-label']) ?>
     <input type="text" id="expense-note" class="form-control" placeholder="เลขบิล/ชื่อร้าน/หมายเหตุ">
   </div>
@@ -119,7 +111,7 @@ use kartik\widgets\ActiveForm;
 
   <div class="col-12">
     <div class="d-grid gap-2">
-      <?= Html::submitButton('<i class="fa-solid fa-circle-check me-1"></i> คอนเฟิร์มบันทึกค่าใช้จ่ายทั้งหมด', ['class' => 'btn btn-primary']) ?>
+      <?= Html::submitButton('<i class="fa-solid fa-circle-check me-1"></i> ยืนยันบันทึกค่าใช้จ่ายทั้งหมด', ['class' => 'btn btn-primary']) ?>
       <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">ปิดหน้าบันทึก</button>
     </div>
   </div>
@@ -171,7 +163,7 @@ function expenseRenderTable() {
       '<div class="card-body p-2">' +
       '<div class="d-flex flex-wrap justify-content-between align-items-start gap-2">' +
       '<div>' +
-      '<div class="small text-muted mb-1">' + $('<div>').text(row.status || '').html() + ' / ' + $('<div>').text(row.expense_type || '').html() + '</div>' +
+      '<div class="small text-muted mb-1">' + $('<div>').text(row.status || '').html() + '</div>' +
       '<div class="fw-medium small">' + $('<div>').text(row.title || '').html() + '</div>' +
       '<div class="small text-muted mt-1">' + $('<div>').text(row.note || '').html() + '</div>' +
       '</div>' +
@@ -196,7 +188,6 @@ function expenseLoadRowToEditor(row) {
   $('#expense-title').val(row.title || '');
   $('#expense-qty').val(row.qty || 1);
   $('#expense-unit-price').val(row.unit_price || 0);
-  $('#expense-type').val(row.expense_type || 'internal');
   $('#expense-note').val(row.note || '');
   $('#expense-add-row-btn').data('edit-index', row.__index);
   expenseRecalc();
@@ -208,7 +199,6 @@ $(document).off('click.expenseAddRow').on('click.expenseAddRow', '#expense-add-r
     title: ($('#expense-title').val() || '').trim(),
     qty: expenseParseNumber($('#expense-qty').val()),
     unit_price: expenseParseNumber($('#expense-unit-price').val()),
-    expense_type: $('#expense-type').val() || '',
     note: ($('#expense-note').val() || '').trim()
   };
   row.total = row.qty * row.unit_price;

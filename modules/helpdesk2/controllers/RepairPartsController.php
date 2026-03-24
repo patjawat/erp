@@ -69,6 +69,25 @@ class RepairPartsController extends \yii\web\Controller
                     }
                 }
 
+                try {
+                    $sumQty = 0.0;
+                    foreach ($rows as $r) {
+                        $sumQty += (float) ($r['qty'] ?? 0);
+                    }
+                    $log = new HelpdeskDetail();
+                    $log->helpdesk_id = (int) $helpdesk_id;
+                    $log->name = 'service_record';
+                    $log->status = 'บันทึกการเบิกอะไหล่';
+                    $log->title = 'เบิกอะไหล่ ' . count($rows) . ' รายการ';
+                    $log->data_json = [
+                        'part_count' => count($rows),
+                        'part_total_qty' => $sumQty,
+                    ];
+                    $log->save(false);
+                } catch (\Throwable $e) {
+                    // ไม่ให้กระทบการบันทึกหลัก
+                }
+
                 $tx->commit();
                 return ['status' => 'success'];
             } catch (\Throwable $e) {

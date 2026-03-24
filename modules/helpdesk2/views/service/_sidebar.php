@@ -16,6 +16,7 @@ $requesterMock = [
 $assigneeMock = [
     'fullname' => 'ยังไม่มอบหมาย',
     'department' => '-',
+    'avatar' => null,
 ];
 
 $req = null;
@@ -32,7 +33,26 @@ try {
         $assignee = [
             'fullname' => $model->emp->fullname ?? $assigneeMock['fullname'],
             'department' => method_exists($model->emp, 'departmentName') ? ($model->emp->departmentName() ?? $assigneeMock['department']) : $assigneeMock['department'],
+            'avatar' => method_exists($model->emp, 'ShowAvatar') ? $model->emp->ShowAvatar() : null,
         ];
+    } else {
+        $latestTeam = \app\modules\helpdesk2\models\HelpdeskDetail::find()
+            ->where(['name' => 'repair_team', 'helpdesk_id' => $model->id])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if ($latestTeam) {
+            $teamEmp = $latestTeam->emp;
+            if (!$teamEmp && !empty($latestTeam->emp_id)) {
+                $teamEmp = \app\modules\hr\models\Employees::findOne(['user_id' => (int) $latestTeam->emp_id]);
+            }
+            if ($teamEmp) {
+            $assignee = [
+                'fullname' => $teamEmp->fullname ?? $assigneeMock['fullname'],
+                'department' => method_exists($teamEmp, 'departmentName') ? ($teamEmp->departmentName() ?? $assigneeMock['department']) : $assigneeMock['department'],
+                'avatar' => method_exists($teamEmp, 'ShowAvatar') ? $teamEmp->ShowAvatar() : null,
+            ];
+            }
+        }
     }
 } catch (\Throwable $e) {
     $assignee = $assigneeMock;
@@ -41,48 +61,10 @@ try {
 
 <div class="position-sticky top-0">
     <div class="card shadow-sm">
-        <div class="card-header fw-bold">ปุ่มด่วน (Sticky)</div>
-        <div class="card-body p-4">
-            <div class="d-grid gap-2">
-                <?= Html::a(
-                    '<i class="fa-solid fa-circle-exclamation me-2"></i>รับงาน',
-                    ['/helpdesk/service/receive', 'id' => $model->id],
-                    ['class' => 'btn btn-success btn-lg receive-order']
-                ) ?>
-
-                <?= Html::a(
-                    '<i class="fa-solid fa-user-plus me-2"></i>มอบหมายช่าง',
-                    ['/helpdesk/team/create', 'helpdesk_id' => $model->id],
-                    [
-                        'class' => 'btn btn-outline-primary btn-lg btn-assign-team',
-                        'data' => [
-                            'title' => '<i class="fa-solid fa-user-plus me-2"></i>มอบหมายช่าง',
-                            'size' => 'modal-md',
-                        ],
-                    ]
-                ) ?>
-
-                <?= Html::a(
-                    '<i class="fa-solid fa-wrench me-2"></i>ส่งซ่อม',
-                    ['send-repair', 'id' => $model->id],
-                    ['class' => 'btn btn-warning btn-lg text-dark btn-send-repair']
-                ) ?>
-
-                <?= Html::a(
-                    '<i class="fa-solid fa-xmark me-2"></i>ปิดงาน',
-                    ['close', 'id' => $model->id],
-                    ['class' => 'btn btn-danger btn-lg']
-                ) ?>
-            </div>
-
-            <div class="text-muted small mt-3">
-                ทำงานตามลำดับนี้: อนุมัติ → มอบหมายช่าง → ส่งซ่อม → ปิดงาน
-            </div>
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-pen"></i>
+            <span>ข้อมูลผู้แจ้ง</span>
         </div>
-    </div>
-
-    <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold">ข้อมูลผู้แจ้ง</div>
         <div class="card-body p-4">
             <div class="d-flex align-items-center gap-3">
                 <?php if (!empty($requester['avatar'])): ?>
@@ -103,12 +85,34 @@ try {
     </div>
 
     <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold">ผู้รับผิดชอบ</div>
+        <div class="card-header fw-bold d-flex align-items-center justify-content-between gap-2">
+            <span class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>ช่างผู้รับผิดชอบงานซ่อม</span>
+            </span>
+            <?= Html::a(
+                '<i class="fa-solid fa-user-gear me-1"></i> เลือกช่าง',
+                ['/helpdesk/team/create', 'helpdesk_id' => $model->id],
+                [
+                    'class' => 'btn btn-sm btn-outline-primary btn-assign-team',
+                    'data' => [
+                        'title' => '<i class="fa-solid fa-user-gear me-1"></i> เลือกช่างผู้รับผิดชอบ',
+                        'size' => 'modal-md',
+                    ],
+                ]
+            ) ?>
+        </div>
         <div class="card-body p-4">
             <div class="d-flex align-items-center gap-3">
-                <div class="rounded-3 border border-primary-subtle bg-primary bg-opacity-10 p-3 text-primary">
-                    <i class="bi bi-people"></i>
-                </div>
+                <?php if (!empty($assignee['avatar'])): ?>
+                    <div class="flex-shrink-0 rounded-3 border border-secondary-subtle overflow-hidden bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center lh-1">
+                        <?= Html::img($assignee['avatar'], ['class' => 'avatar rounded-circle shadow']) ?>
+                    </div>
+                <?php else: ?>
+                    <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-3 text-secondary flex-shrink-0">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                <?php endif; ?>
                 <div>
                         <div class="fw-bold"><?= Html::encode($assignee['fullname'] ?? '-') ?></div>
                         <div class="text-muted"><?= Html::encode($assignee['department'] ?? '-') ?></div>
@@ -118,7 +122,10 @@ try {
     </div>
 
     <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold">Metadata</div>
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <i class="fa-solid fa-database"></i>
+            <span>ข้อมูลประกอบงานซ่อม</span>
+        </div>
         <div class="card-body p-4">
             <div class="d-flex justify-content-between py-1">
                 <span class="text-muted">สถานะ</span>

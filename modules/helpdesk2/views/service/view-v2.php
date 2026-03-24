@@ -7,12 +7,13 @@ use app\modules\helpdesk2\models\HelpdeskDetail;
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
 
 $ticketId = $model->id ?? '-';
-$titleText = 'Ticket #' . $ticketId;
+$titleText = 'หมายเลขงานซ่อม #' . $ticketId;
 
 $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
 $statusCode = (string) ($model->status ?? 'pending');
 $urgencyCode = $dataJson['urgency'] ?? null;
 $createdAt = $model->created_at ?? null;
+$externalBillCount = (int) ($model->getExternalRepairBillsCount() ?? 0);
 
 $badgeClass = static function (string $color): string {
     return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
@@ -93,36 +94,40 @@ $costLabor = is_numeric($dataJson['cost_labor'] ?? null) ? (float) $dataJson['co
 $costParts = is_numeric($dataJson['cost_parts'] ?? null) ? (float) $dataJson['cost_parts'] : 0.0;
 $costTotalForm = is_numeric($dataJson['cost_total'] ?? null) ? (float) $dataJson['cost_total'] : 0.0;
 
-// Mock data (used when controller doesn't provide $logs/$comments).
+// Mock data (used when controller doesn't provide $logs).
 $mockTimeline = [
     (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-22 minutes')), 'message' => 'อัปเดตสถานะงานซ่อม'],
     (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-2 hours')), 'message' => 'รับเรื่องเรียบร้อยแล้ว รอช่างดำเนินการตรวจสอบ'],
     (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-5 hours')), 'message' => 'สร้างงานซ่อมใหม่'],
 ];
 
-$mockComments = [
-    (object) [
-        'is_staff' => false,
-        'user' => (object) ['name' => 'ผู้แจ้ง (ตัวอย่าง)'],
-        'created_at' => date('Y-m-d H:i:s', strtotime('-18 minutes')),
-        'message' => 'ช่วยตรวจอาการให้ละเอียดด้วยครับ/ค่ะ',
-    ],
-    (object) [
-        'is_staff' => true,
-        'user' => (object) ['name' => 'เจ้าหน้าที่ (ตัวอย่าง)'],
-        'created_at' => date('Y-m-d H:i:s', strtotime('-12 minutes')),
-        'message' => 'รับเรื่องแล้วครับ/ค่ะ กำลังประสานช่างตรวจสอบ',
-    ],
-];
-
 $timelineItems = isset($logs) ? $logs : $mockTimeline;
-$commentsItems = isset($comments) ? $comments : $mockComments;
-
-$mockAttachments = [
-    ['type' => 'pdf', 'label' => 'ไฟล์ใบส่งซ่อม (PDF)', 'url' => '#'],
-    ['type' => 'image', 'label' => 'รูปอาการเสีย (JPG)', 'url' => '#'],
-    ['type' => 'image', 'label' => 'รูปหลังการซ่อม (JPG)', 'url' => '#'],
-];
+$commentsItems = [];
+if (isset($comments) && is_array($comments)) {
+    $commentsItems = $comments;
+} else {
+    $feedbackComment = trim((string) ($dataJson['comment'] ?? ''));
+    $feedbackRating = (int) ($model->rating ?? 0);
+    $feedbackDate = (string) ($dataJson['comment_date'] ?? '');
+    if ($feedbackRating > 0 || $feedbackComment !== '') {
+        $requesterName = '-';
+        try {
+            $reqInfo = $model->getUserReq();
+            $requesterName = (string) ($reqInfo['fullname'] ?? '-');
+        } catch (\Throwable $e) {
+            $requesterName = '-';
+        }
+        $ratingStars = str_repeat('★', max(0, min(5, $feedbackRating)));
+        $ratingText = $feedbackRating > 0 ? ('คะแนนความพึงพอใจ: ' . $feedbackRating . '/5 ' . $ratingStars) : '';
+        $message = trim($ratingText . ($feedbackComment !== '' ? ("\n" . $feedbackComment) : ''));
+        $commentsItems[] = (object) [
+            'is_staff' => false,
+            'user' => (object) ['name' => $requesterName],
+            'created_at' => $feedbackDate !== '' ? $feedbackDate : null,
+            'message' => $message !== '' ? $message : '-',
+        ];
+    }
+}
 
 $detailRows = HelpdeskDetail::find()
     ->where(['helpdesk_id' => $model->id])
@@ -168,32 +173,38 @@ $isStarted = in_array($statusCode, ['in_progress', 'success'], true);
 $isClosed = in_array($statusCode, ['success', 'cancel'], true);
 $isFinished = ($statusCode === 'success');
 $hasExternal = $model->isExternalRepair();
+$hasRootCauseData = trim((string) ($model->data_json['root_cause'] ?? '')) !== ''
+    || trim((string) ($model->data_json['diagnosis'] ?? '')) !== '';
 
 $receiveUrl = Url::to(['/helpdesk/service/receive', 'id' => $model->id]);
 $sendRepairUrl = Url::to(['/helpdesk/service/send-repair', 'id' => $model->id]);
 $recordMethodUrl = Url::to(['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number]);
 $partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
 $expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
-$finishUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $model->id]);
-$externalBillUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $model->id]);
+$billUploadUrl = Url::to(['/helpdesk/service/external-bill-form', 'id' => $model->id, 'title' => 'อัปโหลดบิลค่าใช้จ่าย #' . $model->repair_number]);
+$closeJobUrl = Url::to(['/helpdesk/service/update-status', 'id' => $model->id, 'title' => 'ปิดงานซ่อม #' . $model->repair_number]);
+$printSendRepairUrl = Url::to(['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id]);
+$editTicketLiteUrl = Url::to(['/helpdesk/service/edit-ticket-form', 'id' => $model->id, 'title' => 'แก้ไขใบแจ้งซ่อม #' . $model->repair_number]);
 
 $requiredDone = 0;
 $requiredDone += $isReceived ? 1 : 0;
 $requiredDone += $isStarted ? 1 : 0;
-$requiredDone += ($serviceRecordCount > 0) ? 1 : 0;
+$requiredDone += $hasRootCauseData ? 1 : 0;
 $requiredDone += $isFinished ? 1 : 0;
 $requiredTotal = 4;
 $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
 
+$hasStep4Activity = ($partCount > 0) || ($expenseCount > 0) || ($externalBillCount > 0);
 $activeStep = null;
 if (!$isReceived) {
     $activeStep = 1;
 } elseif (!$isStarted) {
     $activeStep = 2;
-} elseif ($serviceRecordCount <= 0) {
+} elseif (!$hasRootCauseData) {
     $activeStep = 3;
+} elseif (!$isClosed && !$hasStep4Activity) {
+    $activeStep = 4;
 } elseif (!$isClosed) {
-    // ขั้นตอน 4 เป็น optional (ถ้ามี) จึงให้ active ไปที่การปิดงานโดยตรงเมื่อข้อมูลหลักครบแล้ว
     $activeStep = 5;
 }
 $isWorkflowFinished = $isClosed;
@@ -241,7 +252,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                     </div>
 
                     <div class="progress mb-3" role="progressbar" aria-label="workflow-progress" aria-valuenow="<?= $requiredProgress ?>" aria-valuemin="0" aria-valuemax="100">
-                        <div class="progress-bar" style="width: <?= $requiredProgress ?>%"></div>
+                        <div class="progress-bar <?= $isClosed ? 'bg-success' : '' ?>" style="width: <?= $requiredProgress ?>%"></div>
                     </div>
 
                     <div class="d-flex flex-column gap-2">
@@ -256,6 +267,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php if (!$isReceived): ?>
                                         <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
                                     <?php endif; ?>
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 </div>
                             </div>
                         </div>
@@ -271,6 +283,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php if (!$isStarted): ?>
                                         <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
                                     <?php endif; ?>
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
                                 </div>
                             </div>
                         </div>
@@ -282,8 +295,15 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php if ($activeStep === 3): ?>
                                         <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
                                     <?php endif; ?>
-                                    <?= Html::tag('span', $serviceRecordCount > 0 ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($serviceRecordCount > 0 ? 'success' : 'secondary')]) ?>
-                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
+                                    <?= Html::tag('span', $hasRootCauseData ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($hasRootCauseData ? 'success' : 'secondary')]) ?>
+                                    <?= Html::a(
+                                        '<i class="fa-solid fa-pen-to-square me-1"></i> ลงข้อมูล',
+                                        ['/helpdesk/service/root-cause-form', 'id' => $model->id],
+                                        [
+                                            'class' => 'btn btn-sm btn-outline-primary open-modal',
+                                            'data' => ['size' => 'modal-lg'],
+                                        ]
+                                    ) ?>
                                 </div>
                             </div>
                         </div>
@@ -297,8 +317,10 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบส่งซ่อม', $printSendRepairUrl, ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']) ?>
                                     <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
                                     <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                 </div>
                             </div>
                         </div>
@@ -313,13 +335,20 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                         <?= Html::tag('span', 'สิ้นสุดกระบวนการ', ['class' => $badgeClass($isFinished ? 'success' : 'danger')]) ?>
                                     <?php endif; ?>
                                     <?= Html::tag('span', $isFinished ? 'ปิดงานแล้ว' : ($isClosed ? 'จบงาน (ยกเลิก)' : 'ยังไม่ปิดงาน'), ['class' => $badgeClass($isFinished ? 'success' : ($isClosed ? 'danger' : 'secondary'))]) ?>
-                                    <?php if (!$isFinished): ?>
+                                    <?php if (!$isClosed): ?>
                                         <?= Html::a(
-                                            '<i class="fa-solid fa-flag-checkered me-1"></i> สรุปผลและปิดงาน',
-                                            $finishUrl,
+                                            '<i class="fa-solid fa-flag-checkered me-1"></i> ปิดงาน',
+                                            $closeJobUrl,
                                             [
                                                 'class' => 'btn btn-sm btn-primary open-modal',
-                                                'data' => ['size' => 'modal-xl'],
+                                                'data' => ['size' => 'modal-md'],
+                                            ]
+                                        ) ?>
+                                        <?= Html::a(
+                                            '<i class="fa-solid fa-ban me-1"></i> ยกเลิกงานซ่อม',
+                                            ['/helpdesk/service/cancel', 'id' => $model->id],
+                                            [
+                                                'class' => 'btn btn-sm btn-outline-danger btn-cancel-repair',
                                             ]
                                         ) ?>
                                     <?php endif; ?>
@@ -334,24 +363,15 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                 <div class="card-header fw-bold d-flex flex-wrap align-items-center gap-2">
                     <span class="flex-grow-1 min-w-0"><i class="bi bi-journal-check me-1"></i> มาตรฐานการบันทึกงานซ่อม</span>
                     <div class="d-flex flex-wrap gap-2 ms-auto">
-                        <?= Html::a(
-                            '<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ',
-                            ['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number],
-                            ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']
-                        ) ?>
-                        <?php if ((string) $model->status === 'pending'): ?>
-                            <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', ['/helpdesk/service/receive', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
-                        <?php endif; ?>
-                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', ['/helpdesk/service/send-repair', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
-                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
-                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', ['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number], ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
+                       
+                        
                     </div>
                 </div>
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <?= Html::tag('span', ($isReceived ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'รับเรื่อง', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
                         <?= Html::tag('span', ($isStarted ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'เริ่มดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($serviceRecordCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกงานซ่อม', ['class' => $badgeClass($serviceRecordCount > 0 ? 'success' : 'secondary')]) ?>
+                        <?= Html::tag('span', ($hasRootCauseData ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกสาเหตุปัญหา', ['class' => $badgeClass($hasRootCauseData ? 'success' : 'secondary')]) ?>
                         <?= Html::tag('span', ($partCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกอะไหล่', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                         <?= Html::tag('span', ($expenseCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกค่าใช้จ่าย', ['class' => $badgeClass($expenseCount > 0 ? 'success' : 'secondary')]) ?>
                         <?= Html::tag('span', ($isClosed ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'ปิดงาน', ['class' => $badgeClass($isClosed ? 'success' : 'secondary')]) ?>
@@ -362,14 +382,6 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                             <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
                                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                     <div class="small text-muted mb-0">สาเหตุของปัญหา</div>
-                                    <?= Html::a(
-                                        '<i class="fa-solid fa-pen-to-square me-1"></i> ลงข้อมูล',
-                                        ['/helpdesk/service/root-cause-form', 'id' => $model->id],
-                                        [
-                                            'class' => 'btn btn-sm btn-outline-primary open-modal',
-                                            'data' => ['size' => 'modal-lg'],
-                                        ]
-                                    ) ?>
                                 </div>
                                 <div class="fw-medium mb-3">
                                     <?= nl2br(Html::encode((string) ($model->data_json['root_cause'] ?? '-'))) ?>
@@ -414,18 +426,15 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                 </div>
                                 <?php if ($hasExternal): ?>
                                     <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
-                                        <div class="small text-muted mb-1">บิล/หลักฐานส่งซ่อมภายนอก</div>
+                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                            <div class="small text-muted">บิล/หลักฐานส่งซ่อมภายนอก</div>
+                                            <?= Html::tag('span', 'แนบแล้ว ' . number_format($externalBillCount) . ' ไฟล์', ['class' => $badgeClass($externalBillCount > 0 ? 'success' : 'secondary')]) ?>
+                                        </div>
                                         <?= $model->getExternalRepairBillsHtml() ?>
                                     </div>
                                 <?php endif; ?>
                                 <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
-                                    <div class="small text-muted mb-2">ลงบันทึกตามรูปแบบการซ่อม</div>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่ (ซ่อมภายใน)', $partsUrl, ['class' => 'btn btn-outline-secondary btn-open-part-pos']) ?>
-                                        <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย (ซ่อมภายนอก)', $expenseUrl, ['class' => 'btn btn-outline-warning btn-open-expense-pos']) ?>
-                                        <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิล/แก้โหมดซ่อม', $externalBillUrl, ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                    </div>
-                                    <div class="small text-muted mt-2">รองรับได้ทั้งซ่อมภายใน, ซ่อมภายนอก หรือทำทั้งสองแบบในงานเดียว</div>
+                                    <div class="small text-muted">ลงบันทึกตามรูปแบบการซ่อมได้จากส่วน “ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)” ด้านบน</div>
                                 </div>
                             </div>
                         </div>
@@ -489,41 +498,10 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
             <div class="card shadow-sm mt-3">
                 <div class="card-header fw-bold d-flex align-items-center justify-content-between gap-2">
                     <span>ไฟล์แนบ</span>
-                    <span class="text-muted small">ตัวอย่าง UI พร้อมแนบไฟล์</span>
+                    <span class="text-muted small">รูปภาพที่ผู้แจ้งแนบมา</span>
                 </div>
                 <div class="card-body p-4">
-                    <ul class="list-group list-group-flush">
-                        <?php foreach ($mockAttachments as $a): ?>
-                            <?php
-                            $iconClass = 'fa-regular fa-file';
-                            if (($a['type'] ?? '') === 'pdf') {
-                                $iconClass = 'fa-solid fa-file-pdf';
-                            } elseif (($a['type'] ?? '') === 'image') {
-                                $iconClass = 'fa-regular fa-file-image';
-                            }
-                            ?>
-                            <li class="list-group-item px-0">
-                                <div class="d-flex align-items-center justify-content-between gap-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-2 text-secondary">
-                                            <i class="<?= $iconClass ?>"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-medium"><?= Html::encode($a['label']) ?></div>
-                                            <div class="text-muted small">ขนาดไฟล์: —</div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <?= Html::a(
-                                            'เปิดดู',
-                                            $a['url'],
-                                            ['class' => 'btn btn-outline-primary']
-                                        ) ?>
-                                    </div>
-                                </div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <?= $model->imageRequest ?>
                 </div>
             </div>
         </div>
@@ -701,14 +679,14 @@ $('body').on('click', 'a.receive-order', function (e) {
       type: 'get',
       url: url,
       dataType: 'json',
-      success: function () {
+      success: function (response) {
         Swal.fire({
           title: 'รับงานแล้ว',
           icon: 'success',
           timer: 900,
           showConfirmButton: false
         }).then(function () {
-          window.location.reload();
+          window.location.href = (response && response.url) ? response.url : window.location.href;
         });
       },
       error: function () {
@@ -758,6 +736,44 @@ $('body').on('click', 'a.btn-send-repair', function (e) {
           text: 'ไม่สามารถส่งซ่อมได้ กรุณาลองใหม่อีกครั้ง',
           icon: 'error'
         });
+      }
+    });
+  });
+});
+
+$('body').on('click', 'a.btn-cancel-repair', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  Swal.fire({
+    title: 'ยืนยันการยกเลิกงานซ่อม',
+    text: 'ต้องการยกเลิกงานซ่อมรายการนี้ใช่หรือไม่?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยันยกเลิก',
+    cancelButtonText: 'กลับ',
+    reverseButtons: false
+  }).then(function (result) {
+    if (!result.isConfirmed) return;
+    $.ajax({
+      type: 'get',
+      url: url,
+      dataType: 'json',
+      success: function (response) {
+        if (response && response.status === 'success') {
+          Swal.fire({
+            title: 'ยกเลิกงานแล้ว',
+            icon: 'success',
+            timer: 900,
+            showConfirmButton: false
+          }).then(function () {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถยกเลิกงานได้', icon: 'error' });
+        }
+      },
+      error: function () {
+        Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', icon: 'error' });
       }
     });
   });

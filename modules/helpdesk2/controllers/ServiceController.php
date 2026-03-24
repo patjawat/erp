@@ -476,6 +476,22 @@ class ServiceController extends \yii\web\Controller
 
                 if ($model->save()) {
                     $this->UpdateAssetStatus($model);
+                    try {
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $model->id;
+                        $log->name = 'service_record';
+                        $log->emp_id = $me->id ?? null;
+                        $log->status = 'ปิดงาน';
+                        $log->title = 'ปิดงานซ่อมเรียบร้อย';
+                        $log->data_json = [
+                            'close_status' => (string) ($model->status ?? ''),
+                            'repair_result' => (string) ($model->repair_result ?? ''),
+                            'closed_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกปิดงานหลัก
+                    }
                     return [
                         'status' => 'success'
                     ];
@@ -507,6 +523,7 @@ class ServiceController extends \yii\web\Controller
     public function actionRootCauseForm($id)
     {
         $model = $this->findModel($id);
+        $me = UserHelper::GetEmployee();
 
         if ($this->request->isPost) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -514,6 +531,21 @@ class ServiceController extends \yii\web\Controller
                 $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
                 $model->data_json = $dataJson;
                 if ($model->save(false, ['data_json'])) {
+                    try {
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $model->id;
+                        $log->name = 'service_record';
+                        $log->emp_id = $me->id ?? null;
+                        $log->status = 'บันทึกสาเหตุ';
+                        $log->title = 'บันทึกสาเหตุของปัญหาและการวินิจฉัย';
+                        $log->data_json = [
+                            'root_cause' => (string) ($dataJson['root_cause'] ?? ''),
+                            'diagnosis' => (string) ($dataJson['diagnosis'] ?? ''),
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกหลัก
+                    }
                     return ['status' => 'success'];
                 }
             }
@@ -536,6 +568,128 @@ class ServiceController extends \yii\web\Controller
         ]);
     }
 
+    /**
+     * ฟอร์มอัปโหลดบิลค่าใช้จ่ายงานซ่อม (เปิดผ่าน .open-modal)
+     * Route: /helpdesk/service/external-bill-form?id=XX
+     */
+    public function actionExternalBillForm($id)
+    {
+        $model = $this->findModel($id);
+        $me = UserHelper::GetEmployee();
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+                $model->data_json = $dataJson;
+                if ($model->save(false, ['data_json'])) {
+                    try {
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $model->id;
+                        $log->name = 'service_record';
+                        $log->emp_id = $me->id ?? null;
+                        $log->status = 'แก้ไขโหมดงานซ่อม';
+                        $log->title = 'แก้ไขโหมดงานซ่อม/บิลค่าใช้จ่ายหลังปิดงานได้';
+                        $log->data_json = [
+                            'repair_channel' => (string) ($dataJson['repair_channel'] ?? ''),
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกหลัก
+                    }
+                    return ['status' => 'success'];
+                }
+            }
+            return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกข้อมูลได้'];
+        }
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-file-invoice-dollar me-1"></i> อัปโหลดบิลค่าใช้จ่าย #' . ($model->repair_number ?? $model->id),
+                'content' => $this->renderAjax('_form_external_bill', [
+                    'model' => $model,
+                ]),
+                'footer' => '',
+            ];
+        }
+
+        return $this->render('_form_external_bill', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * ฟอร์มย่อแก้ไขใบแจ้งซ่อม (แก้ได้เฉพาะ ประเภทอุปกรณ์/รหัสครุภัณฑ์/ช่าง)
+     * Route: /helpdesk/service/edit-ticket-form?id=XX
+     */
+    public function actionEditTicketForm($id)
+    {
+        $model = $this->findModel($id);
+        $me = UserHelper::GetEmployee();
+        $before = [
+            'device_type_id' => (string) ($model->device_type_id ?? ''),
+            'asset_number' => (string) ($model->asset_number ?? ''),
+            'emp_id' => (string) ($model->emp_id ?? ''),
+            'repair_group' => (string) ($model->repair_group ?? ''),
+        ];
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                if ($model->save(false, ['device_type_id', 'asset_number', 'emp_id', 'repair_group'])) {
+                    try {
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $model->id;
+                        $log->name = 'service_record';
+                        $log->emp_id = $me->id ?? null;
+                        $log->status = 'แก้ไขใบแจ้งซ่อม';
+                        $log->title = 'แก้ไขข้อมูลใบแจ้งซ่อม (ประเภทอุปกรณ์/รหัสครุภัณฑ์/ช่าง/แผนกช่าง)';
+                        $log->data_json = [
+                            'before' => $before,
+                            'after' => [
+                                'device_type_id' => (string) ($model->device_type_id ?? ''),
+                                'asset_number' => (string) ($model->asset_number ?? ''),
+                                'emp_id' => (string) ($model->emp_id ?? ''),
+                                'repair_group' => (string) ($model->repair_group ?? ''),
+                            ],
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกหลัก
+                    }
+                    return ['status' => 'success'];
+                }
+            }
+            return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกข้อมูลได้'];
+        }
+
+        $technicianList = ArrayHelper::map(
+            Employees::find()->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all(),
+            'id',
+            static function ($e) {
+                return trim((string) (($e->fullname ?? '') ?: (($e->fname ?? '') . ' ' . ($e->lname ?? ''))));
+            }
+        );
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไขใบแจ้งซ่อม #' . ($model->repair_number ?? $model->id),
+                'content' => $this->renderAjax('_form_edit_ticket_lite', [
+                    'model' => $model,
+                    'technicianList' => $technicianList,
+                ]),
+                'footer' => '',
+            ];
+        }
+
+        return $this->render('_form_edit_ticket_lite', [
+            'model' => $model,
+            'technicianList' => $technicianList,
+        ]);
+    }
+
     public function actionReceive($id)
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -543,6 +697,9 @@ class ServiceController extends \yii\web\Controller
         //บันทึกเปลี่ยนสถานะและออกเลขใขรับซ่อม
         $model = $this->findModel($id);
         $model->status = 'receive';
+        if (empty($model->emp_id)) {
+            $model->emp_id = $me->id ?? null;
+        }
         //ออกระหัสรับงานซ่อม
         $model->receive_date = date('Y-m-d H:i:s');
         $model->save();
@@ -555,7 +712,10 @@ class ServiceController extends \yii\web\Controller
         $serviceRecord->status = 'รับเรื่อง';
         $serviceRecord->title = 'รับเรื่องเรียบร้อยแล้วรอให้ช่างดำเนินการตรวจเช็ค';
         $serviceRecord->save();
-        return ['status' => 'success'];
+        return [
+            'status' => 'success',
+            'url' => Url::to(['/helpdesk/service/view-v2', 'id' => $model->id]),
+        ];
     }
 
     /**
@@ -624,7 +784,7 @@ class ServiceController extends \yii\web\Controller
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        $model->status = 'Cancel';
+        $model->status = 'cancel';
         $model->save();
         return ['status' => 'success'];
     }

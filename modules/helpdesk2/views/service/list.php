@@ -421,7 +421,7 @@ $('body').on('click', '.receive-order', function (e) {
                             showConfirmButton: false,
                             timer: 1500
                         }).then(() => {
-                            location.reload(); // โหลดหน้าใหม่หลังจากแจ้งเตือน
+                            window.location.href = response.url || window.location.href;
                         });
                     } else {
                         Swal.fire('ผิดพลาด', response.message || 'ไม่สามารถรับงานได้', 'error');

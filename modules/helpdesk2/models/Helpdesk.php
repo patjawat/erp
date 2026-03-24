@@ -619,10 +619,25 @@ class Helpdesk extends \yii\db\ActiveRecord
         foreach ($models as $m) {
             $url = Url::to(['/filemanager/uploads/show', 'id' => $m->id], true);
             $label = Html::encode($m->real_filename ?: 'ไฟล์แนบ');
-            $html .= '<li class="mb-1"><a href="' . Html::encode($url) . '" target="_blank" rel="noopener" class="text-primary"><i class="bi bi-file-earmark-pdf me-1"></i>' . $label . '</a></li>';
+            $html .= '<li class="mb-2">';
+            $html .= '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2">';
+            $html .= '<div><i class="bi bi-file-earmark-pdf me-1 text-danger"></i>' . $label . '</div>';
+            $html .= '<div class="d-flex gap-1">';
+            $html .= '<a href="' . Html::encode($url) . '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">เปิดดู</a>';
+            $html .= '<a href="' . Html::encode($url) . '" download="' . $label . '" class="btn btn-sm btn-outline-secondary">ดาวน์โหลด</a>';
+            $html .= '</div></div></li>';
         }
         $html .= '</ul>';
         return $html;
+    }
+
+    /** จำนวนไฟล์บิล/ใบเสร็จที่แนบ (ส่งซ่อมภายนอก) */
+    public function getExternalRepairBillsCount(): int
+    {
+        if (!$this->ref) {
+            return 0;
+        }
+        return (int) Uploads::find()->where(['ref' => $this->ref, 'name' => 'external_repair_bill'])->count();
     }
 
     /** แสดงรูปภาพงานซ่อม (ช่างแนบ) */

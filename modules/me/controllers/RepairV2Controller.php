@@ -33,6 +33,7 @@ class RepairV2Controller extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'feedback' => ['POST'],
                     ],
                 ],
             ]
@@ -308,6 +309,34 @@ class RepairV2Controller extends Controller
 
 
             return $this->redirect(['index']);
+    }
+
+    public function actionFeedback($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ((string) ($model->status ?? '') !== 'success') {
+            return ['status' => 'error', 'message' => 'สามารถให้คะแนนได้เมื่อปิดงานซ่อมแล้วเท่านั้น'];
+        }
+
+        $rating = (int) $this->request->post('rating', 0);
+        $comment = trim((string) $this->request->post('comment', ''));
+
+        if ($rating < 1 || $rating > 5) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกระดับคะแนน 1-5'];
+        }
+
+        $model->rating = (string) $rating;
+        $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+        $dataJson['comment'] = $comment;
+        $dataJson['comment_date'] = date('Y-m-d H:i:s');
+        $model->data_json = $dataJson;
+
+        if ($model->save(false, ['rating', 'data_json'])) {
+            return ['status' => 'success'];
+        }
+
+        return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกคะแนนและความคิดเห็นได้'];
     }
 
     //ดึงแผนกของช่างซ่อมบำรุงตามครุภัณฑ์ที่เลืกอ
