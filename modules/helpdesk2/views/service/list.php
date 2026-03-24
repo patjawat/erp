@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\helpdesk2\models\Helpdesk;
 use yii\web\View;
 use yii\helpers\Html;
 use yii\bootstrap5\LinkPager;
@@ -16,16 +17,8 @@ $badgeClass = static function (string $color): string {
     return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
 };
 
-$priorityMap = [
-    '1' => ['label' => 'ต่ำ', 'color' => 'primary'],
-    '2' => ['label' => 'ปานกลาง', 'color' => 'info'],
-    '3' => ['label' => 'สูง', 'color' => 'warning'],
-    '4' => ['label' => 'วิกฤต', 'color' => 'danger'],
-    'low' => ['label' => 'ต่ำ', 'color' => 'primary'],
-    'medium' => ['label' => 'ปานกลาง', 'color' => 'info'],
-    'high' => ['label' => 'สูง', 'color' => 'warning'],
-    'critical' => ['label' => 'วิกฤต', 'color' => 'danger'],
-];
+/** ข้อความความเร่งด่วนเดียวกับ Select2 (listUrgency) */
+$urgencyList = Helpdesk::listUrgency();
 
 $statusMeta = [
     'pending' => ['label' => 'เปิดงาน', 'color' => 'warning'],
@@ -34,6 +27,38 @@ $statusMeta = [
     'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success'],
     'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger'],
 ];
+
+$statusCounts = [];
+$currentStatusFilter = trim((string) ($searchModel->status ?? ''));
+if (isset($dataProvider->query)) {
+    try {
+        foreach ($statusMeta as $statusCode => $meta) {
+            $q = clone $dataProvider->query;
+            $statusCounts[$statusCode] = (int) $q
+                ->limit(-1)
+                ->offset(-1)
+                ->orderBy([])
+                ->andWhere(['helpdesk.status' => $statusCode])
+                ->count();
+        }
+    } catch (\Throwable $e) {
+        foreach (array_keys($statusMeta) as $statusCode) {
+            $statusCounts[$statusCode] = 0;
+        }
+    }
+}
+
+$buildStatusUrl = static function (?string $statusCode) use ($searchModel): array {
+    $params = Yii::$app->request->queryParams;
+    $formName = $searchModel->formName();
+    $params[$formName] = is_array($params[$formName] ?? null) ? $params[$formName] : [];
+    if ($statusCode === null || $statusCode === '') {
+        unset($params[$formName]['status']);
+    } else {
+        $params[$formName]['status'] = $statusCode;
+    }
+    return array_merge(['/' . Yii::$app->controller->route], $params);
+};
 
 /** ลำดับขั้นตอนสำหรับแสดง workflow (อิงค่า status เดิมในระบบ) */
 $workflowSteps = [
@@ -57,126 +82,76 @@ $workflowSteps = [
 <?php echo $this->render('@app/modules/helpdesk2/menu', ['active' => $active]) ?>
 <?php $this->endBlock(); ?>
 
-<?php
-$this->registerCss(<<<CSS
-.helpdesk2-service-list .btn.btn-sm {
-    --bs-btn-padding-y: 0.25rem !important;
-    --bs-btn-padding-x: 0.5rem !important;
-    --bs-btn-font-size: 0.8203125rem !important;
-    --bs-btn-border-radius: var(--bs-border-radius-sm) !important;
-}
-CSS);
-?>
-
 <div class="helpdesk2-service-list">
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-primary-gradient text-white">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header">
+        <h6 class="mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
         <?= $this->render('@app/modules/helpdesk2/views/service/_search', ['model' => $searchModel]) ?>
     </div>
 </div>
-<div class="d-flex justify-content-between">
-    <h6 class="mt-2">
-        <i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม
-            <?php echo number_format($dataProvider->getTotalCount(), 0) ?> รายการ
-    </h6>
-    <div class="d-flex justify-content-between gap-3">
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/me/repair-v2/create', 'title' => '<i class="fa-solid fa-screwdriver-wrench"></i> แจ้งซ่อม'], ['class' => 'btn btn-sm btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-    </div>
-</div>
 
-<?php
-$kpiTotal = (int) $dataProvider->getTotalCount();
-$statusKpi = [
-    'pending' => 0,
-    'receive' => 0,
-    'in_progress' => 0,
-    'success' => 0,
-    'cancel' => 0,
-];
-if (isset($dataProvider->query)) {
-    try {
-        foreach (array_keys($statusKpi) as $code) {
-            $q = clone $dataProvider->query;
-            $statusKpi[$code] = (int) $q
-                ->limit(-1)
-                ->offset(-1)
-                ->orderBy([])
-                ->andWhere(['status' => $code])
-                ->count();
-        }
-    } catch (\Throwable $e) {
-        // fallback: ถ้านับจาก query ไม่ได้ จะใช้ค่าเริ่มต้น 0
-    }
-}
-$kpiOpen = $statusKpi['pending'] + $statusKpi['receive'] + $statusKpi['in_progress'];
-$kpiDone = $statusKpi['success'];
-$kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) : 0;
-?>
-
-<div class="card border-0 shadow-sm mt-3">
+<div class="card shadow-sm mb-3">
     <div class="card-body">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-            <h6 class="mb-0"><i class="bi bi-speedometer2 me-1"></i> สรุป KPI งานซ่อม</h6>
-            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
-                งานทั้งหมด <?= number_format($kpiTotal) ?> รายการ
-            </span>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">เสร็จสิ้น</div>
-                    <div class="h5 mb-0 text-success"><?= number_format($kpiDone) ?></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">ค้างดำเนินการ</div>
-                    <div class="h5 mb-0 text-warning"><?= number_format($kpiOpen) ?></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">เปิดงาน</div>
-                    <div class="h5 mb-0"><?= number_format($statusKpi['pending']) ?></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">รับเรื่อง/กำลังทำ</div>
-                    <div class="h5 mb-0 text-info"><?= number_format($statusKpi['receive'] + $statusKpi['in_progress']) ?></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">ยกเลิก</div>
-                    <div class="h5 mb-0 text-danger"><?= number_format($statusKpi['cancel']) ?></div>
-                </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                    <div class="small text-muted">อัตราปิดงาน</div>
-                    <div class="h5 mb-1 text-primary"><?= $kpiCompletionRate ?>%</div>
-                    <div class="progress" role="progressbar" aria-label="อัตราปิดงาน" aria-valuenow="<?= $kpiCompletionRate ?>" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
-                        <div class="progress-bar bg-primary" style="width: <?= $kpiCompletionRate ?>%;"></div>
-                    </div>
-                </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="m-0">
+                <i class="bi bi-ui-checks"></i> ทะเบียนงานซ่อม
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1">
+                    <?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+            </h6>
+            <div class="d-flex justify-content-between gap-2 flex-wrap align-items-center">
+                <?php foreach ($statusMeta as $statusCode => $meta): ?>
+                    <?php
+                    $count = (int) ($statusCounts[$statusCode] ?? 0);
+                    $isActiveStatus = $currentStatusFilter === $statusCode;
+                    $badgeClasses = $isActiveStatus
+                        ? $badgeClass($meta['color'])
+                        : $badgeClass('secondary') . ' opacity-75';
+                    ?>
+                    <?= Html::a(
+                        Html::encode($meta['label'] . ' ' . number_format($count)),
+                        $buildStatusUrl($statusCode),
+                        [
+                            'class' => $badgeClasses . ' text-decoration-none',
+                            'title' => 'คลิกเพื่อกรองสถานะ ' . $meta['label'],
+                        ]
+                    ) ?>
+                <?php endforeach; ?>
+                <?php if ($currentStatusFilter !== ''): ?>
+                    <?= Html::a(
+                        'ล้างตัวกรอง',
+                        $buildStatusUrl(null),
+                        ['class' => 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1 text-decoration-none']
+                    ) ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-        <?php $models = $dataProvider->getModels(); ?>
-        <div class="d-flex flex-column gap-3" role="list">
+<?php $models = $dataProvider->getModels(); ?>
+<div class="overflow-auto" style="max-height: 68vh;">
+        <div class="row g-2" role="list">
             <?php foreach ($models as $key => $item): ?>
                 <?php
                 $req = $item->getUserReq();
                 $urgencyCode = is_array($item->data_json ?? null) ? ($item->data_json['urgency'] ?? null) : null;
-                $pInfo = is_scalar($urgencyCode) ? ($priorityMap[(string) $urgencyCode] ?? ['label' => 'ไม่ระบุ', 'color' => 'secondary']) : ['label' => 'ไม่ระบุ', 'color' => 'secondary'];
-                $priorityBadge = Html::tag('span', Html::encode($pInfo['label']), ['class' => $badgeClass($pInfo['color'])]);
+                $urgencyLabel = 'ไม่ระบุ';
+                if ($urgencyCode !== null && $urgencyCode !== '') {
+                    $urgencyLabel = $urgencyList[(string) $urgencyCode] ?? $urgencyList[$urgencyCode] ?? 'ไม่ระบุ';
+                }
+                $vu = $item->viewUrgent();
+                $urgencyColor = 'secondary';
+                if (!empty($vu['color']) && is_string($vu['color'])) {
+                    $c = preg_replace('/[^a-z]/', '', strtolower($vu['color']));
+                    $allowed = ['primary', 'secondary', 'success', 'danger', 'warning', 'info'];
+                    $urgencyColor = in_array($c, $allowed, true) ? $c : 'secondary';
+                }
+                $priorityBadge = Html::tag('span', Html::encode($urgencyLabel), [
+                    'class' => $badgeClass($urgencyColor) . ' text-wrap text-start',
+                    'title' => 'ความเร่งด่วน',
+                ]);
 
                 $statusCode = (string) ($item->status ?? 'pending');
                 $sInfo = $statusMeta[$statusCode] ?? ['label' => ($item->repairStatus?->title ?? 'ไม่ทราบสถานะ'), 'color' => 'secondary'];
@@ -222,12 +197,12 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                 }
                 $isCancel = ($statusCode === 'cancel');
                 ?>
-                <div role="listitem">
+                <div class="col-12" role="listitem">
                     <div class="min-w-0">
                         <div class="card border-0 shadow-sm">
                             <div class="card-body">
                             <?php /* —— Summary: อ่านเร็วในไม่กี่วินาที —— */ ?>
-                            <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-2 gap-lg-3 pb-3">
+                            <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-2 gap-lg-3 pb-2">
                                 <div class="min-w-0 flex-grow-1">
                                     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1">
@@ -258,7 +233,7 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                             </div>
 
                             <?php /* —— รายละเอียดเสริม (ไม่ซ้ำกับ Summary) —— */ ?>
-                            <div class="row g-3 pt-3">
+                            <div class="row g-2 pt-2">
                                 <div class="col-12 col-md-6 col-xl-3">
                                     <div class="small text-muted mb-1">ผู้แจ้ง</div>
                                     <div class="d-flex align-items-center gap-3">
@@ -308,8 +283,8 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                             </div>
 
                             <?php /* —— Workflow (จาก status เดิม) —— */ ?>
-                            <div class="pt-3 mt-3">
-                                <div class="small text-muted mb-2">ขั้นตอนงาน</div>
+                            <div class="pt-2 mt-2 border-top">
+                                <div class="small text-muted mb-1">ขั้นตอนงาน</div>
                                 <?php
                                 $totalSteps = count($workflowSteps);
                                 $progressPercent = 0;
@@ -328,11 +303,11 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                                     }
                                 }
                                 ?>
-                                <div class="mb-2">
-                                    <div class="progress" role="progressbar" aria-label="ความคืบหน้างานซ่อม" aria-valuenow="<?= $progressPercent ?>" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
+                                <div class="mb-1">
+                                    <div class="progress" role="progressbar" aria-label="ความคืบหน้างานซ่อม" aria-valuenow="<?= $progressPercent ?>" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
                                         <div class="progress-bar bg-<?= Html::encode($progressColor) ?>" style="width: <?= $progressPercent ?>%"></div>
                                     </div>
-                                    <div class="small text-muted mt-1">ความคืบหน้า <?= $progressPercent ?>%</div>
+                                    <div class="small mt-1 mb-0 <?= $statusCode === 'success' ? 'text-success fw-medium' : 'text-muted' ?>">ความคืบหน้า <?= $progressPercent ?>%</div>
                                 </div>
                                 <?php if ($isCancel): ?>
                                     <div class="d-flex flex-wrap align-items-center gap-2">
@@ -358,7 +333,9 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                                             if ($isDone) {
                                                 $stepClass = $badgeClass('success');
                                             } elseif ($isCurrent) {
-                                                $stepClass = $badgeClass('primary');
+                                                $stepClass = ($statusCode === 'success')
+                                                    ? $badgeClass('success')
+                                                    : 'badge bg-primary text-primary text-white border border-primary-subtle rounded-pill fw-medium px-2 py-1';
                                             } else {
                                                 $stepClass = $badgeClass('secondary') . ' opacity-75';
                                             }
@@ -367,13 +344,15 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                                                 <span class="text-muted small px-0"><i class="bi bi-chevron-right"></i></span>
                                             <?php endif; ?>
                                             <?php
-                                            $stepIcon = $isDone ? 'bi-check-circle-fill' : 'bi-hourglass-split';
+                                            $stepIcon = ($isDone || ($isCurrent && $statusCode === 'success'))
+                                                ? 'bi-check-circle-fill'
+                                                : 'bi-hourglass-split';
                                             $stepLabelHtml = Html::tag('i', '', ['class' => 'bi ' . $stepIcon . ' me-1', 'aria-hidden' => 'true']) . Html::encode($step['label']);
                                             ?>
                                             <?= Html::tag('span', $stepLabelHtml, ['class' => $stepClass]) ?>
                                         <?php endforeach; ?>
                                     </div>
-                                    <p class="small text-muted mb-0 mt-2">
+                                    <p class="small text-muted mb-0 mt-1">
                                         <i class="bi bi-info-circle me-1"></i>
                                         สถานะปัจจุบัน: <span class="fw-medium text-body"><?= Html::encode($sInfo['label']) ?></span>
                                         <?php if (!$knownInFlow): ?>
@@ -383,7 +362,7 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                                 <?php endif; ?>
                             </div>
 
-                            <div class="d-flex flex-wrap justify-content-end gap-2 pt-3 mt-3">
+                            <div class="d-flex flex-wrap justify-content-end gap-1 pt-2 mt-2">
                                 <?php if ($item->status == 'pending'): ?>
                                     <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับงานซ่อม', ['/helpdesk/service/receive', 'id' => $item->id], ['class' => 'receive-order btn btn-sm btn-outline-primary']); ?>
                                 <?php else: ?>
@@ -397,21 +376,20 @@ $kpiCompletionRate = $kpiTotal > 0 ? (int) round(($kpiDone / $kpiTotal) * 100) :
                 </div>
             <?php endforeach; ?>
         </div>
+</div>
 
-        <div class="d-flex justify-content-center mt-3">
-            <div class="text-muted">
+        <div class="body-footer mt-2">
+            <div class="d-flex justify-content-center">
                 <?= LinkPager::widget([
                     'pagination' => $dataProvider->pagination,
                     'firstPageLabel' => 'หน้าแรก',
                     'lastPageLabel' => 'หน้าสุดท้าย',
                     'options' => [
-                        'listOptions' => 'pagination pagination-sm',
-                        'class' => 'pagination-sm',
+                        'class' => 'pagination pagination-sm',
                     ],
                 ]); ?>
             </div>
         </div>
-
 
  </div>
 <?php

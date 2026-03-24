@@ -173,6 +173,26 @@ $requiredDone += $isFinished ? 1 : 0;
 $requiredTotal = 4;
 $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
 
+$activeStep = null;
+if (!$isReceived) {
+    $activeStep = 1;
+} elseif (!$isStarted) {
+    $activeStep = 2;
+} elseif ($serviceRecordCount <= 0) {
+    $activeStep = 3;
+} elseif (!$isClosed) {
+    // ขั้นตอน 4 เป็น optional (ถ้ามี) จึงให้ active ไปที่การปิดงานโดยตรงเมื่อข้อมูลหลักครบแล้ว
+    $activeStep = 5;
+}
+$isWorkflowFinished = $isClosed;
+
+$stepCardClass = static function (int $stepNumber) use ($activeStep): string {
+    if ($activeStep === $stepNumber) {
+        return 'border border-primary-subtle bg-primary bg-opacity-10 rounded-3 p-3';
+    }
+    return 'border border-secondary border-opacity-25 rounded-3 p-3';
+};
+
 ?>
 
 <div class="container-fluid py-3">
@@ -213,10 +233,13 @@ $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
                     </div>
 
                     <div class="d-flex flex-column gap-2">
-                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                        <div class="<?= $stepCardClass(1) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div class="fw-medium">1) รับงาน</div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <?php if ($activeStep === 1): ?>
+                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
+                                    <?php endif; ?>
                                     <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
                                     <?php if (!$isReceived): ?>
                                         <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
@@ -225,10 +248,13 @@ $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
                             </div>
                         </div>
 
-                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                        <div class="<?= $stepCardClass(2) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div class="fw-medium">2) ส่งซ่อม / เริ่มดำเนินการ</div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <?php if ($activeStep === 2): ?>
+                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
+                                    <?php endif; ?>
                                     <?= Html::tag('span', $isStarted ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
                                     <?php if (!$isStarted): ?>
                                         <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
@@ -237,20 +263,26 @@ $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
                             </div>
                         </div>
 
-                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                        <div class="<?= $stepCardClass(3) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">3) บันทึกวิธีดำเนินการซ่อม</div>
+                                <div class="fw-medium">3) บันทึกสาเหตุของปัญหา</div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <?php if ($activeStep === 3): ?>
+                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
+                                    <?php endif; ?>
                                     <?= Html::tag('span', $serviceRecordCount > 0 ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($serviceRecordCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                        <div class="<?= $stepCardClass(4) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div class="fw-medium">4) อะไหล่ / ค่าใช้จ่าย (ถ้ามี)</div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <?php if ($activeStep === 4): ?>
+                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
+                                    <?php endif; ?>
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
                                     <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary']) ?>
@@ -259,13 +291,25 @@ $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
                             </div>
                         </div>
 
-                        <div class="border border-secondary border-opacity-25 rounded-3 p-3">
+                        <div class="<?= $stepCardClass(5) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div class="fw-medium">5) ปิดงาน</div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <?php if ($activeStep === 5): ?>
+                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
+                                    <?php elseif ($isWorkflowFinished): ?>
+                                        <?= Html::tag('span', 'สิ้นสุดกระบวนการ', ['class' => $badgeClass($isFinished ? 'success' : 'danger')]) ?>
+                                    <?php endif; ?>
                                     <?= Html::tag('span', $isFinished ? 'ปิดงานแล้ว' : ($isClosed ? 'จบงาน (ยกเลิก)' : 'ยังไม่ปิดงาน'), ['class' => $badgeClass($isFinished ? 'success' : ($isClosed ? 'danger' : 'secondary'))]) ?>
                                     <?php if (!$isFinished): ?>
-                                        <?= Html::a('<i class="fa-solid fa-flag-checkered me-1"></i> สรุปผลและปิดงาน', $finishUrl, ['class' => 'btn btn-sm btn-primary']) ?>
+                                        <?= Html::a(
+                                            '<i class="fa-solid fa-flag-checkered me-1"></i> สรุปผลและปิดงาน',
+                                            $finishUrl,
+                                            [
+                                                'class' => 'btn btn-sm btn-primary open-modal',
+                                                'data' => ['size' => 'modal-xl'],
+                                            ]
+                                        ) ?>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -304,15 +348,25 @@ $requiredProgress = (int) round(($requiredDone / max(1, $requiredTotal)) * 100);
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
-                                <div class="small text-muted mb-2">วิธีดำเนินการซ่อม</div>
-                                <div class="fw-medium mb-2">ช่องทางซ่อม: <?= Html::encode($model->viewRepairChannelLabel()) ?></div>
-                                <?php if ($hasExternal): ?>
-                                    <div class="small text-muted mb-1">รายละเอียดส่งซ่อมภายนอก</div>
-                                    <?= $model->getExternalRepairDetailHtml() ?>
-                                <?php else: ?>
-                                    <div class="small text-muted">งานนี้เป็นซ่อมภายใน ให้บันทึกขั้นตอนใน Timeline และแนบรูปงานซ่อม</div>
-                                    <div class="mt-2"><?= $model->getRepairWorkPhotosHtml() ?></div>
-                                <?php endif; ?>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <div class="small text-muted mb-0">สาเหตุของปัญหา</div>
+                                    <?= Html::a(
+                                        '<i class="fa-solid fa-pen-to-square me-1"></i> ลงข้อมูล',
+                                        ['/helpdesk/service/root-cause-form', 'id' => $model->id],
+                                        [
+                                            'class' => 'btn btn-sm btn-outline-primary open-modal',
+                                            'data' => ['size' => 'modal-lg'],
+                                        ]
+                                    ) ?>
+                                </div>
+                                <div class="fw-medium mb-3">
+                                    <?= nl2br(Html::encode((string) ($model->data_json['root_cause'] ?? '-'))) ?>
+                                </div>
+
+                                <div class="small text-muted mb-1">รายละเอียดการวินิจฉัย</div>
+                                <div class="fw-medium">
+                                    <?= nl2br(Html::encode((string) ($model->data_json['diagnosis'] ?? '-'))) ?>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">

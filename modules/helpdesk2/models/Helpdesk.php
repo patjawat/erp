@@ -732,16 +732,19 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         try {
             $model = Categorise::find()->where(['name' => 'helpdesk_urgency', 'code' => $this->data_json['urgency']])->one();
+            $color = is_array($model->data_json ?? null) ? ($model->data_json['color'] ?? 'secondary') : 'secondary';
             return [
                 'title' => $model->title,
                 'description' => $model->title . ' - ' . $model->code,
-                'view' => '<span class="badge bg-' . $model->data_json['color'] . '">' . $model->title . '</span>'
+                'view' => '<span class="badge bg-' . $model->data_json['color'] . '">' . $model->title . '</span>',
+                'color' => $color,
             ];
         } catch (\Throwable $th) {
             return [
                 'title' => '',
                 'description' => '',
-                'view' => ''
+                'view' => '',
+                'color' => 'secondary',
             ];
         }
     }

@@ -233,8 +233,28 @@ class ServiceController extends \yii\web\Controller
                 ];
                 $log->save(false);
 
+                if ($this->request->isAjax) {
+                    return $this->asJson([
+                        'status' => 'success',
+                        'message' => 'บันทึกข้อมูลเรียบร้อย',
+                        'reload' => true,
+                        'url' => Url::to(['view-v2', 'id' => $model->id]),
+                    ]);
+                }
+
                 return $this->redirect(['view-v2', 'id' => $model->id]);
             }
+        }
+
+        if ($this->request->isAjax) {
+            return $this->asJson([
+                'title' => '<i class="fa-solid fa-flag-checkered me-1"></i> สรุปผลและปิดงาน #' . ($model->repair_number ?? $model->id),
+                'content' => $this->renderAjax('update-v2', [
+                    'model' => $model,
+                    'me' => $me,
+                ]),
+                'footer' => '',
+            ]);
         }
 
         return $this->render('update-v2', [
@@ -478,6 +498,42 @@ class ServiceController extends \yii\web\Controller
                 'model' => $model,
             ]);
         }
+    }
+
+    /**
+     * ฟอร์มย่อสำหรับบันทึกสาเหตุของปัญหา/การวินิจฉัย (เปิดผ่าน .open-modal)
+     * Route: /helpdesk/service/root-cause-form?id=XX
+     */
+    public function actionRootCauseForm($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+                $model->data_json = $dataJson;
+                if ($model->save(false, ['data_json'])) {
+                    return ['status' => 'success'];
+                }
+            }
+            return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกข้อมูลได้'];
+        }
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-stethoscope me-1"></i> สาเหตุของปัญหา #' . ($model->repair_number ?? $model->id),
+                'content' => $this->renderAjax('_form_root_cause', [
+                    'model' => $model,
+                ]),
+                'footer' => '',
+            ];
+        }
+
+        return $this->render('_form_root_cause', [
+            'model' => $model,
+        ]);
     }
 
     public function actionReceive($id)

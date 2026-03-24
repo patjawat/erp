@@ -103,70 +103,8 @@ if ($finishAtValue !== '') {
             </div>
         </div>
 
-        <!-- ซ้าย: ข้อมูลผู้แจ้ง + รูปแจ้งซ่อม -->
-        <div class="col-12 col-xl-4 order-2 order-xl-1">
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header border-bottom d-flex align-items-center gap-2">
-                            <div class="erp-icon-box bg-primary bg-opacity-10">
-                                <i class="bi bi-person-circle"></i>
-                            </div>
-                            <h6 class="text-uppercase text-secondary m-0">ข้อมูลผู้แจ้ง</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0" style="width: 48px; height: 48px;">
-                                    <?php
-                                    $emp = $model->emp;
-                                    if ($emp && method_exists($emp, 'getImg')):
-                                        echo Html::img($emp->getImg(), ['alt' => '', 'class' => 'object-fit-cover', 'style' => 'width: 48px; height: 48px;']);
-                                    else:
-                                        echo '<i class="bi bi-person-fill text-primary"></i>';
-                                    endif;
-                                    ?>
-                                </div>
-                                <div class="flex-grow-1 min-w-0">
-                                    <div class="fw-semibold text-truncate"><?= Html::encode($model->emp->fullname ?? '-') ?></div>
-                                    <div class="small text-muted text-truncate"><?= Html::encode($model->emp?->departmentName() ?? '-') ?></div>
-                                </div>
-                            </div>
-                            <ul class="list-group list-group-flush small">
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
-                                    <span class="text-muted">สถานที่</span>
-                                    <span class="fw-medium text-end text-break ms-2"><?= Html::encode($model->data_json['location'] ?? '-') ?></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 py-2">
-                                    <span class="text-muted">ความเร่งด่วน</span>
-                                    <span><?= $model->viewUrgent()['view'] ?? '-' ?></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-start px-0 border-0 py-2">
-                                    <span class="text-muted">อาการที่แจ้ง</span>
-                                    <span class="fw-medium text-end text-break ms-2" style="max-width: 65%;"><?= Html::encode($model->title) ?></span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header border-bottom d-flex align-items-center gap-2">
-                            <div class="erp-icon-box bg-primary bg-opacity-10">
-                                <i class="bi bi-images"></i>
-                            </div>
-                            <h6 class="text-uppercase text-secondary m-0">รูปแจ้งซ่อม</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="small text-muted mb-2">รูปภาพที่ผู้แจ้งแนบมา</div>
-                            <?= $model->imageRequest ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ขวา: ฟอร์มบันทึกงานซ่อม -->
-        <div class="col-12 col-xl-8 order-1 order-xl-2">
+        <!-- ฟอร์มบันทึกงานซ่อม -->
+        <div class="col-12">
             <?php $form = ActiveForm::begin(['id' => 'form-update-v2']); ?>
             <div class="row g-3">
                 <div class="col-12">
