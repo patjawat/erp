@@ -77,6 +77,12 @@ class PdfTemplateService
         'ลายเซ็นผู้ขอใช้รถ' => 'emp_signature',
         'ลายเซ็นหัวหน้ารับรอง' => 'leader_signature',
         'ลายเซ็นพนักงานขับ' => 'driver_signature',
+        // Leave legacy signature keys from older template configs
+        'emp_sign' => 'emp_signature',
+        'send_sign' => 'send_signature',
+        'leader_sign' => 'approver_2_signature',
+        'hr_sign' => 'approver_3_signature',
+        'direc_sign' => 'approver_4_signature',
     ];
 
     /**
@@ -312,6 +318,7 @@ class PdfTemplateService
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
         $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
         $pathToUnlink = null;
+        $signatureTempPaths = [];
         try {
             $pageCount = $pdf->setSourceFile($templatePath);
         } catch (\Throwable $e) {
@@ -468,6 +475,13 @@ class PdfTemplateService
                 }
                 $mm = $this->fieldToPdfMm($item, $pageW, $pageH);
                 $isSignature = substr($lookupKey, -strlen('_signature')) === '_signature';
+                if ($isSignature) {
+                    $imagePath = $this->resolveSignatureImagePath($text, $signatureTempPaths);
+                    if ($imagePath !== null && is_file($imagePath)) {
+                        $pdf->Image($imagePath, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
+                        continue;
+                    }
+                }
                 if ($isSignature && is_file($text)) {
                     $pdf->Image($text, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
                     continue;
@@ -497,7 +511,64 @@ class PdfTemplateService
         if ($pathToUnlink !== null && is_file($pathToUnlink)) {
             @unlink($pathToUnlink);
         }
+        foreach ($signatureTempPaths as $tempPath) {
+            if (is_string($tempPath) && $tempPath !== '' && is_file($tempPath)) {
+                @unlink($tempPath);
+            }
+        }
         return $output;
+    }
+
+    /**
+     * Resolve signature image value to local file path.
+     * Supports absolute path, webroot-relative path, full URL, and data URI.
+     *
+     * @param string $rawValue
+     * @param array<int, string> $tempPaths
+     * @return string|null
+     */
+    private function resolveSignatureImagePath(string $rawValue, array &$tempPaths): ?string
+    {
+        $value = trim($rawValue);
+        if ($value === '') {
+            return null;
+        }
+        if (is_file($value)) {
+            return $value;
+        }
+        if (strpos($value, 'data:image/') === 0) {
+            if (preg_match('#^data:image/(\w+);base64,(.+)$#', $value, $m)) {
+                $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                $bin = base64_decode($m[2], true);
+                if ($bin !== false) {
+                    $tmp = tempnam(sys_get_temp_dir(), 'pdf_sig_');
+                    if ($tmp !== false) {
+                        $tmpPath = $tmp . '.' . $ext;
+                        if (@file_put_contents($tmpPath, $bin) !== false) {
+                            @unlink($tmp);
+                            $tempPaths[] = $tmpPath;
+                            return $tmpPath;
+                        }
+                        @unlink($tmp);
+                    }
+                }
+            }
+            return null;
+        }
+        $parsed = parse_url($value);
+        if (is_array($parsed) && isset($parsed['path']) && is_string($parsed['path'])) {
+            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($parsed['path'], '/');
+            if (is_file($webPath)) {
+                return $webPath;
+            }
+        }
+        if (strpos($value, '/') === 0) {
+            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($value, '/');
+            if (is_file($webPath)) {
+                return $webPath;
+            }
+        }
+        return null;
     }
 
     /**
