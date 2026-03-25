@@ -371,7 +371,7 @@ $workflowSteps = [
 
                             <div class="d-flex flex-wrap justify-content-end gap-1 pt-2 mt-2">
                                 <?php if ($item->status == 'pending'): ?>
-                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับงานซ่อม', ['/helpdesk/service/receive', 'id' => $item->id], ['class' => 'receive-order btn btn-sm btn-outline-primary']); ?>
+                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> รับเรื่อง', ['/helpdesk/service/receive', 'id' => $item->id], ['class' => 'receive-order btn btn-sm btn-outline-primary']); ?>
                                 <?php else: ?>
                                     <?= $this->render('@app/modules/helpdesk2/views/service/action', ['item' => $item]); ?>
                                 <?php endif; ?>
