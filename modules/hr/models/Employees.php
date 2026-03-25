@@ -1134,6 +1134,30 @@ class Employees extends Yii\db\ActiveRecord
         }
     }
 
+    /**
+     * ตรวจว่ามีข้อมูลตำแหน่งสำหรับระบบทั่วไป (เช่น โมดูล me) หรือไม่
+     * นับทั้งคอลัมน์ position_name และประวัติตำแหน่งใน employee_detail (แท็บตำแหน่งใน HR)
+     * เพื่อไม่ให้ถูกบล็อกทั้งที่หน้า HR แสดงรายการตำแหน่งแล้ว
+     */
+    public function hasPersonnelPositionConfigured(): bool
+    {
+        if (trim((string) ($this->position_name ?? '')) !== '') {
+            return true;
+        }
+        try {
+            foreach ($this->positions as $detail) {
+                $text = trim((string) ($detail->data_json['position_name_text'] ?? ''));
+                if ($text !== '' && strcasecmp($text, '-') !== 0) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return false;
+    }
+
     // แสดงประเภทตำแหน่ง
     public function positionTypeName()
     {

@@ -25,6 +25,8 @@ use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 use app\modules\booking\models\VehicleDetailSearch;
+use app\modules\pdfTemplate\models\PdfTemplate;
+use app\modules\pdfTemplate\services\PdfTemplateService;
 
 /**
  * VehicleController implements the CRUD actions for Vehicle model.
@@ -947,11 +949,35 @@ class VehicleController extends Controller
 
     public function actionPrint($id)
     {
-
-
         $model = $this->findModel($id);
         $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         $model->save(false);
+
+        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        if ($template) {
+            $data = $this->buildBookingTemplateData($model);
+            if ((string) Yii::$app->request->get('debug', '') === '1') {
+                $templateService = new PdfTemplateService();
+                $layout = $templateService->loadLayout((int) $template->id);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'template_id' => (int) $template->id,
+                    'template_name' => (string) $template->name,
+                    'data_source_id' => (string) ($template->data_source_id ?? ''),
+                    'layout_count' => count($layout),
+                    'layout' => $layout,
+                    'data' => $data,
+                ];
+            }
+            $templateService = new PdfTemplateService();
+            $pdfBinary = $templateService->generatePdfWithData((int) $template->id, $data);
+            Yii::$app->response->format = Response::FORMAT_RAW;
+            Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+            Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="booking-vehicle-' . (int) $model->id . '.pdf"');
+            Yii::$app->response->content = $pdfBinary;
+            return Yii::$app->response;
+        }
+
         $info = SiteHelper::getInfo();
         $modelData = [
             'director' => $info['company_name'],
@@ -1007,6 +1033,198 @@ class VehicleController extends Controller
                 'message' => 'ไม่พบข้อมูลการจอง'
             ];
         }
+    }
+
+    /**
+     * คืนข้อมูลจริงสำหรับ editor ของ pdf-template (source: booking.vehicle.central)
+     */
+    public function actionPrintData($id)
+    {
+        $model = Vehicle::find()->where(['id' => (int) $id])->one();
+        if (!$model) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['error' => 'ไม่พบรายการ'];
+        }
+        $data = $this->buildBookingTemplateData($model);
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return $data;
+    }
+
+    private function buildBookingTemplateData(Vehicle $model): array
+    {
+        $employee = $model->employee;
+        $leader = $model->leader;
+        $driver = $model->driver;
+        $vehicleStatus = $model->vehicleStatus;
+        $carType = $model->carType;
+
+        $approverData = [];
+        $approveRows = Approve::find()
+            ->where(['name' => 'vehicle'])
+            ->andWhere([
+                'or',
+                ['from_id' => (string) $model->id],
+                ['from_id' => (int) $model->id],
+            ])
+            ->with('employee')
+            ->orderBy(['level' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+        $index = 1;
+        foreach ($approveRows as $approveRow) {
+            if ($index > 4) {
+                break;
+            }
+            $approveEmp = $approveRow->employee;
+            $approveSignature = '';
+            if ($approveEmp && method_exists($approveEmp, 'SignatureFilePath')) {
+                $approveSigPath = (string) ($approveEmp->SignatureFilePath() ?? '');
+                if ($approveSigPath !== '' && is_file($approveSigPath)) {
+                    $approveSignature = $approveSigPath;
+                }
+            }
+            $approveDataJson = $approveRow->data_json;
+            if (is_string($approveDataJson)) {
+                $decodedApproveJson = json_decode($approveDataJson, true);
+                $approveDataJson = is_array($decodedApproveJson) ? $decodedApproveJson : [];
+            }
+            if (!is_array($approveDataJson)) {
+                $approveDataJson = [];
+            }
+            $approveDate = '';
+            if (!empty($approveDataJson['approve_date'])) {
+                $approveDate = substr((string) $approveDataJson['approve_date'], 0, 10);
+            } elseif (in_array((string) $approveRow->status, ['Pass', 'Approve'], true) && !empty($approveRow->updated_at)) {
+                $approveDate = substr((string) $approveRow->updated_at, 0, 10);
+            }
+            $approverData['approver_' . $index . '_fullname'] = (string) ($approveEmp->fullname ?? '');
+            $approverData['approver_' . $index . '_position'] = $approveEmp && method_exists($approveEmp, 'positionName') ? (string) ($approveEmp->positionName() ?? '') : '';
+            $approverData['approver_' . $index . '_approve_date'] = $approveDate;
+            $approverData['approver_' . $index . '_signature'] = $approveSignature;
+            $approverData['approver_' . $index . '_status'] = (string) ($approveRow->status ?? '');
+            $index++;
+        }
+        if (!empty($approverData['approver_1_fullname'])) {
+            $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
+            $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_approve_date'] = (string) ($approverData['approver_1_approve_date'] ?? '');
+            $approverData['approver_signature'] = (string) ($approverData['approver_1_signature'] ?? '');
+            $approverData['approval_status'] = (string) ($approverData['approver_1_status'] ?? '');
+        } elseif ($leader) {
+            $leaderSignature = '';
+            if (method_exists($leader, 'SignatureFilePath')) {
+                $leaderSigPath = (string) ($leader->SignatureFilePath() ?? '');
+                if ($leaderSigPath !== '' && is_file($leaderSigPath)) {
+                    $leaderSignature = $leaderSigPath;
+                }
+            }
+            $approverData['approver_1_fullname'] = (string) ($leader->fullname ?? '');
+            $approverData['approver_1_position'] = method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '';
+            $approverData['approver_1_approve_date'] = '';
+            $approverData['approver_1_signature'] = $leaderSignature;
+            $approverData['approver_1_status'] = '';
+            $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
+            $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_approve_date'] = '';
+            $approverData['approver_signature'] = $leaderSignature;
+            $approverData['approval_status'] = '';
+        }
+
+        $employeeSignature = '';
+        if ($employee && method_exists($employee, 'SignatureFilePath')) {
+            $sigPath = (string) ($employee->SignatureFilePath() ?? '');
+            if ($sigPath !== '' && is_file($sigPath)) {
+                $employeeSignature = $sigPath;
+            }
+        }
+        if ($employeeSignature === '' && !empty($model->userRequest()['signature'])) {
+            $fallbackSignature = (string) $model->userRequest()['signature'];
+            if (is_file($fallbackSignature)) {
+                $employeeSignature = $fallbackSignature;
+            }
+        }
+
+        $driverSignature = '';
+        if ($driver && method_exists($driver, 'SignatureFilePath')) {
+            $driverSigPath = (string) ($driver->SignatureFilePath() ?? '');
+            if ($driverSigPath !== '' && is_file($driverSigPath)) {
+                $driverSignature = $driverSigPath;
+            }
+        }
+
+        $dataJson = is_array($model->data_json) ? $model->data_json : [];
+        return [
+            'id' => (int) $model->id,
+            'code' => (string) ($model->code ?? ''),
+            'thai_year' => (string) ($model->thai_year ?? ''),
+            'created_at' => (string) ($model->created_at ?? ''),
+            'status' => (string) ($model->status ?? ''),
+            'vehicle_type_id' => (string) ($model->vehicle_type_id ?? ''),
+            'go_type' => (string) ($model->go_type ?? ''),
+            'urgent' => (string) ($model->urgent ?? ''),
+            'license_plate' => (string) ($model->license_plate ?? ''),
+            'location' => (string) ($model->location ?? ''),
+            'reason' => (string) ($model->reason ?? ''),
+            'date_start' => (string) ($model->date_start ?? ''),
+            'time_start' => (string) ($model->time_start ?? ''),
+            'date_end' => (string) ($model->date_end ?? ''),
+            'time_end' => (string) ($model->time_end ?? ''),
+            // legacy keys for older templates
+            'date' => (string) ($model->date_start ?? ''),
+            'vehicle_type' => (string) ($model->vehicle_type_id ?? ''),
+            'passenger' => (string) ($dataJson['passenger_total'] ?? ''),
+            'phone' => (string) (($employee->phone ?? '') ?: ($dataJson['phone'] ?? '')),
+            'driver_name' => (string) ($driver->fullname ?? ''),
+            'driver_name_' => (string) ($driver->fullname ?? ''),
+            'leader_name' => (string) ($leader->fullname ?? ''),
+            'leader_signature' => (string) ($approverData['approver_signature'] ?? ''),
+            'driver_signature' => $driverSignature,
+            // aliases for custom templates
+            'fullname' => (string) ($employee->fullname ?? ''),
+            'position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'officer_name' => (string) ($employee->fullname ?? ''),
+            'officer_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'officer_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'requester_fullname' => (string) ($employee->fullname ?? ''),
+            'requester_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'requester_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'employee_fullname' => (string) ($employee->fullname ?? ''),
+            'employee_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'employee_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'time_go' => (string) ($model->time_start ?? ''),
+            'time_back' => (string) ($model->time_end ?? ''),
+            'emp_id' => (string) ($model->emp_id ?? ''),
+            'leader_id' => (string) ($model->leader_id ?? ''),
+            'driver_id' => (string) ($model->driver_id ?? ''),
+            'emp_signature' => $employeeSignature,
+            'requester_signature' => $employeeSignature,
+            'vehicleStatus' => [
+                'title' => (string) ($vehicleStatus->title ?? ''),
+            ],
+            'carType' => [
+                'title' => (string) ($carType->title ?? ''),
+            ],
+            'employee' => [
+                'fullname' => (string) ($employee->fullname ?? ''),
+                'positionName' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+                'departmentName' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            ],
+            'leader' => [
+                'fullname' => (string) ($leader->fullname ?? ''),
+                'positionName' => $leader && method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '',
+            ],
+            'driver' => [
+                'fullname' => (string) ($driver->fullname ?? ''),
+            ],
+            'data_json' => [
+                'phone' => (string) ($dataJson['phone'] ?? ''),
+                'passenger_total' => (string) ($dataJson['passenger_total'] ?? ''),
+                'passenger_name' => (string) ($dataJson['passenger_name'] ?? ''),
+                'note' => (string) ($dataJson['note'] ?? ''),
+                'req_driver_id' => (string) ($dataJson['req_driver_id'] ?? ''),
+            ],
+        ] + $approverData;
     }
 
 

@@ -266,7 +266,7 @@ foreach ($models as $model) {
                                     <div class="d-flex flex-wrap gap-1 justify-content-end mt-2">
                                         <?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', ['/booking/vehicle/view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                         <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i>แก้ไข', ['/booking/vehicle/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขการจงรถ'], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                        <?= Html::a('<i class="fa-solid fa-print me-1"></i>พิมพ์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'btn btn-sm btn-outline-dark', 'target' => '_blank']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-print me-1"></i>พิมพ์', ['/booking/vehicle/print', 'id' => $item->id, 'title' => 'ใบขอใช้รถยนต์'], ['class' => 'btn btn-sm btn-outline-dark', 'target' => '_blank', 'rel' => 'noopener noreferrer', 'data-pjax' => '0']) ?>
                                         <?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i>ยกเลิก', ['/booking/vehicle/cancel', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-danger cancel-order', 'data' => ['size' => 'modal-lg']]) ?>
                                     </div>
                                 </div>
