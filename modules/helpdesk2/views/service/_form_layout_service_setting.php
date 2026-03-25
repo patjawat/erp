@@ -92,8 +92,8 @@ use kartik\widgets\ActiveForm;
                 </div>
 
                 <div class="d-flex gap-2">
-                    <?= $form->field($model, 'data_json[tech_receive_x]')->textInput()->label('ช่างผู้รับงาน-แนวนอน') ?>
-                    <?= $form->field($model, 'data_json[tech_receive_y]')->textInput()->label('ช่างผู้รับงาน-แนวตั้ง') ?>
+                    <?= $form->field($model, 'data_json[tech_receive_x]')->textInput()->label('ช่างผู้รับเรื่อง-แนวนอน') ?>
+                    <?= $form->field($model, 'data_json[tech_receive_y]')->textInput()->label('ช่างผู้รับเรื่อง-แนวตั้ง') ?>
                 </div>
                 <div class="d-flex gap-2">
                     <?= $form->field($model, 'data_json[note_x]')->textInput()->label('หมายเหตุ-แนวนอน') ?>

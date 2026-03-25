@@ -162,6 +162,13 @@ $workflowSteps = [
                     $loc = $item->data_json['location'] ?? null;
                     $location = $loc !== null && $loc !== '' ? (string) $loc : '-';
                 }
+                $problemDetail = '-';
+                if (is_array($item->data_json ?? null)) {
+                    $pd = $item->data_json['problem_detail'] ?? null;
+                    $problemDetail = $pd !== null && $pd !== '' ? (string) $pd : ((string) ($item->title ?? '-'));
+                } else {
+                    $problemDetail = (string) ($item->title ?? '-');
+                }
                 $createdLabel = $item->viewCreated()['full'] ?? '-';
                 /** จำนวนวันนับจากวันที่แจ้ง (created_at) — ใช้เฉพาะคำนวณใน view */
                 $daysSinceReport = null;
@@ -218,7 +225,7 @@ $workflowSteps = [
                                             <span class="text-muted small font-monospace"><?= Html::encode($item->asset_number) ?></span>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="mb-0 text-body lh-sm"><?= Html::encode($summaryTitle !== '' ? $summaryTitle : '-') ?></p>
+                                    <?php /* ยกเลิกข้อความรายละเอียดปัญหาในส่วน Summary เพื่อไม่ให้ซ้ำกับคอลัมน์ "รายละเอียดของปัญหา" */ ?>
                                 </div>
                                 <div class="d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
                                     <?php if ($daysSinceReport !== null): ?>
@@ -273,8 +280,8 @@ $workflowSteps = [
                                     <div class="font-monospace"><?= Html::encode($item->asset_number ?: '-') ?></div>
                                 </div>
                                 <div class="col-12 col-md-6 col-xl-3">
-                                    <div class="small text-muted mb-1">สถานที่</div>
-                                    <div class="text-break"><?= Html::encode($location) ?></div>
+                                    <div class="small text-muted mb-1">รายละเอียดของปัญหา</div>
+                                    <div class="text-break"><?= Html::encode($problemDetail) ?></div>
                                 </div>
                                 <div class="col-12 col-md-6 col-xl-3">
                                     <div class="small text-muted mb-1">ช่องทางแจ้งซ่อม</div>

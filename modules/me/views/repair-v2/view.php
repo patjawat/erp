@@ -76,31 +76,38 @@ $feedbackUrl = Url::to(['/me/repair-v2/feedback', 'id' => $model->id]);
 ?>
 
 <div class="container-fluid px-0">
-    <div class="row g-3">
+    <div class="row g-4">
         <div class="col-12">
             <?=$model->viewServiceRecordInfo()?>
         </div>
 
-        <div class="col-12 col-lg-6">
+        <div class="col-12 col-xl-7">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header"><h6 class="mb-0"><i class="fa-solid fa-clipboard-list me-1"></i>รายละเอียดงานซ่อม</h6></div>
                 <div class="card-body">
+                    <?php $receiverEmpInDl = !empty($model->receive_date) ? ($model->emp ?? null) : null; ?>
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">ผู้แจ้ง:</dt><dd class="col-sm-8"><?=$model->emp->fullname ?? '-'?></dd>
+                        <dt class="col-sm-4">ผู้รับเรื่อง:</dt>
+                        <dd class="col-sm-8">
+                            <div class="d-flex align-items-center gap-2">
+                                <?php if ($receiverEmpInDl && !empty($receiverEmpInDl->ShowAvatar())): ?>
+                                    <?= Html::img($receiverEmpInDl->ShowAvatar(), ['class' => 'avatar rounded-circle shadow', 'alt' => '']) ?>
+                                <?php else: ?>
+                                    <span class="d-inline-flex rounded-circle border border-secondary-subtle bg-secondary bg-opacity-10 p-2 text-secondary align-items-center justify-content-center flex-shrink-0">
+                                        <i class="bi bi-person-circle"></i>
+                                    </span>
+                                <?php endif; ?>
+                                <div class="fw-bold">
+                                    <?= Html::encode(!empty($receiverEmpInDl) && !empty($receiverEmpInDl->fullname) ? $receiverEmpInDl->fullname : '-') ?>
+                                </div>
+                            </div>
+                        </dd>
                         <dt class="col-sm-4">รหัสงาน:</dt><dd class="col-sm-8"><?=$model->repair_number ?: '-'?></dd>
                         <dt class="col-sm-4">ประเภทอุปกรณ์:</dt><dd class="col-sm-8"><?=$model->deviceType->title ?? '-'?></dd>
                         <dt class="col-sm-4">รหัสอุปกรณ์:</dt><dd class="col-sm-8"><?=$model->asset_number ?: '-'?></dd>
                         <dt class="col-sm-4">ปัญหา:</dt><dd class="col-sm-8"><?=$model->title ?: '-'?></dd>
                         <dt class="col-sm-4">สถานที่:</dt><dd class="col-sm-8"><?=Html::encode($location)?></dd>
-                        <dt class="col-sm-4">วันที่แจ้ง:</dt><dd class="col-sm-8"><?=$model->viewCreateDateTime()?></dd>
-                        <dt class="col-sm-4">ช่างผู้ซ่อม:</dt><dd class="col-sm-8"><?=Html::encode($leadTechnician)?></dd>
-                        <dt class="col-sm-4">ทีมช่างผู้ซ่อม:</dt>
-                        <dd class="col-sm-8">
-                            <?php if (!empty($repairTeamRows)): ?>
-                                <div class="mb-1"><?=$model->StackTeam()?></div>
-                            <?php endif; ?>
-                            <div class="small text-muted"><?=Html::encode($teamText)?></div>
-                        </dd>
+                        <dt class="col-sm-4">วันที่รับเรื่อง:</dt><dd class="col-sm-8"><?= Html::encode($model->viewCreateDateTime()) ?></dd>
                         <dt class="col-sm-4">สถานะ:</dt>
                         <dd class="col-sm-8"><span class="<?=$badgeClass($statusInfo['color'])?>"><?=Html::encode($statusInfo['label'])?></span></dd>
                     </dl>
@@ -108,7 +115,106 @@ $feedbackUrl = Url::to(['/me/repair-v2/feedback', 'id' => $model->id]);
             </div>
         </div>
 
-        <div class="col-12 col-lg-6">
+        <div class="col-12 col-xl-5">
+            <?php
+            // UI: ผู้รับเรื่อง/ความคืบหน้าสำหรับฝั่งขวา (ไม่เปลี่ยน business logic)
+            $receiverEmp = !empty($model->receive_date) ? ($model->emp ?? null) : null;
+            $receivedAtDisplay = '-';
+            try {
+                if (!empty($model->receive_date)) {
+                    $receivedAtDisplay = Yii::$app->thaiFormatter->asDateTime($model->receive_date, 'medium');
+                }
+            } catch (\Throwable $e) {
+                $receivedAtDisplay = !empty($model->receive_date) ? (string) $model->receive_date : '-';
+            }
+
+            $progressPercent = match ($statusCode) {
+                'pending' => 25,
+                'receive' => 50,
+                'in_progress' => 75,
+                'success' => 100,
+                default => 0,
+            };
+            $stepIndex = array_search($statusCode, ['pending', 'receive', 'in_progress', 'success'], true);
+            if ($stepIndex === false) {
+                $stepIndex = 0;
+            }
+            ?>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1">ผู้รับเรื่อง / ช่างที่มอบหมาย</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <?php if ($receiverEmp && !empty($receiverEmp->ShowAvatar())): ?>
+                                <?= Html::img($receiverEmp->ShowAvatar(), ['class' => 'avatar rounded-circle shadow', 'alt' => '']) ?>
+                            <?php else: ?>
+                                <span class="d-inline-flex rounded-circle border border-secondary-subtle bg-secondary bg-opacity-10 p-2 text-secondary align-items-center justify-content-center flex-shrink-0">
+                                    <i class="bi bi-person-circle"></i>
+                                </span>
+                            <?php endif; ?>
+                            <div class="min-w-0">
+                                <div class="small fw-bold text-truncate">
+                                    <?= Html::encode(!empty($receiverEmp) && !empty($receiverEmp->fullname) ? $receiverEmp->fullname : '-') ?>
+                                </div>
+                                <div class="text-muted small text-truncate">
+                                    รับเรื่องเมื่อ: <?= Html::encode($receivedAtDisplay) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1">ช่างผู้รับผิดชอบงานซ่อม</div>
+                        <div class="fw-bold text-truncate">
+                            <?= Html::encode(!empty($leadTechnician) ? $leadTechnician : '-') ?>
+                        </div>
+
+                        <?php if (!empty($repairTeamRows)): ?>
+                            <div class="mt-2">
+                                <div class="small text-muted mb-1">ทีมช่างผู้รับผิดชอบงานซ่อม</div>
+                                <div class="mb-1"><?=$model->StackTeam()?></div>
+                                <div class="small text-muted"><?= Html::encode($teamText) ?></div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <div class="small text-muted mb-0">
+                                ความคืบหน้า:
+                                <span class="text-primary fw-bold"><?= (int) $progressPercent ?>%</span>
+                            </div>
+                            <span class="small fw-semibold text-body">
+                                <?= Html::encode($statusInfo['label']) ?>
+                            </span>
+                        </div>
+
+                        <div class="progress mb-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: <?= (int) $progressPercent ?>%"></div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php
+                            $stepMeta = [
+                                ['idx' => 0, 'label' => 'เปิดงาน', 'done' => $stepIndex > 0],
+                                ['idx' => 1, 'label' => 'รับเรื่อง', 'done' => $stepIndex > 1],
+                                ['idx' => 2, 'label' => 'ดำเนินการ', 'done' => $stepIndex > 2],
+                                ['idx' => 3, 'label' => 'ปิดงาน', 'done' => $stepIndex > 3],
+                            ];
+                            foreach ($stepMeta as $st) {
+                                $isActive = ($stepIndex === $st['idx']);
+                                $cls = $isActive
+                                    ? $badgeClass('primary')
+                                    : ($st['done'] ? $badgeClass('success') : $badgeClass('secondary') . ' opacity-75');
+                                $icon = $st['done'] ? 'fa-solid fa-circle-check' : ($isActive ? 'fa-solid fa-hourglass-half' : 'fa-solid fa-hourglass-split');
+                                echo '<span class="' . $cls . '"><i class="' . $icon . ' me-1"></i>' . Html::encode($st['label']) . '</span>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header"><h6 class="mb-0"><i class="fa-solid fa-screwdriver-wrench me-1"></i>สรุปสาเหตุ ผลการซ่อม และค่าใช้จ่าย</h6></div>
                 <div class="card-body">

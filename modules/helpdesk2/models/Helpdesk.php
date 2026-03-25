@@ -353,9 +353,12 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function viewCreated()
     {
         try {
-            $datetime = explode(' ', $this->created_at);
-            $date = ThaiDateHelper::formatThaiDate($datetime[0]);
-            $time = $datetime[1] . '.น';
+            // ถ้ารับงานแล้ว ใช้ `receive_date` แทน `created_at` เพื่อให้หน้าเมนู/ประวัติ
+            // แสดง "วันและเวลาที่รับงาน" ได้ตรง
+            $baseDatetime = !empty($this->receive_date) ? (string) $this->receive_date : (string) $this->created_at;
+            $datetime = explode(' ', $baseDatetime);
+            $date = ThaiDateHelper::formatThaiDate($datetime[0] ?? '');
+            $time = !empty($datetime[1]) ? ((string) $datetime[1]) . '.น' : '';
             return [
                 'full' => $date . ' ' . $time,
                 'date' => $date,
@@ -848,7 +851,8 @@ class Helpdesk extends \yii\db\ActiveRecord
 
     public function viewCreateDateTime()
     {
-        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+        $baseDatetime = !empty($this->receive_date) ? (string) $this->receive_date : (string) $this->created_at;
+        return Yii::$app->thaiDate->toThaiDate($baseDatetime, true, false);
     }
 
     // แสดงวันที่รับเรื่อง

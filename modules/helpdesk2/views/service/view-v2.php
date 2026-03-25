@@ -248,7 +248,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-primary mb-3" role="alert">
-                        เริ่มจากรับงาน → ส่งซ่อม/เริ่มงาน → บันทึกวิธีดำเนินการ → ปิดงานให้เสร็จสมบูรณ์
+                        เริ่มจากรับเรื่อง → ส่งซ่อม/เริ่มงาน → บันทึกวิธีดำเนินการ → ปิดงานให้เสร็จสมบูรณ์
                     </div>
 
                     <div class="progress mb-3" role="progressbar" aria-label="workflow-progress" aria-valuenow="<?= $requiredProgress ?>" aria-valuemin="0" aria-valuemax="100">
@@ -258,14 +258,14 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                     <div class="d-flex flex-column gap-2">
                         <div class="<?= $stepCardClass(1) ?>">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">1) รับงาน</div>
+                                <div class="fw-medium">1) รับเรื่อง</div>
                                 <div class="d-flex align-items-center gap-2">
                                     <?php if ($activeStep === 1): ?>
                                         <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
                                     <?php endif; ?>
                                     <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
                                     <?php if (!$isReceived): ?>
-                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับงาน', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
                                     <?php endif; ?>
                                     <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 </div>
@@ -664,11 +664,11 @@ $('body').on('click', 'a.receive-order', function (e) {
   var url = $(this).attr('href');
 
   Swal.fire({
-    title: 'ยืนยันการรับงาน',
-    text: 'ต้องการรับงานซ่อมรายการนี้ใช่หรือไม่?',
+    title: 'ยืนยันการรับเรื่อง',
+    text: 'ต้องการรับเรื่องซ่อมรายการนี้ใช่หรือไม่?',
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'ยืนยันรับงาน',
+    confirmButtonText: 'ยืนยันรับเรื่อง',
     cancelButtonText: 'ยกเลิก',
     reverseButtons: false
   }).then(function (result) {
@@ -681,7 +681,7 @@ $('body').on('click', 'a.receive-order', function (e) {
       dataType: 'json',
       success: function (response) {
         Swal.fire({
-          title: 'รับงานแล้ว',
+          title: 'รับเรื่องแล้ว',
           icon: 'success',
           timer: 900,
           showConfirmButton: false
@@ -692,7 +692,7 @@ $('body').on('click', 'a.receive-order', function (e) {
       error: function () {
         Swal.fire({
           title: 'ไม่สำเร็จ',
-          text: 'ไม่สามารถรับงานได้ กรุณาลองใหม่อีกครั้ง',
+          text: 'ไม่สามารถรับเรื่องได้ กรุณาลองใหม่อีกครั้ง',
           icon: 'error'
         });
       }

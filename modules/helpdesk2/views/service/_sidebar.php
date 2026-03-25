@@ -20,6 +20,12 @@ $assigneeMock = [
     'department' => '-',
     'avatar' => null,
 ];
+$receiverMock = [
+    'fullname' => 'ยังไม่มีผู้รับเรื่อง',
+    'department' => '-',
+    'avatar' => null,
+    'received_at' => null,
+];
 
 $req = null;
 try {
@@ -29,6 +35,33 @@ try {
 }
 
 $requester = $req ?: $requesterMock;
+$receiver = $receiverMock;
+try {
+    $receiveLog = HelpdeskDetail::find()
+        ->where([
+            'helpdesk_id' => (int) $model->id,
+            'name' => 'service_record',
+            'status' => 'รับเรื่อง',
+        ])
+        ->orderBy(['id' => SORT_DESC])
+        ->one();
+    if ($receiveLog && !empty($receiveLog->emp_id)) {
+        $receiveEmp = Employees::findOne(['id' => (int) $receiveLog->emp_id]);
+        if (!$receiveEmp) {
+            $receiveEmp = Employees::findOne(['user_id' => (int) $receiveLog->emp_id]);
+        }
+        if ($receiveEmp) {
+            $receiver = [
+                'fullname' => $receiveEmp->fullname ?? $receiverMock['fullname'],
+                'department' => method_exists($receiveEmp, 'departmentName') ? ($receiveEmp->departmentName() ?? $receiverMock['department']) : $receiverMock['department'],
+                'avatar' => method_exists($receiveEmp, 'ShowAvatar') ? $receiveEmp->ShowAvatar() : null,
+                'received_at' => $receiveLog->created_at ?? null,
+            ];
+        }
+    }
+} catch (\Throwable $e) {
+    $receiver = $receiverMock;
+}
 
 $technicians = [];
 try {
@@ -70,19 +103,6 @@ try {
         }
     }
 
-    if (!empty($model->emp) && !isset($seenEmpIds[(int) $model->emp->id])) {
-        array_unshift($technicians, [
-            'fullname' => $model->emp->fullname ?? $assigneeMock['fullname'],
-            'department' => method_exists($model->emp, 'departmentName') ? ($model->emp->departmentName() ?? $assigneeMock['department']) : $assigneeMock['department'],
-            'avatar' => method_exists($model->emp, 'ShowAvatar') ? $model->emp->ShowAvatar() : null,
-        ]);
-        $seenEmpIds[(int) $model->emp->id] = true;
-    }
-
-    if (empty($technicians) && !empty($model->emp)) {
-        $pushFromEmployee($model->emp);
-    }
-
     if (empty($technicians)) {
         $technicians[] = $assigneeMock;
     }
@@ -111,6 +131,33 @@ try {
                 <div>
                         <div class="fw-bold"><?= Html::encode($requester['fullname'] ?? '-') ?></div>
                         <div class="text-muted"><?= Html::encode($requester['department'] ?? '-') ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-header fw-bold d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-check"></i>
+            <span>ผู้รับเรื่องซ่อม</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3">
+                <?php if (!empty($receiver['avatar'])): ?>
+                    <div class="flex-shrink-0 rounded-3 border border-secondary-subtle overflow-hidden bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center lh-1">
+                        <?= Html::img($receiver['avatar'], ['class' => 'avatar rounded-circle shadow', 'alt' => '']) ?>
+                    </div>
+                <?php else: ?>
+                    <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-3 text-secondary flex-shrink-0">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                <?php endif; ?>
+                <div>
+                    <div class="fw-bold"><?= Html::encode($receiver['fullname'] ?? '-') ?></div>
+                    <div class="text-muted"><?= Html::encode($receiver['department'] ?? '-') ?></div>
+                    <?php if (!empty($receiver['received_at'])): ?>
+                        <div class="small text-muted">รับเรื่องเมื่อ: <?= Html::encode((string) $receiver['received_at']) ?></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

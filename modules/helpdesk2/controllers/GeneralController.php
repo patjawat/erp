@@ -14,6 +14,7 @@ use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\helpdesk2\models\HelpdeskSearch;
+use app\modules\helpdesk2\helpers\RepairDashboardV2Helper;
 
 class GeneralController extends \yii\web\Controller
 {
@@ -93,6 +94,18 @@ class GeneralController extends \yii\web\Controller
         ]);
     }
 
+    /**
+     * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มทั่วไป) — /helpdesk/general/dashboard-v2
+     */
+    public function actionDashboardV2()
+    {
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+            'title' => 'ศูนย์งานซ่อมบำรุง',
+            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+            'active' => 'dashboard-v2',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(1),
+        ]);
+    }
 
     public function actionAsset()
     {

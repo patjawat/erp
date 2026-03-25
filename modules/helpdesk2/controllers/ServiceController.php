@@ -697,12 +697,30 @@ class ServiceController extends \yii\web\Controller
         //บันทึกเปลี่ยนสถานะและออกเลขใขรับซ่อม
         $model = $this->findModel($id);
         $model->status = 'receive';
-        if (empty($model->emp_id)) {
-            $model->emp_id = $me->id ?? null;
-        }
+        // ผู้รับงานครั้งแรก/ครั้งถัดไปให้แสดงเป็นคนที่กดรับงาน
+        $model->emp_id = $me->id ?? null;
         //ออกระหัสรับงานซ่อม
         $model->receive_date = date('Y-m-d H:i:s');
         $model->save();
+
+        // รับงานครั้งแรก: ตั้งผู้รับงานให้เป็นช่างผู้รับผิดชอบคนแรกอัตโนมัติ
+        if (!empty($me->id)) {
+            $hasRepairTeam = HelpdeskDetail::find()
+                ->where([
+                    'helpdesk_id' => (int) $model->id,
+                    'name' => 'repair_team',
+                ])
+                ->exists();
+            if (!$hasRepairTeam) {
+                $repairTeam = new HelpdeskDetail();
+                $repairTeam->helpdesk_id = (int) $model->id;
+                $repairTeam->name = 'repair_team';
+                $repairTeam->emp_id = (int) $me->id;
+                $repairTeam->status = 'active';
+                $repairTeam->title = 'ตั้งช่างผู้รับผิดชอบอัตโนมัติจากผู้รับงานครั้งแรก';
+                $repairTeam->save(false);
+            }
+        }
 
         //เขียนลงบน timeline
         $serviceRecord = new HelpdeskDetail;

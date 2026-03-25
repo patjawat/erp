@@ -15,7 +15,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 ?>
 
 
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
         <a href="<?= Url::to(['dashboard']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="7" height="9" x="3" y="3" rx="1"></rect>
@@ -24,6 +24,15 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
                 <rect width="7" height="5" x="3" y="16" rx="1"></rect>
             </svg>
             ภาพรวม
+        </a>
+        <a href="<?= Url::to(['dashboard-v2']) ?>" class="btn <?= ($active ?? '') !== 'dashboard-v2' ? 'btn-outline-primary' : 'btn-primary' ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3v18h18"></path>
+                <path d="M18 17V9"></path>
+                <path d="M13 17V5"></path>
+                <path d="M8 17v-3"></path>
+            </svg>
+            แดชบอร์ด V2
         </a>
         <a href="<?= Url::to(['index']) ?>" class="btn <?= $active !== 'index' ? 'btn-outline-primary' : 'btn-primary' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-check-icon lucide-book-check">
@@ -55,6 +64,9 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                 <li>
                     <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภทอุปกรณ์', ['/helpdesk/device-type'], ['class' => 'dropdown-item']) ?>
+                </li>
+                <li>
+                    <?= Html::a('<i class="fa-solid fa-gauge-high me-2"></i> ตั้งค่า SLA', ['/helpdesk/setting/index'], ['class' => 'dropdown-item']) ?>
                 </li>
                 <!-- <li>
                     <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> แบบฟอร์มแจ้งซ่อม', ['/helpdesk/service/form-layout-service-setting'], ['class' => 'dropdown-item']) ?>
