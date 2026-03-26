@@ -6,6 +6,8 @@ use Yii;
 use yii\web\Response;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 use app\modules\inventoryV2\models\Warehouse;
+use app\modules\inventoryV2\models\StockBalance;
+use app\modules\inventoryV2\components\InventoryService;
 
 class RepairPartsController extends \yii\web\Controller
 {
@@ -66,6 +68,26 @@ class RepairPartsController extends \yii\web\Controller
                     ];
                     if (!$part->save()) {
                         throw new \RuntimeException('บันทึกรายการอะไหล่ไม่สำเร็จ');
+                    }
+
+                    // ตัดสต๊อกคลังย่อยทันทีตามจำนวนที่เบิก
+                    // พยายามใช้ FIFO ปกติก่อน และ fallback เป็นตัดตามยอดคงเหลือจริงใน stock_balance
+                    // เฉพาะกรณีที่ยอดรวมพอแต่ lot/remain_qty ใน stock_detail ไม่ครบ ทำให้ FIFO โยน error
+                    try {
+                        InventoryService::moveStock(
+                            $itemCode,
+                            $warehouseId,
+                            $qty,
+                            'OUT',
+                            0,
+                            null
+                        );
+                    } catch (\Throwable $stockError) {
+                        $availableQty = $this->getAvailableBalanceQty($itemCode, $warehouseId);
+                        if ($availableQty + 0.00001 < $qty) {
+                            throw $stockError;
+                        }
+                        $this->deductFromBalanceLots($itemCode, $warehouseId, $qty);
                     }
                 }
 
@@ -169,5 +191,42 @@ class RepairPartsController extends \yii\web\Controller
         }
 
         return ['results' => $results];
+    }
+
+    private function getAvailableBalanceQty(string $itemCode, int $warehouseId): float
+    {
+        return (float) StockBalance::find()
+            ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
+            ->sum('balance_qty');
+    }
+
+    private function deductFromBalanceLots(string $itemCode, int $warehouseId, float $qty): void
+    {
+        $remaining = (float) $qty;
+        $lots = StockBalance::find()
+            ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
+            ->andWhere(['>', 'balance_qty', 0])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        foreach ($lots as $lot) {
+            if ($remaining <= 0) {
+                break;
+            }
+            $lotQty = (float) $lot->balance_qty;
+            if ($lotQty <= 0) {
+                continue;
+            }
+            $take = min($remaining, $lotQty);
+            $lot->balance_qty = $lotQty - $take;
+            if (!$lot->save(false)) {
+                throw new \RuntimeException('ตัดสต๊อกจากยอดคงเหลือไม่สำเร็จ');
+            }
+            $remaining -= $take;
+        }
+
+        if ($remaining > 0.00001) {
+            throw new \RuntimeException("พัสดุรหัส {$itemCode} ในคลังมีไม่พอจ่าย (ขาดอีก {$remaining})");
+        }
     }
 }
