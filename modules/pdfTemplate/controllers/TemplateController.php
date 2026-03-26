@@ -52,6 +52,7 @@ class TemplateController extends Controller
         $leaveRestTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE_REST])->one();
         $repairNoticeTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE])->one();
         $bookingVehicleCentralTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        $bookingVehicleOfficialTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])->one();
         return $this->render('index', [
             'templates' => $templates,
             'developmentTemplateId' => $developmentTemplate ? (int) $developmentTemplate->id : null,
@@ -59,6 +60,7 @@ class TemplateController extends Controller
             'leaveRestTemplateId' => $leaveRestTemplate ? (int) $leaveRestTemplate->id : null,
             'repairNoticeTemplateId' => $repairNoticeTemplate ? (int) $repairNoticeTemplate->id : null,
             'bookingVehicleCentralTemplateId' => $bookingVehicleCentralTemplate ? (int) $bookingVehicleCentralTemplate->id : null,
+            'bookingVehicleOfficialTemplateId' => $bookingVehicleOfficialTemplate ? (int) $bookingVehicleOfficialTemplate->id : null,
         ]);
     }
 
@@ -75,6 +77,7 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_LEAVE_REST,
             PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE,
             PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL,
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL,
         ];
         if (!in_array($context, $allowed, true)) {
             Yii::$app->session->setFlash('error', 'ไม่รู้จัก context');
@@ -94,6 +97,7 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_LEAVE_REST => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลาพักผ่อนแล้ว',
             PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบส่งซ่อมแล้ว',
             PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL => 'บันทึกการตั้งค่าเทมเพลตสำหรับขอใช้รถยนต์ส่วนกลางแล้ว',
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL => 'บันทึกการตั้งค่าเทมเพลตสำหรับขอใช้รถยนต์ส่วนเดินทางไปราชการแล้ว',
         ];
         $msg = $messages[$context] ?? 'บันทึกการตั้งค่าเทมเพลตแล้ว';
         Yii::$app->session->setFlash('success', $msg);
