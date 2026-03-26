@@ -43,6 +43,9 @@ public function actionValidator()
     $result = [];
 
     if ($this->request->isPost && $model->load($this->request->post())) {
+        $postData = $this->request->post('DocumentOrg', []);
+        $currentId = isset($postData['id']) && $postData['id'] !== '' ? (int) $postData['id'] : null;
+        $name = $postData['name'] ?? $model->name ?? 'document_org';
         
         // 1. ตรวจสอบค่าว่าง (Required)
         if (empty($model->title)) {
@@ -54,19 +57,29 @@ public function actionValidator()
 
         // 2. ตรวจสอบความซ้ำ (Unique Check)
         // ตรวจสอบ title ซ้ำ
-        $existsTitle = DocumentOrg::find()
-            ->where(['title' => $model->title])
-            ->andFilterWhere(['not', ['id' => $model->id]]) // กันกรณีแก้ไข record เดิม
-            ->exists();
+        $titleQuery = DocumentOrg::find()
+            ->where([
+                'name' => $name,
+                'title' => $model->title,
+            ]);
+        if ($currentId !== null) {
+            $titleQuery->andWhere(['<>', 'id', $currentId]);
+        }
+        $existsTitle = $titleQuery->exists();
         if ($existsTitle) {
             $model->addError('title', 'ชื่อเรื่องนี้มีอยู่ในระบบแล้ว');
         }
 
         // ตรวจสอบ code ซ้ำ
-        $existsCode = DocumentOrg::find()
-            ->where(['code' => $model->code])
-            ->andFilterWhere(['not', ['id' => $model->id]])
-            ->exists();
+        $codeQuery = DocumentOrg::find()
+            ->where([
+                'name' => $name,
+                'code' => $model->code,
+            ]);
+        if ($currentId !== null) {
+            $codeQuery->andWhere(['<>', 'id', $currentId]);
+        }
+        $existsCode = $codeQuery->exists();
         if ($existsCode) {
             $model->addError('code', 'รหัสนี้มีอยู่ในระบบแล้ว');
         }
