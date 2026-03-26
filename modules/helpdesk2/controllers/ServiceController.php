@@ -627,17 +627,43 @@ class ServiceController extends \yii\web\Controller
     {
         $model = $this->findModel($id);
         $me = UserHelper::GetEmployee();
+        $currentRepairTeam = HelpdeskDetail::find()
+            ->where(['helpdesk_id' => (int) $model->id, 'name' => 'repair_team'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        $currentRepairTeamEmpId = (int) ($currentRepairTeam->emp_id ?? 0);
         $before = [
             'device_type_id' => (string) ($model->device_type_id ?? ''),
             'asset_number' => (string) ($model->asset_number ?? ''),
-            'emp_id' => (string) ($model->emp_id ?? ''),
+            'repair_team_emp_id' => (string) $currentRepairTeamEmpId,
             'repair_group' => (string) ($model->repair_group ?? ''),
         ];
 
         if ($this->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
+            $selectedRepairTeamEmpId = (int) $this->request->post('repair_team_emp_id', 0);
             if ($model->load($this->request->post())) {
-                if ($model->save(false, ['device_type_id', 'asset_number', 'emp_id', 'repair_group'])) {
+                if ($model->save(false, ['device_type_id', 'asset_number', 'repair_group'])) {
+                    if ($selectedRepairTeamEmpId > 0) {
+                        $repairTeam = HelpdeskDetail::find()
+                            ->where(['helpdesk_id' => (int) $model->id, 'name' => 'repair_team'])
+                            ->orderBy(['id' => SORT_DESC])
+                            ->one();
+                        if (!$repairTeam) {
+                            $repairTeam = new HelpdeskDetail();
+                            $repairTeam->helpdesk_id = (int) $model->id;
+                            $repairTeam->name = 'repair_team';
+                        }
+                        $repairTeam->emp_id = $selectedRepairTeamEmpId;
+                        $repairTeam->status = 'active';
+                        $repairTeam->title = 'ช่างผู้รับผิดชอบงานซ่อม';
+                        $repairTeam->save(false);
+                    } else {
+                        HelpdeskDetail::deleteAll([
+                            'helpdesk_id' => (int) $model->id,
+                            'name' => 'repair_team',
+                        ]);
+                    }
                     try {
                         $log = new HelpdeskDetail();
                         $log->helpdesk_id = $model->id;
@@ -650,7 +676,7 @@ class ServiceController extends \yii\web\Controller
                             'after' => [
                                 'device_type_id' => (string) ($model->device_type_id ?? ''),
                                 'asset_number' => (string) ($model->asset_number ?? ''),
-                                'emp_id' => (string) ($model->emp_id ?? ''),
+                                'repair_team_emp_id' => (string) $selectedRepairTeamEmpId,
                                 'repair_group' => (string) ($model->repair_group ?? ''),
                             ],
                         ];
@@ -679,6 +705,7 @@ class ServiceController extends \yii\web\Controller
                 'content' => $this->renderAjax('_form_edit_ticket_lite', [
                     'model' => $model,
                     'technicianList' => $technicianList,
+                    'currentRepairTeamEmpId' => $currentRepairTeamEmpId,
                 ]),
                 'footer' => '',
             ];
@@ -687,6 +714,7 @@ class ServiceController extends \yii\web\Controller
         return $this->render('_form_edit_ticket_lite', [
             'model' => $model,
             'technicianList' => $technicianList,
+            'currentRepairTeamEmpId' => $currentRepairTeamEmpId,
         ]);
     }
 
@@ -697,8 +725,6 @@ class ServiceController extends \yii\web\Controller
         //บันทึกเปลี่ยนสถานะและออกเลขใขรับซ่อม
         $model = $this->findModel($id);
         $model->status = 'receive';
-        // ผู้รับงานครั้งแรก/ครั้งถัดไปให้แสดงเป็นคนที่กดรับงาน
-        $model->emp_id = $me->id ?? null;
         //ออกระหัสรับงานซ่อม
         $model->receive_date = date('Y-m-d H:i:s');
         $model->save();

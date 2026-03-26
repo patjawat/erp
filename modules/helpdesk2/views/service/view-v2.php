@@ -283,7 +283,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php if (!$isStarted): ?>
                                         <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
                                     <?php endif; ?>
-                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
+                                    <?php //  Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
                                 </div>
                             </div>
                         </div>
@@ -317,7 +317,6 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
-                                    <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบส่งซ่อม', $printSendRepairUrl, ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']) ?>
                                     <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
                                     <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
                                     <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>

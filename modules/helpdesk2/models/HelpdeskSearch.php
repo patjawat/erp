@@ -80,12 +80,26 @@ class HelpdeskSearch extends Helpdesk
             return $dataProvider;
         }
 
+        // รองรับ status แบบ multi-select:
+        // ถ้าไม่มีการเลือกจริง (เช่น [] หรือ ['']) ให้ไม่ใส่เงื่อนไข status
+        $statusFilter = $this->status;
+        if (is_array($statusFilter)) {
+            $statusFilter = array_values(array_filter(array_map('strval', $statusFilter), static function ($v) {
+                return $v !== '';
+            }));
+            if (empty($statusFilter)) {
+                $statusFilter = null;
+            }
+        } elseif ($statusFilter === '') {
+            $statusFilter = null;
+        }
+
         // grid filtering conditions (qualify columns used after joinWith('emp') to avoid ambiguous status/name)
         $query->andFilterWhere([
             'helpdesk.id' => $this->id,
             'helpdesk.emp_id' => $this->emp_id,
             'helpdesk.repair_group' => $this->repair_group,
-            'helpdesk.status' => $this->status,
+            'helpdesk.status' => $statusFilter,
             'helpdesk.thai_year' => $this->thai_year,
             'helpdesk.device_type_id' => $this->device_type_id,
             'helpdesk.asset_number' => $this->asset_number,

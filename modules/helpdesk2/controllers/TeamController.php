@@ -7,10 +7,8 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
-use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 use app\modules\helpdesk2\models\HelpdeskSearch;
-use app\modules\hr\models\Employees;
 
 /**
  * TeamController implements the CRUD actions for Helpdesk model.
@@ -88,7 +86,7 @@ class TeamController extends Controller
     public function actionValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Helpdesk();
+        $model = new HelpdeskDetail();
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
       
@@ -133,23 +131,6 @@ class TeamController extends Controller
             if ($model->load($this->request->post())) {
                 $model->name = 'repair_team';
                 if($model->save()){
-                    try {
-                        $helpdesk = Helpdesk::findOne(['id' => $model->helpdesk_id]);
-                        if ($helpdesk && !empty($model->emp_id)) {
-                            $employee = Employees::findOne(['id' => (int) $model->emp_id]);
-                            if (!$employee) {
-                                $employee = Employees::findOne(['user_id' => (int) $model->emp_id]);
-                            }
-                            if ($employee) {
-                                $helpdesk->emp_id = (int) $employee->id;
-                            } else {
-                                $helpdesk->emp_id = (int) $model->emp_id;
-                            }
-                            $helpdesk->save(false, ['emp_id']);
-                        }
-                    } catch (\Throwable $e) {
-                        // ไม่ให้กระทบการบันทึกทีม
-                    }
                     return [
                         'status' => 'success'
                     ];

@@ -8,6 +8,7 @@ use kartik\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
 /** @var array $technicianList */
+/** @var int $currentRepairTeamEmpId */
 ?>
 
 <div class="card border-0 shadow-sm">
@@ -38,14 +39,20 @@ use kartik\widgets\ActiveForm;
             </div>
 
             <div class="col-12">
-                <?= $form->field($model, 'emp_id')->widget(Select2::classname(), [
+                <?= Html::label('ช่างผู้รับผิดชอบ', 'repair-team-emp-id', ['class' => 'form-label']) ?>
+                <?= Select2::widget([
+                    'name' => 'repair_team_emp_id',
+                    'value' => (int) ($currentRepairTeamEmpId ?? 0) ?: null,
                     'data' => $technicianList,
-                    'options' => ['placeholder' => 'เลือกช่างผู้รับผิดชอบ ...'],
+                    'options' => [
+                        'id' => 'repair-team-emp-id',
+                        'placeholder' => 'เลือกช่างผู้รับผิดชอบ ...',
+                    ],
                     'pluginOptions' => [
                         'allowClear' => true,
                         'dropdownParent' => '#main-modal',
                     ],
-                ])->label('ช่างผู้รับผิดชอบ') ?>
+                ]) ?>
             </div>
 
             <div class="col-12">

@@ -239,7 +239,18 @@ $workflowSteps = [
 
                                     <div class="row g-2 align-items-start">
                                         <div class="col-12 col-lg-12">
-                                            <div class="small text-muted mb-1">ความคืบหน้า</div>
+                                            <?php $technicianStackHtml = trim((string) $item->StackTeam()); ?>
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                                                <div class="small text-muted">ความคืบหน้า</div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="small text-muted">ช่าง</span>
+                                                    <?php if ($technicianStackHtml !== ''): ?>
+                                                        <div class="d-flex align-items-center"><?= $technicianStackHtml ?></div>
+                                                    <?php else: ?>
+                                                        <span class="small text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                             <div class="progress my-3" role="progressbar" aria-valuenow="<?= $progressPercent ?>" aria-valuemin="0" aria-valuemax="100" style="height: 6px;">
                                                 <div class="progress-bar bg-<?= Html::encode($progressColor) ?>" style="width: <?= $progressPercent ?>%"></div>
                                             </div>

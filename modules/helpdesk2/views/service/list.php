@@ -8,6 +8,7 @@ use yii\bootstrap5\LinkPager;
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\HelpdeskSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var bool $isMine */
 $this->title = $title;
 $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = ['label' => $title, 'url' => ['index']];
@@ -29,7 +30,13 @@ $statusMeta = [
 ];
 
 $statusCounts = [];
-$currentStatusFilter = trim((string) ($searchModel->status ?? ''));
+$currentStatusFilter = $searchModel->status ?? [];
+if (!is_array($currentStatusFilter)) {
+    $currentStatusFilter = $currentStatusFilter !== null && $currentStatusFilter !== '' ? [(string) $currentStatusFilter] : [];
+}
+$currentStatusFilter = array_values(array_filter(array_map('strval', $currentStatusFilter), static function ($v) {
+    return $v !== '';
+}));
 if (isset($dataProvider->query)) {
     try {
         foreach ($statusMeta as $statusCode => $meta) {
@@ -55,7 +62,31 @@ $buildStatusUrl = static function (?string $statusCode) use ($searchModel): arra
     if ($statusCode === null || $statusCode === '') {
         unset($params[$formName]['status']);
     } else {
-        $params[$formName]['status'] = $statusCode;
+        $current = $params[$formName]['status'] ?? [];
+        if (!is_array($current)) {
+            $current = $current !== null && $current !== '' ? [(string) $current] : [];
+        }
+        $current = array_values(array_filter(array_map('strval', $current), static fn($v) => $v !== ''));
+        if (in_array($statusCode, $current, true)) {
+            $current = array_values(array_diff($current, [$statusCode]));
+        } else {
+            $current[] = $statusCode;
+        }
+        if (empty($current)) {
+            unset($params[$formName]['status']);
+        } else {
+            $params[$formName]['status'] = $current;
+        }
+    }
+    return array_merge(['/' . Yii::$app->controller->route], $params);
+};
+
+$buildMineUrl = static function (bool $mine): array {
+    $params = Yii::$app->request->queryParams;
+    if ($mine) {
+        $params['mine'] = 1;
+    } else {
+        unset($params['mine']);
     }
     return array_merge(['/' . Yii::$app->controller->route], $params);
 };
@@ -101,10 +132,20 @@ $workflowSteps = [
                     <?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between gap-2 flex-wrap align-items-center">
+                <div class="btn-group me-2" role="group" aria-label="สลับมุมมอง">
+                    <?= Html::a('ทั้งหมด', $buildMineUrl(false), [
+                        'class' => 'btn btn-sm ' . (empty($isMine) ? 'btn-primary' : 'btn-outline-primary'),
+                        'title' => 'แสดงงานซ่อมทั้งหมด',
+                    ]) ?>
+                    <?= Html::a('งานซ่อมของฉัน', $buildMineUrl(true), [
+                        'class' => 'btn btn-sm ' . (!empty($isMine) ? 'btn-primary' : 'btn-outline-primary'),
+                        'title' => 'แสดงเฉพาะงานซ่อมที่ฉันแจ้ง/สร้าง',
+                    ]) ?>
+                </div>
                 <?php foreach ($statusMeta as $statusCode => $meta): ?>
                     <?php
                     $count = (int) ($statusCounts[$statusCode] ?? 0);
-                    $isActiveStatus = $currentStatusFilter === $statusCode;
+                    $isActiveStatus = in_array($statusCode, $currentStatusFilter, true);
                     $badgeClasses = $isActiveStatus
                         ? $badgeClass($meta['color'])
                         : $badgeClass('secondary') . ' opacity-75';
@@ -114,11 +155,11 @@ $workflowSteps = [
                         $buildStatusUrl($statusCode),
                         [
                             'class' => $badgeClasses . ' text-decoration-none',
-                            'title' => 'คลิกเพื่อกรองสถานะ ' . $meta['label'],
+                            'title' => 'คลิกเพื่อเลือก/ยกเลิกสถานะ ' . $meta['label'],
                         ]
                     ) ?>
                 <?php endforeach; ?>
-                <?php if ($currentStatusFilter !== ''): ?>
+                <?php if (!empty($currentStatusFilter)): ?>
                     <?= Html::a(
                         'ล้างตัวกรอง',
                         $buildStatusUrl(null),
@@ -291,7 +332,18 @@ $workflowSteps = [
 
                             <?php /* —— Workflow (จาก status เดิม) —— */ ?>
                             <div class="pt-2 mt-2 border-top">
-                                <div class="small text-muted mb-1">ขั้นตอนงาน</div>
+                                <?php $technicianStackHtml = trim((string) $item->StackTeam()); ?>
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                                    <div class="small text-muted">ขั้นตอนงาน</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="small text-muted">ช่าง</span>
+                                        <?php if ($technicianStackHtml !== ''): ?>
+                                            <div class="d-flex align-items-center"><?= $technicianStackHtml ?></div>
+                                        <?php else: ?>
+                                            <span class="small text-muted">-</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                                 <?php
                                 $totalSteps = count($workflowSteps);
                                 $progressPercent = 0;
