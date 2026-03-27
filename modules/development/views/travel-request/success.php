@@ -44,7 +44,7 @@ $emp = $model->createdByEmp ?? $model->emp;
                 <p class="small mb-0"><span class="text-muted">ค่าใช้จ่ายที่ลงทะเบียน:</span> <strong><?= Html::encode($dataJson['registration_amount']) ?> บาท</strong> <i class="bi bi-check-circle-fill text-success"></i></p>
                 <?php endif; ?>
                 <div class="d-flex gap-2 mt-4 flex-wrap">
-                    <?= Html::a('<i class="bi bi-download me-1"></i> ดาวน์โหลด PDF', ['/hr/development/print', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-3', 'target' => '_blank']) ?>
+                    <?= Html::a('<i class="bi bi-download me-1"></i> ดาวน์โหลด PDF', ['/development/default/print-official', 'id' => $model->id], ['class' => 'btn btn-outline-primary rounded-3', 'target' => '_blank']) ?>
                     <?= Html::a('กลับหน้าหลัก', ['/development/default/dashboard'], ['class' => 'btn btn-primary rounded-3']) ?>
                 </div>
             </div>
@@ -56,7 +56,7 @@ $emp = $model->createdByEmp ?? $model->emp;
                 <h6 class="fw-semibold text-body mb-0">ตัวอย่างเอกสาร</h6>
             </div>
             <div class="card-body p-0">
-                <iframe src="<?= Url::to(['/hr/development/print', 'id' => $model->id]) ?>" class="w-100 border-0" style="min-height: 70vh;"></iframe>
+                <iframe src="<?= Url::to(['/development/default/print-official', 'id' => $model->id]) ?>" class="w-100 border-0" style="min-height: 70vh;"></iframe>
             </div>
         </div>
     </div>

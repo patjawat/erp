@@ -71,6 +71,16 @@ use yii\helpers\Html;
                                     ]
                                 ) ?>
                             </li>
+                            <li>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-car-side me-1"></i> ขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ',
+                                    ['/hr/development/print', 'id' => $item->id],
+                                    [
+                                        'class' => 'dropdown-item',
+                                        'target' => '_blank',
+                                    ]
+                                ) ?>
+                            </li>
                             <!-- <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขอไปราชการ(word)', ['/me/development/form-official', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             </li> -->
                             <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ใบขออนุญาต', ['/me/development/permit-request', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>

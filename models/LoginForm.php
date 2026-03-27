@@ -35,11 +35,12 @@ class LoginForm extends Model
         ];
     }
 
-        public function attributeLabels()
+    public function attributeLabels()
     {
         return [
             'username' => 'ชื่อเข้าใช้งาน',
             'password' => 'รหัสผ่าน',
+            'rememberMe' => 'จำการเข้าสู่ระบบไว้ในอุปกรณ์นี้ (สูงสุด 1 วัน)',
         ];
     }
 
@@ -70,7 +71,7 @@ class LoginForm extends Model
     {
         if ($this->validate()) {
             $duration = $this->rememberMe
-                ? (Yii::$app->params['user.rememberMeDuration'] ?? 3600 * 24 * 3650)
+                ? (Yii::$app->params['user.rememberMeDuration'] ?? (3600 * 24))
                 : 0;
             return Yii::$app->user->login($this->getUser(), $duration);
         }

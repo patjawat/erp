@@ -953,7 +953,10 @@ class VehicleController extends Controller
         $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         $model->save(false);
 
-        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])->one();
+        if (!$template) {
+            $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        }
         if ($template) {
             $data = $this->buildBookingTemplateData($model);
             if ((string) Yii::$app->request->get('debug', '') === '1') {

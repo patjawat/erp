@@ -61,7 +61,7 @@ class LoginForm extends Model
     {
         if ($this->validate()) {
             $duration = $this->rememberMe
-                ? (Yii::$app->params['user.rememberMeDuration'] ?? 3600 * 24 * 3650)
+                ? (Yii::$app->params['user.rememberMeDuration'] ?? (3600 * 24))
                 : 0;
             return Yii::$app->user->login($this->getUser(), $duration);
         }

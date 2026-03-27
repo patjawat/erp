@@ -31,6 +31,8 @@ class PdfTemplate extends ActiveRecord
     const CONTEXT_HELPDESK2_REPAIR_NOTICE = 'helpdesk2.repair.notice';
     /** ขอใช้รถยนต์ส่วนกลาง (Booking / Vehicle) */
     const CONTEXT_BOOKING_VEHICLE_CENTRAL = 'booking.vehicle.central';
+    /** ขอใช้รถยนต์เดินทางไปราชการ (Booking / Vehicle) */
+    const CONTEXT_BOOKING_VEHICLE_OFFICIAL = 'booking.vehicle.official';
 
     public static function tableName(): string
     {
