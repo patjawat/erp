@@ -12,8 +12,15 @@ use app\modules\inventoryV2\components\InventoryService;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
+use yii\data\Pagination;
 use yii\helpers\ArrayHelper;
+use yii\web\Response;
 use yii\web\NotFoundHttpException;
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class MainStockController extends \yii\web\Controller
 {
@@ -51,6 +58,559 @@ class MainStockController extends \yii\web\Controller
             'chartData' => $chartData,
             'currentWarehouseId' => $warehouseId,
         ]);
+    }
+
+    /**
+     * รายการพัสดุที่มีสต๊อก (>0) ในคลังที่เลือก (หรือรวมทุกคลังหลักเมื่อเลือก "ทั้งหมด")
+     */
+    public function actionItemsWithStock()
+    {
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            Yii::$app->session->remove('dashboard_warehouse_id');
+            $warehouseId = null;
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+        $itemsQuery = (new Query())
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->select([
+                'sb.item_code',
+                'i.item_name',
+                'total_qty' => new Expression('SUM(sb.balance_qty)'),
+            ])
+            ->where(['sb.warehouse_id' => $warehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0])
+            ->groupBy(['sb.item_code', 'i.item_name'])
+            ->orderBy(['i.item_name' => SORT_ASC]);
+
+        $totalCount = (int) (clone $itemsQuery)->count();
+        $pagination = new Pagination([
+            'totalCount' => $totalCount,
+            'pageSize' => 20,
+            'pageParam' => 'page',
+        ]);
+
+        $rows = (clone $itemsQuery)
+            ->offset($pagination->offset)
+            ->limit($pagination->limit)
+            ->all();
+
+        $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
+            return $r['item_code'] ?? null;
+        }, $rows))));
+
+        $itemModels = [];
+        if (!empty($itemCodes)) {
+            $itemModels = StockItem::find()
+                ->where(['item_code' => $itemCodes])
+                ->indexBy('item_code')
+                ->all();
+        }
+
+        $items = [];
+        foreach ($rows as $r) {
+            $code = $r['item_code'];
+            $model = $itemModels[$code] ?? null;
+            $items[] = [
+                'item_code' => $code,
+                'item_name' => $r['item_name'],
+                'unit_name' => $model ? $model->getUnitName() : null,
+                'total_qty' => (float) $r['total_qty'],
+                'img' => $model ? $model->ShowImg() : null,
+            ];
+        }
+
+        $warehouses = $this->getMainWarehousesList();
+
+        return $this->render('items-with-stock', [
+            'items' => $items,
+            'pagination' => $pagination,
+            'totalCount' => $totalCount,
+            'warehouses' => $warehouses,
+            'currentWarehouseId' => $warehouseId,
+        ]);
+    }
+
+    /**
+     * Offcanvas: ส่งรายการพัสดุที่มีสต๊อกเป็น JSON (content เป็น HTML)
+     */
+    public function actionItemsWithStockOffcanvas()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $q = trim((string) $this->request->get('q', ''));
+
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            Yii::$app->session->remove('dashboard_warehouse_id');
+            $warehouseId = null;
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+        // หาพัสดุที่มียอดคงเหลือ > 0 (จำกัด 20 รายการเพื่อให้ offcanvas เร็ว)
+        $itemsQuery = (new Query())
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->select([
+                'sb.item_code',
+                'i.item_name',
+                'total_qty' => new Expression('SUM(sb.balance_qty)'),
+            ])
+            ->where(['sb.warehouse_id' => $warehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0])
+            ->groupBy(['sb.item_code', 'i.item_name'])
+            ->orderBy(['i.item_name' => SORT_ASC]);
+
+        if ($q !== '') {
+            $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
+            $codeCond = ['like', 'i.item_code', $q];
+
+            // ตัดคำเฉพาะชื่อวัสดุ (item_name) เพื่อให้ค้นหาได้ตรงขึ้น
+            if (!empty($tokens)) {
+                $nameCond = ['and'];
+                foreach ($tokens as $t) {
+                    $nameCond[] = ['like', 'i.item_name', $t];
+                }
+            } else {
+                $nameCond = ['like', 'i.item_name', $q];
+            }
+
+            $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
+        }
+
+        $totalCount = (int) (clone $itemsQuery)->count();
+
+        $rows = (clone $itemsQuery)
+            ->limit(20)
+            ->all();
+
+        // เติม unit_name จาก StockItem (bulk)
+        $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
+            return $r['item_code'] ?? null;
+        }, $rows))));
+
+        $itemModels = [];
+        if (!empty($itemCodes)) {
+            $itemModels = StockItem::find()
+                ->where(['item_code' => $itemCodes])
+                ->indexBy('item_code')
+                ->all();
+        }
+
+        $items = [];
+        foreach ($rows as $r) {
+            $code = $r['item_code'];
+            $model = $itemModels[$code] ?? null;
+            $items[] = [
+                'item_code' => $code,
+                'item_name' => $r['item_name'],
+                'unit_name' => $model ? $model->getUnitName() : null,
+                'total_qty' => (float) $r['total_qty'],
+                'img' => $model ? $model->ShowImg() : null,
+            ];
+        }
+
+        // ชื่อคลังที่เลือกเพื่อแสดงในหัว offcanvas
+        $currentWarehouseName = 'ทั้งหมด';
+        if ($warehouseId !== null) {
+            foreach ($this->getMainWarehousesList() as $w) {
+                if ((int)$w->id === (int)$warehouseId) {
+                    $currentWarehouseName = $w->warehouse_name;
+                    break;
+                }
+            }
+        }
+
+        $warehouseIdParam = $warehouseId !== null ? (string) (int) $warehouseId : 'all';
+
+        return [
+            'status' => 'success',
+            'content' => $this->renderPartial('_items_with_stock_offcanvas_content', [
+                'items' => $items,
+                'totalCount' => $totalCount,
+                'currentWarehouseName' => $currentWarehouseName,
+                'warehouseIdParam' => $warehouseIdParam,
+                'q' => $q,
+            ]),
+        ];
+    }
+
+    /**
+     * Offcanvas: ส่งรายการพัสดุที่ "ต่ำกว่าจุดสั่งซื้อ" (ยอดคงเหลือ < min_qty) เป็น JSON (content เป็น HTML)
+     */
+    public function actionCriticalItemsOffcanvas()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        try {
+            $q = trim((string) $this->request->get('q', ''));
+
+            $mainWarehouseIds = $this->getMainWarehouseIds();
+            if (empty($mainWarehouseIds)) {
+                $mainWarehouseIds = [-1];
+            }
+
+            $warehouseId = $this->getFilterWarehouseId();
+            if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+                Yii::$app->session->remove('dashboard_warehouse_id');
+                $warehouseId = null;
+            }
+
+            $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+            // สรุปยอดคงเหลือต่อ item_code ในคลังที่เลือก
+            $balanceSub = (new Query())
+                ->select(['item_code', 'SUM(balance_qty) AS total_qty'])
+                ->from(StockBalance::tableName())
+                ->where(['warehouse_id' => $warehouseIds])
+                ->groupBy('item_code');
+
+            $itemsQuery = (new Query())
+                ->from(['i' => StockItem::tableName()])
+                ->leftJoin(['b' => $balanceSub], 'b.item_code = i.item_code')
+                ->select([
+                    'i.item_code',
+                    'i.item_name',
+                    'i.min_qty',
+                    'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
+                    'shortfall' => new Expression('i.min_qty - COALESCE(b.total_qty, 0)'),
+                ])
+                ->where([
+                    'i.is_active' => 1,
+                ])
+                ->andWhere(['not', ['i.min_qty' => null]])
+                ->andWhere(['>', 'i.min_qty', 0])
+                ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+
+            if ($q !== '') {
+                $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
+                $codeCond = ['like', 'i.item_code', $q];
+
+                if (!empty($tokens)) {
+                    $nameCond = ['and'];
+                    foreach ($tokens as $t) {
+                        $nameCond[] = ['like', 'i.item_name', $t];
+                    }
+                } else {
+                    $nameCond = ['like', 'i.item_name', $q];
+                }
+
+                $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
+            }
+
+            $totalCount = (int) (clone $itemsQuery)->count();
+
+            $rows = (clone $itemsQuery)
+                ->orderBy(['i.min_qty' => SORT_DESC, 'i.item_name' => SORT_ASC])
+                ->limit(20)
+                ->all();
+
+            $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
+                return $r['item_code'] ?? null;
+            }, $rows))));
+
+            $itemModels = [];
+            if (!empty($itemCodes)) {
+                $itemModels = StockItem::find()
+                    ->where(['item_code' => $itemCodes])
+                    ->indexBy('item_code')
+                    ->all();
+            }
+
+            $items = [];
+            foreach ($rows as $r) {
+                $code = $r['item_code'];
+                $model = $itemModels[$code] ?? null;
+                $items[] = [
+                    'item_code' => $code,
+                    'item_name' => $r['item_name'],
+                    'min_qty' => (float) $r['min_qty'],
+                    'current_qty' => (float) $r['current_qty'],
+                    'shortfall' => (float) $r['shortfall'],
+                    'unit_name' => $model ? $model->getUnitName() : null,
+                    'img' => $model ? $model->ShowImg() : null,
+                ];
+            }
+
+            $currentWarehouseName = 'ทั้งหมด';
+            if ($warehouseId !== null) {
+                foreach ($this->getMainWarehousesList() as $w) {
+                    if ((int)$w->id === (int)$warehouseId) {
+                        $currentWarehouseName = $w->warehouse_name;
+                        break;
+                    }
+                }
+            }
+
+            $warehouseIdParam = $warehouseId !== null ? (string) (int) $warehouseId : 'all';
+
+            return [
+                'status' => 'success',
+                'content' => $this->renderPartial('_critical_items_offcanvas_content', [
+                    'items' => $items,
+                    'totalCount' => $totalCount,
+                    'currentWarehouseName' => $currentWarehouseName,
+                    'warehouseIdParam' => $warehouseIdParam,
+                    'q' => $q,
+                ]),
+            ];
+        } catch (\Throwable $e) {
+            Yii::error('critical-items-offcanvas failed: ' . $e->getMessage(), __METHOD__);
+            return [
+                'status' => 'error',
+                'message' => 'โหลดข้อมูลไม่สำเร็จ: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Export Excel: รายการพัสดุที่มีสต๊อก (>0) ตามคลังที่เลือก (และค้นหาด้วย q)
+     */
+    public function actionExportItemsWithStockExcel()
+    {
+        $q = trim((string) $this->request->get('q', ''));
+
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            Yii::$app->session->remove('dashboard_warehouse_id');
+            $warehouseId = null;
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+        $itemsQuery = (new Query())
+            ->from(['sb' => StockBalance::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->select([
+                'sb.item_code',
+                'i.item_name',
+                'total_qty' => new Expression('SUM(sb.balance_qty)'),
+            ])
+            ->where(['sb.warehouse_id' => $warehouseIds])
+            ->andWhere(['>', 'sb.balance_qty', 0])
+            ->groupBy(['sb.item_code', 'i.item_name'])
+            ->orderBy(['i.item_name' => SORT_ASC]);
+
+        if ($q !== '') {
+            $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
+            $codeCond = ['like', 'i.item_code', $q];
+
+            if (!empty($tokens)) {
+                $nameCond = ['and'];
+                foreach ($tokens as $t) {
+                    $nameCond[] = ['like', 'i.item_name', $t];
+                }
+            } else {
+                $nameCond = ['like', 'i.item_name', $q];
+            }
+
+            $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
+        }
+
+        $rows = $itemsQuery->all();
+        $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
+            return $r['item_code'] ?? null;
+        }, $rows))));
+
+        $itemModels = [];
+        if (!empty($itemCodes)) {
+            $itemModels = StockItem::find()
+                ->where(['item_code' => $itemCodes])
+                ->indexBy('item_code')
+                ->all();
+        }
+
+        $warehouseIdParam = $warehouseId !== null ? (string) (int) $warehouseId : 'all';
+        $filename = 'items-with-stock-' . $warehouseIdParam . '-' . date('Ymd-His') . '.xlsx';
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('รายการพัสดุที่มีสต๊อก');
+
+        $sheet->setCellValue('A1', 'รายการพัสดุที่มีสต๊อก');
+        $sheet->mergeCells('A1:D1');
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true)->setSize(14);
+
+        $headers = ['รหัสพัสดุ', 'ชื่อพัสดุ', 'หน่วย', 'จำนวนคงเหลือ'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '3', $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A3:' . $lastCol . '3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $rowNum = 4;
+        foreach ($rows as $r) {
+            $code = $r['item_code'];
+            $model = $itemModels[$code] ?? null;
+            $unitName = $model ? $model->getUnitName() : null;
+
+            $sheet->setCellValue('A' . $rowNum, $code);
+            $sheet->setCellValue('B' . $rowNum, $r['item_name']);
+            $sheet->setCellValue('C' . $rowNum, $unitName ?? '-');
+            $sheet->setCellValue('D' . $rowNum, (float) $r['total_qty']);
+            $rowNum++;
+        }
+
+        $sheet->getStyle('D4:D' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $this->response->format = Response::FORMAT_RAW;
+        $this->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        Yii::$app->end();
+    }
+
+    /**
+     * Export Excel: รายการพัสดุที่ต่ำกว่าจุดสั่งซื้อ (ยอดคงเหลือ < min_qty)
+     */
+    public function actionExportCriticalItemsExcel()
+    {
+        $q = trim((string) $this->request->get('q', ''));
+
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseId = $this->getFilterWarehouseId();
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            Yii::$app->session->remove('dashboard_warehouse_id');
+            $warehouseId = null;
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+
+        $balanceSub = (new Query())
+            ->select(['item_code', 'SUM(balance_qty) AS total_qty'])
+            ->from(StockBalance::tableName())
+            ->where(['warehouse_id' => $warehouseIds])
+            ->groupBy('item_code');
+
+        $itemsQuery = (new Query())
+            ->from(['i' => StockItem::tableName()])
+            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.item_code')
+            ->select([
+                'i.item_code',
+                'i.item_name',
+                'i.min_qty',
+                'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
+                'shortfall' => new Expression('i.min_qty - COALESCE(b.total_qty, 0)'),
+            ])
+            ->where(['i.is_active' => 1])
+            ->andWhere(['not', ['i.min_qty' => null]])
+            ->andWhere(['>', 'i.min_qty', 0])
+            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+
+        if ($q !== '') {
+            $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
+            $codeCond = ['like', 'i.item_code', $q];
+
+            if (!empty($tokens)) {
+                $nameCond = ['and'];
+                foreach ($tokens as $t) {
+                    $nameCond[] = ['like', 'i.item_name', $t];
+                }
+            } else {
+                $nameCond = ['like', 'i.item_name', $q];
+            }
+
+            $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
+        }
+
+        $rows = $itemsQuery
+            ->orderBy(['i.min_qty' => SORT_DESC, 'i.item_name' => SORT_ASC])
+            ->all();
+
+        $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
+            return $r['item_code'] ?? null;
+        }, $rows))));
+
+        $itemModels = [];
+        if (!empty($itemCodes)) {
+            $itemModels = StockItem::find()
+                ->where(['item_code' => $itemCodes])
+                ->indexBy('item_code')
+                ->all();
+        }
+
+        $warehouseIdParam = $warehouseId !== null ? (string) (int) $warehouseId : 'all';
+        $filename = 'critical-items-' . $warehouseIdParam . '-' . date('Ymd-His') . '.xlsx';
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ต่ำกว่าจุดสั่งซื้อ');
+
+        $sheet->setCellValue('A1', 'รายการพัสดุที่ต่ำกว่าจุดสั่งซื้อ');
+        $sheet->mergeCells('A1:E1');
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true)->setSize(14);
+
+        $headers = ['รหัสพัสดุ', 'ชื่อพัสดุ', 'ยอดคงเหลือ', 'จุดสั่งซื้อ', 'หน่วย'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '3', $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:' . $lastCol . '3')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A3:' . $lastCol . '3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $rowNum = 4;
+        foreach ($rows as $r) {
+            $code = $r['item_code'];
+            $model = $itemModels[$code] ?? null;
+            $unitName = $model ? $model->getUnitName() : null;
+
+            $sheet->setCellValue('A' . $rowNum, $code);
+            $sheet->setCellValue('B' . $rowNum, $r['item_name']);
+            $sheet->setCellValue('C' . $rowNum, (float) $r['current_qty']);
+            $sheet->setCellValue('D' . $rowNum, (float) $r['min_qty']);
+            $sheet->setCellValue('E' . $rowNum, $unitName ?? '-');
+            $rowNum++;
+        }
+
+        $sheet->getStyle('C4:D' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $this->response->format = Response::FORMAT_RAW;
+        $this->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        Yii::$app->end();
     }
 
     /** คลังหลักที่ยังไม่ถูกลบ (ถ้าไม่ใช่ admin เฉพาะคลังที่ผู้ใช้ถูกกำหนดเป็นผู้รับผิดชอบใน warehouse) */

@@ -5,8 +5,11 @@ namespace app\modules\helpdesk2\controllers;
 use Yii;
 use yii\web\Response;
 use app\modules\helpdesk2\models\HelpdeskDetail;
+use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\StockBalance;
+use app\modules\inventoryV2\models\StockDetail;
+use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\components\InventoryService;
 
 class RepairPartsController extends \yii\web\Controller
@@ -40,6 +43,10 @@ class RepairPartsController extends \yii\web\Controller
                     'name' => 'part_record',
                 ]);
 
+                $helpdesk = Helpdesk::findOne((int) $helpdesk_id);
+                $repairNumber = trim((string) ($helpdesk->repair_number ?? ''));
+                $stockOrdersByWarehouse = []; // [warehouse_id => StockOrder]
+
                 foreach ($rows as $row) {
                     $itemCode = trim((string) ($row['item_code'] ?? ''));
                     $itemName = trim((string) ($row['item_name'] ?? ''));
@@ -70,6 +77,53 @@ class RepairPartsController extends \yii\web\Controller
                         throw new \RuntimeException('บันทึกรายการอะไหล่ไม่สำเร็จ');
                     }
 
+                    // สร้างเอกสารจ่ายออกใน inventoryV2 เพื่อให้มี "ประวัติการตัดจ่าย" ในระบบการย่อย (Option B)
+                    if (!isset($stockOrdersByWarehouse[$warehouseId])) {
+                        $now = time();
+                        $orderSuffix = Yii::$app->security->generateRandomString(6);
+                        $repairToken = $repairNumber !== '' ? $repairNumber : ('HDB' . (int) $helpdesk_id);
+                        $repairToken = preg_replace('/[^A-Za-z0-9\-_]/', '', $repairToken) ?: ('HDB' . (int) $helpdesk_id);
+
+                        $orderNo = 'ISS-HDB-' . $repairToken . '-' . date('YmdHis') . '-' . $orderSuffix;
+                        $orderNo = mb_substr($orderNo, 0, 100);
+
+                        $stockOrder = new StockOrder();
+                        $stockOrder->order_type = StockOrder::ORDER_TYPE_OUT;
+                        $stockOrder->order_date = date('Y-m-d');
+                        $stockOrder->order_no = $orderNo;
+                        $stockOrder->main_warehouse_id = $warehouseId;
+                        // เบิกอะไหล่จากงานซ่อม = "การใช้งาน/ตัดจ่าย" ฝั่งคลังย่อย
+                        $stockOrder->source_type = 'USAGE';
+                        $stockOrder->status = StockOrder::STATUS_CONFIRMED;
+
+                        $stockOrder->ref = 'HELPDESK_ID:' . (int) $helpdesk_id;
+                        $stockOrder->data_json = [
+                            'helpdesk_id' => (int) $helpdesk_id,
+                            'repair_number' => $repairNumber,
+                            'source' => 'helpdesk2.repair-parts',
+                        ];
+                        $stockOrder->setDisbursementDate($now);
+                        $stockOrder->updated_at = $now; // ใช้ filter ในหน้า inventory-v2
+
+                        if (!$stockOrder->save(false)) {
+                            throw new \RuntimeException('สร้างเอกสารจ่ายออก (inventoryV2) ไม่สำเร็จ');
+                        }
+
+                        $stockOrdersByWarehouse[$warehouseId] = $stockOrder;
+                    }
+
+                    $stockOrderForWarehouse = $stockOrdersByWarehouse[$warehouseId];
+                    $outDetail = new StockDetail();
+                    $outDetail->stock_order_id = $stockOrderForWarehouse->id;
+                    $outDetail->item_code = $itemCode;
+                    $outDetail->qty = $qty;
+                    $outDetail->unit_price = 0; // ไม่มีราคาทุนจากระบบซ่อมใน flow นี้
+                    $outDetail->lot_number = '-'; // จำเป็นต่อ validate (FIFO จะใช้ lot ของฝั่ง IN อยู่แล้ว)
+                    $outDetail->ref = 'HELPDESK_DETAIL_ID:' . (int) $part->id;
+                    if (!$outDetail->save(false)) {
+                        throw new \RuntimeException('สร้างรายการจ่ายออก (inventoryV2) ไม่สำเร็จ');
+                    }
+
                     // ตัดสต๊อกคลังย่อยทันทีตามจำนวนที่เบิก
                     // พยายามใช้ FIFO ปกติก่อน และ fallback เป็นตัดตามยอดคงเหลือจริงใน stock_balance
                     // เฉพาะกรณีที่ยอดรวมพอแต่ lot/remain_qty ใน stock_detail ไม่ครบ ทำให้ FIFO โยน error
@@ -79,15 +133,44 @@ class RepairPartsController extends \yii\web\Controller
                             $warehouseId,
                             $qty,
                             'OUT',
-                            0,
-                            null
+                            $stockOrderForWarehouse->id,
+                            $outDetail->id
                         );
                     } catch (\Throwable $stockError) {
-                        $availableQty = $this->getAvailableBalanceQty($itemCode, $warehouseId);
-                        if ($availableQty + 0.00001 < $qty) {
-                            throw $stockError;
+                        // หมายเหตุ: FIFO โยน error จาก `stock_detail.remain_qty` ไม่ตรง
+                        // fallback นี้จะตัดจาก `stock_balance` เฉพาะล็อตที่ balance_qty > 0
+                        // ดังนั้นเงื่อนไขเช็คยอดต้องใช้ยอดเฉพาะฝั่งที่ "ตัดได้จริง" ด้วย
+                        $availableQtyNet = $this->getAvailableBalanceQty($itemCode, $warehouseId);
+                        $availableQtyPositive = $this->getAvailablePositiveBalanceQty($itemCode, $warehouseId);
+                        if ($availableQtyPositive + 0.00001 < $qty) {
+                            $topLots = $this->getTopPositiveLots($itemCode, $warehouseId, 5);
+                            $topLotsText = '';
+                            if (!empty($topLots)) {
+                                $topLotsText = ' topLots(>0): ' . implode(
+                                    ', ',
+                                    array_map(static fn($l) => ($l['lot_number'] ?? '-') . ':' . (string) $l['balance_qty'], $topLots)
+                                );
+                            }
+
+                            $fifoAvailableCount = $this->countFifoUsableInLots($itemCode, $warehouseId);
+
+                            throw new \Exception(sprintf(
+                                'พัสดุรหัส %s ในคลังย่อย id=%d มีไม่พอจ่าย (ขาดอีก %s) [ยอดคงเหลือสุทธิ=%.4f, ยอดคงเหลือที่ตัดได้(>0)=%.4f, FIFO_IN_lots_remain>0=%d]%s',
+                                $itemCode,
+                                (int) $warehouseId,
+                                (string) max(0, $qty - $availableQtyPositive),
+                                (float) $availableQtyNet,
+                                (float) $availableQtyPositive,
+                                (int) $fifoAvailableCount,
+                                $topLotsText
+                            ));
                         }
                         $this->deductFromBalanceLots($itemCode, $warehouseId, $qty);
+
+                        // ถ้า FIFO ทำงานไม่ครบ แต่เราตัดสต๊อกจากยอดคงเหลือแล้ว
+                        // ให้ mark remain_qty ของฝั่ง OUT เพื่อให้ประวัติไม่ว่าง
+                        $outDetail->remain_qty = $qty;
+                        $outDetail->save(false);
                     }
                 }
 
@@ -198,6 +281,58 @@ class RepairPartsController extends \yii\web\Controller
         return (float) StockBalance::find()
             ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
             ->sum('balance_qty');
+    }
+
+    /**
+     * ยอดคงเหลือที่ "ตัดได้จริง" ตาม logic ของ deductFromBalanceLots
+     */
+    private function getAvailablePositiveBalanceQty(string $itemCode, int $warehouseId): float
+    {
+        return (float) StockBalance::find()
+            ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
+            ->andWhere(['>', 'balance_qty', 0])
+            ->sum('balance_qty');
+    }
+
+    /**
+     * ดึง lot ที่มี balance_qty > 0 สำหรับช่วย debug ตอนตัดไม่ผ่าน
+     * @return array<int, array{lot_number:string, balance_qty:float}>
+     */
+    private function getTopPositiveLots(string $itemCode, int $warehouseId, int $limit = 5): array
+    {
+        $rows = StockBalance::find()
+            ->select(['lot_number', 'balance_qty'])
+            ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
+            ->andWhere(['>', 'balance_qty', 0])
+            ->orderBy(['balance_qty' => SORT_DESC, 'lot_number' => SORT_ASC])
+            ->limit($limit)
+            ->asArray()
+            ->all();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = [
+                'lot_number' => (string) ($r['lot_number'] ?? '-'),
+                'balance_qty' => (float) ($r['balance_qty'] ?? 0),
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * นับจำนวน IN-lots ที่เหลือสำหรับ FIFO (remain_qty > 0)
+     */
+    private function countFifoUsableInLots(string $itemCode, int $warehouseId): int
+    {
+        return (int) StockDetail::find()
+            ->joinWith('stockOrder')
+            ->where([
+                'stock_detail.item_code' => $itemCode,
+                'stock_order.order_type' => 'IN',
+                'stock_order.main_warehouse_id' => $warehouseId,
+            ])
+            ->andWhere(['>', 'stock_detail.remain_qty', 0])
+            ->count();
     }
 
     private function deductFromBalanceLots(string $itemCode, int $warehouseId, float $qty): void

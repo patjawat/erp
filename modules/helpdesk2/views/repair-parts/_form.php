@@ -17,6 +17,9 @@ foreach (($partRows ?? []) as $row) {
         'qty' => (float) ($dj['qty'] ?? 0),
         'unit' => (string) ($dj['unit'] ?? ''),
         'balance_qty' => (float) ($dj['balance_qty'] ?? 0),
+        // สำคัญ: ต้องส่ง `warehouse_id` กลับไป backend ไม่งั้น backend จะมองเป็น 0
+        // แล้วตัดสต๊อก/ประวัติใน inventoryV2 จะผิดคลัง
+        'warehouse_id' => (int) ($dj['warehouse_id'] ?? 0),
     ];
 }
 
@@ -130,6 +133,57 @@ function partRenderCart() {
     \$body.append(html);
   });
   $('#part-grand-total').text(partFormatNumber(totalQty) + ' ชิ้น');
+}
+
+// Refresh balance_qty in cart from inventoryV2 before submitting.
+// This is important when user is editing an existing repair ticket:
+// the cart may contain stale balances loaded from helpdesk_detail.
+function partRefreshBalancesBeforeSubmit() {
+  return new Promise(function(resolve, reject) {
+    var warehouseId = $('#part-sub-warehouse-id').val();
+    if (!warehouseId) return resolve(false);
+
+    var uniqueCodes = [];
+    partCartRows.forEach(function(r) {
+      var code = r.item_code ? String(r.item_code) : '';
+      if (code && uniqueCodes.indexOf(code) === -1) uniqueCodes.push(code);
+    });
+
+    if (uniqueCodes.length === 0) return resolve(true);
+
+    var jobs = uniqueCodes.map(function(code) {
+      return new Promise(function(res2) {
+        $.getJSON('$lookupUrl', { q: code, warehouse_id: warehouseId })
+          .done(function(resp) {
+            var list = Array.isArray(resp && resp.results) ? resp.results : [];
+            var found = list.find(function(it) { return String(it.item_code) === String(code); });
+            var bal = 0;
+            if (found && found.balance_qty !== undefined) bal = partParseNumber(found.balance_qty);
+            res2({ code: code, balance_qty: bal });
+          })
+          .fail(function() {
+            // If lookup fails, keep existing balances to not block the flow unnecessarily.
+            res2({ code: code, balance_qty: null });
+          });
+      });
+    });
+
+    Promise.all(jobs).then(function(results) {
+      results.forEach(function(r) {
+        if (r.balance_qty === null) return;
+        partCartRows.forEach(function(row) {
+          if (String(row.item_code) === String(r.code)) {
+            row.balance_qty = r.balance_qty;
+          }
+        });
+      });
+      partRenderCart();
+      resolve(true);
+    }).catch(function() {
+      // Don't break submission due to refresh issues.
+      resolve(false);
+    });
+  });
 }
 
 var searchTimer = null;
@@ -246,34 +300,53 @@ $(document).off('beforeSubmit.partForm').on('beforeSubmit.partForm', '#part-pos-
     Swal.fire({ icon: 'warning', title: 'ยังไม่มีรายการเบิกอะไหล่' });
     return false;
   }
-  $('#part-rows-json').val(JSON.stringify(partCartRows));
-  $.ajax({
-    url: form.attr('action'),
-    type: 'POST',
-    data: form.serialize(),
-    dataType: 'json',
-    success: function (res) {
-      if (res.status === 'success') {
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false }).then(function () {
-          try {
-            var el = document.getElementById('part-pos-offcanvas');
-            if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
-          } catch (e) {}
-          window.location.reload();
-        });
-      } else {
-        Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: res.message || 'ไม่สามารถบันทึกได้' });
-      }
-    },
-    error: function () {
-      Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' });
+  partRefreshBalancesBeforeSubmit().then(function() {
+    // Validate current balances (best-effort).
+    // If balances are stale and refresh couldn't run, backend will still validate.
+    var over = partCartRows.filter(function(r) {
+      var b = partParseNumber(r.balance_qty);
+      var q = partParseNumber(r.qty);
+      return q > b + 0.00001;
+    });
+    if (over.length) {
+      Swal.fire({ icon: 'warning', title: 'จำนวนเกินคงเหลือล่าสุด', text: 'กรุณากดค้นหาอีกครั้ง/ปรับจำนวน แล้วค่อยยืนยันใหม่' });
+      return;
     }
+
+    $('#part-rows-json').val(JSON.stringify(partCartRows));
+    $.ajax({
+      url: form.attr('action'),
+      type: 'POST',
+      data: form.serialize(),
+      dataType: 'json',
+      success: function (res) {
+        if (res.status === 'success') {
+          Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false }).then(function () {
+            try {
+              var el = document.getElementById('part-pos-offcanvas');
+              if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
+            } catch (e) {}
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: res.message || 'ไม่สามารถบันทึกได้' });
+        }
+      },
+      error: function () {
+        Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' });
+      }
+    });
   });
   return false;
 });
 
 if (Array.isArray(partInitialRows) && partInitialRows.length) {
   partCartRows = partInitialRows;
+  // fallback: ถ้าแถวใดไม่มี warehouse_id ให้ใช้ค่าจาก dropdown ที่เลือกไว้
+  var currentWid = $('#part-sub-warehouse-id').val();
+  partCartRows.forEach(function (r) {
+    if (!r.warehouse_id && currentWid) r.warehouse_id = currentWid;
+  });
 }
 partRenderCart();
 JS;

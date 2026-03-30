@@ -20,6 +20,7 @@ $pendingRequisitions = $pendingRequisitions ?? [];
 $chartData = $chartData ?? ['categories' => [], 'series' => [], 'fiscal_year' => null];
 $fiscalYear = $chartData['fiscal_year'] ?? null;
 $currentWarehouseId = $currentWarehouseId ?? null;
+$warehouseIdParam = $currentWarehouseId !== null ? (int)$currentWarehouseId : 'all';
 
 $currentWarehouseName = 'ทั้งหมด';
 if ($currentWarehouseId && $warehouses) {
@@ -100,7 +101,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
             </a>
         </div>
         <div class="col-6 col-lg-3">
-            <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
+            <a href="<?= Url::to(['/inventory-v2/main-stock/critical-items-offcanvas', 'warehouse_id' => $warehouseIdParam]) ?>" class="text-decoration-none d-block h-100 kpi-card-link open-critical-items-offcanvas" data-offcanvas-title="<?= Html::encode($currentWarehouseName) ?>">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
                     <div class="card-body p-3">
                         <p class="text-muted small mb-1 fw-bold">ต่ำกว่าจุดสั่งซื้อ</p>
@@ -126,16 +127,18 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-secondary border-3">
-                <div class="card-body p-3">
-                    <p class="text-muted small mb-1 fw-bold">รายการพัสดุที่มีสต็อก</p>
-                    <div class="d-flex align-items-end gap-2">
-                        <span class="fs-4 fw-bold text-dark" id="kpi-items"><?= (int)$stats['items_with_stock'] ?></span>
-                        <span class="text-muted small mb-1">รายการ</span>
+            <a href="<?= Url::to(['/inventory-v2/main-stock/items-with-stock-offcanvas', 'warehouse_id' => $warehouseIdParam]) ?>" class="text-decoration-none d-block h-100 kpi-card-link open-items-with-stock-offcanvas" data-offcanvas-title="<?= Html::encode($currentWarehouseName) ?>">
+                <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-secondary border-3">
+                    <div class="card-body p-3">
+                        <p class="text-muted small mb-1 fw-bold">รายการพัสดุที่มีสต๊อก</p>
+                        <div class="d-flex align-items-end gap-2">
+                            <span class="fs-4 fw-bold text-dark" id="kpi-items"><?= (int)$stats['items_with_stock'] ?></span>
+                            <span class="text-muted small mb-1">รายการ</span>
+                        </div>
+                        <p class="text-muted small mb-0 mt-2"><i class="bi bi-box-seam me-1"></i><?= (int)$stats['lots_count'] ?> Lot ในคลัง</p>
                     </div>
-                    <p class="text-muted small mb-0 mt-2"><i class="bi bi-box-seam me-1"></i><?= (int)$stats['lots_count'] ?> Lot ในคลัง</p>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -207,6 +210,32 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
     </div>
 </div>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="itemsWithStockOffcanvas" aria-labelledby="itemsWithStockOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="itemsWithStockOffcanvasLabel">รายการพัสดุที่มีสต๊อก</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="itemsWithStockOffcanvasBody">
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm mb-2"></div>
+            <div class="small">กำลังโหลด...</div>
+        </div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="criticalItemsOffcanvas" aria-labelledby="criticalItemsOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="criticalItemsOffcanvasLabel">ต่ำกว่าจุดสั่งซื้อ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="criticalItemsOffcanvasBody">
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm mb-2"></div>
+            <div class="small">กำลังโหลด...</div>
+        </div>
+    </div>
+</div>
+
 <style>
 .main-stock-dashboard .kpi-card-link { color: inherit; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .main-stock-dashboard .kpi-card-link:hover { color: inherit; transform: translateY(-2px); }
@@ -256,6 +285,179 @@ $(document).ready(function() {
     chart.render();
 
     $('#warehouseFilter').on('change', function() { $('#form-warehouse').submit(); });
+
+    $('body').on('click', '.open-items-with-stock-offcanvas', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (!url) return;
+
+        $('#itemsWithStockOffcanvas').data('base-url', url);
+
+        var title = $(this).data('offcanvas-title') || 'รายการพัสดุที่มีสต๊อก';
+        $('#itemsWithStockOffcanvasLabel').text(title);
+        $('#itemsWithStockOffcanvasBody').html(
+            '<div class="text-center py-5 text-muted">' +
+                '<div class="spinner-border spinner-border-sm mb-2"></div>' +
+                '<div class="small">กำลังโหลด...</div>' +
+            '</div>'
+        );
+
+        var offcanvasEl = document.getElementById('itemsWithStockOffcanvas');
+        var offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+        offcanvas.show();
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.status === 'success' && res.content) {
+                    $('#itemsWithStockOffcanvasBody').html(res.content);
+                } else {
+                    $('#itemsWithStockOffcanvasBody').html(
+                        '<div class="alert alert-warning mb-0">ไม่พบข้อมูล</div>'
+                    );
+                }
+            },
+            error: function() {
+                $('#itemsWithStockOffcanvasBody').html(
+                    '<div class="alert alert-danger mb-0">โหลดข้อมูลไม่สำเร็จ</div>'
+                );
+            }
+        });
+    });
+
+    $('body').on('click', '.open-critical-items-offcanvas', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (!url) return;
+
+        $('#criticalItemsOffcanvas').data('base-url', url);
+
+        var title = $(this).data('offcanvas-title') || 'ต่ำกว่าจุดสั่งซื้อ';
+        $('#criticalItemsOffcanvasLabel').text('ต่ำกว่าจุดสั่งซื้อ');
+        $('#criticalItemsOffcanvasBody').html(
+            '<div class="text-center py-5 text-muted">' +
+                '<div class="spinner-border spinner-border-sm mb-2"></div>' +
+                '<div class="small">กำลังโหลด...</div>' +
+            '</div>'
+        );
+
+        var offcanvasEl = document.getElementById('criticalItemsOffcanvas');
+        var offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+        offcanvas.show();
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.status === 'success' && res.content) {
+                    $('#criticalItemsOffcanvasBody').html(res.content);
+                    return;
+                }
+                var msg = (res && res.message) ? res.message : 'ไม่พบข้อมูล';
+                $('#criticalItemsOffcanvasBody').html(
+                    '<div class="alert alert-warning mb-0">' + msg + '</div>'
+                );
+            },
+            error: function(xhr) {
+                var detail = xhr && xhr.responseText ? xhr.responseText : '';
+                detail = (detail || '').toString().slice(0, 300);
+                $('#criticalItemsOffcanvasBody').html(
+                    '<div class="alert alert-danger mb-0">โหลดข้อมูลไม่สำเร็จ' + (detail ? (' (รายละเอียด: ' + detail + ')') : '') + '</div>'
+                );
+            }
+        });
+    });
+
+    $('body').on('click', '.items-with-stock-search-btn', function(e) {
+        e.preventDefault();
+        var baseUrl = $('#itemsWithStockOffcanvas').data('base-url');
+        if (!baseUrl) return;
+
+        var q = ($('#itemsWithStockSearchQ').val() || '').toString().trim();
+        var sep = baseUrl.indexOf('?') !== -1 ? '&' : '?';
+        var url = baseUrl + sep + 'q=' + encodeURIComponent(q);
+
+        $('#itemsWithStockOffcanvasBody').html(
+            '<div class="text-center py-5 text-muted">' +
+                '<div class="spinner-border spinner-border-sm mb-2"></div>' +
+                '<div class="small">กำลังค้นหา...</div>' +
+            '</div>'
+        );
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.status === 'success' && res.content) {
+                    $('#itemsWithStockOffcanvasBody').html(res.content);
+                } else {
+                    $('#itemsWithStockOffcanvasBody').html(
+                        '<div class="alert alert-warning mb-0">ไม่พบข้อมูล</div>'
+                    );
+                }
+            },
+            error: function() {
+                $('#itemsWithStockOffcanvasBody').html(
+                    '<div class="alert alert-danger mb-0">โหลดข้อมูลไม่สำเร็จ</div>'
+                );
+            }
+        });
+    });
+
+    $('body').on('keydown', '#itemsWithStockSearchQ', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $('.items-with-stock-search-btn').first().trigger('click');
+        }
+    });
+
+    $('body').on('click', '.critical-items-search-btn', function(e) {
+        e.preventDefault();
+        var baseUrl = $('#criticalItemsOffcanvas').data('base-url');
+        if (!baseUrl) return;
+
+        var q = ($('#criticalItemsSearchQ').val() || '').toString().trim();
+        var sep = baseUrl.indexOf('?') !== -1 ? '&' : '?';
+        var url = baseUrl + sep + 'q=' + encodeURIComponent(q);
+
+        $('#criticalItemsOffcanvasBody').html(
+            '<div class="text-center py-5 text-muted">' +
+                '<div class="spinner-border spinner-border-sm mb-2"></div>' +
+                '<div class="small">กำลังค้นหา...</div>' +
+            '</div>'
+        );
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.status === 'success' && res.content) {
+                    $('#criticalItemsOffcanvasBody').html(res.content);
+                } else {
+                    $('#criticalItemsOffcanvasBody').html(
+                        '<div class="alert alert-warning mb-0">ไม่พบข้อมูล</div>'
+                    );
+                }
+            },
+            error: function() {
+                $('#criticalItemsOffcanvasBody').html(
+                    '<div class="alert alert-danger mb-0">โหลดข้อมูลไม่สำเร็จ</div>'
+                );
+            }
+        });
+    });
+
+    $('body').on('keydown', '#criticalItemsSearchQ', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $('.critical-items-search-btn').first().trigger('click');
+        }
+    });
 });
 JS;
 $this->registerJs($js, View::POS_READY);
