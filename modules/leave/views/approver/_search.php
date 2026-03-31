@@ -102,7 +102,7 @@ use app\modules\hr\models\Organization;
                 'class' => 'btn btn-primary w-md-auto',
                 'id' => 'summit'
             ]) ?>
-            <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            <!-- <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button> -->
         </div>
     </div>
 

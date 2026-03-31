@@ -208,7 +208,7 @@ $phone = $employee->phone ?? '';
                         <?= $form->field($model, 'date_start')->textInput([
                             'id' => 'leave-date_start',
                             'class' => 'form-control',
-                            'placeholder' => 'dd/mm/yyyy',
+                            'placeholder' => 'วันที่/เดือน/พ.ศ.',
                         ])->label('ตั้งแต่วันที่') ?>
                     </div>
                     <div class="col-md-5">
@@ -221,7 +221,7 @@ $phone = $employee->phone ?? '';
                         <?= $form->field($model, 'date_end')->textInput([
                             'id' => 'leave-date_end',
                             'class' => 'form-control',
-                            'placeholder' => 'dd/mm/yyyy',
+                            'placeholder' => 'วันที่/เดือน/พ.ศ.',
                         ])->label('ถึงวันที่') ?>
                     </div>
                     <div class="col-md-5">

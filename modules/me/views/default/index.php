@@ -278,7 +278,7 @@ if (!empty($upcomingHealth)): ?>
     <div class="col-12 col-xl-3">
         <div class="row g-3">
             <div class="col-6">
-                <a href="<?= Url::to(!empty(env('LEAVE_USER_URL')) ? env('LEAVE_USER_URL') : ['/me/leave']) ?>" class="text-decoration-none text-body d-block h-100">
+                <a href="<?= Url::to(['/leave']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
