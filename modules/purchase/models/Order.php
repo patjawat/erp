@@ -193,7 +193,9 @@ class Order extends \yii\db\ActiveRecord
     // เชื่อมกับ ผู้จำหน่าย
     public function getVendor()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
+        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])
+            ->andOnCondition(['name' => 'vendor'])
+            ->andOnCondition(['!=', 'code', '-']);
     }
 
     // เชื่อมกับ รับเข้า Stock

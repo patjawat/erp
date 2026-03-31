@@ -29,7 +29,17 @@ use iamsaint\datetimepicker\Datetimepicker;
 
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'code')->textInput(['maxlength' => true])->label('รหัสตัวแทนจำหน่าย')  ?>
+                    <?php
+                    $vendorCodeInputOptions = [
+                        'maxlength' => true,
+                        'readonly' => true,
+                        'class' => 'form-control bg-light',
+                    ];
+                    if ($model->isNewRecord) {
+                        $vendorCodeInputOptions['placeholder'] = 'สร้างอัตโนมัติ';
+                    }
+                    ?>
+                    <?= $form->field($model, 'code')->textInput($vendorCodeInputOptions)->label('รหัสตัวแทนจำหน่าย') ?>
                 </div>
                 <div class="col-6">
                     <?= $form->field($model, 'data_json[tax_id]')->textInput(['maxlength' => true])->label('เลขประจำตัวผู้เสียภาษี') ?>

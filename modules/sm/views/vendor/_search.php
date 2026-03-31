@@ -13,6 +13,9 @@ use yii\widgets\ActiveForm;
     'options' => ['data-pjax' => 1],
 ]); ?>
 <div class="row g-2 align-items-end">
+    <?php if ((int) ($model->missing_code_only ?? 0) === 1): ?>
+    <?= Html::hiddenInput('VendorSearch[missing_code_only]', '1') ?>
+    <?php endif; ?>
     <div class="col-12 col-sm-6 col-md-7">
         <?= $form->field($model, 'q')->label(false)->textInput([
             'class' => 'form-control',

@@ -4,9 +4,11 @@ namespace app\modules\sm\controllers;
 
 use Yii;
 use yii\helpers\Json;
+use yii\helpers\Url;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
+use yii\web\BadRequestHttpException;
 use yii\web\UploadedFile;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
@@ -42,6 +44,7 @@ class VendorController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'assign-missing-codes' => ['POST'],
                     ],
                 ],
             ]
@@ -57,14 +60,7 @@ class VendorController extends Controller
     {
         $searchModel = new VendorSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['name' => 'vendor']);
-                $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'title', $searchModel->q],
-
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.address'))"), $searchModel->q],
-            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.phone'))"), $searchModel->q],
-        ]);
+        $this->applyVendorIndexListFilters($dataProvider->query, $searchModel);
 
         $baseQuery = clone $dataProvider->query;
         $baseQuery->andWhere(['name' => 'vendor']);
@@ -76,7 +72,7 @@ class VendorController extends Controller
 
         $completeness = [
             'total' => (int) (clone $baseQuery)->count(),
-            'missing_code' => (int) (clone $baseQuery)->andWhere(['or', ['code' => null], ['code' => '']])->count(),
+            'missing_code' => (int) (clone $baseQuery)->andWhere(['or', ['code' => null], ['code' => ''], ['code' => '-']])->count(),
             'missing_title' => (int) (clone $baseQuery)->andWhere(['or', ['title' => null], ['title' => '']])->count(),
             'missing_tax_id' => (int) (clone $baseQuery)->andWhere($missingJson('$.tax_id'))->count(),
             'missing_contact_name' => (int) (clone $baseQuery)->andWhere($missingJson('$.contact_name'))->count(),
@@ -569,32 +565,158 @@ class VendorController extends Controller
     }
 
     /**
-     * Finds the Vendor model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $id ID
-     * @return Vendor the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    /**
      * ดึงรหัสผู้แทนจำหน่ายถัดไป (เช่น V001 -> V002)
      * @return string
      */
     protected function getNextVendorCode()
     {
-        $last = Vendor::find()
-            ->where(['name' => 'vendor'])
-            ->orderBy(['id' => SORT_DESC])
-            ->one();
-        if (!$last || !$last->code) {
-            return 'V001';
-        }
-        if (preg_match('/^V(\d+)$/i', trim($last->code), $m)) {
-            $next = (int) $m[1] + 1;
-            return 'V' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
-        }
-        return 'V001';
+        $n = $this->getMaxVendorVSequence() + 1;
+
+        return $this->formatVendorCode($n);
     }
 
+    /**
+     * เงื่อนไขรายการเดียวกับหน้า index (ชื่อ vendor + การค้นหา q)
+     */
+    protected function applyVendorIndexListFilters($query, VendorSearch $searchModel): void
+    {
+        $query->andFilterWhere(['name' => 'vendor']);
+        $query->andFilterWhere([
+            'or',
+            ['like', 'title', $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.address'))"), $searchModel->q],
+            ['like', new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.phone'))"), $searchModel->q],
+        ]);
+    }
+
+    /**
+     * Query รายการ vendor ตามพารามิเตอร์หน้า index (ไม่จำกัดหน้า)
+     */
+    protected function buildVendorIndexQuery(array $queryParams)
+    {
+        $searchModel = new VendorSearch();
+        $dataProvider = $searchModel->search($queryParams);
+        $this->applyVendorIndexListFilters($dataProvider->query, $searchModel);
+
+        return $dataProvider->query;
+    }
+
+    /**
+     * กำหนดรหัสรูปแบบ V### ให้ผู้แทนจำหน่ายที่รหัสว่างหรือเป็น "-" แบบเลือกขอบเขต
+     */
+    public function actionAssignMissingCodes()
+    {
+        if (!$this->request->isPost) {
+            throw new BadRequestHttpException('Method Not Allowed');
+        }
+
+        $scope = (string) $this->request->post('scope', 'all');
+        if (!in_array($scope, ['all', 'current_filter'], true)) {
+            $scope = 'all';
+        }
+
+        $missingWhere = [
+            'or',
+            ['code' => null],
+            ['code' => ''],
+            ['code' => '-'],
+        ];
+
+        if ($scope === 'current_filter') {
+            parse_str((string) $this->request->post('index_query', ''), $parsed);
+            unset($parsed['page'], $parsed['per-page'], $parsed['_pjax']);
+            $query = $this->buildVendorIndexQuery($parsed);
+            $query->andWhere($missingWhere);
+        } else {
+            $query = Vendor::find()
+                ->where(['name' => 'vendor'])
+                ->andWhere($missingWhere);
+        }
+
+        $models = $query->orderBy(['id' => SORT_ASC])->all();
+
+        if ($models === []) {
+            Yii::$app->session->setFlash('warning', 'ไม่มีรายการที่ต้องกำหนดรหัสตามเงื่อนไขที่เลือก');
+
+            return $this->redirectToVendorIndexFromPost();
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $n = $this->getMaxVendorVSequence() + 1;
+            $updated = 0;
+            foreach ($models as $model) {
+                $newCode = $this->formatVendorCode($n);
+                $n++;
+                // อัปเดตเฉพาะ code — ไม่เรียก save() เต็มรูปแบบ เพราะแถวที่ title/ฟิลด์อื่นไม่ครบจะ validate ไม่ผ่าน
+                $affected = $model->updateAttributes(['code' => $newCode]);
+                if ($affected < 1) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash(
+                        'error',
+                        'บันทึกไม่สำเร็จ: ' . ($model->title ?: '#' . $model->id) . ' (ไม่สามารถอัปเดตรหัส)'
+                    );
+
+                    return $this->redirectToVendorIndexFromPost();
+                }
+                $updated++;
+            }
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'กำหนดรหัสอัตโนมัติแล้ว ' . $updated . ' รายการ');
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        return $this->redirectToVendorIndexFromPost();
+    }
+
+    /**
+     * ค่าสูงสุดของเลขต่อท้ายรหัสแบบ V123 ในผู้แทนจำหน่ายทั้งหมด
+     */
+    protected function getMaxVendorVSequence(): int
+    {
+        $max = 0;
+        $codes = Vendor::find()
+            ->select(['code'])
+            ->where(['name' => 'vendor'])
+            ->andWhere(['not', ['code' => null]])
+            ->andWhere(['not', ['code' => '']])
+            ->andWhere(['!=', 'code', '-'])
+            ->column();
+        foreach ($codes as $c) {
+            if (preg_match('/^V(\d+)$/i', trim((string) $c), $m)) {
+                $max = max($max, (int) $m[1]);
+            }
+        }
+
+        return $max;
+    }
+
+    protected function formatVendorCode(int $n): string
+    {
+        $width = max(3, strlen((string) $n));
+
+        return 'V' . str_pad((string) $n, $width, '0', STR_PAD_LEFT);
+    }
+
+    protected function redirectToVendorIndexFromPost(): \yii\web\Response
+    {
+        $q = (string) $this->request->post('index_query', '');
+        $base = Url::to(['/sm/vendor/index']);
+        if ($q !== '') {
+            $base .= (strpos($base, '?') !== false ? '&' : '?') . $q;
+        }
+
+        return $this->redirect($base);
+    }
+
+    /**
+     * Finds the Vendor model based on its primary key value.
+     * @param int $id ID
+     * @return Vendor the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
     protected function findModel($id)
     {
         if (($model = Vendor::findOne(['name' => 'vendor','id' => $id])) !== null) {

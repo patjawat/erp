@@ -23,8 +23,27 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'sm-container']); ?>
+<?php $indexQueryString = http_build_query(Yii::$app->request->getQueryParams()); ?>
 
 <div class="container-fluid px-2 px-md-3 pb-3">
+    <?php if (Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+        <?= Html::encode(Yii::$app->session->getFlash('success')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+    <?php if (Yii::$app->session->hasFlash('warning')): ?>
+    <div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+        <?= Html::encode(Yii::$app->session->getFlash('warning')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+    <?php if (Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+        <?= Html::encode(Yii::$app->session->getFlash('error')) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
     <div class="row g-3">
         <div class="col-12">
             <div class="card">
@@ -45,6 +64,43 @@ $this->params['breadcrumbs'][] = $this->title;
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= $dataProvider->getTotalCount() ?></span> รายการ
                         </h6>
                         <div class="d-flex flex-wrap gap-2">
+                            <?php
+                            $missingCodeCount = (int) ($completeness['missing_code'] ?? 0);
+                            $missingCodeFilterActive = (int) ($searchModel->missing_code_only ?? 0) === 1;
+                            $missingCodeUrlParams = [];
+                            if ($searchModel->q !== null && (string) $searchModel->q !== '') {
+                                $missingCodeUrlParams['q'] = $searchModel->q;
+                            }
+                            if ((int) $searchModel->incomplete_only === 1) {
+                                $missingCodeUrlParams['incomplete_only'] = 1;
+                            }
+                            if (!$missingCodeFilterActive) {
+                                $missingCodeUrlParams['missing_code_only'] = 1;
+                            }
+                            $missingCodeToggleUrl = ['index'];
+                            if ($missingCodeUrlParams !== []) {
+                                $missingCodeToggleUrl['VendorSearch'] = $missingCodeUrlParams;
+                            }
+                            ?>
+                            <?php if ($missingCodeCount > 0 || $missingCodeFilterActive): ?>
+                            <?= Html::a(
+                                ($missingCodeFilterActive
+                                    ? '<i class="fa-solid fa-list"></i> แสดงรายการทั้งหมด'
+                                    : '<i class="fa-solid fa-gear"></i> ตั้งค่ารหัสที่ยังไม่ครบ'
+                                        . ' <span class="badge bg-warning text-dark ms-1">' . $missingCodeCount . '</span>'),
+                                $missingCodeToggleUrl,
+                                [
+                                    'class' => 'btn ' . ($missingCodeFilterActive ? 'btn-warning' : 'btn-outline-warning'),
+                                    'data-pjax' => 1,
+                                    'title' => $missingCodeFilterActive ? 'ยกเลิกกรองรหัส' : 'แสดงเฉพาะรายการที่รหัสว่างหรือเป็น -',
+                                ]
+                            ) ?>
+                            <?php endif; ?>
+                            <?php if ($missingCodeCount > 0): ?>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAssignVendorCodes" title="กำหนดรหัสแบบ V001, V002, … อัตโนมัติ">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> กำหนดรหัสอัตโนมัติ
+                            </button>
+                            <?php endif; ?>
                             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => 'สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <div class="dropdown">
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -97,7 +153,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <th class="fw-semibold">โทรศัพท์</th>
                                     <th class="fw-semibold d-none d-xl-table-cell">อีเมล</th>
                                     <th class="fw-semibold text-center" style="width: 100px">สถานะ</th>
-                                    <th class="fw-semibold text-center" style="width: 120px">ดำเนินการ</th>
+                                    <th class="fw-semibold text-center" style="min-width: 140px">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody class="align-middle table-group-divider" id="pjax-loading">
@@ -112,9 +168,20 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php else: ?>
                                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                                 <?php $dj = is_array($item->data_json) ? $item->data_json : []; ?>
+                                <?php
+                                $vendorCodeNeedsSetup = $item->code === null || $item->code === '' || $item->code === '-';
+                                ?>
                                 <tr>
                                     <td class="text-center text-muted"><?= ($dataProvider->pagination->offset + 1) + $key ?></td>
-                                    <td><code class="text-body"><?= Html::encode($item->code) ?></code></td>
+                                    <td>
+                                        <?php
+                                        $codeDisplay = ($item->code === null || $item->code === '') ? '—' : $item->code;
+                                        ?>
+                                        <code class="<?= $vendorCodeNeedsSetup ? 'text-warning' : 'text-body' ?>"><?= Html::encode($codeDisplay) ?></code>
+                                        <?php if ($vendorCodeNeedsSetup): ?>
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill fw-medium ms-1 small">รอรหัส</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <div class="fw-semibold"><?= Html::encode($item->title) ?></div>
                                         <?php if (!empty($dj['address'])): ?>
@@ -145,6 +212,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end">
+                                        <div class="d-inline-flex justify-content-end align-items-center gap-1 flex-wrap">
+                                        <?php if ($vendorCodeNeedsSetup): ?>
+                                        <?= Html::a('<i class="fa-solid fa-gear"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-warning btn-sm open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'ตั้งค่ารหัส']) ?>
+                                        <?php endif; ?>
                                         <div class="btn-group btn-group-sm">
                                             <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'แก้ไข']) ?>
                                             <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
@@ -155,6 +226,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li><?= Html::a('<i class="fa-solid fa-trash me-2"></i> ลบ', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item text-danger']) ?></li>
                                             </ul>
+                                        </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -176,5 +248,45 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<?php if (!empty($missingCodeCount) && (int) $missingCodeCount > 0): ?>
+<div class="modal fade" id="modalAssignVendorCodes" tabindex="-1" aria-labelledby="modalAssignVendorCodesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <?= Html::beginForm(['/sm/vendor/assign-missing-codes'], 'post', ['data-pjax' => 0]) ?>
+            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+            <?= Html::hiddenInput('index_query', $indexQueryString) ?>
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAssignVendorCodesLabel"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>กำหนดรหัสอัตโนมัติ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">ระบบจะตั้งรหัสรูปแบบ <code>V001</code>, <code>V002</code>, … ต่อจากเลขสูงสุดที่มีอยู่แล้วในผู้แทนจำหน่ายทั้งระบบ</p>
+                <div class="list-group">
+                    <label class="list-group-item d-flex gap-2 align-items-start">
+                        <input class="form-check-input flex-shrink-0 mt-1" type="radio" name="scope" value="all" checked>
+                        <span>
+                            <span class="fw-semibold d-block">ทุกรายการในระบบ</span>
+                            <span class="small text-muted">ผู้แทนจำหน่ายทุกรายการที่รหัสว่างหรือเป็น &quot;-&quot; (ไม่สนใจการค้นหา/กรองบนหน้าจอ)</span>
+                        </span>
+                    </label>
+                    <label class="list-group-item d-flex gap-2 align-items-start">
+                        <input class="form-check-input flex-shrink-0 mt-1" type="radio" name="scope" value="current_filter">
+                        <span>
+                            <span class="fw-semibold d-block">เฉพาะตามการค้นหาและตัวกรองปัจจุบัน</span>
+                            <span class="small text-muted">เฉพาะรายการที่เข้าเงื่อนไขบนหน้านี้ (รวมช่องค้นหา, กรองข้อมูลไม่ครบ, กรองรหัสยังไม่ครบ) และยังขาดรหัสหรือเป็น &quot;-&quot;</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <?= Html::submitButton('<i class="fa-solid fa-check me-1"></i> ดำเนินการ', ['class' => 'btn btn-primary']) ?>
+            </div>
+            <?= Html::endForm() ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php Pjax::end(); ?>

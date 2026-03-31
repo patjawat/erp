@@ -15,13 +15,16 @@ class VendorSearch extends Vendor
     /** @var int|string 1 = แสดงเฉพาะรายการที่ข้อมูลไม่ครบถ้วน */
     public $incomplete_only = 0;
 
+    /** @var int|string 1 = แสดงเฉพาะรายการที่รหัสยังไม่กรอกหรือเป็น - */
+    public $missing_code_only = 0;
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'active', 'incomplete_only'], 'integer'],
+            [['id', 'active', 'incomplete_only', 'missing_code_only'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','address','contact_name','tel','email','q'], 'safe'],
         ];
     }
@@ -81,12 +84,21 @@ class VendorSearch extends Vendor
             };
             $query->andWhere([
                 'or',
-                ['or', ['code' => null], ['code' => '']],
+                ['or', ['code' => null], ['code' => ''], ['code' => '-']],
                 ['or', ['title' => null], ['title' => '']],
                 $emptyJson('$.tax_id'),
                 $emptyJson('$.contact_name'),
                 $emptyJson('$.phone'),
                 $emptyJson('$.email'),
+            ]);
+        }
+
+        if ((int) $this->missing_code_only === 1) {
+            $query->andWhere([
+                'or',
+                ['code' => null],
+                ['code' => ''],
+                ['code' => '-'],
             ]);
         }
 
