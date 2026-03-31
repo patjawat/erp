@@ -8,6 +8,7 @@ use app\modules\pdfTemplate\models\PdfTemplateField;
 use app\modules\pdfTemplate\services\FieldValueResolver;
 use setasign\Fpdi\Fpdi;
 use Yii;
+use yii\web\NotFoundHttpException;
 
 /**
  * Service for PDF template layout: save/load normalized coordinates and convert to PDF units.
@@ -290,6 +291,49 @@ class PdfTemplateService
             return is_file($path) ? $path : null;
         }
         return null;
+    }
+
+    /**
+     * สร้าง PDF ใบลาจากเทมเพลตที่ตั้งใน /pdf-template/template (leave / leave.rest ตามประเภทการลา)
+     *
+     * @return string เนื้อหา PDF (binary)
+     * @throws NotFoundHttpException ไม่มีโมดูล leave, ข้อมูลใบลา, หรือยังไม่ตั้งเทมเพลต/ไฟล์
+     */
+    public function generateLeavePdfBinary(int $leaveId): string
+    {
+        $leaveModule = Yii::$app->getModule('leave');
+        if (!$leaveModule) {
+            throw new NotFoundHttpException('โมดูล leave ไม่ได้เปิดใช้งาน');
+        }
+        try {
+            $data = $leaveModule->runAction('setting/leave-print-data', ['id' => $leaveId]);
+        } catch (\Throwable $e) {
+            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้: ' . $e->getMessage());
+        }
+        if (is_array($data) && !empty($data['error'])) {
+            throw new NotFoundHttpException($data['error']);
+        }
+        if (!is_array($data)) {
+            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้ (ตอบกลับไม่ถูกต้อง)');
+        }
+        $leaveTypeId = (string) ($data['leave_type_id'] ?? '');
+        $isRest = ($leaveTypeId === 'LT4');
+        $context = $isRest ? PdfTemplate::CONTEXT_LEAVE_REST : PdfTemplate::CONTEXT_LEAVE;
+        $template = PdfTemplate::find()->where(['use_for_context' => $context])->one();
+        if (!$template) {
+            $hint = $isRest
+                ? 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลาพักผ่อน»'
+                : 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ)»';
+            throw new NotFoundHttpException(
+                'ยังไม่มีเทมเพลตสำหรับ' . ($isRest ? 'ใบลาพักผ่อน' : 'ใบลาป่วย/คลอด/กิจ') . ' — ' . $hint
+            );
+        }
+        $path = $this->getTemplateFilePath($template);
+        if ($path === null || !is_file($path)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
+        }
+
+        return $this->generatePdfWithData((int) $template->id, $data);
     }
 
     /**

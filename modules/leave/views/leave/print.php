@@ -49,7 +49,7 @@ $department = $author['department'] ?? ($model->employee ? $model->employee->dep
         </div>
     </div>
     <p class="small text-muted mb-0">
-        กดปุ่มด้านบนหรือใช้ Ctrl+P (Cmd+P) เพื่อพิมพ์ — ต้องการใช้เทมเพลต PDF ให้ไปที่ <strong>การตั้งค่า → แบบฟอร์มใบลา</strong> อัปโหลดเทมเพลตและกำหนดตำแหน่ง
+        กดปุ่มด้านบนหรือใช้ Ctrl+P (Cmd+P) เพื่อพิมพ์หน้านี้ — แนะนำตั้งค่าใบลาแบบหลักที่ <?= Html::a('/pdf-template/template', ['/pdf-template/template'], ['target' => '_blank', 'rel' => 'noopener noreferrer']) ?> (ลิงก์ «พิมพ์ใบลา (PDF)» ในระบบจะเปิดเส้นทางนั้นก่อน) ถ้ายังไม่ตั้งจะใช้แบบฟอร์มไฟล์ที่ <strong>การตั้งค่า → แบบฟอร์มใบลา</strong> หรือหน้านี้
     </p>
 </div>
 

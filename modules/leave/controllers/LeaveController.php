@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\web\NotFoundHttpException;
+use app\modules\pdfTemplate\services\PdfTemplateService;
 use yii\helpers\Url;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
@@ -42,21 +43,20 @@ class LeaveController extends Controller
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
-        $previewPdfUrl = $this->getPreviewPdfUrlForLeave($model);
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             $title = $this->request->get('title', $model->employee ? $model->employee->getAvatar(false) : 'รายละเอียดการลา');
             return [
                 'title' => $title,
-                'content' => $this->renderAjax('view', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl]),
+                'content' => $this->renderAjax('view', ['model' => $model]),
                 'footer' => '',
             ];
         }
-        return $this->render('view', ['model' => $model, 'previewPdfUrl' => $previewPdfUrl]);
+        return $this->render('view', ['model' => $model]);
     }
 
     /**
-     * คืน URL สำหรับแสดงตัวอย่าง PDF ใบลา (เฉพาะเมื่อมีเทมเพลต) ไม่รวมหน้า toolbar
+     * คืน URL สำหรับพิมพ์แบบเดิม (ไฟล์ leave_templates) — ใช้เฉพาะ actionPrint เมื่อไม่ได้ผ่าน actionPdf
      */
     protected function getPreviewPdfUrlForLeave(Leave $model): ?string
     {
@@ -95,11 +95,27 @@ class LeaveController extends Controller
     }
 
     /**
-     * ใช้ redirect ไป actionPrint — ให้ใช้ /leave/leave/print เป็นจุดเดียว (แสดงผลแบบเดียวกับ /hr/development/print)
+     * พิมพ์ใบลา (PDF) — ลองใช้เทมเพลตจาก /pdf-template/template ก่อน หากยังไม่ตั้งค่าจะใช้แบบฟอร์มใบลาเดิม (leave_templates) หรือหน้า HTML
      */
     public function actionPdf($id)
     {
-        return $this->redirect(['print', 'id' => (int) $id]);
+        $id = (int) $id;
+        if (Yii::$app->hasModule('pdf-template')) {
+            try {
+                $binary = (new PdfTemplateService())->generateLeavePdfBinary($id);
+                Yii::$app->response->format = Response::FORMAT_RAW;
+                Yii::$app->response->content = $binary;
+                Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+                Yii::$app->response->headers->set(
+                    'Content-Disposition',
+                    'inline; filename="' . addslashes('leave-' . $id . '.pdf') . '"'
+                );
+                return Yii::$app->response;
+            } catch (NotFoundHttpException $e) {
+                // ไม่มีเทมเพลต pdf-template หรือข้อมูลไม่พร้อม — fallback
+            }
+        }
+        return $this->actionPrint($id);
     }
 
     /**

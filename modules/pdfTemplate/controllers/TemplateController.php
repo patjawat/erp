@@ -434,42 +434,15 @@ class TemplateController extends Controller
 
     /**
      * พิมพ์ใบลาเป็น PDF จากเทมเพลต (ข้อมูลจาก leave module).
-     * ใช้จาก /hr/leave/index — ลิงก์ «พิมพ์ใบลา (จากเทมเพลต)» มาที่นี่
+     * พิมพ์ใบลาจากเทมเพลต — ปุ่มหลักใช้ /leave/leave/pdf (เรียก logic เดียวกันผ่าน PdfTemplateService)
      * ใช้เฉพาะเทมเพลตที่ตั้ง use_for_context = leave เท่านั้น (ไม่ fallback ไปเทมเพลตแรก เด็ดขาด)
      */
     public function actionPrintLeave(int $id): Response
     {
         try {
-            $leaveModule = Yii::$app->getModule('leave');
-            if (!$leaveModule) {
-                throw new NotFoundHttpException('โมดูล leave ไม่ได้เปิดใช้งาน');
-            }
-            $data = $leaveModule->runAction('setting/leave-print-data', ['id' => (int) $id]);
-        } catch (\Throwable $e) {
-            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้: ' . $e->getMessage());
-        }
-        if (is_array($data) && !empty($data['error'])) {
-            throw new NotFoundHttpException($data['error']);
-        }
-        if (!is_array($data)) {
-            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้ (ตอบกลับไม่ถูกต้อง)');
-        }
-        $leaveTypeId = (string) ($data['leave_type_id'] ?? '');
-        $isRest = ($leaveTypeId === 'LT4');
-        $context = $isRest ? PdfTemplate::CONTEXT_LEAVE_REST : PdfTemplate::CONTEXT_LEAVE;
-        $template = PdfTemplate::find()->where(['use_for_context' => $context])->one();
-        if (!$template) {
-            $hint = $isRest
-                ? 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลาพักผ่อน»'
-                : 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ)»';
-            throw new NotFoundHttpException('ยังไม่มีเทมเพลตสำหรับ' . ($isRest ? 'ใบลาพักผ่อน' : 'ใบลาป่วย/คลอด/กิจ') . ' — ' . $hint);
-        }
-        $path = $this->templateService->getTemplateFilePath($template);
-        if ($path === null || !is_file($path)) {
-            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
-        }
-        try {
-            $pdfBinary = $this->templateService->generatePdfWithData((int) $template->id, $data);
+            $pdfBinary = $this->templateService->generateLeavePdfBinary((int) $id);
+        } catch (NotFoundHttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             throw new \yii\web\ServerErrorHttpException('สร้าง PDF ไม่ได้: ' . $e->getMessage());
         }

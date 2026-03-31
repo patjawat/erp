@@ -360,7 +360,6 @@ $config = [
             // 'document/documentqr/upload-ajax',
             // 'gii/*',
             'api/*',
-            'pdf-template/template/print-leave',
             'pdf-template/template/print-sample',
         ],
     ],

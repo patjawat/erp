@@ -226,8 +226,14 @@ $typeTheme = [
                                                 <li>
                                                     <?= Html::a(
                                                         '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา (PDF)',
-                                                        $item->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $item->id],
-                                                        ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ']
+                                                        ['/leave/leave/pdf', 'id' => $item->id],
+                                                        [
+                                                            'class' => 'dropdown-item',
+                                                            'target' => '_blank',
+                                                            'rel' => 'noopener noreferrer',
+                                                            'data-pjax' => '0',
+                                                            'title' => 'ใช้เทมเพลตจาก /pdf-template ก่อน; ถ้ายังไม่ตั้งจะใช้แบบฟอร์มใบลาเดิม — พิมพ์ได้ทุกสถานะ',
+                                                        ]
                                                     ) ?>
                                                 </li>
                                             </ul>

@@ -96,13 +96,6 @@ $models = $dataProvider->getModels();
                                             ]]
                                         ) ?>
                                     </li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="bi bi-file-earmark-pdf me-1"></i> พิมพ์ใบลา (จากเทมเพลต)',
-                                            ['/pdf-template/template/print-leave', 'id' => $item->id],
-                                            ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ใบลาจากเทมเพลต PDF ที่ตั้งค่าใน /pdf-template']
-                                        ) ?>
-                                    </li>
                                 <?php endif; ?>
                             </ul>
                         </div>
