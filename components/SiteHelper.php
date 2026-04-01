@@ -259,4 +259,107 @@ class SiteHelper extends Component
         {
                 return \Yii::$app->session->get('display');
         }
+
+        /**
+         * ข้อความและรูปแบบตัวอักษรบนแถบ Header จากตั้งค่าองค์กร (data_json)
+         * เว้น header_brand_line1 / line2 ว่าง = แสดง HOSPITAL / ERP SYSTEM
+         *
+         * @param  array|\ArrayAccess|null $dataJson
+         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string}
+         */
+        public static function resolveHeaderBrand($dataJson): array
+        {
+                $d = is_array($dataJson) ? $dataJson : [];
+                $line1 = trim((string) ($d['header_brand_line1'] ?? ''));
+                if ($line1 === '') {
+                        $line1 = 'HOSPITAL';
+                }
+                $line2 = trim((string) ($d['header_brand_line2'] ?? ''));
+                if ($line2 === '') {
+                        $line2 = 'ERP SYSTEM';
+                }
+                $googleFont = self::sanitizeHeaderGoogleFontName($d['header_brand_google_font'] ?? '');
+                $fontStack = $googleFont !== '' ? "'" . str_replace("'", '', $googleFont) . "', sans-serif" : null;
+
+                $l1Size = self::sanitizeHeaderCssFontSize($d['header_brand_line1_size'] ?? '', '1.35rem');
+                $l1Color = self::sanitizeHeaderCssColor($d['header_brand_line1_color'] ?? '', '#ffffff');
+                $l1Weight = self::sanitizeHeaderFontWeight($d['header_brand_line1_weight'] ?? '', '700');
+
+                $l2Size = self::sanitizeHeaderCssFontSize($d['header_brand_line2_size'] ?? '', '11px');
+                $l2Color = self::sanitizeHeaderCssColor($d['header_brand_line2_color'] ?? '', 'rgba(255,255,255,0.5)');
+                $l2Weight = self::sanitizeHeaderFontWeight($d['header_brand_line2_weight'] ?? '', '500');
+
+                $fontCss = $fontStack ? 'font-family:' . $fontStack . ';' : '';
+                $line1Style = 'line-height:1;letter-spacing:0.5px;font-size:' . $l1Size . ';color:' . $l1Color . ';font-weight:' . $l1Weight . ';' . $fontCss;
+                $line2Style = 'line-height:1;letter-spacing:1px;font-size:' . $l2Size . ';color:' . $l2Color . ';font-weight:' . $l2Weight . ';' . $fontCss;
+
+                $googleFontHref = null;
+                if ($googleFont !== '') {
+                        $qf = str_replace(' ', '+', $googleFont);
+                        $googleFontHref = 'https://fonts.googleapis.com/css2?family=' . $qf . ':wght@300;400;500;600;700;800&display=swap';
+                }
+
+                return [
+                        'line1' => $line1,
+                        'line2' => $line2,
+                        'line1_style' => $line1Style,
+                        'line2_style' => $line2Style,
+                        'google_font_href' => $googleFontHref,
+                ];
+        }
+
+        private static function sanitizeHeaderGoogleFontName($name): string
+        {
+                $name = trim((string) $name);
+                if ($name === '') {
+                        return '';
+                }
+                if (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\s\-]{0,62}$/', $name)) {
+                        return '';
+                }
+
+                return $name;
+        }
+
+        private static function sanitizeHeaderCssFontSize($value, string $default): string
+        {
+                $value = trim((string) $value);
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^\d+(\.\d+)?(px|rem|em|%)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
+        }
+
+        private static function sanitizeHeaderCssColor($value, string $default): string
+        {
+                $value = trim((string) $value);
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/', $value)) {
+                        return $value;
+                }
+                if (preg_match('/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(\s*,\s*[\d.]+\s*)?\)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
+        }
+
+        private static function sanitizeHeaderFontWeight($value, string $default): string
+        {
+                $value = strtolower(trim((string) $value));
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^(normal|bold|bolder|lighter|[1-9]00)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
+        }
 }
