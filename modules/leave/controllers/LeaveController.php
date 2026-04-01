@@ -856,7 +856,7 @@ class LeaveController extends Controller
             'satsunDays' => $satsunDays,
             'holiday'    => $holiday,
             'shift'      => $shift,
-            'shift_name' => $shift === 'normal' ? 'เวรปกติ' : 'เวร 8',
+            'shift_name' => $shift === 'normal' ? 'เวรเช้า' : 'เวร 8',
             'type_days'  => round($dateStartType + $dateEndType, 2),
             'total'      => $total,
         ];

@@ -885,7 +885,7 @@ class LeaveController extends Controller
             'satsunDays' => $model['satsunDays'],
             'holiday' => $model['holiday'],
             'shift' => $model['shift'],
-            'shift_name' => $model['shift'] == 'normal' ? 'เวรปกติ' : 'เวร 8',
+            'shift_name' => $model['shift'] == 'normal' ? 'เวรเช้า' : 'เวร 8',
             // 'isDayOff' => $model['dayOffBetweenLeave'],
             // 'dayOff' => $holidaysMe,
             'on_holidays' => $on_holidays,

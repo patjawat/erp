@@ -183,7 +183,7 @@ class Leave extends \yii\db\ActiveRecord
             $this->reason = isset($this->data_json['reason']) ? $this->data_json['reason'] : '';
         } catch (\Throwable $th) {
         }
-        $this->work_shift_name = isset($this->data_json['work_shift']) ? ($this->data_json['work_shift'] == 'normal' ? 'เวรปกติ' : 'เวร 8') : '';
+        $this->work_shift_name = isset($this->data_json['work_shift']) ? ($this->data_json['work_shift'] == 'normal' ? 'เวรเช้า' : 'เวร 8') : '';
 
         // $this->asset_name = isset($this->data_json['name']) ? $this->data_json['name'] : '-';
 

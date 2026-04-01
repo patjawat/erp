@@ -22,7 +22,7 @@ class LeaveCreateForm extends \yii\base\Model
     public $contact_phone;
     public $place_go;
     public $leave_time_type = 1;
-    /** @var string|null normal=เวรปกติ, shift=เวร 8 ชั่วโมง */
+    /** @var string|null normal=เวรเช้า, shift=เวร 8 ชั่วโมง */
     public $work_shift;
     /** @var int|null รหัสพนักงานที่รับมอบหมายงาน */
     public $leave_work_send_id;
