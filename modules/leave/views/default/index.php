@@ -193,7 +193,10 @@ $typeTheme = [
                                         <div class="text-muted"><?= Html::encode($item->data_json['reason'] ?? '-') ?></div>
                                     </td>
                                     <td class="small"><?= $item->showLeaveDate() ?></td>
-                                    <td class="small text-center"><?= (int) $item->total_days ?></td>
+                                    <td class="small text-center"><?php
+                                        $d = (float) $item->total_days;
+                                        echo $d == (int) $d ? (string) (int) $d : number_format($d, 1, '.', '');
+                                    ?></td>
                                     <td class="small py-3 px-3">
                                         <?= $item->stackChecker() ?: '<span class="text-muted">—</span>' ?>
                                     </td>

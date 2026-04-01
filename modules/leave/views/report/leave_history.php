@@ -21,7 +21,10 @@ use app\modules\leave\models\Leave;
             <td class="text-truncate" style="max-width: 230px;"><?= $item->getAvatar(false)['avatar'] ?? '-' ?></td>
             <td><?= $item->leaveType ? Html::encode($item->leaveType->title) : '-' ?></td>
             <td><?= $item->showLeaveDate() ?></td>
-            <td class="text-center"><?= (int) $item->total_days ?></td>
+            <td class="text-center"><?php
+                $d = (float) $item->total_days;
+                echo $d == (int) $d ? (string) (int) $d : number_format($d, 1, '.', '');
+            ?></td>
             <td class="text-start"><?= Html::encode($item->data_json['reason'] ?? '-') ?></td>
         </tr>
         <?php endforeach; ?>

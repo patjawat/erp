@@ -464,15 +464,18 @@ class LeaveController extends Controller
                 $address = trim((string) $model->address);
                 $contactPhone = trim((string) $model->contact_phone);
                 $placeGo = trim((string) $model->place_go);
-                $leaveTimeType = (float) $model->leave_time_type;
-                if ($leaveTimeType !== 1.0 && $leaveTimeType !== 0.5) {
-                    $leaveTimeType = 1.0;
-                }
 
                 $dateStartGregorian = AppHelper::convertToGregorian($dateStart);
                 $dateEndGregorian = AppHelper::convertToGregorian($dateEnd);
-                $dateStartType = ($leaveTimeType === 0.5) ? '0.5' : '0';
-                $dateEndType = ($leaveTimeType === 0.5) ? '0.5' : '0';
+                // ใช้ค่าจากฟอร์ม (date_start_type / date_end_type) ให้ตรงกับ JS + actionCalDays — ไม่ใช้ leave_time_type เพราะฟอร์มปัจจุบันไม่ส่งฟิลด์นั้น
+                $dateStartType = (trim((string) $model->date_start_type) === '0.5') ? '0.5' : '0';
+                $dateEndType = (trim((string) $model->date_end_type) === '0.5') ? '0.5' : '0';
+                if ($dateStartGregorian && $dateEndGregorian && $dateStartGregorian === $dateEndGregorian) {
+                    $dateEndType = '0';
+                }
+                $leaveTimeType = ($dateStartGregorian && $dateEndGregorian && $dateStartGregorian === $dateEndGregorian && $dateStartType === '0.5')
+                    ? 0.5
+                    : 1.0;
                 $workShiftForm = $me->work_shift ?? 'normal';
                 $daySummary = $this->getDaySummary($dateStartGregorian, $dateEndGregorian, $me->id);
                 $allDays = (float) ($daySummary['allDays'] ?? 0);
