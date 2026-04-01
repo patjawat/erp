@@ -99,6 +99,15 @@ JS;
     .erp-lucide-ts-option {
         min-height: 2rem;
     }
+
+    #erp-header-line1-color-picker.form-control-color {
+        width: 3.25rem;
+        min-width: 3.25rem;
+        height: auto;
+        min-height: calc(1.5em + 0.75rem + 2px);
+        padding: 0.25rem;
+        cursor: pointer;
+    }
 </style>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -323,7 +332,39 @@ JS;
                     <?= $form->field($model, 'data_json[header_brand_line1_size]')->textInput(['placeholder' => '1.35rem'])->label('บรรทัด 1 — ขนาด') ?>
                 </div>
                 <div class="col-12 col-md-4">
-                    <?= $form->field($model, 'data_json[header_brand_line1_color]')->textInput(['placeholder' => '#ffffff'])->label('บรรทัด 1 — สี (hex หรือ rgba)') ?>
+                    <?php
+                    $line1ColorStored = isset($model->data_json['header_brand_line1_color']) ? trim((string) $model->data_json['header_brand_line1_color']) : '';
+                    $line1PickerHex = '#ffffff';
+                    if ($line1ColorStored !== '') {
+                        if (preg_match('/^#([0-9a-fA-F]{6})$/', $line1ColorStored, $m)) {
+                            $line1PickerHex = '#' . strtolower($m[1]);
+                        } elseif (preg_match('/^#([0-9a-fA-F]{3})$/', $line1ColorStored, $m)) {
+                            $h = strtolower($m[1]);
+                            $line1PickerHex = '#' . $h[0] . $h[0] . $h[1] . $h[1] . $h[2] . $h[2];
+                        } elseif (preg_match('/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i', $line1ColorStored, $m)) {
+                            $r = max(0, min(255, (int) $m[1]));
+                            $g = max(0, min(255, (int) $m[2]));
+                            $b = max(0, min(255, (int) $m[3]));
+                            $line1PickerHex = sprintf('#%02x%02x%02x', $r, $g, $b);
+                        }
+                    }
+                    $line1ColorPicker = Html::tag('input', '', [
+                        'type' => 'color',
+                        'class' => 'form-control form-control-color border',
+                        'id' => 'erp-header-line1-color-picker',
+                        'value' => $line1PickerHex,
+                        'title' => 'เลือกสี',
+                    ]);
+                    echo $form->field($model, 'data_json[header_brand_line1_color]', [
+                        'template' => "{label}\n<div class=\"input-group\">" . $line1ColorPicker . "{input}</div>\n{hint}\n{error}",
+                    ])->textInput([
+                        'id' => 'erp-header-line1-color-text',
+                        'class' => 'form-control',
+                        'placeholder' => '#ffffff หรือ rgba(255,255,255,1)',
+                        'autocomplete' => 'off',
+                    ])->label('บรรทัด 1 — สี (hex หรือ rgba)')
+                        ->hint('ใช้ตัวเลือกสีหรือพิมพ์เอง เช่น #fff, #ffffff, rgba(...) — ค่าโปร่งใส (alpha) ระบุในช่องข้อความ');
+                    ?>
                 </div>
                 <div class="col-12 col-md-4">
                     <?= $form->field($model, 'data_json[header_brand_line1_weight]')->dropDownList([
@@ -408,6 +449,41 @@ $js = <<< JS
                         });
                     }
                 });
+
+    (function () {
+        var \$t = \$('#erp-header-line1-color-text');
+        var \$p = \$('#erp-header-line1-color-picker');
+        if (!\$t.length || !\$p.length) {
+            return;
+        }
+        function applyPickerToText() {
+            \$t.val((\$p.val() || '').toLowerCase());
+        }
+        function trySyncPickerFromText() {
+            var v = (\$t.val() || '').trim();
+            var m6 = v.match(/^#([0-9a-fA-F]{6})\$/i);
+            if (m6) {
+                \$p.val('#' + m6[1].toLowerCase());
+                return;
+            }
+            var m3 = v.match(/^#([0-9a-fA-F]{3})\$/i);
+            if (m3) {
+                var h = m3[1].toLowerCase();
+                \$p.val('#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2]);
+                return;
+            }
+            var mrgba = v.match(/^rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/i);
+            if (mrgba) {
+                var r = Math.max(0, Math.min(255, parseInt(mrgba[1], 10)));
+                var g = Math.max(0, Math.min(255, parseInt(mrgba[2], 10)));
+                var b = Math.max(0, Math.min(255, parseInt(mrgba[3], 10)));
+                var hx = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                \$p.val(hx);
+            }
+        }
+        \$p.on('input change', applyPickerToText);
+        \$t.on('input change blur', function () { trySyncPickerFromText(); });
+    })();
 
     JS;
 $this->registerJS($js)
