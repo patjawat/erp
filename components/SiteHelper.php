@@ -261,11 +261,109 @@ class SiteHelper extends Component
         }
 
         /**
+         * ตัวเลือกไอคอน Lucide สำหรับแถบ Header (ชื่อตรงกับ https://lucide.dev/icons/)
+         * ค่า key = ชื่อไอคอนแบบ kebab-case สำหรับ data-lucide
+         *
+         * @return array<string, array<string, string>|string>
+         */
+        public static function headerLucideIconChoices(): array
+        {
+                return [
+                        'ค่าเริ่มต้น' => [
+                                'package' => 'Package',
+                        ],
+                        'อาคาร · โรงพยาบาล · สุขภาพ' => [
+                                'hospital' => 'Hospital',
+                                'building' => 'Building',
+                                'building-2' => 'Building 2',
+                                'landmark' => 'Landmark',
+                                'home' => 'Home',
+                                'heart-pulse' => 'Heart pulse',
+                                'stethoscope' => 'Stethoscope',
+                                'activity' => 'Activity',
+                                'pill' => 'Pill',
+                                'syringe' => 'Syringe',
+                                'microscope' => 'Microscope',
+                        ],
+                        'องค์กร · ผู้คน' => [
+                                'users' => 'Users',
+                                'user' => 'User',
+                                'user-round' => 'User round',
+                                'user-star' => 'User star',
+                                'id-card' => 'ID card',
+                                'badge-check' => 'Badge check',
+                                'shield' => 'Shield',
+                                'shield-check' => 'Shield check',
+                                'handshake' => 'Handshake',
+                        ],
+                        'เอกสาร · งาน · ปฏิทิน' => [
+                                'file-text' => 'File text',
+                                'files' => 'Files',
+                                'clipboard-list' => 'Clipboard list',
+                                'file-spreadsheet' => 'File spreadsheet',
+                                'folder-kanban' => 'Folder kanban',
+                                'calendar' => 'Calendar',
+                                'calendar-days' => 'Calendar days',
+                                'calendar-check' => 'Calendar check',
+                                'notebook-pen' => 'Notebook pen',
+                                'pen-line' => 'Pen line',
+                        ],
+                        'ธุรกิจ · การเงิน · คลัง' => [
+                                'briefcase' => 'Briefcase',
+                                'banknote' => 'Banknote',
+                                'wallet' => 'Wallet',
+                                'scale' => 'Scale',
+                                'gavel' => 'Gavel',
+                                'truck' => 'Truck',
+                                'package-open' => 'Package open',
+                                'box' => 'Box',
+                                'archive' => 'Archive',
+                                'shopping-cart' => 'Shopping cart',
+                                'warehouse' => 'Warehouse',
+                        ],
+                        'ระบบ · เทคโนโลยี' => [
+                                'layout-dashboard' => 'Layout dashboard',
+                                'layout-grid' => 'Layout grid',
+                                'database' => 'Database',
+                                'server' => 'Server',
+                                'hard-drive' => 'Hard drive',
+                                'cpu' => 'CPU',
+                                'cloud' => 'Cloud',
+                                'wifi' => 'WiFi',
+                                'smartphone' => 'Smartphone',
+                                'monitor' => 'Monitor',
+                                'settings' => 'Settings',
+                                'cog' => 'Cog',
+                                'wrench' => 'Wrench',
+                        ],
+                        'ทั่วไป' => [
+                                'bell' => 'Bell',
+                                'mail' => 'Mail',
+                                'phone' => 'Phone',
+                                'globe' => 'Globe',
+                                'map-pin' => 'Map pin',
+                                'star' => 'Star',
+                                'sparkles' => 'Sparkles',
+                                'heart' => 'Heart',
+                                'heart-plus' => 'Heart plus',
+                                'award' => 'Award',
+                                'trophy' => 'Trophy',
+                                'factory' => 'Factory',
+                                'hammer' => 'Hammer',
+                                'chart-bar' => 'Chart bar',
+                                'chart-line' => 'Chart line',
+                                'pie-chart' => 'Pie chart',
+                                'trending-up' => 'Trending up',
+                        ],
+                ];
+        }
+
+        /**
          * ข้อความและรูปแบบตัวอักษรบนแถบ Header จากตั้งค่าองค์กร (data_json)
          * เว้น header_brand_line1 / line2 ว่าง = แสดง HOSPITAL / ERP SYSTEM
          *
          * @param  array|\ArrayAccess|null $dataJson
-         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string}
+         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string, lucide_icon: string}
          */
         public static function resolveHeaderBrand($dataJson): array
         {
@@ -305,7 +403,41 @@ class SiteHelper extends Component
                         'line1_style' => $line1Style,
                         'line2_style' => $line2Style,
                         'google_font_href' => $googleFontHref,
+                        'lucide_icon' => self::sanitizeHeaderLucideIcon($d['header_brand_lucide_icon'] ?? ''),
                 ];
+        }
+
+        public static function sanitizeHeaderLucideIcon($value): string
+        {
+                $value = strtolower(trim((string) $value));
+                $allowed = self::headerLucideIconAllowedNames();
+                if ($value !== '' && in_array($value, $allowed, true)) {
+                        return $value;
+                }
+
+                return 'package';
+        }
+
+        /**
+         * @return list<string>
+         */
+        private static function headerLucideIconAllowedNames(): array
+        {
+                static $names = null;
+                if ($names !== null) {
+                        return $names;
+                }
+                $names = [];
+                foreach (self::headerLucideIconChoices() as $group) {
+                        if (!is_array($group)) {
+                                continue;
+                        }
+                        foreach (array_keys($group) as $iconName) {
+                                $names[] = (string) $iconName;
+                        }
+                }
+
+                return $names;
         }
 
         private static function sanitizeHeaderGoogleFontName($name): string

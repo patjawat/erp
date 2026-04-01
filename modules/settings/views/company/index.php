@@ -10,6 +10,7 @@ use yii\widgets\MaskedInput;
 use app\components\AppHelper;
 use kartik\widgets\Typeahead;
 use app\components\SiteHelper;
+use app\widgets\TomSelectWidget;
 use kartik\editors\Summernote;
 use app\modules\hr\models\Employees;
 use iamsaint\datetimepicker\Datetimepicker;
@@ -55,11 +56,48 @@ $resultsJs = <<< JS
     }
     JS;
 
+$headerLucideTomRender = <<<'JS'
+{
+    option: function(item, escape) {
+        var v = String(item.value || "");
+        if (!v) return "<div>" + escape(item.text) + "</div>";
+        return '<div class="d-flex align-items-center gap-2 py-1 erp-lucide-ts-option">' +
+            '<span class="erp-lucide-ts-ic flex-shrink-0" aria-hidden="true"><i data-lucide="' + escape(v) + '"></i></span>' +
+            '<span class="flex-grow-1">' + escape(item.text) + '</span>' +
+            '<span class="text-muted small text-nowrap">' + escape(v) + '</span></div>';
+    },
+    item: function(item, escape) {
+        var v = String(item.value || "");
+        if (!v) return "<div>" + escape(item.text) + "</div>";
+        return '<div class="d-flex align-items-center gap-2 erp-lucide-ts-item">' +
+            '<span class="erp-lucide-ts-ic flex-shrink-0" aria-hidden="true"><i data-lucide="' + escape(v) + '"></i></span>' +
+            '<span class="text-truncate">' + escape(item.text) + '</span></div>';
+    }
+}
+JS;
+
 ?>
 <style>
 
     .field-director_type{
         margin-bottom: 3px !important;
+    }
+
+    .erp-lucide-ts-option .erp-lucide-ts-ic svg,
+    .erp-lucide-ts-item .erp-lucide-ts-ic svg {
+        width: 1.35rem;
+        height: 1.35rem;
+        stroke-width: 2;
+        vertical-align: middle;
+    }
+
+    .ts-wrapper.single .ts-control .erp-lucide-ts-item .erp-lucide-ts-ic svg {
+        width: 1.125rem;
+        height: 1.125rem;
+    }
+
+    .erp-lucide-ts-option {
+        min-height: 2rem;
     }
 </style>
 
@@ -251,13 +289,34 @@ $resultsJs = <<< JS
                         เว้นบรรทัดที่ 2 ว่างจะแสดง ERP SYSTEM
                     </p>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <?= $form->field($model, 'data_json[header_brand_lucide_icon]')->widget(TomSelectWidget::class, [
+                        'items' => SiteHelper::headerLucideIconChoices(),
+                        'options' => ['class' => 'form-select'],
+                        'clientOptions' => [
+                            'placeholder' => 'ค้นหาชื่อไอคอน...',
+                            'maxOptions' => 500,
+                            'create' => false,
+                            'searchField' => ['text', 'value'],
+                            'render' => new JsExpression($headerLucideTomRender),
+                            'onInitialize' => new JsExpression('function () { if (typeof lucide !== "undefined" && lucide.createIcons) { setTimeout(function () { lucide.createIcons(); }, 0); } }'),
+                            'onDropdownOpen' => new JsExpression('function () { if (typeof lucide !== "undefined" && lucide.createIcons) { requestAnimationFrame(function () { lucide.createIcons(); }); } }'),
+                            'onChange' => new JsExpression('function () { if (typeof lucide !== "undefined" && lucide.createIcons) { requestAnimationFrame(function () { lucide.createIcons(); }); } }'),
+                        ],
+                    ])->label('ไอคอนข้างข้อความ (Lucide)')
+                        ->hint(Html::a(
+                            'lucide.dev/icons',
+                            'https://lucide.dev/icons/',
+                            ['target' => '_blank', 'rel' => 'noopener noreferrer']
+                        ) . ' — พิมพ์ค้นหาได้ แสดงไอคอนและรายการทั้งหมดในเมนู') ?>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
                     <?= $form->field($model, 'data_json[header_brand_line1]')->textInput(['placeholder' => 'เว้นว่าง = HOSPITAL'])->label('ข้อความบรรทัดที่ 1 (Header)') ?>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <?= $form->field($model, 'data_json[header_brand_line2]')->textInput(['placeholder' => 'เว้นว่าง = ERP SYSTEM'])->label('ข้อความบรรทัดที่ 2 (Header)') ?>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <?= $form->field($model, 'data_json[header_brand_google_font]')->textInput(['placeholder' => 'เช่น Sarabun, Kanit'])->label('Google Font (ชื่อฟอนต์)') ?>
                 </div>
                 <div class="col-12 col-md-4">
