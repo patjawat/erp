@@ -3288,9 +3288,101 @@ small {
   color: #f44336;
 }
 
+
+.report-usage {
+
+  &__header {
+    margin-bottom: 24px;
+  }
+
+  &__card {
+    padding: 24px;
+    border-radius: 16px;
+    color: #fff;
+    font-weight: 500;
+
+    &--green {
+      background: linear-gradient(135deg,#00a86b,#00c48c);
+    }
+
+    &--blue {
+      background: linear-gradient(135deg,#3b82f6,#6366f1);
+    }
+
+    &--orange {
+      background: linear-gradient(135deg,#ff7a18,#ffb347);
+    }
+
+    &--purple {
+      background: linear-gradient(135deg,#8b5cf6,#a855f7);
+    }
+  }
+
+  &__label {
+    font-size: 14px;
+    opacity: .9;
+  }
+
+  &__value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+}
+
 // ปรับขนาดหน้าจอ modal
 @media (min-width: 768px) and (max-width: 991.98px) {
   .modal-dialog {
     max-width: 90%;
   }
 }
+
+.dashboard-card {
+
+  padding: 24px;
+  border-radius: 16px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: all .25s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+  }
+
+  /* glass highlight */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+      135deg,
+      rgba(255,255,255,.25),
+      rgba(255,255,255,0)
+    );
+
+    opacity: .4;
+  }
+
+  &--green {
+    background: linear-gradient(135deg,#34d399,#059669);
+  }
+
+  &--blue {
+    background: linear-gradient(135deg,#60a5fa,#2563eb);
+  }
+
+  &--orange {
+    background: linear-gradient(135deg,#fb923c,#ea580c);
+  }
+
+  &--purple {
+    background: linear-gradient(135deg,#a78bfa,#7c3aed);
+  }
+
+}
+

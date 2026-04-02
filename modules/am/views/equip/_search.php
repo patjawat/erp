@@ -41,7 +41,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 <!-- ตัวกรองหลัก: ค้นหา · หมวด · สภาพ | ปุ่ม action ด้านขวา -->
 <div class="equip-search-toolbar">
 <div class="row g-2 g-lg-3 align-items-center">
-    <div class="col-12 col-lg-3 d-flex align-items-center">
+    <div class="col-12 col-lg-3">
         <div class="input-group w-100">
             <span class="input-group-text bg-body border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
             <?= $form->field($model, 'q', [
@@ -52,7 +52,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
                 ->label(false) ?>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center">
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
 
         echo $form->field($model, 'asset_type_id', $toolbarFieldOpts)->widget(Select2::classname(), [
@@ -72,7 +72,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
         ])->label(false);
         ?>
     </div>
-    <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center">
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
         echo $form->field($model, 'asset_category_id', $toolbarFieldOpts)->widget(DepDrop::classname(), [
             'options' => [
@@ -96,7 +96,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
         ])->label(false); ?>
     </div>
-    <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center">
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
         echo $form->field($model, 'asset_status', $toolbarFieldOpts)->widget(Select2::classname(), [
             'data' => $model->ListAssetStatus(),

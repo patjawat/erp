@@ -139,7 +139,6 @@ class DocumentsController extends \yii\web\Controller
         ]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider = $searchModel->search($this->request->queryParams);
         /** @var \yii\db\ActiveQuery $query */
         $query = $dataProvider->query;
         $query->joinWith([

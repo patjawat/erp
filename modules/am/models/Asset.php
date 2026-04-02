@@ -486,6 +486,13 @@ class Asset extends \yii\db\ActiveRecord
         return $this->hasOne(AssetCategory::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);;
     }
 
+    /**
+     * พนักงานผู้รับผิดชอบ (asset.owner เก็บค่า cid ตรงกับ employees.cid)
+     */
+    public function getOwnerEmployee()
+    {
+        return $this->hasOne(Employees::class, ['cid' => 'owner']);
+    }
 
     // วิธีการได้มา
     public function getPurchaseName()

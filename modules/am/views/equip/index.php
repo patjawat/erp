@@ -44,97 +44,58 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 
-    <div class="row g-3 pt-3">
-        <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.25rem;"><i class="fa-solid fa-desktop"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-primary"><?= (int) $equipStats['total'] ?></div>
-                        <div class="small text-muted">ทั้งหมด</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.25rem;"><i class="fa-solid fa-check"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-success"><?= (int) $equipStats['good'] ?></div>
-                        <div class="small text-muted">สภาพดี</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.25rem;"><i class="fa-solid fa-circle"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-danger"><?= (int) $equipStats['damaged'] ?></div>
-                        <div class="small text-muted">ชำรุด/รอซ่อม</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-xl-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body d-flex align-items-center gap-3 py-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center bg-warning bg-opacity-25 text-body flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.25rem;"><i class="fa-solid fa-sack-dollar"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-primary"><?= Html::encode(number_format($equipStats['total_value'], 2)) ?></div>
-                        <div class="small text-muted">รวมราคาแรกรับ (บาท)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="card rounded-4">
+    <div class="card-body p-3">
+    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
+</div>
 
-    <div class="row g-3 mt-1">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-body border-bottom py-3 px-3 px-md-4">
-                    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between gap-3">
-                        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
-                            <i class="fa-regular fa-file-lines text-primary"></i>
-                            ทะเบียนคุมครุภัณฑ์
-                        </h6>
-                        <div class="d-flex flex-wrap align-items-center gap-2 w-50 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
-                            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
-                                'class' => 'btn btn-sm btn-primary text-white shadow-sm',
+
+<?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
+
+
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card shadow-sm rounded-4">
+            <div class="card-header bg-body border-bottom py-3 px-3 px-md-4">
+                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between gap-3">
+                    <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
+                        <i class="fa-regular fa-file-lines text-primary"></i>
+                        ทะเบียนคุมครุภัณฑ์
+                    </h6>
+                    <div class="d-flex flex-wrap align-items-center gap-2 w-50 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
+                        <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
+                            'class' => 'btn btn-sm btn-primary text-white shadow-sm',
+                            'data-pjax' => 0,
+                        ]) ?>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="มุมมอง">
+                            <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
+                                'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
                                 'data-pjax' => 0,
                             ]) ?>
-                            <div class="btn-group btn-group-sm" role="group" aria-label="มุมมอง">
-                                <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
-                                    'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                    'data-pjax' => 0,
-                                ]) ?>
-                                <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
-                                    'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                    'data-pjax' => 0,
-                                ]) ?>
-                            </div>
+                            <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
+                                'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                                'data-pjax' => 0,
+                            ]) ?>
                         </div>
                     </div>
                 </div>
-                <div class="card-body py-3">
-                    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-                </div>
-                <div class="card-body p-0">
-                    <?php if ($isTableView): ?>
-                        <?= $this->render('_list', [
-                            'dataProvider' => $dataProvider,
-                        ]) ?>
-                    <?php else: ?>
-                        <?= $this->render('_grid', [
-                            'dataProvider' => $dataProvider,
-                        ]) ?>
-                    <?php endif; ?>
-                </div>
+            </div>
+ 
+            <div class="card-body p-0">
+                <?php if ($isTableView): ?>
+                    <?= $this->render('_list', [
+                        'dataProvider' => $dataProvider,
+                    ]) ?>
+                <?php else: ?>
+                    <?= $this->render('_grid', [
+                        'dataProvider' => $dataProvider,
+                    ]) ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
+</div>
 
 <span id="totalCount" class="d-none"><?= (int) $dataProvider->getTotalCount(); ?></span>
 

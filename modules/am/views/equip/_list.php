@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use app\components\widgets\DataSummaryWidget;
+use app\modules\hr\models\Employees;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
@@ -76,16 +77,20 @@ $equipSubtitle = static function ($item): string {
     max-height: min(68vh, 760px);
     overflow: auto;
 }
-.equip-action-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    min-width: 2.25rem;
-    padding: 0;
+/* คอลัมน์จัดการ: แคบเท่าที่จำเป็น + ปุ่มไม่หดคลิกยากบนมือถือ */
+.equip-register-table th.equip-actions-th,
+.equip-register-table td.equip-actions-cell {
+    width: 150px;
+}
+.equip-register-table .equip-actions-inner .btn {
+    flex-shrink: 0;
+    min-width: 2.375rem;
+    min-height: 2.375rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
 }
+
 </style>
 <div class="bg-body">
     <div class="equip-list-scroll">
@@ -98,9 +103,10 @@ $equipSubtitle = static function ($item): string {
                     <th>หมวด</th>
                     <th class="text-end">ราคาแรกรับ</th>
                     <th>ที่ตั้ง</th>
+                    <th>ผู้รับผิดชอบ</th>
                     <th>วันรับ</th>
                     <th class="text-center">สภาพ</th>
-                    <th class="text-center" style="min-width: 8.5rem;">จัดการ</th>
+                    <th class="text-center equip-actions-th">จัดการ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -116,6 +122,11 @@ $equipSubtitle = static function ($item): string {
                     }
                     $catTitle = $item->assetCategory?->title ?? $item->assetType?->title ?? '-';
                     $titleName = $item->asset_name ?: ($item->AssetitemName() ?: '-');
+                    $ownerEmp = $item->ownerEmployee;
+                    if ($ownerEmp === null && $item->owner !== null && $item->owner !== '' && is_numeric($item->owner)) {
+                        $ownerEmp = Employees::findOne((int) $item->owner);
+                    }
+                    $ownerName = $ownerEmp?->fullname ?: '';
                     ?>
                     <tr>
                         <td>
@@ -124,36 +135,57 @@ $equipSubtitle = static function ($item): string {
                             ]) ?>
                         </td>
                         <td>
-                            <div class="fw-bold text-body"><?= Html::encode($titleName) ?></div>
-                            <?php $sub = $equipSubtitle($item); ?>
-                            <?php if ($sub !== ''): ?>
-                                <div class="small text-muted mt-1 lh-sm text-break"><?= Html::encode($sub) ?></div>
-                            <?php endif; ?>
+                            <div class="d-flex gap-3 align-items-center">
+                                <?= Html::a(
+                                    Html::img(
+                                        $item->ShowImg()['image'],
+                                        [
+                                            'class' => 'rounded border flex-shrink-0',
+                                            'style' => 'width:56px;height:56px;object-fit:cover;',
+                                            'alt' => $titleName,
+                                        ]
+                                    ),
+                                    ['view-asset', 'id' => $item->id],
+                                    [
+                                        'class' => 'flex-shrink-0 text-decoration-none',
+                                        'data-pjax' => 0,
+                                        'title' => 'ดูรายละเอียด',
+                                    ]
+                                ) ?>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-bold text-body"><?= Html::encode($titleName) ?></div>
+                                    <?php $sub = $equipSubtitle($item); ?>
+                                    <?php if ($sub !== ''): ?>
+                                        <div class="small text-muted mt-1 lh-sm text-break"><?= Html::encode($sub) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </td>
                         <td>
                             <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle fw-medium px-3 py-2"><?= Html::encode($catTitle) ?></span>
                         </td>
                         <td class="text-end text-nowrap"><span class="fw-bold text-body font-monospace"><?= Html::encode(number_format($price, 2)) ?></span></td>
                         <td class="text-muted small"><?= Html::encode($location ?: '-') ?></td>
+                        <td class="text-muted small"><?= Html::encode($ownerName ?: '-') ?></td>
                         <td class="text-muted small text-nowrap"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
                         <td class="text-center"><?= $statusBadge($item) ?></td>
-                        <td class="text-center">
-                            <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-solid fa-wrench" aria-hidden="true"></i>', ['maintenance', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-warning text-white equip-action-icon',
+                        <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
+                            <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
+                                <?= Html::a('<i class="fa-solid fa-eye" aria-hidden="true"></i>', ['maintenance', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-info text-white',
                                     'title' => 'บำรุงรักษา',
                                     'data-pjax' => 0,
                                 ]) ?>
                                 <?php if (Yii::$app->user->can('asset')): ?>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', ['update', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-outline-warning equip-action-icon',
+                                        'class' => 'btn btn-sm btn-outline-warning',
                                         'title' => 'แก้ไข',
                                         'data-pjax' => 0,
                                     ]) ?>
                                 <?php endif; ?>
                                 <?php if (Yii::$app->user->can('admin')): ?>
                                     <?= Html::a('<i class="fa-solid fa-trash" aria-hidden="true"></i>', ['delete', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-danger equip-action-icon delete-asset',
+                                        'class' => 'btn btn-sm btn-danger delete-asset',
                                         'title' => 'ลบ',
                                         'data-pjax' => 0,
                                     ]) ?>

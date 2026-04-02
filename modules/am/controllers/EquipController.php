@@ -121,7 +121,7 @@ class EquipController extends Controller
             ],
         ]);
 
-        $dataProvider->query->with(['assetType', 'assetCategory']);
+        $dataProvider->query->with(['assetType', 'assetCategory', 'ownerEmployee']);
 
         $baseQuery = $dataProvider->query;
         $equipStats = [
