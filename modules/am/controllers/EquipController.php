@@ -121,6 +121,16 @@ class EquipController extends Controller
             ],
         ]);
 
+        $dataProvider->query->with(['assetType', 'assetCategory']);
+
+        $baseQuery = $dataProvider->query;
+        $equipStats = [
+            'total' => (int) (clone $baseQuery)->count('DISTINCT asset.id'),
+            'good' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => 1])->count('DISTINCT asset.id'),
+            'damaged' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => [3, 5]])->count('DISTINCT asset.id'),
+            'total_value' => (float) ((clone $baseQuery)->sum(new Expression('COALESCE(asset.price, 0)'))) ?: 0.0,
+        ];
+
         if ($this->request->get('view')) {
             SiteHelper::setDisplay($this->request->get('view'));
         }
@@ -129,6 +139,7 @@ class EquipController extends Controller
             'tabs' => 'asset',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'equipStats' => $equipStats,
         ]);
     }
 
