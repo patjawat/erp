@@ -10,7 +10,7 @@ use app\components\SiteHelper;
 $site = Categorise::findOne(['name' => 'site']);
 $dataJson = ($site && is_array($site->data_json)) ? $site->data_json : [];
 $colorName = $dataJson['theme_color_name'] ?? 'blue';
-$headerBrand = SiteHelper::resolveHeaderBrand($dataJson);
+$headerBrand = SiteHelper::resolveHeaderBrand($dataJson, \Yii::$app->user->isGuest);
 if (!empty($headerBrand['google_font_href'])) {
     $this->registerLinkTag([
         'rel' => 'stylesheet',
