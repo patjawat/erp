@@ -53,7 +53,7 @@ class HolidayController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/holiday/view', ['model' => $this->findModel($id)]);
+        return $this->render('view', ['model' => $this->findModel($id)]);
     }
 
     public function actionValidator()
@@ -92,10 +92,10 @@ class HolidayController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/holiday/create', ['model' => $model]),
+                'content' => $this->renderAjax('create', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/holiday/create', ['model' => $model]);
+        return $this->render('create', ['model' => $model]);
     }
 
     public function actionUpdate($id)
@@ -114,10 +114,10 @@ class HolidayController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/holiday/update', ['model' => $model]),
+                'content' => $this->renderAjax('update', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/holiday/update', ['model' => $model]);
+        return $this->render('update', ['model' => $model]);
     }
 
     public function actionDelete($id)

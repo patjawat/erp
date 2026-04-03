@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu_admin', ['active' => 'setting']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'leave']); ?>
@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> เพิ่มวันหยุด', ['/leave/holiday/create', 'title' => 'เพิ่มวันหยุด'], ['class' => 'btn btn-primary open-modal rounded-pill shadow', 'data' => ['size' => 'modal-md']]) ?>
                 <?= Html::a('<i class="fa-solid fa-cloud"></i> โหลดวันหยุดอัตโนมัติ', ['/leave/holiday/sync-date'], ['class' => 'btn btn-secondary rounded-pill shadow sync-date text-white']) ?>
             </div>
-            <?= $this->render('@app/modules/hr/views/holiday/_search', ['model' => $searchModel]) ?>
+            <?= $this->render('_search', ['model' => $searchModel]) ?>
         </div>
     </div>
 </div>

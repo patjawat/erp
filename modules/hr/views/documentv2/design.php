@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $searchModel */

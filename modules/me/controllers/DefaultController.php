@@ -9,7 +9,7 @@ use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
-use app\modules\hr\models\LeaveSearch;
+use app\modules\leave\models\LeaveSearch;
 use app\modules\helpdesk\models\HelpdeskSearch;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\appreciation\models\Appreciation;

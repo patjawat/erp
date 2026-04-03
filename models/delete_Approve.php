@@ -4,7 +4,7 @@ namespace app\models;
 
 use Yii;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\purchase\models\Order;
 use app\modules\booking\models\Booking;

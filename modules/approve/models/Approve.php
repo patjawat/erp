@@ -10,7 +10,7 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\modules\am\models\AssetDetail;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\LeaveType;
 use app\modules\hr\models\Development;

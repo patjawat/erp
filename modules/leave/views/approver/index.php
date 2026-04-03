@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $totalCount = (int) $dataProvider->getTotalCount();
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('../menu_admin', ['active' => 'approver']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'approver']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>

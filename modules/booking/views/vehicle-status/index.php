@@ -6,7 +6,7 @@ use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use kartik\color\ColorInput;
-use app\modules\hr\models\LeavePolicies;
+use app\modules\leave\models\LeavePolicies;
 
 $this->title = 'สถานะการจองรถ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบงานยานพาหนะ', 'url' => ['/booking/vehicle/index']];

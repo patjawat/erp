@@ -22,9 +22,9 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 // Microsoft Excel
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use app\modules\hr\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveEntitlements;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use app\modules\hr\models\LeaveEntitlementsSearch;
+use app\modules\leave\models\LeaveEntitlementsSearch;
 use yii\web\ForbiddenHttpException;
 
 /**
@@ -116,7 +116,7 @@ class LeaveEntitlementsController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/leave-entitlements/view', [
+        return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -172,12 +172,12 @@ class LeaveEntitlementsController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave-entitlements/create', [
+                'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave-entitlements/create', [
+            return $this->render('create', [
                 'model' => $model,
             ]);
         }
@@ -402,12 +402,12 @@ class LeaveEntitlementsController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave-entitlements/update', [
+                'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave-entitlements/update', [
+            return $this->render('update', [
                 'model' => $model,
             ]);
         }
@@ -611,10 +611,10 @@ class LeaveEntitlementsController extends Controller
 
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave-entitlements/_form_import', ['model' => $model])
+                'content' => $this->renderAjax('_form_import', ['model' => $model])
             ];
         } else {
-            return $this->render('@app/modules/hr/views/leave-entitlements/_form_import', ['model' => $model]);
+            return $this->render('_form_import', ['model' => $model]);
         }
     }
 

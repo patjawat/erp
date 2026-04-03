@@ -12,7 +12,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $name = $employee ? trim(($employee->fname ?? '') . ' ' . ($employee->lname ?? '')) : 'ผู้ใช้';
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('../menu_user', ['active' => 'index']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'index']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>

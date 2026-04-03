@@ -16,7 +16,7 @@ use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
-use app\modules\hr\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveEntitlements;
 use app\modules\hr\models\Organization;
 use app\modules\leave\models\LeaveType;
 use yii\behaviors\BlameableBehavior;
