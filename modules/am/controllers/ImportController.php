@@ -155,10 +155,10 @@ class ImportController extends Controller
             return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
         }
 
-        $rowsData = [];
+        $rowsByCode = []; // รหัสครุภัณฑ์ซ้ำในไฟล์ → แถวหลังแทนที่แถวก่อน (อัปเดตล่าสุด)
+        $rowsNoCode = [];
         $errorRows = [];
         $rowNumber = 0;
-        $codesInFile = []; // หมายเลขครุภัณฑ์ที่เจอในไฟล์นี้ (ไม่ให้ซ้ำในไฟล์) — หมายเลข FSN ซ้ำได้
 
         if (($handle = fopen($filePath, "r")) !== false) {
             $columnIndexes = null;
@@ -170,16 +170,25 @@ class ImportController extends Controller
                 }
 
                 $code = trim((string) ($data[0] ?? ''));
+
+                $model = null;
                 if ($code !== '') {
-                    if (Asset::find()->where(['code' => $code])->exists()) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในระบบ']]];
-                        continue;
+                    $existing = Asset::find()->where(['code' => $code])->one();
+                    if ($existing !== null) {
+                        $gid = $existing->asset_group_id;
+                        if ($gid != 4 && (string) $gid !== '4') {
+                            $errorRows[] = [
+                                'row' => $rowNumber,
+                                'code' => $code,
+                                'errors' => ['code' => ['รหัสนี้มีในระบบเป็นประเภทอื่น — นำเข้าครุภัณฑ์อัปเดตได้เฉพาะรายการในกลุ่มครุภัณฑ์']],
+                            ];
+                            continue;
+                        }
+                        $model = $existing;
                     }
-                    if (isset($codesInFile[$code])) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในไฟล์นี้']]];
-                        continue;
-                    }
-                    $codesInFile[$code] = true;
+                }
+                if ($model === null) {
+                    $model = new Asset();
                 }
 
                 $ci = $columnIndexes ?? $this->equipImportColumnIndexes([]);
@@ -200,13 +209,12 @@ class ImportController extends Controller
                     }
                 }
 
-                $model = new Asset();
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
                 $model->code = $data[0];
                 $model->fsn_number = $data[1]; // หมายเลข FSN ซ้ำได้
                 $model->asset_name = $data[2];
-                $dataJson = [
+                $incomingJson = [
                     'brand' => $data[3],
                     'asset_model' => $data[4],
                     'color_name' => $data[5],
@@ -222,7 +230,8 @@ class ImportController extends Controller
                     'order_number' => trim((string) ($data[$orderIdx] ?? '')),
                     'note' => trim((string) ($data[$noteIdx] ?? '')),
                 ];
-                $model->data_json = $dataJson;
+                $baseJson = $model->isNewRecord ? [] : $this->assetImportDataJsonAsArray($model->data_json);
+                $model->data_json = array_merge($baseJson, $incomingJson);
                 if ($depreciationParsed['value'] !== null) {
                     $model->depreciation_rate = $depreciationParsed['value'];
                 }
@@ -251,9 +260,13 @@ class ImportController extends Controller
                         'code' => $data[0],
                         'errors' => $errors
                     ];
+                } else {
+                    if ($code !== '') {
+                        $rowsByCode[$code] = $model;
+                    } else {
+                        $rowsNoCode[] = $model;
+                    }
                 }
-
-                $rowsData[] = $model;
             }
             fclose($handle);
 
@@ -266,19 +279,55 @@ class ImportController extends Controller
                 ];
             }
 
-            // บันทึกทุกแถว
+            $rowsData = array_merge(array_values($rowsByCode), $rowsNoCode);
+
             $imported = 0;
+            $created = 0;
+            $updated = 0;
             foreach ($rowsData as $model) {
-                if ($model->save(false)) $imported++;
+                $wasNew = $model->isNewRecord;
+                if ($model->save(false)) {
+                    $imported++;
+                    if ($wasNew) {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
+                }
+            }
+
+            $msg = "นำเข้าข้อมูลเรียบร้อย {$imported} แถว";
+            if ($created > 0 || $updated > 0) {
+                $msg .= " (สร้างใหม่ {$created}, อัปเดต {$updated})";
             }
 
             return [
                 'status' => 'success',
-                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว"
+                'message' => $msg,
+                'created' => $created,
+                'updated' => $updated,
             ];
         }
 
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
+    }
+
+    /**
+     * @param mixed $dataJson ค่า data_json จาก Asset (array หรือ JSON string)
+     * @return array<string, mixed>
+     */
+    protected function assetImportDataJsonAsArray($dataJson): array
+    {
+        if (is_array($dataJson)) {
+            return $dataJson;
+        }
+        if (is_string($dataJson) && $dataJson !== '') {
+            $decoded = json_decode($dataJson, true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
     }
 
     /**
