@@ -182,17 +182,6 @@ class ImportController extends Controller
                     $codesInFile[$code] = true;
                 }
 
-                // มีรหัสผู้ขายแต่ชื่อว่าง และไม่เจอรหัสในฐานข้อมูล → ไม่นำเข้าแถวนี้
-                $vendorCode = trim((string) ($data[18] ?? ''));
-                $vendorName = trim((string) ($data[19] ?? ''));
-                if ($vendorCode !== '' && $vendorName === '') {
-                    $vendorExists = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->exists();
-                    if (!$vendorExists) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['vendor' => ['ไม่พบรหัสผู้ขาย/ผู้บริจาคในระบบ — ไม่นำเข้าแถวนี้']]];
-                        continue;
-                    }
-                }
-
                 $ci = $columnIndexes ?? $this->equipImportColumnIndexes([]);
                 $usefulLifeIdx = $ci['useful_life'];
                 $orderIdx = $ci['order_number'];
@@ -528,8 +517,9 @@ class ImportController extends Controller
 
     /**
      * รหัส/ชื่อผู้ขายจาก CSV → vendor code ใน categorise (name='vendor') โครงสร้างเดียวกับ /sm/vendor
-     * - มีรหัส: ค้น WHERE name='vendor' AND code=รหัส ถ้าเจอคืน code (ไม่แก้ไข) ถ้าไม่เจอสร้างใหม่
-     * - รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — ค้น/สร้างผู้ขายอัตโนมัติจากชื่อ (findVendor)
+     * - มีรหัสและพบในระบบ: คืน code (อัปเดตชื่อถ้าส่งชื่อมาและไม่ตรง)
+     * - มีรหัสแต่ไม่พบในระบบ: ไม่บันทึกรหัสจาก CSV — ถ้ามีชื่อให้ค้น/สร้างจากชื่อ (findVendor) มิฉะนั้นคืนค่าว่าง
+     * - รหัสว่างแต่มีชื่อ: ค้น/สร้างผู้ขายอัตโนมัติจากชื่อ (findVendor)
      */
     protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
     {
@@ -546,20 +536,17 @@ class ImportController extends Controller
                 }
                 return $byCode->code;
             }
-            // มีรหัสแต่ชื่อว่างและไม่เจอใน DB → caller จะข้ามแถว ไม่สร้าง vendor
-            if ($vendorName === '') {
-                return '';
+            // ไม่พบรหัสในระบบ — ไม่สร้างผู้ขายด้วยรหัสจาก CSV
+            if ($vendorName !== '') {
+                return $this->findVendor($vendorName);
             }
-            // ไม่พบรหัสในทะเบียนแต่มีชื่อ → สร้างใหม่
-            $newVender = new Categorise(['name' => 'vendor', 'title' => $vendorName]);
-            $newVender->code = $vendorCode;
-            $newVender->save(false);
-            return $newVender->code;
+
+            return '';
         }
 
-        // รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — นำเข้า/สร้างผู้ขายอัตโนมัติตามโครงสร้างระบบผู้แทนจำหน่าย (categorise name=vendor เหมือน /sm/vendor)
+        // รหัสว่างแต่มีชื่อ: นำเข้า/สร้างผู้ขายอัตโนมัติจากชื่อ (categorise name=vendor เหมือน /sm/vendor)
         if ($vendorName !== '') {
-            return $this->findVendor($vendorName); // ค้นจาก title หรือสร้างใหม่ (code อัตโนมัติ)
+            return $this->findVendor($vendorName);
         }
 
         return '';
