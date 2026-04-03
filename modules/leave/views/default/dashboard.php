@@ -21,19 +21,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="row">
     <div class="col-6">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary_year', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary_year', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>
     </div>
     <div class="col-6">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary_month', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary_month', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>
     </div>
     <div class="col-12">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>
