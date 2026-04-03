@@ -4,14 +4,14 @@ use yii\helpers\Html;
 ?>
 
 
-<div class="my-4">
 
-  <div class="row g-4">
+
+  <div class="row g-4 mt-1">
 
     <!-- ทรัพย์สินทั้งหมด -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body">
+        <div class="card-body py-3">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="fw-bold fs-4">
               <?= (int) $equipStats['total'] ?> รายการ
@@ -28,7 +28,7 @@ use yii\helpers\Html;
     <!-- สภาพดี -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body">
+        <div class="card-body py-3">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="fw-bold fs-4">
               <?= (int) $equipStats['good'] ?> รายการ
@@ -45,7 +45,7 @@ use yii\helpers\Html;
     <!-- ชำรุด / รอซ่อม -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body">
+        <div class="card-body py-3">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="fw-bold fs-4">
               <?= (int) $equipStats['damaged'] ?> รายการ
@@ -62,7 +62,7 @@ use yii\helpers\Html;
     <!-- รวมราคาแรกรับ -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body">
+        <div class="card-body py-3">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="fw-bold fs-4">
               <?= Html::encode(number_format($equipStats['total_value'], 2)) ?> บาท
@@ -76,4 +76,3 @@ use yii\helpers\Html;
       </div>
     </div>
   </div>
-</div>

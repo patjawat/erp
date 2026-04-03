@@ -44,7 +44,7 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 
-<div class="card rounded-4">
+<div class="card">
     <div class="card-body p-3">
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
@@ -53,14 +53,15 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 
 <?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
 
-
 <div class="row g-3 mt-1">
     <div class="col-12">
-        <div class="card shadow-sm rounded-4">
+        <div class="card">
             <div class="card-header bg-body border-bottom py-3 px-3 px-md-4">
                 <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between gap-3">
                     <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
-                        <i class="fa-regular fa-file-lines text-primary"></i>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-pill">
+                    <i data-lucide="file-text"></i> 
+            </div>
                         ทะเบียนคุมครุภัณฑ์
                     </h6>
                     <div class="d-flex flex-wrap align-items-center gap-2 w-50 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
