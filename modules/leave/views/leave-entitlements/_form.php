@@ -133,7 +133,7 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 
 
 
-<?= $form->field($model, 'days')->textInput(['type' => 'number', 'step' => '0.5', 'min' => '0.5'])->label('รวมสิทธลาพักผ่อน') ?>
+<?= $form->field($model, 'days')->textInput(['type' => 'number'])->label('รวมสิทธลาพักผ่อน') ?>
 
 <?= $form->field($model, 'month_of_service')->hiddenInput(['value' => 0])->label(false) ?>
 <?= $form->field($model, 'position_type_id')->hiddenInput(['maxlength' => true])->label(false) ?>

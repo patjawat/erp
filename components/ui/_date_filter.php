@@ -11,7 +11,6 @@ echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
     ],
     'pluginOptions' => [
         'allowClear' => true,
-        // 'width' => '130px',
     ],
     'pluginEvents' => [
         "select2:select" => "function(result) { 
@@ -25,6 +24,10 @@ echo $form->field($model, 'date_filter')->widget(Select2::classname(), [
                             $('#dateEnd').val(res.date_end)
                             }
                         });
+                    }",
+        "select2:clear" => "function() {
+                        $('#dateStart').val('');
+                        $('#dateEnd').val('');
                     }",
     ]
 ])->label(false);

@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('../menu_admin', ['active' => 'dashboard']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="row">
