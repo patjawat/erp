@@ -89,68 +89,78 @@ $disposals = $recentActivities['disposals'] ?? [];
 <div class="container-fluid px-2 px-md-3 pb-4">
   <!-- Section 1 — Executive KPI -->
   <section class="mb-4">
-    <div class="row g-3">
+    <div class="row g-4 mt-1">
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
-              <i class="fa-solid fa-boxes-stacked fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['total_assets'] ?? 0) ?></div>
-              <div class="small text-secondary">ครุภัณฑ์ทั้งหมด</div>
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['total_assets'] ?? 0) ?></span>
+                <span class="text-muted">ครุภัณฑ์ทั้งหมด (รายการ)</span>
+              </div>
+              <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill">
+                <i data-lucide="package"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-2">
-              <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['exceeding_useful_life'] ?? 0) ?></div>
-              <div class="small text-secondary">เกินอายุการใช้งาน</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-2">
-              <i class="fa-solid fa-wrench fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['under_repair'] ?? 0) ?></div>
-              <div class="small text-secondary">ส่งซ่อม</div>
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['exceeding_useful_life'] ?? 0) ?></span>
+                <span class="text-muted">เกินอายุการใช้งาน (รายการ)</span>
+              </div>
+              <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-pill">
+                <i data-lucide="history"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-secondary bg-opacity-10 text-secondary p-2">
-              <i class="fa-solid fa-trash-can fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['waiting_disposal'] ?? 0) ?></div>
-              <div class="small text-secondary">รอจำหน่าย</div>
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['under_repair'] ?? 0) ?></span>
+                <span class="text-muted">ส่งซ่อม (รายการ)</span>
+              </div>
+              <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill">
+                <i data-lucide="wrench"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-info bg-opacity-10 text-info p-2">
-              <i class="fa-solid fa-coins fa-lg"></i>
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['waiting_disposal'] ?? 0) ?></span>
+                <span class="text-muted">รอจำหน่าย (รายการ)</span>
+              </div>
+              <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-pill">
+                <i data-lucide="trash-2"></i>
+              </div>
             </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['estimated_replacement_cost'] ?? 0, 0) ?></div>
-              <div class="small text-secondary">มูลค่าแทนที่ (บาท)</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= Html::encode(number_format($kpis['estimated_replacement_cost'] ?? 0, 0)) ?></span>
+                <span class="text-muted">มูลค่าแทนที่ (บาท)</span>
+              </div>
+              <div class="bg-info bg-opacity-10 text-info p-3 rounded-pill">
+                <i data-lucide="banknote"></i>
+              </div>
             </div>
           </div>
         </div>

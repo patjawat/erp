@@ -37,6 +37,7 @@ $this->title = 'นำเข้าไฟล์ CSV';
             ],
             'pluginOptions' => [
                 'allowClear' => true,
+                'dropdownParent' => '#main-modal',
             ],
             'pluginEvents' => [
                 "select2:select" => "function() { 
@@ -57,6 +58,7 @@ $this->title = 'นำเข้าไฟล์ CSV';
             'type' => DepDrop::TYPE_SELECT2,
             'select2Options' => ['pluginOptions' => ['allowClear' => true]],
             'pluginOptions' => [
+                'dropdownParent' => '#main-modal',
                 'depends' => ['asset_type_id'],
                 'url' => Url::to(['/am/asset-item/get-asset-category']),
                 'loadingText' => 'กำลังโหลด ...',
