@@ -193,7 +193,9 @@ class Order extends \yii\db\ActiveRecord
     // เชื่อมกับ ผู้จำหน่าย
     public function getVendor()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])->andOnCondition(['name' => 'vendor']);
+        return $this->hasOne(Categorise::class, ['code' => 'vendor_id'])
+            ->andOnCondition(['name' => 'vendor'])
+            ->andOnCondition(['!=', 'code', '-']);
     }
 
     // เชื่อมกับ รับเข้า Stock
@@ -1064,6 +1066,18 @@ function cutDecimal($number, $precision = 5)
     public function ListVendor()
     {
         return CategoriseHelper::Vendor();
+    }
+
+    /** รายชื่อผู้ขอ (บุคลากร) สำหรับ dropdown ค้นหา */
+    public static function listRequesters()
+    {
+        return ArrayHelper::map(
+            Employees::find()->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all(),
+            'id',
+            function ($emp) {
+                return $emp->prefix . $emp->fname . ' ' . $emp->lname;
+            }
+        );
     }
 
     // ร้อยละดำเนินการ

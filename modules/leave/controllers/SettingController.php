@@ -509,6 +509,17 @@ class SettingController extends Controller
         $hr = $model->checkerName(3);
         $direc = $model->checkerName(4);
         $sendEmp = $model->leaveWorkSend();
+        $empSignature = '';
+        if ($emp && method_exists($emp, 'signature')) {
+            $empSignature = (string) $emp->signature();
+        }
+        $sendSignature = '';
+        if ($sendEmp && method_exists($sendEmp, 'signature')) {
+            $sendSignature = (string) $sendEmp->signature();
+        }
+        $leaderSignature = (string) ($leader['signature'] ?? '');
+        $hrSignature = (string) ($hr['signature'] ?? '');
+        $direcSignature = (string) ($direc['signature'] ?? '');
         $ent = method_exists($model, 'Entitlements') ? $model->Entitlements() : null;
         $entitlementsDays = $ent && isset($ent->days) ? (string) $ent->days : '0';
         $values = [
@@ -567,7 +578,14 @@ class SettingController extends Controller
         $values['approver_fullname'] = $values['approve_1_name'] ?? '';
         $values['approver_position'] = $values['approve_1_position'] ?? '';
         $values['approver_approve_date'] = $values['approve_date_1'] ?? '';
-        $values['approver_signature'] = '';
+        $values['approver_signature'] = (string) ($model->checkerName(1)['signature'] ?? '');
+        // Signature aliases for PDF template editor/data source compatibility.
+        $values['emp_signature'] = $empSignature;
+        $values['send_signature'] = $sendSignature;
+        $values['approver_1_signature'] = (string) ($model->checkerName(1)['signature'] ?? '');
+        $values['approver_2_signature'] = $leaderSignature;
+        $values['approver_3_signature'] = $hrSignature;
+        $values['approver_4_signature'] = $direcSignature;
         $values['approval_status'] = $values['status'];
         $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');
         return $values;

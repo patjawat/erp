@@ -49,6 +49,11 @@ class Module extends \yii\base\Module
                 'label' => (new \app\modules\pdfTemplate\sources\HelpdeskDataSource())->getLabel(),
                 'class' => \app\modules\pdfTemplate\sources\HelpdeskDataSource::class,
             ],
+            'booking.vehicle.central' => [
+                'id' => 'booking.vehicle.central',
+                'label' => (new \app\modules\pdfTemplate\sources\BookingVehicleDataSource())->getLabel(),
+                'class' => \app\modules\pdfTemplate\sources\BookingVehicleDataSource::class,
+            ],
         ];
         $fromParams = Yii::$app->params['pdfTemplate.dataSources'] ?? null;
         if (is_array($fromParams) && !empty($fromParams)) {

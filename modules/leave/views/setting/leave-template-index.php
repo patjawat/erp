@@ -118,7 +118,7 @@ $this->registerCss('
                     <ol class="text-muted mb-0 ps-3" style="font-size:.72rem;">
                         <li class="mb-1">อัปโหลด PDF ต้นแบบใบลา</li>
                         <li class="mb-1">กด <strong>กำหนดตำแหน่งข้อมูล</strong> ลากวางฟิลด์ให้ตรงกับแบบฟอร์ม</li>
-                        <li>การพิมพ์ใบลาจะใช้ตำแหน่งที่กำหนดอัตโนมัติ</li>
+                        <li>ถ้ายังไม่ใช้เทมเพลตที่ <?= Html::a('/pdf-template', ['/pdf-template/template'], ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'text-decoration-none']) ?> การพิมพ์จะใช้ตำแหน่งที่กำหนดในหน้านี้อัตโนมัติ</li>
                     </ol>
                 </div>
             </div>

@@ -73,7 +73,7 @@ $phone = $employee->phone ?? '';
         <?php
         $workShiftLabel = '';
         if ($employee && isset($employee->work_shift)) {
-            $workShiftLabel = $employee->work_shift === 'shift' ? 'เวร 8' : 'เวรปกติ';
+            $workShiftLabel = $employee->work_shift === 'shift' ? 'เวร 8' : 'เวรเช้า';
         }
         ?>
         <div class="card border-0 shadow-sm rounded-3 mb-4">
@@ -192,7 +192,7 @@ $phone = $employee->phone ?? '';
                     </div>
                     <div class="col-md-5">
                         <?= $form->field($model, $attrWorkShift)->dropDownList(
-                            ['normal' => 'เวรปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
+                            ['normal' => 'เวรเช้า', 'shift' => 'เวร 8 ชั่วโมง'],
                             [
                                 'id'    => 'leave-work_shift',
                                 'class' => 'form-select',
@@ -208,7 +208,7 @@ $phone = $employee->phone ?? '';
                         <?= $form->field($model, 'date_start')->textInput([
                             'id' => 'leave-date_start',
                             'class' => 'form-control',
-                            'placeholder' => 'dd/mm/yyyy',
+                            'placeholder' => 'วันที่/เดือน/พ.ศ.',
                         ])->label('ตั้งแต่วันที่') ?>
                     </div>
                     <div class="col-md-5">
@@ -221,7 +221,7 @@ $phone = $employee->phone ?? '';
                         <?= $form->field($model, 'date_end')->textInput([
                             'id' => 'leave-date_end',
                             'class' => 'form-control',
-                            'placeholder' => 'dd/mm/yyyy',
+                            'placeholder' => 'วันที่/เดือน/พ.ศ.',
                         ])->label('ถึงวันที่') ?>
                     </div>
                     <div class="col-md-5">

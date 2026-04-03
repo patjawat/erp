@@ -11,6 +11,9 @@ use app\modules\booking\models\Vehicle;
  */
 class VehicleSearch extends Vehicle
 {
+    /** @var int|null 1=ยังไม่บันทึกการเดินทาง, null=ทั้งหมด */
+    public $not_logged;
+
     /**
      * {@inheritdoc}
      */
@@ -18,7 +21,7 @@ class VehicleSearch extends Vehicle
     {
         return [
             [['id', 'thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code', 'vehicle_type_id','refer_type', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department','date_filter'], 'safe'],
+            [['ref', 'code', 'vehicle_type_id','refer_type', 'urgent', 'license_plate', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'driver_id', 'leader_id', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','q_department','date_filter', 'not_logged'], 'safe'],
             [['oil_price', 'oil_liter'], 'number'],
         ];
     }
@@ -47,6 +50,13 @@ class VehicleSearch extends Vehicle
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 20,
+            ],
+            'sort' => [
+                'defaultOrder' => ['date_start' => SORT_DESC, 'id' => SORT_DESC],
+                'attributes' => ['id', 'date_start', 'date_end', 'status', 'code', 'created_at'],
+            ],
         ]);
 
         $this->load($params);
@@ -82,7 +92,7 @@ class VehicleSearch extends Vehicle
             ->andFilterWhere(['like', 'license_plate', $this->license_plate])
             ->andFilterWhere(['like', 'location', $this->location])
             ->andFilterWhere(['like', 'reason', $this->reason])
-            ->andFilterWhere(['like', 'vehicle.status', $this->status])
+            ->andFilterWhere(['vehicle.status' => $this->status])
             ->andFilterWhere(['like', 'time_start', $this->time_start])
             ->andFilterWhere(['like', 'time_end', $this->time_end])
             ->andFilterWhere(['like', 'driver_id', $this->driver_id])

@@ -400,6 +400,13 @@ class ReportController extends \yii\web\Controller
             $config['default_font'] = 'thsarabun';
         }
 
+        // กำหนดโฟลเดอร์ชั่วคราวให้ mPDF ใช้ @runtime/mpdf (แก้ปัญหา temp dir เขียนไม่ได้บน server)
+        $tmpDir = Yii::getAlias('@runtime/mpdf');
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0777, true);
+        }
+        $config['tempDir'] = $tmpDir;
+
         $mpdf = new \Mpdf\Mpdf($config);
         $mpdf->SetTitle('รายงานค่าเสื่อมรายเดือน - ' . $periodLabel);
         $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);

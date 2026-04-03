@@ -27,6 +27,16 @@ $providerLoginUrl = \yii\helpers\Url::to('https://moph.id.th/oauth/redirect?' . 
     'response_type' => 'code',
     'state' => env('PROVIDER_REDIRECT_URI')
 ]));
+
+// ยกเลิกพื้นหลังเทา (#f3f3f3) จาก web/css/custom.css สำหรับ .form-check-input — เฉพาะหน้า login นี้
+$rememberMeInputId = Html::getInputId($model, 'rememberMe');
+$this->registerCss(<<<CSS
+#{$rememberMeInputId}.form-check-input:not(:checked) {
+  --bs-form-check-bg: transparent;
+  background-color: transparent;
+}
+CSS
+);
 ?>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-primary p-3 p-md-4">
@@ -69,14 +79,21 @@ $providerLoginUrl = \yii\helpers\Url::to('https://moph.id.th/oauth/redirect?' . 
                             'class' => 'form-control form-control-lg rounded-pill ps-5'
                         ])->label('รหัสผ่าน', ['class' => 'form-label text-dark']) ?>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="form-check mb-0">
-                                <?= $form->field($model, 'rememberMe')->checkbox([
-                                    'class' => 'form-check-input',
-                                    'template' => "{input}\n{label}",
-                                ])->label('จดจำฉัน', ['class' => 'form-check-label text-dark small']) ?>
+                        <div class="d-flex justify-content-between align-items-start mb-3 gap-2">
+                            <div class="flex-grow-1 min-w-0">
+                               
+                                    <div class="form-check form-switch mb-0">
+                                        <?= $form->field($model, 'rememberMe')->checkbox([
+                                            'class' => 'form-check-input mt-0',
+                                            'role' => 'switch',
+                                            'template' => "{input}\n{label}",
+                                        ])->label('จำการเข้าสู่ระบบไว้ในอุปกรณ์นี้ (สูงสุด 1 วัน)', ['class' => 'form-check-label text-dark fw-medium']) ?>
+                                    </div>
+                                
                             </div>
-                            <?= Html::a('ลืมรหัสผ่าน?', ['/site/forgot-password'], ['class' => 'text-primary small text-decoration-none']) ?>
+                            <div class="flex-shrink-0 pt-1">
+                                <?= Html::a('ลืมรหัสผ่าน?', ['/site/forgot-password'], ['class' => 'text-primary small text-decoration-none']) ?>
+                            </div>
                         </div>
 
                         <div class="d-grid mb-3">

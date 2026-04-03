@@ -9,6 +9,7 @@ use yii\web\UploadedFile;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
 use app\modules\helpdesk2\models\RepairFormSetting;
+use app\modules\helpdesk2\models\HelpdeskSlaSetting;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\components\ThaiDateHelper;
 
@@ -31,7 +32,8 @@ class SettingController extends Controller
             ? Url::to(['/helpdesk/setting/serve-template'])
             : null;
 
-        return $this->render('index', [
+        // SLA ตั้งค่าแยกออกจากการตั้งค่า PDF Template (ไปที่ module pdf-template แล้ว)
+        return $this->render('sla', [
             'hasTemplate' => $hasTemplate,
             'templateUrl' => $templateUrl,
         ]);
@@ -207,6 +209,49 @@ class SettingController extends Controller
         $record  = RepairFormSetting::getRecord();
         $newVal  = $record->toggleEnabled();
         return ['success' => true, 'enabled' => $newVal];
+    }
+
+    // ─────────────────────────────────────────────
+    //  ตั้งค่า SLA (AJAX/POST)
+    // ─────────────────────────────────────────────
+    public function actionSaveSlaSettings()
+    {
+        $hours = Yii::$app->request->post('urgency_hours', []);
+        if (!is_array($hours)) {
+            Yii::$app->session->setFlash('error', 'ข้อมูล SLA ไม่ถูกต้อง');
+            return $this->redirect(['/helpdesk/setting/index']);
+        }
+
+        $record = HelpdeskSlaSetting::getRecord();
+        $config = $record->getConfig();
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        $normalized = [];
+        foreach ($hours as $k => $v) {
+            $key = (string) $k;
+            if ($key === '') {
+                continue;
+            }
+            if (is_numeric($v)) {
+                $val = (int) $v;
+                if ($val > 0) {
+                    $normalized[$key] = $val;
+                }
+            }
+        }
+
+        if (empty($normalized)) {
+            Yii::$app->session->setFlash('error', 'กรุณากรอกชั่วโมง SLA อย่างน้อย 1 ค่า (มากกว่า 0)');
+            return $this->redirect(['/helpdesk/setting/index']);
+        }
+
+        $config['urgency_hours'] = $normalized;
+        $record->setConfig($config);
+
+        Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่า SLA เรียบร้อย');
+        return $this->redirect(['/helpdesk/setting/index']);
     }
 
     // ─────────────────────────────────────────────

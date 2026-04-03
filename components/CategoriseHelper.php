@@ -18,7 +18,10 @@ class CategoriseHelper extends Component
 
     public static function Categorise($name)
     {
-        return Categorise::find()->where(['name' => $name])->all();
+        return Categorise::find()
+            ->where(['name' => $name])
+            ->andWhere(['!=', 'code', '-'])
+            ->all();
     }
 
     //หาตำแหน่ง กลุ่ม ประเภท ด้วย ID

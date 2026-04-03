@@ -86,6 +86,81 @@ class ExpensesController extends Controller
         ]);
 
         if ($this->request->isPost) {
+            $rowsJson = (string) $this->request->post('expense_rows_json', '');
+            if ($rowsJson !== '') {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                $rows = json_decode($rowsJson, true);
+                if (!is_array($rows)) {
+                    return ['status' => 'error', 'message' => 'รูปแบบรายการค่าใช้จ่ายไม่ถูกต้อง'];
+                }
+
+                $helpdeskId = (int) ($this->request->post('helpdesk_id') ?: $model->helpdesk_id);
+                $tx = Yii::$app->db->beginTransaction();
+                try {
+                    HelpdeskDetail::deleteAll([
+                        'helpdesk_id' => $helpdeskId,
+                        'name' => 'expense_record',
+                    ]);
+
+                    $savedCount = 0;
+                    foreach ($rows as $row) {
+                        $title = trim((string) ($row['title'] ?? ''));
+                        if ($title === '') {
+                            continue;
+                        }
+                        $qty = (float) ($row['qty'] ?? 0);
+                        $unitPrice = (float) ($row['unit_price'] ?? 0);
+                        $total = (float) ($row['total'] ?? ($qty * $unitPrice));
+                        $status = trim((string) ($row['status'] ?? 'ค่าใช้จ่าย'));
+                        $expenseType = trim((string) ($row['expense_type'] ?? ''));
+                        $note = trim((string) ($row['note'] ?? ''));
+
+                        $item = new HelpdeskDetail();
+                        $item->helpdesk_id = $helpdeskId;
+                        $item->name = 'expense_record';
+                        $item->status = $status;
+                        $item->title = $title;
+                        $item->code = (string) $total;
+                        $item->data_json = [
+                            'qty' => $qty,
+                            'unit_price' => $unitPrice,
+                            'total' => $total,
+                            'expense_type' => $expenseType,
+                            'note' => $note,
+                        ];
+                        if (!$item->save()) {
+                            throw new \RuntimeException('ไม่สามารถบันทึกรายการค่าใช้จ่ายได้');
+                        }
+                        $savedCount++;
+                        $this->CheckUpdateServiceRecordStatus($item);
+                    }
+
+                    try {
+                        $sumTotal = 0.0;
+                        foreach ($rows as $r) {
+                            $sumTotal += (float) ($r['total'] ?? 0);
+                        }
+                        $log = new HelpdeskDetail();
+                        $log->helpdesk_id = $helpdeskId;
+                        $log->name = 'service_record';
+                        $log->status = 'ขั้นตอน 4: บันทึกค่าใช้จ่าย';
+                        $log->title = 'บันทึกค่าใช้จ่ายแล้ว ' . $savedCount . ' รายการ';
+                        $log->data_json = [
+                            'expense_count' => $savedCount,
+                            'expense_total' => $sumTotal,
+                        ];
+                        $log->save(false);
+                    } catch (\Throwable $e) {
+                        // ไม่ให้กระทบการบันทึกหลัก
+                    }
+                    $tx->commit();
+                    return ['status' => 'success'];
+                } catch (\Throwable $e) {
+                    $tx->rollBack();
+                    return ['status' => 'error', 'message' => $e->getMessage()];
+                }
+            }
+
             if ($model->load($this->request->post()) && $model->save()) {
                 $this->CheckUpdateServiceRecordStatus($model);
                 \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -97,17 +172,27 @@ class ExpensesController extends Controller
             $model->loadDefaultValues();
         }
 
+        $expenseRows = HelpdeskDetail::find()
+            ->where([
+                'helpdesk_id' => $model->helpdesk_id,
+                'name' => 'expense_record',
+            ])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
+                    'expenseRows' => $expenseRows,
                 ])
             ];
         } else {
             return $this->render('create', [
                 'model' => $model,
+                'expenseRows' => $expenseRows,
             ]);
         }
     }

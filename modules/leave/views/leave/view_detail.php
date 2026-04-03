@@ -6,7 +6,6 @@ use app\components\UserHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\leave\models\Leave $model */
-/** @var string|null $previewPdfUrl URL สำหรับแสดงตัวอย่าง PDF โดยตรง (ไม่มี toolbar หน้ารูปแบบพิมพ์) */
 
 $me = UserHelper::GetEmployee();
 $author = $model->getAvatar($model->emp_id, '');
@@ -62,10 +61,16 @@ $substitute = $model->leaveWorkSend();
                     <div class="mt-2 pt-2 border-top border-opacity-25">
                         <?= Html::a(
                             '<i class="bi bi-printer me-1"></i> พิมพ์ใบลา (PDF)',
-                            $model->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $model->id],
-                            ['class' => 'btn btn-sm btn-outline-primary rounded-pill', 'target' => '_blank', 'rel' => 'noopener']
+                            ['/leave/leave/pdf', 'id' => $model->id],
+                            [
+                                'class' => 'btn btn-sm btn-outline-primary rounded-pill',
+                                'target' => '_blank',
+                                'rel' => 'noopener noreferrer',
+                                'data-pjax' => '0',
+                                'title' => 'ใช้เทมเพลตจาก /pdf-template; ถ้ายังไม่ตั้งจะใช้แบบฟอร์มเดิม — พิมพ์ได้ทุกสถานะ',
+                            ]
                         ) ?>
-                        <span class="small text-muted ms-2">พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ</span>
+                        <span class="small text-muted ms-2">เทมเพลตตามการตั้งค่า PDF — พิมพ์ได้ทุกสถานะ</span>
                     </div>
                 </div>
             </div>

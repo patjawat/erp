@@ -3,11 +3,14 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\components\ApproveHelper;
+use app\components\SiteHelper;
 
 $notify = ApproveHelper::Info();
 $total = $notify['total'];
 $totalLeave = $notify['leave']['total'];
 $totalPurchase = $notify['purchase']['total'];
+$siteInfo = SiteHelper::getInfo();
+$manualUrl = !empty($siteInfo['manual']) ? $siteInfo['manual'] : Url::to(['/me/guide']);
 
 $menus = [
     ['icon' => 'fa-regular fa-calendar', 'label' => 'ขอลา', 'url' => ['/me/leave']],
@@ -44,13 +47,13 @@ $menus = [
             </svg>
         คลังหน่วยงาน
     </a>
-    <!-- <a href="<?= Url::to(['/me/guide']) ?>" class="btn <?= $active !== 'guide' ? 'btn-outline-primary' : 'btn-primary' ?>">
+    <a href="<?= $manualUrl ?>" class="btn <?= $active !== 'guide' ? 'btn-outline-primary' : 'btn-primary' ?>" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
         </svg>
-        คู่มือให้งาน
-    </a> -->
+        คู่มือ
+    </a>
 
     <!-- <div class="dropdown">
         <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">

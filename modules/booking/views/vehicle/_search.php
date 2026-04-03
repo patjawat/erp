@@ -49,6 +49,14 @@ use app\components\DateFilterHelper;
 
 
 </div>
+<div class="row mt-2">
+    <div class="col-lg-6 col-md-6 col-sm-12">
+        <?= $form->field($model, 'not_logged')->dropDownList([
+            '' => 'ทั้งหมด',
+            '1' => 'ยังไม่บันทึกการเดินทาง',
+        ], ['class' => 'form-select'])->label(false) ?>
+    </div>
+</div>
 <div class="collapse mt-3" id="collapseFilter">
     
 </div>

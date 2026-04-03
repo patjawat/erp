@@ -13558,11 +13558,6 @@ textarea:focus {
   background: rgb(111, 129, 218);
   background: linear-gradient(0deg, rgb(111, 129, 218) 0%, rgb(111, 129, 218) 40%, rgb(208, 213, 237) 100%);
 }
-[data-bs-theme=purple] #blank-form input {
-  background-color: #e4e9fe;
-  color: #6e81d9;
-  font-weight: 400;
-}
 
 [data-bs-theme=cyan] {
   --bs-primary: #078da9;
@@ -13590,11 +13585,6 @@ textarea:focus {
 }
 [data-bs-theme=cyan] .text-primary {
   color: #078da9 !important;
-}
-[data-bs-theme=cyan] #blank-form input {
-  background-color: #dfe7ed;
-  color: #078da9;
-  font-weight: 400;
 }
 [data-bs-theme=cyan] .blank-page {
   background: rgb(7, 141, 169);
@@ -13635,11 +13625,6 @@ textarea:focus {
   background: rgb(8, 102, 173);
   background: linear-gradient(0deg, rgb(8, 102, 173) 0%, rgb(8, 102, 173) 40%, rgb(152, 210, 254) 100%);
 }
-[data-bs-theme=blue] #blank-form input {
-  background-color: #dfe7ed;
-  color: #0866ad;
-  font-weight: 400;
-}
 
 [data-bs-theme=pink] {
   --bs-primary: #B0578D;
@@ -13660,11 +13645,6 @@ textarea:focus {
 [data-bs-theme=pink] .blank-page {
   background: rgb(176, 87, 141);
   background: linear-gradient(0deg, rgb(176, 87, 141) 0%, rgb(176, 87, 141) 40%, rgb(253, 233, 245) 100%);
-}
-[data-bs-theme=pink] #blank-form input {
-  background-color: #dfe7ed;
-  color: #B0578D;
-  font-weight: 400;
 }
 
 a.active,
@@ -15450,3 +15430,5 @@ small, .small {
     max-width: 90%;
   }
 }
+
+/*# sourceMappingURL=custom.css.map */

@@ -8,6 +8,7 @@ use app\modules\pdfTemplate\models\PdfTemplateField;
 use app\modules\pdfTemplate\services\FieldValueResolver;
 use setasign\Fpdi\Fpdi;
 use Yii;
+use yii\web\NotFoundHttpException;
 
 /**
  * Service for PDF template layout: save/load normalized coordinates and convert to PDF units.
@@ -58,6 +59,31 @@ class PdfTemplateService
         'ผู้อนุมัติ (วันที่อนุมัติ)' => 'approver_approve_date',
         'ผู้อนุมัติ (ลายเซ็น)' => 'approver_signature',
         'สถานะผู้อนุมัติ' => 'approval_status',
+        // Booking vehicle (central) common/legacy Thai labels
+        'ชื่อผู้ขอ' => 'officer_name',
+        'ชื่อผู้ขอใช้รถ' => 'officer_name',
+        'ตำแหน่งผู้ขอ' => 'officer_position',
+        'สังกัดผู้ขอ' => 'officer_department',
+        'หน่วยงานผู้ขอ' => 'officer_department',
+        'เบอร์โทรผู้ขอ' => 'phone',
+        'เวลาไป' => 'time_go',
+        'เวลากลับ' => 'time_back',
+        'ทะเบียนรถ' => 'license_plate',
+        'ประเภทรถ' => 'vehicle_type',
+        'สถานที่ไป' => 'location',
+        'เหตุผลการใช้รถ' => 'reason',
+        'จำนวนผู้โดยสาร' => 'passenger',
+        'ชื่อพนักงานขับ' => 'driver_name',
+        'ชื่อหัวหน้ารับรอง' => 'leader_name',
+        'ลายเซ็นผู้ขอใช้รถ' => 'emp_signature',
+        'ลายเซ็นหัวหน้ารับรอง' => 'leader_signature',
+        'ลายเซ็นพนักงานขับ' => 'driver_signature',
+        // Leave legacy signature keys from older template configs
+        'emp_sign' => 'emp_signature',
+        'send_sign' => 'send_signature',
+        'leader_sign' => 'approver_2_signature',
+        'hr_sign' => 'approver_3_signature',
+        'direc_sign' => 'approver_4_signature',
     ];
 
     /**
@@ -268,6 +294,49 @@ class PdfTemplateService
     }
 
     /**
+     * สร้าง PDF ใบลาจากเทมเพลตที่ตั้งใน /pdf-template/template (leave / leave.rest ตามประเภทการลา)
+     *
+     * @return string เนื้อหา PDF (binary)
+     * @throws NotFoundHttpException ไม่มีโมดูล leave, ข้อมูลใบลา, หรือยังไม่ตั้งเทมเพลต/ไฟล์
+     */
+    public function generateLeavePdfBinary(int $leaveId): string
+    {
+        $leaveModule = Yii::$app->getModule('leave');
+        if (!$leaveModule) {
+            throw new NotFoundHttpException('โมดูล leave ไม่ได้เปิดใช้งาน');
+        }
+        try {
+            $data = $leaveModule->runAction('setting/leave-print-data', ['id' => $leaveId]);
+        } catch (\Throwable $e) {
+            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้: ' . $e->getMessage());
+        }
+        if (is_array($data) && !empty($data['error'])) {
+            throw new NotFoundHttpException($data['error']);
+        }
+        if (!is_array($data)) {
+            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้ (ตอบกลับไม่ถูกต้อง)');
+        }
+        $leaveTypeId = (string) ($data['leave_type_id'] ?? '');
+        $isRest = ($leaveTypeId === 'LT4');
+        $context = $isRest ? PdfTemplate::CONTEXT_LEAVE_REST : PdfTemplate::CONTEXT_LEAVE;
+        $template = PdfTemplate::find()->where(['use_for_context' => $context])->one();
+        if (!$template) {
+            $hint = $isRest
+                ? 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลาพักผ่อน»'
+                : 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ)»';
+            throw new NotFoundHttpException(
+                'ยังไม่มีเทมเพลตสำหรับ' . ($isRest ? 'ใบลาพักผ่อน' : 'ใบลาป่วย/คลอด/กิจ') . ' — ' . $hint
+            );
+        }
+        $path = $this->getTemplateFilePath($template);
+        if ($path === null || !is_file($path)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
+        }
+
+        return $this->generatePdfWithData((int) $template->id, $data);
+    }
+
+    /**
      * สร้าง PDF จากเทมเพลต + ข้อมูลที่ใส่ในแต่ละฟิลด์.
      * ใช้เฉพาะ $data ที่ส่งเข้ามา (ไม่มี sample ใน service).
      * Caller: HR ส่งข้อมูลจริง + __from_hr_print; ปุ่มพิมพ์ตัวอย่างส่งชุดตัวอย่างเป็น $data.
@@ -293,6 +362,7 @@ class PdfTemplateService
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
         $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
         $pathToUnlink = null;
+        $signatureTempPaths = [];
         try {
             $pageCount = $pdf->setSourceFile($templatePath);
         } catch (\Throwable $e) {
@@ -428,13 +498,34 @@ class PdfTemplateService
                     $suffix = str_replace('approver_', '', $lookupKey);
                     $text = (string) ($values['approver_' . $level . '_' . $suffix] ?? '');
                 } else {
-                    $text = $sourcePath !== '' ? (string) FieldValueResolver::resolve($values, $lookupKey) : (string) ($values[$lookupKey] ?? $values[trim((string) ($item['field'] ?? $item['field_name'] ?? ''))] ?? '');
+                    $fieldKey = trim((string) ($item['field'] ?? ''));
+                    $fieldNameKey = trim((string) ($item['field_name'] ?? ''));
+                    $sourceKey = $sourcePath !== '' ? (self::LABEL_TO_KEY[$sourcePath] ?? $sourcePath) : '';
+                    $resolvedFromSource = $sourcePath !== '' ? (string) FieldValueResolver::resolve($values, $sourceKey) : '';
+                    if ($resolvedFromSource !== '') {
+                        $text = $resolvedFromSource;
+                    } else {
+                        $text = (string) (
+                            ($sourceKey !== '' ? ($values[$sourceKey] ?? null) : null)
+                            ?? ($lookupKey !== '' ? ($values[$lookupKey] ?? null) : null)
+                            ?? ($fieldKey !== '' ? ($values[$fieldKey] ?? null) : null)
+                            ?? ($fieldNameKey !== '' ? ($values[$fieldNameKey] ?? null) : null)
+                            ?? ''
+                        );
+                    }
                 }
                 if ($text === '') {
                     continue;
                 }
                 $mm = $this->fieldToPdfMm($item, $pageW, $pageH);
                 $isSignature = substr($lookupKey, -strlen('_signature')) === '_signature';
+                if ($isSignature) {
+                    $imagePath = $this->resolveSignatureImagePath($text, $signatureTempPaths);
+                    if ($imagePath !== null && is_file($imagePath)) {
+                        $pdf->Image($imagePath, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
+                        continue;
+                    }
+                }
                 if ($isSignature && is_file($text)) {
                     $pdf->Image($text, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
                     continue;
@@ -451,18 +542,77 @@ class PdfTemplateService
                 $pdf->SetFont('THSarabunNew', $fontStyle, $fontSize);
                 $encoded = iconv('UTF-8', 'cp874//IGNORE', $text);
                 $encStr = $encoded !== false ? $encoded : $text;
-                $tw = $pdf->GetStringWidth($encStr);
-                $x = $this->alignX($alignment, $mm['x'], $mm['width'], $tw);
-                $yBaseline = $mm['y'] + $this->fontSizeToBaselineOffset($fontSize, $pageW);
-                $pdf->SetXY($x, $yBaseline);
-                $pdf->Write(0, $encStr);
+                $boxWidth = max(1.0, (float) ($mm['width'] ?? 1.0));
+                $lineHeight = max(1.2, (float) $fontSize * 0.42); // mm in A4 mode
+                // Fixed behavior: single line + ellipsis to avoid vertical overlap.
+                $effectiveMaxLines = 1;
+                $encStr = $this->truncateTextToLines($pdf, $encStr, $boxWidth, $effectiveMaxLines);
+                $pdf->SetXY($mm['x'], $mm['y']);
+                $pdf->MultiCell($boxWidth, $lineHeight, $encStr, 0, $alignment, false);
             }
         }
         $output = $pdf->Output('', 'S');
         if ($pathToUnlink !== null && is_file($pathToUnlink)) {
             @unlink($pathToUnlink);
         }
+        foreach ($signatureTempPaths as $tempPath) {
+            if (is_string($tempPath) && $tempPath !== '' && is_file($tempPath)) {
+                @unlink($tempPath);
+            }
+        }
         return $output;
+    }
+
+    /**
+     * Resolve signature image value to local file path.
+     * Supports absolute path, webroot-relative path, full URL, and data URI.
+     *
+     * @param string $rawValue
+     * @param array<int, string> $tempPaths
+     * @return string|null
+     */
+    private function resolveSignatureImagePath(string $rawValue, array &$tempPaths): ?string
+    {
+        $value = trim($rawValue);
+        if ($value === '') {
+            return null;
+        }
+        if (is_file($value)) {
+            return $value;
+        }
+        if (strpos($value, 'data:image/') === 0) {
+            if (preg_match('#^data:image/(\w+);base64,(.+)$#', $value, $m)) {
+                $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+                $bin = base64_decode($m[2], true);
+                if ($bin !== false) {
+                    $tmp = tempnam(sys_get_temp_dir(), 'pdf_sig_');
+                    if ($tmp !== false) {
+                        $tmpPath = $tmp . '.' . $ext;
+                        if (@file_put_contents($tmpPath, $bin) !== false) {
+                            @unlink($tmp);
+                            $tempPaths[] = $tmpPath;
+                            return $tmpPath;
+                        }
+                        @unlink($tmp);
+                    }
+                }
+            }
+            return null;
+        }
+        $parsed = parse_url($value);
+        if (is_array($parsed) && isset($parsed['path']) && is_string($parsed['path'])) {
+            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($parsed['path'], '/');
+            if (is_file($webPath)) {
+                return $webPath;
+            }
+        }
+        if (strpos($value, '/') === 0) {
+            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($value, '/');
+            if (is_file($webPath)) {
+                return $webPath;
+            }
+        }
+        return null;
     }
 
     /**
@@ -732,7 +882,10 @@ class PdfTemplateService
 
     /**
      * จัดรูปแบบวันที่สำหรับแสดงใน PDF.
-     * รองรับ: numeric (01/01/2569), short (1 ม.ค. 2569), medium_p (1 มกราคม พ.ศ. 2569), month_year (มกราคม 2569), medium, long.
+     * รองรับ: raw (คงค่าเดิม), day_only (01), month_only (12),
+     * month_name_short (ธ.ค.), month_name_full (ธันวาคม),
+     * day_month (1 ม.ค.), year_only (2569),
+     * numeric (01/01/2569), short (1 ม.ค. 2569), medium_p (1 มกราคม พ.ศ. 2569), month_year (มกราคม 2569), medium, long.
      * ค่าที่รับควรเป็น Y-m-d หรือค่าที่ strtotime แปลงได้
      */
     private function formatDateForPdf(string $value, string $format): string
@@ -740,6 +893,9 @@ class PdfTemplateService
         $value = trim($value);
         if ($value === '') {
             return '';
+        }
+        if ($format === 'raw') {
+            return $value;
         }
         $ts = is_numeric($value) ? (int) $value : @strtotime($value);
         if ($ts === false || $ts <= 0) {
@@ -759,6 +915,18 @@ class PdfTemplateService
             9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
         ];
         switch ($format) {
+            case 'day_only':
+                return sprintf('%02d', $day);
+            case 'month_only':
+                return sprintf('%02d', $month);
+            case 'month_name_short':
+                return $thaiMonthsShort[$month];
+            case 'month_name_full':
+                return $thaiMonthsFull[$month];
+            case 'day_month':
+                return $day . ' ' . $thaiMonthsShort[$month];
+            case 'year_only':
+                return (string) $yearThai;
             case 'numeric':
                 return sprintf('%02d/%02d/%04d', $day, $month, $yearThai);
             case 'short':
@@ -773,5 +941,99 @@ class PdfTemplateService
             default:
                 return $day . ' ' . $thaiMonthsShort[$month] . ' ' . $yearThai;
         }
+    }
+
+    /**
+     * Wrap and truncate text to max lines, append "..." when overflow.
+     */
+    private function truncateTextToLines(Fpdi $pdf, string $text, float $boxWidth, int $maxLines): string
+    {
+        $text = trim($text);
+        if ($text === '' || $maxLines <= 0) {
+            return '';
+        }
+        $parts = preg_split('/\r\n|\r|\n/', $text) ?: [];
+        $lines = [];
+        foreach ($parts as $part) {
+            $wrapped = $this->wrapTextByWidth($pdf, (string) $part, $boxWidth);
+            if (empty($wrapped)) {
+                $wrapped = [''];
+            }
+            foreach ($wrapped as $line) {
+                $lines[] = $line;
+                if (count($lines) >= $maxLines) {
+                    break 2;
+                }
+            }
+        }
+        $allWrapped = [];
+        foreach ($parts as $part) {
+            $wrapped = $this->wrapTextByWidth($pdf, (string) $part, $boxWidth);
+            if (empty($wrapped)) {
+                $wrapped = [''];
+            }
+            $allWrapped = array_merge($allWrapped, $wrapped);
+        }
+        if (count($allWrapped) > $maxLines && !empty($lines)) {
+            $last = (string) $lines[count($lines) - 1];
+            $ellipsis = '...';
+            while ($last !== '' && $pdf->GetStringWidth($last . $ellipsis) > $boxWidth) {
+                $last = substr($last, 0, -1);
+            }
+            $lines[count($lines) - 1] = $last . $ellipsis;
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Wrap single paragraph by width (no newline preserved).
+     *
+     * @return string[]
+     */
+    private function wrapTextByWidth(Fpdi $pdf, string $text, float $boxWidth): array
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return [''];
+        }
+        $tokens = preg_split('/(\s+)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [];
+        $lines = [];
+        $line = '';
+        foreach ($tokens as $token) {
+            $candidate = $line === '' ? $token : $line . $token;
+            if ($pdf->GetStringWidth($candidate) <= $boxWidth) {
+                $line = $candidate;
+                continue;
+            }
+            if ($line !== '') {
+                $lines[] = trim($line);
+                $line = ltrim($token);
+                if ($pdf->GetStringWidth($line) <= $boxWidth) {
+                    continue;
+                }
+            } else {
+                $line = $token;
+            }
+            while ($line !== '' && $pdf->GetStringWidth($line) > $boxWidth) {
+                $chunk = '';
+                $len = strlen($line);
+                for ($i = 0; $i < $len; $i++) {
+                    $next = $chunk . substr($line, $i, 1);
+                    if ($pdf->GetStringWidth($next) > $boxWidth) {
+                        break;
+                    }
+                    $chunk = $next;
+                }
+                if ($chunk === '') {
+                    break;
+                }
+                $lines[] = trim($chunk);
+                $line = ltrim(substr($line, strlen($chunk)));
+            }
+        }
+        if ($line !== '') {
+            $lines[] = trim($line);
+        }
+        return $lines;
     }
 }

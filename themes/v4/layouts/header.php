@@ -5,9 +5,18 @@ use yii\helpers\Html;
 use app\models\Categorise;
 use app\components\UserHelper;
 use app\components\ApproveHelper;
+use app\components\SiteHelper;
 
 $site = Categorise::findOne(['name' => 'site']);
-$colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : 'blue';
+$dataJson = ($site && is_array($site->data_json)) ? $site->data_json : [];
+$colorName = $dataJson['theme_color_name'] ?? 'blue';
+$headerBrand = SiteHelper::resolveHeaderBrand($dataJson);
+if (!empty($headerBrand['google_font_href'])) {
+    $this->registerLinkTag([
+        'rel' => 'stylesheet',
+        'href' => $headerBrand['google_font_href'],
+    ]);
+}
 $notify = ApproveHelper::Info();
 $total = $notify['total'];
 ?>
@@ -44,17 +53,29 @@ $total = $notify['total'];
         display: flex;
         flex-wrap: nowrap;
     }
-    
+
+    .erp-header-brand-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: inherit;
+    }
+
+    .erp-header-brand-icon svg {
+        width: 40px;
+        height: 40px;
+        stroke-width: 1.25;
+    }
+
 </style>
 <header class="header-fixed container-fluid d-flex align-items-center justify-content-between px-4">
     <div class="d-flex align-items-center gap-3">
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package-icon lucide-package"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>
-        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-mouse-pointer-icon lucide-square-mouse-pointer"><path d="M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z"/><path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/></svg> -->
-        <a href="<?= Url::to(['/me']) ?>">
-
+    <span class="erp-header-brand-icon" aria-hidden="true"><i data-lucide="<?= Html::encode($headerBrand['lucide_icon']) ?>"></i></span>
+        <a href="<?= Url::to(['/me']) ?>" class="text-decoration-none">
             <div style="line-height: 1;">
-                <div class="fw-bold text-white" style="font-size: 1.35rem; letter-spacing: 0.5px;">HOSPITAL</div>
-                <div class="text-white-50" style="font-size: 11px; font-weight: 500; letter-spacing: 1px;">ERP SYSTEM</div>
+                <div style="<?= $headerBrand['line1_style'] ?>"><?= Html::encode($headerBrand['line1']) ?></div>
+                <div style="<?= $headerBrand['line2_style'] ?>"><?= Html::encode($headerBrand['line2']) ?></div>
             </div>
         </a>
     </div>

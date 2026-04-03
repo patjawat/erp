@@ -62,8 +62,6 @@ $resultsJs = <<<JS
         line-height: 1.5;
         border-radius: .3rem;
     }
-
-
 </style>
 
 <?php $form = ActiveForm::begin([
@@ -74,6 +72,10 @@ $resultsJs = <<<JS
 
 <?php if (!$model->isNewRecord): ?>
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
+<<<<<<< HEAD
+=======
+    <!-- // ไม่มีอะไรเลย -->
+>>>>>>> main
 <?php endif ?>
      <?php echo $form->field($model, 'data_json[phone]')->hiddenInput()->label(false) ?>
      <?php echo $form->field($model, 'data_json[address]')->hiddenInput()->label(false) ?>
@@ -108,215 +110,216 @@ $resultsJs = <<<JS
                                 'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                                'select2:select' => 'function() {
+                                    'select2:select' => 'function() {
                                         calDays();
                                         }',
-                            ],
-                        ])->label('ประเภท');
-                        ?>
+                                ],
+                            ])->label('ประเภท');
+                            ?>
 
-                        <?= $form->field($model, 'date_end_type')->widget(Select2::classname(), [
-                            'data' => [
-                                '0' => 'เต็มวัน',
-                                '0.5' => 'ครึงวัน',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
-                                'width' => '100%',
-                            ],
-                            'pluginEvents' => [
-                                'select2:unselect' => 'function() {
+                            <?= $form->field($model, 'date_end_type')->widget(Select2::classname(), [
+                                'data' => [
+                                    '0' => 'เต็มวัน',
+                                    '0.5' => 'ครึงวัน',
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'dropdownParent' => '#main-modal',
+                                    'width' => '100%',
+                                ],
+                                'pluginEvents' => [
+                                    'select2:unselect' => 'function() {
                                     calDays();
                                     }',
-                                'select2:select' => 'function() {
+                                    'select2:select' => 'function() {
                                         calDays();
                                     }',
-                            ],
-                        ])->label('ประเภท');
-                        ?>
+                                ],
+                            ])->label('ประเภท');
+                            ?>
 
 
+                        </div>
                     </div>
+                    <?php
+                    echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
+                        'data' => $model->listLeavetype(),
+                        'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                        ],
+                        'pluginEvents' => [
+                            'select2:unselect' => 'function() {
+                                    calDays();
+                                    }',
+                            'select2:select' => 'function() {
+                                        calDays();
+                                    }',
+                        ],
+                    ])->label('ประเภท');
+                    ?>
+                    <?php
+                    echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
+                        'data' => [
+                            'ภายในจังหวัด' => 'ภายในจังหวัด',
+                            'ต่างจังหวัด' => 'ต่างจังหวัด',
+                            'ต่างประเทศ' => 'ต่างประเทศ',
+                        ],
+                        // 'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                            'width' => '100%',
+                        ],
+                    ])->label('สถานที่ไป');
+                    ?>
+
                 </div>
-                <?php
-                echo $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
-                    'data' => $model->listLeavetype(),
-                    'options' => ['placeholder' => 'เลือกประเภทการลา ...'],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                    ],
-                    'pluginEvents' => [
-                        'select2:unselect' => 'function() {
-                                    calDays();
-                                    }',
-                        'select2:select' => 'function() {
-                                        calDays();
-                                    }',
-                    ],
-                ])->label('ประเภท');
-                ?>
-                 <?php
-                                echo $form->field($model, 'data_json[location]')->widget(Select2::classname(), [
-                                    'data' => [
-                                        'ภายในจังหวัด' => 'ภายในจังหวัด',
-                                        'ต่างจังหวัด' => 'ต่างจังหวัด',
-                                        'ต่างประเทศ' => 'ต่างประเทศ',
-                                    ],
-                                    // 'options' => ['placeholder' => 'เลือกสถานที่ไป ...'],
-                                    'pluginOptions' => [
-                                        'allowClear' => true,
-                                        'dropdownParent' => '#main-modal',
-                                        'width' => '100%',
-                                    ],
-                                ])->label('สถานที่ไป');
-                                ?>
+                <div class="col-6">
+                    <?php
+                    echo $form->field($model, 'data_json[work_shift]')->widget(Select2::classname(), [
+                        'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
+                        'options' => [
+                            'id' => 'work_shift',
+                            'placeholder' => '--- ประเภทของเวร ---',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                        // เพิ่มการดักจับ Event ตรงนี้
+                        'pluginEvents' => [
+                            "change" => "function() { calDays(); }",
+                        ]
+                    ])->label('(หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์) *');
+                    ?>
+                    <div class="d-flex justify-content-between gap-3">
+                        <div class="w-50">
+                            <?php echo $form->field($model, 'data_json[sat_sun_days]')->textInput([
+                                'id' => 'satsunDays',
+                                'style' => 'background-color: antiquewhite;font-weight: 800;'
+                            ])->label('วันเสาร์-อาทิตย์') ?>
+                        </div>
 
-            </div>
-            <div class="col-6">
-                <?php
-                echo $form->field($model, 'data_json[work_shift]')->widget(Select2::classname(), [
-                    'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
-                    'options' => [
-                        'id' => 'work_shift',
-                        'placeholder' => '--- ประเภทของเวร ---',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                    // เพิ่มการดักจับ Event ตรงนี้
-                    'pluginEvents' => [
-                        "change" => "function() { calDays(); }",
-                    ]
-                ])->label('(หากเป็นเวร 8 จะไม่นับวันหยุดและเสาร์-อาทิตย์) *');
-                ?>
-                <div class="d-flex justify-content-between gap-3">
-                    <div class="w-50">
-                        <?php echo $form->field($model, 'data_json[sat_sun_days]')->textInput([
-                            'id' => 'satsunDays',
-                            'style' => 'background-color: antiquewhite;font-weight: 800;'
-                        ])->label('วันเสาร์-อาทิตย์') ?>
-                    </div>
-
-                    <div class="w-50">
-                        <?php echo $form->field($model, 'data_json[holidays]')->textInput([
-                            'id' => 'holiday',
-                            'style' => 'background-color: antiquewhite;'
+                        <div class="w-50">
+                            <?php echo $form->field($model, 'data_json[holidays]')->textInput([
+                                'id' => 'holiday',
+                                'style' => 'background-color: antiquewhite;'
                             ])->label('วันหยุดนักขัตฤกษ์') ?>
+                        </div>
                     </div>
-                </div>
-                <?php echo $form->field($model, 'total_days')->textInput([
-                    'id' => 'summaryDay',
-                    'style' => 'background-color: antiquewhite;font-weight: 800;
-                    '])->label('สรุปวันลา') ?>
-           <?php
-                        try {
-                            $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
-                        } catch (\Throwable $th) {
-                            $initEmployee = '';
-                        }
-                        echo $form->field($model, 'data_json[leave_work_send_id]')->widget(Select2::classname(), [
-                            'initValueText' => $initEmployee,
-                            'options' => ['placeholder' => 'เลือกรายการ...'],
-                            'size' => Select2::LARGE,
-                            'pluginEvents' => [
-                                'select2:unselect' => 'function() {
+                    <?php echo $form->field($model, 'total_days')->textInput([
+                        'id' => 'summaryDay',
+                        'style' => 'background-color: antiquewhite;font-weight: 800;
+                    '
+                    ])->label('สรุปวันลา') ?>
+                    <?php
+                    try {
+                        $initEmployee = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one()->getAvatar(false);
+                    } catch (\Throwable $th) {
+                        $initEmployee = '';
+                    }
+                    echo $form->field($model, 'data_json[leave_work_send_id]')->widget(Select2::classname(), [
+                        'initValueText' => $initEmployee,
+                        'options' => ['placeholder' => 'เลือกรายการ...'],
+                        'size' => Select2::LARGE,
+                        'pluginEvents' => [
+                            'select2:unselect' => 'function() {
                                     $("#leave-data_json-leave_work_send").val("")
                                     }',
-                                'select2:select' => 'function() {
+                            'select2:select' => 'function() {
                                             var fullname = $(this).select2("data")[0].fullname;
                                             $("#leave-data_json-leave_work_send").val(fullname)
                                     }',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'dropdownParent' => '#main-modal',
+                            'minimumInputLength' => 1,
+                            'ajax' => [
+                                'url' => Url::to(['/depdrop/employee-by-id']),
+                                'dataType' => 'json',
+                                'delay' => 250,
+                                'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                'processResults' => new JsExpression($resultsJs),
+                                'cache' => true,
                             ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
-                                'minimumInputLength' => 1,
-                                'ajax' => [
-                                    'url' => Url::to(['/depdrop/employee-by-id']),
-                                    'dataType' => 'json',
-                                    'delay' => 250,
-                                    'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                                    'processResults' => new JsExpression($resultsJs),
-                                    'cache' => true,
-                                ],
-                                'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                                'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                                'templateResult' => new JsExpression('formatRepo'),
-                            ],
-                        ])->label('มอบหมายงานให้')
-                        ?>    
-        </div>
-        </div>
-
-        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
-                    type="button" role="tab" aria-controls="pills-home"
-                    aria-selected="true">รายละเอียดเพิ่มเติม</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
-                    type="button" role="tab" aria-controls="pills-profile"
-                    aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
-            </li>
-
-        </ul>
-        <div class="tab-content" id="pills-tabContent">
-            <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
-                tabindex="0">
-                <?php $isDirectorApplicant = !empty($model->emp_id) && \app\components\SiteHelper::isDirectorFromSettings($model->emp_id); ?>
-                <!-- Start row -->
-                <div class="row">
-                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
-                         <?php echo $form->field($model, 'data_json[phone]')->textInput()->label(false) ?>
-     <?php echo $form->field($model, 'data_json[address]')->textArea()->label(false) ?>
-       
-                                 <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
-                    </div>
-                    <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
-
-                     
-                        <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
-
-
-                    </div>
+                            'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                            'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+                            'templateResult' => new JsExpression('formatRepo'),
+                        ],
+                    ])->label('มอบหมายงานให้')
+                    ?>
                 </div>
-              
-                <!-- End Row -->
             </div>
-            <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"
-                tabindex="0">
-                <?php echo $model->Upload('leave_file') ?>
+
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
+                        type="button" role="tab" aria-controls="pills-home"
+                        aria-selected="true">รายละเอียดเพิ่มเติม</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
+                        type="button" role="tab" aria-controls="pills-profile"
+                        aria-selected="false">เอกสารแนบ/ใบรับรองแพทย์</button>
+                </li>
+
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab"
+                    tabindex="0">
+                    <?php $isDirectorApplicant = !empty($model->emp_id) && \app\components\SiteHelper::isDirectorFromSettings($model->emp_id); ?>
+                    <!-- Start row -->
+                    <div class="row">
+                        <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
+                            <?php echo $form->field($model, 'data_json[phone]')->textInput()->label(false) ?>
+                            <?php echo $form->field($model, 'data_json[address]')->textArea()->label(false) ?>
+
+                            <?php echo $form->field($model, 'data_json[reason]')->textArea(['style' => 'height:130px;'])->label('เหตุผล/เนื่องจาก') ?>
+                        </div>
+                        <div class="<?= $isDirectorApplicant ? 'col-12' : 'col-6' ?>">
+
+
+                            <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
+
+
+                        </div>
+                    </div>
+
+                    <!-- End Row -->
+                </div>
+                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"
+                    tabindex="0">
+                    <?php echo $model->Upload('leave_file') ?>
+                </div>
+
             </div>
 
         </div>
-
     </div>
-</div>
 
 
-<?php // echo $this->render('summary', ['model' => $model]) 
-?>
+    <?php // echo $this->render('summary', ['model' => $model]) 
+    ?>
 
-<?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
+    <?php echo $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
 
-<div class="form-group mt-3 d-flex justify-content-center gap-3">
-    <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
-    <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
-</div>
+    <div class="form-group mt-3 d-flex justify-content-center gap-3">
+        <?php echo Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+        <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
+    </div>
 
 
-<?php ActiveForm::end(); ?>
-<?php
-$calDaysUrl = Url::to(['/hr/leave/cal-days', 'emp_id' => $model->emp_id]);
-$js = <<<JS
+    <?php ActiveForm::end(); ?>
+    <?php
+    $calDaysUrl = Url::to(['/hr/leave/cal-days', 'emp_id' => $model->emp_id]);
+    $js = <<<JS
 
         calDays()
         // ตรวจสอบเบื้องต้นตอนโหลดหน้าเว็บ
@@ -569,6 +572,6 @@ $js = <<<JS
     });
 
     JS;
-$this->registerJS($js, View::POS_END);
+    $this->registerJS($js, View::POS_END);
 
-?>
+    ?>

@@ -3,8 +3,8 @@
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
-// Session ฝั่งเซิร์ฟเวอร์ไม่ลบทิ้งเร็ว (ให้สอดคล้องกับ cookie lifetime)
-$sessionLifetime = $params['session.cookieLifetime'] ?? (3600 * 24 * 3650);
+// Session ฝั่งเซิร์ฟเวอร์ให้สอดคล้องกับ cookie lifetime (เดียวกับ remember / session ใน params)
+$sessionLifetime = $params['session.cookieLifetime'] ?? 3600;
 if (function_exists('ini_set')) {
     ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
 }
@@ -204,7 +204,10 @@ $config = [
             'loginUrl' => ['/auth/login'],
             'enableAutoLogin' => true,
             'enableSession' => true,
-            'authTimeout' => null,  // ไม่ให้ logout อัตโนมัติเมื่อ idle
+            // Idle: ไม่มีกิจกรรมเกิน X วินาที → logout
+            'authTimeout' => $params['user.idleTimeoutSeconds'] ?? 3600,
+            // Absolute: นับจากเวลาล็อกอิน — สอดคล้อง remember 1 วัน
+            'absoluteAuthTimeout' => $params['user.workingDaySeconds'] ?? (3600 * 24),
             'identityCookie' => [
                 'name' => '_identity_erp',
                 'httpOnly' => true,
@@ -315,6 +318,12 @@ $config = [
             'inventory/main-stock/view-cart',
             'inventory/stock-in/create-validator',
             'inventory/stock-order/update-lot-validator/*',
+            'inventory-v2/main-stock/dashboard',
+            'inventory-v2/main-stock/items-with-stock',
+            'inventory-v2/main-stock/items-with-stock-offcanvas',
+            'inventory-v2/main-stock/critical-items-offcanvas',
+            'inventory-v2/main-stock/export-items-with-stock-excel',
+            'inventory-v2/main-stock/export-critical-items-excel',
             'helpdesk/repair/create-validator',
             'helpdesk/repair/technician-list',
             'filemanager/*',
@@ -351,7 +360,6 @@ $config = [
             // 'document/documentqr/upload-ajax',
             // 'gii/*',
             'api/*',
-            'pdf-template/template/print-leave',
             'pdf-template/template/print-sample',
         ],
     ],

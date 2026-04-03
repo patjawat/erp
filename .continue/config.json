@@ -1,0 +1,9 @@
+{
+  "models": [
+    {
+      "title": "Deepseek Local",
+      "provider": "ollama",
+      "model": "deepseek-coder:6.7b"
+    }
+  ]
+}

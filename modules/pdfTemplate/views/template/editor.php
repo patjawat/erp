@@ -13,6 +13,7 @@ use yii\helpers\Url;
 /** @var string $fieldsForSourceUrl */
 /** @var string $developmentPrintDataUrl */
 /** @var string $leavePrintDataUrl */
+/** @var string $bookingPrintDataUrl */
 
 $this->title = 'กำหนดตำแหน่ง — ' . Html::encode($template->name);
 $dataSources = $dataSources ?? [];
@@ -20,6 +21,7 @@ $selectedSourceId = $selectedSourceId ?? '';
 $fieldsForSourceUrl = $fieldsForSourceUrl ?? '';
 $developmentPrintDataUrl = $developmentPrintDataUrl ?? '';
 $leavePrintDataUrl = $leavePrintDataUrl ?? '';
+$bookingPrintDataUrl = $bookingPrintDataUrl ?? '';
 $this->params['breadcrumbs'][] = ['label' => 'Template รายงานขอไปราชการ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'แก้ไข';
 
@@ -54,7 +56,6 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         <h4 class="mb-0 fw-semibold"><i class="bi bi-geo-alt me-2"></i><?= Html::encode($this->title) ?></h4>
         <div class="d-flex gap-2 flex-wrap">
             <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ตัวอย่าง (ข้อมูลตัวอย่าง)', ['print-sample', 'template_id' => $template->id], ['class' => 'btn btn-outline-secondary rounded-3', 'target' => '_blank', 'title' => 'เปิด PDF ด้วยข้อมูลตัวอย่าง เพื่อตรวจตำแหน่ง']) ?>
-            <?= Html::a('<i class="bi bi-list-ul me-1"></i> ไปพิมพ์รายการจริง', ['/hr/development/index'], ['class' => 'btn btn-success rounded-3', 'target' => '_blank', 'title' => 'ไปที่รายการขอไปราชการ แล้วกดปุ่มพิมพ์ที่รายการที่ต้องการ จะได้ PDF ข้อมูลจริงจาก DB']) ?>
             <?= Html::a('<i class="bi bi-download me-1"></i> ส่งออก config', ['export-config', 'id' => $template->id], ['class' => 'btn btn-outline-info rounded-3', 'title' => 'ดาวน์โหลดไฟล์ JSON ตำแหน่งฟิลด์ไปแชร์หรือเก็บไว้']) ?>
             <?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i> ดาวน์โหลดไฟล์ PDF เทมเพลต', ['download-template-file', 'id' => $template->id], ['class' => 'btn btn-outline-primary rounded-3', 'title' => 'ดาวน์โหลดไฟล์ PDF ต้นฉบับของเทมเพลตนี้', 'target' => '_blank']) ?>
             <button type="button" id="btn-save-layout" class="btn btn-primary rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึกตำแหน่ง</button>
@@ -90,7 +91,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         <strong>เหตุที่ได้ข้อมูล sample:</strong> ปุ่ม «พิมพ์ตัวอย่าง» ใช้สำหรับตรวจตำแหน่งฟิลด์ด้วยข้อมูลตัวอย่าง (นายสมชาย ตัวอย่าง, 01/04/2569 ฯลฯ).
         <strong>เมื่อต้องการ PDF ข้อมูลจริง</strong> ให้กด «ไปพิมพ์รายการจริง» แล้วไปกดปุ่ม <strong>พิมพ์ใบขอไปราชการ</strong> ที่รายการที่ต้องการ — ระบบจะใช้ข้อมูลจาก DB.
     </div>
-    <?php if ($developmentPrintDataUrl || $leavePrintDataUrl): ?>
+    <?php if ($developmentPrintDataUrl || $leavePrintDataUrl || $bookingPrintDataUrl): ?>
     <div class="card border rounded-3 mb-3" id="card-real-data">
         <div class="card-header bg-success bg-opacity-10 py-2">
             <h6 class="mb-0 small fw-semibold"><i class="bi bi-database me-1"></i> ดึงข้อมูลจริงมาแสดงบน overlay</h6>
@@ -124,6 +125,9 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                         </select>
                     </div>
                     <?php endif; ?>
+                    <div class="mb-2">
+                        <input type="text" id="field-filter" class="form-control" placeholder="ค้นหาฟิลด์..." autocomplete="off">
+                    </div>
                 <div id="field-list">
                     <?php foreach ($fieldDefinitions as $fd):
                         $src = $fd['source'] ?? $fd['field'] ?? '';
@@ -190,11 +194,23 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                             <label class="form-label small">หน้า</label>
                             <input type="number" id="sel-page" class="form-control" min="1" value="1">
                         </div>
+                        <div id="text-width-settings" class="mb-2">
+                            <label class="form-label small">ความกว้างกล่องข้อความ (% ของความกว้างหน้า)</label>
+                            <input type="number" id="sel-width-percent" class="form-control" min="1" max="100" step="0.5" placeholder="20" title="เปอร์เซ็นต์ของความกว้างหน้า (เช่น 20 = 20%)">
+                            <div class="form-text">ถ้ากล่องแคบ ระบบจะตัดข้อความลงบรรทัดใหม่อัตโนมัติ</div>
+                        </div>
                         <div id="date-format-settings" class="mb-2 d-none">
                             <label class="form-label small">รูปแบบวันที่</label>
                             <select id="sel-date-format" class="form-select">
                                 <option value="">— ไม่จัดรูปแบบ —</option>
+                                <option value="raw">ตามข้อมูลต้นทาง (ไม่แปลงรูปแบบ)</option>
+                                <option value="day_only">01 (เฉพาะวัน)</option>
+                                <option value="month_only">12 (เฉพาะเดือน)</option>
+                                <option value="month_name_short">ธ.ค. (เฉพาะชื่อเดือนแบบย่อ)</option>
+                                <option value="month_name_full">ธันวาคม (เฉพาะชื่อเดือนเต็ม)</option>
                                 <option value="numeric">01/01/2569 (วัน/เดือน/พ.ศ.)</option>
+                                <option value="day_month">1 ม.ค. (เฉพาะวัน/เดือน)</option>
+                                <option value="year_only">2569 (เฉพาะปี)</option>
                                 <option value="short">1 ม.ค. 2569</option>
                                 <option value="medium_p">1 มกราคม พ.ศ. 2569</option>
                                 <option value="month_year">มกราคม 2569</option>
@@ -279,12 +295,20 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     var fieldsForSourceUrlBase = <?= json_encode($fieldsForSourceUrlBase) ?>;
     var developmentPrintDataUrl = <?= json_encode($developmentPrintDataUrl) ?>;
     var leavePrintDataUrl = <?= json_encode($leavePrintDataUrl) ?>;
+    var bookingPrintDataUrl = <?= json_encode($bookingPrintDataUrl) ?>;
     var saveUrl = <?= json_encode($saveUrl) ?>;
     var previewUrl = <?= json_encode($previewUrl) ?>;
     var csrfParam = <?= json_encode($csrf) ?>;
     var csrfToken = <?= json_encode($csrfToken) ?>;
     var initialLayout = <?= $layoutJson ?>;
     var fieldDefs = <?= $fieldDefsJson ?>;
+    // Map field source key -> Thai label (for overlay when no realData)
+    var fieldDefMap = {};
+    (fieldDefs || []).forEach(function (fd) {
+        var src = fd && (fd.source || fd.field || '');
+        var lbl = fd && (fd.label || src);
+        if (src) fieldDefMap[String(src)] = String(lbl);
+    });
     var pageW = <?= json_encode($pageW) ?>;
     var pageH = <?= json_encode($pageH) ?>;
 
@@ -296,6 +320,22 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     if (!wrap || !canvas || !overlay) return;
 
     var state = { layout: [], nextId: 1, selectedId: null, realData: null, pdfDoc: null, numPages: 1, currentPage: 1 };
+
+    function normalizeText(s) {
+        return (s || '').toString().toLowerCase().trim();
+    }
+
+    function filterFieldList(query) {
+        var q = normalizeText(query);
+        var items = document.querySelectorAll('#field-list .field-list-item');
+        items.forEach(function (el) {
+            var label = normalizeText(el.getAttribute('data-label') || el.textContent);
+            var src = normalizeText(el.getAttribute('data-source') || el.getAttribute('data-field'));
+            el.style.display = (!q || label.includes(q) || src.includes(q)) ? '' : 'none';
+        });
+    }
+
+    // (removed) data source filter
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
@@ -462,7 +502,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
             if ((parseInt(item.page, 10) || 1) !== currentPage) return;
             var left = toPx(item.x_percent, s.w);
             var top = toPx(item.y_percent, s.h);
-            var width = Math.max(40, toPx(item.width_percent || 0.2, s.w));
+            var width = Math.max(16, toPx(item.width_percent || 0.2, s.w));
             var path = (item.source || item.field || '').trim();
             var isList = path === 'travel_party_list' || (LABEL_TO_KEY[path] || path) === 'travel_party_list';
             var members = state.realData && state.realData.travel_party_members && Array.isArray(state.realData.travel_party_members) ? state.realData.travel_party_members : [];
@@ -500,9 +540,21 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 text = resolveValue(state.realData, path);
                 if (!text) text = item.field_name || item.field;
             } else {
-                text = isList ? 'รายการคณะเดินทาง (loop)' : (isApproverField ? (item.field_name || item.field) : (item.field_name || item.field || 'ฟิลด์'));
+                var fallbackLabel = fieldDefMap[path] || item.field_name || item.field || 'ฟิลด์';
+                text = isList ? 'รายการคณะเดินทาง (loop)' : (isApproverField ? fallbackLabel : fallbackLabel);
             }
             div.textContent = text || 'ฟิลด์';
+            if (isList) {
+                div.style.whiteSpace = 'normal';
+                div.style.overflow = 'hidden';
+                div.style.textOverflow = 'clip';
+                div.style.wordBreak = 'break-word';
+            } else {
+                div.style.whiteSpace = 'nowrap';
+                div.style.overflow = 'hidden';
+                div.style.textOverflow = 'ellipsis';
+                div.style.wordBreak = 'normal';
+            }
             if (item.font_bold) div.style.fontWeight = 'bold';
             overlay.appendChild(div);
             attachDrag(div, item);
@@ -546,6 +598,10 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 if (sigBlock) sigBlock.classList.toggle('d-none', !isSig);
                 var sigW = document.getElementById('sel-signature-width-percent');
                 var sigH = document.getElementById('sel-signature-height-percent');
+                var textWidthBlock = document.getElementById('text-width-settings');
+                var textWidthInput = document.getElementById('sel-width-percent');
+                if (textWidthBlock) textWidthBlock.classList.toggle('d-none', isSig);
+                if (textWidthInput) textWidthInput.value = !isSig ? ((item.width_percent != null ? parseFloat(item.width_percent) : 0.2) * 100) : '';
                 if (sigW) sigW.value = isSig ? ((item.width_percent != null ? parseFloat(item.width_percent) : 0.2) * 100) : '';
                 if (sigH) sigH.value = isSig ? ((item.height_percent != null ? parseFloat(item.height_percent) : 0.03) * 100) : '';
                 document.getElementById('field-settings-form').classList.remove('d-none');
@@ -763,6 +819,17 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
             renderOverlay();
         }
     });
+    var textWidthEl = document.getElementById('sel-width-percent');
+    if (textWidthEl) textWidthEl.addEventListener('change', function() {
+        var id = document.getElementById('sel-field-id').value;
+        var item = state.layout.find(function(x) { return String(x.id) === id; });
+        var lookupKey = item ? (LABEL_TO_KEY[item.source || item.field || ''] || item.source) : '';
+        if (item && !isSignatureField(lookupKey)) {
+            var v = parseFloat(this.value);
+            item.width_percent = isNaN(v) ? 0.2 : clamp01(v / 100);
+            renderOverlay();
+        }
+    });
 
     function addFieldItem(el) {
         var source = el.dataset.source || el.dataset.field;
@@ -803,6 +870,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     });
     function getPrintDataUrlForSource(sourceId) {
         if (sourceId === 'leave' && leavePrintDataUrl) return leavePrintDataUrl;
+        if (sourceId === 'booking.vehicle.central' && bookingPrintDataUrl) return bookingPrintDataUrl;
         if (developmentPrintDataUrl) return developmentPrintDataUrl;
         return '';
     }
@@ -814,13 +882,16 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         if (sourceId === 'leave') {
             if (hint) hint.textContent = 'ใส่รหัสใบลา (Leave ID) แล้วกดโหลด — ค่าจริงจะแสดงในกล่องฟิลด์บน PDF';
             if (input) input.placeholder = 'รหัสใบลา';
+        } else if (sourceId === 'booking.vehicle.central') {
+            if (hint) hint.textContent = 'ใส่รหัสคำขอรถส่วนกลาง (Vehicle ID) แล้วกดโหลด — ค่าจริงจะแสดงในกล่องฟิลด์บน PDF';
+            if (input) input.placeholder = 'รหัสคำขอรถ (เช่น 125)';
         } else {
             if (hint) hint.textContent = 'ใส่รหัสรายการขอไปราชการ (Development ID) แล้วกดโหลด — ค่าจริงจะแสดงในกล่องฟิลด์บน PDF';
             if (input) input.placeholder = 'รหัสรายการ (เช่น 1138)';
         }
     }
     var btnLoadReal = document.getElementById('btn-load-real-data');
-    if ((developmentPrintDataUrl || leavePrintDataUrl) && btnLoadReal) {
+    if ((developmentPrintDataUrl || leavePrintDataUrl || bookingPrintDataUrl) && btnLoadReal) {
         var dsSelect = document.getElementById('data-source-select');
         if (dsSelect) { dsSelect.addEventListener('change', updateRealDataCardLabel); updateRealDataCardLabel(); }
         btnLoadReal.addEventListener('click', function() {
@@ -866,9 +937,11 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 .then(function(res) {
                     var list = document.getElementById('field-list');
                     list.innerHTML = '';
+                    fieldDefMap = {};
                     (res.fields || []).forEach(function(fd) {
                         var src = fd.source || fd.field || '';
                         var lbl = fd.label || src;
+                        if (src) fieldDefMap[String(src)] = String(lbl);
                         var div = document.createElement('div');
                         div.className = 'field-list-item border rounded-2 p-2 mb-1 small';
                         div.setAttribute('data-source', src);
@@ -877,9 +950,20 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                         div.textContent = lbl;
                         list.appendChild(div);
                     });
+                    var q = document.getElementById('field-filter') ? document.getElementById('field-filter').value : '';
+                    filterFieldList(q);
                 })
                 .catch(function() {});
         });
+    }
+
+    // Filters UI: field list only
+    var fieldFilter = document.getElementById('field-filter');
+    if (fieldFilter) {
+        fieldFilter.addEventListener('input', function () {
+            filterFieldList(this.value);
+        });
+        filterFieldList(fieldFilter.value || '');
     }
 
     btnSave.addEventListener('click', function() {

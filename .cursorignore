@@ -1,0 +1,10 @@
+node_modules
+/vendor/*
+!views/vendor/**
+runtime
+storage
+dist
+build
+*.log
+*.zip
+*.sql

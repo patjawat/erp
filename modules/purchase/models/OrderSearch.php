@@ -94,7 +94,6 @@ class OrderSearch extends Order
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
             'request_type' => $this->request_type,
-            'emp_id' => $this->emp_id,
         ]);
 
         $query

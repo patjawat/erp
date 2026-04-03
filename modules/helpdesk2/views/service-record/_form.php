@@ -26,7 +26,6 @@ use kartik\widgets\ActiveForm;
                     'options' => ['placeholder' => 'หัวข้อ'],
                     'pluginOptions' => [
                         'allowClear' => true,
-                         'dropdownParent' => '#main-modal',
                         'tags' => true,
                     ],
                 ])->label(false);

@@ -60,13 +60,14 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
     <i class="bi bi-info-circle fs-5 text-info flex-shrink-0 mt-1"></i>
     <div class="small">
         กำลังแก้ไขตำแหน่งสำหรับ <strong><?= Html::encode($typeLabel) ?></strong> — ประเภทอื่นไม่ได้รับผลกระทบ
+        <span class="d-block mt-1 text-muted">พิมพ์จากรายการใบลา: <?= Html::a('เทมเพลต PDF (pdf-template)', ['/pdf-template/template'], ['target' => '_blank', 'rel' => 'noopener noreferrer', 'class' => 'alert-link']) ?> ผ่าน <code>/leave/leave/pdf</code> ก่อน แล้วจึง fallback มาแบบฟอร์มไฟล์นี้</span>
     </div>
 </div>
 <?php else: ?>
 <div class="alert alert-info border-0 rounded-3 mb-3 d-flex align-items-start gap-2" role="status">
     <i class="bi bi-info-circle fs-5 text-info flex-shrink-0 mt-1"></i>
     <div class="small">
-        <strong>การพิมพ์ใบลา</strong> — หลังบันทึกตำแหน่งแล้ว ไปที่ <strong>ขอลา / รายการของฉัน</strong> แล้วกดปุ่ม «พิมพ์ใบลา» ที่รายการที่ต้องการ เพื่อเปิดหน้ารูปแบบพิมพ์ หรือใช้บล็อก <strong>ทดสอบพิมพ์ใบลา</strong> ด้านซ้ายเพื่อตรวจสอบทันที
+        <strong>การพิมพ์ใบลา</strong> — จากรายการใบลาจะเปิด PDF ผ่าน <strong>/leave/leave/pdf</strong> โดยลองใช้เทมเพลตที่ <?= Html::a('/pdf-template/template', ['/pdf-template/template'], ['target' => '_blank', 'rel' => 'noopener noreferrer']) ?> ก่อน ถ้ายังไม่ตั้งค่าจะใช้แบบฟอร์มไฟล์ในหน้านี้ (FPDI) หรือหน้า HTML — ใช้บล็อก <strong>ทดสอบพิมพ์</strong> ด้านล่างเพื่อเปิด PDF ตัวอย่างในแท็บใหม่
     </div>
 </div>
 <?php endif; ?>
@@ -195,7 +196,7 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                             <i class="bi bi-printer text-primary"></i>
                             ทดสอบพิมพ์ใบลา
                         </label>
-                        <p class="small text-muted mb-2">เลือกใบลาด้านล่าง แล้วกดปุ่มเพื่อเปิดหน้ารูปแบบพิมพ์ (ใช้ตรวจสอบหลังกำหนดตำแหน่ง)</p>
+                        <p class="small text-muted mb-2">เลือกใบลาแล้วกดปุ่มเพื่อเปิด PDF (ลำดับเดียวกับรายการใบลา: ลองเทมเพลต <?= Html::encode('/pdf-template') ?> ก่อน แล้วจึง fallback แบบฟอร์มไฟล์นี้)</p>
                         <div class="d-flex flex-wrap align-items-end gap-2">
                             <div class="flex-grow-1" style="min-width: 200px;">
                                 <select id="leave-print-test-select" class="form-select">
@@ -205,9 +206,9 @@ $fontDisplayScale = ($canvasW / $pageWpt) * 0.55;
                                 </select>
                             </div>
                             <?= Html::a(
-                                '<i class="bi bi-printer me-1"></i> เปิดหน้ารูปแบบพิมพ์',
-                                ['/leave/leave/print', 'id' => $recentLeaves[0]->id],
-                                ['class' => 'btn btn-outline-primary rounded-3', 'target' => '_blank', 'rel' => 'noopener', 'id' => 'leave-print-test-btn', 'data-print-base' => Url::to(['/leave/leave/print'])]
+                                '<i class="bi bi-printer me-1"></i> เปิด PDF ใบลา',
+                                ['/leave/leave/pdf', 'id' => $recentLeaves[0]->id],
+                                ['class' => 'btn btn-outline-primary rounded-3', 'target' => '_blank', 'rel' => 'noopener noreferrer', 'id' => 'leave-print-test-btn', 'data-print-base' => Url::to(['/leave/leave/pdf'])]
                             ) ?>
                         </div>
                     </div>

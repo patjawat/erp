@@ -52,7 +52,18 @@ $signatureSystemUrl = $signatureSystemUrl ?? null;
                         </div>
                     </div>
                     <?php
-                    $leaveTimeLabel = (isset($draft['leave_time_type']) && (float) $draft['leave_time_type'] === 0.5) ? 'ครึ่งวัน' : 'การลาเต็มวัน';
+                    $dsType = (string) ($draft['date_start_type'] ?? '0');
+                    $deType = (string) ($draft['date_end_type'] ?? '0');
+                    $dsg = (string) ($draft['date_start_g'] ?? '');
+                    $deg = (string) ($draft['date_end_g'] ?? '');
+                    $isHalfStart = ($dsType === '0.5');
+                    $isHalfEnd = ($deType === '0.5');
+                    if ($dsg !== '' && $deg !== '' && $dsg === $deg) {
+                        $leaveTimeLabel = $isHalfStart ? 'ลาครึ่งวัน' : 'ลาเต็มวัน';
+                    } else {
+                        $leaveTimeLabel = 'วันแรก: ' . ($isHalfStart ? 'ครึ่งวัน' : 'เต็มวัน')
+                            . ' · วันสุดท้าย: ' . ($isHalfEnd ? 'ครึ่งวัน' : 'เต็มวัน');
+                    }
                     $totalDaysDisplay = (float) ($draft['total_days'] ?? 0);
                     $calDays = (int) ($draft['summary_calendar_days'] ?? 0);
                     $summarySatSun = (int) ($draft['summary_sat_sun'] ?? 0);
@@ -60,10 +71,14 @@ $signatureSystemUrl = $signatureSystemUrl ?? null;
                     ?>
                     <div class="card border-0 border-start border-3 border-info rounded-4 overflow-hidden mb-4">
                         <div class="card-body py-3 px-4">
-                            <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
                                 <div class="p-2 bg-info bg-opacity-10 rounded-circle text-info"><i class="bi bi-calendar3 fs-5"></i></div>
                                 <h6 class="fw-bold mb-0 text-body">สรุปวันลา</h6>
                             </div>
+                            <p class="small text-body mb-3 ps-1 border-start border-3 border-info ms-1">
+                                <span class="text-muted">ลักษณะวันลา:</span>
+                                <?= Html::encode($leaveTimeLabel) ?>
+                            </p>
                             <div class="row g-2 small">
                                 <div class="col-6 col-md-3 text-center">
                                     <div class="text-muted mb-1">รวมระยะเวลา</div>
@@ -86,11 +101,11 @@ $signatureSystemUrl = $signatureSystemUrl ?? null;
                     </div>
                     <table class="table table-borderless small mb-0">
                         <tr>
-                            <td class="text-muted" style="width: 100px;">ประเภท</td>
+                            <td class="text-muted" style="width: 100px;">ประเภทการลา</td>
                             <td><?= Html::encode($typeTitle) ?></td>
                         </tr>
                         <tr>
-                            <td class="text-muted">ลักษณะการลา</td>
+                            <td class="text-muted">ครึ่งวัน / เต็มวัน</td>
                             <td><?= Html::encode($leaveTimeLabel) ?></td>
                         </tr>
                         <tr>

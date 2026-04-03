@@ -16,6 +16,39 @@ class SiteHelper extends Component
         public static function getInfo()
         {
                 $model = Categorise::findOne(['name' => 'site']);
+                // หากยังไม่ได้ตั้งค่า "site" ในตาราง categorise ให้คืนค่า default เพื่อไม่ให้ระบบพัง
+                if (!$model) {
+                        $defaultLayout = 'vertical';
+                        return [
+                                'layout' => $defaultLayout,
+                                'director' => null,
+                                'logo' => null,
+                                'company_name' => null,
+                                'hoscode' => null,
+                                'doc_number' => null,
+                                'director_name' => null,
+                                'director_position' => null,
+                                'director_type' => null,
+                                'leader' => null,
+                                'leader_fullname' => null,
+                                'leader_position' => '',
+                                'leader_signature_path' => null,
+                                'address' => null,
+                                'province' => null,
+                                'phone' => null,
+                                'website' => '-',
+                                'line_liff_home' => null,
+                                'line_liff_profile' => null,
+                                'line_liff_login' => null,
+                                'line_liff_register' => null,
+                                'line_liff_user_connect' => null,
+                                'line_qrcode' => null,
+                                'pdpa_url' => null,
+                                'active_pdpa' => 0,
+                                'manual' => 0,
+                        ];
+                }
+
                 $siteUrl = isset($model->data_json['website']) ? $model->data_json['website'] : '-';
                 $siteName = isset($model->data_json['company_name']) ? $model->data_json['company_name'] : null;
                 $director =  Employees::find()->where(['id' => $model->data_json['director_name'] ?? 0])->one();
@@ -225,5 +258,240 @@ class SiteHelper extends Component
         public static function getDisplay()
         {
                 return \Yii::$app->session->get('display');
+        }
+
+        /**
+         * ตัวเลือกไอคอน Lucide สำหรับแถบ Header (ชื่อตรงกับ https://lucide.dev/icons/)
+         * ค่า key = ชื่อไอคอนแบบ kebab-case สำหรับ data-lucide
+         *
+         * @return array<string, array<string, string>|string>
+         */
+        public static function headerLucideIconChoices(): array
+        {
+                return [
+                        'ค่าเริ่มต้น' => [
+                                'package' => 'Package',
+                        ],
+                        'อาคาร · โรงพยาบาล · สุขภาพ' => [
+                                'hospital' => 'Hospital',
+                                'building' => 'Building',
+                                'building-2' => 'Building 2',
+                                'landmark' => 'Landmark',
+                                'home' => 'Home',
+                                'heart-pulse' => 'Heart pulse',
+                                'stethoscope' => 'Stethoscope',
+                                'activity' => 'Activity',
+                                'pill' => 'Pill',
+                                'syringe' => 'Syringe',
+                                'microscope' => 'Microscope',
+                        ],
+                        'องค์กร · ผู้คน' => [
+                                'users' => 'Users',
+                                'user' => 'User',
+                                'user-round' => 'User round',
+                                'user-star' => 'User star',
+                                'id-card' => 'ID card',
+                                'badge-check' => 'Badge check',
+                                'shield' => 'Shield',
+                                'shield-check' => 'Shield check',
+                                'handshake' => 'Handshake',
+                        ],
+                        'เอกสาร · งาน · ปฏิทิน' => [
+                                'file-text' => 'File text',
+                                'files' => 'Files',
+                                'clipboard-list' => 'Clipboard list',
+                                'file-spreadsheet' => 'File spreadsheet',
+                                'folder-kanban' => 'Folder kanban',
+                                'calendar' => 'Calendar',
+                                'calendar-days' => 'Calendar days',
+                                'calendar-check' => 'Calendar check',
+                                'notebook-pen' => 'Notebook pen',
+                                'pen-line' => 'Pen line',
+                        ],
+                        'ธุรกิจ · การเงิน · คลัง' => [
+                                'briefcase' => 'Briefcase',
+                                'banknote' => 'Banknote',
+                                'wallet' => 'Wallet',
+                                'scale' => 'Scale',
+                                'gavel' => 'Gavel',
+                                'truck' => 'Truck',
+                                'package-open' => 'Package open',
+                                'box' => 'Box',
+                                'archive' => 'Archive',
+                                'shopping-cart' => 'Shopping cart',
+                                'warehouse' => 'Warehouse',
+                        ],
+                        'ระบบ · เทคโนโลยี' => [
+                                'layout-dashboard' => 'Layout dashboard',
+                                'layout-grid' => 'Layout grid',
+                                'database' => 'Database',
+                                'server' => 'Server',
+                                'hard-drive' => 'Hard drive',
+                                'cpu' => 'CPU',
+                                'cloud' => 'Cloud',
+                                'wifi' => 'WiFi',
+                                'smartphone' => 'Smartphone',
+                                'monitor' => 'Monitor',
+                                'settings' => 'Settings',
+                                'cog' => 'Cog',
+                                'wrench' => 'Wrench',
+                        ],
+                        'ทั่วไป' => [
+                                'bell' => 'Bell',
+                                'mail' => 'Mail',
+                                'phone' => 'Phone',
+                                'globe' => 'Globe',
+                                'map-pin' => 'Map pin',
+                                'star' => 'Star',
+                                'sparkles' => 'Sparkles',
+                                'heart' => 'Heart',
+                                'heart-plus' => 'Heart plus',
+                                'award' => 'Award',
+                                'trophy' => 'Trophy',
+                                'factory' => 'Factory',
+                                'hammer' => 'Hammer',
+                                'chart-bar' => 'Chart bar',
+                                'chart-line' => 'Chart line',
+                                'pie-chart' => 'Pie chart',
+                                'trending-up' => 'Trending up',
+                        ],
+                ];
+        }
+
+        /**
+         * ข้อความและรูปแบบตัวอักษรบนแถบ Header จากตั้งค่าองค์กร (data_json)
+         * เว้น header_brand_line1 / line2 ว่าง = แสดง HOSPITAL / ERP SYSTEM
+         *
+         * @param  array|\ArrayAccess|null $dataJson
+         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string, lucide_icon: string}
+         */
+        public static function resolveHeaderBrand($dataJson): array
+        {
+                $d = is_array($dataJson) ? $dataJson : [];
+                $line1 = trim((string) ($d['header_brand_line1'] ?? ''));
+                if ($line1 === '') {
+                        $line1 = 'HOSPITAL';
+                }
+                $line2 = trim((string) ($d['header_brand_line2'] ?? ''));
+                if ($line2 === '') {
+                        $line2 = 'ERP SYSTEM';
+                }
+                $googleFont = self::sanitizeHeaderGoogleFontName($d['header_brand_google_font'] ?? '');
+                $fontStack = $googleFont !== '' ? "'" . str_replace("'", '', $googleFont) . "', sans-serif" : null;
+
+                $l1Size = self::sanitizeHeaderCssFontSize($d['header_brand_line1_size'] ?? '', '1.35rem');
+                $l1Color = self::sanitizeHeaderCssColor($d['header_brand_line1_color'] ?? '', '#ffffff');
+                $l1Weight = self::sanitizeHeaderFontWeight($d['header_brand_line1_weight'] ?? '', '700');
+
+                $l2Size = self::sanitizeHeaderCssFontSize($d['header_brand_line2_size'] ?? '', '11px');
+                $l2Color = self::sanitizeHeaderCssColor($d['header_brand_line2_color'] ?? '', 'rgba(255,255,255,0.5)');
+                $l2Weight = self::sanitizeHeaderFontWeight($d['header_brand_line2_weight'] ?? '', '500');
+
+                $fontCss = $fontStack ? 'font-family:' . $fontStack . ';' : '';
+                $line1Style = 'line-height:1;letter-spacing:0.5px;font-size:' . $l1Size . ';color:' . $l1Color . ';font-weight:' . $l1Weight . ';' . $fontCss;
+                $line2Style = 'line-height:1;letter-spacing:1px;font-size:' . $l2Size . ';color:' . $l2Color . ';font-weight:' . $l2Weight . ';' . $fontCss;
+
+                $googleFontHref = null;
+                if ($googleFont !== '') {
+                        $qf = str_replace(' ', '+', $googleFont);
+                        $googleFontHref = 'https://fonts.googleapis.com/css2?family=' . $qf . ':wght@300;400;500;600;700;800&display=swap';
+                }
+
+                return [
+                        'line1' => $line1,
+                        'line2' => $line2,
+                        'line1_style' => $line1Style,
+                        'line2_style' => $line2Style,
+                        'google_font_href' => $googleFontHref,
+                        'lucide_icon' => self::sanitizeHeaderLucideIcon($d['header_brand_lucide_icon'] ?? ''),
+                ];
+        }
+
+        public static function sanitizeHeaderLucideIcon($value): string
+        {
+                $value = strtolower(trim((string) $value));
+                $allowed = self::headerLucideIconAllowedNames();
+                if ($value !== '' && in_array($value, $allowed, true)) {
+                        return $value;
+                }
+
+                return 'package';
+        }
+
+        /**
+         * @return list<string>
+         */
+        private static function headerLucideIconAllowedNames(): array
+        {
+                static $names = null;
+                if ($names !== null) {
+                        return $names;
+                }
+                $names = [];
+                foreach (self::headerLucideIconChoices() as $group) {
+                        if (!is_array($group)) {
+                                continue;
+                        }
+                        foreach (array_keys($group) as $iconName) {
+                                $names[] = (string) $iconName;
+                        }
+                }
+
+                return $names;
+        }
+
+        private static function sanitizeHeaderGoogleFontName($name): string
+        {
+                $name = trim((string) $name);
+                if ($name === '') {
+                        return '';
+                }
+                if (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\s\-]{0,62}$/', $name)) {
+                        return '';
+                }
+
+                return $name;
+        }
+
+        private static function sanitizeHeaderCssFontSize($value, string $default): string
+        {
+                $value = trim((string) $value);
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^\d+(\.\d+)?(px|rem|em|%)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
+        }
+
+        private static function sanitizeHeaderCssColor($value, string $default): string
+        {
+                $value = trim((string) $value);
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/', $value)) {
+                        return $value;
+                }
+                if (preg_match('/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(\s*,\s*[\d.]+\s*)?\)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
+        }
+
+        private static function sanitizeHeaderFontWeight($value, string $default): string
+        {
+                $value = strtolower(trim((string) $value));
+                if ($value === '') {
+                        return $default;
+                }
+                if (preg_match('/^(normal|bold|bolder|lighter|[1-9]00)$/', $value)) {
+                        return $value;
+                }
+
+                return $default;
         }
 }

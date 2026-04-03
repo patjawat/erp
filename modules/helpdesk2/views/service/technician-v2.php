@@ -6,6 +6,7 @@ use kartik\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\bootstrap5\LinkPager;
 use app\modules\helpdesk2\models\Helpdesk;
+use app\widgets\datepicker\DatepickerThai;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\HelpdeskSearch $searchModel */
@@ -16,6 +17,7 @@ $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = $this->title;
 
 $tickets = $dataProvider->getModels();
+$queueOffset = $dataProvider->pagination ? (int) $dataProvider->pagination->offset : 0;
 $kpiTotal = $dataProvider->getTotalCount();
 $kpiOpen = 0;
 $kpiInProgress = 0;
@@ -45,7 +47,7 @@ $statusFilterOptions = [
                         </div>
                         <div>
                             <h4 class="mb-0 fw-semibold"><?= Html::encode($this->title) ?></h4>
-                            <div class="text-muted small">สรุปงานที่ต้องดำเนินการ และเข้าไปบันทึกผลการซ่อม</div>
+                            <div class="text-muted small">สรุปงานที่ต้องดำเนินการ และเข้าไปบันทึกผลการซ่อม — เรียงคิวตาม<strong class="text-body">วันที่แจ้ง</strong> (แจ้งก่อนอยู่บน)</div>
                         </div>
                     </div>
                     <div class="d-flex gap-2 flex-wrap">
@@ -78,38 +80,70 @@ $statusFilterOptions = [
                     'action' => ['technician-v2'],
                     'options' => ['class' => 'row g-3 align-items-end'],
                 ]); ?>
-                <div class="col-12 col-md-3">
-                    <?= $form->field($searchModel, 'q')->textInput([
-                        'placeholder' => 'รหัสงาน / อาการ / สถานที่',
+                <div class="col-12 col-md-6 col-xl-3">
+                    <?= $form->field($searchModel, 'created_date_from')->widget(DatepickerThai::class, [
+                        'options' => ['placeholder' => 'ตั้งแต่วันที่แจ้ง'],
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <?= $form->field($searchModel, 'created_date_to')->widget(DatepickerThai::class, [
+                        'options' => ['placeholder' => 'ถึงวันที่แจ้ง'],
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <?= $form->field($searchModel, 'repair_number')->textInput([
+                        'placeholder' => 'รหัสงานซ่อม',
                         'class' => 'form-control',
-                    ])->label('คำค้น') ?>
+                    ]) ?>
                 </div>
-                <div class="col-12 col-md-2">
-                    <?= $form->field($searchModel, 'status')->widget(Select2::class, [
-                        'data' => $statusFilterOptions,
-                        'options' => ['placeholder' => 'สถานะทั้งหมด'],
-                        'pluginOptions' => ['allowClear' => true],
-                    ])->label('สถานะ') ?>
-                </div>
-                <div class="col-12 col-md-2">
-                    <?= $form->field($searchModel, 'urgency')->widget(Select2::class, [
-                        'data' => Helpdesk::listUrgency(),
-                        'options' => ['placeholder' => 'ความเร่งด่วนทั้งหมด'],
-                        'pluginOptions' => ['allowClear' => true],
-                    ])->label('ความเร่งด่วน') ?>
-                </div>
-                <div class="col-12 col-md-2">
+                <div class="col-12 col-md-6 col-xl-3">
                     <?= $form->field($searchModel, 'device_type_id')->widget(Select2::class, [
                         'data' => (new Helpdesk())->listDeviceType(),
                         'options' => ['placeholder' => 'อุปกรณ์ทั้งหมด'],
                         'pluginOptions' => ['allowClear' => true],
-                    ])->label('อุปกรณ์') ?>
+                    ]) ?>
                 </div>
-                <div class="col-12 col-md-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search me-1"></i> ค้นหา
-                    </button>
-                    <?= Html::a('<i class="bi bi-x-circle me-1"></i>ล้าง', ['technician-v2'], ['class' => 'btn btn-outline-secondary']) ?>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <?= $form->field($searchModel, 'title')->textInput([
+                        'placeholder' => 'อาการ / หัวข้อแจ้ง',
+                        'class' => 'form-control',
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <?= $form->field($searchModel, 'q_location')->textInput([
+                        'placeholder' => 'สถานที่',
+                        'class' => 'form-control',
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <?= $form->field($searchModel, 'q_requester')->textInput([
+                        'placeholder' => 'ชื่อหรือนามสกุลผู้แจ้ง',
+                        'class' => 'form-control',
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <?= $form->field($searchModel, 'urgency')->widget(Select2::class, [
+                        'data' => Helpdesk::listUrgency(),
+                        'options' => ['placeholder' => 'ความเร่งด่วนทั้งหมด'],
+                        'pluginOptions' => ['allowClear' => true],
+                    ]) ?>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <?= $form->field($searchModel, 'status')->widget(Select2::class, [
+                        'data' => $statusFilterOptions,
+                        'options' => ['placeholder' => 'สถานะทั้งหมด'],
+                        'pluginOptions' => ['allowClear' => true],
+                    ]) ?>
+                </div>
+                <div class="col-12 col-xl-6 d-flex flex-column">
+                    <div class="mt-auto mb-3 w-100">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search me-1"></i> ค้นหา
+                            </button>
+                            <?= Html::a('<i class="bi bi-x-circle me-1"></i>ล้างตัวกรอง', ['technician-v2'], ['class' => 'btn btn-outline-secondary']) ?>
+                        </div>
+                    </div>
                 </div>
                 <?php ActiveForm::end(); ?>
             </div>
@@ -129,6 +163,8 @@ $statusFilterOptions = [
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th scope="col" class="text-center text-nowrap">ลำดับคิว</th>
+                                <th scope="col" class="text-nowrap">วันที่แจ้ง</th>
                                 <th scope="col">รหัสงานซ่อม</th>
                                 <th scope="col">อุปกรณ์</th>
                                 <th scope="col">อาการ</th>
@@ -142,16 +178,25 @@ $statusFilterOptions = [
                         <tbody class="align-middle table-group-divider">
                             <?php if (empty($tickets)): ?>
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">ไม่พบงานในคิว</td>
+                                    <td colspan="10" class="text-center text-muted py-4">ไม่พบงานในคิว</td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($tickets as $t): ?>
+                                <?php foreach ($tickets as $i => $t): ?>
                                     <?php
                                     $viewUrl = Url::to(['/helpdesk/service/view-v2', 'id' => $t->id]);
                                     $updateUrl = Url::to(['/helpdesk/service/update-v2', 'id' => $t->id]);
                                     $req = $t->getUserReq();
+                                    $queueNo = $queueOffset + $i + 1;
+                                    $created = $t->viewCreated();
                                     ?>
                                     <tr>
+                                        <td class="text-center text-muted small fw-medium"><?= (int) $queueNo ?></td>
+                                        <td class="text-nowrap small">
+                                            <div class="fw-medium"><?= Html::encode($created['date'] ?? '-') ?></div>
+                                            <?php if (!empty($created['time'])): ?>
+                                                <div class="text-muted"><?= Html::encode($created['time']) ?></div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="fw-medium text-primary"><?= Html::encode($t->repair_number) ?></td>
                                         <td><?= Html::encode($t->deviceType->title ?? '-') ?></td>
                                         <td class="text-truncate" style="max-width: 320px;"><?= Html::encode($t->title) ?></td>

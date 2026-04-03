@@ -193,7 +193,10 @@ $typeTheme = [
                                         <div class="text-muted"><?= Html::encode($item->data_json['reason'] ?? '-') ?></div>
                                     </td>
                                     <td class="small"><?= $item->showLeaveDate() ?></td>
-                                    <td class="small text-center"><?= (int) $item->total_days ?></td>
+                                    <td class="small text-center"><?php
+                                        $d = (float) $item->total_days;
+                                        echo $d == (int) $d ? (string) (int) $d : number_format($d, 1, '.', '');
+                                    ?></td>
                                     <td class="small py-3 px-3">
                                         <?= $item->stackChecker() ?: '<span class="text-muted">—</span>' ?>
                                     </td>
@@ -226,8 +229,14 @@ $typeTheme = [
                                                 <li>
                                                     <?= Html::a(
                                                         '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา (PDF)',
-                                                        $item->getPreviewPdfUrl() ?: ['/leave/leave/pdf', 'id' => $item->id],
-                                                        ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'พิมพ์ได้ทุกสถานะ ไม่ต้องรอการอนุมัติ']
+                                                        ['/leave/leave/pdf', 'id' => $item->id],
+                                                        [
+                                                            'class' => 'dropdown-item',
+                                                            'target' => '_blank',
+                                                            'rel' => 'noopener noreferrer',
+                                                            'data-pjax' => '0',
+                                                            'title' => 'ใช้เทมเพลตจาก /pdf-template ก่อน; ถ้ายังไม่ตั้งจะใช้แบบฟอร์มใบลาเดิม — พิมพ์ได้ทุกสถานะ',
+                                                        ]
                                                     ) ?>
                                                 </li>
                                             </ul>

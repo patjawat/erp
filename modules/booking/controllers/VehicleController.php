@@ -8,6 +8,7 @@ use DatePeriod;
 use DateInterval;
 use yii\web\Response;
 use yii\web\Controller;
+use yii\db\Query;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\filters\VerbFilter;
@@ -24,6 +25,8 @@ use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 use app\modules\booking\models\VehicleDetailSearch;
+use app\modules\pdfTemplate\models\PdfTemplate;
+use app\modules\pdfTemplate\services\PdfTemplateService;
 
 /**
  * VehicleController implements the CRUD actions for Vehicle model.
@@ -75,20 +78,104 @@ class VehicleController extends Controller
             'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'code', $searchModel->q],
-            ['like', 'reason', $searchModel->q],
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+
+        // ลด N+1: preload relations ที่ใช้ใน list.php
+        $query->with([
+            'employee',
+            'locationOrg',
+            'vehicleStatus',
+            'vehicleDetails.driver',
+            'vehicleDetails.car',
         ]);
 
+        // select เฉพาะ field ที่ใช้จริงบนหน้ารายการ
+        $query->select([
+            'id',
+            'code',
+            'vehicle_type_id',
+            'urgent',
+            'location',
+            'reason',
+            'status',
+            'date_start',
+            'time_start',
+            'date_end',
+            'time_end',
+            'go_type',
+            'emp_id',
+            'is_shared',
+            'created_at',
+        ]);
 
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
-        $dataProvider->query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        $dataProvider->query->orderBy([
+        $q = trim((string) $searchModel->q);
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'code', $q],
+                ['like', 'reason', $q],
+            ]);
+        }
+
+
+        $query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)]);
+        $query->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // Filter: ยังไม่บันทึกการเดินทาง (distance_km/oil_price/oil_liter ยังไม่มี > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $recordedExistsSubQuery = (new Query())
+                ->select(new \yii\db\Expression('1'))
+                ->from('vehicle_detail vd')
+                ->where('vd.vehicle_id = vehicle.id')
+                ->andWhere([
+                    'or',
+                    ['and', ['IS NOT', 'vd.distance_km', null], ['>', 'vd.distance_km', 0]],
+                    ['and', ['IS NOT', 'vd.oil_price', null], ['>', 'vd.oil_price', 0]],
+                    ['and', ['IS NOT', 'vd.oil_liter', null], ['>', 'vd.oil_liter', 0]],
+                ]);
+
+            $query->andWhere(['not exists', $recordedExistsSubQuery]);
+        }
+
+        $query->orderBy([
             'date_start' => SORT_DESC,
             'location' =>  SORT_DESC,
         ]);
+
+        // สรุปสถานะสำหรับงานจัดสรร (ใช้ query เดียวกับรายการหลัก)
+        $summaryBaseQuery = clone $query;
+
+        $statusSummary = (clone $summaryBaseQuery)
+            ->select(['status', 'COUNT(*) AS total'])
+            ->groupBy(['status'])
+            ->asArray()
+            ->all();
+
+        $assignedExistsSubQuery = (new Query())
+            ->select(new \yii\db\Expression('1'))
+            ->from('vehicle_detail vd')
+            ->where('vd.vehicle_id = vehicle.id')
+            ->andWhere([
+                'or',
+                ['IS NOT', 'vd.driver_id', null],
+                [
+                    'and',
+                    ['IS NOT', 'vd.license_plate', null],
+                    ['<>', 'vd.license_plate', ''],
+                    ['<>', 'vd.license_plate', ' '],
+                ],
+            ]);
+
+        $waitingAllocationCount = (int) (clone $summaryBaseQuery)
+            ->andWhere(['IN', 'status', ['Pending', 'Pass', 'Approve']])
+            ->andWhere(['not exists', $assignedExistsSubQuery])
+            ->count();
+
+        $allocatedCount = (int) (clone $summaryBaseQuery)
+            ->andWhere(['exists', $assignedExistsSubQuery])
+            ->count();
+
         return $this->render('index', [
             'type' => $type,
             'icon' => '<i class="fa-solid fa-car-on"></i>',
@@ -96,7 +183,10 @@ class VehicleController extends Controller
             'icon' => '',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'action' => ''
+            'action' => '',
+            'statusSummary' => $statusSummary,
+            'waitingAllocationCount' => $waitingAllocationCount,
+            'allocatedCount' => $allocatedCount,
         ]);
     }
 
@@ -112,7 +202,9 @@ class VehicleController extends Controller
             'vehicle_type_id' => $type
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('employee');
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('employee');
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'code', $searchModel->q],
@@ -125,6 +217,22 @@ class VehicleController extends Controller
         }
 
         $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // Filter: ยังไม่บันทึกการเดินทาง (distance_km/oil_price/oil_liter ไม่มีค่า > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $recordedExistsSubQuery = (new Query())
+                ->select(new \yii\db\Expression('1'))
+                ->from('vehicle_detail vd')
+                ->where('vd.vehicle_id = vehicle.id')
+                ->andWhere([
+                    'or',
+                    ['and', ['IS NOT', 'vd.distance_km', null], ['>', 'vd.distance_km', 0]],
+                    ['and', ['IS NOT', 'vd.oil_price', null], ['>', 'vd.oil_price', 0]],
+                    ['and', ['IS NOT', 'vd.oil_liter', null], ['>', 'vd.oil_liter', 0]],
+                ]);
+
+            $query->andWhere(['not exists', $recordedExistsSubQuery]);
+        }
 
 
         return $this->render('index', [
@@ -146,24 +254,80 @@ class VehicleController extends Controller
         $searchModel = new VehicleDetailSearch();
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
-        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'official']);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => 'official']);
 
-        $dataProvider->query->andFilterWhere([
+        $query->andFilterWhere([
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
 
 
-        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        return $this->render('work', [
+        $query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+
+        // Filter: ยังไม่บันทึกการเดินทาง (vehicle_detail ไม่มี distance_km/oil_price/oil_liter > 0)
+        if ((string) $searchModel->not_logged === '1') {
+            $query->andWhere([
+                'and',
+                ['or', ['vehicle_detail.distance_km' => null], ['<=', 'vehicle_detail.distance_km', 0]],
+                ['or', ['vehicle_detail.oil_price' => null], ['<=', 'vehicle_detail.oil_price', 0]],
+                ['or', ['vehicle_detail.oil_liter' => null], ['<=', 'vehicle_detail.oil_liter', 0]],
+            ]);
+        }
+
+        // UI parity กับหน้า /booking/vehicle/index: summary card ต้องมี status/จำนวนรอจัดสรร/จำนวนจัดสรรแล้ว
+        $statusSummary = (clone $query)
+            ->select(['vehicle_detail.status AS status', 'COUNT(*) AS total'])
+            ->groupBy(['vehicle_detail.status'])
+            ->asArray()
+            ->all();
+
+        $waitingAllocationCount = (int) (clone $query)
+            ->andWhere(['IN', 'vehicle_detail.status', ['Pending', 'Pass', 'Approve']])
+            ->andWhere(['vehicle_detail.driver_id' => null])
+            ->andWhere([
+                'or',
+                ['vehicle_detail.license_plate' => null],
+                ['vehicle_detail.license_plate' => ''],
+                ['vehicle_detail.license_plate' => ' '],
+            ])
+            ->count();
+
+        $allocatedCount = (int) (clone $query)
+            ->andWhere([
+                'or',
+                ['IS NOT', 'vehicle_detail.driver_id', null],
+                [
+                    'and',
+                    ['IS NOT', 'vehicle_detail.license_plate', null],
+                    ['<>', 'vehicle_detail.license_plate', ''],
+                    ['<>', 'vehicle_detail.license_plate', ' '],
+                ],
+            ])
+            ->count();
+
+        // เพิ่ม eager load เพื่อให้ card-based list โหลดข้อมูลที่ใช้จริงได้ลื่นขึ้น
+        $query->with([
+            'vehicle.employee',
+            'vehicle.locationOrg',
+            'vehicle',
+            'driver',
+            'vehicleDetailStatus',
+        ]);
+
+        return $this->render('work-official/index', [
             'vehicle_type' => 'official',
             'icon' => '<i class="fa-solid fa-car-on"></i>',
             'title' => 'ทะเบียนการจัดสรรรถทั่วไป (พขร.)',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'statusSummary' => $statusSummary,
+            'waitingAllocationCount' => $waitingAllocationCount,
+            'allocatedCount' => $allocatedCount,
         ]);
     }
 
@@ -173,17 +337,19 @@ class VehicleController extends Controller
         $searchModel = new VehicleDetailSearch([]);
 
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
-        $dataProvider->query->andFilterWhere(['vehicle.location' => $searchModel->location]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => 'ambulance']);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle.thai_year' => $searchModel->thai_year]);
+        $query->andFilterWhere(['vehicle.location' => $searchModel->location]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => 'ambulance']);
 
-        $dataProvider->query->andFilterWhere([
+        $query->andFilterWhere([
             'or',
             ['like', 'reason', $searchModel->q],
         ]);
 
-        $dataProvider->query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
+        $query->andFilterWhere(['>=', 'vehicle_detail.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'vehicle_detail.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         return $this->render('work', [
             'vehicle_type' => 'ambulance',
             'title' => 'ทะเบียนการจัดสรรรถพยาบาล (พขร.)',
@@ -248,10 +414,12 @@ class VehicleController extends Controller
 
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $todays]);
-        $dataProvider->query->andWhere(['vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle_detail.date_start' => $todays]);
+        $query->andWhere(['vehicle_type_id' => $vehicle_type]);
+        $query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
         if ($this->request->isAJax) {
@@ -288,10 +456,12 @@ class VehicleController extends Controller
         $nextDate = date('Y-m-d', strtotime($todays . ' +1 day'));
         $searchModel = new VehicleDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->joinWith('vehicle');
-        $dataProvider->query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
-        $dataProvider->query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
-        $dataProvider->query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
+        /** @var \yii\db\ActiveQuery $query */
+        $query = $dataProvider->query;
+        $query->joinWith('vehicle');
+        $query->andFilterWhere(['vehicle_detail.date_start' => $nextDate]);
+        $query->andFilterWhere(['vehicle.vehicle_type_id' => $vehicle_type]);
+        $query->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']]);
         $dataProvider->pagination->pageSize = 7;
 
 
@@ -779,11 +949,38 @@ class VehicleController extends Controller
 
     public function actionPrint($id)
     {
-
-
         $model = $this->findModel($id);
         $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         $model->save(false);
+
+        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])->one();
+        if (!$template) {
+            $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        }
+        if ($template) {
+            $data = $this->buildBookingTemplateData($model);
+            if ((string) Yii::$app->request->get('debug', '') === '1') {
+                $templateService = new PdfTemplateService();
+                $layout = $templateService->loadLayout((int) $template->id);
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'template_id' => (int) $template->id,
+                    'template_name' => (string) $template->name,
+                    'data_source_id' => (string) ($template->data_source_id ?? ''),
+                    'layout_count' => count($layout),
+                    'layout' => $layout,
+                    'data' => $data,
+                ];
+            }
+            $templateService = new PdfTemplateService();
+            $pdfBinary = $templateService->generatePdfWithData((int) $template->id, $data);
+            Yii::$app->response->format = Response::FORMAT_RAW;
+            Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+            Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="booking-vehicle-' . (int) $model->id . '.pdf"');
+            Yii::$app->response->content = $pdfBinary;
+            return Yii::$app->response;
+        }
+
         $info = SiteHelper::getInfo();
         $modelData = [
             'director' => $info['company_name'],
@@ -839,6 +1036,198 @@ class VehicleController extends Controller
                 'message' => 'ไม่พบข้อมูลการจอง'
             ];
         }
+    }
+
+    /**
+     * คืนข้อมูลจริงสำหรับ editor ของ pdf-template (source: booking.vehicle.central)
+     */
+    public function actionPrintData($id)
+    {
+        $model = Vehicle::find()->where(['id' => (int) $id])->one();
+        if (!$model) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['error' => 'ไม่พบรายการ'];
+        }
+        $data = $this->buildBookingTemplateData($model);
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return $data;
+    }
+
+    private function buildBookingTemplateData(Vehicle $model): array
+    {
+        $employee = $model->employee;
+        $leader = $model->leader;
+        $driver = $model->driver;
+        $vehicleStatus = $model->vehicleStatus;
+        $carType = $model->carType;
+
+        $approverData = [];
+        $approveRows = Approve::find()
+            ->where(['name' => 'vehicle'])
+            ->andWhere([
+                'or',
+                ['from_id' => (string) $model->id],
+                ['from_id' => (int) $model->id],
+            ])
+            ->with('employee')
+            ->orderBy(['level' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+        $index = 1;
+        foreach ($approveRows as $approveRow) {
+            if ($index > 4) {
+                break;
+            }
+            $approveEmp = $approveRow->employee;
+            $approveSignature = '';
+            if ($approveEmp && method_exists($approveEmp, 'SignatureFilePath')) {
+                $approveSigPath = (string) ($approveEmp->SignatureFilePath() ?? '');
+                if ($approveSigPath !== '' && is_file($approveSigPath)) {
+                    $approveSignature = $approveSigPath;
+                }
+            }
+            $approveDataJson = $approveRow->data_json;
+            if (is_string($approveDataJson)) {
+                $decodedApproveJson = json_decode($approveDataJson, true);
+                $approveDataJson = is_array($decodedApproveJson) ? $decodedApproveJson : [];
+            }
+            if (!is_array($approveDataJson)) {
+                $approveDataJson = [];
+            }
+            $approveDate = '';
+            if (!empty($approveDataJson['approve_date'])) {
+                $approveDate = substr((string) $approveDataJson['approve_date'], 0, 10);
+            } elseif (in_array((string) $approveRow->status, ['Pass', 'Approve'], true) && !empty($approveRow->updated_at)) {
+                $approveDate = substr((string) $approveRow->updated_at, 0, 10);
+            }
+            $approverData['approver_' . $index . '_fullname'] = (string) ($approveEmp->fullname ?? '');
+            $approverData['approver_' . $index . '_position'] = $approveEmp && method_exists($approveEmp, 'positionName') ? (string) ($approveEmp->positionName() ?? '') : '';
+            $approverData['approver_' . $index . '_approve_date'] = $approveDate;
+            $approverData['approver_' . $index . '_signature'] = $approveSignature;
+            $approverData['approver_' . $index . '_status'] = (string) ($approveRow->status ?? '');
+            $index++;
+        }
+        if (!empty($approverData['approver_1_fullname'])) {
+            $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
+            $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_approve_date'] = (string) ($approverData['approver_1_approve_date'] ?? '');
+            $approverData['approver_signature'] = (string) ($approverData['approver_1_signature'] ?? '');
+            $approverData['approval_status'] = (string) ($approverData['approver_1_status'] ?? '');
+        } elseif ($leader) {
+            $leaderSignature = '';
+            if (method_exists($leader, 'SignatureFilePath')) {
+                $leaderSigPath = (string) ($leader->SignatureFilePath() ?? '');
+                if ($leaderSigPath !== '' && is_file($leaderSigPath)) {
+                    $leaderSignature = $leaderSigPath;
+                }
+            }
+            $approverData['approver_1_fullname'] = (string) ($leader->fullname ?? '');
+            $approverData['approver_1_position'] = method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '';
+            $approverData['approver_1_approve_date'] = '';
+            $approverData['approver_1_signature'] = $leaderSignature;
+            $approverData['approver_1_status'] = '';
+            $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
+            $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_approve_date'] = '';
+            $approverData['approver_signature'] = $leaderSignature;
+            $approverData['approval_status'] = '';
+        }
+
+        $employeeSignature = '';
+        if ($employee && method_exists($employee, 'SignatureFilePath')) {
+            $sigPath = (string) ($employee->SignatureFilePath() ?? '');
+            if ($sigPath !== '' && is_file($sigPath)) {
+                $employeeSignature = $sigPath;
+            }
+        }
+        if ($employeeSignature === '' && !empty($model->userRequest()['signature'])) {
+            $fallbackSignature = (string) $model->userRequest()['signature'];
+            if (is_file($fallbackSignature)) {
+                $employeeSignature = $fallbackSignature;
+            }
+        }
+
+        $driverSignature = '';
+        if ($driver && method_exists($driver, 'SignatureFilePath')) {
+            $driverSigPath = (string) ($driver->SignatureFilePath() ?? '');
+            if ($driverSigPath !== '' && is_file($driverSigPath)) {
+                $driverSignature = $driverSigPath;
+            }
+        }
+
+        $dataJson = is_array($model->data_json) ? $model->data_json : [];
+        return [
+            'id' => (int) $model->id,
+            'code' => (string) ($model->code ?? ''),
+            'thai_year' => (string) ($model->thai_year ?? ''),
+            'created_at' => (string) ($model->created_at ?? ''),
+            'status' => (string) ($model->status ?? ''),
+            'vehicle_type_id' => (string) ($model->vehicle_type_id ?? ''),
+            'go_type' => (string) ($model->go_type ?? ''),
+            'urgent' => (string) ($model->urgent ?? ''),
+            'license_plate' => (string) ($model->license_plate ?? ''),
+            'location' => (string) ($model->location ?? ''),
+            'reason' => (string) ($model->reason ?? ''),
+            'date_start' => (string) ($model->date_start ?? ''),
+            'time_start' => (string) ($model->time_start ?? ''),
+            'date_end' => (string) ($model->date_end ?? ''),
+            'time_end' => (string) ($model->time_end ?? ''),
+            // legacy keys for older templates
+            'date' => (string) ($model->date_start ?? ''),
+            'vehicle_type' => (string) ($model->vehicle_type_id ?? ''),
+            'passenger' => (string) ($dataJson['passenger_total'] ?? ''),
+            'phone' => (string) (($employee->phone ?? '') ?: ($dataJson['phone'] ?? '')),
+            'driver_name' => (string) ($driver->fullname ?? ''),
+            'driver_name_' => (string) ($driver->fullname ?? ''),
+            'leader_name' => (string) ($leader->fullname ?? ''),
+            'leader_signature' => (string) ($approverData['approver_signature'] ?? ''),
+            'driver_signature' => $driverSignature,
+            // aliases for custom templates
+            'fullname' => (string) ($employee->fullname ?? ''),
+            'position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'officer_name' => (string) ($employee->fullname ?? ''),
+            'officer_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'officer_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'requester_fullname' => (string) ($employee->fullname ?? ''),
+            'requester_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'requester_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'employee_fullname' => (string) ($employee->fullname ?? ''),
+            'employee_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'employee_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'time_go' => (string) ($model->time_start ?? ''),
+            'time_back' => (string) ($model->time_end ?? ''),
+            'emp_id' => (string) ($model->emp_id ?? ''),
+            'leader_id' => (string) ($model->leader_id ?? ''),
+            'driver_id' => (string) ($model->driver_id ?? ''),
+            'emp_signature' => $employeeSignature,
+            'requester_signature' => $employeeSignature,
+            'vehicleStatus' => [
+                'title' => (string) ($vehicleStatus->title ?? ''),
+            ],
+            'carType' => [
+                'title' => (string) ($carType->title ?? ''),
+            ],
+            'employee' => [
+                'fullname' => (string) ($employee->fullname ?? ''),
+                'positionName' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+                'departmentName' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            ],
+            'leader' => [
+                'fullname' => (string) ($leader->fullname ?? ''),
+                'positionName' => $leader && method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '',
+            ],
+            'driver' => [
+                'fullname' => (string) ($driver->fullname ?? ''),
+            ],
+            'data_json' => [
+                'phone' => (string) ($dataJson['phone'] ?? ''),
+                'passenger_total' => (string) ($dataJson['passenger_total'] ?? ''),
+                'passenger_name' => (string) ($dataJson['passenger_name'] ?? ''),
+                'note' => (string) ($dataJson['note'] ?? ''),
+                'req_driver_id' => (string) ($dataJson['req_driver_id'] ?? ''),
+            ],
+        ] + $approverData;
     }
 
 

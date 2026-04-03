@@ -8,11 +8,17 @@ use yii\helpers\Url;
 /** @var int|null $developmentTemplateId */
 /** @var int|null $leaveTemplateId */
 /** @var int|null $leaveRestTemplateId */
+/** @var int|null $repairNoticeTemplateId */
+/** @var int|null $bookingVehicleCentralTemplateId */
+/** @var int|null $bookingVehicleOfficialTemplateId */
 
 $this->title = 'Template รายงานขอไปราชการ';
 $developmentTemplateId = $developmentTemplateId ?? null;
 $leaveTemplateId = $leaveTemplateId ?? null;
 $leaveRestTemplateId = $leaveRestTemplateId ?? null;
+$repairNoticeTemplateId = $repairNoticeTemplateId ?? null;
+$bookingVehicleCentralTemplateId = $bookingVehicleCentralTemplateId ?? null;
+$bookingVehicleOfficialTemplateId = $bookingVehicleOfficialTemplateId ?? null;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="card border-0 shadow-sm rounded-3">
@@ -30,6 +36,21 @@ $this->params['breadcrumbs'][] = $this->title;
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php endif; ?>
+
+        <div class="alert alert-secondary border-0 rounded-3 d-flex align-items-start gap-2 mb-4">
+            <i class="bi bi-signpost-split fs-5 flex-shrink-0"></i>
+            <div class="small">
+                หน้านี้แยกการตั้งค่าเทมเพลตรถเป็น <strong>2 ส่วนคนละ context</strong>:
+                <strong>ขอใช้รถยนต์ส่วนกลาง</strong> และ <strong>ขอใช้รถยนต์ส่วนเดินทางไปราชการ</strong>
+            </div>
+        </div>
+        <div class="alert alert-warning border-0 rounded-3 d-flex align-items-start gap-2 mb-4">
+            <i class="bi bi-exclamation-triangle fs-5 flex-shrink-0"></i>
+            <div class="small">
+                <strong>Marker:</strong> เปิดหน้า build ใหม่ต้องเห็นข้อความนี้ —
+                <code>booking.vehicle.official</code> (ขอใช้รถยนต์ส่วนเดินทางไปราชการ)
+            </div>
+        </div>
 
         <div class="card border rounded-3 mb-4">
             <div class="card-header bg-primary bg-opacity-10 py-2">
@@ -90,6 +111,69 @@ $this->params['breadcrumbs'][] = $this->title;
                     </select>
                 </div>
                 <button type="submit" class="btn btn-info rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
+                <?php \yii\widgets\ActiveForm::end(); ?>
+            </div>
+        </div>
+
+        <div class="card border rounded-3 mb-4">
+            <div class="card-header bg-warning bg-opacity-10 py-2">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-wrench-adjustable-circle me-1"></i> ตั้งค่าเทมเพลตสำหรับใบส่งซ่อม</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารจากระบบงานซ่อม (Helpdesk2) — ใบส่งซ่อม</p>
+                <?php $formRepairNotice = \yii\widgets\ActiveForm::begin(['action' => ['set-template-for-context'], 'method' => 'post', 'options' => ['class' => 'd-flex flex-wrap align-items-end gap-2']]); ?>
+                <input type="hidden" name="context" value="helpdesk2.repair.notice">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <select name="template_id" class="form-select">
+                        <option value="">— ยังไม่เลือก —</option>
+                        <?php foreach ($templates as $t): ?>
+                        <option value="<?= (int) $t->id ?>"<?= $repairNoticeTemplateId === (int) $t->id ? ' selected' : '' ?>><?= Html::encode($t->name) ?> (id=<?= (int) $t->id ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-warning rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
+                <?php \yii\widgets\ActiveForm::end(); ?>
+            </div>
+        </div>
+
+        <div class="card border rounded-3 mb-4">
+            <div class="card-header bg-primary bg-opacity-10 py-2">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-car-front me-1"></i> ตั้งค่าเทมเพลตสำหรับ ขอใช้รถยนต์ส่วนกลาง</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารขอใช้รถยนต์ส่วนกลาง (Booking / Vehicle)</p>
+                <?php $formBooking = \yii\widgets\ActiveForm::begin(['action' => ['set-template-for-context'], 'method' => 'post', 'options' => ['class' => 'd-flex flex-wrap align-items-end gap-2']]); ?>
+                <input type="hidden" name="context" value="booking.vehicle.central">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <select name="template_id" class="form-select">
+                        <option value="">— ยังไม่เลือก —</option>
+                        <?php foreach ($templates as $t): ?>
+                        <option value="<?= (int) $t->id ?>"<?= $bookingVehicleCentralTemplateId === (int) $t->id ? ' selected' : '' ?>><?= Html::encode($t->name) ?> (id=<?= (int) $t->id ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
+                <?php \yii\widgets\ActiveForm::end(); ?>
+            </div>
+        </div>
+
+        <div class="card border rounded-3 mb-4">
+            <div class="card-header bg-secondary bg-opacity-10 py-2">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-car-front-fill me-1"></i> ตั้งค่าเทมเพลตสำหรับ ขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ</h6>
+            </div>
+            <div class="card-body p-3">
+                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ</p>
+                <?php $formBookingOfficial = \yii\widgets\ActiveForm::begin(['action' => ['set-template-for-context'], 'method' => 'post', 'options' => ['class' => 'd-flex flex-wrap align-items-end gap-2']]); ?>
+                <input type="hidden" name="context" value="booking.vehicle.official">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <select name="template_id" class="form-select">
+                        <option value="">— ยังไม่เลือก —</option>
+                        <?php foreach ($templates as $t): ?>
+                        <option value="<?= (int) $t->id ?>"<?= $bookingVehicleOfficialTemplateId === (int) $t->id ? ' selected' : '' ?>><?= Html::encode($t->name) ?> (id=<?= (int) $t->id ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary rounded-3"><i class="bi bi-check-lg me-1"></i> บันทึก</button>
                 <?php \yii\widgets\ActiveForm::end(); ?>
             </div>
         </div>

@@ -39,7 +39,7 @@ $phone = $employee->phone ?? '';
         <?php
         $workShiftLabel = '';
         if ($employee && isset($employee->work_shift)) {
-            $workShiftLabel = $employee->work_shift === 'shift' ? 'เวร 8' : 'เวรปกติ';
+            $workShiftLabel = $employee->work_shift === 'shift' ? 'เวร 8' : 'เวรเช้า';
         }
         ?>
         <div class="card border-0 shadow-sm rounded-3 mb-4">

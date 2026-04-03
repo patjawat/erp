@@ -40,7 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <i class="fa-solid fa-file-excel me-1"></i> Excel
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><?= Html::a('<i class="fa-solid fa-download me-2"></i> ดาวน์โหลด Template', ['/am/building/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/building/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/building/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
             </ul>

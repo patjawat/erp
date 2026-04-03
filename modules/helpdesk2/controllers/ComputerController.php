@@ -13,6 +13,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\helpdesk2\models\HelpdeskSearch;
+use app\modules\helpdesk2\helpers\RepairDashboardV2Helper;
 
 class ComputerController extends \yii\web\Controller
 {
@@ -88,6 +89,19 @@ class ComputerController extends \yii\web\Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
 
+        ]);
+    }
+
+    /**
+     * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มคอมพิวเตอร์) — /helpdesk/computer/dashboard-v2
+     */
+    public function actionDashboardV2()
+    {
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+            'title' => 'ศูนย์คอมพิวเตอร์',
+            'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
+            'active' => 'dashboard-v2',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(2),
         ]);
     }
 

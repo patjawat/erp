@@ -50,11 +50,17 @@ class TemplateController extends Controller
         $developmentTemplate = PdfTemplate::findForContext(PdfTemplate::CONTEXT_DEVELOPMENT);
         $leaveTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE])->one();
         $leaveRestTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_LEAVE_REST])->one();
+        $repairNoticeTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE])->one();
+        $bookingVehicleCentralTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
+        $bookingVehicleOfficialTemplate = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])->one();
         return $this->render('index', [
             'templates' => $templates,
             'developmentTemplateId' => $developmentTemplate ? (int) $developmentTemplate->id : null,
             'leaveTemplateId' => $leaveTemplate ? (int) $leaveTemplate->id : null,
             'leaveRestTemplateId' => $leaveRestTemplate ? (int) $leaveRestTemplate->id : null,
+            'repairNoticeTemplateId' => $repairNoticeTemplate ? (int) $repairNoticeTemplate->id : null,
+            'bookingVehicleCentralTemplateId' => $bookingVehicleCentralTemplate ? (int) $bookingVehicleCentralTemplate->id : null,
+            'bookingVehicleOfficialTemplateId' => $bookingVehicleOfficialTemplate ? (int) $bookingVehicleOfficialTemplate->id : null,
         ]);
     }
 
@@ -65,7 +71,14 @@ class TemplateController extends Controller
     {
         $context = Yii::$app->request->post('context', '');
         $templateId = (int) Yii::$app->request->post('template_id', 0);
-        $allowed = [PdfTemplate::CONTEXT_DEVELOPMENT, PdfTemplate::CONTEXT_LEAVE, PdfTemplate::CONTEXT_LEAVE_REST];
+        $allowed = [
+            PdfTemplate::CONTEXT_DEVELOPMENT,
+            PdfTemplate::CONTEXT_LEAVE,
+            PdfTemplate::CONTEXT_LEAVE_REST,
+            PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE,
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL,
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL,
+        ];
         if (!in_array($context, $allowed, true)) {
             Yii::$app->session->setFlash('error', 'ไม่รู้จัก context');
             return $this->redirect(['index']);
@@ -82,6 +95,9 @@ class TemplateController extends Controller
             PdfTemplate::CONTEXT_DEVELOPMENT => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบขอไปราชการแล้ว',
             PdfTemplate::CONTEXT_LEAVE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ) แล้ว',
             PdfTemplate::CONTEXT_LEAVE_REST => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบลาพักผ่อนแล้ว',
+            PdfTemplate::CONTEXT_HELPDESK2_REPAIR_NOTICE => 'บันทึกการตั้งค่าเทมเพลตสำหรับใบส่งซ่อมแล้ว',
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL => 'บันทึกการตั้งค่าเทมเพลตสำหรับขอใช้รถยนต์ส่วนกลางแล้ว',
+            PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL => 'บันทึกการตั้งค่าเทมเพลตสำหรับขอใช้รถยนต์ส่วนเดินทางไปราชการแล้ว',
         ];
         $msg = $messages[$context] ?? 'บันทึกการตั้งค่าเทมเพลตแล้ว';
         Yii::$app->session->setFlash('success', $msg);
@@ -301,6 +317,7 @@ class TemplateController extends Controller
         $fieldDefinitions = $dataSources ? $registry->getFieldDefinitions($selectedSourceId) : $this->getDefaultFieldDefinitions();
         $developmentPrintDataUrl = \yii\helpers\Url::to(['/hr/development/print-data']);
         $leavePrintDataUrl = \yii\helpers\Url::to(['/leave/setting/leave-print-data']);
+        $bookingPrintDataUrl = \yii\helpers\Url::to(['/booking/vehicle/print-data']);
         return $this->render('editor', [
             'template' => $template,
             'layout' => $layout,
@@ -311,6 +328,7 @@ class TemplateController extends Controller
             'fieldsForSourceUrl' => \yii\helpers\Url::to(['fields-for-source', 'template_id' => $template_id]),
             'developmentPrintDataUrl' => $developmentPrintDataUrl,
             'leavePrintDataUrl' => $leavePrintDataUrl,
+            'bookingPrintDataUrl' => $bookingPrintDataUrl,
         ]);
     }
 
@@ -416,42 +434,15 @@ class TemplateController extends Controller
 
     /**
      * พิมพ์ใบลาเป็น PDF จากเทมเพลต (ข้อมูลจาก leave module).
-     * ใช้จาก /hr/leave/index — ลิงก์ «พิมพ์ใบลา (จากเทมเพลต)» มาที่นี่
+     * พิมพ์ใบลาจากเทมเพลต — ปุ่มหลักใช้ /leave/leave/pdf (เรียก logic เดียวกันผ่าน PdfTemplateService)
      * ใช้เฉพาะเทมเพลตที่ตั้ง use_for_context = leave เท่านั้น (ไม่ fallback ไปเทมเพลตแรก เด็ดขาด)
      */
     public function actionPrintLeave(int $id): Response
     {
         try {
-            $leaveModule = Yii::$app->getModule('leave');
-            if (!$leaveModule) {
-                throw new NotFoundHttpException('โมดูล leave ไม่ได้เปิดใช้งาน');
-            }
-            $data = $leaveModule->runAction('setting/leave-print-data', ['id' => (int) $id]);
-        } catch (\Throwable $e) {
-            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้: ' . $e->getMessage());
-        }
-        if (is_array($data) && !empty($data['error'])) {
-            throw new NotFoundHttpException($data['error']);
-        }
-        if (!is_array($data)) {
-            throw new NotFoundHttpException('โหลดข้อมูลใบลาไม่ได้ (ตอบกลับไม่ถูกต้อง)');
-        }
-        $leaveTypeId = (string) ($data['leave_type_id'] ?? '');
-        $isRest = ($leaveTypeId === 'LT4');
-        $context = $isRest ? PdfTemplate::CONTEXT_LEAVE_REST : PdfTemplate::CONTEXT_LEAVE;
-        $template = PdfTemplate::find()->where(['use_for_context' => $context])->one();
-        if (!$template) {
-            $hint = $isRest
-                ? 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลาพักผ่อน»'
-                : 'กรุณาไปที่ /pdf-template แล้วตั้งค่า «เทมเพลตสำหรับใบลา (ป่วย/คลอด/กิจ)»';
-            throw new NotFoundHttpException('ยังไม่มีเทมเพลตสำหรับ' . ($isRest ? 'ใบลาพักผ่อน' : 'ใบลาป่วย/คลอด/กิจ') . ' — ' . $hint);
-        }
-        $path = $this->templateService->getTemplateFilePath($template);
-        if ($path === null || !is_file($path)) {
-            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
-        }
-        try {
-            $pdfBinary = $this->templateService->generatePdfWithData((int) $template->id, $data);
+            $pdfBinary = $this->templateService->generateLeavePdfBinary((int) $id);
+        } catch (NotFoundHttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             throw new \yii\web\ServerErrorHttpException('สร้าง PDF ไม่ได้: ' . $e->getMessage());
         }

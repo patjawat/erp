@@ -33,6 +33,7 @@ class RepairV2Controller extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'feedback' => ['POST'],
                     ],
                 ],
             ]
@@ -46,14 +47,14 @@ class RepairV2Controller extends Controller
      */
     public function actionIndex()
     {
-        $userId = \Yii::$app->user->id;
         $emp = UserHelper::GetEmployee();
         $searchModel = new HelpdeskSearch([
-            'created_by' => $userId,
-            'emp_id' => $emp->id,
-            'date_filter' => 'this_month',
+            'date_filter' => '',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $empId = (int) ($emp->id ?? 0);
+        $dataProvider->query->andWhere(['helpdesk.emp_id' => $empId]);
+        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'title', $searchModel->q],
@@ -65,7 +66,16 @@ class RepairV2Controller extends Controller
             $searchModel->date_start = AppHelper::convertToThai($range[0]);
             $searchModel->date_end = AppHelper::convertToThai($range[1]);
         }
-        $dataProvider->query->andFilterWhere(['between', new \yii\db\Expression('DATE(created_at)'), AppHelper::convertToGregorian($searchModel->date_start), AppHelper::convertToGregorian($searchModel->date_end)]);
+        $dateStart = trim((string) ($searchModel->date_start ?? ''));
+        $dateEnd = trim((string) ($searchModel->date_end ?? ''));
+        if ($dateStart !== '' && $dateEnd !== '') {
+            $dataProvider->query->andFilterWhere([
+                'between',
+                new \yii\db\Expression('DATE(created_at)'),
+                AppHelper::convertToGregorian($dateStart),
+                AppHelper::convertToGregorian($dateEnd),
+            ]);
+        }
 
 
         return $this->render('index', [
@@ -308,6 +318,34 @@ class RepairV2Controller extends Controller
 
 
             return $this->redirect(['index']);
+    }
+
+    public function actionFeedback($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if ((string) ($model->status ?? '') !== 'success') {
+            return ['status' => 'error', 'message' => 'สามารถให้คะแนนได้เมื่อปิดงานซ่อมแล้วเท่านั้น'];
+        }
+
+        $rating = (int) $this->request->post('rating', 0);
+        $comment = trim((string) $this->request->post('comment', ''));
+
+        if ($rating < 1 || $rating > 5) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกระดับคะแนน 1-5'];
+        }
+
+        $model->rating = (string) $rating;
+        $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+        $dataJson['comment'] = $comment;
+        $dataJson['comment_date'] = date('Y-m-d H:i:s');
+        $model->data_json = $dataJson;
+
+        if ($model->save(false, ['rating', 'data_json'])) {
+            return ['status' => 'success'];
+        }
+
+        return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกคะแนนและความคิดเห็นได้'];
     }
 
     //ดึงแผนกของช่างซ่อมบำรุงตามครุภัณฑ์ที่เลืกอ

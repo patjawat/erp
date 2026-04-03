@@ -13,6 +13,7 @@ use app\components\DateFilterHelper;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\helpdesk2\models\HelpdeskSearch;
+use app\modules\helpdesk2\helpers\RepairDashboardV2Helper;
 
 class MedicalController extends \yii\web\Controller
 {
@@ -90,6 +91,18 @@ class MedicalController extends \yii\web\Controller
         ]);
     }
 
+    /**
+     * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มเครื่องมือแพทย์) — /helpdesk/medical/dashboard-v2
+     */
+    public function actionDashboardV2()
+    {
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+            'title' => 'ศูนย์เครื่องมือแพทย์',
+            'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
+            'active' => 'dashboard-v2',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(3),
+        ]);
+    }
 
     public function actionAsset()
     {

@@ -52,7 +52,7 @@ $form = ActiveForm::begin([
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'data_json[work_shift]')->dropDownList(
-                    ['normal' => 'เวรปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
+                    ['normal' => 'เวรเช้า', 'shift' => 'เวร 8 ชั่วโมง'],
                     ['id' => 'work_shift', 'class' => 'form-select', 'prompt' => '--- เลือก ---']
                 )->label('ประเภทของเวร') ?>
             </div>

@@ -238,6 +238,14 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
+    /**
+     * ผู้แจ้งซ่อม (lookup จาก `created_by` -> employees.user_id)
+     */
+    public function getEmployee()
+    {
+        return $this->hasOne(Employees::class, ['user_id' => 'created_by']);
+    }
     public function getEmpTeam()
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
@@ -316,9 +324,18 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         try {
             $emp = $this->employee;
-            $createDate = $this->viewCreated()['full'] !== '' ?  $this->viewCreated()['full'] : 'ไม่ระบุ';
+            // แสดงเฉพาะรูปในกรอบ (ไม่ใช้ getAvatar ที่แนบชื่อ/วันที่/ตำแหน่งข้างรูป)
+            $avatarOnly = Html::img('@web/img/loading.gif', [
+                'class' => 'avatar-md lazyload object-fit-cover d-block m-0 rounded-circle border border-secondary border-opacity-25 shadow-sm',
+                'alt' => (string) ($emp->fullname ?? 'ผู้แจ้ง'),
+                'data' => [
+                    'expand' => '-20',
+                    'sizes' => 'auto',
+                    'src' => $emp->ShowAvatar(),
+                ],
+            ]);
             return [
-                'avatar' => $emp->getAvatar(false, $createDate),
+                'avatar' => $avatarOnly,
                 'fullname' => $emp->fullname,
                 'department' => $emp->departmentName(),
             ];
@@ -336,9 +353,12 @@ class Helpdesk extends \yii\db\ActiveRecord
     public function viewCreated()
     {
         try {
-            $datetime = explode(' ', $this->created_at);
-            $date = ThaiDateHelper::formatThaiDate($datetime[0]);
-            $time = $datetime[1] . '.น';
+            // ถ้ารับงานแล้ว ใช้ `receive_date` แทน `created_at` เพื่อให้หน้าเมนู/ประวัติ
+            // แสดง "วันและเวลาที่รับงาน" ได้ตรง
+            $baseDatetime = !empty($this->receive_date) ? (string) $this->receive_date : (string) $this->created_at;
+            $datetime = explode(' ', $baseDatetime);
+            $date = ThaiDateHelper::formatThaiDate($datetime[0] ?? '');
+            $time = !empty($datetime[1]) ? ((string) $datetime[1]) . '.น' : '';
             return [
                 'full' => $date . ' ' . $time,
                 'date' => $date,
@@ -602,10 +622,25 @@ class Helpdesk extends \yii\db\ActiveRecord
         foreach ($models as $m) {
             $url = Url::to(['/filemanager/uploads/show', 'id' => $m->id], true);
             $label = Html::encode($m->real_filename ?: 'ไฟล์แนบ');
-            $html .= '<li class="mb-1"><a href="' . Html::encode($url) . '" target="_blank" rel="noopener" class="text-primary"><i class="bi bi-file-earmark-pdf me-1"></i>' . $label . '</a></li>';
+            $html .= '<li class="mb-2">';
+            $html .= '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2">';
+            $html .= '<div><i class="bi bi-file-earmark-pdf me-1 text-danger"></i>' . $label . '</div>';
+            $html .= '<div class="d-flex gap-1">';
+            $html .= '<a href="' . Html::encode($url) . '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">เปิดดู</a>';
+            $html .= '<a href="' . Html::encode($url) . '" download="' . $label . '" class="btn btn-sm btn-outline-secondary">ดาวน์โหลด</a>';
+            $html .= '</div></div></li>';
         }
         $html .= '</ul>';
         return $html;
+    }
+
+    /** จำนวนไฟล์บิล/ใบเสร็จที่แนบ (ส่งซ่อมภายนอก) */
+    public function getExternalRepairBillsCount(): int
+    {
+        if (!$this->ref) {
+            return 0;
+        }
+        return (int) Uploads::find()->where(['ref' => $this->ref, 'name' => 'external_repair_bill'])->count();
     }
 
     /** แสดงรูปภาพงานซ่อม (ช่างแนบ) */
@@ -679,7 +714,11 @@ class Helpdesk extends \yii\db\ActiveRecord
         try {
             $data = '';
             $data .= '<div class="avatar-stack">';
-            foreach ($this->data_json['join'] as $key => $avatar) {
+            $join = $this->data_json['join'] ?? [];
+            if (!is_iterable($join)) {
+                return '';
+            }
+            foreach ($join as $key => $avatar) {
                 $emp = Employees::findOne(['user_id' => $avatar]);
                 $data .= '<a href="javascript: void(0);" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-title="' . $emp->fullname . '">';
                 $data .= Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']);
@@ -711,16 +750,19 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         try {
             $model = Categorise::find()->where(['name' => 'helpdesk_urgency', 'code' => $this->data_json['urgency']])->one();
+            $color = is_array($model->data_json ?? null) ? ($model->data_json['color'] ?? 'secondary') : 'secondary';
             return [
                 'title' => $model->title,
                 'description' => $model->title . ' - ' . $model->code,
-                'view' => '<span class="badge bg-' . $model->data_json['color'] . '">' . $model->title . '</span>'
+                'view' => '<span class="badge bg-' . $model->data_json['color'] . '">' . $model->title . '</span>',
+                'color' => $color,
             ];
         } catch (\Throwable $th) {
             return [
                 'title' => '',
                 'description' => '',
-                'view' => ''
+                'view' => '',
+                'color' => 'secondary',
             ];
         }
     }
@@ -809,7 +851,8 @@ class Helpdesk extends \yii\db\ActiveRecord
 
     public function viewCreateDateTime()
     {
-        return Yii::$app->thaiDate->toThaiDate($this->created_at, true, false);
+        $baseDatetime = !empty($this->receive_date) ? (string) $this->receive_date : (string) $this->created_at;
+        return Yii::$app->thaiDate->toThaiDate($baseDatetime, true, false);
     }
 
     // แสดงวันที่รับเรื่อง

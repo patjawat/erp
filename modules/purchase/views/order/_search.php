@@ -50,6 +50,17 @@ use kartik\widgets\ActiveForm;
    <div class="col-lg-2 col-md-6 col-sm-12">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
+    <div class="col-lg-4 col-md-6 col-sm-12">
+        <?= $form->field($model, 'emp_id')->widget(Select2::classname(), [
+            'data' => $model->listRequesters(),
+            'options' => ['placeholder' => 'ผู้ขอทั้งหมด'],
+            'theme' => Select2::THEME_KRAJEE_BS5,
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+        ])->label(false);
+        ?>
+    </div>
      <div class="col-lg-4 col-md-6 col-sm-12">
         <?= $form->field($model, 'vendor_id')->widget(Select2::classname(), [
             'data' => $model->ListVendor(),
@@ -107,8 +118,8 @@ echo $form->field($model, 'request_type')->radioList(
                 ?>
         </div>
 
-    <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
-        <div class="d-flex flex-column flex-md-row gap-2">
+    <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 ms-lg-auto">
+        <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
 
             <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
                 'class' => 'btn btn-primary w-100 w-md-auto',

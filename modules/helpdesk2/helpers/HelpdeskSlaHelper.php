@@ -11,6 +11,27 @@ use app\modules\helpdesk2\models\Helpdesk;
 class HelpdeskSlaHelper
 {
     /**
+     * Default SLA hours mapping (backward compatible).
+     *
+     * Low → 72h, Medium → 24h, High → 4h, Critical → 1h
+     *
+     * @return array<string,int>
+     */
+    private static function defaultUrgencyHours(): array
+    {
+        return [
+            '1' => 72,
+            '2' => 24,
+            '3' => 4,
+            '4' => 1,
+            'low' => 72,
+            'medium' => 24,
+            'high' => 4,
+            'critical' => 1,
+        ];
+    }
+
+    /**
      * Calculate SLA information for a ticket.
      *
      * @return array{
@@ -79,24 +100,57 @@ class HelpdeskSlaHelper
             return [null, null];
         }
 
-        // รองรับทั้งตัวเลข (1-4) และข้อความ (low, medium, high, critical)
-        $map = [
-            '1' => ['low', 72],
-            '2' => ['medium', 24],
-            '3' => ['high', 4],
-            '4' => ['critical', 1],
-            'low' => ['low', 72],
-            'medium' => ['medium', 24],
-            'high' => ['high', 4],
-            'critical' => ['critical', 1],
-        ];
-
         $key = (string) $urgency;
-        if (!isset($map[$key])) {
+
+        // SLA hours mapping from settings (fallback to legacy defaults)
+        static $normalized = null;
+        if ($normalized === null) {
+            $hoursMap = null;
+            try {
+                $record = \app\modules\helpdesk2\models\HelpdeskSlaSetting::getRecord();
+                $cfg = $record->getConfig();
+                $hoursMap = $cfg['urgency_hours'] ?? null;
+            } catch (\Throwable $e) {
+                $hoursMap = null;
+            }
+
+            if (!is_array($hoursMap)) {
+                $hoursMap = self::defaultUrgencyHours();
+            }
+
+            // Normalize configured hours map onto expected keys
+            $normalized = self::defaultUrgencyHours();
+            foreach ($hoursMap as $uKey => $uVal) {
+                $uKey = (string) $uKey;
+                if ($uVal === null) {
+                    continue;
+                }
+                if (is_numeric($uVal) && (int) $uVal > 0) {
+                    $normalized[$uKey] = (int) $uVal;
+                }
+            }
+        }
+
+        if (!isset($normalized[$key]) || (int) $normalized[$key] <= 0) {
             return [null, null];
         }
 
-        return $map[$key];
+        // Also return priority string (for debug / future UI)
+        $priorityKey = null;
+        if (in_array($key, ['1', 'low'], true)) {
+            $priorityKey = 'low';
+        } elseif (in_array($key, ['2', 'medium'], true)) {
+            $priorityKey = 'medium';
+        } elseif (in_array($key, ['3', 'high'], true)) {
+            $priorityKey = 'high';
+        } elseif (in_array($key, ['4', 'critical'], true)) {
+            $priorityKey = 'critical';
+        } else {
+            // If custom key is used, fall back to generic string
+            $priorityKey = $key;
+        }
+
+        return [$priorityKey, (int) $normalized[$key]];
     }
 
     /**

@@ -30,6 +30,12 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php endif; ?>
 
+<div class="alert alert-info border-0 rounded-3 mb-3 small" role="status">
+    <i class="bi bi-file-earmark-pdf me-1"></i>
+    การพิมพ์จากรายการใบลาและหน้ารายละเอียดใช้เทมเพลตที่ <?= Html::a('ตั้งค่า PDF — pdf-template', ['/pdf-template/template'], ['class' => 'alert-link', 'target' => '_blank', 'rel' => 'noopener noreferrer']) ?>
+    ก่อน (ผ่าน <code>/leave/leave/pdf</code>) ถ้ายังไม่ตั้งค่าจะใช้เทมเพลตไฟล์ในหน้านี้แทน
+</div>
+
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-header bg-primary bg-opacity-10 text-primary border-0 py-3 px-4 d-flex align-items-center justify-content-between">
         <h6 class="mb-0 small fw-semibold d-flex align-items-center gap-2">

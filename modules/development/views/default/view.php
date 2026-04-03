@@ -72,7 +72,7 @@ if (empty($approvalItems)) {
     $approvalItems[] = ['label' => 'ไม่มีการขออนุมัติเงิน/รถ', 'checked' => true];
 }
 
-$printUrl = Url::to(['/hr/development/print', 'id' => $model->id]);
+$printUrl = Url::to(['/development/default/print-official', 'id' => $model->id]);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
@@ -217,7 +217,7 @@ $printUrl = Url::to(['/hr/development/print', 'id' => $model->id]);
 
                     <!-- ปุ่มดำเนินการ (สไตล์ตัวอย่าง: ปุ่มหลักส้ม/เขียว, ปุ่มรองขาวเทา) -->
                     <div class="d-flex flex-column gap-2 mt-4">
-                        <?= Html::a('<i class="bi bi-printer me-2"></i> ฝากปริ้นท์ (ห้องบุคคล)', $printUrl, [
+                        <?= Html::a('<i class="bi bi-printer me-2"></i> พิมพ์ขอใช้รถยนต์เดินทางไปราชการ', $printUrl, [
                             'class' => 'btn btn-warning rounded-3',
                             'target' => '_blank',
                             'title' => 'เปิดหน้าพิมพ์',

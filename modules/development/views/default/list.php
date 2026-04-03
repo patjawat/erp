@@ -244,10 +244,10 @@ $to = min($currentPage * $pageSize + $pageSize, $totalCount);
                                 'class' => 'btn btn-sm btn-outline-primary rounded-pill',
                                 'title' => 'ดูรายละเอียด',
                             ]) ?>
-                            <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ใบขอไปราชการ', ['/hr/development/print', 'id' => $item->id], [
+                            <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์ขอใช้รถยนต์เดินทางไปราชการ', ['/development/default/print-official', 'id' => $item->id], [
                                 'class' => 'btn btn-sm btn-outline-secondary rounded-pill',
                                 'target' => '_blank',
-                                'title' => 'พิมพ์ใบขอไปราชการ',
+                                'title' => 'พิมพ์ขอใช้รถยนต์เดินทางไปราชการ',
                             ]) ?>
                         </div>
                     </div>
