@@ -1,75 +1,79 @@
 <?php
+
 use yii\helpers\Html;
 ?>
 
-<div class="container-fluid my-4">
+
+<div class="my-4">
 
   <div class="row g-4">
 
     <!-- ทรัพย์สินทั้งหมด -->
     <div class="col-md-3">
-      <div class="dashboard-card dashboard-card--blue">
-
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i data-lucide="package"></i>
-          <span class="dashboard-card__title">ทรัพย์สินทั้งหมด</span>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div class="fw-bold fs-4">
+              <?= (int) $equipStats['total'] ?> รายการ
+            </div>
+            <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill">
+              <i data-lucide="package"></i>
+            </div>
+          </div>
+          <span class="text-muted">ทรัพย์สินทั้งหมด</span>
         </div>
-
-        <div class="dashboard-card__value">
-        <?= (int) $equipStats['total'] ?> รายการ
-        </div>
-
       </div>
     </div>
 
     <!-- สภาพดี -->
     <div class="col-md-3">
-      <div class="dashboard-card dashboard-card--green">
-
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i data-lucide="check-circle"></i>
-          <span class="dashboard-card__title">สภาพดี</span>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div class="fw-bold fs-4">
+              <?= (int) $equipStats['good'] ?> รายการ
+            </div>
+            <div class="bg-success bg-opacity-10 text-success p-3 rounded-pill">
+              <i data-lucide="check-circle"></i>
+            </div>
+          </div>
+          <span class="text-muted">สภาพดี</span>
         </div>
-
-        <div class="dashboard-card__value">
-        <?= (int) $equipStats['good'] ?> รายการ
-        </div>
-
       </div>
     </div>
 
     <!-- ชำรุด / รอซ่อม -->
     <div class="col-md-3">
-      <div class="dashboard-card dashboard-card--orange">
-
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i data-lucide="wrench"></i>
-          <span class="dashboard-card__title">ชำรุด / รอซ่อม</span>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div class="fw-bold fs-4">
+              <?= (int) $equipStats['damaged'] ?> รายการ
+            </div>
+            <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill">
+              <i data-lucide="wrench"></i>
+            </div>
+          </div>
+          <span class="text-muted">ชำรุด / รอซ่อม</span>
         </div>
-
-        <div class="dashboard-card__value">
-        <?= (int) $equipStats['damaged'] ?> รายการ
-        </div>
-
       </div>
     </div>
 
     <!-- รวมราคาแรกรับ -->
     <div class="col-md-3">
-      <div class="dashboard-card dashboard-card--purple">
-
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i data-lucide="banknote"></i>
-          <span class="dashboard-card__title">รวมราคาแรกรับ</span>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div class="fw-bold fs-4">
+              <?= Html::encode(number_format($equipStats['total_value'], 2)) ?> บาท
+            </div>
+            <div class="bg-info bg-opacity-10 text-info p-3 rounded-pill">
+              <i data-lucide="banknote"></i>
+            </div>
+          </div>
+          <span class="text-muted">รวมราคาแรกรับ</span>
         </div>
-
-        <div class="dashboard-card__value">
-        <?= Html::encode(number_format($equipStats['total_value'], 2)) ?> บาท
-        </div>
-
       </div>
     </div>
-
   </div>
-
 </div>
