@@ -161,9 +161,13 @@ class ImportController extends Controller
         $codesInFile = []; // หมายเลขครุภัณฑ์ที่เจอในไฟล์นี้ (ไม่ให้ซ้ำในไฟล์) — หมายเลข FSN ซ้ำได้
 
         if (($handle = fopen($filePath, "r")) !== false) {
-            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+            $columnIndexes = null;
+            while (($data = fgetcsv($handle, 0, ",")) !== false) {
                 $rowNumber++;
-                if ($rowNumber == 1) continue; // ข้าม header
+                if ($rowNumber == 1) {
+                    $columnIndexes = $this->equipImportColumnIndexes($data);
+                    continue; // ข้าม header
+                }
 
                 $code = trim((string) ($data[0] ?? ''));
                 if ($code !== '') {
@@ -189,13 +193,31 @@ class ImportController extends Controller
                     }
                 }
 
+                $ci = $columnIndexes ?? $this->equipImportColumnIndexes([]);
+                $usefulLifeIdx = $ci['useful_life'];
+                $orderIdx = $ci['order_number'];
+                $noteIdx = $ci['note'];
+
+                $depreciationParsed = ['value' => null, 'error' => null];
+                if ($ci['depreciation'] !== null) {
+                    $depreciationParsed = $this->parseDepreciationRateForImport($data[$ci['depreciation']] ?? '');
+                    if ($depreciationParsed['error'] !== null) {
+                        $errorRows[] = [
+                            'row' => $rowNumber,
+                            'code' => $code,
+                            'errors' => ['depreciation' => [$depreciationParsed['error']]],
+                        ];
+                        continue;
+                    }
+                }
+
                 $model = new Asset();
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
                 $model->code = $data[0];
                 $model->fsn_number = $data[1]; // หมายเลข FSN ซ้ำได้
                 $model->asset_name = $data[2];
-                $model->data_json = [
+                $dataJson = [
                     'brand' => $data[3],
                     'asset_model' => $data[4],
                     'color_name' => $data[5],
@@ -208,9 +230,13 @@ class ImportController extends Controller
                     'fsn_old' => $data[0],
                     'vendor_id' => $this->resolveVendorFromImport($data[18] ?? '', $data[19] ?? ''),
                     'vendor_name' => trim((string) ($data[19] ?? '')),
-                    'order_number' => trim((string) ($data[21] ?? '')),
-                    'note' => trim((string) ($data[22] ?? '')),
+                    'order_number' => trim((string) ($data[$orderIdx] ?? '')),
+                    'note' => trim((string) ($data[$noteIdx] ?? '')),
                 ];
+                $model->data_json = $dataJson;
+                if ($depreciationParsed['value'] !== null) {
+                    $model->depreciation_rate = $depreciationParsed['value'];
+                }
                 $model->price = $data[8];
                 $model->purchase = $this->resolvePurchaseFromImport($data[10] ?? '');
                 $model->receive_date = $this->normalizeDateForDb($data[13] ?? '');
@@ -219,7 +245,7 @@ class ImportController extends Controller
                     $model->on_year = $data[15]; // ปีงบประมาณ (ซ้ำ) ถ้ามีให้ใช้ค่านี้แทน
                 }
                 $model->license_plate = $data[17];
-                $model->useful_life = (int) ($data[20] ?? 0); // อายุการใช้งาน (ปี)
+                $model->useful_life = (int) ($data[$usefulLifeIdx] ?? 0); // อายุการใช้งาน (ปี)
                 $model->asset_status = 1;
                 $model->asset_group_id = 4;
 
@@ -264,6 +290,56 @@ class ImportController extends Controller
         }
 
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
+    }
+
+    /**
+     * แมปดัชนีคอลัมน์จากแถวหัวตาราง (รองรับเทมเพลตเก่าที่ไม่มีคอลัมน์อัตราค่าเสื่อม)
+     *
+     * @return array{useful_life: int, depreciation: int|null, order_number: int, note: int}
+     */
+    protected function equipImportColumnIndexes(array $headerRow): array
+    {
+        $norm = array_map(static fn ($h) => trim((string) $h), $headerRow);
+        $find = static function (string $name) use ($norm): ?int {
+            $i = array_search($name, $norm, true);
+
+            return $i === false ? null : (int) $i;
+        };
+        $idxDep = $find('อัตราค่าเสื่อม');
+        $idxOrder = $find('เลขที่ใบกำกับ/ใบส่งของ');
+        $idxNote = $find('หมายเหตุ');
+        $idxUseful = $find('อายุการใช้งาน');
+
+        return [
+            'useful_life' => $idxUseful ?? 20,
+            'depreciation' => $idxDep,
+            'order_number' => $idxOrder ?? ($idxDep !== null ? $idxDep + 1 : 21),
+            'note' => $idxNote ?? ($idxDep !== null ? $idxDep + 2 : 22),
+        ];
+    }
+
+    /**
+     * อัตราค่าเสื่อมจาก CSV — ว่างได้, ตัวเลขทศนิยม 2 ตำแหน่ง (รองรับจุดทศนิยมหรือจุลภาค)
+     *
+     * @return array{value: float|null, error: string|null}
+     */
+    protected function parseDepreciationRateForImport($raw): array
+    {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return ['value' => null, 'error' => null];
+        }
+        $normalized = str_replace(["\xc2\xa0", ' '], '', $raw);
+        $normalized = str_replace(',', '.', $normalized);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return ['value' => null, 'error' => 'อัตราค่าเสื่อมต้องเป็นตัวเลข (ทศนิยมได้สูงสุด 2 ตำแหน่ง)'];
+        }
+        $v = round((float) $normalized, 2);
+        if ($v < 0) {
+            return ['value' => null, 'error' => 'อัตราค่าเสื่อมต้องไม่ติดลบ'];
+        }
+
+        return ['value' => $v, 'error' => null];
     }
 
     /**
