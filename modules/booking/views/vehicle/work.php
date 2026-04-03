@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     $reason = $vehicle?->reason ?? '-';
                     $cancelUrl = ['/booking/vehicle-detail/cancel', 'id' => $item->id];
                     $workUpdateUrl = ['/booking/vehicle/work-update', 'id' => $item->id, 'title' => 'บันทึกภาระกิจการใช้รถยนต์'];
-                    $viewUrl = ['view', 'id' => $item->id];
+                    $viewUrl = ['view', 'id' => $item->vehicle_id];
                     ?>
                     <div class="col-12">
                         <div class="card border-0 shadow-sm h-100">
