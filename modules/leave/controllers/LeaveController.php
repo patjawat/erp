@@ -18,7 +18,7 @@ use app\modules\leave\models\LeaveCreateForm;
 use app\components\SiteHelper;
 use app\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\components\LeaveHelper;
+use app\modules\leave\components\LeaveHelper;
 
 /**
  * สร้างใบลา (2 ขั้น: กรอกรายละเอียด → ตรวจสอบ + ลงลายมือชื่อ)
