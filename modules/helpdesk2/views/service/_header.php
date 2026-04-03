@@ -6,6 +6,9 @@ use yii\helpers\Html;
 /** @var string $statusBadge */
 /** @var string $priorityBadge */
 /** @var string $slaBadgeHtml */
+/** @var string|null $returnUrl */
+
+$returnUrl = $returnUrl ?? null;
 
 ?>
 <div class="card shadow-sm">
@@ -24,7 +27,14 @@ use yii\helpers\Html;
             </div>
 
             <div class="d-flex flex-column align-items-end gap-2">
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                    <?php if ($returnUrl !== null && $returnUrl !== ''): ?>
+                        <?= Html::a(
+                            '<i class="bi bi-arrow-left me-1"></i>กลับรายการ',
+                            $returnUrl,
+                            ['class' => 'btn btn-sm btn-outline-secondary']
+                        ) ?>
+                    <?php endif; ?>
                     <?= Html::a(
                         '<i class="fa-solid fa-print me-1"></i>พิมพ์ใบส่งซ่อม',
                         ['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id],
