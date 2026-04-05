@@ -367,20 +367,27 @@ class DocumentsController extends \yii\web\Controller
         ];
     }
 
+    /**
+     * โหลดเฉพาะโครงหน้า + ฟอร์มค้นหา — ชุดทะเบียนหนังสือ (KPI + รายการ) โหลดทาง actionAjaxRefresh ผ่าน Ajax
+     */
     public function actionIndex()
     {
-        $d = $this->buildDocumentsIndexViewData();
+        $emp = UserHelper::GetEmployee();
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+        ]);
+        $searchModel->load(Yii::$app->request->queryParams, '');
+
+        $kpi = $this->request->get('kpi');
+        if (!is_string($kpi) || !in_array($kpi, ['unread', 'bookmarked', 'urgent', 'total'], true)) {
+            $kpi = null;
+        }
 
         return $this->render('index', [
-            'searchModel' => $d['searchModel'],
-            'dataProvider' => $d['dataProvider'],
+            'searchModel' => $searchModel,
             'action' => 'index',
-            'to' => 'ถึง' . $d['emp']->fullname(),
-            'activeKpi' => $d['kpi'],
-            'unreadOpenDetailIdByDocument' => $d['unreadOpenDetailIdByDocument'],
-            'unreadOpenDocumentsDetailById' => $d['unreadOpenDocumentsDetailById'],
-            'readAtByRoutingId' => $d['readAtByRoutingId'],
-            'documentStats' => $d['documentStats'],
+            'to' => 'ถึง' . $emp->fullname(),
+            'activeKpi' => $kpi,
         ]);
     }
 

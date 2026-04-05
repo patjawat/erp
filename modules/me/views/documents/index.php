@@ -4,7 +4,6 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 use yii\bootstrap5\Html;
 use yii\web\View;
-use yii\web\JqueryAsset;
 
 $this->title = 'ทะเบียนหนังสือ';
 $this->params['breadcrumbs'][] = ['label' => 'บริการ', 'url' => ['/me']];
@@ -15,9 +14,9 @@ $viewListUrl = Url::to(array_merge(['/me/documents/index'], $viewQuery, ['view' 
 $viewGridUrl = Url::to(array_merge(['/me/documents/index'], $viewQuery, ['view' => 'grid']));
 $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
 
-/** @var array{total:int,unread:int,bookmarked:int,urgent:int} $documentStats */
+/** @var app\modules\dms\models\DocumentSearch $searchModel */
 /** @var string|null $activeKpi */
-$documentStats = $documentStats ?? ['total' => 0, 'unread' => 0, 'bookmarked' => 0, 'urgent' => 0];
+/** @var yii\data\ActiveDataProvider|null $dataProvider เฉพาะโหมดฝังรายการ (isset($list)) */
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 w-100">
@@ -42,23 +41,126 @@ $documentStats = $documentStats ?? ['total' => 0, 'unread' => 0, 'bookmarked' =>
     </div>
 
     <div id="me-documents-kpi-wrap">
-        <?= $this->render('kpi_summary', [
-            'documentStats' => $documentStats,
-            'activeKpi' => $activeKpi ?? null,
-        ]) ?>
+        <?= $this->render('_register_ajax_placeholder_kpi') ?>
     </div>
     <?php
-    $this->registerJs(
-        'window.meDocumentsIndexConfig = ' . Json::encode([
-            'refreshUrl' => Url::to(['/me/documents/ajax-refresh']),
-            'queryParams' => Yii::$app->request->getQueryParams(),
-        ]) . ';',
-        View::POS_HEAD
-    );
-    $this->registerJsFile('@web/js/me-documents-index.js', [
-        'depends' => [JqueryAsset::class],
-        'position' => View::POS_END,
-    ]);
+    $meDocumentsIndexJs = 'window.meDocumentsIndexConfig = ' . Json::encode([
+        'refreshUrl' => Url::to(['/me/documents/ajax-refresh']),
+        'queryParams' => Yii::$app->request->getQueryParams(),
+    ]) . ";\n" . <<<'ME_DOCS_JS'
+(function ($) {
+  "use strict";
+  var refreshTimer = null;
+  function getCfg() {
+    return window.meDocumentsIndexConfig || {};
+  }
+  function isMeDocumentsRegisterShell() {
+    return document.getElementById("me-documents-list-wrap") !== null;
+  }
+  function applyRegisterPayload(res) {
+    if (!res || !res.success) {
+      return;
+    }
+    var $kpi = $("#me-documents-kpi-wrap");
+    var $list = $("#me-documents-list-wrap");
+    if (typeof res.kpiHtml === "string" && $kpi.length) {
+      $kpi.html(res.kpiHtml);
+    }
+    if (typeof res.listHtml === "string" && $list.length) {
+      $list.html(res.listHtml);
+    }
+    if (res.totalCount !== undefined && $("#totalCount").length) {
+      $("#totalCount").text(String(res.totalCount));
+    }
+  }
+  function showRegisterError(message) {
+    var $list = $("#me-documents-list-wrap");
+    var $kpi = $("#me-documents-kpi-wrap");
+    var msg = message || "โหลดทะเบียนหนังสือไม่สำเร็จ กรุณารีเฟรชหน้า";
+    if ($list.length) {
+      $list.html(
+        '<div class="p-4 text-center text-danger small">' +
+          $("<div>").text(msg).html() +
+          "</div>"
+      );
+    }
+    if ($kpi.length) {
+      $kpi.html(
+        '<div class="p-3 text-center text-danger small">' +
+          $("<div>").text(msg).html() +
+          "</div>"
+      );
+    }
+  }
+  function fetchRegister() {
+    var cfg = getCfg();
+    if (!cfg.refreshUrl) {
+      return;
+    }
+    $.ajax({
+      url: cfg.refreshUrl,
+      type: "GET",
+      dataType: "json",
+      data: cfg.queryParams || {},
+      cache: false,
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .done(function (res) {
+        if (!res || res.success !== true) {
+          showRegisterError(
+            (res && res.message) || "เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง"
+          );
+          return;
+        }
+        applyRegisterPayload(res);
+      })
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        var hint =
+          textStatus === "parsererror"
+            ? "รูปแบบข้อมูลไม่ใช่ JSON (ตรวจสอบ URL / actionAjaxRefresh)"
+            : errorThrown || textStatus || "เครือข่ายผิดพลาด";
+        showRegisterError(hint);
+      });
+  }
+  function scheduleFetchRegister() {
+    var cfg = getCfg();
+    if (!cfg.refreshUrl) {
+      return;
+    }
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(fetchRegister, 150);
+  }
+  function urlSignalsMeDocumentsViewOrBookmark(url) {
+    if (!url || typeof url !== "string") {
+      return false;
+    }
+    return /me(\/|%2F)documents(\/|%2F)(view|bookmark)/i.test(url);
+  }
+  $(function () {
+    if (isMeDocumentsRegisterShell() && getCfg().refreshUrl) {
+      fetchRegister();
+    }
+  });
+  $(document).ajaxComplete(function (event, xhr, settings) {
+    if (!isMeDocumentsRegisterShell() || !getCfg().refreshUrl) {
+      return;
+    }
+    if (!settings || xhr.status !== 200) {
+      return;
+    }
+    var url = settings.url || "";
+    if (!urlSignalsMeDocumentsViewOrBookmark(url)) {
+      return;
+    }
+    var ct = xhr.getResponseHeader("Content-Type") || "";
+    if (/documents(\/|%2F)view/i.test(url) && ct.indexOf("json") === -1) {
+      return;
+    }
+    scheduleFetchRegister();
+  });
+})(jQuery);
+ME_DOCS_JS;
+    $this->registerJs($meDocumentsIndexJs, View::POS_READY);
     ?>
 <?php endif; ?>
 
@@ -100,33 +202,33 @@ $documentStats = $documentStats ?? ['total' => 0, 'unread' => 0, 'bookmarked' =>
                     </div>
                 <?php endif; ?>
 
-                <?php if (!isset($list)): ?>
-                <div id="me-documents-list-wrap">
-                <?php endif; ?>
-                <?php if ($isTableView): ?>
-                    <?= $this->render('_list', [
-                        'dataProvider' => $dataProvider,
-                        'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument ?? [],
-                        'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById ?? [],
-                        'readAtByRoutingId' => $readAtByRoutingId ?? [],
-                    ]) ?>
-                <?php else: ?>
-                    <?= $this->render('_grid', [
-                        'dataProvider' => $dataProvider,
-                        'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument ?? [],
-                        'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById ?? [],
-                        'readAtByRoutingId' => $readAtByRoutingId ?? [],
-                    ]) ?>
-                <?php endif; ?>
-                <?php if (!isset($list)): ?>
-                </div>
+                <?php if (isset($list) && isset($dataProvider)): ?>
+                    <?php if ($isTableView): ?>
+                        <?= $this->render('_list', [
+                            'dataProvider' => $dataProvider,
+                            'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument ?? [],
+                            'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById ?? [],
+                            'readAtByRoutingId' => $readAtByRoutingId ?? [],
+                        ]) ?>
+                    <?php else: ?>
+                        <?= $this->render('_grid', [
+                            'dataProvider' => $dataProvider,
+                            'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument ?? [],
+                            'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById ?? [],
+                            'readAtByRoutingId' => $readAtByRoutingId ?? [],
+                        ]) ?>
+                    <?php endif; ?>
+                <?php elseif (!isset($list)): ?>
+                    <div id="me-documents-list-wrap">
+                        <?= $this->render('_register_ajax_placeholder_list') ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-<span id="totalCount" class="d-none"><?= (int) $dataProvider->getTotalCount() ?></span>
+<span id="totalCount" class="d-none"><?= (isset($list) && isset($dataProvider)) ? (int) $dataProvider->getTotalCount() : 0 ?></span>
 
 <?php
 $js = <<< JS
