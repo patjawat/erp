@@ -111,9 +111,17 @@ $geofencesJson = json_encode($geofencesForJs, JSON_UNESCAPED_UNICODE);
                 <input type="hidden" id="photo_path" name="photo_path">
             </div>
             <div class="col-12 mt-3">
-                <p class="text-muted small mb-0">
-                    <i class="bi bi-geo-alt me-1"></i> <span id="coord-display">กำลังดึงตำแหน่ง...</span>
+                <p class="text-muted small mb-2">
+                    <i class="bi bi-geo-alt me-1"></i> <span id="coord-display">กำลังตรวจสอบสิทธิ์ตำแหน่ง...</span>
                 </p>
+                <div id="location-permission-wrap" class="d-none alert alert-primary border-0 mb-0 py-3" role="region" aria-label="ขออนุญาตตำแหน่ง">
+                    <p class="small fw-semibold mb-1" id="location-permission-title">ขอใช้ตำแหน่งเพื่อลงเวลา</p>
+                    <p class="small mb-3" id="location-permission-text"></p>
+                    <button type="button" id="btn-allow-location" class="btn btn-light text-primary fw-semibold w-100 rounded-3">
+                        <i class="bi bi-geo-alt-fill me-1"></i> อนุญาตใช้ตำแหน่ง
+                    </button>
+                    <p class="small mb-0 mt-2 d-none opacity-75" id="location-permission-extra"></p>
+                </div>
                 <div id="geofence-status" class="alert alert-light border small py-2 mb-0 mt-2 d-none" role="status"></div>
             </div>
             <input type="hidden" id="lat" name="lat">
@@ -246,20 +254,85 @@ $this->registerJs(<<<JS
         if (la != null && ln != null)
             $('#coord-display').text('พิกัด: ' + la.toFixed(5) + ', ' + ln.toFixed(5));
         else
-            $('#coord-display').text('ไม่ได้รับพิกัด (อนุญาตตำแหน่งหรือลองใหม่)');
+            $('#coord-display').text('ยังไม่มีพิกัด — กดปุ่มด้านล่างเพื่ออนุญาตตำแหน่ง');
         refreshGeofenceUI(la, ln);
     }
 
-    if (navigator.geolocation) {
+    function showLocationPrompt(show, text, extra) {
+        var \$w = $('#location-permission-wrap');
+        var \$ex = $('#location-permission-extra');
+        if (show) {
+            \$w.removeClass('d-none');
+            $('#location-permission-text').text(text || '');
+            if (extra) {
+                \$ex.removeClass('d-none').text(extra);
+            } else {
+                \$ex.addClass('d-none').text('');
+            }
+        } else {
+            \$w.addClass('d-none');
+            \$ex.addClass('d-none').text('');
+        }
+    }
+
+    function fetchLocation() {
+        var \$btn = $('#btn-allow-location');
+        \$btn.prop('disabled', true);
+        $('#coord-display').text('กำลังขอตำแหน่ง...');
+        if (!navigator.geolocation) {
+            setCoord(null, null);
+            showLocationPrompt(true,
+                'เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง',
+                '');
+            \$btn.prop('disabled', true);
+            return;
+        }
         navigator.geolocation.getCurrentPosition(
             function(p) {
+                \$btn.prop('disabled', false);
+                showLocationPrompt(false);
                 setCoord(p.coords.latitude, p.coords.longitude);
             },
-            function() { setCoord(null, null); },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            function(err) {
+                \$btn.prop('disabled', false);
+                setCoord(null, null);
+                var code = err && err.code;
+                var msg = 'ยังไม่ได้รับตำแหน่ง กรุณากดปุ่ม «อนุญาตใช้ตำแหน่ง» แล้วเลือกอนุญาตเมื่อระบบถาม';
+                var extra = '';
+                if (code === 1) {
+                    msg = 'ยังไม่อนุญาตให้ใช้ตำแหน่ง กรุณากดปุ่มด้านล่าง แล้วเลือกอนุญาตในหน้าต่างของเบราว์เซอร์';
+                    extra = 'ถ้าเคยปฏิเสธไว้ ให้ไปที่การตั้งค่าเบราว์เซอร์ > ความเป็นส่วนตัว/ตำแหน่ง แล้วอนุญาตสำหรับเว็บไซต์นี้';
+                } else if (code === 2) {
+                    msg = 'ระบบหาตำแหน่งไม่ได้ชั่วคราว ลองอีกครั้งในที่โล่งหรือเปิด GPS';
+                } else if (code === 3) {
+                    msg = 'หมดเวลารอตำแหน่ง กรุณากดปุ่มเพื่อลองใหม่';
+                }
+                showLocationPrompt(true, msg, extra);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
         );
+    }
+
+    $('#btn-allow-location').on('click', function() { fetchLocation(); });
+
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then(function(status) {
+            if (status.state === 'denied') {
+                setCoord(null, null);
+                showLocationPrompt(true,
+                    'การใช้ตำแหน่งถูกปิดไว้ในเบราว์เซอร์ กรุณาเปิดสิทธิ์ตำแหน่งในการตั้งค่า แล้วกดปุ่มด้านล่างเพื่อลองใหม่',
+                    'iOS: ตั้งค่า > Safari > ตำแหน่ง — Android: ตั้งค่าแอปเบราว์เซอร์ > สิทธิ์ > ตำแหน่ง');
+                return;
+            }
+            status.onchange = function() {
+                if (status.state === 'granted') {
+                    fetchLocation();
+                }
+            };
+            fetchLocation();
+        }).catch(function() { fetchLocation(); });
     } else {
-        setCoord(null, null);
+        fetchLocation();
     }
 
     $('#btn-checkin').on('click', function() {

@@ -82,6 +82,12 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
                     <span class="fw-semibold small">ขอลา</span>
                 </a>
             </div>
+            <div class="col-12">
+                <a href="<?= Html::encode(Url::to(['/mobile/default/attendance'])) ?>" class="card home-quick-action flex-row justify-content-center gap-2 py-3">
+                    <i data-lucide="clock" class="qa-icon mb-0"></i>
+                    <span class="fw-semibold small">ลงเวลาเข้า-ออกงาน</span>
+                </a>
+            </div>
         </div>
     </div>
 

@@ -6,6 +6,9 @@ use Yii;
 use yii\web\Controller;
 use yii\filters\AccessControl;
 use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\attendance\models\CheckinLocation;
+use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
 use app\modules\am\models\Asset;
@@ -94,6 +97,37 @@ class DefaultController extends Controller
         $this->view->title = 'บริการ';
         return $this->render('services', [
             'current_page' => 'services',
+        ]);
+    }
+
+    /**
+     * ลงเวลาเข้า-ออกงาน (เรียกบันทึกผ่าน attendance/default/save เหมือนเว็บหลัก).
+     */
+    public function actionAttendance()
+    {
+        $this->view->title = 'ลงเวลาเข้า-ออก';
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน กรุณาติดต่อ HR');
+            return $this->redirect(['/mobile/default/index']);
+        }
+        $geofences = [];
+        $lastCheckin = null;
+        try {
+            $geofences = CheckinLocation::findActiveGeofenced();
+            $lastCheckin = CheckinRecord::find()
+                ->andWhere(['emp_id' => $me->id])
+                ->orderBy(['checkin_at' => SORT_DESC])
+                ->one();
+        } catch (\Throwable $e) {
+            $geofences = [];
+            $lastCheckin = null;
+        }
+        return $this->render('attendance', [
+            'current_page' => 'attendance',
+            'employee' => $me,
+            'geofences' => $geofences,
+            'lastCheckin' => $lastCheckin,
         ]);
     }
 

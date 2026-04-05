@@ -7,6 +7,12 @@ $this->params['mobileSubtitle'] = 'เลือกบริการที่ต
 
 $services = [
     [
+        'icon'  => 'clock',
+        'label' => 'ลงเวลาเข้า-ออก',
+        'desc'  => 'บันทึกเวลาเข้างานและออกงาน',
+        'url'   => \yii\helpers\Url::to(['/mobile/default/attendance']),
+    ],
+    [
         'icon'  => 'car',
         'label' => 'จองรถราชการ',
         'desc'  => 'จองรถสำหรับการเดินทางราชการ',
