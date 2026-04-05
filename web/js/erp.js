@@ -199,12 +199,12 @@ $("body").on("click", ".bookmark", function (e) {
       if (res.data.bookmark == "Y") {
         $("body")
           .find(".bookmark-star-" + id)
-          .html('<i class="fa-solid fa-star text-warning"></i>');
+          .html('<i class="fa-solid fa-bookmark text-warning"></i>');
         success("ติดดาว");
       } else if (res.data.bookmark == "N") {
         $("body")
           .find(".bookmark-star-" + id)
-          .html('<i class="fa-regular fa-star"></i>');
+          .html('<i class="fa-regular fa-bookmark"></i>');
         success("ยกเลิกติดดาว");
       }
       // location.reload();

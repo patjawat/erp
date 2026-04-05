@@ -172,13 +172,13 @@ $equipSubtitle = static function ($item): string {
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
                                 <?= Html::a('<i class="fa-solid fa-eye" aria-hidden="true"></i>', ['maintenance', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-info text-white',
+                                    'class' => 'btn btn-sm btn-primary',
                                     'title' => 'บำรุงรักษา',
                                     'data-pjax' => 0,
                                 ]) ?>
                                 <?php if (Yii::$app->user->can('asset')): ?>
                                     <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', ['update', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-outline-warning',
+                                        'class' => 'btn btn-sm btn-warning',
                                         'title' => 'แก้ไข',
                                         'data-pjax' => 0,
                                     ]) ?>

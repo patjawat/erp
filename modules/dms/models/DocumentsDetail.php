@@ -358,6 +358,54 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         }
     }
 
+    /**
+     * วันเวลาอ่านของพนักงานต่อแถว routing (department/tags) ตรงกับ actionView: name=read, from_id=id แถวถึงหน่วยงาน/tags, to_id=พนักงาน
+     *
+     * @param int[] $routingDetailIds
+     * @return array<int,string> routing detail id => doc_read (datetime)
+     */
+    public static function readRecordTimesByRoutingFromIds(array $routingDetailIds, int $employeeId): array
+    {
+        $routingDetailIds = array_values(array_unique(array_filter(array_map('intval', $routingDetailIds))));
+        if ($routingDetailIds === []) {
+            return [];
+        }
+
+        $toOr = [
+            'or',
+            ['to_id' => (string) $employeeId],
+            ['to_id' => $employeeId],
+        ];
+
+        $rows = static::find()
+            ->select(['from_id', 'doc_read'])
+            ->where(['name' => 'read'])
+            ->andWhere($toOr)
+            ->andWhere(['from_id' => $routingDetailIds])
+            ->andWhere(['not', ['doc_read' => null]])
+            ->orderBy(['doc_read' => SORT_DESC])
+            ->asArray()
+            ->all();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $fromId = (int) $row['from_id'];
+            if (isset($map[$fromId])) {
+                continue;
+            }
+            $dr = $row['doc_read'] ?? null;
+            if ($dr === null || $dr === '' || trim((string) $dr) === '') {
+                continue;
+            }
+            if (strpos((string) $dr, '0000-00-00') === 0) {
+                continue;
+            }
+            $map[$fromId] = is_string($dr) ? $dr : (string) $dr;
+        }
+
+        return $map;
+    }
+
     //ปักหมุดเอกสาร
     public function docRead()
     {
@@ -367,13 +415,13 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         if ($model && $model->bookmark == 'Y') {
             return [
                 'status' => $model->bookmark,
-                'view' => $model->bookmark == 'Y' ? '<i class="fa-solid fa-star text-warning"></i>' : '<i class="fa-regular fa-star"></i>',
+                'view' => $model->bookmark == 'Y' ? '<i class="fa-solid fa-bookmark text-warning"></i>' : '<i class="fa-regular fa-star"></i>',
                 'read_date' => $model->doc_read ? (ThaiDateHelper::formatThaiDate($model->doc_read) . ' ' . (explode(' ',$model->doc_read)[1]) ?? '') : ''
             ];
         }else{
             return [
                 'status' => 'N',
-                'view' => '<i class="fa-regular fa-star"></i>',
+                'view' => '<i class="fa-regular fa-bookmark"></i>',
                 'read_date' => ''
             ];
         }
