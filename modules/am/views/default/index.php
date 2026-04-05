@@ -92,11 +92,11 @@ $disposals = $recentActivities['disposals'] ?? [];
     <div class="row g-4 mt-1">
       <div class="col-6 col-md-4 col-lg">
         <div class="card">
-          <div class="card-body py-3">
+          <div class="card-body py-2">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
               <div class="d-flex flex-column gap-3">
                 <span class="fw-bold fs-3"><?= (int) ($kpis['total_assets'] ?? 0) ?></span>
-                <span class="text-muted">ครุภัณฑ์ทั้งหมด (รายการ)</span>
+                <span class="text-primary">ครุภัณฑ์ทั้งหมด (รายการ)</span>
               </div>
               <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill">
                 <i data-lucide="package"></i>
@@ -107,11 +107,11 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
       <div class="col-6 col-md-4 col-lg">
         <div class="card">
-          <div class="card-body py-3">
+          <div class="card-body py-2">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
               <div class="d-flex flex-column gap-3">
                 <span class="fw-bold fs-3"><?= (int) ($kpis['exceeding_useful_life'] ?? 0) ?></span>
-                <span class="text-muted">เกินอายุการใช้งาน (รายการ)</span>
+                <span class="text-danger">เกินอายุการใช้งาน (รายการ)</span>
               </div>
               <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-pill">
                 <i data-lucide="history"></i>
@@ -122,11 +122,11 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
       <div class="col-6 col-md-4 col-lg">
         <div class="card">
-          <div class="card-body py-3">
+          <div class="card-body py-2">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
               <div class="d-flex flex-column gap-3">
                 <span class="fw-bold fs-3"><?= (int) ($kpis['under_repair'] ?? 0) ?></span>
-                <span class="text-muted">ส่งซ่อม (รายการ)</span>
+                <span class="text-warning">ส่งซ่อม (รายการ)</span>
               </div>
               <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill">
                 <i data-lucide="wrench"></i>
@@ -137,11 +137,11 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
       <div class="col-6 col-md-4 col-lg">
         <div class="card">
-          <div class="card-body py-3">
+          <div class="card-body py-2">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
               <div class="d-flex flex-column gap-3">
                 <span class="fw-bold fs-3"><?= (int) ($kpis['waiting_disposal'] ?? 0) ?></span>
-                <span class="text-muted">รอจำหน่าย (รายการ)</span>
+                <span class="text-secondary">รอจำหน่าย (รายการ)</span>
               </div>
               <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-pill">
                 <i data-lucide="trash-2"></i>
@@ -152,11 +152,11 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
       <div class="col-6 col-md-4 col-lg">
         <div class="card">
-          <div class="card-body py-3">
+          <div class="card-body py-2">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
               <div class="d-flex flex-column gap-3">
                 <span class="fw-bold fs-3"><?= Html::encode(number_format($kpis['estimated_replacement_cost'] ?? 0, 0)) ?></span>
-                <span class="text-muted">มูลค่าแทนที่ (บาท)</span>
+                <span class="text-info">มูลค่าแทนที่ (บาท)</span>
               </div>
               <div class="bg-info bg-opacity-10 text-info p-3 rounded-pill">
                 <i data-lucide="banknote"></i>

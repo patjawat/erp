@@ -8,6 +8,18 @@ $this->params['breadcrumbs'][] = ['label' => 'ลงเวลา', 'url' => ['/a
 $this->params['breadcrumbs'][] = $this->title;
 
 $saveUrl = Url::to(['/attendance/default/save']);
+$geofences = $geofences ?? [];
+$geofencesForJs = [];
+foreach ($geofences as $g) {
+    $geofencesForJs[] = [
+        'id' => (int)$g->id,
+        'name' => $g->name,
+        'lat' => (float)$g->lat,
+        'lng' => (float)$g->lng,
+        'radius_m' => (int)$g->radius_m,
+    ];
+}
+$geofencesJson = json_encode($geofencesForJs, JSON_UNESCAPED_UNICODE);
 ?>
 <?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/me/menu', ['active' => 'checkin']) ?>
@@ -102,6 +114,7 @@ $saveUrl = Url::to(['/attendance/default/save']);
                 <p class="text-muted small mb-0">
                     <i class="bi bi-geo-alt me-1"></i> <span id="coord-display">กำลังดึงตำแหน่ง...</span>
                 </p>
+                <div id="geofence-status" class="alert alert-light border small py-2 mb-0 mt-2 d-none" role="status"></div>
             </div>
             <input type="hidden" id="lat" name="lat">
             <input type="hidden" id="lng" name="lng">
@@ -125,9 +138,62 @@ $saveUrlJs = json_encode($saveUrl);
 $this->registerJs(<<<JS
 (function(){
     var saveUrl = $saveUrlJs;
+    var geofences = $geofencesJson;
     var currentMethod = 'manual';
     var currentCheckType = 'in';
     var lat = null, lng = null;
+
+    function escHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function haversineM(lat1, lon1, lat2, lon2) {
+        var R = 6371000;
+        var toRad = function(x) { return x * Math.PI / 180; };
+        var dLat = toRad(lat2 - lat1);
+        var dLon = toRad(lon2 - lon1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    function refreshGeofenceUI(la, ln) {
+        var \$box = $('#geofence-status');
+        if (!geofences || !geofences.length) {
+            \$box.addClass('d-none').removeClass('alert-success alert-warning alert-danger').text('');
+            return;
+        }
+        if (la == null || ln == null) {
+            \$box.removeClass('d-none alert-success alert-warning').addClass('alert-danger')
+                .html('<i class="bi bi-exclamation-triangle me-1"></i>องค์กรกำหนดบริเวณลงเวลา — ต้องได้รับพิกัด GPS ก่อนลงเวลา');
+            return;
+        }
+        var inside = null;
+        var nearest = null;
+        var nearestD = null;
+        for (var i = 0; i < geofences.length; i++) {
+            var z = geofences[i];
+            var d = haversineM(la, ln, z.lat, z.lng);
+            if (d <= z.radius_m) {
+                inside = z;
+                break;
+            }
+            if (nearestD === null || d < nearestD) {
+                nearestD = d;
+                nearest = z;
+            }
+        }
+        if (inside) {
+            \$box.removeClass('d-none alert-warning alert-danger').addClass('alert-success')
+                .html('<i class="bi bi-check-circle me-1"></i>อยู่ในบริเวณที่อนุญาต: «' + escHtml(inside.name) + '» (รัศมี ' + inside.radius_m + ' ม.)');
+        } else if (nearest) {
+            \$box.removeClass('d-none alert-success alert-danger').addClass('alert-warning')
+                .html('<i class="bi bi-geo-alt me-1"></i>ยังไม่อยู่ในรัศมีที่กำหนด — ห่างจาก «' + escHtml(nearest.name) + '» ~' + Math.round(nearestD) + ' ม. (อนุญาต ' + nearest.radius_m + ' ม.)');
+        } else {
+            \$box.addClass('d-none').text('');
+        }
+    }
 
     function updateCheckTypeUI() {
         $('.check-type-btn').removeClass('border-2 border-success border-secondary bg-success bg-opacity-10 bg-secondary bg-opacity-10').addClass('border');
@@ -181,6 +247,7 @@ $this->registerJs(<<<JS
             $('#coord-display').text('พิกัด: ' + la.toFixed(5) + ', ' + ln.toFixed(5));
         else
             $('#coord-display').text('ไม่ได้รับพิกัด (อนุญาตตำแหน่งหรือลองใหม่)');
+        refreshGeofenceUI(la, ln);
     }
 
     if (navigator.geolocation) {
@@ -189,7 +256,7 @@ $this->registerJs(<<<JS
                 setCoord(p.coords.latitude, p.coords.longitude);
             },
             function() { setCoord(null, null); },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     } else {
         setCoord(null, null);

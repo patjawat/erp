@@ -29,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ],
                 [
                     'attribute' => 'radius_m',
-                    'label' => 'รัศมี (ม.)',
+                    'label' => 'รัศมี GPS (ม.)',
                 ],
                 [
                     'attribute' => 'active',

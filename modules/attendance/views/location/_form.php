@@ -18,7 +18,8 @@ $isNew = $model->isNewRecord;
                 <?= $form->field($model, 'lng')->textInput(['type' => 'number', 'step' => 'any', 'class' => 'form-control', 'placeholder' => '100.5018'])->label('Longitude') ?>
             </div>
             <div class="col-12 col-md-6">
-                <?= $form->field($model, 'radius_m')->textInput(['type' => 'number', 'min' => 0, 'class' => 'form-control'])->label('รัศมี (เมตร) — 0 = ไม่บังคับตรวจพิกัด') ?>
+                <?= $form->field($model, 'radius_m')->textInput(['type' => 'number', 'min' => 0, 'max' => 100000, 'class' => 'form-control'])->label('รัศมีอนุญาตลงเวลา (เมตร)') ?>
+                <p class="form-text text-muted small mb-0">ระยะห่างสูงสุดจากจุดศูนย์กลาง (Lat/Lng) ที่ยอมรับเมื่อลงเวลาด้วย GPS — ใส่ 0 = ไม่ใช้รัศมีกับจุดนี้ (ถ้าทุกจุดเป็น 0 ระบบจะไม่บังคับตรวจพิกัด)</p>
             </div>
             <div class="col-12 col-md-6">
                 <?= $form->field($model, 'qr_token')->textInput(['class' => 'form-control', 'placeholder' => 'เว้นว่างให้ระบบสร้างอัตโนมัติ'])->label('ค่า QR (ถ้ามี)') ?>

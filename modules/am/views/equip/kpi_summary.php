@@ -11,11 +11,11 @@ use yii\helpers\Html;
     <!-- ทรัพย์สินทั้งหมด -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body py-3">
+        <div class="card-body py-2">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex flex-column gap-3">
               <span class="fw-bold fs-3"><?= (int) $equipStats['total'] ?></span> 
-              <span class="text-muted">ทรัพย์สินทั้งหมด (รายการ)</span>
+              <span class="text-primary">ทรัพย์สินทั้งหมด (รายการ)</span>
             </div>
             <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill">
               <i data-lucide="package"></i>
@@ -28,11 +28,11 @@ use yii\helpers\Html;
     <!-- สภาพดี -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body py-3">
+        <div class="card-body py-2">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-            <div class="d-flex flex-column gap-3 fw-bold fs-4">
+            <div class="d-flex flex-column gap-3">
               <span class="fw-bold fs-3"><?= (int) $equipStats['good'] ?></span> 
-              <span class="text-muted">สภาพดี (รายการ)</span>
+              <span class="text-success">สภาพดี (รายการ)</span>
             </div>
             <div class="bg-success bg-opacity-10 text-success p-3 rounded-pill">
               <i data-lucide="check-circle"></i>
@@ -45,11 +45,11 @@ use yii\helpers\Html;
     <!-- ชำรุด / รอซ่อม -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body py-3">
+        <div class="card-body py-2">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex flex-column gap-3">
               <span class="fw-bold fs-3"><?= (int) $equipStats['damaged'] ?></span> 
-              <span class="text-muted">ชำรุด / รอซ่อม (รายการ)</span>
+              <span class="text-warning">ชำรุด / รอซ่อม (รายการ)</span>
             </div>
             <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill">
               <i data-lucide="wrench"></i>
@@ -62,11 +62,11 @@ use yii\helpers\Html;
     <!-- รวมราคาแรกรับ -->
     <div class="col-md-3">
       <div class="card">
-        <div class="card-body py-3">
+        <div class="card-body py-2">
           <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex flex-column gap-3">
               <span class="fw-bold fs-3"><?= Html::encode(number_format($equipStats['total_value'], 2)) ?></span> 
-              <span class="text-muted">รวมราคาแรกรับ (บาท)</span>
+              <span class="text-info">รวมราคาแรกรับ (บาท)</span>
             </div>
             <div class="bg-info bg-opacity-10 text-info p-3 rounded-pill">
               <i data-lucide="banknote"></i>

@@ -19,60 +19,66 @@ $kpiUrl = static function (?string $key) use ($params): string {
     return Url::to(array_merge(['/me/documents/index'], $p));
 };
 
-$cardClass = static function (?string $key) use ($activeKpi): string {
-    $base = 'card border-0 shadow-sm h-100 text-decoration-none text-body';
+$isKpiActive = static function (?string $key) use ($activeKpi): bool {
     if ($key === null) {
-        $isActive = $activeKpi === null || $activeKpi === 'total';
-    } else {
-        $isActive = ($activeKpi === $key);
+        return $activeKpi === null || $activeKpi === 'total';
     }
-    return $base . ($isActive ? ' border border-primary border-2' : '');
+    return $activeKpi === $key;
 };
+
+/**
+ * มาตรฐาน kpi_card: card + เส้นบน accent, body py-3, แถว flex ซ้ายตัวเลข+ป้าย / ขวาไอคอนใน pill
+ *
+ * @param string $theme primary|secondary|warning|danger
+ */
+$renderKpiCard = static function (
+    string $url,
+    int $value,
+    string $label,
+    string $iconBi,
+    string $theme,
+    bool $isActive
+): string {
+    $cardClass = 'card text-decoration-none text-body';
+    if ($isActive) {
+        $cardClass .= ' border border-' . $theme . ' border-3 border-top-3 border-start-0 border-end-0 border-bottom-0';
+    } else {
+        $cardClass .= ' border-0 shadow-sm';
+    }
+    $labelClass = $isActive ? 'text-' . $theme : 'text-muted small';
+    $inner = '<div class="card-body py-2">'
+        . '<div class="d-flex align-items-center justify-content-between gap-2 mb-2">'
+        . '<div class="d-flex flex-column gap-3">'
+        . '<span class="fw-bold fs-3">' . (int) $value . '</span>'
+        . '<span class="' . Html::encode($labelClass) . '">' . Html::encode($label) . '</span>'
+        . '</div>'
+        . '<div class="bg-' . $theme . ' bg-opacity-10 text-' . $theme . ' p-3 rounded-pill">'
+        . '<i class="bi ' . Html::encode($iconBi) . '" aria-hidden="true"></i>'
+        . '</div>'
+        . '</div></div>';
+
+    return Html::a($inner, $url, ['class' => $cardClass, 'data-pjax' => 0]);
+};
+
+$items = [
+    ['key' => null, 'kpi' => 'total', 'label' => 'หนังสือทั้งหมด (รายการ)', 'icon' => 'bi-inbox', 'theme' => 'primary'],
+    ['key' => 'unread', 'kpi' => 'unread', 'label' => 'ยังไม่ได้อ่าน (ฉบับ)', 'icon' => 'bi-envelope-open', 'theme' => 'secondary'],
+    ['key' => 'bookmarked', 'kpi' => 'bookmarked', 'label' => 'บันทึกไว้', 'icon' => 'bi-bookmark-fill', 'theme' => 'warning'],
+    ['key' => 'urgent', 'kpi' => 'urgent', 'label' => 'ด่วนที่สุด (รายการ)', 'icon' => 'bi-lightning-charge-fill', 'theme' => 'danger'],
+];
 ?>
 
 <div class="row g-3 mt-1">
-    <div class="col-6 col-xl-3">
-        <?= Html::a(
-            '<div class="card-body py-3"><div class="d-flex justify-content-between align-items-start gap-2">'
-            . '<div class="d-flex flex-column gap-2"><span class="fw-bold fs-3 mb-0">' . (int) $documentStats['total'] . '</span>'
-            . '<span class="text-muted small">หนังสือทั้งหมด (รายการ)</span></div>'
-            . '<div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill"><i class="bi bi-inbox" aria-hidden="true"></i></div>'
-            . '</div></div>',
-            $kpiUrl('total'),
-            ['class' => $cardClass(null), 'data-pjax' => 0]
-        ) ?>
-    </div>
-    <div class="col-6 col-xl-3">
-        <?= Html::a(
-            '<div class="card-body py-3"><div class="d-flex justify-content-between align-items-start gap-2">'
-            . '<div class="d-flex flex-column gap-2"><span class="fw-bold fs-3 mb-0">' . (int) $documentStats['unread'] . '</span>'
-            . '<span class="text-muted small">ยังไม่ได้อ่าน (ฉบับ)</span></div>'
-            . '<div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-pill"><i class="bi bi-envelope-open" aria-hidden="true"></i></div>'
-            . '</div></div>',
-            $kpiUrl('unread'),
-            ['class' => $cardClass('unread'), 'data-pjax' => 0]
-        ) ?>
-    </div>
-    <div class="col-6 col-xl-3">
-        <?= Html::a(
-            '<div class="card-body py-3"><div class="d-flex justify-content-between align-items-start gap-2">'
-            . '<div class="d-flex flex-column gap-2"><span class="fw-bold fs-3 mb-0">' . (int) $documentStats['bookmarked'] . '</span>'
-            . '<span class="text-muted small">บันทึกไว้ </span></div>'
-            . '<div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></div>'
-            . '</div></div>',
-            $kpiUrl('bookmarked'),
-            ['class' => $cardClass('bookmarked'), 'data-pjax' => 0]
-        ) ?>
-    </div>
-    <div class="col-6 col-xl-3">
-        <?= Html::a(
-            '<div class="card-body py-3"><div class="d-flex justify-content-between align-items-start gap-2">'
-            . '<div class="d-flex flex-column gap-2"><span class="fw-bold fs-3 mb-0">' . (int) $documentStats['urgent'] . '</span>'
-            . '<span class="text-muted small">ด่วนที่สุด (รายการ)</span></div>'
-            . '<div class="bg-danger bg-opacity-10 text-danger p-3 rounded-pill"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i></div>'
-            . '</div></div>',
-            $kpiUrl('urgent'),
-            ['class' => $cardClass('urgent'), 'data-pjax' => 0]
-        ) ?>
-    </div>
+    <?php foreach ($items as $item): ?>
+        <div class="col-6 col-xl-3">
+            <?= $renderKpiCard(
+                $kpiUrl($item['key']),
+                (int) $documentStats[$item['kpi']],
+                $item['label'],
+                $item['icon'],
+                $item['theme'],
+                $isKpiActive($item['key'])
+            ) ?>
+        </div>
+    <?php endforeach; ?>
 </div>
