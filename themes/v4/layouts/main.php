@@ -43,10 +43,6 @@ AppAsset::register($this);
         --erp-bg: #f3f7fa;
     }
 
-    /* body {
-        background-color: var(--erp-bg);
-    } */
-
     .header-fixed {
         position: sticky;
         top: 0;
