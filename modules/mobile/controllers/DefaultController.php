@@ -325,11 +325,29 @@ class DefaultController extends Controller
             $model->status = 'Pending';
             $model->save();
             $model->createApprove();
-            return $model;
+            return $this->redirect(['/mobile/default/leave-request-view', 'id' => $model->id]);
            
         }
 
         return $this->render('leave-request', [
+            'current_page' => 'services',
+            'model' => $model,
+        ]);
+    }
+
+    public function actionLeaveRequestView($id)
+    {
+        $this->view->title = 'รายละเอียดคำขอลา';
+        $model = Leave::findOne((int) $id);
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบคำขอลานี้');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+        if ($model->emp_id !== Yii::$app->user->identity->employee->id) {
+            Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์ดูคำขอลานี้');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+        return $this->render('leave_request_view', [
             'current_page' => 'services',
             'model' => $model,
         ]);
