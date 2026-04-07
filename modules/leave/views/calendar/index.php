@@ -48,7 +48,7 @@ $this->registerCss('
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu_user', ['active' => 'calendar']) ?>
+<?= $this->render('@app/modules/leave/menu_user', ['active' => 'calendar']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="row g-3">
