@@ -2,16 +2,18 @@
 
 namespace app\modules\mobile\controllers;
 
-use Yii;
-use yii\web\Controller;
-use yii\filters\AccessControl;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use app\modules\am\models\Asset;
 use app\modules\attendance\models\CheckinLocation;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
-use app\modules\am\models\Asset;
+use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveType;
+use Yii;
+use yii\filters\AccessControl;
+use yii\web\Controller;
 use yii\web\Response;
 
 /**
@@ -303,8 +305,33 @@ class DefaultController extends Controller
     public function actionLeaveRequest()
     {
         $this->view->title = 'ขอลาออนไลน์';
+       $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/leave/default/index']);
+        }
+
+        $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
+
+        $model = new Leave();
+        $model->ref = $ref;
+        $model->emp_id = $me->id;
+        $model->thai_year = (int) AppHelper::YearBudget();
+
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->status = 'Pending';
+            $model->save();
+            $model->createApprove();
+            return $model;
+           
+        }
+
         return $this->render('leave-request', [
             'current_page' => 'services',
+            'model' => $model,
         ]);
     }
 

@@ -421,7 +421,6 @@ class LeaveController extends Controller
         }
 
         $thaiYear = (int) AppHelper::YearBudget();
-        $budgetRange = AppHelper::BudgetYearRange($thaiYear);
         $roundLabel = 'รอบที่ 1 (1 ม.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
 
         $types = LeaveType::find()

@@ -25,6 +25,8 @@ if ($isUpdate) {
         if ($code !== '') $typeOptions[$code] = $t->title;
     }
 }
+
+
 $attrWorkShift      = $isUpdate ? 'data_json[work_shift]' : 'work_shift';
 $attrReason         = $isUpdate ? 'data_json[reason]' : 'reason';
 $attrPhone          = $isUpdate ? 'data_json[leave_contact_phone]' : 'contact_phone';
