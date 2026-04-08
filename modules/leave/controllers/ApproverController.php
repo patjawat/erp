@@ -39,11 +39,13 @@ class ApproverController extends Controller
         }
 
         $status = $this->request->get('status');
-        $searchModel = new LeaveSearch();
+        $searchModel = new LeaveSearch([
+            'status' => 'Checking2_pass'
+        ]);
+        // $params['LeaveSearch']['status'] = 'Checking2_pass'; // หน.กลุ่มงานเห็นชอบ — default หน้าแรก
         $params = $this->request->queryParams;
-        if (!isset($params['LeaveSearch']['status']) || $params['LeaveSearch']['status'] === '') {
-            $params['LeaveSearch']['status'] = 'Checking2_pass'; // หน.กลุ่มงานเห็นชอบ — default หน้าแรก
-        }
+        // if (!isset($params['LeaveSearch']['status']) || $params['LeaveSearch']['status'] === '') {
+        // }
         $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
         $query->joinWith([
