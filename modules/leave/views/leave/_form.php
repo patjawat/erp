@@ -1,10 +1,14 @@
 <?php
-use yii\helpers\Html;
-use yii\helpers\Url;
+
+use app\components\ApproveLevelResolver;
+use app\components\SiteHelper;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Employees;
 use kartik\widgets\ActiveForm;
 use kartik\widgets\Select2;
+use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\web\JsExpression;
-use app\modules\filemanager\components\FileManagerHelper;
 
 /** @var app\modules\leave\models\LeaveCreateForm|app\modules\leave\models\Leave $model */
 /** @var string $draftRef */
@@ -45,6 +49,28 @@ $name = $employee ? trim(($employee->fname ?? '') . ' ' . ($employee->lname ?? '
 $positionName = $employee && $employee->positionType ? $employee->positionType->title : '';
 $phone = $employee->phone ?? '';
 ?>
+
+<style>
+    .workflow-step .step-dot {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #dee2e6;
+        color: #6c757d;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .workflow-step.done .step-dot {
+        background: #5D5FEF;
+        color: #fff;
+    }
+</style>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2">
     <a href="<?= Url::to(['/leave/default/index']) ?>" class="btn btn-link btn-sm text-body p-0"><i class="bi bi-arrow-left fs-4"></i></a>
@@ -52,6 +78,76 @@ $phone = $employee->phone ?? '';
 </div>
 <?php $this->endBlock(); ?>
 
+
+
+<?php
+$rows = ApproveLevelResolver::resolve('leave', 802);
+
+// fallback: ถ้าไม่มี settings ให้ใช้ director เป็นผู้อนุมัติเสมอ
+if (empty($rows)) {
+    $dirInfo = SiteHelper::viewDirector();
+    $dirId   = !empty($dirInfo['id']) ? (int) $dirInfo['id'] : null;
+    echo "<pre>";
+    print_r($dirId);
+    echo "</pre>";
+
+    if ($dirId) {
+        $rows = [[
+            'from_id'   => (string) $this->id,
+            'name'      => 'leave',
+            'level'     => 1,
+            'title'     => 'ผู้อำนวยการ',
+            'emp_id'    => $dirId,
+            'status'    => 'Pending',
+            'data_json' => ['label' => 'ผู้อำนวยการ'],
+        ]];
+    } else {
+        return; // ไม่มีทั้ง settings และ director — ไม่สร้าง approve
+    }
+}
+
+// ใช้ผู้อนุมัติตามที่ resolve จาก approve_level_setting (ไม่เขียนทับเป็น ผอ. ทุกระดับ)
+// ผอ. ตามตั้งค่าองค์กร (settings/company) — อิงจาก data_json[director_name] ที่เก็บเป็น id
+$isDirector = \app\components\SiteHelper::isDirectorFromSettings(802);
+$approveDate = date('Y-m-d H:i:s');
+$firstPendingApprove = null;
+$first = true;
+
+foreach ($rows as $r) {
+    // $dataJson = ['label' => $r['label']];
+    // if ($r['approver_type'] === 'role') {
+    //     // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
+    //     $dataJson['role'] = 'role'; // placeholder
+    // }
+
+
+    // $a = new Approve();
+    // $a->from_id = (string) $this->id;
+    // $a->name    = 'leave';
+    // $a->level   = $r['level'];
+    // $a->title   = $r['label'];
+
+    // if ($isDirector) {
+    //     $a->emp_id    = (int) $this->emp_id;
+    //     $a->status    = 'Pass';
+    //     $a->data_json = ['label' => $r['label'], 'approve_date' => $approveDate];
+    // } else {
+    //     $a->emp_id    = $r['emp_id'];
+    //     $a->status    =  $first ? 'Pending' : 'None';
+    //     $a->data_json = $dataJson;
+    //     if ($a->status === 'Pending' && $firstPendingApprove === null) {
+    //         $firstPendingApprove = $a;
+    //     }
+    // }
+    // $a->save(false);
+    // $first = false;
+}
+
+// echo "<pre>";
+// print_r($rows);
+// echo "</pre>";
+
+?>
 <div class="container-fluid py-3">
     <?php $form = ActiveForm::begin([
         'id' => $isUpdate ? 'form-leave-update' : 'leave-create-form',
@@ -67,7 +163,7 @@ $phone = $employee->phone ?? '';
         ],
     ]); ?>
     <?php if ($isUpdate): ?>
-    <?= $form->field($model, 'id')->hiddenInput()->label(false) ?>
+        <?= $form->field($model, 'id')->hiddenInput()->label(false) ?>
     <?php endif; ?>
 
     <div class="col-12 col-lg-5">
@@ -99,12 +195,38 @@ $phone = $employee->phone ?? '';
                         <div class="fw-bold text-body"><?= Html::encode($name) ?></div>
                         <div class="small text-muted"><?= Html::encode($positionName) ?></div>
                         <?php if ($workShiftLabel !== ''): ?>
-                        <div class="small text-secondary">🕐 <?= Html::encode($workShiftLabel) ?></div>
+                            <div class="small text-secondary">🕐 <?= Html::encode($workShiftLabel) ?></div>
                         <?php endif; ?>
                         <div class="small text-primary">☎ <?= Html::encode($phone) ?></div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="row g-0">
+            <?php
+            $listApprove = ApproveLevelResolver::resolve('leave', $model->emp_id);
+            ?>
+            <?php foreach ($listApprove as $i => $step): ?>
+                <?php
+                $approveEmployee = Employees::findOne(['id' => $step['emp_id']]);
+                ?>
+                <div class="col-3 workflow-step ">
+
+
+                    <div class="step-dot">
+                        <?php
+                        if ($approveEmployee) {
+                            echo Html::img($approveEmployee->showAvatar(), ['class' => 'rounded-circle', 'width' => 35, 'height' => 35, 'style' => 'min-width: 35px; min-height: 35px;', 'alt' => $approveEmployee->fullname]);
+                        }
+                        ?>
+                    </div>
+                    <span class="step-label d-block text-truncate">
+                        <?= Html::encode($step['label']) ?>
+                    </span>
+
+                </div>
+            <?php endforeach; ?>
         </div>
 
         <!-- สถิติการลา (create และ update แสดงเหมือนกัน) -->
@@ -140,15 +262,15 @@ $phone = $employee->phone ?? '';
                         </thead>
                         <tbody class="table-group-divider">
                             <?php foreach ($stats as $row): ?>
-                            <tr>
-                                <td><?= Html::encode($row['title']) ?></td>
-                                <td class="text-center"><?= (int) $row['used_times'] ?></td>
-                                <td class="text-center"><?= (float) $row['used_days'] ?></td>
-                                <td class="text-center leave-this-times">0</td>
-                                <td class="text-center leave-this-days">0</td>
-                                <td class="text-center"><?= (int) $row['used_times'] ?></td>
-                                <td class="text-center"><?= (float) $row['used_days'] ?></td>
-                            </tr>
+                                <tr>
+                                    <td><?= Html::encode($row['title']) ?></td>
+                                    <td class="text-center"><?= (int) $row['used_times'] ?></td>
+                                    <td class="text-center"><?= (float) $row['used_days'] ?></td>
+                                    <td class="text-center leave-this-times">0</td>
+                                    <td class="text-center leave-this-days">0</td>
+                                    <td class="text-center"><?= (int) $row['used_times'] ?></td>
+                                    <td class="text-center"><?= (float) $row['used_days'] ?></td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -268,9 +390,9 @@ $phone = $employee->phone ?? '';
                     </div>
                 </div>
                 <?php if ($isUpdate): ?>
-                <?= $form->field($model, 'total_days')->hiddenInput(['id' => 'leave-total_days'])->label(false) ?>
+                    <?= $form->field($model, 'total_days')->hiddenInput(['id' => 'leave-total_days'])->label(false) ?>
                 <?php else: ?>
-                <?= $form->field($model, 'total_days_manual')->hiddenInput(['id' => 'leave-total_days_manual'])->label(false) ?>
+                    <?= $form->field($model, 'total_days_manual')->hiddenInput(['id' => 'leave-total_days_manual'])->label(false) ?>
                 <?php endif; ?>
                 <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded bg-body-secondary bg-opacity-25">
                     <i class="bi bi-file-text text-primary"></i>
@@ -347,12 +469,12 @@ $phone = $employee->phone ?? '';
                 </div>
 
                 <?php if ($isUpdate): ?>
-                <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
-                <?= $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'emp_id')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'data_json[leave_work_send]')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'data_json[title]')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'data_json[director]')->hiddenInput()->label(false) ?>
+                    <?= $form->field($model, 'data_json[director_fullname]')->hiddenInput()->label(false) ?>
                 <?php endif; ?>
 
                 <div class="text-end">

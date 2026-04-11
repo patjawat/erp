@@ -244,8 +244,9 @@ class Leave extends \yii\db\ActiveRecord
         $approveDate = date('Y-m-d H:i:s');
         $firstPendingApprove = null;
         $first = true;
-
+        $data = [];
         foreach ($rows as $r) {
+            
              $dataJson = ['label' => $r['label']];
             if ($r['approver_type'] === 'role') {
                 // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
@@ -273,7 +274,9 @@ class Leave extends \yii\db\ActiveRecord
             }
             $a->save(false);
             $first = false;
+            $data[] = $a;
         }
+        // return $data;
 
         if (!$isDirector && $firstPendingApprove && $firstPendingApprove->id) {
             try {
