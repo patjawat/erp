@@ -102,8 +102,8 @@ function format_no_round($number, $decimals = 2)
                             <td><?= $item['asset_name'] ?></td>
                             <td class="text-center"><?= $item['unit'] ?></td>
                             <td class="text-center"><?= $item['item_qty'] ?></td>
-                            <td class="text-end"><?=number_format($item['unit_price'],5) ?? 0 ?></td>
-                            <td class="text-end"><?= number_format($item['end_price'],5) ?? 0 ?></td>
+                            <td class="text-end"><?= number_format($item['unit_price'] ?? 0, 5) ?></td>
+                            <td class="text-end"><?= number_format($item['end_price'] ?? 0, 5) ?></td>
                         </tr>
                         <?php $totalPrice += ($item['end_price']); ?>
                     <?php endforeach; ?>

@@ -111,14 +111,14 @@
                <td><?= $item['asset_item'] ?></td>
                <td><?= $item['asset_name'] ?></td>
                <td><?= $item['asset_type_name'] ?></td>
-               <td class="text-end"><?= number_format($item['begin_qty'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['begin_price'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['qty_in'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['price_in'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['qty_out'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['price_out'], 5) ?></td>
-               <td class="text-end"><?= number_format($item['end_qty'] ?? 0, 5) ?></td>
-               <td class="text-end"><?= number_format($item['end_price'] ?? 0, 5) ?></td>
+              <td class="text-end"><?= number_format($item['begin_qty'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['begin_price'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['qty_in'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['price_in'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['qty_out'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['price_out'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['end_qty'] ?? 0, 5) ?></td>
+<td class="text-end"><?= number_format($item['end_price'] ?? 0, 5) ?></td>
              </tr>
            <?php endforeach; ?>
          </tbody>
