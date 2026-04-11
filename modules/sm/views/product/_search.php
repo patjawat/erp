@@ -48,16 +48,6 @@ use kartik\widgets\ActiveForm;
         ])->label(false);
         ?>
     </div>
-    <div class="col-lg-2 col-md-6 col-sm-12">
-        <?= $form->field($model, 'unit')->widget(Select2::classname(), [
-            'data' => $model->listUnit(),
-            'options' => ['placeholder' => 'หน่วยทั้งหมด'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-        ])->label(false);
-        ?>
-    </div>
     <div class="col-lg-2 col-md-6 col-sm-6">
         <div class="mt-1">
             <?= $form->field($model, 'innovation_account')->checkbox(['custom' => true, 'switch' => true, 'checked' => $model->innovation_account == "1" ? true : false])->label('แสดงบัญชีนวัตกรรม'); ?>
@@ -81,11 +71,6 @@ use kartik\widgets\ActiveForm;
                 'id' => 'summit'
             ]) ?>
 
-            <?= Html::a(
-                '<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
-                ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'],
-                ['class' => 'btn btn-light open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-lg']]
-            ) ?>
 
             <div class="dropdown w-100 w-md-auto">
                 <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"

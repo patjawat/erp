@@ -2,7 +2,7 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 
-$this->title = 'อาคาร';
+$this->title = 'สิ่งปลูกสร้าง';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -10,7 +10,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2 mb-1">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-<i data-lucide="building-2"></i>  
+<i data-lucide="construction"></i>  
         ทะเบียน<?= $this->title ?>
     </h4>
 </div>

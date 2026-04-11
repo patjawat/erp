@@ -105,7 +105,7 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status','useful_life'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
@@ -146,6 +146,7 @@ class Asset extends \yii\db\ActiveRecord
             'updated_by' => 'ผู้แก้ไข',
             'lifecycle_status' => 'สถานะวงจรชีวิต',
             'qr_code_path' => 'QR Code',
+            'asset_kind' => 'ประเภททรัพย์สิน',
         ];
     }
 

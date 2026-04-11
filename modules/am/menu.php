@@ -15,7 +15,8 @@ use yii\helpers\Url;
         </button>
         <ul class="dropdown-menu">
             <li><?= Html::a('<i data-lucide="map-pin-house" class="me-2" style="width:1rem;height:1rem;"></i> ที่ดิน', ['/am/land'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="building-2" class="me-2" style="width:1rem;height:1rem;"></i> อาคาร/สิ่งปลูกสร้าง', ['/am/building'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="building-2" class="me-2" style="width:1rem;height:1rem;"></i> อาคาร', ['/am/building'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="construction" class="me-2" style="width:1rem;height:1rem;"></i> สิ่งปลูกสร้าง', ['/am/structure'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="package" class="me-2" style="width:1rem;height:1rem;"></i> ครุภัณฑ์', ['/am/equip'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
