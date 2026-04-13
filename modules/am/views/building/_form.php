@@ -205,7 +205,7 @@ $group = Yii::$app->request->get('group');
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <?php
                             echo $form->field($model, 'asset_name', [
                                 'addon' => [
@@ -213,20 +213,11 @@ $group = Yii::$app->request->get('group');
                                 ]
                             ])->textInput([
                                 'maxlength' => true,
-                                'placeholder' => 'ระบุชื่อสิ่งปลูกสร้าง',
+                                'placeholder' => 'ระบุชื่ออาคาร',
                                 'readonly' => false,  // Make field readonly
                                 'class' => 'form-control'  // Add background color
-                            ])->label('ชื่อสิ่งปลูกสร้าง');
+                            ])->label('ชื่ออาคาร');
                             ?>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-12">
-                            <?php echo $form->field($model, 'data_json[building_type_name]')->textInput()->label('ประเภทสิ่งปลูกสร้าง'); ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php echo $form->field($model, 'data_json[floors]')->textInput()->label('จำนวนชั้น'); ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php echo $form->field($model, 'data_json[area]')->textInput()->label('พื้นที่ใช้สอย (ตร.ม.)'); ?>
                         </div>
                         <div class="col-md-6">
                             <?php
@@ -242,6 +233,13 @@ $group = Yii::$app->request->get('group');
                                 'class' => 'form-control'  // Add background color
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
+                        <div class="col-md-6">
+                            <?php echo $form->field($model, 'data_json[floors]')->textInput()->label('จำนวนชั้น'); ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?php echo $form->field($model, 'data_json[area]')->textInput()->label('พื้นที่ใช้สอย (ตร.ม.)'); ?>
+                        </div>
+                        
 
 
 
@@ -270,7 +268,7 @@ $group = Yii::$app->request->get('group');
                     </div>
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
+                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง'); ?>
                         </div>
 
 

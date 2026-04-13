@@ -51,6 +51,9 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
         </div>
     </div>
 
+    <div id="debug" style="position:fixed;bottom:0;left:0;background:#000;color:#0f0;padding:10px;z-index:9999;font-size:12px;max-height:200px;overflow:auto;"></div>
+
+
     <!-- Quick Actions: จองรถ, จองห้องประชุม, แจ้งซ่อม, ขอลา (ซ้าย→ขวา บน→ล่าง) -->
     <div>
         <h3 class="home-section-title d-flex align-items-center gap-2">
@@ -177,3 +180,98 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
         </div>
     </div>
 </div>
+<?php
+use yii\web\View;
+
+$js = <<<JS
+
+(function () {
+
+    // 🔥 กันยิงซ้ำ
+    if (window.__tg_login_done) return;
+    window.__tg_login_done = true;
+
+    // 🔥 กัน reload loop
+    if (localStorage.getItem("tg_logged_in") === "1") {
+        console.log("Already logged in");
+        return;
+    }
+
+    const tg = window.Telegram?.WebApp;
+
+    if (!tg) {
+        console.log("Not running inside Telegram Mini App");
+        return;
+    }
+
+    tg.ready();
+    tg.expand();
+
+    const user = tg.initDataUnsafe?.user;
+
+    if (!user || !user.id) {
+        console.log("No Telegram user detected");
+        return;
+    }
+
+    const debugBox = document.getElementById("debug");
+
+    function log(msg) {
+        console.log(msg);
+        if (debugBox) {
+            debugBox.innerText = JSON.stringify(msg, null, 2);
+        }
+    }
+
+    $.ajax({
+        url: "/mobile/auth/telegram-login",
+        type: "POST",
+        dataType: "json",
+        data: {
+            telegram_id: user.id,
+            initData: tg.initData ?? ''
+        },
+        headers: {
+            'X-CSRF-Token': yii.getCsrfToken()
+        },
+
+        success: function(res) {
+
+            log(res);
+
+            if (res.success) {
+
+                // 🔥 mark login success
+                localStorage.setItem("tg_logged_in", "1");
+
+                setTimeout(() => {
+                    window.location.href = "/mobile/default/index";
+                }, 200);
+
+            } else {
+
+                localStorage.removeItem("tg_logged_in");
+
+                setTimeout(() => {
+                    window.location.href = "/mobile/auth/login";
+                }, 200);
+
+            }
+        },
+
+        error: function(err) {
+
+            log({
+                error: true,
+                message: "AJAX error",
+                detail: err
+            });
+
+        }
+    });
+
+})();
+JS;
+
+$this->registerJs($js, View::POS_END);
+?>

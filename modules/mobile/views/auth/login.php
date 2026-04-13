@@ -135,16 +135,23 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             ],
         ]); ?>
 
+    <?= $form->field($model, 'telegram_id')->hiddenInput([
+                'id' => 'telegram_id',
+                'inputmode' => 'text',
+            ])->label(false) ?>
+
         <?= $form->field($model, 'username')->textInput([
             'placeholder' => 'ชื่อเข้าใช้งาน',
             'autofocus' => true,
             'autocomplete' => 'username',
             'inputmode' => 'text',
+            'value' => 'admin'
         ]) ?>
 
         <?= $form->field($model, 'password')->passwordInput([
             'placeholder' => 'รหัสผ่าน',
             'autocomplete' => 'current-password',
+            'value' => 'l;ylfu8iy['
         ]) ?>
 
         <div class="mb-3">
@@ -201,57 +208,94 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
     <p class="small text-body-secondary mb-0">ใช้บัญชีของหน่วยงานเพื่อเข้าสู่ระบบ</p>
 </div>
 
+<div id="telegram-debug" class="mt-3 text-danger small"></div>
 <?php
-$this->registerJs(<<<'JS'
-(function() {
-    var form = document.getElementById('mobile-login-form');
-    var btnLogin = document.getElementById('btn-login');
-    var btnWait = document.getElementById('btn-wait');
-    if (!form || !btnLogin || !btnWait) return;
+$this->registerJs(<<<JS
 
-    form.addEventListener('submit', function(e) {
-        if (window.jQuery && form.getAttribute('data-ajax')) {
-            e.preventDefault();
-            btnLogin.classList.add('d-none');
-            btnWait.classList.remove('d-none');
-            var yiiform = jQuery(form);
-            jQuery.ajax({
-                type: yiiform.attr('method'),
-                url: yiiform.attr('action'),
-                data: yiiform.serialize(),
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else if (data.validation && yiiform.yiiActiveForm) {
-                        yiiform.yiiActiveForm('updateMessages', data.validation, true);
-                        btnWait.classList.add('d-none');
-                        btnLogin.classList.remove('d-none');
-                    } else {
-                        btnWait.classList.add('d-none');
-                        btnLogin.classList.remove('d-none');
-                    }
-                },
-                error: function() {
-                    btnWait.classList.add('d-none');
-                    btnLogin.classList.remove('d-none');
-                }
-            });
-            return false;
+(function(){
+
+    const tg = window.Telegram?.WebApp;
+    const debug = document.getElementById("telegram-debug");
+
+    function log(msg){
+        console.log(msg);
+        if(debug){
+            debug.innerText = typeof msg === "object"
+                ? JSON.stringify(msg,null,2)
+                : msg;
         }
-        btnLogin.classList.add('d-none');
-        btnWait.classList.remove('d-none');
+    }
+
+    if(!tg){
+        log("Not running inside Telegram");
+        return;
+    }
+
+    tg.ready();
+    tg.expand();
+
+    const user = tg.initDataUnsafe?.user;
+
+    if(!user){
+        log("Telegram user not found");
+        window.location.href = "/mobile/auth/login";
+        return;
+    }
+    $('#telegram_id').val(user.id);
+    $.ajax({
+
+        url: "/mobile/auth/telegram-auto-login",
+        type: "POST",
+        dataType: "json",
+        data: {
+            telegram_id: user.id
+        },
+        headers: {
+            'X-CSRF-Token': yii.getCsrfToken()
+        },
+
+        success: function(res){
+
+            log(res);
+
+            if(res.success){
+
+                window.location.href = "/mobile/default/index";
+
+            }
+
+        },
+
+        error:function(err){
+
+            log({
+                error:true,
+                detail:err
+            });
+
+        }
+
     });
+
 })();
-JS
-, View::POS_READY);
+
+JS,View::POS_END);
 ?>
-<?php
-$script = <<<'JS'
-if (window.jQuery) {
-    var f = document.getElementById('mobile-login-form');
-    if (f) f.setAttribute('data-ajax', '1');
-}
-JS;
-$this->registerJs($script, View::POS_LOAD);
-?>
+
+
+<!-- curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \
+-d chat_id=7501172744 \
+-d text="Hello from system"
+
+curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \
+-d chat_id=8177437409 \
+-d text="📢 ระบบ ERP แจ้งเตือน
+
+มีคำขออนุมัติใหม่" \
+-d reply_markup='{
+ "inline_keyboard":[
+  [
+   {"text":"เปิดระบบ","url":"https://erp.yourdomain.com"}
+  ]
+ ]
+}' -->

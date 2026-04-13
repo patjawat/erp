@@ -201,7 +201,7 @@ class BuildingController extends \yii\web\Controller
                 }
 
                 $code = trim((string) ($data[0] ?? ''));
-                $name = trim((string) ($data[1] ?? ''));
+                $name = trim((string) ($data[2] ?? ''));
                 if ($code === '' || $name === '') {
                     $errs = [];
                     if ($code === '') $errs['code'][] = 'ต้องระบุรหัสอาคาร/สิ่งปลูกสร้าง';

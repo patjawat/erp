@@ -5,9 +5,9 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItem $model */
 
-$this->title = 'แก้ไขข้อมูลอาคาร/สิ่งปลูกสร้าง';
+$this->title = 'แก้ไขข้อมูลสิ่งปลูกสร้าง';
 $this->params['breadcrumbs'][] = ['label' => 'ทรัพย์สิน', 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => 'อาคาร/สิ่งปลูกสร้าง', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'สิ่งปลูกสร้าง', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 

@@ -1,10 +1,11 @@
 <?php
 
 namespace app\modules\telegrambot\controllers;
+use app\models\Categorise;
+use app\modules\telegrambot\components\TelegramBot;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
-use app\modules\telegrambot\components\TelegramBot;
 
 /**
  * Default controller for the `telegrambot` module
@@ -17,7 +18,31 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+
+   $model = Categorise::findOne(['name'=>'telegram_setting']);
+
+if(!$model){
+$model = new Categorise();
+$model->name='telegram_setting';
+}
+
+if($model->load(Yii::$app->request->post())){
+
+$model->data_json = json_encode($model->data_json);
+
+$model->save(false);
+
+Yii::$app->session->setFlash('success','บันทึกสำเร็จ');
+
+return $this->refresh();
+
+}
+
+$model->data_json = json_decode($model->data_json,true);
+
+return $this->render('index',[
+'model'=>$model
+]);
     }
 
      public $enableCsrfValidation = false; // ปิด CSRF สำหรับ webhook
