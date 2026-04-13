@@ -5,21 +5,21 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
-$this->title = 'นำเข้า ทะเบียนอาคาร/สิ่งปลูกสร้าง';
+$this->title = 'นำเข้า ทะเบียนสิ่งปลูกสร้าง';
 ?>
 
-<div class="am-building-import">
+<div class="am-structure-import">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <?= Html::a(
             '<i class="fa-solid fa-download me-2"></i>ดาวน์โหลดเทมเพลต CSV',
-            ['/am/building/download-template'],
+            ['/am/structure/download-template'],
             ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener']
         ) ?>
-        <small class="text-muted">ใช้เทมเพลตเพื่อดูรูปแบบคอลัมน์และนำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง</small>
+        <small class="text-muted">เทมเพลตสำหรับสิ่งปลูกสร้างแยกจากอาคาร — ดูคอลัมน์และรูปแบบก่อนนำเข้า</small>
     </div>
 
     <?php $form = ActiveForm::begin([
-        'options' => ['enctype' => 'multipart/form-data', 'id' => 'building-upload-form'],
+        'options' => ['enctype' => 'multipart/form-data', 'id' => 'structure-upload-form'],
     ]) ?>
 
     <div class="mt-2">
@@ -46,10 +46,9 @@ $this->title = 'นำเข้า ทะเบียนอาคาร/สิ�
 </div>
 
 <?php
-$previewUrl = Url::to(['/am/building/preview']);
-$importUrl = Url::to(['/am/building/import-csv']);
+$previewUrl = Url::to(['/am/structure/preview']);
+$importUrl = Url::to(['/am/structure/import-csv']);
 $js = <<<JS
-    // AJAX preview
     $('#csvFile').on('change', function() {
         var file = this.files[0];
         if (!file) return;
@@ -106,7 +105,7 @@ $js = <<<JS
         });
     });
 
-    $('body').on('beforeSubmit', '#building-upload-form', function (e) {
+    $('body').on('beforeSubmit', '#structure-upload-form', function (e) {
         e.preventDefault();
         var filePath = $('#filePath').val();
         if (!filePath) {
@@ -116,7 +115,7 @@ $js = <<<JS
 
         Swal.fire({
             title: 'ยืนยันการนำเข้า?',
-            text: 'เมื่อยืนยันแล้วจะบันทึกข้อมูลเข้าระบบ',
+            text: 'เมื่อยืนยันแล้วจะบันทึกข้อมูลเข้าระบบ (ทะเบียนสิ่งปลูกสร้าง)',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ยืนยัน',
@@ -170,4 +169,3 @@ $js = <<<JS
 JS;
 $this->registerJs($js);
 ?>
-

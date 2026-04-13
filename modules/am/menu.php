@@ -9,7 +9,7 @@ use yii\helpers\Url;
         ภาพรวม
     </a>
     <div class="dropdown d-inline-block">
-        <button class="btn <?= in_array($active, ['land','building','equip']) ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= in_array($active, ['land','building','structure','equip'], true) ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fa-solid fa-star text-warning me-1"></i>
             <span class="d-none d-sm-inline">ทะเบียนทรัพย์สิน</span>
         </button>

@@ -13,6 +13,7 @@ use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\Employees;
+use app\models\Categorise;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
 
@@ -81,8 +82,8 @@ class BuildingController extends \yii\web\Controller
     }
 
     /**
-     * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง
-     * คอลัมน์อ้างอิงจาก modules/am/views/building/_form.php
+     * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าทะเบียนอาคาร
+     * คอลัมน์อ้างอิงจาก modules/am/data/building_import_columns.php (18 คอลัมน์)
      */
     public function actionDownloadTemplate()
     {
@@ -99,7 +100,7 @@ class BuildingController extends \yii\web\Controller
         $csv = stream_get_contents($fp);
         fclose($fp);
 
-        $filename = 'template_import_อาคารสิ่งปลูกสร้าง_' . date('Ymd') . '.csv';
+        $filename = 'template_import_อาคาร_' . date('Ymd') . '.csv';
         \Yii::$app->response->sendContentAsFile($csv, $filename, [
             'mimeType' => 'text/csv',
             'inline' => false,
@@ -108,14 +109,14 @@ class BuildingController extends \yii\web\Controller
     }
 
     /**
-     * Modal: นำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง (flow เหมือนนำเข้าครุภัณฑ์)
+     * Modal: นำเข้าทะเบียนอาคาร (flow เหมือนนำเข้าครุภัณฑ์)
      */
     public function actionImport()
     {
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง',
+                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้าทะเบียนอาคาร',
                 'content' => $this->renderAjax('import', []),
             ];
         }
@@ -201,11 +202,11 @@ class BuildingController extends \yii\web\Controller
                 }
 
                 $code = trim((string) ($data[0] ?? ''));
-                $name = trim((string) ($data[2] ?? ''));
+                $name = trim((string) ($data[1] ?? ''));
                 if ($code === '' || $name === '') {
                     $errs = [];
-                    if ($code === '') $errs['code'][] = 'ต้องระบุรหัสอาคาร/สิ่งปลูกสร้าง';
-                    if ($name === '') $errs['asset_name'][] = 'ต้องระบุชื่อสิ่งปลูกสร้าง';
+                    if ($code === '') $errs['code'][] = 'ต้องระบุหมายเลขครุภัณฑ์';
+                    if ($name === '') $errs['asset_name'][] = 'ต้องระบุชื่ออาคาร';
                     $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => $errs];
                     continue;
                 }
@@ -224,17 +225,12 @@ class BuildingController extends \yii\web\Controller
                 $model->asset_name = $name;
                 $model->price = (float) ($data[7] ?? 0);
                 $model->on_year = trim((string) ($data[9] ?? ''));
-                $model->receive_date = $this->normalizeDateForDb($data[16] ?? '');
-                $model->asset_status = (int) ($data[19] ?? 1);
-                $deptResolved = $this->resolveDepartmentFromImport(trim((string) ($data[10] ?? '')));
-                if ($deptResolved !== null) {
-                    $model->department = $deptResolved;
-                }
-                $ownerResolved = $this->resolveOwnerFromImport(trim((string) ($data[18] ?? '')));
-                if ($ownerResolved !== null) {
-                    $model->owner = $ownerResolved;
-                }
-                $model->purchase = trim((string) ($data[12] ?? ''));
+                $model->receive_date = $this->normalizeDateForDb($data[15] ?? '');
+                $model->asset_status = '1';
+                $model->purchase = $this->resolvePurchaseFromImport($data[11] ?? '');
+
+                $vendorNameRaw = trim((string) ($data[13] ?? ''));
+                $vendorCodeResolved = $this->resolveVendorFromImport(trim((string) ($data[12] ?? '')), $vendorNameRaw);
 
                 $model->data_json = [
                     'building_type_name' => trim((string) ($data[2] ?? '')),
@@ -242,13 +238,13 @@ class BuildingController extends \yii\web\Controller
                     'area' => trim((string) ($data[4] ?? '')),
                     'location' => trim((string) ($data[5] ?? '')),
                     'asset_options' => trim((string) ($data[6] ?? '')),
-                    'budget_type' => trim((string) ($data[8] ?? '')),
-                    'method_get' => trim((string) ($data[11] ?? '')),
-                    'vendor_id' => trim((string) ($data[13] ?? '')),
-                    'vendor_name' => trim((string) ($data[14] ?? '')),
-                    'inspection_date' => $this->normalizeDateForDb($data[15] ?? ''),
-                    'expire_date' => $this->normalizeDateForDb($data[17] ?? ''),
-                    'note' => trim((string) ($data[20] ?? '')),
+                    'budget_type' => $this->resolveBudgetTypeFromImport($data[8] ?? ''),
+                    'method_get' => $this->resolveMethodGetFromImport($data[10] ?? ''),
+                    'vendor_id' => $vendorCodeResolved,
+                    'vendor_name' => $vendorNameRaw,
+                    'inspection_date' => $this->normalizeDateForDb($data[14] ?? ''),
+                    'expire_date' => $this->normalizeDateForDb($data[16] ?? ''),
+                    'note' => trim((string) ($data[17] ?? '')),
                 ];
 
                 $model->validate();
@@ -418,6 +414,120 @@ class BuildingController extends \yii\web\Controller
         }
         $emp = Employees::find()->where(['cid' => $str])->one();
         return $emp ? (int) $emp->id : null;
+    }
+
+    /**
+     * ค้นใน categorise ตามชื่อหมวด แล้วคืน code สำหรับบันทึก
+     * ลำดับ: ตรงกับรหัส (code) → ตรงกับชื่อ (title) → ชื่อไม่สนตัวพิมพ์เล็กใหญ่
+     */
+    protected function resolveCategoriseCodeByName($categoryName, $value)
+    {
+        $value = trim(preg_replace('/\s+/u', ' ', (string) $value));
+        if ($value === '') {
+            return '';
+        }
+        $rows = Categorise::find()->where(['name' => $categoryName])->all();
+        foreach ($rows as $row) {
+            if ((string) $row->code === $value) {
+                return (string) $row->code;
+            }
+        }
+        foreach ($rows as $row) {
+            if ((string) $row->title === $value) {
+                return (string) $row->code;
+            }
+        }
+        $lower = static function ($s) {
+            return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+        };
+        $vLower = $lower($value);
+        foreach ($rows as $row) {
+            if ($lower((string) $row->title) === $vLower) {
+                return (string) $row->code;
+            }
+        }
+
+        return '';
+    }
+
+    /** ประเภทเงิน: ค้นจากชื่อหรือรหัสใน budget_type → บันทึกเป็น code */
+    protected function resolveBudgetTypeFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('budget_type', $value);
+    }
+
+    /** วิธีได้มา: ค้นจากชื่อหรือรหัสใน method_get → บันทึกเป็น code */
+    protected function resolveMethodGetFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('method_get', $value);
+    }
+
+    /** วิธีการได้มา: ค้นจากชื่อหรือรหัสใน purchase → บันทึกเป็น code */
+    protected function resolvePurchaseFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('purchase', $value);
+    }
+
+    protected function getNextVendorCode()
+    {
+        $last = Categorise::find()
+            ->where(['name' => 'vendor'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if (!$last || !$last->code) {
+            return 'V001';
+        }
+        if (preg_match('/^V(\d+)$/i', trim($last->code), $m)) {
+            $next = (int) $m[1] + 1;
+
+            return 'V' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        }
+
+        return 'V001';
+    }
+
+    protected function findVendorByTitle($title = null)
+    {
+        $model = Categorise::find()->where(['name' => 'vendor', 'title' => $title])->one();
+        if ($model) {
+            return $model->code;
+        }
+        $newVendor = new Categorise(['name' => 'vendor', 'title' => $title]);
+        $newVendor->code = $this->getNextVendorCode();
+        $newVendor->save(false);
+
+        return $newVendor->code;
+    }
+
+    /**
+     * รหัส/ชื่อผู้ขายจาก CSV → vendor code (เช่นเดียวกับ ImportController::resolveVendorFromImport)
+     */
+    protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
+    {
+        $vendorCode = trim((string) $vendorCode);
+        $vendorName = trim((string) $vendorName);
+
+        if ($vendorCode !== '') {
+            $byCode = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->one();
+            if ($byCode) {
+                if ($vendorName !== '' && $byCode->title !== $vendorName) {
+                    $byCode->title = $vendorName;
+                    $byCode->save(false);
+                }
+
+                return $byCode->code;
+            }
+            if ($vendorName !== '') {
+                return $this->findVendorByTitle($vendorName);
+            }
+
+            return '';
+        }
+        if ($vendorName !== '') {
+            return $this->findVendorByTitle($vendorName);
+        }
+
+        return '';
     }
 
     public function actionDelete($id)

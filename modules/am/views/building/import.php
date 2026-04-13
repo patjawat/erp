@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
-$this->title = 'นำเข้า ทะเบียนอาคาร/สิ่งปลูกสร้าง';
+$this->title = 'นำเข้า ทะเบียนอาคาร';
 ?>
 
 <div class="am-building-import">
@@ -15,7 +15,7 @@ $this->title = 'นำเข้า ทะเบียนอาคาร/สิ�
             ['/am/building/download-template'],
             ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener']
         ) ?>
-        <small class="text-muted">ใช้เทมเพลตเพื่อดูรูปแบบคอลัมน์และนำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง</small>
+        <small class="text-muted">เทมเพลตสำหรับทะเบียนอาคารเท่านั้น — สิ่งปลูกสร้างใช้เมนูทะเบียนสิ่งปลูกสร้าง</small>
     </div>
 
     <?php $form = ActiveForm::begin([

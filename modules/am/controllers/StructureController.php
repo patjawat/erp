@@ -13,6 +13,7 @@ use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\Employees;
+use app\models\Categorise;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
 
@@ -21,7 +22,7 @@ class StructureController extends \yii\web\Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-            'asset_group_id' => 2
+            'asset_group_id' => 7
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere('deleted_at IS NULL');
@@ -39,7 +40,7 @@ class StructureController extends \yii\web\Controller
             ['LIKE', 'price', $searchModel->q],
             ['LIKE', 'on_year', $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.building_type_name')"), $searchModel->q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.structure_type_name')"), $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.address')"), $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.location')"), $searchModel->q],
             ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.floors')"), $searchModel->q],
@@ -73,7 +74,7 @@ class StructureController extends \yii\web\Controller
         $totalValue = (float) ($sumQuery->select(new Expression('SUM(price)'))->scalar() ?? 0);
 
         return $this->render('index', [
-            'tabs' => 'building',
+            'tabs' => 'structure',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'totalValue' => $totalValue,
@@ -81,12 +82,12 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
-     * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง
-     * คอลัมน์อ้างอิงจาก modules/am/views/building/_form.php
+     * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าทะเบียนสิ่งปลูกสร้าง
+     * คอลัมน์อ้างอิงจาก modules/am/data/structure_import_columns.php (20 คอลัมน์)
      */
     public function actionDownloadTemplate()
     {
-        $config = require \Yii::getAlias('@app/modules/am/data/building_import_columns.php');
+        $config = require \Yii::getAlias('@app/modules/am/data/structure_import_columns.php');
         $headers = $config['headers'];
         $example = $config['sample'];
 
@@ -99,7 +100,7 @@ class StructureController extends \yii\web\Controller
         $csv = stream_get_contents($fp);
         fclose($fp);
 
-        $filename = 'template_import_อาคารสิ่งปลูกสร้าง_' . date('Ymd') . '.csv';
+        $filename = 'template_import_สิ่งปลูกสร้าง_' . date('Ymd') . '.csv';
         \Yii::$app->response->sendContentAsFile($csv, $filename, [
             'mimeType' => 'text/csv',
             'inline' => false,
@@ -108,14 +109,14 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
-     * Modal: นำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง (flow เหมือนนำเข้าครุภัณฑ์)
+     * Modal: นำเข้าทะเบียนสิ่งปลูกสร้าง (flow เหมือนนำเข้าครุภัณฑ์)
      */
     public function actionImport()
     {
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้าทะเบียนอาคาร/สิ่งปลูกสร้าง',
+                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้าทะเบียนสิ่งปลูกสร้าง',
                 'content' => $this->renderAjax('import', []),
             ];
         }
@@ -137,7 +138,7 @@ class StructureController extends \yii\web\Controller
             return ['status' => 'error', 'message' => 'รองรับเฉพาะไฟล์ .csv'];
         }
 
-        $filePath = \Yii::getAlias('@runtime') . '/building_import_' . time() . '_' . \Yii::$app->security->generateRandomString(8) . '.csv';
+        $filePath = \Yii::getAlias('@runtime') . '/structure_import_' . time() . '_' . \Yii::$app->security->generateRandomString(8) . '.csv';
         $file->saveAs($filePath);
 
         $previewData = [];
@@ -156,7 +157,7 @@ class StructureController extends \yii\web\Controller
                     continue;
                 }
                 $code = trim((string) ($data[0] ?? ''));
-                if ($code !== '' && Asset::find()->where(['asset_group_id' => 2, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
+                if ($code !== '' && Asset::find()->where(['asset_group_id' => 7, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
                     $duplicates[] = $data;
                 }
             }
@@ -175,7 +176,7 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
-     * POST: นำเข้าข้อมูลจริง (บันทึกเข้า asset_group_id = 2)
+     * POST: นำเข้าข้อมูลจริง (บันทึกเข้า asset_group_id = 7)
      */
     public function actionImportCsv()
     {
@@ -204,51 +205,61 @@ class StructureController extends \yii\web\Controller
                 $name = trim((string) ($data[1] ?? ''));
                 if ($code === '' || $name === '') {
                     $errs = [];
-                    if ($code === '') $errs['code'][] = 'ต้องระบุรหัสอาคาร/สิ่งปลูกสร้าง';
+                    if ($code === '') $errs['code'][] = 'ต้องระบุหมายเลขครุภัณฑ์';
                     if ($name === '') $errs['asset_name'][] = 'ต้องระบุชื่อสิ่งปลูกสร้าง';
                     $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => $errs];
                     continue;
                 }
-                if (Asset::find()->where(['asset_group_id' => 2, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
+                if (Asset::find()->where(['asset_group_id' => 7, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
                     $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['รหัสซ้ำในระบบ']]];
                     continue;
                 }
 
-                // คอลัมน์อ้างอิงจาก building_import_columns.php / _form.php
+                // คอลัมน์อ้างอิงจาก structure_import_columns.php / views/structure/_form.php
                 $model = new Asset([
                     'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]);
-                $model->asset_group_id = 2;
-                $model->useful_life = 50; // ค่าเริ่มต้นสำหรับอาคาร/สิ่งปลูกสร้าง (ปี)
+                $model->asset_group_id = 7;
+                $model->useful_life = 50;
                 $model->code = $code;
                 $model->asset_name = $name;
-                $model->price = (float) ($data[7] ?? 0);
-                $model->on_year = trim((string) ($data[9] ?? ''));
-                $model->receive_date = $this->normalizeDateForDb($data[16] ?? '');
-                $model->asset_status = (int) ($data[19] ?? 1);
-                $deptResolved = $this->resolveDepartmentFromImport(trim((string) ($data[10] ?? '')));
+                $model->price = (float) ($data[6] ?? 0);
+                $model->on_year = trim((string) ($data[8] ?? ''));
+                $model->receive_date = $this->normalizeDateForDb($data[15] ?? '');
+
+                $statusRaw = trim((string) ($data[18] ?? ''));
+                $model->asset_status = $statusRaw !== ''
+                    ? $this->resolveCategoriseCodeByName('asset_status', $statusRaw)
+                    : '1';
+                if ($model->asset_status === '') {
+                    $model->asset_status = '1';
+                }
+
+                $deptResolved = $this->resolveDepartmentFromImport(trim((string) ($data[9] ?? '')));
                 if ($deptResolved !== null) {
                     $model->department = $deptResolved;
                 }
-                $ownerResolved = $this->resolveOwnerFromImport(trim((string) ($data[18] ?? '')));
+                $ownerResolved = $this->resolveOwnerFromImport(trim((string) ($data[17] ?? '')));
                 if ($ownerResolved !== null) {
                     $model->owner = $ownerResolved;
                 }
-                $model->purchase = trim((string) ($data[12] ?? ''));
+                $model->purchase = $this->resolvePurchaseFromImport($data[11] ?? '');
+
+                $vendorNameRaw = trim((string) ($data[13] ?? ''));
+                $vendorCodeResolved = $this->resolveVendorFromImport(trim((string) ($data[12] ?? '')), $vendorNameRaw);
 
                 $model->data_json = [
-                    'building_type_name' => trim((string) ($data[2] ?? '')),
-                    'floors' => trim((string) ($data[3] ?? '')),
+                    'structure_type_name' => trim((string) ($data[2] ?? '')),
+                    'location' => trim((string) ($data[3] ?? '')),
                     'area' => trim((string) ($data[4] ?? '')),
-                    'location' => trim((string) ($data[5] ?? '')),
-                    'asset_options' => trim((string) ($data[6] ?? '')),
-                    'budget_type' => trim((string) ($data[8] ?? '')),
-                    'method_get' => trim((string) ($data[11] ?? '')),
-                    'vendor_id' => trim((string) ($data[13] ?? '')),
-                    'vendor_name' => trim((string) ($data[14] ?? '')),
-                    'inspection_date' => $this->normalizeDateForDb($data[15] ?? ''),
-                    'expire_date' => $this->normalizeDateForDb($data[17] ?? ''),
-                    'note' => trim((string) ($data[20] ?? '')),
+                    'asset_options' => trim((string) ($data[5] ?? '')),
+                    'budget_type' => $this->resolveBudgetTypeFromImport($data[7] ?? ''),
+                    'method_get' => $this->resolveMethodGetFromImport($data[10] ?? ''),
+                    'vendor_id' => $vendorCodeResolved,
+                    'vendor_name' => $vendorNameRaw,
+                    'inspection_date' => $this->normalizeDateForDb($data[14] ?? ''),
+                    'expire_date' => $this->normalizeDateForDb($data[16] ?? ''),
+                    'note' => trim((string) ($data[19] ?? '')),
                 ];
 
                 $model->validate();
@@ -420,6 +431,110 @@ class StructureController extends \yii\web\Controller
         return $emp ? (int) $emp->id : null;
     }
 
+    protected function resolveCategoriseCodeByName($categoryName, $value)
+    {
+        $value = trim(preg_replace('/\s+/u', ' ', (string) $value));
+        if ($value === '') {
+            return '';
+        }
+        $rows = Categorise::find()->where(['name' => $categoryName])->all();
+        foreach ($rows as $row) {
+            if ((string) $row->code === $value) {
+                return (string) $row->code;
+            }
+        }
+        foreach ($rows as $row) {
+            if ((string) $row->title === $value) {
+                return (string) $row->code;
+            }
+        }
+        $lower = static function ($s) {
+            return function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+        };
+        $vLower = $lower($value);
+        foreach ($rows as $row) {
+            if ($lower((string) $row->title) === $vLower) {
+                return (string) $row->code;
+            }
+        }
+
+        return '';
+    }
+
+    protected function resolveBudgetTypeFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('budget_type', $value);
+    }
+
+    protected function resolveMethodGetFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('method_get', $value);
+    }
+
+    protected function resolvePurchaseFromImport($value)
+    {
+        return $this->resolveCategoriseCodeByName('purchase', $value);
+    }
+
+    protected function getNextVendorCode()
+    {
+        $last = Categorise::find()
+            ->where(['name' => 'vendor'])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if (!$last || !$last->code) {
+            return 'V001';
+        }
+        if (preg_match('/^V(\d+)$/i', trim($last->code), $m)) {
+            $next = (int) $m[1] + 1;
+
+            return 'V' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        }
+
+        return 'V001';
+    }
+
+    protected function findVendorByTitle($title = null)
+    {
+        $model = Categorise::find()->where(['name' => 'vendor', 'title' => $title])->one();
+        if ($model) {
+            return $model->code;
+        }
+        $newVendor = new Categorise(['name' => 'vendor', 'title' => $title]);
+        $newVendor->code = $this->getNextVendorCode();
+        $newVendor->save(false);
+
+        return $newVendor->code;
+    }
+
+    protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
+    {
+        $vendorCode = trim((string) $vendorCode);
+        $vendorName = trim((string) $vendorName);
+
+        if ($vendorCode !== '') {
+            $byCode = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->one();
+            if ($byCode) {
+                if ($vendorName !== '' && $byCode->title !== $vendorName) {
+                    $byCode->title = $vendorName;
+                    $byCode->save(false);
+                }
+
+                return $byCode->code;
+            }
+            if ($vendorName !== '') {
+                return $this->findVendorByTitle($vendorName);
+            }
+
+            return '';
+        }
+        if ($vendorName !== '') {
+            return $this->findVendorByTitle($vendorName);
+        }
+
+        return '';
+    }
+
     public function actionDelete($id)
     {
         // ให้สอดคล้องกับ AssetController: ลบได้เฉพาะ admin
@@ -446,7 +561,7 @@ class StructureController extends \yii\web\Controller
 
         if ($this->request->isAjax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['status' => 'success', 'url' => Url::to(['/am/building/index'])];
+            return ['status' => 'success', 'url' => Url::to(['/am/structure/index'])];
         }
 
         return $this->redirect(['index']);

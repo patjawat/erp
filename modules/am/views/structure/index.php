@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/am/menu', ['active' => 'building']) ?>
+<?= $this->render('@app/modules/am/menu', ['active' => 'structure']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -34,9 +34,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <i class="fa-solid fa-file-excel me-1"></i> Excel
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/building/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/structure/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/building/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/structure/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
             </ul>
         </div>
     </div>
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <th class="text-center py-2 text-dark" style="width: 50px;">#</th>
                       <th class="text-center" style="width:80px;">รูปภาพ</th>
-                    <th class="py-2 text-dark">รหัสพัสดุ / ชื่ออาคาร</th>
+                    <th class="py-2 text-dark">รหัสพัสดุ / ชื่อสิ่งปลูกสร้าง</th>
                     <th class="py-2 text-dark">ประเภท</th>
                     <th class="py-2 text-dark">ที่ตั้ง / ปีสร้าง</th>
                     <th class="py-2 text-end text-dark">พื้นที่ (ตร.ม.)</th>
@@ -108,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="fw-semibold text-dark"><?= $item->code ?></div>
                             <div class="text-muted small"><?= $item->asset_name ?></div>
                         </td>
-                        <td class="align-middle"><?= $item->data_json['building_type_name'] ?? '-' ?></td>
+                        <td class="align-middle"><?= $item->data_json['structure_type_name'] ?? ($item->data_json['building_type_name'] ?? '-') ?></td>
                         <td class="align-middle">
                             <div class="fw-semibold text-dark"><?= $item->on_year ?></div>
                             <div class="text-muted small"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?></div>
