@@ -38,7 +38,7 @@ return $this->refresh();
 
 }
 
-$model->data_json = json_decode($model->data_json,true);
+$model->data_json = json_decode((string) ($model->data_json ?? ''), true);
 
 return $this->render('index',[
 'model'=>$model
