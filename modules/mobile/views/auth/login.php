@@ -280,20 +280,3 @@ $this->registerJs(<<<JS
 JS,View::POS_END);
 ?>
 
-
-<!-- curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \
--d chat_id=8177437409 \
--d text="Hello from system"
-
-curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \
--d chat_id=8177437409 \
--d text="📢 ระบบ ERP แจ้งเตือน
-
-มีคำขออนุมัติใหม่" \
--d reply_markup='{
- "inline_keyboard":[
-  [
-   {"text":"เปิดระบบ","url":"https://erp.yourdomain.com"}
-  ]
- ]
-}' -->

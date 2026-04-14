@@ -86,6 +86,7 @@ class UpdateTableController extends Controller
             ['name' => 'health', 'type' => 1, 'description' => 'ตรวจสุขภาพ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
+
             // การตรวจสุขภาพ
             ['name' => '/health/*', 'type' => 2, 'description' => ''],
             ['name' => '/health/me/*', 'type' => 2, 'description' => ''],
@@ -231,6 +232,8 @@ class UpdateTableController extends Controller
             ['name' => '/warehouse/*', 'type' => 2, 'description' => ''],
             ['name' => 'purchase/po-order/index', 'type' => 2, 'description' => ''],
             ['name' => '/ms-word/*', 'type' => 2, 'description' => ''],
+
+            ['name' => '/mobile/*', 'type' => 2, 'description' => 'App Mobile'],
         ];
     }
 
@@ -440,6 +443,7 @@ class UpdateTableController extends Controller
 
             ['child' => '/plan/*', 'parent' => 'user'],
             ['child' => '/health/*', 'parent' => 'health'],
+            ['child' => '/mobile/*', 'parent' => 'user'],
         ];
     }
 

@@ -4,29 +4,6 @@ $this->registerJsFile('https://telegram.org/js/telegram-web-app.js', ['position'
 
 ?>
 
-<?php
-// $botToken = '7760493857:AAEqmuAH5eDi0iEqct656owBRP0qJXPypc8';
-// $chatId = '8177437409'; // ผู้ใช้ต้องเริ่มแชทกับบอทก่อน
-
-// $keyboard = [
-//     'inline_keyboard' => [[
-//         [
-//             'text' => 'เปิด Web App',
-//             'web_app' => ['url' => 'https://ee4d-2001-fb1-119-77fb-709a-8667-26bf-3ee.ngrok-free.app/telegrambot/home']
-//         ]
-//     ]]
-// ];
-
-// $data = [
-//     'chat_id' => $chatId,
-//     'text' => 'กดปุ่มเพื่อเปิด Mini Web App',
-//     'reply_markup' => json_encode($keyboard)
-// ];
-
-// file_get_contents("https://api.telegram.org/bot$botToken/sendMessage?" . http_build_query($data));
-
-?>
-<h1>Home</h1>
 
   <style>
     body {
