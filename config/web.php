@@ -18,7 +18,7 @@ $config = [
     'id' => 'basic',
     'version' => $version,
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'mobile'],
     'homeUrl' => ['/site'],
     'timeZone' => 'Asia/Bangkok',
     'aliases' => [
@@ -340,6 +340,7 @@ $config = [
             'depdrop/*',
             'auth/*',
             'mobile/auth/*',
+            'mobile/error/*',
             'health/health-screen/validator',
             'gii/*',
             // 'hr/*',
