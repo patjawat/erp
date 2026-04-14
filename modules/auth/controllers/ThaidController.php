@@ -3,23 +3,31 @@
 namespace app\modules\auth\controllers;
 
 use Yii;
-use yii\web\Response;
 use app\modules\hr\models\Employees;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\EmployeeDetail;
 
 class ThaidController extends \yii\web\Controller
 {
+    /** Session key: route array e.g. ['/mobile/default/index'] after ThaiD login (จากโมดูล mobile) */
+    private const SESSION_THAID_SUCCESS_REDIRECT = 'thaid_success_redirect';
+
     public function actionIndex()
     {
-        return $this->redirect(Yii::$app->thaidAuth->getLoginUrl());
+        if (Yii::$app->request->get('mobile') === '1') {
+            Yii::$app->session->set(self::SESSION_THAID_SUCCESS_REDIRECT, ['/mobile/default/index']);
+        } else {
+            Yii::$app->session->remove(self::SESSION_THAID_SUCCESS_REDIRECT);
+        }
 
+        return $this->redirect(Yii::$app->thaidAuth->getLoginUrl());
     }
 
     // callback กลับมาจาก ThaiD
     public function actionCallback($code = null)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $successRedirect = Yii::$app->session->get(self::SESSION_THAID_SUCCESS_REDIRECT);
+
         $user = Yii::$app->thaidAuth->getUserFromCode($code);
         $cid = $user['sub'] ?? null;
         $birthdate = $user['birthdate'] ?? null;
@@ -39,15 +47,22 @@ class ThaidController extends \yii\web\Controller
 
         // ถ้าไม่พบข้อมูลพนักงาน
         if (!$emp) {
-            $this->redirect(['/auth/login/fail']);
+            Yii::$app->session->remove(self::SESSION_THAID_SUCCESS_REDIRECT);
+            if (is_array($successRedirect)) {
+                return $this->redirect(['/mobile/auth/login']);
+            }
+            return $this->redirect(['/auth/login/fail']);
         }
+
+        $afterLogin = is_array($successRedirect) ? $successRedirect : ['/me'];
+        Yii::$app->session->remove(self::SESSION_THAID_SUCCESS_REDIRECT);
 
         // ถ้าพบข้อมูลพนักงาน แต่ยังไม่มี user_id
         if ($emp && $emp->user_id == 0) {
             $user = $this->registerUser($emp);
             if ($user) {
                 Yii::$app->user->login($user);
-                return $this->redirect(['/me']);
+                return $this->redirect($afterLogin);
             }
         }
 
@@ -55,14 +70,13 @@ class ThaidController extends \yii\web\Controller
         if ($emp && $emp->user_id >= 1) {
             $user = User::findOne($emp->user_id);
             Yii::$app->user->login($user);
-            return $this->redirect(['/me']);
+            return $this->redirect($afterLogin);
         }
     }
 
     // ตรวจสอบข้อมูลพนักงาน
     private function checkEmployee($data)
     {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
         $emp = Employees::find()->where(
             [
                 'cid' => $data['cid'],

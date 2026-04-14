@@ -12,7 +12,7 @@ use app\components\SiteHelper;
 $this->title = 'เข้าสู่ระบบ';
 $siteInfo = SiteHelper::getInfo();
 $appName = $siteInfo['company_name'] ?? 'บริการออนไลน์';
-$thaidUrl = Url::to(['/auth/thaid/']);
+$thaidUrl = Url::to(['/auth/thaid/', 'mobile' => '1']);
 $thaidLogoPath = Yii::getAlias('@webroot/images/thaid_logo.jpg');
 $hasThaidLogo = $thaidLogoPath && is_file($thaidLogoPath);
 
@@ -182,7 +182,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
 
         <div class="mobile-login-divider">หรือ</div>
 
-        <a href="<?= Html::encode($providerLoginUrl) ?>" class="mobile-login-provider">
+        <a href="<?= Html::encode($providerLoginUrl) ?>" class="mobile-login-provider" data-telegram-external-link="1">
             <?php if ($hasProviderLogo): ?>
                 <?= Html::img('@web/images/provider_logo.png', ['class' => 'provider-icon', 'alt' => 'Provider ID']) ?>
             <?php else: ?>
@@ -192,7 +192,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             <span class="provider-desc">ยืนยันตัวตนผ่าน Provider ID (มธ.)</span>
         </a>
 
-        <a href="<?= Html::encode($thaidUrl) ?>" class="mobile-login-thaid">
+        <a href="<?= Html::encode($thaidUrl) ?>" class="mobile-login-thaid" data-telegram-external-link="1">
             <?php if ($hasThaidLogo): ?>
                 <?= Html::img('@web/images/thaid_logo.jpg', ['class' => 'thaid-icon', 'alt' => 'ThaiD']) ?>
             <?php else: ?>
@@ -233,6 +233,25 @@ $this->registerJs(<<<JS
 
     tg.ready();
     tg.expand();
+
+    // OAuth / แอป ThaiD: เปิดนอก WebView ของ Telegram มิฉะนั้น deep link ไปแอป ThaiD มักไม่ทำงาน
+    function absoluteUrl(href) {
+        try {
+            return new URL(href, window.location.origin).href;
+        } catch (e) {
+            return href;
+        }
+    }
+    document.querySelectorAll('[data-telegram-external-link="1"]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            var href = el.getAttribute('href');
+            if (!href || typeof tg.openLink !== 'function') {
+                return;
+            }
+            e.preventDefault();
+            tg.openLink(absoluteUrl(href));
+        });
+    });
 
     const user = tg.initDataUnsafe?.user;
 
