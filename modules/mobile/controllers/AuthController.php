@@ -53,7 +53,7 @@ class AuthController extends Controller
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
-            return $this->redirect(['/mobile/default/index']);
+            return $this->goBack(Url::to(['/mobile/default/index']));
         }
 
         $this->layout = 'login';
@@ -104,6 +104,7 @@ class AuthController extends Controller
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
 
             $data = Yii::$app->request->post('LoginForm');
+            /** @var User $user */
             $user = Yii::$app->user->identity;
             if ($user->telegram_id == null) {
                 $user->telegram_id = $data['telegram_id'];
@@ -111,7 +112,7 @@ class AuthController extends Controller
             }
 
 
-            return $this->redirect(['/mobile/default/index']);
+            return $this->goBack(Url::to(['/mobile/default/index']));
         }
 
         return $this->render('login', [
@@ -156,12 +157,14 @@ class AuthController extends Controller
 
         // 🔐 3. login หลังจาก bind เสร็จ
         Yii::$app->user->login($user, 3600 * 24 * 30);
+        $redirect = Yii::$app->user->getReturnUrl(Url::to(['/mobile/default/index']));
 
         return [
             'success' => true,
             'user_id' => $user->id,
             'telegram_id' => $user->telegram_id,
-            'message' => 'Login success'
+            'message' => 'Login success',
+            'redirect' => $redirect,
         ];
     }
 
@@ -187,10 +190,12 @@ class AuthController extends Controller
         }
 
         Yii::$app->user->login($user, 3600 * 24 * 30);
+        $redirect = Yii::$app->user->getReturnUrl(Url::to(['/mobile/default/index']));
 
         return [
             'success' => true,
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'redirect' => $redirect,
         ];
     }
 

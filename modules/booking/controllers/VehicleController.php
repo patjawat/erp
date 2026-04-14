@@ -25,6 +25,7 @@ use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 use app\modules\booking\models\VehicleDetailSearch;
+use app\modules\booking\components\VehicleTelegramNotify;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 
@@ -365,6 +366,7 @@ class VehicleController extends Controller
     public function actionWorkUpdate($id)
     {
         $model = VehicleDetail::findOne($id);
+        $previousDetailDriverId = $model->driver_id;
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
         if (!$model->ref) {
@@ -382,6 +384,9 @@ class VehicleController extends Controller
             if ($model->save()) {
                 $model->vehicle->status = $model->status;
                 $model->vehicle->save();
+                if ($model->vehicle) {
+                    VehicleTelegramNotify::notifyVehicleDetailDriverChanged($model->vehicle, $model, $previousDetailDriverId);
+                }
                 return ['status' => 'success',];
             } else {
                 return ['status' => 'error',];
@@ -778,6 +783,7 @@ class VehicleController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $previousDriverId = $model->driver_id;
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
         // เก็บค่าเดิมไว้ก่อน
@@ -792,6 +798,7 @@ class VehicleController extends Controller
             $model->data_json = ArrayHelper::merge($old_json, $new_json);
 
             $model->save();
+            VehicleTelegramNotify::notifyDriverChanged($model, $previousDriverId);
             return [
                 'status' => 'success',
                 'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',
@@ -836,36 +843,48 @@ class VehicleController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            $transaction = Yii::$app->db->beginTransaction();
-            $model->status = 'Pass';
             $post = Yii::$app->request->post();
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $model->status = 'Pass';
+                if (!$model->save()) {
+                    throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
+                }
 
-            // try {
-            // บันทึกข้อมูลหลักการจอง
-            if (!$model->save()) {
-                throw new \Exception('ไม่สามารถบันทึกข้อมูลการจองได้');
-            }
-
-            foreach ($post['vehicleDetails'] as $key => $detail) {
-                $bookingDetail = VehicleDetail::findOne($detail['id']);
-                if ($bookingDetail) {
+                $driverNotifyRows = [];
+                foreach ($post['vehicleDetails'] as $key => $detail) {
+                    $bookingDetail = VehicleDetail::findOne($detail['id']);
+                    if (!$bookingDetail) {
+                        throw new \Exception('ไม่พบรายละเอียดการจอง');
+                    }
+                    $prevDriver = $bookingDetail->driver_id;
                     $bookingDetail->driver_id = $detail['driver'];
                     $bookingDetail->license_plate = $detail['car'];
                     $bookingDetail->status = 'Pass';
-                    $bookingDetail->save(false);
-                    $this->sendMessage($model);
+                    if (!$bookingDetail->save(false)) {
+                        throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+                    }
+                    $driverNotifyRows[] = ['detail' => $bookingDetail, 'prev' => $prevDriver];
                 }
 
-                if (!$bookingDetail->save()) {
-                    throw new \Exception('ไม่สามารถบันทึกรายละเอียดการจองได้');
+                $transaction->commit();
+
+                foreach ($driverNotifyRows as $row) {
+                    VehicleTelegramNotify::notifyVehicleDetailDriverChanged($model, $row['detail'], $row['prev']);
                 }
+                VehicleTelegramNotify::notifyRequesterAllocated($model);
+                $this->sendApprove($model);
+
+                return [
+                    'status' => 'success'
+                ];
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ];
             }
-
-            $transaction->commit();
-            $this->sendApprove($model);
-            return [
-                'status' => 'success'
-            ];
         }
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;

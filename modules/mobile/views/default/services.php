@@ -61,6 +61,13 @@ $services = [
         'url'   => '#',
     ],
 ];
+
+$services[] = [
+    'icon'  => 'clipboard-check',
+    'label' => 'อนุมัติใบลา',
+    'desc'  => 'ดูรายการใบลาที่รออนุมัติจากคุณ',
+    'url'   => \yii\helpers\Url::to(['/mobile/default/leave-approvals']),
+];
 ?>
 <style>
 .service-menu-card {

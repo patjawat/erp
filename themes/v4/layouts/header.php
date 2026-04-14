@@ -114,7 +114,7 @@ $total = $notify['total'];
                     </div>
                 <?php endif; ?>
 
-                <div class="d-none d-md-block text-white fw-medium"><?= UserHelper::GetEmployee()->fullname ?></div>
+                <div class="d-none d-md-block text-white fw-medium"><?= UserHelper::GetEmployee()->fullname ?? '-' ?></div>
             </div>
 
 

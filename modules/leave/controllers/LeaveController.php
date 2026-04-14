@@ -15,6 +15,7 @@ use app\components\AppHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
 use app\modules\leave\models\LeaveCreateForm;
+use app\modules\leave\components\LeaveApprovalService;
 use app\components\SiteHelper;
 use app\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -308,55 +309,18 @@ class LeaveController extends Controller
         }
         $me = UserHelper::GetEmployee();
         $status = (string) Yii::$app->request->post('status');
-        if (!in_array($status, ['Pass', 'Reject'], true)) {
-            return ['status' => 'error', 'message' => 'Invalid status'];
+        $userIsChecker = Yii::$app->user->can('leave');
+        $userIsOwner = $me && (int) $model->emp_id === (int) $me->id;
+        $canApprove = $model->status === 'Pending' && ($userIsOwner || (empty($model->emp_id) && $userIsChecker));
+        if (!$canApprove) {
+            return ['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์อนุมัติรายการนี้'];
         }
-        $model->data_json = ArrayHelper::merge(
-            (array) $model->data_json,
-            ['approve_date' => date('Y-m-d H:i:s')]
-        );
-        $model->status = $status;
-        if (empty($model->emp_id)) {
-            $model->emp_id = $me->id;
+
+        $result = (new LeaveApprovalService())->process($model, $status, $me ? (int) $me->id : null);
+        if (!($result['ok'] ?? false)) {
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
         }
-        if (!$model->save(false)) {
-            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
-        }
-        $leave = Leave::findOne((int) $model->from_id);
-        if (!$leave) {
-            return ['status' => 'success'];
-        }
-        if ($status === 'Reject') {
-            $leave->status = 'Reject';
-            $leave->save(false);
-            $leave->MsgReject();
-            return ['status' => 'success'];
-        }
-        if ($model->maxLevel() && $status === 'Pass') {
-            $leave->status = 'Approve';
-            $leave->save(false);
-            $leave->MsgApprove();
-            return ['status' => 'success'];
-        }
-        $statusMap = [
-            1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
-            2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
-            3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
-            4 => ['Pass' => 'Approve', 'Reject' => 'Reject'],
-        ];
-        if (isset($statusMap[$model->level][$status])) {
-            $leave->status = $statusMap[$model->level][$status];
-            $leave->save(false);
-        }
-        $nextApprove = ApproveModel::findOne([
-            'from_id' => $model->from_id,
-            'name' => 'leave',
-            'level' => $model->level + 1,
-        ]);
-        if ($nextApprove && $status === 'Pass') {
-            $nextApprove->status = 'Pending';
-            $nextApprove->save(false);
-        }
+
         return ['status' => 'success'];
     }
 

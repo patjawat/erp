@@ -16,6 +16,7 @@ use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\leave\components\LeaveApproveResolver;
+use app\modules\leave\components\LeaveTelegramService;
 use app\modules\leave\models\LeaveEntitlements;
 use app\modules\leave\models\LeaveType;
 use Yii;
@@ -283,6 +284,7 @@ class Leave extends \yii\db\ActiveRecord
                 if ($toUser) {
                     LineMsg::sendLeave($firstPendingApprove->id, $toUser);
                 }
+                (new LeaveTelegramService())->notifyPendingApprove($firstPendingApprove);
             } catch (\Throwable $e) {
                 // ignore
             }

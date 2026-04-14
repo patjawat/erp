@@ -11,6 +11,7 @@ use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleDetailSearch;
+use app\modules\booking\components\VehicleTelegramNotify;
 
 /**
  * VehicleDetailController implements the CRUD actions for VehicleDetail model.
@@ -114,8 +115,12 @@ class VehicleDetailController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $previousDriverId = $model->driver_id;
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            if ($model->vehicle) {
+                VehicleTelegramNotify::notifyVehicleDetailDriverChanged($model->vehicle, $model, $previousDriverId);
+            }
             return $this->redirect(['view', 'id' => $model->id]);
         }
 

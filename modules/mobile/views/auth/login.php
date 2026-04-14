@@ -259,9 +259,7 @@ $this->registerJs(<<<JS
             log(res);
 
             if(res.success){
-
-                window.location.href = "/mobile/default/index";
-
+                window.location.href = res.redirect || "/mobile/default/index";
             }
 
         },
@@ -284,7 +282,7 @@ JS,View::POS_END);
 
 
 <!-- curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \
--d chat_id=7501172744 \
+-d chat_id=8177437409 \
 -d text="Hello from system"
 
 curl -X POST https://api.telegram.org/bot8489332575:AAHIh2X9ipxpDs8x77UQ2IXxG1emctDlzdo/sendMessage \

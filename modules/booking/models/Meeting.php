@@ -407,34 +407,102 @@ return $data;
 
 
     
-    // ส่งข้ความไปยังผู้ดูแลห้องประชุม
+    // ส่งข้อความไปยังผู้ดูแลห้องประชุม (Line / Telegram ตามผู้รับผิดชอบในตั้งค่าห้อง data_json[owner])
     public function SendMeeting()
     {
-        //ส่ง lie msg
+        $ownerRoom = Room::find()->where(['name' => 'meeting_room', 'code' => $this->room_id])->one();
+
+        // ส่ง Line ถึงผู้รับผิดชอบห้อง
         try {
-           $ownerRoom = Room::find()->where(['name' => 'meeting_room', 'code' => $this->room_id])->one();
-        $id = $ownerRoom->data_json['owner'] ?? 0;
-        $emp = Employees::findOne($id);
-        $lineId = $emp->user->line_id;
-        LineMsg::BookMeeting($this->id, $lineId);
+            if ($ownerRoom) {
+                $ownerId = $ownerRoom->data_json['owner'] ?? null;
+                if ($ownerId) {
+                    $emp = Employees::findOne($ownerId);
+                    if ($emp && $emp->user && !empty($emp->user->line_id)) {
+                        LineMsg::BookMeeting($this->id, $emp->user->line_id);
+                    }
+                }
+            }
         } catch (\Throwable $th) {
-            //throw $th;
         }
-        // ส่ง telegram
+
+        // Telegram: ส่งตรงถึง telegram_id ของผู้รับผิดชอบห้อง; ถ้าไม่มีให้ใช้ช่องกลุ่ม meeting เหมือนเดิม
         try {
-             $room = 'ขอใช้'.$this->room->title; // ข้อความสำรอง
-            $message = $room." วันที่ " . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . 
-            " เวลา " . $this->time_start . "-" . $this->time_end . "\n" .
-            "ผู้ติดต่อ " . $this->employee->fullname . "\n" . 
-            "โทรศัพท์ " . $this->data_json['phone'];
-        
-             $response = Yii::$app->telegram->sendMessage('meeting', $message, [
+            $roomTitle = $ownerRoom !== null
+                ? ($ownerRoom->title ?: 'ห้องประชุม')
+                : ($this->room->title ?? 'ห้องประชุม');
+            $room = 'ขอใช้' . $roomTitle;
+            $contactName = '-';
+            try {
+                $contactName = $this->employee->fullname ?? '-';
+            } catch (\Throwable $th) {
+            }
+            $phone = is_array($this->data_json) ? ($this->data_json['phone'] ?? '') : '';
+            $message = $room . ' วันที่ ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium')
+                . ' เวลา ' . $this->time_start . '-' . $this->time_end . "\n"
+                . 'ผู้ติดต่อ ' . $contactName . "\n"
+                . 'โทรศัพท์ ' . $phone;
+
+            $options = [
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => true,
+            ];
+
+            $sentToOwner = false;
+            if ($ownerRoom) {
+                $ownerId = $ownerRoom->data_json['owner'] ?? null;
+                if ($ownerId) {
+                    $ownerEmp = Employees::findOne($ownerId);
+                    $chatId = ($ownerEmp && $ownerEmp->user)
+                        ? trim((string) ($ownerEmp->user->telegram_id ?? ''))
+                        : '';
+                    if ($chatId !== '') {
+                        $sentToOwner = (bool) Yii::$app->telegram->sendDirectMessage($chatId, $message, $options);
+                    }
+                }
+            }
+
+            if (!$sentToOwner) {
+                Yii::$app->telegram->sendMessage('meeting', $message, $options);
+            }
+        } catch (\Throwable $th) {
+        }
+    }
+
+    /**
+     * แจ้งเตือน Telegram ไปยังผู้จอง (emp_id) เมื่อการจองได้รับการอนุมัติ
+     */
+    public function notifyBookerMeetingApprovedTelegram(): bool
+    {
+        try {
+            $emp = $this->employee;
+            if (!$emp || !$emp->user) {
+                return false;
+            }
+            $chatId = trim((string) ($emp->user->telegram_id ?? ''));
+            if ($chatId === '') {
+                return false;
+            }
+            $roomTitle = (string) $this->room_id;
+            try {
+                if ($this->room) {
+                    $roomTitle = $this->room->title ?: $roomTitle;
+                }
+            } catch (\Throwable $th) {
+            }
+            $message = "การจองห้องประชุมได้รับการอนุมัติแล้ว\n"
+                . 'หัวข้อ: ' . ($this->title ?: '-') . "\n"
+                . 'ห้อง: ' . $roomTitle . "\n"
+                . 'วันที่ ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium')
+                . ' เวลา ' . $this->time_start . '-' . $this->time_end;
+
+            return (bool) Yii::$app->telegram->sendDirectMessage($chatId, $message, [
                 'parse_mode' => 'HTML',
                 'disable_web_page_preview' => true,
             ]);
         } catch (\Throwable $th) {
-            //throw $th;
-        } 
+            return false;
+        }
     }
 
     //แสดงวันเวลาที่แสดง

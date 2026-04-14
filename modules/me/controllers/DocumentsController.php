@@ -8,6 +8,7 @@ use app\models\Uploads;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\DateFilterHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\dms\models\Documents;
@@ -201,6 +202,47 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
+     * สร้าง search model พร้อม hydrate ช่วงวันที่จาก query เพื่อให้หน้า render กับ ajax ใช้ state เดียวกัน
+     */
+    private function createDocumentsSearchModel(): DocumentSearch
+    {
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+        ]);
+        $searchModel->load($this->request->queryParams);
+        $this->hydrateDocumentSearchDates($searchModel);
+
+        return $searchModel;
+    }
+
+    /**
+     * เติมค่า date_start/date_end จาก date_filter เมื่อยังไม่มีค่า และคืนช่วงวันที่แบบ Gregorian สำหรับ query
+     *
+     * @return array{0:?string,1:?string}
+     */
+    private function hydrateDocumentSearchDates(DocumentSearch $searchModel): array
+    {
+        $dateStart = $searchModel->date_start ? AppHelper::convertToGregorian($searchModel->date_start) : null;
+        $dateEnd = $searchModel->date_end ? AppHelper::convertToGregorian($searchModel->date_end) : null;
+
+        if (($dateStart === null || $dateEnd === null) && is_string($searchModel->date_filter) && $searchModel->date_filter !== '') {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            if ($range !== null) {
+                if ($dateStart === null) {
+                    $dateStart = date('Y-m-d', strtotime($range[0]));
+                    $searchModel->date_start = AppHelper::convertToThai($dateStart);
+                }
+                if ($dateEnd === null) {
+                    $dateEnd = date('Y-m-d', strtotime($range[1]));
+                    $searchModel->date_end = AppHelper::convertToThai($dateEnd);
+                }
+            }
+        }
+
+        return [$dateStart, $dateEnd];
+    }
+
+    /**
      * ข้อมูลหน้า index ทะเบียนหนังสือ (ใช้ทั้ง render เต็มและ Ajax refresh)
      *
      * @return array{
@@ -220,9 +262,8 @@ class DocumentsController extends \yii\web\Controller
         $kpiRaw = $this->request->get('kpi');
         $isUnreadKpi = is_string($kpiRaw) && $kpiRaw === 'unread';
 
-        $searchModel = new DocumentSearch([
-            'date_filter' => 'today'
-        ]);
+        $searchModel = $this->createDocumentsSearchModel();
+        [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
         $dataProvider = $searchModel->search($this->request->queryParams);
         /** @var \yii\db\ActiveQuery $query */
         $query = $dataProvider->query;
@@ -256,15 +297,12 @@ class DocumentsController extends \yii\web\Controller
         } elseif ($searchModel->q_status !== null && $searchModel->q_status !== '' && (string) $searchModel->q_status !== 'Y') {
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
-        $dataProvider->query->andFilterWhere([
-            'between',
-            'doc_transactions_date',
-            AppHelper::convertToGregorian($searchModel->date_start),
-            AppHelper::convertToGregorian($searchModel->date_end)
-        ]);
+        $query
+            ->andFilterWhere(['>=', 'doc_transactions_date', $dateStart])
+            ->andFilterWhere(['<=', 'doc_transactions_date', $dateEnd]);
 
         // JOIN หลายแถวต่อ 1 เอกสาร — ต้อง group ที่ documents.id ไม่เช่นนั้น LIMIT ของ pagination นับแถว join → เห็นแค่ไม่กี่รายการต่อหน้า
-        $dataProvider->query->groupBy(['documents.id']);
+        $query->groupBy(['documents.id']);
 
         // ยังไม่ได้อ่าน (showHome) รวมหนังสือถึงหน่วยงานที่อาจไม่มีแถว tags ถึงตัวพนักงาน — ห้ามบังคับ tags ในการนับ/กรอง unread
         $kpiUnreadBaseQuery = clone $dataProvider->query;
@@ -373,10 +411,7 @@ class DocumentsController extends \yii\web\Controller
     public function actionIndex()
     {
         $emp = UserHelper::GetEmployee();
-        $searchModel = new DocumentSearch([
-            'date_filter' => 'today',
-        ]);
-        $searchModel->load(Yii::$app->request->queryParams, '');
+        $searchModel = $this->createDocumentsSearchModel();
 
         $kpi = $this->request->get('kpi');
         if (!is_string($kpi) || !in_array($kpi, ['unread', 'bookmarked', 'urgent', 'total'], true)) {
