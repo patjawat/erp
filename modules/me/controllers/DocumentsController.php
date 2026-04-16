@@ -17,7 +17,6 @@ use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentsDetailSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Organization;
-use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 class DocumentsController extends \yii\web\Controller
@@ -78,101 +77,6 @@ class DocumentsController extends \yii\web\Controller
         ])->queryColumn();
     }
 
-    /** แปลงรายการ detail id → document_id ไม่ซ้ำ */
-    private function documentIdsFromDetailIds(array $detailIds): array
-    {
-        $detailIds = array_values(array_unique(array_filter(array_map('intval', $detailIds))));
-        if ($detailIds === []) {
-            return [];
-        }
-
-        return DocumentsDetail::find()
-            ->select('document_id')
-            ->distinct()
-            ->where(['id' => $detailIds])
-            ->column();
-    }
-
-    /** document_id สำหรับ KPI / กรอง kpi=unread — มาจากชุดเดียวกับ showHome */
-    private function unreadDocumentIdsForMeInbox($department, $empId): array
-    {
-        $docIds = $this->documentIdsFromDetailIds($this->unreadDetailIdsShowHomeExact($department, $empId));
-
-        return array_values(array_unique(array_filter(array_map('intval', $docIds))));
-    }
-
-    /**
-     * kpi=unread: document_id => documents_detail.id สำหรับลิงก์ view/bookmark
-     * ใช้แถว unread จริงจาก SQL เดียวกับ showHome — ไม่ใช้ hasOne documentTags ที่อาจชี้แถว tags คนอื่น/ไม่ใช่แถวที่ยัง unread
-     *
-     * @return array<int,int>
-     */
-    private function unreadOpenDetailIdByDocumentMap($department, int $empId): array
-    {
-        $detailIds = array_values(array_unique(array_filter(array_map('intval', $this->unreadDetailIdsShowHomeExact($department, $empId)))));
-        if ($detailIds === []) {
-            return [];
-        }
-
-        $rows = DocumentsDetail::find()
-            ->select(['id', 'document_id', 'name'])
-            ->where(['id' => $detailIds])
-            ->asArray()
-            ->all();
-
-        $byDocument = [];
-        foreach ($rows as $row) {
-            $docId = (int) $row['document_id'];
-            if (!isset($byDocument[$docId])) {
-                $byDocument[$docId] = [];
-            }
-            $byDocument[$docId][] = $row;
-        }
-
-        $map = [];
-        foreach ($byDocument as $docId => $list) {
-            $chosen = null;
-            foreach ($list as $row) {
-                if (($row['name'] ?? '') === 'tags') {
-                    $chosen = $row;
-                    break;
-                }
-            }
-            if ($chosen === null) {
-                foreach ($list as $row) {
-                    if (($row['name'] ?? '') === 'department') {
-                        $chosen = $row;
-                        break;
-                    }
-                }
-            }
-            if ($chosen === null && $list !== []) {
-                $chosen = $list[0];
-            }
-            if ($chosen !== null) {
-                $map[(int) $docId] = (int) $chosen['id'];
-            }
-        }
-
-        return $map;
-    }
-
-    /**
-     * โหลด DocumentsDetail ตาม unreadOpenDetailIdByDocumentMap สำหรับส่งเข้า view (ลด N+1)
-     *
-     * @param array<int,int> $openMap document_id => detail_id
-     * @return array<int,DocumentsDetail>
-     */
-    private function unreadOpenDocumentsDetailById(array $openMap): array
-    {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $openMap))));
-        if ($ids === []) {
-            return [];
-        }
-
-        return DocumentsDetail::find()->where(['id' => $ids])->indexBy('id')->all();
-    }
-
     /** เงื่อนไขแถว tags ถึงพนักงาน (รองรับ to_id หลายรูปแบบในฐานข้อมูล) */
     private function tagsToEmployeeCondition(int $empId): array
     {
@@ -202,7 +106,7 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
-     * สร้าง search model พร้อม hydrate ช่วงวันที่จาก query เพื่อให้หน้า render กับ ajax ใช้ state เดียวกัน
+     * สร้าง search model พร้อม hydrate ช่วงวันที่จาก query เพื่อให้หน้า render ใช้ state เดียวกับการค้นหา
      */
     private function createDocumentsSearchModel(): DocumentSearch
     {
@@ -243,24 +147,20 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
-     * ข้อมูลหน้า index ทะเบียนหนังสือ (ใช้ทั้ง render เต็มและ Ajax refresh)
+     * ข้อมูลหน้า index ทะเบียนหนังสือ
      *
      * @return array{
      *   searchModel: DocumentSearch,
      *   dataProvider: \yii\data\ActiveDataProvider,
-     *   kpi: string|null,
      *   unreadOpenDetailIdByDocument: array,
      *   unreadOpenDocumentsDetailById: array,
      *   readAtByRoutingId: array,
-     *   documentStats: array{total:int,unread:int,bookmarked:int,urgent:int},
      *   emp: object
      * }
      */
     private function buildDocumentsIndexViewData(): array
     {
         $emp = UserHelper::GetEmployee();
-        $kpiRaw = $this->request->get('kpi');
-        $isUnreadKpi = is_string($kpiRaw) && $kpiRaw === 'unread';
 
         $searchModel = $this->createDocumentsSearchModel();
         [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
@@ -288,13 +188,10 @@ class DocumentsController extends \yii\web\Controller
             ['like', 'doc_number', $q],
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
         ]);
-        // โหมดยังไม่ได้อ่าน: ห้ามใช้ d_read.bookmark — ขัดกับ r.doc_read IS NULL ของนิยาม unread
-        if (!$isUnreadKpi && $searchModel->q_status == 'Y') {
+        if ($searchModel->q_status == 'Y') {
             $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
             $dataProvider->query->andWhere($this->readRowToEmployeeCondition((int) $emp->id));
-        } elseif (!$isUnreadKpi) {
-            $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
-        } elseif ($searchModel->q_status !== null && $searchModel->q_status !== '' && (string) $searchModel->q_status !== 'Y') {
+        } else {
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
         $query
@@ -304,13 +201,7 @@ class DocumentsController extends \yii\web\Controller
         // JOIN หลายแถวต่อ 1 เอกสาร — ต้อง group ที่ documents.id ไม่เช่นนั้น LIMIT ของ pagination นับแถว join → เห็นแค่ไม่กี่รายการต่อหน้า
         $query->groupBy(['documents.id']);
 
-        // ยังไม่ได้อ่าน (showHome) รวมหนังสือถึงหน่วยงานที่อาจไม่มีแถว tags ถึงตัวพนักงาน — ห้ามบังคับ tags ในการนับ/กรอง unread
-        $kpiUnreadBaseQuery = clone $dataProvider->query;
-        $kpiInboxBaseQuery = clone $dataProvider->query;
-        $kpiInboxBaseQuery->andWhere($this->tagsToEmployeeCondition((int) $emp->id));
-        if (!$isUnreadKpi) {
-            $dataProvider->query->andWhere($this->tagsToEmployeeCondition((int) $emp->id));
-        }
+        $dataProvider->query->andWhere($this->tagsToEmployeeCondition((int) $emp->id));
 
         $dataProvider->setPagination([
             'pageSize' => 20,
@@ -322,66 +213,14 @@ class DocumentsController extends \yii\web\Controller
             // 'thai_year' => SORT_DESC,
         ]]);
 
-        $kpi = $this->request->get('kpi');
-        if (!is_string($kpi) || !in_array($kpi, ['unread', 'bookmarked', 'urgent', 'total'], true)) {
-            $kpi = null;
-        }
-        switch ($kpi) {
-            case 'unread':
-                $unreadIds = $this->unreadDocumentIdsForMeInbox($emp->department, $emp->id);
-                if ($unreadIds === []) {
-                    $dataProvider->query->andWhere('0=1');
-                } else {
-                    $dataProvider->query->andWhere(['documents.id' => $unreadIds]);
-                }
-                break;
-            case 'bookmarked':
-                $dataProvider->query->andWhere(['d_read.bookmark' => 'Y']);
-                $dataProvider->query->andWhere($this->readRowToEmployeeCondition((int) $emp->id));
-                break;
-            case 'urgent':
-                $dataProvider->query->andWhere(['documents.doc_speed' => 'ด่วนที่สุด']);
-                break;
-            case 'total':
-            default:
-                break;
-        }
-
-        // query มี GROUP BY documents.id แล้ว — ใช้ count('*') ไม่ใช้ DISTINCT documents.id (subquery ไม่มี prefix ตาราง)
-        $totalList = (int) (clone $kpiInboxBaseQuery)->count('*');
-        $bookmarkedCount = (int) (clone $kpiInboxBaseQuery)
-            ->andWhere(['d_read.bookmark' => 'Y'])
-            ->andWhere($this->readRowToEmployeeCondition((int) $emp->id))
-            ->count('*');
-        $urgentCount = (int) (clone $kpiInboxBaseQuery)
-            ->andWhere(['documents.doc_speed' => 'ด่วนที่สุด'])
-            ->count('*');
-
-        $unreadIdsForKpi = $this->unreadDocumentIdsForMeInbox($emp->department, $emp->id);
-        if ($unreadIdsForKpi === []) {
-            $unreadCount = 0;
-        } else {
-            $unreadCount = (int) (clone $kpiUnreadBaseQuery)
-                ->andWhere(['documents.id' => $unreadIdsForKpi])
-                ->count('*');
-        }
-
-        $unreadOpenDetailIdByDocument = $isUnreadKpi
-            ? $this->unreadOpenDetailIdByDocumentMap($emp->department, (int) $emp->id)
-            : [];
-        $unreadOpenDocumentsDetailById = $unreadOpenDetailIdByDocument !== []
-            ? $this->unreadOpenDocumentsDetailById($unreadOpenDetailIdByDocument)
-            : [];
+        $unreadOpenDetailIdByDocument = [];
+        $unreadOpenDocumentsDetailById = [];
 
         $routingIdsForReadStatus = [];
         foreach ($dataProvider->getModels() as $m) {
-            if ($unreadOpenDetailIdByDocument !== [] && isset($unreadOpenDetailIdByDocument[$m->id])) {
-                $routingIdsForReadStatus[] = $unreadOpenDetailIdByDocument[$m->id];
-            } else {
-                $dt = $m->documentTags ?? $m->documentDepartment ?? null;
-                if ($dt !== null) {
-                    $routingIdsForReadStatus[] = (int) $dt->id;
-                }
+            $dt = $m->documentTags ?? $m->documentDepartment ?? null;
+            if ($dt !== null) {
+                $routingIdsForReadStatus[] = (int) $dt->id;
             }
         }
         $readAtByRoutingId = $routingIdsForReadStatus !== []
@@ -391,66 +230,27 @@ class DocumentsController extends \yii\web\Controller
         return [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'kpi' => $kpi,
             'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument,
             'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById,
             'readAtByRoutingId' => $readAtByRoutingId,
-            'documentStats' => [
-                'total' => $totalList,
-                'unread' => $unreadCount,
-                'bookmarked' => $bookmarkedCount,
-                'urgent' => $urgentCount,
-            ],
             'emp' => $emp,
         ];
     }
 
-    /**
-     * โหลดเฉพาะโครงหน้า + ฟอร์มค้นหา — ชุดทะเบียนหนังสือ (KPI + รายการ) โหลดทาง actionAjaxRefresh ผ่าน Ajax
-     */
     public function actionIndex()
     {
-        $emp = UserHelper::GetEmployee();
-        $searchModel = $this->createDocumentsSearchModel();
-
-        $kpi = $this->request->get('kpi');
-        if (!is_string($kpi) || !in_array($kpi, ['unread', 'bookmarked', 'urgent', 'total'], true)) {
-            $kpi = null;
-        }
+        $d = $this->buildDocumentsIndexViewData();
+        $emp = $d['emp'];
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
-            'action' => 'index',
-            'to' => 'ถึง' . $emp->fullname(),
-            'activeKpi' => $kpi,
-        ]);
-    }
-
-    /** Ajax: HTML สำหรับอัปเดต KPI + รายการแบบเรียลไทม์ (หลังเปิดอ่าน / ปักดาว) */
-    public function actionAjaxRefresh()
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        $d = $this->buildDocumentsIndexViewData();
-        $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
-        $listPartial = $isTableView ? '_list' : '_grid';
-        $listHtml = $this->renderPartial($listPartial, [
+            'searchModel' => $d['searchModel'],
             'dataProvider' => $d['dataProvider'],
             'unreadOpenDetailIdByDocument' => $d['unreadOpenDetailIdByDocument'],
             'unreadOpenDocumentsDetailById' => $d['unreadOpenDocumentsDetailById'],
             'readAtByRoutingId' => $d['readAtByRoutingId'],
+            'action' => 'index',
+            'to' => 'ถึง' . $emp->fullname(),
         ]);
-        $kpiHtml = $this->renderPartial('kpi_summary', [
-            'documentStats' => $d['documentStats'],
-            'activeKpi' => $d['kpi'],
-        ]);
-
-        return [
-            'success' => true,
-            'kpiHtml' => $kpiHtml,
-            'listHtml' => $listHtml,
-            'documentStats' => $d['documentStats'],
-            'totalCount' => (int) $d['dataProvider']->getTotalCount(),
-        ];
     }
 
     /** ดาวน์โหลดเทมเพลต Excel (รอพัฒนาระบบไฟล์) */

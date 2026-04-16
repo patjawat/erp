@@ -22,12 +22,6 @@ use app\components\DateFilterHelper;
     ],
      'fieldConfig' => ['options' => ['class' => 'form-group mb-1 mr-2 me-2']] // spacing form field groups
 ]); ?>
-<?php
-$kpiParam = Yii::$app->request->get('kpi');
-if (is_string($kpiParam) && in_array($kpiParam, ['unread', 'bookmarked', 'urgent', 'total'], true)) {
-    echo Html::hiddenInput('kpi', $kpiParam);
-}
-?>
 <div class="row g-2 align-items-start">
 <div class="col-12 col-lg">
         <div class="input-group">
