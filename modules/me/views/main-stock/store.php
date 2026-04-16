@@ -96,7 +96,7 @@ $products = $cart->getItems();
 
                 <div class="d-flex justify-content-between">
                     <div class="fw-semibold text-danger">
-                        <?php echo number_format($model->unit_price,2); ?>
+                        <?php echo number_format($model->unit_price ?? 0,2); ?>
                     </div>
                     <?php if($model->SumQty() >= 1):?>
                     <?php
