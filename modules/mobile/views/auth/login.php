@@ -145,13 +145,11 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             'autofocus' => true,
             'autocomplete' => 'username',
             'inputmode' => 'text',
-            'value' => 'admin'
         ]) ?>
 
         <?= $form->field($model, 'password')->passwordInput([
             'placeholder' => 'รหัสผ่าน',
             'autocomplete' => 'current-password',
-            'value' => 'l;ylfu8iy['
         ]) ?>
 
         <div class="mb-3">
