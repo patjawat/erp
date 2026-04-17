@@ -49,8 +49,8 @@ class LeaveDataSource implements DataSourceInterface
             ['source' => 'approver_fullname', 'label' => 'ผู้อนุมัติ (ชื่อ-นามสกุล)'],
             ['source' => 'approver_position', 'label' => 'ผู้อนุมัติ (ตำแหน่ง)'],
             ['source' => 'approver_approve_date', 'label' => 'ผู้อนุมัติ (วันที่อนุมัติ)'],
-            ['source' => 'approver_signature', 'label' => 'ผู้อนุมัติ (ลายเซ็น)'],
             ['source' => 'approval_status', 'label' => 'สถานะผู้อนุมัติ'],
+            ['source' => 'approver_signature', 'label' => 'ผู้อนุมัติ (ลายเซ็น)'],
         ];
     }
 }

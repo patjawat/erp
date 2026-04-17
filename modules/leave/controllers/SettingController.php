@@ -13,6 +13,7 @@ use app\components\ThaiDateHelper;
 use app\components\SiteHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
+use app\modules\approveV2\models\Approve;
 use yii\helpers\Url;
 
 const LEAVE_FORM_TEMPLATE_NAME  = 'leave_form_template';
@@ -587,6 +588,27 @@ class SettingController extends Controller
         $values['approver_3_signature'] = $hrSignature;
         $values['approver_4_signature'] = $direcSignature;
         $values['approval_status'] = $values['status'];
+
+        // Populate per-level approver status keys (compatibility for PDF templates).
+        // Map Approve.status -> expected values used by PdfTemplateService: Pass | Reject | กำหนด
+        for ($level = 1; $level <= 8; $level++) {
+            $approveModel = Approve::find()->where(['name' => 'leave', 'from_id' => $model->id, 'level' => $level])->one();
+            $statusVal = '';
+            if ($approveModel && isset($approveModel->status)) {
+                $s = $approveModel->status;
+                if ($s === 'Pass') {
+                    $statusVal = 'Pass';
+                } elseif ($s === 'Reject') {
+                    $statusVal = 'Reject';
+                } elseif ($s === 'Pending' || $s === 'None') {
+                    // 'Pending' treated as 'กำหนด' (assigned); 'None' -> empty
+                    $statusVal = $s === 'Pending' ? 'กำหนด' : '';
+                } else {
+                    $statusVal = (string) $s;
+                }
+            }
+            $values['approver_' . $level . '_status'] = $statusVal;
+        }
         $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');
         return $values;
     }
