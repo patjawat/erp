@@ -195,8 +195,8 @@ class DocumentsController extends \yii\web\Controller
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
         $query
-            ->andFilterWhere(['>=', 'doc_date', $dateStart])
-            ->andFilterWhere(['<=', 'doc_date', $dateEnd]);
+            ->andFilterWhere(['>=', 'doc_transactions_date', $dateStart])
+            ->andFilterWhere(['<=', 'doc_transactions_date', $dateEnd]);
 
         // JOIN หลายแถวต่อ 1 เอกสาร — ต้อง group ที่ documents.id ไม่เช่นนั้น LIMIT ของ pagination นับแถว join → เห็นแค่ไม่กี่รายการต่อหน้า
         $query->groupBy(['documents.id']);

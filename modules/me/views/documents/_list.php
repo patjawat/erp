@@ -20,7 +20,7 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
         <thead class="table-light">
             <tr>
                 <th class="text-center d-none d-md-table-cell">ลำดับ</th>
-                <th class="text-center">เลขรับ/หนังสือ</th>
+                <th class="text-center" style="min-width:120px">เลขรับ/วันที่</th>
                 <th class="">วันที่หนังสือ</th>
                 <th>เรื่อง/รายละเอียด</th>
                 <th>ไฟล์แนบ</th>
@@ -52,12 +52,10 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
 
                     <td class="text-center">
                         <div class="fw-bold text-dark small"><?= Html::encode($item->doc_regis_number) ?></div>
-                        <div class="text-danger small"><?= Html::encode($item->doc_number) ?></div>
+                        <div class="small"><?= Html::encode(ThaiDateHelper::formatThaiDate($item->doc_transactions_date, 'short')) ?></div>
                     </td>
                     <td>
-                        <div class="small">
-                            <?= Html::encode(ThaiDateHelper::formatThaiDate($item->doc_date, 'short')) ?>
-                        </div>
+                        <div class="text-danger small"><?= Html::encode($item->doc_number) ?></div>
                     </td>
 
                     <td>

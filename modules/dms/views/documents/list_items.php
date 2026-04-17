@@ -1,15 +1,16 @@
 <?php
 
-use yii\helpers\Url;
+use app\components\ThaiDateHelper;
 use yii\helpers\Html;
+use yii\helpers\Url;
 ?>
 
 <table class="table table-striped table-fixed">
     <thead>
         <tr>
-            <th class="text-center" style="width:50px;">ลำดับ</th>
-            <th class="text-center" style="min-width:100px; width:100px;">เลขที่รับ</th>
-            <th style="min-width:320px;">เรื่อง</th>
+            <th class="text-center d-none d-md-table-cell">ลำดับ</th>
+            <th class="text-center" style="min-width:120px">เลขรับ/วันที่</th>
+            <th>รายละเอียด</th>
             <th style="width:90px;">ไฟล์แนบ</th>
             <th style="min-width:250px;">ผู้บันทึก</th>
             <th style="min-width:100px;">สถานะ</th>
@@ -18,62 +19,65 @@ use yii\helpers\Html;
     </thead>
     <tbody class="align-middle  table-group-divider table-hover">
         <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
-        </td>
-        <td class="text-center"><?php echo $item->doc_regis_number ?></td>
-        <td class="fw-light align-middle">
-            <div>
-                <h6 style="width:600px" class="text-truncate mb-0">
-                    <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
-                    <span class="badge text-bg-danger fs-13">
-                        <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
-                    </span>
-                    <?php endif; ?>
+            <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
+            </td>
+            <td class="text-center">
+                <div class="fw-bold text-dark small"><?= Html::encode($item->doc_regis_number) ?></div>
+                <div class="small"><?= Html::encode(ThaiDateHelper::formatThaiDate($item->doc_transactions_date, 'short')) ?></div>
+            </td>
+            <td class="fw-light align-middle">
+                <div>
+                    <h6 style="width:600px" class="text-truncate mb-0">
+                        <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
+                            <span class="badge text-bg-danger fs-13">
+                                <i class="fa-solid fa-circle-exclamation"></i> ด่วนที่สุด
+                            </span>
+                        <?php endif; ?>
 
-                    <?php if ($item->secret == 'ลับที่สุด'): ?>
-                    <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
-                        ลับที่สุด
-                    </span>
-                    <?php endif; ?>
-                    <a href="<?php echo Url::to(['/dms/documents/view', 'id' => $item->id]) ?>" class="open-modal"
-                        data-size="modal-fullscreen">
-                        เรื่อง : <?php echo $item->topic ?>
-                    </a>
+                        <?php if ($item->secret == 'ลับที่สุด'): ?>
+                            <span class="badge text-bg-danger fs-13"><i class="fa-solid fa-lock"></i>
+                                ลับที่สุด
+                            </span>
+                        <?php endif; ?>
+                        <a href="<?php echo Url::to(['/dms/documents/view', 'id' => $item->id]) ?>" class="open-modal"
+                            data-size="modal-fullscreen">
+                            เรื่อง : <?php echo $item->topic ?>
+                        </a>
 
-                    <?php echo $item->isFile()?>
-                </h6>
-            </div>
-            <p class="fw-normal fs-13 mb-0">
-                <?= $item->data_json['des'] ?? '' ?>
-            </p>
-            <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);
+                        <?php echo $item->isFile() ?>
+                    </h6>
+                </div>
+                <p class="fw-normal fs-13 mb-0">
+                    <?= $item->data_json['des'] ?? '' ?>
+                </p>
+                <?php // echo Html::img('@web/img/krut.png',['style' => 'width:20px']);
                 ?>
-            <span class="text-danger">
-                <?php echo $item->doc_number ?>
-            </span>
-            <span class="text-primary fw-normal fs-13">
-                |
-                <i class="fa-solid fa-inbox"></i>
-                <?php echo $item->documentOrg->title ?? '-'; ?>
-                <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                    <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                <span class="text-danger">
+                    <?php echo $item->doc_number ?>
                 </span>
-            </span>
-            <?php echo $item->StackDocumentTags('comment') ?>
-        </td>
-        <td>
-            <?= $item->isFile()?>
-        </td>
-        <td class="fw-light align-middle">
-            <div class=" d-flex flex-column">
-                <?= $item->viewCreate()['avatar']; ?>
-            </div>
-        </td>
-        <td> <?= $item->documentStatus->title ?? '-' ?></td>
-        <td>
-            <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-fullscreen']]) ?>
-        </td>
-        </tr>
+                <span class="text-primary fw-normal fs-13">
+                    |
+                    <i class="fa-solid fa-inbox"></i>
+                    <?php echo $item->documentOrg->title ?? '-'; ?>
+                    <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                        <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                    </span>
+                </span>
+                <?php echo $item->StackDocumentTags('comment') ?>
+            </td>
+            <td>
+                <?= $item->isFile() ?>
+            </td>
+            <td class="fw-light align-middle">
+                <div class=" d-flex flex-column">
+                    <?= $item->viewCreate()['avatar']; ?>
+                </div>
+            </td>
+            <td> <?= $item->documentStatus->title ?? '-' ?></td>
+            <td>
+                <?php echo Html::a('<i class="fa-regular fa-pen-to-square fa-2x"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'open-modal', 'data' => ['size' => 'modal-fullscreen']]) ?>
+            </td>
+            </tr>
         <?php endforeach; ?>
     </tbody>
 </table>

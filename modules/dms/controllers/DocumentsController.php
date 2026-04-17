@@ -183,7 +183,7 @@ class DocumentsController extends Controller
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $start = AppHelper::convertToGregorian($range[0]);
             $end = AppHelper::convertToGregorian($range[1]);
-            $dataProvider->query->andFilterWhere(['between', 'doc_transactions_date', $start, $end]);
+            $dataProvider->query->andFilterWhere(['between', 'doc_date', $start, $end]);
         }
 
         return $this->render('receive', [
