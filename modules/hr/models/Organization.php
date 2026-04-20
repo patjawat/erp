@@ -37,39 +37,39 @@ class Organization extends \yii\db\ActiveRecord
     use \kartik\tree\models\TreeTrait {
         isDisabled as parentIsDisabled; // note the alias
     }
- 
+
     /**
      * @var string the classname for the TreeQuery that implements the NestedSetQueryBehavior.
      * If not set this will default to `kartik	ree\models\TreeQuery`.
      */
     public static $treeQueryClass; // change if you need to set your own TreeQuery
- 
+
     /**
      * @var bool whether to HTML encode the tree node names. Defaults to `true`.
      */
     public $encodeNodeNames = true;
- 
+
     /**
      * @var bool whether to HTML purify the tree node icon content before saving.
      * Defaults to `true`.
      */
     public $purifyNodeIcons = true;
- 
+
     /**
      * @var array activation errors for the node
      */
     public $nodeActivationErrors = [];
- 
+
     /**
      * @var array node removal errors
      */
     public $nodeRemovalErrors = [];
- 
+
     /**
      * @var bool attribute to cache the `active` state before a model update. Defaults to `true`.
      */
     public $activeOrig = true;
-    
+
     /**
      * {@inheritdoc}
      */
@@ -93,10 +93,10 @@ class Organization extends \yii\db\ActiveRecord
     }
 
     public function getParent()
-{
-    return $this->parents(1)->one(); // ดึง parent ตัวเดียว
-}
-    
+    {
+        return $this->parents(1)->one(); // ดึง parent ตัวเดียว
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -105,7 +105,7 @@ class Organization extends \yii\db\ActiveRecord
         return [
             // [['root', 'lft', 'rgt', 'lvl', 'icon_type', 'active', 'selected', 'disabled', 'readonly', 'visible', 'collapsed', 'movable_u', 'movable_d', 'movable_l', 'movable_r', 'removable', 'removable_all', 'child_allowed'], 'integer'],
             [['name'], 'required'],
-            [['leader','tb_name','code','data_json'], 'safe'],
+            [['leader', 'tb_name', 'code', 'data_json'], 'safe'],
             [['name'], 'string', 'max' => 60],
             [['leader'], 'string', 'max' => 60],
             [['icon'], 'string', 'max' => 255],
@@ -158,5 +158,23 @@ class Organization extends \yii\db\ActiveRecord
             'removable_all' => 'Removable All',
             'child_allowed' => 'Child Allowed',
         ];
+    }
+
+    public function getLeader()
+    {
+        $json = json_decode($this->data_json, true);
+        return Employees::findOne($json['leader_1'] ?? null);
+    }
+
+    public function getTreeLabel()
+    {
+        $leader = $this->leader;
+
+        if ($leader) {
+            $avatar = $leader->ShowAvatar();
+            return "<img src='{$avatar}' width='24' height='24' class='rounded-circle me-1'> {$this->name}";
+        }
+
+        return $this->name;
     }
 }

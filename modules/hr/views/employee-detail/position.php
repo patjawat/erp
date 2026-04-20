@@ -217,17 +217,39 @@ echo $form->field($model, 'data_json[position_name]')->widget(Select2::classname
 ])->label('ความเชี่ยวชาญ')?>
     </div>
     <div class="col-6">
-        <?=$form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
+
+    <?= $form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',
+    'id' => 'treeID',
     'query' => Organization::find()->addOrderBy('root, lft'),
-    'value' => 1,
     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
     'fontAwesome' => true,
     'asDropdown' => true,
     'multiple' => false,
-    'options' => ['disabled' => false],
-])->label('หน่วยงานภายในตามโครงสร้าง');?>
+
+    'options' => [
+        'placeholder' => 'เลือกหน่วยงาน...',
+    ],
+
+    'pluginOptions' => [
+        'allowClear' => true
+    ],
+])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+
+        <?php
+//         $form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
+//     'name' => 'department',
+//     'query' => Organization::find()->addOrderBy('root, lft'),
+//     'value' => 1,
+//     'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+//     'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+//     'fontAwesome' => true,
+//     'asDropdown' => true,
+//     'multiple' => false,
+//     'options' => ['disabled' => false],
+// ])->label('หน่วยงานภายในตามโครงสร้าง');
+?>
 
     </div>
     <div class="col-6">

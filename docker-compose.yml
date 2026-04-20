@@ -38,8 +38,8 @@ services:
       - MYSQL_PASSWORD=docker
       - MYSQL_ROOT_HOST=%
       - MYSQL_DATABASE=${DB_NAME}
-    # command:
-    #   [
+    command:
+      [
     #     "mysqld",
     #     # "--lower_case_table_names=2",
     #     "--max_allowed_packet=1G",
@@ -55,8 +55,8 @@ services:
     #     "--interactive_timeout=28800",
     #     "--character-set-server=utf8mb4",
     #     "--collation-server=utf8mb4_general_ci",
-    #     "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
-    #   ]
+        "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+      ]
 
     ports:
       - "${MYSQL_PORT}:3306"

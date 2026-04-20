@@ -55,15 +55,17 @@ use yii\helpers\Url;
                 <span class="text-danger">
                     <?php echo $item->doc_number ?>
                 </span>
-                <span class="text-primary fw-normal fs-13">
-                    |
-                    <i class="fa-solid fa-inbox"></i>
-                    <?php echo $item->documentOrg->title ?? '-'; ?>
-                    <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
-                        <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-primary fw-normal fs-13">
+                        |
+                        <i class="fa-solid fa-inbox"></i>
+                        <?php echo $item->documentOrg->title ?? '-'; ?>
+                        <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
+                            <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
+                        </span>
                     </span>
-                </span>
-                <?php echo $item->StackDocumentTags('comment') ?>
+                </div>
+                    <?php echo $item->StackDocumentTags('comment') ?>
             </td>
             <td>
                 <?= $item->isFile() ?>

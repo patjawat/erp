@@ -17,7 +17,6 @@ use app\components\UserHelper;
 use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
 use app\modules\hr\models\Organization;
@@ -474,9 +473,13 @@ class DocumentsController extends Controller
             AppHelper::convertToGregorian($searchModel->date_end)
         ]);
 
+        if ($searchModel->q_department) {
+            $dataProvider->query->andFilterWhere(['like', 'tags_department', $searchModel->q_department]);
+        }
+
         $dataProvider->setSort(['defaultOrder' => [
+            'doc_transactions_date' => SORT_DESC,
             'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
         ]]);
 
 
@@ -604,8 +607,8 @@ class DocumentsController extends Controller
                         $requestId = $model->data_json['request_id'] ?? null;
                         $tempFile = $model->data_json['temp_path'] ?? null;
 
-                       if ($requestId) {
-                             WebhookSender::clearWebhookTempData($requestId);
+                        if ($requestId) {
+                            WebhookSender::clearWebhookTempData($requestId);
                         }
                     }
                     // ถ้าเป็นการส่งหนังสือภายนอกให้ส่ง webhook
