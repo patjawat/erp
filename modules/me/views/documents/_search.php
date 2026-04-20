@@ -93,15 +93,8 @@ use app\components\DateFilterHelper;
             <p class="small text-muted mb-0"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i> ตัวเลือกการกรองเพิ่มเติมจะเพิ่มในขั้นตอนถัดไป</p>
             <div class="row">
                 <div class="col-6 col-md-3">
-        <?= $form->field($model, 'document_org')->widget(Select2::classname(), [
-            'data' => $model->ListDocumentOrg(),
-            'options' => ['placeholder' => 'หน่วยงานทั้งหมด'],
-            'pluginOptions' => ['allowClear' => true, 'tags' => true],
-        ])->label(false); ?>
-    </div>
-    <div class="col-6 col-md-3">
       <?php
-                                $status = ArrayHelper::merge($model->listStatus(), ['Y' => 'บันทึกไว้ (ปักดาวแล้ว · bookmark=Y)']);
+                                $status = ArrayHelper::merge($model->listStatus(), ['Y' => 'บันทึกไว้ (ปักดาวแล้ว · bookmark=Y)','read' => 'อ่านแล้ว','unread' => 'ยังไม่ได้อ่าน']);
                                 echo $form->field($model, 'q_status')->widget(Select2::classname(), [
                                     'data' =>$status,
                                     'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -110,6 +103,16 @@ use app\components\DateFilterHelper;
                                     ],
                                 ])->label(false);?>
     </div>
+                <div class="col-6 col-md-3">
+        <?php 
+        //  $form->field($model, 'document_org')->widget(Select2::classname(), [
+        //     'data' => $model->ListDocumentOrg(),
+        //     'options' => ['placeholder' => 'หน่วยงานทั้งหมด'],
+        //     'pluginOptions' => ['allowClear' => true, 'tags' => true],
+        // ])->label(false); 
+        ?>
+    </div>
+    
             </div>
         </div>
     </div>

@@ -1,7 +1,8 @@
 <?php
 
-use yii\helpers\Url;
+use app\components\EmployeeHelper;
 use yii\bootstrap5\Html;
+use yii\helpers\Url;
 
 $this->title = 'ทะเบียนหนังสือ';
 $this->params['breadcrumbs'][] = ['label' => 'บริการ', 'url' => ['/me']];
@@ -20,7 +21,7 @@ $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 w-100">
     <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
         <span class="text-primary"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
-        <?= Html::encode($to) ?>
+        <?php //  Html::encode($to) ?>
     </h4>
 </div>
 <?php $this->endBlock(); ?>
@@ -31,10 +32,20 @@ $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
 </div>
 <?php $this->endBlock(); ?>
 
+
+
 <?php if (!isset($list)): ?>
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-3">
-            <?= $this->render('_search', ['model' => $searchModel, 'action' => $action]) ?>
+            <?php
+//  $me = EmployeeHelper::GetEmployee();
+
+        // echo $me->id;
+        // echo $depId = $me->department ?? null;
+            
+            ?>
+
+            <?= $this->render('_search', ['model' => $searchModel, 'action' => 'index']) ?>
         </div>
     </div>
 <?php endif; ?>
@@ -70,6 +81,7 @@ $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
                 </div>
             </div>
 
+
             <div class="card-body p-0">
                 <?php if (isset($list)): ?>
                     <div class="p-3 border-bottom">
@@ -81,9 +93,8 @@ $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
                     <?php if ($isTableView): ?>
                         <?= $this->render('_list', [
                             'dataProvider' => $dataProvider,
-                            'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument ?? [],
-                            'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById ?? [],
-                            'readAtByRoutingId' => $readAtByRoutingId ?? [],
+                            'searchModel' => $searchModel,
+
                         ]) ?>
                     <?php else: ?>
                         <?= $this->render('_grid', [

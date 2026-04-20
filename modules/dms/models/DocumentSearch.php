@@ -3,9 +3,8 @@
 namespace app\modules\dms\models;
 
 use yii\base\Model;
-use app\components\AppHelper;
 use yii\data\ActiveDataProvider;
-use app\components\DateFilterHelper;
+
 use app\modules\dms\models\Documents;
 
 /**
@@ -85,7 +84,7 @@ class DocumentSearch extends Documents
             ->andFilterWhere(['like', 'secret', $this->secret])
             ->andFilterWhere(['like', 'doc_date', $this->doc_date])
             ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])
-            ->andFilterWhere(['like', 'doc_transactions_date', $this->doc_transactions_date])
+            // ->andFilterWhere(['like', 'doc_transactions_date', $this->doc_transactions_date])
             ->andFilterWhere(['like', 'doc_time', $this->doc_time])
             ->andFilterWhere(['like', 'documents.data_json', $this->data_json]);
 
