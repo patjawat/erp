@@ -4,7 +4,6 @@ namespace app\modules\me\controllers;
 
 use app\components\AppHelper;
 use app\components\DateFilterHelper;
-use app\components\EmployeeHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\models\Categorise;
@@ -16,7 +15,6 @@ use app\modules\dms\models\DocumentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Organization;
 use Yii;
-use yii\data\ActiveDataProvider;
 use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -328,12 +326,13 @@ class DocumentsController extends \yii\web\Controller
         $empId = $me->id ?? null;
         $depId = $me->department ?? null;
 
-        $searchModel = new DocumentSearch();
+       $searchModel = new DocumentSearch([
+                'date_filter' => 'today'
+            ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $q = trim($searchModel->q ?? '');
 
-        $dateStart =  AppHelper::convertToGregorian($searchModel->date_start);
-        $dateEnd =  AppHelper::convertToGregorian($searchModel->date_end);
+       [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
 
         $query = $dataProvider->query;
 
