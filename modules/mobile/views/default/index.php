@@ -207,8 +207,8 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
                 </a>
             </div>
             <div class="col-12">
-                <!-- <a href="<?= Html::encode(Url::to(['/mobile/default/attendance'])) ?>" class="card home-quick-action flex-row justify-content-center gap-2 py-3"> -->
-                <a href="https://sstas.tphcp.go.th/kiosk" class="card home-quick-action flex-row justify-content-center gap-2 py-3">
+                <a href="<?= Html::encode(Url::to(['/mobile/default/attendance'])) ?>" class="card home-quick-action flex-row justify-content-center gap-2 py-3">
+                <!-- <a href="https://sstas.tphcp.go.th/kiosk" class="card home-quick-action flex-row justify-content-center gap-2 py-3"> -->
                     <i data-lucide="clock" class="qa-icon mb-0"></i>
                     <span class="fw-semibold small">ลงเวลาเข้า-ออกงาน</span>
                 </a>

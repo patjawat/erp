@@ -149,8 +149,8 @@ class ReportController extends Controller
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
             ->where(['sb.warehouse_id' => $warehouseIds])
-            ->andWhere(['>', 'sb.balance_qty', 0])
-            ->groupBy('sb.warehouse_id', 'sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
+            // ->andWhere(['>', 'sb.balance_qty', 0]) // แสดงรายการที่มียอดคงเหลือ 0 ด้วย (เพื่อให้เห็นว่ามีรายการอะไรบ้างที่เคยมีการรับเข้ามาในคลัง แต่ตอนนี้หมดแล้ว)
+            ->groupBy('sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
 
         $raw = $query->all();
         $warehouseNames = [];
@@ -303,13 +303,13 @@ class ReportController extends Controller
         $categoryId = $this->request->get('category_id') !== null && $this->request->get('category_id') !== ''
             ? (string) $this->request->get('category_id') : null;
 
-        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId);
+        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId,$categoryId);
         $rows = $data['rows'];
         $listMain = $data['listMain'];
         $listSub = $data['listSub'];
 
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
-            Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->orderBy('title')->all(),
+            Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->orderBy('title')->all(),
             'code',
             'title'
         );
@@ -398,7 +398,8 @@ class ReportController extends Controller
      * ดึงข้อมูลรายงานวัสดุไม่พอจ่าย (ใช้ทั้งหน้าแสดงและ export Excel)
      * @return array { rows: array, listMain: Warehouse[] }
      */
-    protected function getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId)
+    // --- เพิ่ม $categoryId = null ใน signature ---
+    protected function getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId, $categoryId = null)
     {
         $listMain = Warehouse::find()
             ->where(['warehouse_type' => 'MAIN'])
@@ -477,6 +478,11 @@ class ReportController extends Controller
                 ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
                 ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
         }
+
+        // --- เพิ่มเงื่อนไขค้นหาด้วย $categoryId ---
+        // ใช้ andFilterWhere() เพื่อให้ถ้าค่า $categoryId ว่างเปล่า หรือ null ระบบจะไม่นำไปต่อท้ายเงื่อนไข WHERE
+        $query->andFilterWhere(['i.category_id' => $categoryId]);
+
         $query->orderBy(['shortfall' => SORT_DESC]);
         $rows = $query->all();
 

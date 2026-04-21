@@ -30,7 +30,7 @@ use yii\bootstrap5\Breadcrumbs;
    }
 </style>
 
-<div class="page-title-box shadow-sm">
+<div class="page-title-box">
    <div class="container-fluid" style="max-width: 1600px;">
       <div class="d-flex flex-column flex-lg-row justify-content-lg-between align-items-center py-3 text-center text-lg-start">
          

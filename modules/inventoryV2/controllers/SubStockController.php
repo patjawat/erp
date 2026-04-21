@@ -42,6 +42,66 @@ class SubStockController extends \yii\web\Controller
         $chartData = $this->getChartDataLast7Days($subWarehouseIds);
         $warehouses = $this->getSubWarehousesList();
 
+
+        $usageHistory = [];
+        $helpdeskIdFilter = (int) $this->request->get('helpdesk_id', 0);
+        if ($helpdeskIdFilter > 0) {
+            // DEBUG/ค้นหาแบบกว้าง: แสดงว่ามี stock_order ที่เกี่ยวข้องถูกสร้างและมีเลข helpdesk_id นี้อยู่ใน ref/data_json หรือไม่
+            // (ไม่จำกัด status เผื่อกรณีบันทึกแต่ยังไม่ CONFIRMED)
+            $needle = (string) $helpdeskIdFilter;
+            $usageHistory = StockOrder::find()
+                ->with('stockDetails')
+                ->where([
+                    'order_type' => StockOrder::ORDER_TYPE_OUT,
+                ])
+                ->andWhere([
+                    'or',
+                    ['like', 'ref', $needle],
+                    ['like', 'data_json', $needle],
+                ])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(20)
+                ->all();
+        } else if ($warehouseId > 0) {
+            // แสดงเฉพาะคลังที่เลือก (ถ้าส่ง warehouse_id มา)
+            $usageHistory = StockOrder::find()
+                ->with('stockDetails')
+                ->where([
+                    'order_type' => StockOrder::ORDER_TYPE_OUT,
+                ])
+                ->andWhere(['!=', 'status', StockOrder::STATUS_CANCELLED])
+                ->andWhere([
+                    'or',
+                    ['source_type' => 'USAGE'],
+                    ['like', 'ref', 'HELPDESK_ID:%'],
+                    ['like', 'data_json', '"helpdesk_id"'],
+                    ['like', 'data_json', 'helpdesk_id'],
+                ])
+                ->andWhere(['or', ['main_warehouse_id' => $warehouseId], ['sub_warehouse_id' => $warehouseId]])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(20)
+                ->all();
+        } else {
+            // รวมทุกคลังย่อยที่ผู้ใช้มีสิทธิ
+            $usageHistory = StockOrder::find()
+                ->with('stockDetails')
+                ->where([
+                    'order_type' => StockOrder::ORDER_TYPE_OUT,
+                ])
+                ->andWhere(['!=', 'status', StockOrder::STATUS_CANCELLED])
+                ->andWhere([
+                    'or',
+                    ['source_type' => 'USAGE'],
+                    ['like', 'ref', 'HELPDESK_ID:%'],
+                    ['like', 'data_json', '"helpdesk_id"'],
+                    ['like', 'data_json', 'helpdesk_id'],
+                ])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(20)
+                ->all();
+        }
+
+
         return $this->render('dashboard', [
             'pendingReceiveCount' => $stats['pending_receive'],
             'criticalCount' => $stats['critical_count'],
@@ -52,6 +112,7 @@ class SubStockController extends \yii\web\Controller
             'subWarehouseIds' => $subWarehouseIds,
             'warehouses' => $warehouses,
             'currentWarehouseId' => $warehouseId,
+            'usageHistory' => $usageHistory,
         ]);
     }
 

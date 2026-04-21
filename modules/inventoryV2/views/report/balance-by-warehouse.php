@@ -19,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-    <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+    <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
     <form method="get" action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="d-flex align-items-center gap-2">
         <select name="warehouse_id" class="form-select border shadow-sm" style="width: 240px; height: 38px;">
             <?php foreach ($warehouses as $wid => $wname): ?>

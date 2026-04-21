@@ -27,7 +27,12 @@ if ($currentWarehouseId && $warehouses) {
         }
     }
 }
-?>
+
+        $reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
+        if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
+            $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
+        }
+        ?>
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
@@ -84,7 +89,7 @@ if ($currentWarehouseId && $warehouses) {
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <a href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
+            <a href="<?= Url::to($reportBalanceUrl) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
                 <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start">
@@ -187,6 +192,10 @@ if ($currentWarehouseId && $warehouses) {
                     <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>" class="text-muted text-decoration-none">ดูทะเบียนใบขอเบิก <i class="bi bi-chevron-right"></i></a>
                 </div>
             </div>
+        </div>
+        <div class="col-12">
+           <?= $this->render('use_history', ['usageHistory' => $usageHistory, 'currentWarehouseId' => $currentWarehouseId]) ?>
+
         </div>
     </div>
 </div>
