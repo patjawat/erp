@@ -13,7 +13,7 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
       - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
-      - /Volumes/Backup/erp/source/dansai/fileupload:/app/modules/filemanager/fileupload
+      # - /Volumes/Backup/erp/source/dansai/fileupload:/app/modules/filemanager/fileupload
     ports:
       - "${HOS_CODE}:80"
     links:
@@ -55,7 +55,8 @@ services:
     #     "--interactive_timeout=28800",
     #     "--character-set-server=utf8mb4",
     #     "--collation-server=utf8mb4_general_ci",
-        "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+        # "--sql_mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+        "--sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
       ]
 
     ports:
