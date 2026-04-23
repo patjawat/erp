@@ -84,9 +84,9 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <thead class="table-light">
                     <tr>
                         <th class="text-nowrap">ระดับ</th>
-                        <th class="text-nowrap">ชื่อระดับ</th>
                         <th class="text-nowrap">หน่วยงาน/กลุ่มงาน</th>
                         <th class="text-nowrap">ประเภท</th>
+                        <th class="text-nowrap">คำที่ใช้ลงความเห็น</th>
                         <th class="text-nowrap">ผู้อนุมัติ (ตามโครงสร้าง)</th>
                     </tr>
                 </thead>
@@ -99,9 +99,9 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                     <?php foreach ($resolvedLevels as $r): ?>
                     <tr>
                         <td><strong><?= (int) $r['level'] ?></strong></td>
-                        <td><?= Html::encode($r['label']) ?></td>
                         <td><?= !empty($r['org_node_name']) ? Html::encode($r['org_node_name']) : '<span class="text-muted">—</span>' ?></td>
                         <td><?= Html::encode($typeLabels[$r['approver_type']] ?? $r['approver_type']) ?></td>
+                        <td><?= Html::encode($r['label']) ?></td>
                         <td><?= Html::encode($r['approver_display'] ?? '—') ?></td>
                     </tr>
                     <?php endforeach; ?>
@@ -120,9 +120,9 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <thead class="table-light">
                     <tr>
                         <th class="text-nowrap">ระดับ</th>
-                        <th class="text-nowrap">ชื่อระดับ</th>
                         <th class="text-nowrap">ประเภทผู้อนุมัติ</th>
                         <th class="text-nowrap">ระดับในผังองค์กร</th>
+                        <th class="text-nowrap">คำที่ใช้ลงความเห็น</th>
                         <th class="text-nowrap">ค่า (บทบาท/พนักงาน)</th>
                         <th class="text-nowrap text-center">ใช้งาน</th>
                         <th class="text-nowrap text-end" style="width: 140px;">จัดการ</th>
@@ -137,13 +137,13 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                     <?php foreach ($models as $item): ?>
                     <tr>
                         <td><strong><?= (int) $item->level ?></strong></td>
-                        <td><?= Html::encode($item->label) ?></td>
                         <td><?= Html::encode($typeLabels[$item->approver_type] ?? $item->approver_type) ?></td>
                         <td><?= in_array($item->approver_type, [ApproveLevelSetting::TYPE_ORG_LEADER1, ApproveLevelSetting::TYPE_ORG_LEADER2], true)
                             ? (isset($item->org_node_level) && $item->org_node_level !== null && $item->org_node_level !== ''
-                                ? Html::encode($orgLevelLabels[$item->org_node_level] ?? 'ระดับ ' . $item->org_node_level)
-                                : '<span class="text-muted">แผนกผู้ขอ</span>')
+                            ? Html::encode($orgLevelLabels[$item->org_node_level] ?? 'ระดับ ' . $item->org_node_level)
+                            : '<span class="text-muted">แผนกผู้ขอ</span>')
                             : '<span class="text-muted">—</span>' ?></td>
+                            <td><?= Html::encode($item->label) ?></td>
                         <td><?= $item->approver_value ? Html::encode($item->approver_value) : '<span class="text-muted">—</span>' ?></td>
                         <td class="text-center">
                             <?php if ($item->active): ?>
