@@ -73,7 +73,7 @@ $totalCount = (int) $dataProvider->getTotalCount();
             </div>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body p-0" >
         <?= $this->render('list', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

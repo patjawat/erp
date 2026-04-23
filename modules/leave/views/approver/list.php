@@ -12,7 +12,7 @@ use app\modules\leave\models\Leave;
 $offset = (int) ($dataProvider->pagination->offset ?? 0);
 $models = $dataProvider->getModels();
 ?>
-<div class="table-responsive">
+<div class="table-responsive" style="min-height: 500px;">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>

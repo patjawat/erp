@@ -129,16 +129,23 @@ class LeaveController extends Controller
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
+
         $me = UserHelper::GetEmployee();
-        if (!$me || $me->id != $model->emp_id) {
+        // 1. ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
+        $isAdmin = Yii::$app->user->can('leave'); 
+
+        // 2. เช็คสิทธิ์เจ้าของใบลา (ถ้าไม่ใช่ Admin และไม่ใช่เจ้าของ -> ปฏิเสธ)
+        if (!$isAdmin && (!$me || $me->id != $model->emp_id)) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ไม่ใช่เจ้าของใบลา</p>', 'footer' => ''];
+                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ไม่ใช่เจ้าของใบลาและไม่มีสิทธิ์ผู้ดูแลระบบ</p>', 'footer' => ''];
             }
-            Yii::$app->session->setFlash('error', 'ไม่ใช่เจ้าของใบลา');
+            Yii::$app->session->setFlash('error', 'ไม่ใช่เจ้าของใบลาและไม่มีสิทธิ์ผู้ดูแลระบบ');
             return $this->redirect(['/leave/default/index']);
         }
-        if ($model->hasApprovalDecision()) {
+
+        // 3. เช็คสถานะการอนุมัติ (ถ้าไม่ใช่ Admin และมีการอนุมัติแล้ว -> ปฏิเสธ)
+        if (!$isAdmin && $model->hasApprovalDecision()) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ใบลานี้มีการอนุมัติ/ไม่อนุมัติแล้ว ไม่สามารถแก้ไขได้</p>', 'footer' => ''];
@@ -147,6 +154,8 @@ class LeaveController extends Controller
             return $this->redirect(['/leave/default/index']);
         }
 
+        // --- ส่วนที่เหลือคงเดิม ---
+        
         // แปลงวันที่เป็น พ.ศ. สำหรับแสดงในฟอร์ม
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end   = AppHelper::convertToThai($model->date_end);
@@ -167,17 +176,19 @@ class LeaveController extends Controller
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end   = AppHelper::convertToGregorian($model->date_end);
+            
             $oldJson = $model->getOldAttribute('data_json');
             if (is_string($oldJson)) {
                 $oldJson = json_decode($oldJson, true) ?: [];
             }
             $model->data_json = array_merge((array) $oldJson, (array) $model->data_json);
+            
             if ($model->save(false)) {
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
-                    return ['status' => 'success', 'redirect' => Url::to(['/leave/default/index'])];
+                    return ['status' => 'success', 'redirect' => Url::to(['/leave/approver/index'])];
                 }
-                return $this->redirect(['/leave/default/index']);
+                return $this->redirect(['/leave/approver/index']);
             }
         }
 
