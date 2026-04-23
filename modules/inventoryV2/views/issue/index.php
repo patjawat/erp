@@ -147,7 +147,7 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                             'header' => 'จัดการ',
                             'headerOptions' => ['class' => 'text-end'],
                             'contentOptions' => ['class' => 'text-end'],
-                            'template' => '{process} {print}',
+                            'template' => '{process} {print} {printdoc}',
                             'buttons' => [
                                 'process' => function($url, $model) {
                                     if ($model->status === 'APPROVED') {
@@ -161,6 +161,13 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                                 },
                                 'print' => function($url, $model) {
                                     return Html::a('<i class="bi bi-printer"></i>', ['print', 'id' => $model->id], [
+                                        'class' => 'btn btn-outline-secondary btn-sm border-0',
+                                        'title' => 'พิมพ์ใบเบิกวัสดุ',
+                                        'target' => '_blank',
+                                    ]);
+                                },
+                                'printdoc' => function($url, $model) {
+                                    return Html::a('<i class="bi bi-printer"></i>', ['/inventory-v2/document/print-issu', 'id' => $model->id], [
                                         'class' => 'btn btn-outline-secondary btn-sm border-0',
                                         'title' => 'พิมพ์ใบเบิกวัสดุ',
                                         'target' => '_blank',

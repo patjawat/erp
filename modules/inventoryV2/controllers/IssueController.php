@@ -5,15 +5,17 @@ namespace app\modules\inventoryV2\controllers;
 use app\components\AppHelper;
 use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\components\InventoryService;
+use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
-use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\Warehouse;
+use kartik\mpdf\Pdf;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
-use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
+
 
 class IssueController extends Controller
 {
@@ -284,37 +286,94 @@ class IssueController extends Controller
      * หน้ารูปแบบใบเบิกวัสดุสำหรับพิมพ์ (ตามแบบฟอร์มราชการ)
      * ใช้ layout เฉพาะพิมพ์ ไม่มี template หลักของเว็บ
      */
+    // public function actionPrint($id)
+    // {
+    //     $this->layout = '/print';
+    //     $model = StockOrder::find()
+    //         ->where(['id' => $id, 'order_type' => 'OUT', 'source_type' => 'REQUEST'])
+    //         ->with(['mainWarehouse', 'subWarehouse', 'stockDetails', 'stockDetails.item'])
+    //         ->one();
+    //     if (!$model) {
+    //         throw new NotFoundHttpException('ไม่พบใบเบิกที่ต้องการ');
+    //     }
+    //     return $this->render('print', ['model' => $model]);
+    // }
+
+// public function actionPdf($id)
+// {
+//     $model = $this->findModel($id);
+    
+//     // ดึงเนื้อหา HTML จาก View ที่คุณเขียนไว้
+//     $content = $this->renderPartial('view_pdf', [
+//         'model' => $model,
+//     ]);
+
+//     // นำค่า Config เริ่มต้นของ mPDF มาเพื่อจะ Merge กับฟอนต์ของเรา
+//     $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+//     $fontDirs = $defaultConfig['fontDir'];
+
+//     $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+//     $fontData = $defaultFontConfig['fontdata'];
+
+//     $pdf = new Pdf([
+//         'mode' => Pdf::MODE_UTF8,
+//         'format' => Pdf::FORMAT_A4, 
+//         'orientation' => Pdf::ORIENT_PORTRAIT, 
+//         'destination' => Pdf::DEST_BROWSER, 
+//         'content' => $content,  
+//         'options' => [
+//             'title' => 'ใบเบิกวัสดุ - ' . $model->order_no,
+//             // 1. เพิ่ม Path ที่เก็บไฟล์ฟอนต์ของเรา
+//             'fontDir' => array_merge($fontDirs, [
+//                 Yii::getAlias('@webroot/fonts'), 
+//             ]),
+//             // 2. Map ชื่อฟอนต์เข้ากับไฟล์ .ttf
+//             'fontdata' => $fontData + [
+//                 'sarabun' => [
+//                     'R' => 'THSarabunNew.ttf',
+//                     'B' => 'THSarabunNew Bold.ttf',
+//                     'I' => 'THSarabunNew Italic.ttf',
+//                     'BI' => 'THSarabunNew BoldItalic.ttf',
+//                 ]
+//             ],
+//             // 3. กำหนดฟอนต์เริ่มต้นของเอกสาร PDF ทั้งหมดเป็น sarabun
+//             'default_font' => 'sarabun' 
+//         ],
+//         'methods' => [ 
+//             'SetTitle' => 'ใบเบิกวัสดุ',
+//         ]
+//     ]);
+
+//     return $pdf->render(); 
+// }
+
+
+    // ... โค้ดอื่นๆ ใน Controller ...
+
     public function actionPrint($id)
     {
-        $this->layout = '/print';
         $model = StockOrder::find()
             ->where(['id' => $id, 'order_type' => 'OUT', 'source_type' => 'REQUEST'])
             ->with(['mainWarehouse', 'subWarehouse', 'stockDetails', 'stockDetails.item'])
             ->one();
-        if (!$model) {
-            throw new NotFoundHttpException('ไม่พบใบเบิกที่ต้องการ');
-        }
-        return $this->render('print', ['model' => $model]);
-    }
 
-    /**
-     * ส่งออกใบเบิกวัสดุเป็น PDF (รูปแบบตามแบบฟอร์ม 100%)
-     */
-    public function actionPdf($id)
-    {
-        $model = StockOrder::find()
-            ->where(['id' => $id, 'order_type' => 'OUT', 'source_type' => 'REQUEST'])
-            ->with(['mainWarehouse', 'subWarehouse', 'stockDetails', 'stockDetails.item'])
-            ->one();
         if (!$model) {
             throw new NotFoundHttpException('ไม่พบใบเบิกที่ต้องการ');
         }
 
-        $html = $this->renderPartial('_print_pdf', ['model' => $model]);
-        $html = '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"></head><body>' . $html . '</body></html>';
+        // เรนเดอร์เนื้อหาจากไฟล์ view (_print_pdf)
+        $content = $this->renderPartial('_print_pdf', ['model' => $model]);
 
-        $fontPath = Yii::getAlias('@webroot/fonts');
-        $fontPathTh = $fontPath . DIRECTORY_SEPARATOR . 'THSarabunNew';
+        // กำหนด Path ของฟอนต์ไทย
+        $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+
+        // ดึงค่าเริ่มต้นของ mPDF มาเพื่อใช้งานร่วมกับฟอนต์ใหม่
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
         $config = [
             'mode' => 'utf-8',
             'format' => 'A4',
@@ -323,52 +382,59 @@ class IssueController extends Controller
             'margin_right' => 15,
             'margin_top' => 15,
             'margin_bottom' => 15,
-            'default_font' => 'freeserif',
+            'fontDir' => array_merge($fontDirs, [$fontPath]),
+            'fontdata' => $fontData + [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf', // เปลี่ยนชื่อไฟล์ตรงนี้ให้ตรงกับในโฟลเดอร์จริงถ้ามีการใช้ช่องว่าง
+                    'I' => 'THSarabunNew-Italic.ttf',
+                    'BI' => 'THSarabunNew-BoldItalic.ttf',
+                ]
+            ],
+            'default_font' => 'thsarabun',
+            // ตั้งค่าให้ mPDF รองรับภาษาไทยและเลือกฟอนต์ให้อัตโนมัติ
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
         ];
 
-        $ttfR = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew.ttf';
-        $ttfB = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew Bold.ttf';
-        $ttfBAlt = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew-Bold.ttf';
-        $ttfI = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew Italic.ttf';
-        $ttfIAlt = $fontPathTh . DIRECTORY_SEPARATOR . 'THSarabunNew-Italic.ttf';
-        if (is_dir($fontPathTh) && file_exists($ttfR)) {
-            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-            $defaultFont = (new \Mpdf\Config\FontVariables())->getDefaults();
-            $config['fontDir'] = array_merge($defaultConfig['fontDir'], [$fontPathTh]);
-            $fontdata = [
-                'R' => 'THSarabunNew.ttf',
-                'B' => file_exists($ttfB) ? 'THSarabunNew Bold.ttf' : (file_exists($ttfBAlt) ? 'THSarabunNew-Bold.ttf' : 'THSarabunNew.ttf'),
-                'I' => file_exists($ttfI) ? 'THSarabunNew Italic.ttf' : (file_exists($ttfIAlt) ? 'THSarabunNew-Italic.ttf' : 'THSarabunNew.ttf'),
-            ];
-            $config['fontdata'] = array_merge($defaultFont['fontdata'], [
-                'thsarabun' => $fontdata,
-            ]);
-            $config['default_font'] = 'thsarabun';
+        $mpdf = new \Mpdf\Mpdf($config);
+
+        // กำหนดหัวข้อใน PDF Meta Data
+        $mpdf->SetTitle('ใบเบิกวัสดุ - ' . $model->order_no);
+
+        // 1. นำเข้าไฟล์ CSS ภายนอก (ถ้าต้องการใช้)
+        $cssFile = Yii::getAlias('@webroot/css/kv-mpdf-bootstrap.css');
+        if (file_exists($cssFile)) {
+            $stylesheet = file_get_contents($cssFile);
+            $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
         }
 
-        $mpdf = new \Mpdf\Mpdf($config);
-        $mpdf->SetTitle('ใบเบิกวัสดุ - ' . $model->order_no);
-        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+        // 2. เขียน HTML เนื้อหาหลักลงใน PDF
+        $mpdf->WriteHTML($content, \Mpdf\HTMLParserMode::HTML_BODY);
+
+        // ป้องกันอักขระพิเศษในชื่อไฟล์
         $filename = 'ใบเบิกวัสดุ_' . preg_replace('/[^a-zA-Z0-9\-_]/', '_', $model->order_no) . '.pdf';
-        $mpdf->Output($filename, \Mpdf\Output\Destination::DOWNLOAD);
+
+        // ส่งออกไฟล์ PDF ให้เปิดดูใน Browser ทันที
+        return $mpdf->Output($filename, \Mpdf\Output\Destination::INLINE);
     }
 
     public function actionGetAvailableLots($item_code, $warehouse_id)
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-    return \app\modules\inventoryV2\models\StockDetail::find()
-        ->joinWith('stockOrder')
-        ->select(['stock_detail.lot_number', 'stock_detail.remain_qty', 'stock_detail.unit_price'])
-        ->where([
-            'stock_detail.item_code' => $item_code,
-            'stock_order.main_warehouse_id' => $warehouse_id,
-            'stock_order.order_type' => 'IN'
-        ])
-        ->andWhere(['>', 'remain_qty', 0])
-        ->asArray()
-        ->all();
-}
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        return \app\modules\inventoryV2\models\StockDetail::find()
+            ->joinWith('stockOrder')
+            ->select(['stock_detail.lot_number', 'stock_detail.remain_qty', 'stock_detail.unit_price'])
+            ->where([
+                'stock_detail.item_code' => $item_code,
+                'stock_order.main_warehouse_id' => $warehouse_id,
+                'stock_order.order_type' => 'IN'
+            ])
+            ->andWhere(['>', 'remain_qty', 0])
+            ->asArray()
+            ->all();
+    }
 
     protected function findModel($id)
     {
