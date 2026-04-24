@@ -219,6 +219,28 @@ class AssetController extends Controller
         }
     }
 
+        public function actionDepreciationNew($id)
+    {
+        $model = $this->findModel($id);
+        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา' . $model->data_json['asset_name'] : '-';
+        $title = $this->request->get('title') . isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-chart-line"></i> ' . $asset_name,
+                'content' => $this->renderAjax('depreciation_list_new', [
+                    'model' => $model,
+                ]),
+            ];
+        } else {
+            return $this->render('depreciation_list_new', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+
+
     /**
      * Creates a new Asset model.
      * If creation is successful, the browser will be redirected to the 'view' page.
