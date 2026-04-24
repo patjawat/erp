@@ -10,14 +10,9 @@ namespace app\commands;
 
 use Yii;
 use app\modules\hr\models\Employees;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\hr\models\Organization;
 use yii\console\Controller;
 use yii\helpers\BaseConsole;
-use yii\helpers\ArrayHelper;
 use app\models\Categorise;
-use DirectoryIterator;
-use app\modules\filemanager\models\Uploads;
 
 /**
  * แก้ไขรหัสตำแหน่งใหม่ v2
