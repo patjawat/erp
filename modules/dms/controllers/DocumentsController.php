@@ -657,6 +657,17 @@ class DocumentsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+
+        $model->tags_department = implode(',',
+            DocumentsDetail::find()
+                ->select('to_id')
+                ->where([
+                    'document_id' => $model->id,
+                    'name' => 'department'
+                ])
+                ->column()
+        );
+
         $old_json = $model->data_json;
         try {
             $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
@@ -700,7 +711,7 @@ class DocumentsController extends Controller
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-                // $model->UpdateDocumentTags();
+                $model->UpdateDocumentTags();
                 //ถ้าเป็นหนังสือส่ง
                 if ($model->document_group == "send") {
                     WebhookSender::sendToAgencies($model);

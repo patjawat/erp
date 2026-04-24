@@ -436,26 +436,6 @@ class Documents extends \yii\db\ActiveRecord
             // code...
         } catch (\Throwable $th) {
         }
-
-        // try {
-        //     $dicrector = 0;
-        //     $clearDEmployeeTag = DocumentsDetail::deleteAll([
-        //         'and',
-        //         ['not in', 'to_id', $this->tags_employee],
-        //         ['document_id' => $this->id, 'name' => 'comment']
-        //     ]);
-
-        //     foreach ($this->tags_employee as $key => $value):
-        //         $check = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $this->id, 'to_id' => $value])->one();
-        //         $new = $check ? $check : new DocumentsDetail();
-        //         $new->name = 'comment';
-        //         $new->data_json = ['comment' => $this->data_json['comment']];
-        //         $new->document_id = $this->id;
-        //         $new->to_id = $value;
-        //         $new->save(false);
-        //     endforeach;
-        // } catch (\Throwable $th) {
-        // }
     }
 
     // แสดงรายชื่อหน่วยงานที่ Tags ไป
