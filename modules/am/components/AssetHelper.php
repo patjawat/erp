@@ -43,8 +43,14 @@ class AssetHelper extends Component
 
     //ค่าเสื่อมราคาตามวันที่ 1 รายการ
     public static function Depreciation($id, $number)
-{
-    $sql = "
+    {
+        $asset = Asset::findOne($id);
+
+        if (!$asset) {
+            return [];
+        }
+
+        $sql = "
     SELECT x3.*,
         ROUND(IF(x3.days = 0,0,(x3.year_price/12)),2) AS price_month,
         IF((x3.price - total_price) < 1,1,ROUND((x3.price - total_price),2)) AS total
@@ -72,7 +78,7 @@ class AssetHelper extends Component
                     IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(NOW(),'%Y-%m'),'Y','N') AS active,
                     a.price,
                     a.useful_life AS service_life,
-                    a.depreciation AS dep
+                    a.depreciation_rate AS dep
                 FROM asset a
                 JOIN (
                     SELECT 
@@ -100,14 +106,14 @@ class AssetHelper extends Component
     WHERE x3.date_number <= :number
     ";
 
-    return Yii::$app->db->createCommand($sql)
-        ->bindValue(':id', $id)
-        ->bindValue(':receive_date', Asset::findOne($id)->receive_date)
-        ->bindValue(':number', $number)
-        ->queryAll() ?: [];
-}
-   
-// public static function Depreciation($id, $number)
+        return Yii::$app->db->createCommand($sql)
+            ->bindValue(':id', $asset->id)
+            ->bindValue(':receive_date', $asset->receive_date)
+            ->bindValue(':number', $number)
+            ->queryAll();
+    }
+
+    // public static function Depreciation($id, $number)
     // {
 
     //     $sql = "SELECT x3.*,
@@ -121,7 +127,7 @@ class AssetHelper extends Component
     // FROM(
     // SELECT x1.*,
     // IF(x1.date_number = 1, DATEDIFF(x1.end_date,receive_date),x1.days_of_month) as count_days
-    
+
     // FROM(
     // select 
     // (TIMESTAMPDIFF(MONTH, (SELECT receive_date FROM asset WHERE id = :id) ,LAST_DAY(m1))+1)  as date_number,
@@ -135,8 +141,8 @@ class AssetHelper extends Component
     //     (SELECT price FROM asset where id =:id) as price,
     //     (SELECT data_json->'$.service_life' FROM asset WHERE id = :id) as service_life,
     //     (SELECT CAST(data_json->'$.depreciation' as UNSIGNED) FROM asset WHERE id = :id) as dep
-        
-    
+
+
     // from
     // (
     // select ((SELECT receive_date FROM asset WHERE id = :id) - INTERVAL DAYOFMONTH((SELECT receive_date FROM asset WHERE id = :id))-1 DAY) + INTERVAL m MONTH as m1
