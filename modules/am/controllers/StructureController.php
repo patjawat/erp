@@ -22,7 +22,7 @@ class StructureController extends \yii\web\Controller
     public function actionIndex()
     {
         $searchModel = new AssetSearch([
-            'asset_group_id' => 7
+            'asset_group_id' => 3
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere('deleted_at IS NULL');
@@ -577,6 +577,7 @@ class StructureController extends \yii\web\Controller
     public function actionCreate()
     {
         $model = new Asset([
+            'asset_group_id' => 3,
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
 

@@ -22,6 +22,7 @@ $health = $dashboard['health'] ?? [];
 $replacement = $dashboard['replacementForecast'] ?? [];
 $categoryDist = $dashboard['categoryDistribution'] ?? [];
 $deptDist = $dashboard['departmentDistribution'] ?? [];
+$groupDist = $dashboard['groupDistribution'] ?? [];
 $riskAlerts = $dashboard['riskAlerts'] ?? [];
 $ageAnalysis = $dashboard['ageAnalysis'] ?? [];
 $recentActivities = $dashboard['recentActivities'] ?? [];
@@ -42,6 +43,13 @@ foreach ($deptDist as $row) {
     $org = $id ? Organization::findOne($id) : null;
     $deptLabels[] = $org ? $org->name : ($id ? "หน่วยงาน #{$id}" : 'ไม่ระบุ');
     $deptValues[] = (int) ($row['value'] ?? 0);
+}
+
+$groupLabels = [];
+$groupValues = [];
+foreach ($groupDist as $row) {
+    $groupLabels[] = $row['label'] ?: 'ไม่ระบุ';
+    $groupValues[] = (int) ($row['value'] ?? 0);
 }
 
 $ageLabels = [];
@@ -252,8 +260,22 @@ $disposals = $recentActivities['disposals'] ?? [];
   </div>
 
   <div class="row g-3 mt-0">
+    <!-- Section 4c — Group Distribution -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-success bg-opacity-10 text-success">
+            <i data-lucide="pie-chart"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">สัดส่วนตามกลุ่มทรัพย์สิน</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-group-donut" style="min-height: 300px;"></div>
+        </div>
+      </div>
+    </div>
     <!-- Section 4a — Category Distribution -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
           <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
@@ -267,7 +289,7 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
     </div>
     <!-- Section 4b — Department Distribution -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
           <div class="erp-icon-box bg-info bg-opacity-10 text-info">
@@ -426,6 +448,8 @@ $categoryLabelsJs = Json::encode($categoryLabels);
 $categoryValuesJs = Json::encode($categoryValues);
 $deptLabelsJs = Json::encode($deptLabels);
 $deptValuesJs = Json::encode($deptValues);
+$groupLabelsJs = Json::encode($groupLabels);
+$groupValuesJs = Json::encode($groupValues);
 $ageLabelsJs = Json::encode($ageLabels);
 $ageValuesJs = Json::encode($ageValues);
 $js = <<<JS
@@ -457,6 +481,19 @@ $js = <<<JS
   };
   var repEl = document.getElementById('chart-replacement-bar');
   if (repEl) { new ApexCharts(repEl, repOpt).render(); }
+
+  // Section 4c — Group Donut
+  var groupOpt = {
+    series: $groupValuesJs,
+    chart: { type: 'donut', height: 300 },
+    labels: $groupLabelsJs,
+    colors: ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#64748b'],
+    legend: { position: 'bottom' },
+    plotOptions: { pie: { donut: { size: '60%' } } },
+    dataLabels: { enabled: true }
+  };
+  var groupEl = document.getElementById('chart-group-donut');
+  if (groupEl) { new ApexCharts(groupEl, groupOpt).render(); }
 
   // Section 4a — Category Horizontal Bar
   var catOpt = {

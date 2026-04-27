@@ -572,12 +572,22 @@ class BuildingController extends \yii\web\Controller
     public function actionCreate()
     {
         $model = new Asset([
+             'asset_group_id' => 2,
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
-
+$old_data_json = $model->data_json;
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+                $model->receive_date = AppHelper::DateToDb($model->receive_date);
 
+                $convert_date = [
+                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
+                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                ];
+
+                $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
+
+$model->save();
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {

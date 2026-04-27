@@ -199,7 +199,7 @@ class EquipController extends Controller
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionViewAsset($id)
+    public function actionView($id)
     {
         $model = $this->findModel($id);
         $searchModel = new AssetSearch();

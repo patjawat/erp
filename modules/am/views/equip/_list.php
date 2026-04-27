@@ -172,7 +172,7 @@ $equipSubtitle = static function ($item): string {
                         <td class="text-center"><?= $statusBadge($item) ?></td>
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['maintenance', 'id' => $item->id], [
+                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-primary',
                                     'title' => 'บำรุงรักษา',
                                     'data-pjax' => 0,

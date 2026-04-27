@@ -1,6 +1,7 @@
 <?php
-use yii\helpers\Url;
+use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $this->title = 'อาคาร';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
@@ -126,9 +127,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
   <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['maintenance', 'id' => $item->id], [
+                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-primary',
-                                    'title' => 'บำรุงรักษา',
+                                    'title' => 'ดูรายละเอียด',
                                     'data-pjax' => 0,
                                 ]) ?>
                                 <?php if (Yii::$app->user->can('asset')): ?>
@@ -161,4 +162,12 @@ $this->params['breadcrumbs'][] = $this->title;
             </tbody>
         </table>
     </div>
+    <div class="card-footer bg-body border-top py-3 px-4">
+    <?php
+    echo DataSummaryWidget::widget([
+        'dataProvider' => $dataProvider,
+        'pagerOptions' => [],
+    ]);
+    ?>
+</div>
 </div>
