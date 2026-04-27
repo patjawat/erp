@@ -61,9 +61,23 @@ $statusBadge = static function ($item): string {
                         </div>
                         <div class="d-flex gap-1">
                             <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view-asset', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary', 'data-pjax' => 0]) ?>
+                             <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-light',
+                                    'title' => 'พิมพ์',
+                                    'data-pjax' => 0,
+                                    'target' => '_blank',
+                                ]) ?>
                             <?php if (Yii::$app->user->can('asset')): ?>
                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-warning', 'data-pjax' => 0]) ?>
                             <?php endif; ?>
+<?php if (Yii::$app->user->can('admin')): ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-danger delete-asset',
+                                        'title' => 'ลบ',
+                                        'data-pjax' => 0,
+                                    ]) ?>
+                                <?php endif; ?>
+
                         </div>
                     </div>
                 </div>

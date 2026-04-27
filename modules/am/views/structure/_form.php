@@ -192,6 +192,38 @@ $group = Yii::$app->request->get('group');
                 </div>
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header border-bottom d-flex align-items-center gap-2">
+                <div class="erp-icon-box bg-primary bg-opacity-10">
+                    <i data-lucide="trending-down"></i>
+                </div>
+                <h6 class="text-uppercase text-secondary m-0">เตรียมข้อมูลค่าเสื่อม</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-section mb-0">
+                    <p class="text-muted small mb-3">ใช้สำหรับคำนวณค่าเสื่อมราคาในอนาคต</p>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <?= $form->field($model, 'depreciation_rate', [
+                                'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
+                            ])->textInput([
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => '0',
+                                'placeholder' => 'เช่น 20.00',
+                                'class' => 'form-control',
+                            ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <div class="col-8">
         <div class="card">

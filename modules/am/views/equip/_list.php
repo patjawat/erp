@@ -106,7 +106,7 @@ $equipSubtitle = static function ($item): string {
                     <th>ผู้รับผิดชอบ</th>
                     <th>วันรับ</th>
                     <th class="text-center">สภาพ</th>
-                    <th class="text-center equip-actions-th">จัดการ</th>
+                    <th class="text-center equip-actions-th" style="min-width: 200px;">จัดการ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -134,6 +134,7 @@ $equipSubtitle = static function ($item): string {
                                 'class' => 'fw-semibold link-primary text-decoration-none',
                             ]) ?>
                         </td>
+                        
                         <td>
                             <div class="d-flex gap-3 align-items-center">
                                 <?= Html::a(
@@ -171,20 +172,26 @@ $equipSubtitle = static function ($item): string {
                         <td class="text-center"><?= $statusBadge($item) ?></td>
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
-                                <?= Html::a('<i class="fa-solid fa-eye" aria-hidden="true"></i>', ['maintenance', 'id' => $item->id], [
+                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['maintenance', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-primary',
                                     'title' => 'บำรุงรักษา',
                                     'data-pjax' => 0,
                                 ]) ?>
                                 <?php if (Yii::$app->user->can('asset')): ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', ['update', 'id' => $item->id], [
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-warning',
                                         'title' => 'แก้ไข',
                                         'data-pjax' => 0,
                                     ]) ?>
                                 <?php endif; ?>
+                                  <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-light',
+                                    'title' => 'พิมพ์',
+                                    'data-pjax' => 0,
+                                    'target' => '_blank',
+                                ]) ?>
                                 <?php if (Yii::$app->user->can('admin')): ?>
-                                    <?= Html::a('<i class="fa-solid fa-trash" aria-hidden="true"></i>', ['delete', 'id' => $item->id], [
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-danger delete-asset',
                                         'title' => 'ลบ',
                                         'data-pjax' => 0,

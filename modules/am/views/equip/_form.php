@@ -159,10 +159,10 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                 <div class="form-section mb-0">
                     <p class="text-muted small mb-3">ใช้สำหรับคำนวณค่าเสื่อมราคาในอนาคต</p>
                     <div class="row g-3">
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-6">
                             <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-6">
                             <?= $form->field($model, 'depreciation_rate', [
                                 'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
                             ])->textInput([
@@ -173,11 +173,7 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                 'class' => 'form-control',
                             ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <?= $form->field($model, 'residual_value', [
-                                'template' => '{label}<div class="input-group"><span class="input-group-text">฿</span>{input}</div>{hint}{error}',
-                            ])->textInput(['type' => 'number', 'step' => '0.01', 'placeholder' => '0.00', 'class' => 'form-control'])->label('มูลค่าซาก(ค่าเหลือเมื่อสิ้นอายุการใช้งาน)'); ?>
-                        </div>
+
                     </div>
                 </div>
             </div>

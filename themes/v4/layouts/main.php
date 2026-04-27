@@ -43,6 +43,7 @@ AppAsset::register($this);
         --erp-bg: #f3f7fa;
     }
 
+    /* กำหนดขนาดของ Lucide icon ให้สมดุลกับตัวอักษรและเท่ากับ FontAwesome */
     .header-fixed {
         position: sticky;
         top: 0;
@@ -270,8 +271,8 @@ AppAsset::register($this);
 
         <?php echo $this->render('page_title'); ?>
 
-        <main class="px-0">
-            <div class="container-fluid mt--65" style="max-width: 1600px;">
+        <main class="px-0 mt-4">
+            <div class="container-fluid mt--45" style="max-width: 1600px;">
                 <?= $content ?>
             </div>
         </main>
