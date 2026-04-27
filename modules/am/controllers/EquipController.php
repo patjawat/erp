@@ -318,7 +318,7 @@ class EquipController extends Controller
                 $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
 
                 if ($model->save()) {
-                    return $this->redirect(['view-asset', 'id' => $model->id]);
+                    return $this->redirect(['view', 'id' => $model->id]);
                 } else {
                     return $model->getErrors();
                 }
@@ -368,7 +368,7 @@ class EquipController extends Controller
             if ($model->save()) {
                 $model->updateFsn();
                 $this->CheckUpdateData($model);
-                return $this->redirect(['view-asset', 'id' => $model->id]);
+                return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return $model->getErrors();

@@ -401,8 +401,10 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                             <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'อาคาร/ห้อง/คลัง'])->label('สถานที่ตั้ง/คลัง/ห้อง'); ?>
                         </div>
                         <div class="col-12 col-md-6">
+                 
                             <?php
                             $url = \yii\helpers\Url::to(['/depdrop/employee']);
+
 
                             // 1. หาข้อมูลพนักงานก่อน
                             $employee = !empty($model->owner) ? Employees::findOne($model->owner) : null;
@@ -428,12 +430,6 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                     'templateResult' => new JsExpression('function(city) { return city.text; }'),
                                     'templateSelection' => new JsExpression('function (city) { return city.text; }'),
                                 ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>

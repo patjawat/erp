@@ -284,7 +284,7 @@ use kartik\editors\Summernote;
                     <div class="col-md-6">
                         <?php
                         $url = \yii\helpers\Url::to(['/depdrop/employee']);
-                       $employee = !empty($model->owner) ? Employees::findOne(['cid' => $model->owner]) : null;
+                       $employee = !empty($model->owner) ? Employees::findOne($model->owner) : null;
                         $ownerName = $employee?->fullname ?? '';
                         echo $form->field($model, 'owner')->widget(Select2::classname(), [
                             // 'data' => $model->ListEmployees(),

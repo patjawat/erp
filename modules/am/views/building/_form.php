@@ -329,12 +329,6 @@ use kartik\editors\Summernote;
                                     'templateResult' => new JsExpression('function(city) { return city.text; }'),
                                     'templateSelection' => new JsExpression('function (city) { return city.text; }'),
                                 ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>
