@@ -126,7 +126,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                 <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
-                <li><?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel', '#', ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]) ?></li>
+                <li><button type="button" class="dropdown-item btn-export-excel"><i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel</button></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
             </ul>
@@ -277,6 +277,28 @@ $(".filter-asset-close").on("click", function(){
 
 // const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 // const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+$('.btn-export-excel').click(function(e) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'ยืนยันการดาวน์โหลด?',
+        text: "คุณต้องการส่งออกข้อมูลตามเงื่อนไขนี้เป็นไฟล์ Excel ใช่หรือไม่?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        confirmButtonText: 'ใช่, ดาวน์โหลดเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let form = $('.equip-search-form');
+            form.append('<input type="hidden" name="export" value="excel" id="export-excel-input">');
+            form[0].submit(); // Use native submit to bypass PJAX/AJAX
+            setTimeout(() => {
+                $('#export-excel-input').remove();
+            }, 500);
+        }
+    });
+});
 
 JS;
 $this->registerJS($js);

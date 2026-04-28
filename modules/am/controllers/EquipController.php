@@ -18,6 +18,13 @@ use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
 use app\modules\am\services\AssetNumberGenerator;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 /**
  * AssetController implements the CRUD actions for Asset model.
@@ -130,6 +137,77 @@ class EquipController extends Controller
             'damaged' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => [3, 5]])->count('DISTINCT asset.id'),
             'total_value' => (float) ((clone $baseQuery)->sum(new Expression('COALESCE(asset.price, 0)'))) ?: 0.0,
         ];
+
+        if ($this->request->get('export') === 'excel') {
+            $dataProvider->pagination = false;
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set widths
+            $sheet->getColumnDimension('A')->setWidth(10);
+            $sheet->getColumnDimension('B')->setWidth(20);
+            $sheet->getColumnDimension('C')->setWidth(35);
+            $sheet->getColumnDimension('D')->setWidth(25);
+            $sheet->getColumnDimension('E')->setWidth(25);
+            $sheet->getColumnDimension('F')->setWidth(25);
+            $sheet->getColumnDimension('G')->setWidth(15);
+            $sheet->getColumnDimension('H')->setWidth(15);
+            $sheet->getColumnDimension('I')->setWidth(15);
+
+            $setHeader = 'A1:I1';
+            $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+            $sheet->getStyle($setHeader)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('8DB4E2');
+            $sheet->getStyle($setHeader)->getFont()->setBold(true);
+
+            $sheet->setTitle('ทะเบียนครุภัณฑ์');
+            $sheet->setCellValue('A1', 'ลำดับ');
+            $sheet->setCellValue('B1', 'รหัสครุภัณฑ์');
+            $sheet->setCellValue('C1', 'ชื่อครุภัณฑ์');
+            $sheet->setCellValue('D1', 'ประเภท/หมวด');
+            $sheet->setCellValue('E1', 'หน่วยงาน');
+            $sheet->setCellValue('F1', 'ผู้รับผิดชอบ');
+            $sheet->setCellValue('G1', 'วันที่รับ');
+            $sheet->setCellValue('H1', 'ราคา');
+            $sheet->setCellValue('I1', 'สถานะ');
+
+            $startRow = 2;
+            foreach ($dataProvider->getModels() as $key => $a) {
+                $numRow = $startRow++;
+                $sheet->setCellValue('A' . $numRow, ($key + 1));
+                $sheet->setCellValue('B' . $numRow, $a->code ?? '');
+                $sheet->setCellValue('C' . $numRow, $a->asset_name ?? $a->AssetitemName() ?? '');
+                $sheet->setCellValue('D' . $numRow, $a->assetType->title ?? '');
+                $sheet->setCellValue('E' . $numRow, $a->departmentName() ?? '');
+                $sheet->setCellValue('F' . $numRow, $a->ownerEmployee->fullname ?? '');
+                $sheet->setCellValue('G' . $numRow, $a->receive_date ? \app\components\AppHelper::DateFormDb($a->receive_date) : '');
+                
+                $price = $a->price ? (float)$a->price : 0;
+                $sheet->setCellValue('H' . $numRow, $price);
+                $sheet->getStyle('H' . $numRow)->getNumberFormat()->setFormatCode('#,##0.00');
+                
+                $sheet->setCellValue('I' . $numRow, $a->statusName() ?? '');
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            
+            $dirPath = Yii::getAlias('@webroot') . '/downloads';
+            if (!is_dir($dirPath)) {
+                mkdir($dirPath, 0777, true);
+            }
+            $filePath = $dirPath . '/ทะเบียนครุภัณฑ์.xlsx';
+            
+            $writer->save($filePath);
+
+            if (file_exists($filePath)) {
+                return Yii::$app->response->sendFile($filePath);
+            } else {
+                throw new \yii\web\NotFoundHttpException('The file does not exist.');
+            }
+        }
 
         if ($this->request->get('view')) {
             SiteHelper::setDisplay($this->request->get('view'));
