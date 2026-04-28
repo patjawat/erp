@@ -63,7 +63,10 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
             <div class="col-sm-8">
 
                 <ul>
-                    <?php foreach ($model->equipmentItems() as $item): ?>
+                    <?php 
+                    $equipments = $model->data_json['equipment'] ?? [];
+                    foreach ($equipments as $item): 
+                     ?>
                         <li><?= $labels[$item] ?? $item ?></li>
                     <?php endforeach; ?>
                 </ul>
