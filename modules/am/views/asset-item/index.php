@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use app\modules\am\models\AssetItem;
+use app\components\widgets\DataSummaryWidget;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItemSearch $searchModel */
@@ -96,17 +97,14 @@ $this->params['breadcrumbs'][] = $this->title;
         </table>
 
 
-        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-            <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'listOptions' => 'pagination pagination-sm',
-                    'class' => 'pagination-sm',
-                ],
-            ]); ?>
-        </div>
+        <div class="card-footer bg-body border-top py-3 px-4">
+    <?php
+    echo DataSummaryWidget::widget([
+        'dataProvider' => $dataProvider,
+        'pagerOptions' => [],
+    ]);
+    ?>
+</div>
 
     </div>
 </div>

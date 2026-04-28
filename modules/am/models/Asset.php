@@ -980,4 +980,25 @@ class Asset extends \yii\db\ActiveRecord
             return false;
         }
     }
+
+    public function NextId()
+{
+    $prefix = $this->asset_group_id;
+
+    $last = self::find()
+        ->where(['asset_group_id' => $prefix])
+        ->andWhere(['like', 'code', $prefix . '-%', false])
+        ->orderBy(['id' => SORT_DESC])
+        ->one();
+
+    if ($last) {
+        $parts = explode('-', $last->code);
+        $number = (int)$parts[1] + 1;
+    } else {
+        $number = 1;
+    }
+
+    return $prefix . '-' . $number;
+}
+
 }

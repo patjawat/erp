@@ -77,7 +77,9 @@ $phone = $employee->phone ?? '';
     <h4 class="fw-bold text-body mb-0"><?= $isUpdate ? 'แก้ไขใบลา' : 'สร้างใบลาใหม่' ?></h4>
 </div>
 <?php $this->endBlock(); ?>
-
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn') ?>
+<?php $this->endBlock(); ?>
 
 
 <?php

@@ -2,14 +2,14 @@
 
 namespace app\modules\am\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\web\Controller;
 use app\models\Categorise;
-use yii\filters\VerbFilter;
-use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetItem;
 use app\modules\am\models\AssetItemSearch;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * AssetItemController implements the CRUD actions for AssetItem model.
@@ -50,6 +50,7 @@ class AssetItemController extends Controller
         ]);
     }
 
+
     /**
      * Displays a single AssetItem model.
      * @param string $id รหัสทรัพย์สิน
@@ -83,18 +84,18 @@ class AssetItemController extends Controller
      */
     public function actionCreate()
     {
-        $model = new AssetItem([
-            'asset_group_id' => 'EQUIP',
-            'asset_type_id' => $this->request->get('asset_type_id'),
-            'asset_category_id' => $this->request->get('asset_category_id'),
-            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
-        ]);
+           Yii::$app->response->format = Response::FORMAT_JSON;
+            $model = new AssetItem([
+                'asset_group_id' => $this->request->get('asset_type_id'),
+                'asset_category_id' => $this->request->get('category_id'),
+                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
+            ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->code = $model->NextId();
-                $model->save();
+                $model->id = $model->NextId();
+                $model->save(false);
                 return [
                     'status' => 'success',
                     'container' => '#am-container',
@@ -160,7 +161,7 @@ class AssetItemController extends Controller
     }
 
 
-        public function actionGetAssetType()
+    public function actionGetAssetType()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -243,6 +244,31 @@ class AssetItemController extends Controller
             ]);
         }
     }
+
+    // ตรวจสอบความถูกต้อง
+    public function actionValidator()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetItem();
+        $requiredName = 'ต้องระบุ';
+    if ($this->request->isPost && $model->load($this->request->post())) {
+
+            $model->title == '' ? $model->addError('title', $requiredName) : null;
+            $model->asset_group_id == '' ? $model->addError('asset_group_id', $requiredName) : null;
+            $model->asset_category_id == '' ? $model->addError('asset_category_id', $requiredName) : null;
+           
+            foreach ($model->getErrors() as $attribute => $errors) {
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
+            }
+            if (!empty($result)) {
+                return $this->asJson($result);
+            }
+        }
+    }
+
+
+    
+
 
 
 

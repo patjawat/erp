@@ -37,7 +37,7 @@ class AssetItem extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
 
-     public $q;
+    public $q;
     public static function tableName()
     {
         return 'asset_items';
@@ -57,7 +57,7 @@ class AssetItem extends \yii\db\ActiveRecord
             [['title', 'description'], 'string'],
             [['price', 'depreciation'], 'number'],
             [['service_life', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['q','data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['q', 'data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['id', 'ref', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'fsn'], 'string', 'max' => 255],
             [['status'], 'string', 'max' => 50],
             [['id'], 'unique'],
@@ -107,14 +107,35 @@ class AssetItem extends \yii\db\ActiveRecord
         return $this->hasOne(Categorise::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);
     }
     public function getAssetType()
-{
-    return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'asset_type_id'])->andOnCondition(['name' => 'asset_type']);
         // ->via('category')
-}
+    }
 
-public function getGroup()
+    public function getGroup()
+    {
+        return $this->hasOne(Categorise::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
+    }
+
+
+    public function NextId()
 {
-    return $this->hasOne(Categorise::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
-}
+    $prefix = $this->asset_group_id;
 
+    $last = self::find()
+        ->where(['like', 'id', $prefix . '-%', false])
+        ->orderBy(new \yii\db\Expression(
+            "CAST(SUBSTRING_INDEX(id,'-',-1) AS UNSIGNED) DESC"
+        ))
+        ->one();
+
+    if ($last) {
+        $parts = explode('-', $last->id);
+        $number = (int)$parts[1] + 1;
+    } else {
+        $number = 1;
+    }
+
+    return $prefix . '-' . $number;
+}
 }

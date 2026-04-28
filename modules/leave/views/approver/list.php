@@ -80,7 +80,7 @@ $models = $dataProvider->getModels();
                                         ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]
                                     ) ?>
                                 </li>
-                                <?php if (!$item->hasApprovalDecision()): ?>
+                                <?php // if (!$item->hasApprovalDecision()): ?>
                                 <li>
                                     <?= Html::a(
                                         '<i class="bi bi-pencil me-2"></i> แก้ไข',
@@ -88,7 +88,7 @@ $models = $dataProvider->getModels();
                                         ['class' => 'dropdown-item']
                                     ) ?>
                                 </li>
-                                <?php endif; ?>
+                                <?php // endif; ?>
                                 <li>
                                     <?= Html::a(
                                         '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา (PDF)',

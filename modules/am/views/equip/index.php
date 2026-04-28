@@ -46,43 +46,46 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 
 <div class="card">
     <div class="card-body p-3">
-    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
-
 
 <?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
 
 <div class="row g-3 mt-1">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-body border-bottom py-3 px-3 px-md-4">
-                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between gap-3">
-                    <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-pill">
-                    <i data-lucide="file-text"></i> 
+             <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="border-color: rgb(241, 245, 249); background-color: rgba(248, 250, 252, 0.5);">
+            <div class="d-flex align-items-center gap-2">
+                <div class="p-2 rounded-3" style="background-color: rgb(219, 234, 254);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E4E91" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list" aria-hidden="true">
+                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <path d="M12 11h4"></path>
+                        <path d="M12 16h4"></path>
+                        <path d="M8 11h.01"></path>
+                        <path d="M8 16h.01"></path>
+                    </svg></div>
+                <h3 class="m-0 fw-bold" style="font-size: 16px; color: rgb(30, 41, 59);">รายการทะเบียนคุมครุภัณฑ์</h3><span class="badge rounded-pill fw-bold" style="background-color: rgb(226, 232, 240); color: rgb(71, 85, 105); font-size: 10px; padding: 4px 8px;"><?=$dataProvider->getTotalCount()?> รายการ</span>
             </div>
-                        ทะเบียนคุมครุภัณฑ์
-                    </h6>
-                    <div class="d-flex flex-wrap align-items-center gap-2 w-50 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
-                        <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
-                            'class' => 'btn btn-sm btn-primary text-white shadow-sm',
-                            'data-pjax' => 0,
-                        ]) ?>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="มุมมอง">
-                            <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
-                                'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                'data-pjax' => 0,
-                            ]) ?>
-                            <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
-                                'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                'data-pjax' => 0,
-                            ]) ?>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">
+
+                    <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
+                        'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                        'data-pjax' => 0,
+                    ]) ?>
+                    <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
+                        'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                        'data-pjax' => 0,
+                    ]) ?>
+
+                </div><button class="btn text-white fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm" style="background-color: rgb(30, 78, 145); font-size: 14px; padding: 8px 20px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus" aria-hidden="true">
+                        <path d="M5 12h14"></path>
+                        <path d="M12 5v14"></path>
+                    </svg> <span>ลงทะเบียนครุภัณฑ์</span></button>
             </div>
- 
+        </div>
+
             <div class="card-body p-0">
                 <?php if ($isTableView): ?>
                     <?= $this->render('_list', [
