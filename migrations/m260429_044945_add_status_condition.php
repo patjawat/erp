@@ -18,7 +18,7 @@ class m260429_044945_add_status_condition extends Migration
         }
 
         // =====================================================
-        // 1. ตาราง asset_status (เพิ่มคอลัมน์จัดการสี)
+        // 1. ตาราง asset_status
         // =====================================================
         $this->createTable('asset_status', [
             'id' => $this->string(20)->notNull(),
@@ -31,7 +31,6 @@ class m260429_044945_add_status_condition extends Migration
 
         $this->addPrimaryKey('pk_asset_status','asset_status','id');
 
-        // แทรกข้อมูลเริ่มต้น พร้อมกำหนดสีให้แต่ละสถานะ
         $this->batchInsert('asset_status', 
             ['id', 'name', 'color_css', 'color_code', 'sort_order'], 
             [
@@ -81,6 +80,11 @@ class m260429_044945_add_status_condition extends Migration
         $this->update('asset', ['asset_status' => 'repair'],       ['asset_status' => '5']);
         $this->update('asset', ['asset_status' => 'active'],       ['asset_status' => '0']); 
         $this->update('asset', ['asset_status' => 'active'],       ['asset_status' => null]);
+        $this->update('asset', ['asset_status' => 'active'],       ['asset_status' => '']); // ดักค่า String ว่าง
+
+        // [เพิ่มใหม่] คลีนอัพข้อมูลขยะที่ไม่ได้อยู่ใน List ให้กลายเป็น active ทั้งหมด
+        $validStatuses = ['active', 'borrowed', 'repair', 'wait_dispose', 'disposed'];
+        $this->update('asset', ['asset_status' => 'active'], ['NOT IN', 'asset_status', $validStatuses]);
 
         // =====================================================
         // 4. เพิ่ม asset_condition
@@ -131,7 +135,6 @@ class m260429_044945_add_status_condition extends Migration
 
         $this->dropColumn('asset','asset_condition');
 
-        // สลับข้อมูลกลับเป็นตัวเลข (rollback data)
         $this->update('asset', ['asset_status' => '1'], ['asset_status' => 'active']);
         $this->update('asset', ['asset_status' => '2'], ['asset_status' => 'disposed']);
         $this->update('asset', ['asset_status' => '3'], ['asset_status' => 'wait_dispose']);

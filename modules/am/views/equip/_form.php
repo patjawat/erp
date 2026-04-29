@@ -463,7 +463,7 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                 ]
-                            ])->label(true); ?>
+                            ]); ?>
                         </div>
                     </div>
                 </div>
