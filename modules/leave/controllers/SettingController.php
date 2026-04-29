@@ -499,6 +499,36 @@ class SettingController extends Controller
         $lastDateStart = $lastLeave && $lastLeave->date_start ? $fmtDate($lastLeave->date_start) : '-';
         $lastDateEnd = $lastLeave && $lastLeave->date_end ? $fmtDate($lastLeave->date_end) : '-';
         $leaveSummary = $model->getLeaveSummary();
+        $leaveTypeRows = LeaveType::find()
+            ->where(['name' => 'leave_type', 'active' => 1])
+            ->orderBy(['code' => SORT_ASC])
+            ->all();
+        $leaveSummaryByType = [];
+        foreach ($leaveTypeRows as $leaveTypeRow) {
+            $code = (string) ($leaveTypeRow->code ?? '');
+            if ($code === '') {
+                continue;
+            }
+            $summary = $model->getLeaveSummary($code);
+            $entitlementDays = '';
+            $entitlementTotalDays = '';
+            if ($code === 'LT4') {
+                $ent = method_exists($model, 'Entitlements') ? $model->Entitlements() : null;
+                if ($ent && isset($ent->days)) {
+                    $entitlementDays = (string) $ent->days;
+                    $entitlementTotalDays = (string) $ent->days;
+                }
+            }
+            $leaveSummaryByType[$code] = [
+                'code' => $code,
+                'title' => (string) ($leaveTypeRow->title ?? ''),
+                'current_leave_days' => (string) ($summary['current_leave_days'] ?? ''),
+                'last_leave_days' => (string) ($summary['last_leave_days'] ?? ''),
+                'total_leave_days' => (string) ($summary['total_leave_days'] ?? ''),
+                'entitlement_days' => $entitlementDays,
+                'entitlement_total_days' => $entitlementTotalDays,
+            ];
+        }
         $lastLeaveDays = $leaveSummary['last_leave_days'] ?? null;
         $totalLeaveDays = $leaveSummary['total_leave_days'] ?? null;
         if ($lastLeaveDays === null || $totalLeaveDays === null) {
@@ -580,6 +610,9 @@ class SettingController extends Controller
         $values['approver_position'] = $values['approve_1_position'] ?? '';
         $values['approver_approve_date'] = $values['approve_date_1'] ?? '';
         $values['approver_signature'] = (string) ($model->checkerName(1)['signature'] ?? '');
+        $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');
+        $values['leave_type_title'] = (string) ($model->leaveType->title ?? '');
+        $values['leave_summary_by_type'] = $leaveSummaryByType;
         // Signature aliases for PDF template editor/data source compatibility.
         $values['emp_signature'] = $empSignature;
         $values['send_signature'] = $sendSignature;
@@ -609,7 +642,6 @@ class SettingController extends Controller
             }
             $values['approver_' . $level . '_status'] = $statusVal;
         }
-        $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');
         return $values;
     }
 
@@ -913,4 +945,3 @@ class SettingController extends Controller
         return ['emp_sign', 'signature_applicant', 'leader_sign', 'hr_sign', 'direc_sign', 'send_sign'];
     }
 }
-

@@ -1048,7 +1048,7 @@ class Leave extends \yii\db\ActiveRecord
     }
 
 //แสรุปการลาในใบลาแต่ละครั้ง
-    public function getLeaveSummary()
+    public function getLeaveSummary($leaveTypeId = null)
 {
     $sql = "
         SELECT 
@@ -1070,6 +1070,7 @@ class Leave extends \yii\db\ActiveRecord
                 AND l2.thai_year = l.thai_year
                 AND l2.date_start < l.date_start
                 AND l2.status = 'Approve'
+                " . ($leaveTypeId ? " AND l2.leave_type_id = :leave_type_id " : "") . "
             ) AS last_leave_days,
 
             -- รวมวันลาทั้งหมดจนถึงครั้งนี้
@@ -1080,6 +1081,7 @@ class Leave extends \yii\db\ActiveRecord
                 AND l3.thai_year = l.thai_year
                 AND l3.date_start <= l.date_start
                 AND l3.status = 'Approve'
+                " . ($leaveTypeId ? " AND l3.leave_type_id = :leave_type_id " : "") . "
             ) AS total_leave_days
 
         FROM `leave` l
@@ -1087,15 +1089,21 @@ class Leave extends \yii\db\ActiveRecord
         AND l.emp_id = :emp_id
         AND l.thai_year = :thai_year
         AND l.status = :status
+        " . ($leaveTypeId ? " AND l.leave_type_id = :leave_type_id " : "") . "
         LIMIT 1
     ";
 
-    return Yii::$app->db->createCommand($sql, [
+    $params = [
         ':id' => $this->id,
         ':emp_id' => $this->emp_id,
         ':thai_year' => $this->thai_year,
         ':status' => 'Approve',
-    ])->queryOne();
+    ];
+    if ($leaveTypeId) {
+        $params[':leave_type_id'] = $leaveTypeId;
+    }
+
+    return Yii::$app->db->createCommand($sql, $params)->queryOne();
 }
 
     public function listEmployees()

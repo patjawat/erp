@@ -20,6 +20,8 @@ class LeaveDataSource implements DataSourceInterface
     {
         return [
             ['source' => 'org_name', 'label' => 'ชื่อหน่วยงาน'],
+            ['source' => 'leave_type_id', 'label' => 'ประเภทการลา (รหัส)'],
+            ['source' => 'leave_type_title', 'label' => 'ประเภทการลา (ชื่อ)'],
             ['source' => 'title', 'label' => 'ประเภทการลา (หัวเรื่อง)'],
             ['source' => 'createDate', 'label' => 'วันที่ยื่นคำขอ'],
             ['source' => 'level_name', 'label' => 'ระดับตำแหน่ง'],
