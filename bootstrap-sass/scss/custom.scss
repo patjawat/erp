@@ -591,7 +591,7 @@ textarea:focus {
 }
 
 .page-content-wrapper {
-  background-color: #e3e9f1;
+  background-color: #eceff2;
 }
 
 
@@ -1536,7 +1536,7 @@ a:hover {
 
 
 .page-title-box {
-  padding: 12px 12px 85px 12px;
+  padding: 12px 12px 100px 12px;
   margin: 0 -12px;
   // background: var(--bs-primary);
   // color: #fff;
@@ -1737,6 +1737,10 @@ a {
 
 .mt--65 {
   margin-top: -65px;
+}
+
+.mt--80 {
+  margin-top: -80px;
 }
 
 .mh-16 {

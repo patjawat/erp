@@ -44,13 +44,14 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 
+<?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
+
 <div class="card">
     <div class="card-body p-3">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
-<?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
 
 <div class="row g-3 mt-1">
     <div class="col-12">
@@ -79,10 +80,11 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
                         'data-pjax' => 0,
                     ]) ?>
 
-                </div><button class="btn text-white fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm" style="background-color: rgb(30, 78, 145); font-size: 14px; padding: 8px 20px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus" aria-hidden="true">
-                        <path d="M5 12h14"></path>
-                        <path d="M12 5v14"></path>
-                    </svg> <span>ลงทะเบียนครุภัณฑ์</span></button>
+                </div>
+                  <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
+                            'class' => 'btn btn-primary fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm',
+                            'data-pjax' => 0,
+                        ]) ?>
             </div>
         </div>
 
