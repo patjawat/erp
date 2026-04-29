@@ -7,6 +7,7 @@ use yii\db\Expression;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\Employees;
 
 /**
  * Annual asset audit header.
@@ -16,8 +17,8 @@ use app\modules\hr\models\Organization;
  * @property int $seq_no
  * @property int $fiscal_year
  * @property int|null $department
+ * @property string|null $emp_id
  * @property string|null $audit_date
- * @property string|null $auditors
  * @property string|null $summary_note
  * @property string $status draft|active|closed
  * @property int|null $created_by
@@ -39,10 +40,11 @@ class AssetAudit extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['audit_no', 'fiscal_year'], 'required'],
+            [['fiscal_year', 'emp_id'], 'required'],
             [['seq_no', 'fiscal_year', 'department', 'created_by', 'updated_by'], 'integer'],
-            [['audit_date', 'auditors', 'summary_note', 'created_at', 'updated_at'], 'safe'],
-            [['auditors', 'summary_note'], 'string'],
+            [['emp_id'], 'string', 'max' => 255],
+            [['audit_date', 'summary_note', 'created_at', 'updated_at'], 'safe'],
+            [['summary_note'], 'string'],
             [['audit_no'], 'string', 'max' => 255],
             [['status'], 'string', 'max' => 20],
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_ACTIVE, self::STATUS_CLOSED]],
@@ -50,6 +52,19 @@ class AssetAudit extends \yii\db\ActiveRecord
             [['audit_no'], 'unique'],
             [['fiscal_year', 'seq_no'], 'unique', 'targetAttribute' => ['fiscal_year', 'seq_no']],
         ];
+    }
+
+    public function beforeValidate()
+    {
+        if (!parent::beforeValidate()) {
+            return false;
+        }
+
+        if (($this->audit_no === null || $this->audit_no === '') && $this->fiscal_year) {
+            $this->audit_no = 'TEMP';
+        }
+
+        return true;
     }
 
     public function attributeLabels()
@@ -60,8 +75,8 @@ class AssetAudit extends \yii\db\ActiveRecord
             'seq_no' => 'ลำดับ',
             'fiscal_year' => 'ปีงบประมาณ',
             'department' => 'หน่วยงาน',
+            'emp_id' => 'ผู้ตรวจนับ',
             'audit_date' => 'วันที่ตรวจนับ',
-            'auditors' => 'ผู้ตรวจนับ',
             'summary_note' => 'หมายเหตุรวม',
             'status' => 'สถานะ',
             'created_by' => 'ผู้สร้าง',
@@ -96,6 +111,19 @@ class AssetAudit extends \yii\db\ActiveRecord
     public function getDepartmentRef()
     {
         return $this->hasOne(Organization::class, ['id' => 'department']);
+    }
+
+    public function getAuditorEmp()
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
+    }
+
+    public function getAuditorLabel()
+    {
+        if ($this->auditorEmp !== null) {
+            return $this->auditorEmp->fullname ?? trim(($this->auditorEmp->fname ?? '') . ' ' . ($this->auditorEmp->lname ?? '')) ?: (string) $this->emp_id;
+        }
+        return $this->emp_id ?: '-';
     }
 
     public static function statusList()

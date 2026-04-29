@@ -6,7 +6,6 @@
 /** @var app\modules\am\models\AssetDetail[] $recentTransfers */
 
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use app\models\Categorise;

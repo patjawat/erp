@@ -17,6 +17,12 @@ use app\modules\am\models\AssetAuditItem;
 use app\modules\am\models\AssetAuditSearch;
 use app\modules\am\models\AssetCondition;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\Employees;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 /**
  * Annual asset inventory.
@@ -125,6 +131,82 @@ class AuditController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionExportExcel($id)
+    {
+        $model = $this->findModel($id);
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ตรวจนับ');
+
+        $departmentName = $model->departmentRef->name ?? '-';
+        $auditorName = $model->auditorLabel;
+        $auditDate = $model->audit_date ? AppHelper::convertToThai($model->audit_date) : '-';
+        $statusLabel = $model->getStatusLabel();
+        $itemCount = count($model->auditItems);
+
+        $sheet->mergeCells('A1:D1');
+        $sheet->setCellValue('A1', 'ใบตรวจนับครุภัณฑ์ประจำปี');
+        $sheet->mergeCells('A2:D2');
+        $sheet->setCellValue('A2', 'เลขที่ ' . $model->audit_no);
+
+        $sheet->setCellValue('A4', 'ปีงบประมาณ');
+        $sheet->setCellValue('B4', $model->fiscal_year);
+        $sheet->setCellValue('C4', 'หน่วยงาน');
+        $sheet->setCellValue('D4', $departmentName);
+
+        $sheet->setCellValue('A5', 'วันที่ตรวจนับ');
+        $sheet->setCellValue('B5', $auditDate);
+        $sheet->setCellValue('C5', 'ผู้ตรวจนับ');
+        $sheet->setCellValue('D5', $auditorName);
+
+        $sheet->setCellValue('A6', 'สถานะ');
+        $sheet->setCellValue('B6', $statusLabel);
+        $sheet->setCellValue('C6', 'จำนวนรายการ');
+        $sheet->setCellValue('D6', $itemCount);
+
+        $sheet->setCellValue('A8', 'หมายเหตุรวม');
+        $sheet->mergeCells('B8:D8');
+        $sheet->setCellValue('B8', $model->summary_note ?: '-');
+
+        $startRow = 10;
+        $sheet->setCellValue('A' . $startRow, 'รหัส');
+        $sheet->setCellValue('B' . $startRow, 'ชื่อครุภัณฑ์');
+        $sheet->setCellValue('C' . $startRow, 'สภาพ');
+        $sheet->setCellValue('D' . $startRow, 'หมายเหตุ');
+
+        $headerRange = 'A' . $startRow . ':D' . $startRow;
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9EAF7');
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        $row = $startRow + 1;
+        foreach ($model->auditItems as $item) {
+            $sheet->setCellValue('A' . $row, $item->asset_code);
+            $sheet->setCellValue('B' . $row, $item->asset_name);
+            $sheet->setCellValue('C' . $row, $item->condition->name ?? $item->asset_condition ?? '-');
+            $sheet->setCellValue('D' . $row, $item->note ?? '');
+            $sheet->getStyle('A' . $row . ':D' . $row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $row++;
+        }
+
+        foreach (['A' => 18, 'B' => 36, 'C' => 16, 'D' => 36] as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
+        $sheet->getStyle('A1:D2')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A4:D8')->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+        $sheet->getStyle('B8:D8')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A1:D' . max($row - 1, 10))->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+
+        $fileName = 'asset-audit-' . str_replace('/', '-', $model->audit_no) . '.xlsx';
+        $filePath = Yii::getAlias('@webroot') . '/downloads/' . $fileName;
+        if (!is_dir(dirname($filePath))) {
+            mkdir(dirname($filePath), 0777, true);
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filePath);
+        return Yii::$app->response->sendFile($filePath, $fileName);
+    }
+
     public function actionLookupAsset($code)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -142,7 +224,7 @@ class AuditController extends Controller
             'success' => true,
             'data' => [
                 'asset_id' => $asset->id,
-                'asset_code' => $asset->code ?: $code,
+                'asset_code' => $this->resolveAssetCode($asset, $code),
                 'asset_name' => $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: $code,
                 'asset_condition' => $asset->asset_condition,
                 'asset_condition_name' => $asset->assetCondition->name ?? '',
@@ -165,7 +247,7 @@ class AuditController extends Controller
 
         $assets = Asset::find()
             ->where(['department' => $departmentId])
-            ->andWhere(['or', ['deleted_at' => null], ['deleted_at' => '']])
+            ->andWhere(['or', ['deleted_at' => null]])
             ->with(['assetCondition'])
             ->orderBy(['code' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
@@ -174,7 +256,7 @@ class AuditController extends Controller
         foreach ($assets as $asset) {
             $rows[] = [
                 'asset_id' => $asset->id,
-                'asset_code' => $asset->code ?: '',
+                'asset_code' => $this->resolveAssetCode($asset),
                 'asset_name' => $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: '',
                 'asset_condition' => $asset->asset_condition ?: '',
                 'asset_condition_name' => $asset->assetCondition->name ?? '',
@@ -195,7 +277,7 @@ class AuditController extends Controller
 
     protected function findModel($id)
     {
-        $model = AssetAudit::find()->with(['departmentRef', 'auditItems' => function ($query) {
+        $model = AssetAudit::find()->with(['departmentRef', 'auditorEmp', 'auditItems' => function ($query) {
             $query->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC]);
         }])->where(['id' => (int) $id])->one();
         if ($model === null) {
@@ -248,7 +330,7 @@ class AuditController extends Controller
                 $asset = Asset::find()->where(['code' => $code])->with(['assetCondition'])->one();
                 if ($asset !== null) {
                     $item->asset_id = $asset->id;
-                    $item->asset_code = $asset->code ?: $code;
+                    $item->asset_code = $this->resolveAssetCode($asset, $code);
                     $item->asset_name = $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: $code;
                     $item->asset_condition = $condition !== '' ? $condition : $asset->asset_condition;
                 } else {
@@ -270,6 +352,27 @@ class AuditController extends Controller
         }
 
         return $items;
+    }
+
+    protected function resolveAssetCode(Asset $asset, $fallback = '')
+    {
+        $fallback = trim((string) $fallback);
+        $code = trim((string) ($asset->code ?? ''));
+        if ($code !== '') {
+            return $code;
+        }
+        $fsn = trim((string) ($asset->fsn_number ?? ''));
+        if ($fsn !== '') {
+            return $fsn;
+        }
+        $assetItem = trim((string) ($asset->asset_item_id ?? ''));
+        if ($assetItem !== '') {
+            return $assetItem;
+        }
+        if ($fallback !== '') {
+            return $fallback;
+        }
+        return (string) $asset->id;
     }
 
     protected function saveWithItems(AssetAudit $model, array $items, bool $insert)

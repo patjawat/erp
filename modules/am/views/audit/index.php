@@ -15,10 +15,22 @@ $this->title = 'ตรวจนับพัสดุประจำปี';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+<i data-lucide="file-check" class="me-2"></i>
+    <?= $this->title ?>
+  </h4>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/am/menu', ['active' => 'work']) ?>
+<?php $this->endBlock(); ?>
+
 <div class="audit-index">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <h3 class="mb-0"><?= Html::encode($this->title) ?></h3>
             <div class="text-muted small">ตามระเบียบข้อ 209 ตรวจนับพัสดุอย่างน้อยปีละ 1 ครั้ง ก่อนสิ้นปีงบประมาณ</div>
         </div>
         <?= Html::a('สร้างใบตรวจนับ', ['create'], ['class' => 'btn btn-primary']) ?>
@@ -82,9 +94,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
-                        'attribute' => 'auditors',
+                        'attribute' => 'emp_id',
                         'label' => 'ผู้ตรวจนับ',
-                        'value' => fn ($model) => $model->auditors ?: '-',
+                        'value' => fn ($model) => $model->auditorLabel,
                     ],
                     [
                         'label' => 'รายการ',

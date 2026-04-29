@@ -8,6 +8,7 @@ use app\widgets\datepicker\DatepickerThai;
 use kartik\tree\TreeViewInput;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\web\JsExpression;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
@@ -59,6 +60,17 @@ $initialIndex = count($items);
                     'asDropdown' => true,
                     'multiple' => false,
                     'options' => ['class' => 'form-select', 'id' => 'audit-department'],
+                    'pluginOptions' => [
+                        'closeOnSelect' => true,
+                    ],
+                    'pluginEvents' => [
+                        'select2:select' => new JsExpression('function() {
+                            var $el = $(this);
+                            setTimeout(function() {
+                                try { $el.select2("close"); } catch (e) {}
+                            }, 50);
+                        }'),
+                    ],
                 ])->label('หน่วยงานที่ตรวจนับ') ?>
                 <div class="d-flex justify-content-end mt-2">
                     <button type="button" id="load-assets-by-department" class="btn btn-outline-primary btn-sm">
@@ -79,11 +91,13 @@ $initialIndex = count($items);
                     'class' => 'form-select',
                 ]) ?>
             </div>
-            <div class="col-12">
-                <?= $form->field($model, 'auditors')->textarea([
-                    'rows' => 2,
-                    'class' => 'form-control',
-                    'placeholder' => 'ระบุรายชื่อผู้ตรวจนับ เช่น คณะกรรมการตรวจนับ / หัวหน้าฝ่าย / เจ้าหน้าที่พัสดุ',
+            <div class="col-12 col-md-6">
+                <?= $this->render('@app/components/ui/input_emp', [
+                    'form' => $form,
+                    'model' => $model,
+                    'fieldName' => 'emp_id',
+                    'label' => 'ผู้ตรวจนับ',
+                    'placeholder' => 'เลือกผู้ตรวจนับ',
                 ]) ?>
             </div>
             <div class="col-12">
@@ -208,6 +222,7 @@ $script = <<<'JS'
 let auditItemIndex = __INITIAL_INDEX__;
 const lookupAssetUrl = __LOOKUP_URL__;
 const loadAssetsUrl = __LOAD_URL__;
+let auditSubmitConfirmed = false;
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -382,6 +397,45 @@ $(document).on('click', '.remove-audit-item', function() {
         return;
     }
     $(this).closest('tr').remove();
+});
+
+$('#asset-audit-form').on('beforeSubmit', function(e) {
+    if (auditSubmitConfirmed) {
+        auditSubmitConfirmed = false;
+        return true;
+    }
+
+    e.preventDefault();
+    const form = $(this);
+    const confirmSubmit = function() {
+        auditSubmitConfirmed = true;
+        form.trigger('submit');
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'บันทึกใบตรวจนับ?',
+            text: 'กรุณาตรวจสอบข้อมูลก่อนบันทึก',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'บันทึก',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                confirmSubmit();
+            }
+        });
+    } else if (window.confirm('ยืนยันบันทึกใบตรวจนับ?')) {
+        confirmSubmit();
+    }
+
+    return false;
+});
+
+$(document).on('select2:select', '#audit-department', function() {
+    try {
+        $(this).select2('close');
+    } catch (e) {}
 });
 JS;
 $conditionJs = '';

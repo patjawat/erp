@@ -4,6 +4,7 @@ namespace app\modules\am\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use app\modules\hr\models\Employees;
 
 /**
  * Search model for annual asset audits.
@@ -16,7 +17,7 @@ class AssetAuditSearch extends AssetAudit
     {
         return [
             [['id', 'seq_no', 'fiscal_year'], 'integer'],
-            [['audit_no', 'audit_date', 'auditors', 'summary_note', 'status', 'q'], 'safe'],
+            [['audit_no', 'audit_date', 'emp_id', 'summary_note', 'status', 'q'], 'safe'],
         ];
     }
 
@@ -27,7 +28,10 @@ class AssetAuditSearch extends AssetAudit
 
     public function search($params)
     {
-        $query = AssetAudit::find()->with(['auditItems', 'departmentRef']);
+        $query = AssetAudit::find()
+            ->alias('aa')
+            ->with(['auditItems', 'departmentRef', 'auditorEmp'])
+            ->leftJoin(['ae' => Employees::tableName()], 'ae.id = aa.emp_id');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -50,25 +54,27 @@ class AssetAuditSearch extends AssetAudit
         }
 
         $query->andFilterWhere([
-            'id' => $this->id,
-            'seq_no' => $this->seq_no,
-            'fiscal_year' => $this->fiscal_year,
+            'aa.id' => $this->id,
+            'aa.seq_no' => $this->seq_no,
+            'aa.fiscal_year' => $this->fiscal_year,
         ]);
 
-        $query->andFilterWhere(['like', 'audit_no', $this->audit_no])
-            ->andFilterWhere(['like', 'status', $this->status])
-            ->andFilterWhere(['like', 'auditors', $this->auditors])
-            ->andFilterWhere(['like', 'summary_note', $this->summary_note])
-            ->andFilterWhere(['like', 'audit_date', $this->audit_date]);
+        $query->andFilterWhere(['like', 'aa.audit_no', $this->audit_no])
+            ->andFilterWhere(['like', 'aa.status', $this->status])
+            ->andFilterWhere(['like', 'aa.emp_id', $this->emp_id])
+            ->andFilterWhere(['like', 'aa.summary_note', $this->summary_note])
+            ->andFilterWhere(['like', 'aa.audit_date', $this->audit_date]);
 
         $q = trim((string) $this->q);
         if ($q !== '') {
             $query->andWhere([
                 'or',
-                ['like', 'audit_no', $q],
-                ['like', 'auditors', $q],
-                ['like', 'summary_note', $q],
+                ['like', 'aa.audit_no', $q],
+                ['like', 'aa.emp_id', $q],
+                ['like', 'aa.summary_note', $q],
+                new \yii\db\Expression("CONCAT(COALESCE(ae.prefix,''),COALESCE(ae.fname,''),' ',COALESCE(ae.lname,'')) LIKE :q"),
             ]);
+            $query->addParams([':q' => '%' . $q . '%']);
         }
 
         return $dataProvider;

@@ -22,7 +22,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="dropdown d-inline-block">
-        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= $active !== 'work' ? 'btn-outline-primary' : 'btn-primary' ?>" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 3v12" />
                 <path d="m8 11 4 4 4-4" />
