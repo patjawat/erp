@@ -106,3 +106,7 @@ use app\components\widgets\DataSummaryWidget;
     ]);
     ?>
 </div>
+
+        </div>
+    </div>
+</div>

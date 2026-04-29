@@ -199,6 +199,31 @@ class GeneralController extends \yii\web\Controller
             $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
 
+        $baseQuery = $dataProvider->query;
+
+        $equipStats = [
+            // รวมจำนวนทั้งหมด
+            'total' => (int) (clone $baseQuery)->count('DISTINCT asset.id'),
+            
+            // --- นับตาม "สภาพ" (Condition) ---
+            // สภาพดี (good) 
+            'good' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => 'good'])->count('DISTINCT asset.id'),
+            
+            // สภาพพอใช้ (fair) - *เพิ่มเข้ามาใหม่*
+            'fair' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => 'fair'])->count('DISTINCT asset.id'),
+            
+            // สภาพชำรุดและเสื่อมสภาพ (นับรวมกัน หรือจะแยกก็ได้)
+            'damaged' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => ['damaged', 'worn']])->count('DISTINCT asset.id'),
+
+            // --- (ทางเลือก) หากต้องการนับตาม "สถานะ" (Status) ด้วย ---
+            // ตัวอย่าง: ของที่กำลังส่งซ่อม หรือ รอจำหน่าย
+            'repairing' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => 'repair'])->count('DISTINCT asset.id'),
+            'waiting_dispose' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => 'wait_dispose'])->count('DISTINCT asset.id'),
+
+            // มูลค่ารวม
+            'total_value' => (float) ((clone $baseQuery)->sum(new Expression('COALESCE(asset.price, 0)'))) ?: 0.0,
+        ];
+        
         $dataProvider->setSort([
             'defaultOrder' => [
                 'code' => 'SORT_DESC',
@@ -213,6 +238,7 @@ class GeneralController extends \yii\web\Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'active' => 'asset',
+             'equipStats' => $equipStats,
         ]);
     }
 

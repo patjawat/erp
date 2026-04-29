@@ -226,8 +226,8 @@ class RepairV2Controller extends Controller
     {
         $model = Asset::findOne(['code' => $code]);
         if ($model) {
-            $model->asset_status = 5;
-            $model->save();
+            $model->asset_status = 'repair';
+            $model->save(false);
         }
     }
 
