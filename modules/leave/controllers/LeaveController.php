@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 use yii\helpers\Url;
 use yii\helpers\ArrayHelper;
@@ -249,8 +250,20 @@ class LeaveController extends Controller
             throw new NotFoundHttpException('ไม่พบรายการ');
         }
         $me = UserHelper::GetEmployee();
-        if (!$me || $me->id != $leave->emp_id) {
-            throw new NotFoundHttpException('ไม่มีสิทธิ์ดูไฟล์นี้');
+        $canAdmin = Yii::$app->user->can('admin');
+        $canLeave = Yii::$app->user->can('leave');
+        $isApprover = false;
+        if ($me) {
+            $isApprover = ApproveModel::find()
+                ->where([
+                    'name' => 'leave',
+                    'from_id' => (string) $leave->id,
+                    'emp_id' => $me->id,
+                ])
+                ->exists();
+        }
+        if (!$me || ($me->id != $leave->emp_id && !$canAdmin && !$canLeave && !$isApprover)) {
+            throw new ForbiddenHttpException('ไม่มีสิทธิ์ดูไฟล์นี้');
         }
         $basePath = FileManagerHelper::getUploadPath() . $upload->ref . '/';
         $filePath = $basePath . $upload->real_filename;
@@ -272,17 +285,11 @@ class LeaveController extends Controller
         $ext = strtolower(pathinfo($upload->file_name ?? $upload->real_filename, PATHINFO_EXTENSION));
         $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
         $fileName = $upload->file_name ?: $upload->real_filename;
-        // ป้องกันไม่ให้มี output ปนกับ binary (แสดง PDF/ไฟล์ถูกต้อง)
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
         Yii::$app->response->format = Response::FORMAT_RAW;
         Yii::$app->response->headers->set('Content-Type', $mime);
         Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . addslashes($fileName) . '"');
-        return Yii::$app->response->sendFile($filePath, $fileName, [
-            'inline' => true,
-            'mimeType' => $mime,
-        ]);
+        Yii::$app->response->data = file_get_contents($filePath);
+        return Yii::$app->response;
     }
 
     /**

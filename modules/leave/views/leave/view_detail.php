@@ -120,7 +120,7 @@ if (!empty($model->created_at)) {
                         <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
                             <?php foreach ($attachments as $att): ?>
                             <li>
-                                <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" title="คลิกเพื่อดูในหน้านี้">
+                                <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" data-open="new-tab" target="_blank" rel="noopener noreferrer" title="คลิกเพื่อเปิดแท็บใหม่">
                                     <i class="bi bi-file-earmark-arrow-down text-primary"></i>
                                     <span class="small"><?= Html::encode($att->file_name) ?></span>
                                     <i class="bi bi-eye small text-muted"></i>
@@ -313,8 +313,12 @@ $this->registerJs(<<<'JS'
     }
     document.querySelectorAll('.leave-attachment-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
             var url = this.getAttribute('data-url') || this.getAttribute('href');
+            var openMode = (this.getAttribute('data-open') || '').toLowerCase();
+            if (openMode === 'new-tab') {
+                return;
+            }
+            e.preventDefault();
             if (url) {
                 iframe.src = url;
                 if (typeof bootstrap !== 'undefined') {

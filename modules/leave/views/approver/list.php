@@ -24,6 +24,7 @@ $models = $dataProvider->getModels();
                 <th class="py-3 px-3 small">เหตุผล</th>
                 <th class="py-3 px-3 small">ระหว่างวันที่</th>
                 <th class="py-3 px-3 small">หน่วยงาน</th>
+                <th class="text-center py-3 px-3 small">เอกสารแนบ</th>
                 <th class="py-3 px-3 small">ผู้อนุมัติ</th>
                 <th class="py-3 px-3 small">สถานะ/ความคืบหน้า</th>
                 <th class="text-end py-3 px-3 small">ดำเนินการ</th>
@@ -33,6 +34,7 @@ $models = $dataProvider->getModels();
             <?php foreach ($models as $key => $item): ?>
                 <?php
                 $no = $offset + $key + 1;
+                $attachments = $item->getAttachmentList();
                 $stackApproves = $item->approves ? array_filter($item->approves, function ($a) {
                     return !in_array($a->status, ['None', 'Pending'], true);
                 }) : [];
@@ -48,20 +50,34 @@ $models = $dataProvider->getModels();
                         </span>
                     </td>
                     <td class="text-center fw-bold">
-<?= (float) $item->total_days ?>
+                        <?= (float) $item->total_days ?>
                     </td>
                     <td class="py-3 px-3">
                         <a href="<?= Url::to(['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
-                            class="open-modal text-decoration-none d-inline-flex align-items-center gap-2" data-size="modal-xl">
-                            <?= $item->employee ? $item->employee->getAvatar(false) : '-' ?>
-                        </a>
-                    </td>
-                    <td class="py-3 px-3 small"><?= Html::encode($item->work_shift_name ?? '-') ?></td>
-                    <td class="py-3 px-3">
-                        <div class="small"><?= Html::encode($item->data_json['reason'] ?? '') ?></div>
-                    </td>
-                    <td class="py-3 px-3 small"><?= $item->showLeaveDate() ?></td>
-                    <td class="py-3 px-3 small text-muted text-truncate" style="max-width: 150px;"><?= $item->employee ? Html::encode($item->employee->departmentName()) : '-' ?></td>
+                        class="open-modal text-decoration-none d-inline-flex align-items-center gap-2" data-size="modal-xl">
+                        <?= $item->employee ? $item->employee->getAvatar(false) : '-' ?>
+                    </a>
+                </td>
+                <td class="py-3 px-3 small"><?= Html::encode($item->work_shift_name ?? '-') ?></td>
+                <td class="py-3 px-3">
+                    <div class="small"><?= Html::encode($item->data_json['reason'] ?? '') ?></div>
+                </td>
+                <td class="py-3 px-3 small"><?= $item->showLeaveDate() ?></td>
+                <td class="py-3 px-3 small text-muted text-truncate" style="max-width: 150px;"><?= $item->employee ? Html::encode($item->employee->departmentName()) : '-' ?></td>
+                <td>
+                    
+                 <?php if (!empty($attachments)): ?>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                            <?php foreach ($attachments as $att): ?>
+                            <li>
+                                <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" data-open="new-tab" target="_blank" rel="noopener noreferrer" title="คลิกเพื่อเปิดแท็บใหม่">
+                                  <i class="fa-solid fa-paperclip text-primary"></i>
+                                </a>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                   </i></td>
                     <td class="py-3 px-3"><?= Leave::renderStackChecker($stackApproves) ?></td>
                     <td class="py-3 px-3 small">
                         <?= $item->viewStatus() ?>
