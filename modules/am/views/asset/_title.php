@@ -44,8 +44,12 @@ use yii\helpers\Html;
                         <div class="fw-medium text-dark">- ปี</div>
                     </div>
                     <div class="col">
+                        <div class="text-secondary small mb-1">สภาพ</div>
+                        <?= $model->getConditionBadge() ?>
+                    </div>
+                     <div class="col">
                         <div class="text-secondary small mb-1">สถานะ</div>
-                        <?= $model->viewstatus() ?>
+                        <?= $model->getStatusBadge() ?>
                     </div>
                     <div class="col">
                         <div class="text-secondary small mb-1">ผู้รับผิดชอบ</div>

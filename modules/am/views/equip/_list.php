@@ -6,17 +6,6 @@ use app\modules\hr\models\Employees;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$statusBadge = static function ($item): string {
-    $st = (int) $item->asset_status;
-    $label = Html::encode($item->statusName() ?: '-');
-    if ($st === 1) {
-        return '<span class="badge rounded-pill fw-bold border d-inline-flex align-items-center justify-content-center gap-1" style="background-color: rgb(236, 253, 245); color: rgb(4, 120, 87); border-color: rgb(167, 243, 208); font-size: 11px; padding: 4px 10px;"><span class="rounded-circle" style="width: 6px; height: 6px; background-color: rgb(16, 185, 129);"></span>' . $label . '</span>';
-    }
-    if (in_array($st, [3, 5], true)) {
-        return '<span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger-subtle fw-medium px-2 py-2">' . $label . '</span>';
-    }
-    return '<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle fw-medium px-2 py-2">' . $label . '</span>';
-};
 
 $equipSubtitle = static function ($item): string {
     $dj = is_array($item->data_json) ? $item->data_json : [];
@@ -109,6 +98,7 @@ $equipSubtitle = static function ($item): string {
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 224px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 128px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">วันที่รับ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
                 </tr>
@@ -166,9 +156,8 @@ $equipSubtitle = static function ($item): string {
                         </td>
                         <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
                         <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price,2) ?></td>
-                        <td class="px-4 py-3 border-0 text-center">
-                            <?= $statusBadge($item) ?>
-                        </td>
+                        <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
+                        <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3  border-0">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
                                 <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [

@@ -66,7 +66,7 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
                         <path d="M8 11h.01"></path>
                         <path d="M8 16h.01"></path>
                     </svg></div>
-                <h3 class="m-0 fw-bold" style="font-size: 16px; color: rgb(30, 41, 59);">รายการทะเบียนคุมครุภัณฑ์</h3><span class="badge rounded-pill fw-bold" style="background-color: rgb(226, 232, 240); color: rgb(71, 85, 105); font-size: 10px; padding: 4px 8px;"><?=$dataProvider->getTotalCount()?> รายการ</span>
+                <h3 class="m-0 fw-bold" style="font-size: 16px; color: rgb(30, 41, 59);">รายการทะเบียนคุมครุภัณฑ์</h3><span class="badge rounded-pill fw-bold" style="background-color: rgb(226, 232, 240); color: rgb(71, 85, 105); font-size: 10px; padding: 4px 8px;"><?=number_format($dataProvider->getTotalCount(),0)?> รายการ</span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">

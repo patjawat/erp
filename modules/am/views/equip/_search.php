@@ -96,11 +96,28 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
         ])->label(false); ?>
     </div>
-    <div class="col-12 col-sm-6 col-lg-2">
+    <div class="col-12 col-sm-3 col-lg-1">
+        <?php
+        echo $form->field($model, 'asset_condition', $toolbarFieldOpts)->widget(Select2::classname(), [
+            'data' => $model->ListAssetCondition(),
+            'options' => ['placeholder' => '--ทุกสภาพ--'],
+            'pluginOptions' => [
+                'allowClear' => true,
+            ],
+            'pluginEvents' => [
+                "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+            ]
+        ])->label(false);
+        ?>
+    </div>
+    <div class="col-12 col-sm-3 col-lg-1">
         <?php
         echo $form->field($model, 'asset_status', $toolbarFieldOpts)->widget(Select2::classname(), [
             'data' => $model->ListAssetStatus(),
-            'options' => ['placeholder' => 'ทุกสภาพ'],
+            'options' => ['placeholder' => '--ทุกสถานะ--'],
             'pluginOptions' => [
                 'allowClear' => true,
             ],

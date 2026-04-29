@@ -104,11 +104,11 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price', 'asset_status','useful_life'], 'required'],
+            [['price', 'asset_status','useful_life','asset_condition'], 'required'],
             [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
-            [['life', 'department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
+            [['department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
             [['ref', 'code'], 'string', 'max' => 255],
         ];
     }
@@ -147,6 +147,7 @@ class Asset extends \yii\db\ActiveRecord
             'lifecycle_status' => 'สถานะวงจรชีวิต',
             'qr_code_path' => 'QR Code',
             'asset_kind' => 'ประเภททรัพย์สิน',
+            'asset_condition' => 'สภาพครุภัณฑ์',
         ];
     }
 
@@ -174,6 +175,11 @@ class Asset extends \yii\db\ActiveRecord
     public function listAssetCategory()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_category'])->all(), 'code', 'title');
+    }
+
+    public function ListAssetCondition()
+    {
+        return ArrayHelper::map(AssetCondition::find()->all(), 'id', 'name');
     }
 
 
@@ -513,6 +519,19 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
+       public function getAssetStatus()
+    {
+        return $this->hasOne(AssetStatus::class, ['id' => 'asset_status']);
+    }
+
+    /**
+     * Relation สำหรับดึงข้อมูลจากตาราง asset_condition
+     */
+    public function getAssetCondition()
+    {
+        return $this->hasOne(AssetCondition::class, ['id' => 'asset_condition']);
+    }
+
     public function getAssetGroup()
     {
         return $this->hasOne(AssetGroup::class, ['code' => 'asset_group_id'])->andOnCondition(['name' => 'asset_group']);
@@ -597,10 +616,7 @@ class Asset extends \yii\db\ActiveRecord
 
     public function statusName()
     {
-        $model = CategoriseHelper::CategoriseByCodeName($this->asset_status, 'asset_status');
-        if ($model) {
-            return $model->title;
-        }
+       return $this->assetStatus->name ?? '-';
     }
 
     public function vendorName()
@@ -778,7 +794,7 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListAssetstatus()
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_status'])->all(), 'code', 'title');
+        return ArrayHelper::map(AssetStatus::find()->all(), 'id', 'name');
     }
 
     public function ListMaintainpm()
@@ -1000,5 +1016,71 @@ class Asset extends \yii\db\ActiveRecord
 
     return $prefix . '-' . $number;
 }
+/**
+     * ฟังก์ชันแสดง Badge ของ "สถานะ"
+     */
+    public function getStatusBadge()
+    {
+        if (!$this->assetStatus) {
+            return $this->renderBadge('ไม่ระบุ', 'secondary');
+        }
+        // เรียกใช้ renderBadge โดยส่งชื่อ และ class สีที่เก็บไว้ใน DB
+        return $this->renderBadge($this->assetStatus->name, $this->assetStatus->color_css);
+    }
 
+    /**
+     * ฟังก์ชันแสดง Badge ของ "สภาพ"
+     */
+    public function getConditionBadge()
+    {
+        if (!$this->assetCondition) {
+             return $this->renderBadge('ไม่ระบุ', 'secondary');
+        }
+        
+        // กำหนดสีให้แต่ละสภาพการใช้งาน (เนื่องจาก condition ไม่มีสีใน DB)
+        $conditionColors = [
+            'good' => 'success',    // ดี (เขียว)
+            'fair' => 'info',       // พอใช้ (ฟ้า)
+            'worn' => 'warning',    // เสื่อมสภาพ (เหลือง)
+            'damaged' => 'danger'   // ชำรุด (แดง)
+        ];
+        
+        $colorCss = $conditionColors[$this->asset_condition] ?? 'secondary';
+        return $this->renderBadge($this->assetCondition->name, $colorCss);
+    }
+
+    /**
+     * องค์ประกอบหลักในการสร้าง HTML Badge (ตาม UI ที่คุณต้องการ)
+     */
+    private function renderBadge($text, $theme)
+    {
+        // กำหนดชุดสีอ้างอิงตามที่คุณออกแบบไว้ (โทนพาสเทลแบบ Tailwind)
+        $themes = [
+            'success' => [ // สีเขียว
+                'bg' => 'rgb(236, 253, 245)', 'text' => 'rgb(4, 120, 87)', 'border' => 'rgb(167, 243, 208)', 'dot' => 'rgb(16, 185, 129)'
+            ],
+            'info' => [ // สีฟ้า
+                'bg' => 'rgb(240, 249, 255)', 'text' => 'rgb(3, 105, 161)', 'border' => 'rgb(186, 230, 253)', 'dot' => 'rgb(14, 165, 233)'
+            ],
+            'warning' => [ // สีเหลือง/ส้ม
+                'bg' => 'rgb(254, 252, 232)', 'text' => 'rgb(161, 98, 7)', 'border' => 'rgb(254, 240, 138)', 'dot' => 'rgb(234, 179, 8)'
+            ],
+            'danger' => [ // สีแดง
+                'bg' => 'rgb(255, 241, 242)', 'text' => 'rgb(190, 18, 60)', 'border' => 'rgb(254, 205, 211)', 'dot' => 'rgb(244, 63, 94)'
+            ],
+            'secondary' => [ // สีเทา
+                'bg' => 'rgb(243, 244, 246)', 'text' => 'rgb(55, 65, 81)', 'border' => 'rgb(229, 231, 235)', 'dot' => 'rgb(107, 114, 128)'
+            ],
+        ];
+
+        // เลือกชุดสี ถ้าไม่มีให้ใช้สีเทา (secondary)
+        $color = $themes[$theme] ?? $themes['secondary'];
+
+        // สร้าง HTML
+        return '<span class="badge rounded-pill fw-bold border d-inline-flex align-items-center justify-content-center gap-1" ' .
+               'style="background-color: '.$color['bg'].'; color: '.$color['text'].'; border-color: '.$color['border'].'; font-size: 11px; padding: 4px 10px;">' .
+               '<span class="rounded-circle" style="width: 6px; height: 6px; background-color: '.$color['dot'].';"></span>' .
+               $text .
+               '</span>';
+    }
 }
