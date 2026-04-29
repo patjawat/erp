@@ -12,7 +12,7 @@ use app\modules\am\models\AssetDetail;
  */
 class DashboardDataService
 {
-    public const CACHE_KEY = 'am_dashboard_exec';
+    public const CACHE_KEY = 'am_dashboard_exec_v2';
     public const CACHE_DURATION = 300; // 5 minutes
 
     /**
@@ -33,6 +33,7 @@ class DashboardDataService
             'replacementForecast' => self::getReplacementForecast(),
             'categoryDistribution' => self::getCategoryDistribution(),
             'departmentDistribution' => self::getDepartmentDistribution(),
+            'groupDistribution' => self::getGroupDistribution(),
             'riskAlerts' => self::getRiskAlerts(),
             'ageAnalysis' => self::getAgeAnalysis(),
             'recentActivities' => self::getRecentActivities(),
@@ -223,6 +224,23 @@ SQL;
         }
         return Yii::$app->db->createCommand(
             'SELECT COALESCE(department, 0) AS dept_id, COUNT(*) AS value FROM {{%asset}} WHERE deleted_at IS NULL GROUP BY department ORDER BY value DESC LIMIT 15'
+        )->queryAll();
+    }
+
+    /** Section 4c: Asset Group distribution */
+    protected static function getGroupDistribution(): array
+    {
+        $schema = Yii::$app->db->getSchema()->getTableSchema('{{%asset}}');
+        if (!$schema || $schema->getColumn('asset_group_id') === null) {
+            return [];
+        }
+        return Yii::$app->db->createCommand(
+            "SELECT c.title AS label, a.asset_group_id, COUNT(a.asset_group_id) AS value 
+             FROM {{%asset}} a 
+             LEFT JOIN {{%categorise}} c ON c.code = a.asset_group_id AND c.name = 'asset_group'
+             WHERE a.deleted_at IS NULL AND c.code IN(1,2,3,4,5,6)
+             GROUP BY a.asset_group_id
+             ORDER BY a.asset_group_id DESC"
         )->queryAll();
     }
 

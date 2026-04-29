@@ -8,7 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use yii\web\NotFoundHttpException;
 use app\modules\approve\models\Approve;
 use app\modules\approve\models\ApproveSearch;

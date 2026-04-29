@@ -17,7 +17,6 @@ use app\components\UserHelper;
 use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
 use app\modules\hr\models\Organization;
@@ -183,7 +182,7 @@ class DocumentsController extends Controller
             $range = DateFilterHelper::getRange($searchModel->date_filter);
             $start = AppHelper::convertToGregorian($range[0]);
             $end = AppHelper::convertToGregorian($range[1]);
-            $dataProvider->query->andFilterWhere(['between', 'doc_transactions_date', $start, $end]);
+            $dataProvider->query->andFilterWhere(['between', 'doc_date', $start, $end]);
         }
 
         return $this->render('receive', [
@@ -474,9 +473,13 @@ class DocumentsController extends Controller
             AppHelper::convertToGregorian($searchModel->date_end)
         ]);
 
+        if ($searchModel->q_department) {
+            $dataProvider->query->andFilterWhere(['like', 'tags_department', $searchModel->q_department]);
+        }
+
         $dataProvider->setSort(['defaultOrder' => [
+            'doc_transactions_date' => SORT_DESC,
             'doc_regis_number' => SORT_DESC,
-            'thai_year' => SORT_DESC,
         ]]);
 
 
@@ -604,8 +607,8 @@ class DocumentsController extends Controller
                         $requestId = $model->data_json['request_id'] ?? null;
                         $tempFile = $model->data_json['temp_path'] ?? null;
 
-                       if ($requestId) {
-                             WebhookSender::clearWebhookTempData($requestId);
+                        if ($requestId) {
+                            WebhookSender::clearWebhookTempData($requestId);
                         }
                     }
                     // ถ้าเป็นการส่งหนังสือภายนอกให้ส่ง webhook
@@ -654,6 +657,17 @@ class DocumentsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+
+        $model->tags_department = implode(',',
+            DocumentsDetail::find()
+                ->select('to_id')
+                ->where([
+                    'document_id' => $model->id,
+                    'name' => 'department'
+                ])
+                ->column()
+        );
+
         $old_json = $model->data_json;
         try {
             $model->doc_expire = AppHelper::convertToThai($model->doc_expire);
@@ -697,7 +711,7 @@ class DocumentsController extends Controller
                 } catch (\Throwable $th) {
                     //throw $th;
                 }
-                // $model->UpdateDocumentTags();
+                $model->UpdateDocumentTags();
                 //ถ้าเป็นหนังสือส่ง
                 if ($model->document_group == "send") {
                     WebhookSender::sendToAgencies($model);

@@ -12,15 +12,16 @@ use app\modules\leave\models\Leave;
 $offset = (int) ($dataProvider->pagination->offset ?? 0);
 $models = $dataProvider->getModels();
 ?>
-<div class="table-responsive">
+<div class="table-responsive" style="min-height: 500px;">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>
                 <th class="text-center py-3 px-3 small">ลำดับ</th>
-                <th class="text-center py-3 px-3 small">ประเภทบุคลากร</th>
+                <th class="text-center py-3 px-3 small">ประเภทการลา</th>
+                <th class="text-center">จำนวนวันลา</th>
                 <th class="py-3 px-3 small">ผู้ขออนุมัติการลา</th>
                 <th class="py-3 px-3 small">ประเภทเวร</th>
-                <th class="py-3 px-3 small">การลา</th>
+                <th class="py-3 px-3 small">เหตุผล</th>
                 <th class="py-3 px-3 small">ระหว่างวันที่</th>
                 <th class="py-3 px-3 small">หน่วยงาน</th>
                 <th class="py-3 px-3 small">ผู้อนุมัติ</th>
@@ -41,7 +42,14 @@ $models = $dataProvider->getModels();
                 ?>
                 <tr>
                     <td class="text-center py-3 px-3 text-muted small"><?= $no ?></td>
-                    <td class="text-center py-3 px-3 small"><?= $item->employee && $item->employee->positionType ? Html::encode($item->employee->positionType->title) : '-' ?></td>
+                    <td class="text-center py-3 px-3 small">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                            <?= $item->leaveType ? Html::encode($item->leaveType->title) : '-' ?>
+                        </span>
+                    </td>
+                    <td class="text-center fw-bold">
+<?= (float) $item->total_days ?>
+                    </td>
                     <td class="py-3 px-3">
                         <a href="<?= Url::to(['/leave/leave/view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-calendar-plus"></i> แก้ไขวันลา']) ?>"
                             class="open-modal text-decoration-none d-inline-flex align-items-center gap-2" data-size="modal-xl">
@@ -51,10 +59,6 @@ $models = $dataProvider->getModels();
                     <td class="py-3 px-3 small"><?= Html::encode($item->work_shift_name ?? '-') ?></td>
                     <td class="py-3 px-3">
                         <div class="small"><?= Html::encode($item->data_json['reason'] ?? '') ?></div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
-                            <?= $item->leaveType ? Html::encode($item->leaveType->title) : '-' ?>
-                            <code><?= (float) $item->total_days ?></code> วัน
-                        </span>
                     </td>
                     <td class="py-3 px-3 small"><?= $item->showLeaveDate() ?></td>
                     <td class="py-3 px-3 small text-muted text-truncate" style="max-width: 150px;"><?= $item->employee ? Html::encode($item->employee->departmentName()) : '-' ?></td>

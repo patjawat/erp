@@ -21,6 +21,7 @@ use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;
 use app\modules\booking\models\BookingDetail;
 use app\modules\booking\models\VehicleDetail;
+use app\modules\booking\components\VehicleTelegramNotify;
 
 /**
  * This is the model class for table "vehicle".
@@ -280,28 +281,14 @@ class Vehicle extends \yii\db\ActiveRecord
 
     public function sendMessage($msg = null)
     {
-
-
-        $telegramMessage = $msg ? $msg : "
-        🚗 <b>แจ้งเตือนการจองรถ</b>
-        👤 <b>ผู้จอง:</b> " . $this->userRequest()['fullname'] . "
-        📝 <b>วัตถุประสงค์:</b> " . $this->reason . "
-        📍 <b>สถานที่:</b> " . ($this->locationOrg?->title ?? '-') . "
-        📅 <b>วันที่เดินทาง:</b> " . $this->showDateRange() . "
-        🕘 <b>เวลา:</b> " . $this->viewTime()['full'] . "
-        
-        ";
-        //ส่ง telegram
-        try {
-
-            $response = Yii::$app->telegram->sendMessage('vehicle', $telegramMessage, [
-                'parse_mode' => 'HTML',
-                'disable_web_page_preview' => true,
-            ]);
-        } catch (\Throwable $th) {
-            //throw $th;
+        $telegramMessage = $msg !== null ? $msg : VehicleTelegramNotify::buildDefaultBookingMessage($this);
+        VehicleTelegramNotify::broadcastToVehicleRole($telegramMessage);
+        VehicleTelegramNotify::sendVehicleChannel($telegramMessage);
+        if ($msg === null) {
+            VehicleTelegramNotify::notifyDriverIfSelected($this);
         }
-        $lineMessage = $msg . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
+
+        $lineMessage = ($msg !== null ? $msg : '') . $this->reason . 'วันเวลา ' . Yii::$app->thaiFormatter->asDate($this->date_start, 'medium') . ' เวลา' . $this->time_end . ' - ' . $this->time_end;
 
         try {
 

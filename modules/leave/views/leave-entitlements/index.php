@@ -10,7 +10,7 @@ use yii\widgets\Pjax;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'กำหนดสิทธิลาพักผ่อน';
-$this->params['breadcrumbs'][] = ['label' => 'การลางาน', 'url' => ['/leave/default/index']];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลา', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('page-title'); ?>
@@ -25,26 +25,26 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu_admin', ['active' => 'setting']) ?>
+<?=$this->render('@app/modules/leave/menu',['active' => 'setting'])?>
 <?php $this->endBlock(); ?>
 <?php Pjax::begin(['id' => 'leave']); ?>
 
 
 <div class="card">
-    <div class="card-header">
-        <h6 class="mt-2 mb-0"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+<div class="card-header bg-primary-gradient text-white">
+        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
         <div class="card-body ">
-        <?= $this->render('@app/modules/hr/views/leave-entitlements/_search', ['model' => $searchModel]) ?>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
 
 
     </div>
 </div>
 <div class="card">
-    <div class="card-header">
-         <div class="d-flex justify-content-between align-top align-items-center">
-             <h6 class="mb-0">
+    <div class="card-header bg-primary-gradient text-white">
+         <div class="d-flex justify-content-between  align-top align-items-center">
+             <h6 class="text-white">
                 <i class="bi bi-ui-checks"></i> <?=$this->title?>
                 <span class="badge rounded-pill text-bg-primary"><?php echo $dataProvider->getTotalCount() ?></span>
                 รายการ
@@ -128,7 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการลา', ['/leave/report/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT4','title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                    <li><?= Html::a('<i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการลา', ['/leave/leave/leave-history', 'emp_id' => $item->emp_id,'thai_year' => $searchModel->thai_year,'leave_type_id' => 'LT4','title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขสิทธิวันลา'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
                                     <li><?php echo Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                 </ul>
                             </div>

@@ -12,7 +12,7 @@ use app\components\SiteHelper;
 $this->title = 'เข้าสู่ระบบ';
 $siteInfo = SiteHelper::getInfo();
 $appName = $siteInfo['company_name'] ?? 'บริการออนไลน์';
-$thaidUrl = Url::to(['/auth/thaid/']);
+$thaidUrl = Url::to(['/auth/thaid/', 'mobile' => '1']);
 $thaidLogoPath = Yii::getAlias('@webroot/images/thaid_logo.jpg');
 $hasThaidLogo = $thaidLogoPath && is_file($thaidLogoPath);
 
@@ -135,6 +135,11 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             ],
         ]); ?>
 
+    <?= $form->field($model, 'telegram_id')->hiddenInput([
+                'id' => 'telegram_id',
+                'inputmode' => 'text',
+            ])->label(false) ?>
+
         <?= $form->field($model, 'username')->textInput([
             'placeholder' => 'ชื่อเข้าใช้งาน',
             'autofocus' => true,
@@ -175,7 +180,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
 
         <div class="mobile-login-divider">หรือ</div>
 
-        <a href="<?= Html::encode($providerLoginUrl) ?>" class="mobile-login-provider">
+        <a href="<?= Html::encode($providerLoginUrl) ?>" class="mobile-login-provider" data-telegram-external-link="1">
             <?php if ($hasProviderLogo): ?>
                 <?= Html::img('@web/images/provider_logo.png', ['class' => 'provider-icon', 'alt' => 'Provider ID']) ?>
             <?php else: ?>
@@ -185,7 +190,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             <span class="provider-desc">ยืนยันตัวตนผ่าน Provider ID (มธ.)</span>
         </a>
 
-        <a href="<?= Html::encode($thaidUrl) ?>" class="mobile-login-thaid">
+        <a href="<?= Html::encode($thaidUrl) ?>" class="mobile-login-thaid" data-telegram-external-link="1">
             <?php if ($hasThaidLogo): ?>
                 <?= Html::img('@web/images/thaid_logo.jpg', ['class' => 'thaid-icon', 'alt' => 'ThaiD']) ?>
             <?php else: ?>
@@ -201,57 +206,94 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
     <p class="small text-body-secondary mb-0">ใช้บัญชีของหน่วยงานเพื่อเข้าสู่ระบบ</p>
 </div>
 
+<div id="telegram-debug" class="mt-3 text-danger small"></div>
 <?php
-$this->registerJs(<<<'JS'
-(function() {
-    var form = document.getElementById('mobile-login-form');
-    var btnLogin = document.getElementById('btn-login');
-    var btnWait = document.getElementById('btn-wait');
-    if (!form || !btnLogin || !btnWait) return;
+$this->registerJs(<<<JS
 
-    form.addEventListener('submit', function(e) {
-        if (window.jQuery && form.getAttribute('data-ajax')) {
-            e.preventDefault();
-            btnLogin.classList.add('d-none');
-            btnWait.classList.remove('d-none');
-            var yiiform = jQuery(form);
-            jQuery.ajax({
-                type: yiiform.attr('method'),
-                url: yiiform.attr('action'),
-                data: yiiform.serialize(),
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else if (data.validation && yiiform.yiiActiveForm) {
-                        yiiform.yiiActiveForm('updateMessages', data.validation, true);
-                        btnWait.classList.add('d-none');
-                        btnLogin.classList.remove('d-none');
-                    } else {
-                        btnWait.classList.add('d-none');
-                        btnLogin.classList.remove('d-none');
-                    }
-                },
-                error: function() {
-                    btnWait.classList.add('d-none');
-                    btnLogin.classList.remove('d-none');
-                }
-            });
-            return false;
+(function(){
+
+    const tg = window.Telegram?.WebApp;
+    const debug = document.getElementById("telegram-debug");
+
+    function log(msg){
+        console.log(msg);
+        if(debug){
+            debug.innerText = typeof msg === "object"
+                ? JSON.stringify(msg,null,2)
+                : msg;
         }
-        btnLogin.classList.add('d-none');
-        btnWait.classList.remove('d-none');
+    }
+
+    if(!tg){
+        log("Not running inside Telegram");
+        return;
+    }
+
+    tg.ready();
+    tg.expand();
+
+    // OAuth / แอป ThaiD: เปิดนอก WebView ของ Telegram มิฉะนั้น deep link ไปแอป ThaiD มักไม่ทำงาน
+    function absoluteUrl(href) {
+        try {
+            return new URL(href, window.location.origin).href;
+        } catch (e) {
+            return href;
+        }
+    }
+    document.querySelectorAll('[data-telegram-external-link="1"]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            var href = el.getAttribute('href');
+            if (!href || typeof tg.openLink !== 'function') {
+                return;
+            }
+            e.preventDefault();
+            tg.openLink(absoluteUrl(href));
+        });
     });
+
+    const user = tg.initDataUnsafe?.user;
+
+    if(!user){
+        log("Telegram user not found");
+        window.location.href = "/mobile/auth/login";
+        return;
+    }
+    $('#telegram_id').val(user.id);
+    $.ajax({
+
+        url: "/mobile/auth/telegram-auto-login",
+        type: "POST",
+        dataType: "json",
+        data: {
+            telegram_id: user.id
+        },
+        headers: {
+            'X-CSRF-Token': yii.getCsrfToken()
+        },
+
+        success: function(res){
+
+            log(res);
+
+            if(res.success){
+                window.location.href = res.redirect || "/mobile/default/index";
+            }
+
+        },
+
+        error:function(err){
+
+            log({
+                error:true,
+                detail:err
+            });
+
+        }
+
+    });
+
 })();
-JS
-, View::POS_READY);
+
+JS,View::POS_END);
 ?>
-<?php
-$script = <<<'JS'
-if (window.jQuery) {
-    var f = document.getElementById('mobile-login-form');
-    if (f) f.setAttribute('data-ajax', '1');
-}
-JS;
-$this->registerJs($script, View::POS_LOAD);
-?>
+

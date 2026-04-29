@@ -18,12 +18,12 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\BaseConsole;
 use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\booking\models\Room;
 use app\modules\hr\models\Employees;
 use app\modules\booking\models\Booking;
 use app\modules\filemanager\models\Uploads;
-use app\modules\hr\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveEntitlements;
 
 /**
  * This command echoes the first argument that you have entered.

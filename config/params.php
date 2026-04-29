@@ -23,4 +23,8 @@ return [
         'composePath' => null,  // โฟลเดอร์ที่มี docker-compose.yml เช่น /home/erp-production/run-production
         'serviceName' => 'app', // ชื่อ service ใน docker-compose (เช่น app = container app-erp)
     ],
+
+    // Google Maps JavaScript API — เลือกพิกัดจุดลงเวลา (โมดูล attendance) ว่าง = แสดงเฉพาะช่องกรอกตัวเลข
+    // ตั้งค่าได้จาก GOOGLE_MAPS_API_KEY หรือใส่สตริงคีย์แทน getenv(...) ด้านล่าง
+    'googleMapsApiKey' => getenv('GOOGLE_MAPS_API_KEY') ?: '',
 ];

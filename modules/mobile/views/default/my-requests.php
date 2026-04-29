@@ -8,6 +8,7 @@ use app\components\ThaiDateHelper;
 /** @var string $current_page */
 /** @var string $type */
 /** @var \app\modules\booking\models\Meeting[] $meetings */
+/** @var \app\modules\leave\models\Leave[] $leaves */
 $this->params['current_page']   = $current_page ?? 'profile';
 $this->params['mobileTitle']    = 'คำขอของฉัน';
 $this->params['mobileSubtitle'] = 'ดูและติดตามสถานะคำขอทั้งหมด';
@@ -113,16 +114,53 @@ function statusBadgeClass($code) {
         <?php endif; ?>
     <?php endif; ?>
 
-    <!-- ชนิดอื่น (ยังไม่มีข้อมูลจาก DB) -->
-    <?php if ($type === 'leave'): ?>
-        <div class="card border-0 rounded-3 shadow-sm">
-            <div class="card-body req-empty">
-                <i data-lucide="calendar-off" class="d-block mx-auto"></i>
-                <p class="mb-2 small">ยังไม่มีคำขอลาในระบบมือถือ</p>
-                <a href="<?= Html::encode(Url::to(['/mobile/default/leave-request'])) ?>" class="btn btn-primary btn-sm" style="border-radius: 12px;">ขอลาออนไลน์</a>
+    <?php
+    $showLeave = ($type === 'all' || $type === 'leave');
+    $leaveList = $showLeave ? ($leaves ?? []) : [];
+    ?>
+    <?php if ($showLeave): ?>
+        <?php if ($type === 'all' && !empty($leaveList)): ?>
+            <h6 class="small fw-semibold text-body-secondary text-uppercase mb-2">ขอลา</h6>
+        <?php endif; ?>
+        <?php if (empty($leaveList)): ?>
+            <?php if ($type === 'leave'): ?>
+                <div class="card border-0 rounded-3 shadow-sm">
+                    <div class="card-body req-empty">
+                        <i data-lucide="calendar-off" class="d-block mx-auto"></i>
+                        <p class="mb-2 small">ยังไม่มีคำขอลาในระบบมือถือ</p>
+                        <a href="<?= Html::encode(Url::to(['/mobile/default/leave-request'])) ?>" class="btn btn-primary rounded-3">ขอลาออนไลน์</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php else: ?>
+            <div class="d-flex flex-column gap-2">
+                <?php foreach ($leaveList as $leave): ?>
+                    <?php
+                    $statusTitle = $leave->leaveStatus ? $leave->leaveStatus->title : ($leave->status ?: 'Pending');
+                    $badgeClass = statusBadgeClass($leave->status);
+                    $dateRange = trim(preg_replace('/\s+/', ' ', strip_tags((string) $leave->showLeaveDate())));
+                    $viewUrl = Url::to(['/mobile/default/leave-request-view', 'id' => $leave->id]);
+                    ?>
+                    <a href="<?= Html::encode($viewUrl) ?>" class="card req-card">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div class="req-icon-wrap bg-warning bg-opacity-10 text-warning">
+                                <i data-lucide="calendar-off" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0 req-card-text">
+                                <div class="fw-semibold"><?= Html::encode($leave->leaveType->title ?? 'คำขอลา') ?></div>
+                                <div class="small text-body-secondary"><?= Html::encode($dateRange !== '' ? $dateRange : '-') ?></div>
+                                <div class="small text-body-secondary">รหัสคำขอ <?= Html::encode((string) $leave->id) ?></div>
+                            </div>
+                            <span class="badge bg-<?= $badgeClass ?> bg-opacity-10 text-<?= $badgeClass ?> border border-<?= $badgeClass ?>-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0"><?= Html::encode($statusTitle) ?></span>
+                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0" style="width: 1rem; height: 1rem;"></i>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php endif; ?>
     <?php endif; ?>
+
+    <!-- ชนิดอื่น (ยังไม่มีข้อมูลจาก DB) -->
     <?php if ($type === 'vehicle'): ?>
         <div class="card border-0 rounded-3 shadow-sm">
             <div class="card-body req-empty">

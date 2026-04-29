@@ -67,6 +67,11 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
                 <span class="flex-grow-1">คำขอของฉัน</span>
                 <i data-lucide="chevron-right" class="chevron"></i>
             </a>
+            <a href="<?= Html::encode(Url::to(['/mobile/default/attendance'])) ?>" class="profile-menu-item">
+                <i data-lucide="clock"></i>
+                <span class="flex-grow-1">ลงเวลาเข้า-ออกงาน</span>
+                <i data-lucide="chevron-right" class="chevron"></i>
+            </a>
             <?php if ($isRoomOwner): ?>
             <a href="<?= Html::encode(Url::to(['/mobile/default/room-manage'])) ?>" class="profile-menu-item">
                 <i data-lucide="layout-grid"></i>

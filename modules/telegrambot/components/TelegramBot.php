@@ -1,46 +1,50 @@
 <?php
 namespace app\modules\telegrambot\components;
 
+use app\models\Categorise;
+
 class TelegramBot
 {
     protected $botToken;
     protected $apiUrl;
 
-    public function __construct($botToken= null)
+    public function __construct($botToken = null)
     {
-        // $this->botToken = $botToken;
-        //  $this->botToken = $botToken ?: TelegramBotToken::getDefaultToken();
-         $this->botToken = $botToken ?: '7760493857:AAEqmuAH5eDi0iEqct656owBRP0qJXPypc8';
-        $this->apiUrl = "https://api.telegram.org/bot{$botToken}/";
+        $this->botToken = trim((string) ($botToken ?: $this->resolveBotToken()));
+        $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}/";
     }
 
     public function sendMessage($chatId, $text)
     {
-        $url = $this->apiUrl . "sendMessage";
-        $data = [
-            'chat_id' => $chatId,
-            'text' => $text,
-        ];
+        $url = $this->apiUrl . 'sendMessage?chat_id=' . urlencode(trim((string) $chatId)) . '&text=' . urlencode($text);
+        return file_get_contents($url);
+    }
 
-        // $options = [
-        //     'http' => [
-        //         'method' => 'POST',
-        //         'header' => "Content-type: application/x-www-form-urlencoded\r\n",
-        //         'content' => http_build_query($data),
-        //     ],
-        // ];
+    protected function resolveBotToken()
+    {
+        $setting = Categorise::findOne(['name' => 'telegram_setting']);
+        $data = $this->normalizeDataJson($setting->data_json ?? null);
+        if (!empty($data['bot_token'])) {
+            return trim((string) $data['bot_token']);
+        }
 
-        // $context = stream_context_create($options);
-        // $result = file_get_contents($url, false, $context);
-        // return $result;
+        if (!empty($data['token'])) {
+            return trim((string) $data['token']);
+        }
 
-        $token = $this->botToken;
+        return null;
+    }
 
-        $url = "https://api.telegram.org/bot{$token}/sendMessage?chat_id={$chatId}&text=" . urlencode($text);
+    protected function normalizeDataJson($data): array
+    {
+        if (is_array($data)) {
+            return $data;
+        }
 
-        $response = file_get_contents($url);
+        if (is_string($data) && $data !== '') {
+            return json_decode($data, true) ?: [];
+        }
 
-        echo $response;
-
+        return [];
     }
 }

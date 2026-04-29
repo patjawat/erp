@@ -30,20 +30,24 @@ use yii\helpers\Html;
                     </div>
                 </div>
 
-                <div class="row g-3 py-3 border-top border-bottom border-light-subtle my-3">
-                    <div class="col-6 col-md-3">
+                <div class="row row-cols-2 row-cols-md-5 g-3 py-3 border-top border-bottom border-light-subtle my-3">
+                    <div class="col">
+                        <div class="text-secondary small mb-1">หมวดครุภัณฑ์</div>
+                        <div class="fw-medium text-dark"><?= Html::encode($model->assetCategory?->title ?? '-') ?></div>
+                    </div>
+                    <div class="col">
                         <div class="text-secondary small mb-1">วันที่ได้มา</div>
                         <div class="fw-medium text-dark"><?= Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium') ?></div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col">
                         <div class="text-secondary small mb-1">อายุการใช้งาน</div>
                         <div class="fw-medium text-dark">- ปี</div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col">
                         <div class="text-secondary small mb-1">สถานะ</div>
                         <?= $model->viewstatus() ?>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col">
                         <div class="text-secondary small mb-1">ผู้รับผิดชอบ</div>
                         <?= $model->getOwner() ?>
                         <!-- <div class="fw-medium text-dark">ศูนย์คอมพิวเตอร์</div> -->

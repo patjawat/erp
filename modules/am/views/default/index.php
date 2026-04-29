@@ -22,6 +22,7 @@ $health = $dashboard['health'] ?? [];
 $replacement = $dashboard['replacementForecast'] ?? [];
 $categoryDist = $dashboard['categoryDistribution'] ?? [];
 $deptDist = $dashboard['departmentDistribution'] ?? [];
+$groupDist = $dashboard['groupDistribution'] ?? [];
 $riskAlerts = $dashboard['riskAlerts'] ?? [];
 $ageAnalysis = $dashboard['ageAnalysis'] ?? [];
 $recentActivities = $dashboard['recentActivities'] ?? [];
@@ -42,6 +43,13 @@ foreach ($deptDist as $row) {
     $org = $id ? Organization::findOne($id) : null;
     $deptLabels[] = $org ? $org->name : ($id ? "หน่วยงาน #{$id}" : 'ไม่ระบุ');
     $deptValues[] = (int) ($row['value'] ?? 0);
+}
+
+$groupLabels = [];
+$groupValues = [];
+foreach ($groupDist as $row) {
+    $groupLabels[] = $row['label'] ?: 'ไม่ระบุ';
+    $groupValues[] = (int) ($row['value'] ?? 0);
 }
 
 $ageLabels = [];
@@ -89,68 +97,78 @@ $disposals = $recentActivities['disposals'] ?? [];
 <div class="container-fluid px-2 px-md-3 pb-4">
   <!-- Section 1 — Executive KPI -->
   <section class="mb-4">
-    <div class="row g-3">
+    <div class="row g-4 mt-1">
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-2">
-              <i class="fa-solid fa-boxes-stacked fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['total_assets'] ?? 0) ?></div>
-              <div class="small text-secondary">ครุภัณฑ์ทั้งหมด</div>
+        <div class="card">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['total_assets'] ?? 0) ?></span>
+                <span class="text-primary">ครุภัณฑ์ทั้งหมด (รายการ)</span>
+              </div>
+              <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-pill">
+                <i data-lucide="package"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-2">
-              <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['exceeding_useful_life'] ?? 0) ?></div>
-              <div class="small text-secondary">เกินอายุการใช้งาน</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-warning bg-opacity-10 text-warning p-2">
-              <i class="fa-solid fa-wrench fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['under_repair'] ?? 0) ?></div>
-              <div class="small text-secondary">ส่งซ่อม</div>
+        <div class="card">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['exceeding_useful_life'] ?? 0) ?></span>
+                <span class="text-danger">เกินอายุการใช้งาน (รายการ)</span>
+              </div>
+              <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-pill">
+                <i data-lucide="history"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-secondary bg-opacity-10 text-secondary p-2">
-              <i class="fa-solid fa-trash-can fa-lg"></i>
-            </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['waiting_disposal'] ?? 0) ?></div>
-              <div class="small text-secondary">รอจำหน่าย</div>
+        <div class="card">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['under_repair'] ?? 0) ?></span>
+                <span class="text-warning">ส่งซ่อม (รายการ)</span>
+              </div>
+              <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-pill">
+                <i data-lucide="wrench"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex align-items-center gap-3">
-            <div class="rounded-3 bg-info bg-opacity-10 text-info p-2">
-              <i class="fa-solid fa-coins fa-lg"></i>
+        <div class="card">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= (int) ($kpis['waiting_disposal'] ?? 0) ?></span>
+                <span class="text-secondary">รอจำหน่าย (รายการ)</span>
+              </div>
+              <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-pill">
+                <i data-lucide="trash-2"></i>
+              </div>
             </div>
-            <div>
-              <div class="fs-4 fw-bold text-dark"><?= number_format($kpis['estimated_replacement_cost'] ?? 0, 0) ?></div>
-              <div class="small text-secondary">มูลค่าแทนที่ (บาท)</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg">
+        <div class="card">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex flex-column gap-3">
+                <span class="fw-bold fs-3"><?= Html::encode(number_format($kpis['estimated_replacement_cost'] ?? 0, 0)) ?></span>
+                <span class="text-info">มูลค่าแทนที่ (บาท)</span>
+              </div>
+              <div class="bg-info bg-opacity-10 text-info p-3 rounded-pill">
+                <i data-lucide="banknote"></i>
+              </div>
             </div>
           </div>
         </div>
@@ -242,8 +260,22 @@ $disposals = $recentActivities['disposals'] ?? [];
   </div>
 
   <div class="row g-3 mt-0">
+    <!-- Section 4c — Group Distribution -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-success bg-opacity-10 text-success">
+            <i data-lucide="pie-chart"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">สัดส่วนตามกลุ่มทรัพย์สิน</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-group-donut" style="min-height: 300px;"></div>
+        </div>
+      </div>
+    </div>
     <!-- Section 4a — Category Distribution -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
           <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
@@ -257,7 +289,7 @@ $disposals = $recentActivities['disposals'] ?? [];
       </div>
     </div>
     <!-- Section 4b — Department Distribution -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
           <div class="erp-icon-box bg-info bg-opacity-10 text-info">
@@ -416,6 +448,8 @@ $categoryLabelsJs = Json::encode($categoryLabels);
 $categoryValuesJs = Json::encode($categoryValues);
 $deptLabelsJs = Json::encode($deptLabels);
 $deptValuesJs = Json::encode($deptValues);
+$groupLabelsJs = Json::encode($groupLabels);
+$groupValuesJs = Json::encode($groupValues);
 $ageLabelsJs = Json::encode($ageLabels);
 $ageValuesJs = Json::encode($ageValues);
 $js = <<<JS
@@ -447,6 +481,19 @@ $js = <<<JS
   };
   var repEl = document.getElementById('chart-replacement-bar');
   if (repEl) { new ApexCharts(repEl, repOpt).render(); }
+
+  // Section 4c — Group Donut
+  var groupOpt = {
+    series: $groupValuesJs,
+    chart: { type: 'donut', height: 300 },
+    labels: $groupLabelsJs,
+    colors: ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#64748b'],
+    legend: { position: 'bottom' },
+    plotOptions: { pie: { donut: { size: '60%' } } },
+    dataLabels: { enabled: true }
+  };
+  var groupEl = document.getElementById('chart-group-donut');
+  if (groupEl) { new ApexCharts(groupEl, groupOpt).render(); }
 
   // Section 4a — Category Horizontal Bar
   var catOpt = {

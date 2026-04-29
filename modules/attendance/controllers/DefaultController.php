@@ -107,14 +107,17 @@ class DefaultController extends Controller
             return $this->redirect(['/me']);
         }
         $locations = [];
+        $geofences = [];
         try {
             $locations = CheckinLocation::find()->where(['active' => 1])->all();
+            $geofences = CheckinLocation::findActiveGeofenced();
         } catch (\Throwable $e) {
             // ตาราง checkin_location ยังไม่มี (ยังไม่รัน migration)
         }
         return $this->render('checkin', [
             'employee' => $me,
             'locations' => $locations,
+            'geofences' => $geofences,
         ]);
     }
 
@@ -144,25 +147,21 @@ class DefaultController extends Controller
         $photoPath = Yii::$app->request->post('photo_path');
 
         try {
-            $locationId = null;
-            if ($qrToken) {
-                $loc = CheckinLocation::findByQrToken($qrToken);
-                if ($loc) {
-                    $locationId = $loc->id;
-                }
-            } elseif ($lat !== null && $lat !== '' && $lng !== null && $lng !== '') {
-                $loc = CheckinLocation::findLocationAt((float)$lat, (float)$lng);
-                if ($loc) {
-                    $locationId = $loc->id;
-                }
+            $validation = CheckinLocation::validateClockIn($lat, $lng, $qrToken);
+            if (!$validation['ok']) {
+                return ['success' => false, 'message' => $validation['message']];
             }
+            /** @var CheckinLocation|null $matchedLoc */
+            $matchedLoc = $validation['location'];
+            $locationId = $matchedLoc ? $matchedLoc->id : null;
+
             $record = new CheckinRecord();
             $record->emp_id = $me->id;
             $record->checkin_at = date('Y-m-d H:i:s');
             $record->method = $method;
             $record->check_type = $checkType;
-            $record->lat = $lat ?: null;
-            $record->lng = $lng ?: null;
+            $record->lat = $lat !== null && $lat !== '' ? $lat : null;
+            $record->lng = $lng !== null && $lng !== '' ? $lng : null;
             $record->location_id = $locationId;
             $record->is_in_location = 1;
             $record->out_of_location_reason = null;
@@ -171,6 +170,7 @@ class DefaultController extends Controller
             $record->data_json = [
                 'user_agent' => Yii::$app->request->userAgent,
                 'remote_ip' => Yii::$app->request->userIP,
+                'geofence' => !empty($validation['meta']) ? $validation['meta'] : null,
             ];
             $record->status = CheckinRecord::STATUS_PENDING;
             if (!$record->save()) {

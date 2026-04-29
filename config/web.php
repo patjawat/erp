@@ -18,7 +18,7 @@ $config = [
     'id' => 'basic',
     'version' => $version,
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'mobile'],
     'homeUrl' => ['/site'],
     'timeZone' => 'Asia/Bangkok',
     'aliases' => [
@@ -262,19 +262,19 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-                'am/asset/bulk-create' => 'am/asset-bulk/bulk-create',
-                'am/asset/transfer' => 'am/asset-lifecycle/transfer',
-                'am/asset/repair' => 'am/asset-lifecycle/repair',
-                'am/asset/dispose' => 'am/asset-lifecycle/dispose',
-                'am/asset/print-qr' => 'am/asset-lifecycle/print-qr',
-                'am/dashboard' => 'am/default/index',
-                'am/report/register' => 'am/report/register',
-                'am/report/depreciation-report' => 'am/report/depreciation-report',
-                'am/report/movement-report' => 'am/report/movement-report',
-                'am/report/survey-report' => 'am/report/survey-report',
-                'am/report/monthly-depreciation' => 'am/report/monthly-depreciation',
-                'am/depreciation/monthly-processing' => 'am/depreciation/monthly-processing',
-                'api/asset/scan' => 'am/asset-api/scan',
+                // 'am/asset/bulk-create' => 'am/asset-bulk/bulk-create',
+                // 'am/asset/transfer' => 'am/asset-lifecycle/transfer',
+                // 'am/asset/repair' => 'am/asset-lifecycle/repair',
+                // 'am/asset/dispose' => 'am/asset-lifecycle/dispose',
+                // 'am/asset/print-qr' => 'am/asset-lifecycle/print-qr',
+                // 'am/dashboard' => 'am/default/index',
+                // 'am/report/register' => 'am/report/register',
+                // 'am/report/depreciation-report' => 'am/report/depreciation-report',
+                // 'am/report/movement-report' => 'am/report/movement-report',
+                // 'am/report/survey-report' => 'am/report/survey-report',
+                // 'am/report/monthly-depreciation' => 'am/report/monthly-depreciation',
+                // 'am/depreciation/monthly-processing' => 'am/depreciation/monthly-processing',
+                // 'api/asset/scan' => 'am/asset-api/scan',
                 // กฎสำหรับ Webhook โดยเฉพาะ
                 'POST webhook/receive' => 'dms/webhook/receive',
                 // โปรไฟล์ของฉัน
@@ -340,6 +340,7 @@ $config = [
             'depdrop/*',
             'auth/*',
             'mobile/auth/*',
+            'mobile/error/*',
             'health/health-screen/validator',
             'gii/*',
             // 'hr/*',
@@ -418,7 +419,7 @@ if (YII_ENV_DEV) {
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
         // 'allowedIPs' => ['127.0.0.1', '::1'],
-        'allowedIPs' => ['*'],
+        // 'allowedIPs' => ['*'],
     ];
 }
 

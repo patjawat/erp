@@ -10,11 +10,8 @@ use yii\widgets\MaskedInput;
 use app\modules\hr\models\Employees;
 use kartik\editors\Summernote;
 
-$title = Yii::$app->request->get('title');
-$group = Yii::$app->request->get('group');
 
 ?>
-ประเภทครุภัณฑ์
 
 <style>
     .modal-footer {
@@ -192,6 +189,38 @@ $group = Yii::$app->request->get('group');
                 </div>
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header border-bottom d-flex align-items-center gap-2">
+                <div class="erp-icon-box bg-primary bg-opacity-10">
+                    <i data-lucide="trending-down"></i>
+                </div>
+                <h6 class="text-uppercase text-secondary m-0">เตรียมข้อมูลค่าเสื่อม</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-section mb-0">
+                    <p class="text-muted small mb-3">ใช้สำหรับคำนวณค่าเสื่อมราคาในอนาคต</p>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <?= $form->field($model, 'depreciation_rate', [
+                                'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
+                            ])->textInput([
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => '0',
+                                'placeholder' => 'เช่น 20.00',
+                                'class' => 'form-control',
+                            ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <div class="col-8">
         <div class="card">
@@ -205,7 +234,7 @@ $group = Yii::$app->request->get('group');
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <?php
                             echo $form->field($model, 'asset_name', [
                                 'addon' => [
@@ -213,20 +242,11 @@ $group = Yii::$app->request->get('group');
                                 ]
                             ])->textInput([
                                 'maxlength' => true,
-                                'placeholder' => 'ระบุชื่อสิ่งปลูกสร้าง',
+                                'placeholder' => 'ระบุชื่ออาคาร',
                                 'readonly' => false,  // Make field readonly
                                 'class' => 'form-control'  // Add background color
-                            ])->label('ชื่อสิ่งปลูกสร้าง');
+                            ])->label('ชื่ออาคาร');
                             ?>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-12">
-                            <?php echo $form->field($model, 'data_json[building_type_name]')->textInput()->label('ประเภทสิ่งปลูกสร้าง'); ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php echo $form->field($model, 'data_json[floors]')->textInput()->label('จำนวนชั้น'); ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?php echo $form->field($model, 'data_json[area]')->textInput()->label('พื้นที่ใช้สอย (ตร.ม.)'); ?>
                         </div>
                         <div class="col-md-6">
                             <?php
@@ -242,6 +262,13 @@ $group = Yii::$app->request->get('group');
                                 'class' => 'form-control'  // Add background color
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
+                        <div class="col-md-6">
+                            <?php echo $form->field($model, 'data_json[floors]')->textInput()->label('จำนวนชั้น'); ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?php echo $form->field($model, 'data_json[area]')->textInput()->label('พื้นที่ใช้สอย (ตร.ม.)'); ?>
+                        </div>
+                        
 
 
 
@@ -270,7 +297,7 @@ $group = Yii::$app->request->get('group');
                     </div>
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง/อาคาร/ห้อง'); ?>
+                            <?= $form->field($model, 'data_json[location]')->textInput()->label('สถานที่ตั้ง'); ?>
                         </div>
 
 
@@ -302,12 +329,6 @@ $group = Yii::$app->request->get('group');
                                     'templateResult' => new JsExpression('function(city) { return city.text; }'),
                                     'templateSelection' => new JsExpression('function (city) { return city.text; }'),
                                 ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>

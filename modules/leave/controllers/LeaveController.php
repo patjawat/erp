@@ -15,10 +15,11 @@ use app\components\AppHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
 use app\modules\leave\models\LeaveCreateForm;
+use app\modules\leave\components\LeaveApprovalService;
 use app\components\SiteHelper;
 use app\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\components\LeaveHelper;
+use app\modules\leave\components\LeaveHelper;
 
 /**
  * สร้างใบลา (2 ขั้น: กรอกรายละเอียด → ตรวจสอบ + ลงลายมือชื่อ)
@@ -128,16 +129,23 @@ class LeaveController extends Controller
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
         }
+
         $me = UserHelper::GetEmployee();
-        if (!$me || $me->id != $model->emp_id) {
+        // 1. ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
+        $isAdmin = Yii::$app->user->can('leave'); 
+
+        // 2. เช็คสิทธิ์เจ้าของใบลา (ถ้าไม่ใช่ Admin และไม่ใช่เจ้าของ -> ปฏิเสธ)
+        if (!$isAdmin && (!$me || $me->id != $model->emp_id)) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ไม่ใช่เจ้าของใบลา</p>', 'footer' => ''];
+                return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ไม่ใช่เจ้าของใบลาและไม่มีสิทธิ์ผู้ดูแลระบบ</p>', 'footer' => ''];
             }
-            Yii::$app->session->setFlash('error', 'ไม่ใช่เจ้าของใบลา');
+            Yii::$app->session->setFlash('error', 'ไม่ใช่เจ้าของใบลาและไม่มีสิทธิ์ผู้ดูแลระบบ');
             return $this->redirect(['/leave/default/index']);
         }
-        if ($model->hasApprovalDecision()) {
+
+        // 3. เช็คสถานะการอนุมัติ (ถ้าไม่ใช่ Admin และมีการอนุมัติแล้ว -> ปฏิเสธ)
+        if (!$isAdmin && $model->hasApprovalDecision()) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ['title' => 'แก้ไข', 'content' => '<p class="text-center text-muted mb-0">ใบลานี้มีการอนุมัติ/ไม่อนุมัติแล้ว ไม่สามารถแก้ไขได้</p>', 'footer' => ''];
@@ -146,6 +154,8 @@ class LeaveController extends Controller
             return $this->redirect(['/leave/default/index']);
         }
 
+        // --- ส่วนที่เหลือคงเดิม ---
+        
         // แปลงวันที่เป็น พ.ศ. สำหรับแสดงในฟอร์ม
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end   = AppHelper::convertToThai($model->date_end);
@@ -166,17 +176,19 @@ class LeaveController extends Controller
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end   = AppHelper::convertToGregorian($model->date_end);
+            
             $oldJson = $model->getOldAttribute('data_json');
             if (is_string($oldJson)) {
                 $oldJson = json_decode($oldJson, true) ?: [];
             }
             $model->data_json = array_merge((array) $oldJson, (array) $model->data_json);
+            
             if ($model->save(false)) {
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
-                    return ['status' => 'success', 'redirect' => Url::to(['/leave/default/index'])];
+                    return ['status' => 'success', 'redirect' => Url::to(['/leave/approver/index'])];
                 }
-                return $this->redirect(['/leave/default/index']);
+                return $this->redirect(['/leave/approver/index']);
             }
         }
 
@@ -308,55 +320,18 @@ class LeaveController extends Controller
         }
         $me = UserHelper::GetEmployee();
         $status = (string) Yii::$app->request->post('status');
-        if (!in_array($status, ['Pass', 'Reject'], true)) {
-            return ['status' => 'error', 'message' => 'Invalid status'];
+        $userIsChecker = Yii::$app->user->can('leave');
+        $userIsOwner = $me && (int) $model->emp_id === (int) $me->id;
+        $canApprove = $model->status === 'Pending' && ($userIsOwner || (empty($model->emp_id) && $userIsChecker));
+        if (!$canApprove) {
+            return ['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์อนุมัติรายการนี้'];
         }
-        $model->data_json = ArrayHelper::merge(
-            (array) $model->data_json,
-            ['approve_date' => date('Y-m-d H:i:s')]
-        );
-        $model->status = $status;
-        if (empty($model->emp_id)) {
-            $model->emp_id = $me->id;
+
+        $result = (new LeaveApprovalService())->process($model, $status, $me ? (int) $me->id : null);
+        if (!($result['ok'] ?? false)) {
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
         }
-        if (!$model->save(false)) {
-            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
-        }
-        $leave = Leave::findOne((int) $model->from_id);
-        if (!$leave) {
-            return ['status' => 'success'];
-        }
-        if ($status === 'Reject') {
-            $leave->status = 'Reject';
-            $leave->save(false);
-            $leave->MsgReject();
-            return ['status' => 'success'];
-        }
-        if ($model->maxLevel() && $status === 'Pass') {
-            $leave->status = 'Approve';
-            $leave->save(false);
-            $leave->MsgApprove();
-            return ['status' => 'success'];
-        }
-        $statusMap = [
-            1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
-            2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
-            3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
-            4 => ['Pass' => 'Approve', 'Reject' => 'Reject'],
-        ];
-        if (isset($statusMap[$model->level][$status])) {
-            $leave->status = $statusMap[$model->level][$status];
-            $leave->save(false);
-        }
-        $nextApprove = ApproveModel::findOne([
-            'from_id' => $model->from_id,
-            'name' => 'leave',
-            'level' => $model->level + 1,
-        ]);
-        if ($nextApprove && $status === 'Pass') {
-            $nextApprove->status = 'Pending';
-            $nextApprove->save(false);
-        }
+
         return ['status' => 'success'];
     }
 
@@ -421,7 +396,6 @@ class LeaveController extends Controller
         }
 
         $thaiYear = (int) AppHelper::YearBudget();
-        $budgetRange = AppHelper::BudgetYearRange($thaiYear);
         $roundLabel = 'รอบที่ 1 (1 ม.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
 
         $types = LeaveType::find()

@@ -103,8 +103,8 @@ $msg = 'ขอ';
                     <?= $item->leave->total_days ?> วัน
                   </span>
                 </div>
-                <div class="text-muted small text-truncate" style="max-width: 200px;" title="<?= $item->leave->data_json['reason'] ?>">
-                  <?= $item->leave->data_json['reason'] ?>
+                <div class="text-muted small text-truncate" style="max-width: 200px;" title="<?= $item->leave->data_json['reason'] ?? '-' ?>">
+                  <?= $item->leave->data_json['reason'] ?? '-' ?>
                 </div>
               </td>
               <td>

@@ -93,28 +93,33 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $item->viewStatus() ?>
                         </td>
 
-                        <td class="text-center py-2">
-                            <div class="d-flex justify-content-center">
-                                <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <i class="fa-regular fa-eye"></i></a>
-                                <a href="<?= Url::to(['update', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                 <i class="fa-regular fa-pen-to-square"></i></a>
-                                <a href="<?= Url::to(['qrcode', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect width="5" height="5" x="3" y="3" rx="1"></rect>
-                                        <rect width="5" height="5" x="16" y="3" rx="1"></rect>
-                                        <rect width="5" height="5" x="3" y="16" rx="1"></rect>
-                                        <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
-                                        <path d="M21 21v.01"></path>
-                                        <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
-                                        <path d="M3 12h.01"></path>
-                                        <path d="M12 3h.01"></path>
-                                        <path d="M12 16v.01"></path>
-                                        <path d="M16 12h1"></path>
-                                        <path d="M21 12v.01"></path>
-                                        <path d="M12 21v-1"></path>
-                                    </svg>
-                                </a>
+                        <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
+                            <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
+                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-primary',
+                                    'title' => 'ดูรายละเอียด',
+                                    'data-pjax' => 0,
+                                ]) ?>
+                                <?php if (Yii::$app->user->can('asset')): ?>
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-warning',
+                                        'title' => 'แก้ไข',
+                                        'data-pjax' => 0,
+                                    ]) ?>
+                                <?php endif; ?>
+                                  <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-light',
+                                    'title' => 'พิมพ์',
+                                    'data-pjax' => 0,
+                                    'target' => '_blank',
+                                ]) ?>
+                                <?php if (Yii::$app->user->can('admin')): ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-danger delete-asset',
+                                        'title' => 'ลบ',
+                                        'data-pjax' => 0,
+                                    ]) ?>
+                                <?php endif; ?>
                             </div>
                         </td>
 

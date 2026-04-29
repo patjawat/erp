@@ -9,7 +9,7 @@ use yii\web\Response;
 use app\components\Processor;
 use app\components\SiteHelper;
 use yii\helpers\BaseFileHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use yii\web\NotFoundHttpException;
 
 class DocumentController extends \yii\web\Controller

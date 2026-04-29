@@ -51,6 +51,7 @@ use app\modules\am\models\AssetDetail;
  * @property int|null $purchase_text การได้มา
  * @property int|null $useful_life อายุการใช้งาน (ปี)
  * @property float|null $residual_value มูลค่าซาก
+ * @property float|null $depreciation_rate อัตราค่าเสื่อม (% ต่อปี, ทศนิยม 2 ตำแหน่ง)
  * @property string|null $depreciation_method วิธีคำนวณค่าเสื่อม
  * @property string|null $lifecycle_status received|active|repair|disposed
  * @property string|null $qr_code_path Path to saved QR image
@@ -104,8 +105,8 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status','useful_life'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_method', 'lifecycle_status', 'qr_code_path'], 'safe'],
-            [['price', 'residual_value'], 'number'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
+            [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
             [['life', 'department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
             [['ref', 'code'], 'string', 'max' => 255],
@@ -136,6 +137,7 @@ class Asset extends \yii\db\ActiveRecord
             'car_type' => 'ประเภทการใช้งานรถยนต์',
             'useful_life' => 'อายุการใช้งาน (ปี)',
             'residual_value' => 'มูลค่าซาก',
+            'depreciation_rate' => 'อัตราค่าเสื่อม (%)',
             'depreciation_method' => 'วิธีคำนวณค่าเสื่อม',
             'data_json' => 'Data Json',
             'updated_at' => 'วันเวลาแก้ไข',
@@ -144,6 +146,7 @@ class Asset extends \yii\db\ActiveRecord
             'updated_by' => 'ผู้แก้ไข',
             'lifecycle_status' => 'สถานะวงจรชีวิต',
             'qr_code_path' => 'QR Code',
+            'asset_kind' => 'ประเภททรัพย์สิน',
         ];
     }
 
@@ -298,6 +301,21 @@ class Asset extends \yii\db\ActiveRecord
             $this->asset_type = isset($this->data_json['asset_type']) ? $this->data_json['asset_type'] : '';
             $this->purchase_text = isset($this->data_json['purchase_text']) ? $this->data_json['purchase_text'] : '';
             $this->department_name = isset($this->data_json['department_name']) ? $this->data_json['department_name'] : '';
+            if ($this->hasAttribute('depreciation_rate')) {
+                $dr = $this->getAttribute('depreciation_rate');
+                if (($dr === null || $dr === '') && isset($this->data_json['depreciation'])) {
+                    $raw = $this->data_json['depreciation'];
+                    if ($raw !== null && $raw !== '') {
+                        $normalized = str_replace(',', '.', preg_replace('/\s+/u', '', (string) $raw));
+                        if ($normalized !== '' && is_numeric($normalized)) {
+                            $fv = round((float) $normalized, 2);
+                            if ($fv >= 0) {
+                                $this->depreciation_rate = $fv;
+                            }
+                        }
+                    }
+                }
+            }
         } catch (\Throwable $th) {
             // throw $th;
         }
@@ -368,10 +386,33 @@ class Asset extends \yii\db\ActiveRecord
             // throw $th;
         }
 
+        if ($this->hasAttribute('depreciation_rate') && ($this->asset_group_id == 4 || $this->asset_group_id === '4')) {
+            $this->syncDepreciationRateToDataJson();
+        }
+
         if ($this->lifecycle_status === null || $this->lifecycle_status === '') {
             $this->lifecycle_status = $insert ? self::LIFECYCLE_RECEIVED : self::LIFECYCLE_ACTIVE;
         }
         return parent::beforeSave($insert);
+    }
+
+    /**
+     * ให้ data_json.depreciation สอดคล้องกับคอลัมน์ depreciation_rate (รายงาน/legacy ที่อ่านจาก JSON)
+     */
+    protected function syncDepreciationRateToDataJson(): void
+    {
+        $dj = is_array($this->data_json) ? $this->data_json : [];
+        $rate = $this->depreciation_rate;
+        if ($rate === null || $rate === '') {
+            unset($dj['depreciation']);
+            $this->data_json = $dj;
+
+            return;
+        }
+        $v = round((float) $rate, 2);
+        $this->depreciation_rate = $v;
+        $dj['depreciation'] = $v;
+        $this->data_json = $dj;
     }
 
     public function afterSave($insert, $changedAttributes)
@@ -486,6 +527,13 @@ class Asset extends \yii\db\ActiveRecord
         return $this->hasOne(AssetCategory::class, ['code' => 'asset_category_id'])->andOnCondition(['name' => 'asset_category']);;
     }
 
+    /**
+     * พนักงานผู้รับผิดชอบ (asset.owner เก็บค่า cid ตรงกับ employees.cid)
+     */
+    public function getOwnerEmployee()
+    {
+        return $this->hasOne(Employees::class, ['cid' => 'owner']);
+    }
 
     // วิธีการได้มา
     public function getPurchaseName()

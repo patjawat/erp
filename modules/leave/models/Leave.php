@@ -2,28 +2,30 @@
 
 namespace app\modules\leave\models;
 
-use Yii;
-use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\db\Expression;
-use app\models\Uploads;
-use app\models\Categorise;
-use app\components\LineMsg;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\SiteHelper;
-use app\components\UserHelper;
-use app\components\ThaiDateHelper;
+use app\components\ApproveLevelResolver;
 use app\components\CategoriseHelper;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\LeaveEntitlements;
-use app\modules\hr\models\Organization;
-use app\modules\leave\models\LeaveType;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
+use app\components\LineMsg;
+use app\components\SiteHelper;
+use app\components\ThaiDateHelper;
+use app\components\UserHelper;
+use app\models\Categorise;
+use app\models\Uploads;
 use app\modules\approveV2\models\Approve;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\leave\components\LeaveApproveResolver;
+use app\modules\leave\components\LeaveTelegramService;
+use app\modules\leave\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveType;
+use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
 /**
  * This is the model class for table "leave".
@@ -215,7 +217,8 @@ class Leave extends \yii\db\ActiveRecord
      */
     public function createApprove()
     {
-        $rows = LeaveApproveResolver::buildApproveRows((int) $this->emp_id, (string) $this->id);
+        // $rows = LeaveApproveResolver::buildApproveRows((int) $this->emp_id, (string) $this->id);
+        $rows = ApproveLevelResolver::resolve('leave',$this->emp_id);
 
         // fallback: ถ้าไม่มี settings ให้ใช้ director เป็นผู้อนุมัติเสมอ
         if (empty($rows)) {
@@ -241,27 +244,36 @@ class Leave extends \yii\db\ActiveRecord
         $isDirector = \app\components\SiteHelper::isDirectorFromSettings($this->emp_id);
         $approveDate = date('Y-m-d H:i:s');
         $firstPendingApprove = null;
+        $first = true;
 
         foreach ($rows as $r) {
+             $dataJson = ['label' => $r['label']];
+            if ($r['approver_type'] === 'role') {
+                // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
+                $dataJson['role'] = 'role'; // placeholder
+            }
+
+
             $a = new Approve();
             $a->from_id = (string) $this->id;
             $a->name    = 'leave';
             $a->level   = $r['level'];
-            $a->title   = $r['title'];
+            $a->title   = $r['label'];
 
             if ($isDirector) {
                 $a->emp_id    = (int) $this->emp_id;
                 $a->status    = 'Pass';
-                $a->data_json = ['label' => $r['title'], 'approve_date' => $approveDate];
+                $a->data_json = ['label' => $r['label'], 'approve_date' => $approveDate];
             } else {
                 $a->emp_id    = $r['emp_id'];
-                $a->status    = $r['status'];
-                $a->data_json = $r['data_json'];
+                $a->status    =  $first ? 'Pending' : 'None';
+                $a->data_json = $dataJson;
                 if ($a->status === 'Pending' && $firstPendingApprove === null) {
                     $firstPendingApprove = $a;
                 }
             }
             $a->save(false);
+            $first = false;
         }
 
         if (!$isDirector && $firstPendingApprove && $firstPendingApprove->id) {
@@ -272,6 +284,7 @@ class Leave extends \yii\db\ActiveRecord
                 if ($toUser) {
                     LineMsg::sendLeave($firstPendingApprove->id, $toUser);
                 }
+                (new LeaveTelegramService())->notifyPendingApprove($firstPendingApprove);
             } catch (\Throwable $e) {
                 // ignore
             }
@@ -660,8 +673,9 @@ class Leave extends \yii\db\ActiveRecord
         if ($check) {
             return [
                 'employee' => $check->employee,
-                'fullname' => $check->employee ? '( ' . $check->employee->fullname . ' )' : 'ไม่ระบุชื่อ',
-                'signature' =>   $check->employee ? $check->employee->signature() : 'ไม่ระบุตำแหน่ง',
+                // Return plain fullname without surrounding parentheses for PDF display compatibility
+                'fullname' => $check->employee ? $check->employee->fullname : 'ไม่ระบุชื่อ',
+                'signature' => $check->employee ? $check->employee->signature() : 'ไม่ระบุตำแหน่ง',
                 'position' => $check->employee ? $check->employee->positionName() : 'ไม่ระบุตำแหน่ง',
                 'approve_date' => isset($check->data_json['approve_date']) ? 'วันที่ ' . Yii::$app->thaiFormatter->asDate($check->data_json['approve_date'], 'long') : '',
             ];

@@ -20,10 +20,10 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\BaseConsole;
 use app\components\AppHelper;
 use yii\helpers\BaseFileHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\approve\models\Approve;
-use app\modules\hr\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveEntitlements;
 
 /**
  * This command echoes the first argument that you have entered.

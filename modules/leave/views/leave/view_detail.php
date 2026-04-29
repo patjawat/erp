@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use app\components\UserHelper;
+use app\components\ThaiDateHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\leave\models\Leave $model */
@@ -20,6 +21,14 @@ $attachments = $model->getAttachmentList();
 $signatureData = isset($model->data_json['signature_data']) ? trim((string) $model->data_json['signature_data']) : '';
 $signatureType = $model->data_json['signature_type'] ?? 'canvas';
 $substitute = $model->leaveWorkSend();
+$leaveWrittenAt = null;
+$leaveWrittenDaysAgo = null;
+if (!empty($model->created_at)) {
+    $leaveWrittenAt = ThaiDateHelper::formatThaiDate($model->created_at, 'long')
+        . ' ' . date('H:i', strtotime((string) $model->created_at)) . ' น.';
+    $createdDt = new \DateTime((string) $model->created_at);
+    $leaveWrittenDaysAgo = (int) $createdDt->diff(new \DateTime())->days;
+}
 ?>
 <div class="row g-4">
     <!-- คอลัมน์ซ้าย: ข้อมูลหลัก -->
@@ -52,26 +61,19 @@ $substitute = $model->leaveWorkSend();
                                 <?php if ($authorDept !== ''): ?>
                                     <div class="small text-secondary"><?= Html::encode($authorDept) ?></div>
                                 <?php endif; ?>
+                                
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
                             <?= $model->viewStatus() ?>
                         </div>
                     </div>
-                    <div class="mt-2 pt-2 border-top border-opacity-25">
-                        <?= Html::a(
-                            '<i class="bi bi-printer me-1"></i> พิมพ์ใบลา (PDF)',
-                            ['/leave/leave/pdf', 'id' => $model->id],
-                            [
-                                'class' => 'btn btn-sm btn-outline-primary rounded-pill',
-                                'target' => '_blank',
-                                'rel' => 'noopener noreferrer',
-                                'data-pjax' => '0',
-                                'title' => 'ใช้เทมเพลตจาก /pdf-template; ถ้ายังไม่ตั้งจะใช้แบบฟอร์มเดิม — พิมพ์ได้ทุกสถานะ',
-                            ]
-                        ) ?>
-                        <span class="small text-muted ms-2">เทมเพลตตามการตั้งค่า PDF — พิมพ์ได้ทุกสถานะ</span>
-                    </div>
+                    <?php if ($leaveWrittenAt !== null): ?>
+                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                        <div class="small text-muted">วันเวลาที่เขียนใบลา</div>
+                                        <div class="small fw-medium text-body"><?= Html::encode($leaveWrittenAt) ?></div>
+                                    </div>
+                                <?php endif; ?>
                 </div>
             </div>
 

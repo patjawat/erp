@@ -53,7 +53,7 @@ class HolidayController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/holiday/view', ['model' => $this->findModel($id)]);
+        return $this->render('view', ['model' => $this->findModel($id)]);
     }
 
     public function actionValidator()
@@ -92,10 +92,10 @@ class HolidayController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/holiday/create', ['model' => $model]),
+                'content' => $this->renderAjax('create', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/holiday/create', ['model' => $model]);
+        return $this->render('create', ['model' => $model]);
     }
 
     public function actionUpdate($id)
@@ -114,10 +114,10 @@ class HolidayController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/holiday/update', ['model' => $model]),
+                'content' => $this->renderAjax('update', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/holiday/update', ['model' => $model]);
+        return $this->render('update', ['model' => $model]);
     }
 
     public function actionDelete($id)
@@ -130,16 +130,40 @@ class HolidayController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $url = 'https://www.myhora.com/calendar/ical/holiday.aspx?latest.json';
-        $json = file_get_contents($url);
+        $json = @file_get_contents($url);
+        if ($json === false || $json === '') {
+            return ['status' => 'error', 'message' => 'ไม่สามารถดึงข้อมูลวันหยุดได้'];
+        }
         $data = json_decode($json, true);
-        foreach ($data['VCALENDAR'][0]['VEVENT'] as $Calendar) {
-            $dateString = $Calendar['DTSTART;VALUE=DATE'];
-            $date = DateTime::createFromFormat('Ymd', $dateString);
+        // myhora บางช่วงส่ง JSON ผิดรูปแบบ (คั่นอ็อบเจ็กต์ใน VEVENT ด้วย }{ แทน },{)
+        if (!is_array($data)) {
+            $repaired = preg_replace('/}\s*{/', '},{', $json);
+            $data = json_decode($repaired, true);
+        }
+        if (!is_array($data)) {
+            return ['status' => 'error', 'message' => 'รูปแบบข้อมูลวันหยุดไม่ถูกต้อง'];
+        }
+        $vevents = $data['VCALENDAR'][0]['VEVENT'] ?? null;
+        if (!is_array($vevents)) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการวันหยุดในแหล่งข้อมูล'];
+        }
+        foreach ($vevents as $Calendar) {
+            if (!is_array($Calendar)) {
+                continue;
+            }
+            $dateString = $Calendar['DTSTART;VALUE=DATE'] ?? null;
+            if ($dateString === null || $dateString === '') {
+                continue;
+            }
+            $date = DateTime::createFromFormat('Ymd', (string) $dateString);
+            if ($date === false) {
+                continue;
+            }
             $CalendarDate = $date->format('Y-m-d');
             $checkDay = Calendar::find()->where(['name' => 'holiday', 'date_start' => $CalendarDate])->one();
             if (!$checkDay) {
                 $model = new Calendar();
-                $model->title = $Calendar['SUMMARY'];
+                $model->title = $Calendar['SUMMARY'] ?? '';
                 $model->name = 'holiday';
                 $model->thai_year = AppHelper::YearBudget($CalendarDate);
                 $model->date_start = $CalendarDate;

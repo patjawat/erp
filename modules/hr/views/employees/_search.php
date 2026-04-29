@@ -56,11 +56,11 @@ use app\modules\hr\models\Organization;
 
         ])->label(false); ?>
     </div>
-            <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12 col-sx-12 d-flex align-items-center align-self-center">
+    <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12 col-sx-12 d-flex align-items-center align-self-center">
         <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
     </div>
-       
-<div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
+
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
         <?= $form->field($model, 'gender')->widget(Select2::classname(), [
             'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
             'options' => ['placeholder' => 'เพศทั้งหมด...'],
@@ -69,7 +69,7 @@ use app\modules\hr\models\Organization;
             ],
         ])->label(false) ?>
     </div>
-     <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
         <?= $form->field($model, 'work_shift')->widget(Select2::classname(), [
             'data' => ['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'],
             'options' => ['placeholder' => 'ประเภทของเวรทั้งหมด ...'],
@@ -82,11 +82,11 @@ use app\modules\hr\models\Organization;
 
         <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label(false) ?>
     </div>
-     <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
+    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
         <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label(false) ?>
     </div>
-   
-    
+
+
     <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12">
         <?= $form->field($model, 'user_register')->widget(Select2::classname(), [
             'data' => [1 => 'ลงทะเบียนสำเร็จ', 0 => 'ยังไม่ลงทะเบียน'],
@@ -110,51 +110,50 @@ use app\modules\hr\models\Organization;
         ])->label(false) ?>
 
     </div>
-           <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12 col-sx-12">
+    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-12 col-sx-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาบุคลากร...'])->label(false) ?>
     </div>
- <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
-            <?= $form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => $model->ListStatus(),
-                'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
-                'pluginOptions' => [
-                    'allowClear' => true
-                ],
-                ])->label(false) ?>
+    <div class="col-xl-2 col-lg-2 col-md-6 col-sm-12 col-sx-12">
+        <?= $form->field($model, 'status')->widget(Select2::classname(), [
+            'data' => $model->ListStatus(),
+            'options' => ['placeholder' => 'สถานะทั้งหมด ...'],
+            'pluginOptions' => [
+                'allowClear' => true
+            ],
+        ])->label(false) ?>
 
-</div>
+    </div>
     <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-sx-12">
         <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
             'name' => 'department',
             'id' => 'treeID',
             'query' => Organization::find()->addOrderBy('root, lft'),
-            'value' => null,  // ไม่ตั้งค่าเริ่มต้น
             'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
             'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
             'fontAwesome' => true,
             'asDropdown' => true,
             'multiple' => false,
+
             'options' => [
-                'class' => 'close',
-                'allowClear' => true,
-            ],
-            'pluginOptions' => [
-                'allowClear' => true,
                 'placeholder' => 'เลือกหน่วยงาน...',
+            ],
+
+            'pluginOptions' => [
+                'allowClear' => true
             ],
         ])->label(false); ?>
     </div>
 
 
 
-<div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
+    <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
         <div class="d-flex flex-column flex-md-row gap-2">
 
             <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
                 'class' => 'btn btn-primary w-100 w-md-auto',
                 'id' => 'summit'
             ]) ?>
-             <?= Html::a('<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>', ['/hr/employees/create'], ['class' => 'btn btn-light open-modal w-100 w-md-auto open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>', ['/hr/employees/create'], ['class' => 'btn btn-light open-modal w-100 w-md-auto open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
             <div class="dropdown w-100 w-md-auto">
                 <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"
@@ -165,7 +164,7 @@ use app\modules\hr\models\Organization;
 
                 <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
                     <li>
-                         <a href="#" id="download-button" class="dropdown-item">
+                        <a href="#" id="download-button" class="dropdown-item">
                             <i class="fa-solid fa-file-export me-1"></i>ส่งออก</a>
                     </li>
                     <li><?= Html::a(
@@ -180,7 +179,7 @@ use app\modules\hr\models\Organization;
                             ['class' => 'dropdown-item', 'target' => '_blank']
                         ) ?>
                     </li>
-                </a>
+                    </a>
                 </ul>
             </div>
 

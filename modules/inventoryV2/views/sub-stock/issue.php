@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
@@ -39,163 +40,85 @@ $saveUrl = Url::to(['/inventory-v2/sub-stock/save-usage']);
                     <?= Html::a('กลับ Dashboard คลังย่อย', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'alert-link']) ?>
                 </div>
             <?php else: ?>
-            <div class="row g-3 mb-4 p-3 rounded border">
-                <div class="col-12 col-md-4">
-                    <label class="form-label fw-bold">คลังย่อย</label>
-                    <select class="form-select" id="warehouseSelect" required>
-                        <option value="">-- เลือกคลังย่อย --</option>
-                        <?php foreach ($subWarehouses as $w): ?>
-                            <option value="<?= (int)$w->id ?>" <?= $currentWarehouseId && (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>>
-                                <?= Html::encode($w->warehouse_name) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label fw-bold">ประเภทงาน/การเบิก</label>
-                    <select class="form-select" id="jobType">
-                        <option value="patient">งานคลินิก (ตัดจ่ายรายคนไข้)</option>
-                        <option value="maintenance">งานซ่อมบำรุง/ไอที (ตัดจ่ายตาม Job)</option>
-                        <option value="office">งานบริหาร/บัญชี (เบิกใช้ในสำนักงาน)</option>
-                        <option value="emergency">งานอุบัติเหตุ/ฉุกเฉิน (เบิกเติม Unit Stock)</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-5">
-                    <label class="form-label fw-bold" id="dynamicLabel">HN / ชื่อคนไข้</label>
-                    <input type="text" class="form-control" id="referenceInput" placeholder="ระบุอ้างอิงการเบิก...">
-                </div>
-            </div>
-
-            <div class="row g-2 mb-3 align-items-end border-bottom pb-3">
-                <div class="col-12 col-md-5">
-                    <label class="form-label fw-bold">พัสดุ / Lot (ที่มีในคลังย่อย)</label>
-                    <select class="form-select" id="stockItemSelector" disabled>
-                        <option value="">-- เลือกคลังย่อยก่อน --</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-2">
-                    <label class="form-label fw-bold">จำนวนที่ใช้</label>
-                    <input type="number" class="form-control text-center" id="inputQty" value="1" min="0.01" step="0.01">
-                </div>
-                <div class="col-12 col-md-2">
-                    <button type="button" class="btn btn-primary w-100" id="btnAddToList"><i class="bi bi-plus-circle"></i> เพิ่มรายการ</button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="disburseTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="5%">#</th>
-                            <th width="40%">รายการพัสดุ</th>
-                            <th width="15%">Lot</th>
-                            <th width="15%" class="text-center">จำนวน</th>
-                            <th width="10%">หน่วย</th>
-                            <th width="5%"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="align-middle table-group-divider">
-                        <tr id="noDataRow"><td colspan="6" class="text-center py-4 text-muted">ยังไม่มีรายการตัดจ่าย</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="text-end mt-4">
-                <button type="button" class="btn btn-primary px-5 me-2" id="btnSaveFinal"><i class="bi bi-check-lg me-1"></i>ยืนยันการบันทึกรายการ</button>
-                <?= Html::a('ยกเลิก', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'btn btn-outline-secondary']) ?>
-            </div>
-            <?php if (!empty($usageHistory)): ?>
-                <div class="card shadow-sm border-0 border-top border-primary border-2 mt-4">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="mb-0 text-primary fw-bold">
-                            <i class="bi bi-clock-history me-2"></i>ประวัติการตัดจ่าย/การใช้งาน (ล่าสุด)
-                        </h6>
-        <div class="text-muted small mt-1">
-            คลังที่เลือก: <?= Html::encode($currentWarehouseId !== null ? (string) $currentWarehouseId : 'ทั้งหมด') ?>
-            <?php if (!empty($_GET['helpdesk_id'])): ?>
-                | ค้นตาม helpdesk_id: <?= Html::encode((string) $_GET['helpdesk_id']) ?>
-            <?php endif; ?>
-        </div>
+                <div class="row g-3 mb-4 p-3 rounded border">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">คลังย่อย</label>
+                        <select class="form-select" id="warehouseSelect" required>
+                            <option value="">-- เลือกคลังย่อย --</option>
+                            <?php foreach ($subWarehouses as $w): ?>
+                                <option value="<?= (int)$w->id ?>" <?= $currentWarehouseId && (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>>
+                                    <?= Html::encode($w->warehouse_name) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width:22%">เลขที่เอกสาร</th>
-                                        <th style="width:18%">วันที่</th>
-                                        <th style="width:20%">งาน/Job</th>
-                                        <th>อ้างอิง</th>
-                                        <th style="width:14%" class="text-end">จำนวนรวม</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($usageHistory as $o): ?>
-                                        <?php
-                                            $dj = $o->data_json;
-                                            if (is_string($dj)) {
-                                                $dj = json_decode($dj, true) ?: [];
-                                            }
-                                        $jobType = (string) ($dj['job_type'] ?? '');
-                                        $reference = (string) ($dj['reference'] ?? '');
-
-                                        // สำหรับเอกสารจากงานซ่อม (repair-parts) เราเก็บไว้ใน data_json[repair_number]
-                                        if ($jobType === '' && isset($dj['repair_number']) && (string) $dj['repair_number'] !== '') {
-                                            $jobType = 'ซ่อม #' . (string) $dj['repair_number'];
-                                        }
-                                        // สำหรับเอกสารจากงานซ่อม reference อาจไม่ได้ถูกเติมใน data_json['reference']
-                                        if ($reference === '') {
-                                            if (isset($dj['helpdesk_id']) && (string) $dj['helpdesk_id'] !== '') {
-                                                $reference = 'helpdesk_id=' . (string) $dj['helpdesk_id'];
-                                            }
-                                        }
-                                            $totalQty = 0.0;
-                                            $details = is_array($o->stockDetails) ? $o->stockDetails : [];
-                                            foreach ($details as $d) {
-                                                $totalQty += (float) ($d->qty ?? 0);
-                                            }
-                                        ?>
-                                        <tr>
-                                            <td class="fw-bold"><?= Html::encode($o->order_no) ?></td>
-                                            <td class="text-nowrap">
-                                                <?php
-                                                    $ts = $o->order_date ? strtotime($o->order_date) : null;
-                                                    echo $ts ? Html::encode(date('d/m/Y H:i', $ts)) : '-';
-                                                ?>
-                                            </td>
-                                            <td><?= Html::encode($jobType !== '' ? $jobType : '-') ?></td>
-                                            <td>
-                                                <?= Html::encode($reference !== '' ? $reference : '-') ?>
-                                                <?php if (!empty($_GET['helpdesk_id'])): ?>
-                                                    <div class="text-muted small mt-1">
-                                                        source_type: <?= Html::encode((string) ($o->source_type ?? '-')) ?>,
-                                                        status: <?= Html::encode((string) ($o->status ?? '-')) ?>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-end fw-semibold"><?= number_format($totalQty, 2) ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-bold">ประเภทงาน/การเบิก</label>
+                        <select class="form-select" id="jobType">
+                            <option value="patient">งานคลินิก (ตัดจ่ายรายคนไข้)</option>
+                            <option value="maintenance">งานซ่อมบำรุง/ไอที (ตัดจ่ายตาม Job)</option>
+                            <option value="office">งานบริหาร/บัญชี (เบิกใช้ในสำนักงาน)</option>
+                            <option value="emergency">งานอุบัติเหตุ/ฉุกเฉิน (เบิกเติม Unit Stock)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold" id="dynamicLabel">HN / ชื่อคนไข้</label>
+                        <input type="text" class="form-control" id="referenceInput" placeholder="ระบุอ้างอิงการเบิก...">
                     </div>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-light border mt-4 mb-0" role="alert">
-                    ยังไม่มีประวัติการตัดจ่าย/การใช้งานสำหรับคลังนี้
+
+                <div class="row g-2 mb-3 align-items-end border-bottom pb-3">
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">พัสดุ / Lot (ที่มีในคลังย่อย)</label>
+                        <select class="form-select" id="stockItemSelector" disabled>
+                            <option value="">-- เลือกคลังย่อยก่อน --</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label fw-bold">จำนวนที่ใช้</label>
+                        <input type="number" class="form-control text-center" id="inputQty" value="1" min="0.01" step="0.01">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="button" class="btn btn-primary w-100" id="btnAddToList"><i class="bi bi-plus-circle"></i> เพิ่มรายการ</button>
+                    </div>
                 </div>
-            <?php endif; ?>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="disburseTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="40%">รายการพัสดุ</th>
+                                <th width="15%">Lot</th>
+                                <th width="15%" class="text-center">จำนวน</th>
+                                <th width="10%">หน่วย</th>
+                                <th width="5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="align-middle table-group-divider">
+                            <tr id="noDataRow">
+                                <td colspan="6" class="text-center py-4 text-muted">ยังไม่มีรายการตัดจ่าย</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="button" class="btn btn-primary px-5 me-2" id="btnSaveFinal"><i class="bi bi-check-lg me-1"></i>ยืนยันการบันทึกรายการ</button>
+                    <?= Html::a('ยกเลิก', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'btn btn-outline-secondary']) ?>
+                </div>
+                <?= $this->render('use_history', ['usageHistory' => $usageHistory, 'currentWarehouseId' => $currentWarehouseId]) ?>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
 <?php if (!empty($subWarehouses)): ?>
-<?php
-$getLotsUrlJson = json_encode($getLotsUrl);
-$saveUrlJson = json_encode($saveUrl);
-$this->registerJs(<<<JS
+    <?php
+    $getLotsUrlJson = json_encode($getLotsUrl);
+    $saveUrlJson = json_encode($saveUrl);
+    $this->registerJs(
+        <<<JS
 (function(){
     var getLotsUrl = {$getLotsUrlJson};
     var saveUrl = {$saveUrlJson};
@@ -294,7 +217,8 @@ $this->registerJs(<<<JS
             });
     });
 })();
-JS
-, View::POS_READY);
-?>
+JS,
+        View::POS_READY
+    );
+    ?>
 <?php endif; ?>

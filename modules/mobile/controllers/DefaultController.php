@@ -2,13 +2,21 @@
 
 namespace app\modules\mobile\controllers;
 
-use Yii;
-use yii\web\Controller;
-use yii\filters\AccessControl;
 use app\components\AppHelper;
+use app\components\UserHelper;
+use app\modules\am\models\Asset;
+use app\modules\attendance\models\CheckinLocation;
+use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
-use app\modules\am\models\Asset;
+use app\modules\approveV2\models\Approve as ApproveModel;
+use app\modules\leave\components\LeaveApprovalService;
+use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveType;
+use Yii;
+use yii\filters\AccessControl;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
@@ -49,6 +57,9 @@ class DefaultController extends Controller
         $this->view->title = 'บริการออนไลน์';
         return $this->render('index', [
             'current_page' => 'home',
+            'pendingLeaveApprovals' => $this->findPendingLeaveApprovals(3),
+            'recentLeaveRequests' => $this->findRecentLeaveRequests(3),
+            'recentMeetings' => $this->findRecentMeetings(3),
         ]);
     }
 
@@ -83,6 +94,8 @@ class DefaultController extends Controller
         $this->view->title = 'การแจ้งเตือน';
         return $this->render('notifications', [
             'current_page' => 'home',
+            'pendingLeaveApprovals' => $this->findPendingLeaveApprovals(),
+            'recentLeaveRequests' => $this->findRecentLeaveRequests(10),
         ]);
     }
 
@@ -94,6 +107,37 @@ class DefaultController extends Controller
         $this->view->title = 'บริการ';
         return $this->render('services', [
             'current_page' => 'services',
+        ]);
+    }
+
+    /**
+     * ลงเวลาเข้า-ออกงาน (เรียกบันทึกผ่าน attendance/default/save เหมือนเว็บหลัก).
+     */
+    public function actionAttendance()
+    {
+        $this->view->title = 'ลงเวลาเข้า-ออก';
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน กรุณาติดต่อ HR');
+            return $this->redirect(['/mobile/default/index']);
+        }
+        $geofences = [];
+        $lastCheckin = null;
+        try {
+            $geofences = CheckinLocation::findActiveGeofenced();
+            $lastCheckin = CheckinRecord::find()
+                ->andWhere(['emp_id' => $me->id])
+                ->orderBy(['checkin_at' => SORT_DESC])
+                ->one();
+        } catch (\Throwable $e) {
+            $geofences = [];
+            $lastCheckin = null;
+        }
+        return $this->render('attendance', [
+            'current_page' => 'attendance',
+            'employee' => $me,
+            'geofences' => $geofences,
+            'lastCheckin' => $lastCheckin,
         ]);
     }
 
@@ -269,9 +313,202 @@ class DefaultController extends Controller
     public function actionLeaveRequest()
     {
         $this->view->title = 'ขอลาออนไลน์';
+       $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/leave/default/index']);
+        }
+
+        $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
+
+        $model = new Leave();
+        $model->ref = $ref;
+        $model->emp_id = $me->id;
+        $model->thai_year = (int) AppHelper::YearBudget();
+
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $model->date_start = AppHelper::convertToGregorian($model->date_start);
+            $model->date_end = AppHelper::convertToGregorian($model->date_end);
+            $model->status = 'Pending';
+            $model->save();
+            $model->createApprove();
+            return $this->redirect(['/mobile/default/leave-request-view', 'id' => $model->id]);
+           
+        }
+
         return $this->render('leave-request', [
             'current_page' => 'services',
+            'model' => $model,
         ]);
+    }
+
+    public function actionLeaveRequestView($id)
+    {
+        $this->view->title = 'รายละเอียดคำขอลา';
+        $model = Leave::findOne((int) $id);
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบคำขอลานี้');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+        if ($model->emp_id !== Yii::$app->user->identity->employee->id) {
+            Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์ดูคำขอลานี้');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+        return $this->render('leave_request_view', [
+            'current_page' => 'profile',
+            'model' => $model,
+        ]);
+    }
+
+    public function actionApproveLeave($id)
+    {
+        $this->view->title = 'อนุมัติใบลา';
+        $approve = ApproveModel::find()
+            ->andWhere(['id' => (int) $id, 'name' => 'leave'])
+            ->one();
+        if ($approve === null) {
+            throw new NotFoundHttpException('ไม่พบรายการอนุมัติ');
+        }
+
+        $me = UserHelper::GetEmployee();
+        $userIsChecker = Yii::$app->user->can('leave');
+        $userIsOwner = $me && (int) $approve->emp_id === (int) $me->id;
+        $canApprove = $approve->status === 'Pending' && ($userIsOwner || (empty($approve->emp_id) && $userIsChecker));
+        if (!$canApprove) {
+            Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์อนุมัติรายการนี้');
+            return $this->redirect(['/mobile/default/index']);
+        }
+
+        $leave = Leave::findOne((int) $approve->from_id);
+        if (!$leave) {
+            throw new NotFoundHttpException('ไม่พบข้อมูลใบลา');
+        }
+
+        return $this->render('leave_approve_view', [
+            'current_page' => 'services',
+            'approve' => $approve,
+            'model' => $leave,
+        ]);
+    }
+
+    public function actionApproveLeaveUpdate($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request'];
+        }
+
+        $approve = ApproveModel::find()
+            ->andWhere(['id' => (int) $id, 'name' => 'leave'])
+            ->one();
+        if ($approve === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการอนุมัติ'];
+        }
+
+        $me = UserHelper::GetEmployee();
+        $userIsChecker = Yii::$app->user->can('leave');
+        $userIsOwner = $me && (int) $approve->emp_id === (int) $me->id;
+        $canApprove = $approve->status === 'Pending' && ($userIsOwner || (empty($approve->emp_id) && $userIsChecker));
+        if (!$canApprove) {
+            return ['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์อนุมัติรายการนี้'];
+        }
+
+        $status = (string) Yii::$app->request->post('status');
+        $result = (new LeaveApprovalService())->process($approve, $status, $me ? (int) $me->id : null);
+        if (!($result['ok'] ?? false)) {
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
+        }
+
+        return [
+            'status' => 'success',
+            'redirect' => \yii\helpers\Url::to(['/mobile/default/leave-approvals']),
+        ];
+    }
+
+    public function actionLeaveApprovals()
+    {
+        $this->view->title = 'รายการอนุมัติใบลา';
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/mobile/default/index']);
+        }
+
+        return $this->render('leave-approvals', [
+            'current_page' => 'services',
+            'approvals' => $this->findPendingLeaveApprovals(null, $me),
+        ]);
+    }
+
+    protected function findPendingLeaveApprovals(?int $limit = null, $employee = null): array
+    {
+        $me = $employee ?: UserHelper::GetEmployee();
+        if (!$me) {
+            return [];
+        }
+
+        $query = ApproveModel::find()
+            ->with(['leave.leaveType', 'leave.employee', 'employee'])
+            ->andWhere(['name' => 'leave', 'status' => 'Pending'])
+            ->orderBy(['id' => SORT_DESC]);
+
+        if (Yii::$app->user->can('leave')) {
+            $query->andWhere([
+                'or',
+                ['approve.emp_id' => (int) $me->id],
+                ['approve.emp_id' => null],
+            ]);
+        } else {
+            $query->andWhere(['approve.emp_id' => (int) $me->id]);
+        }
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return array_values(array_filter($query->all(), static function (ApproveModel $approve) {
+            return $approve->leave !== null;
+        }));
+    }
+
+    protected function findRecentLeaveRequests(?int $limit = null, $employee = null): array
+    {
+        $me = $employee ?: UserHelper::GetEmployee();
+        if (!$me) {
+            return [];
+        }
+
+        $query = Leave::find()
+            ->with(['leaveType', 'leaveStatus'])
+            ->where(['emp_id' => (int) $me->id])
+            ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->all();
+    }
+
+    protected function findRecentMeetings(?int $limit = null, $employee = null): array
+    {
+        $me = $employee ?: UserHelper::GetEmployee();
+        if (!$me) {
+            return [];
+        }
+
+        $query = Meeting::find()
+            ->with(['room'])
+            ->where(['emp_id' => (string) $me->id])
+            ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->all();
     }
 
     /**
@@ -293,6 +530,7 @@ class DefaultController extends Controller
         $this->view->title = 'คำขอของฉัน';
         $empId = null;
         $meetings = [];
+        $leaves = [];
         if (!Yii::$app->user->isGuest && !empty(Yii::$app->user->identity->employee)) {
             $empId = Yii::$app->user->identity->employee->id;
             try {
@@ -304,11 +542,22 @@ class DefaultController extends Controller
             } catch (\Throwable $e) {
                 $meetings = [];
             }
+            try {
+                $leaves = Leave::find()
+                    ->with(['leaveType', 'leaveStatus'])
+                    ->where(['emp_id' => $empId])
+                    ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC])
+                    ->limit(100)
+                    ->all();
+            } catch (\Throwable $e) {
+                $leaves = [];
+            }
         }
         return $this->render('my-requests', [
             'current_page' => 'profile',
             'type' => $type,
             'meetings' => $meetings,
+            'leaves' => $leaves,
         ]);
     }
 
@@ -474,6 +723,9 @@ class DefaultController extends Controller
         }
         $meeting->status = $status;
         if ($meeting->save(false)) {
+            if ($status === 'Pass') {
+                $meeting->notifyBookerMeetingApprovedTelegram();
+            }
             return ['ok' => true, 'message' => $status === 'Pass' ? 'อนุมัติการจองแล้ว' : 'ยกเลิกการจองแล้ว'];
         }
         return ['ok' => false, 'message' => 'บันทึกไม่สำเร็จ'];

@@ -24,7 +24,7 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\am\models\Asset;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Development;
 use app\modules\booking\models\Meeting;

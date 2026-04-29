@@ -15,9 +15,9 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\LineMsg;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use yii\web\NotFoundHttpException;
-use app\modules\hr\models\LeaveSearch;
+use app\modules\leave\models\LeaveSearch;
 use app\modules\hr\models\LeavePermission;
 
 class PurchaseController extends \yii\web\Controller

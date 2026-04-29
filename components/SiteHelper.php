@@ -363,10 +363,14 @@ class SiteHelper extends Component
          * เว้น header_brand_line1 / line2 ว่าง = แสดง HOSPITAL / ERP SYSTEM
          *
          * @param  array|\ArrayAccess|null $dataJson
-         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string, lucide_icon: string}
+         * @param  bool                     $forceDefaultBrand ถ้า true ไม่ใช้ค่าจากตั้งค่าองค์กร (HOSPITAL / ERP SYSTEM / ไอคอนเริ่มต้น) — ใช้เมื่อยังไม่ล็อกอิน เช่น หน้า login
+         * @return array{line1: string, line2: string, line1_style: string, line2_style: string, google_font_href: ?string, lucide_icon: string, brand_font_family_css: string}
          */
-        public static function resolveHeaderBrand($dataJson): array
+        public static function resolveHeaderBrand($dataJson, bool $forceDefaultBrand = false): array
         {
+                if ($forceDefaultBrand) {
+                        $dataJson = [];
+                }
                 $d = is_array($dataJson) ? $dataJson : [];
                 $line1 = trim((string) ($d['header_brand_line1'] ?? ''));
                 if ($line1 === '') {
@@ -404,6 +408,7 @@ class SiteHelper extends Component
                         'line2_style' => $line2Style,
                         'google_font_href' => $googleFontHref,
                         'lucide_icon' => self::sanitizeHeaderLucideIcon($d['header_brand_lucide_icon'] ?? ''),
+                        'brand_font_family_css' => $fontCss,
                 ];
         }
 

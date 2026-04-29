@@ -16,24 +16,24 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('../menu_admin', ['active' => 'dashboard']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="row">
     <div class="col-6">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary_year', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary_year', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>
     </div>
     <div class="col-6">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary_month', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary_month', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>
     </div>
     <div class="col-12">
-        <?= $this->render('@app/modules/hr/views/leave/dashboard/leave_summary', [
+        <?= $this->render('@app/modules/leave/views/dashboard/leave_summary', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]) ?>

@@ -59,51 +59,93 @@ class ReportController extends Controller
         ]);
     }
 
-    /**
-     * รายงานสรุปยอดคงเหลือตามคลัง: วัสดุเหลืออะไรเท่าไหร่ ประเภทอะไร มูลค่ารวม น้อยกว่ากำหนดเท่าไหร่
-     * รองรับทั้งคลังหลัก (ดูได้ทุกคลังหลัก + คลังย่อย) และคลังย่อย (ดูของตัวเอง)
-     */
     public function actionBalanceByWarehouse()
-    {
-        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
-            ? (int) $this->request->get('warehouse_id')
-            : null;
+{
+    $request = $this->request;
+    $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
+    
+    // รับค่าตัวกรองใหม่
+    $categoryId = $request->get('category_id');
+    $status = $request->get('status');
+    $search = $request->get('search');
 
-        $listMain = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $listSub = Warehouse::find()
-            ->where(['warehouse_type' => 'SUB'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
+    // ... (ส่วนการดึง $warehouses เหมือนเดิม) ...
+    $listMain = Warehouse::find()->where(['warehouse_type' => 'MAIN'])->orderBy(['warehouse_name' => SORT_ASC])->all();
+    $listSub = Warehouse::find()->where(['warehouse_type' => 'SUB'])->andWhere(['or', ['delete' => null], ['delete' => '']])->orderBy(['warehouse_name' => SORT_ASC])->all();
+    
+    $warehouses = ['' => '-- ทุกคลัง --'];
+    foreach ($listMain as $w) $warehouses[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
+    foreach ($listSub as $w) $warehouses[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
 
-        $warehouses = ['' => '-- ทุกคลัง (หลัก + ย่อย) --'];
-        foreach ($listMain as $w) {
-            $warehouses[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
+    $allWarehouses = array_merge($listMain, $listSub);
+    $warehouseIds = $warehouseId ? [$warehouseId] : array_column($allWarehouses, 'id');
+
+    // ดึงข้อมูลดิบมาก่อน
+    $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
+    $rows = $data['rows'];
+
+    // --- ส่วนการกรองข้อมูล (แก้ไขเพื่อป้องกัน Error) ---
+if ($categoryId || $status || $search) {
+    $rows = array_filter($rows, function($item) use ($categoryId, $status, $search) {
+        $match = true;
+        
+        // 1. กรองประเภท (เพิ่มการเช็ก isset หรือใช้ ?? null)
+        if ($categoryId) {
+            $itemCatId = $item['category_id'] ?? null; // ป้องกัน Undefined array key
+            if ($itemCatId != $categoryId) {
+                $match = false;
+            }
         }
-        foreach ($listSub as $w) {
-            $warehouses[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
+        
+        // 2. กรองสถานะ
+        if ($status && $match) {
+            $isBelowMin = $item['below_min'] ?? false;
+            $isBelowMax = $item['below_max'] ?? false;
+
+            if ($status == 'below_min' && !$isBelowMin) $match = false;
+            if ($status == 'below_max' && (!$isBelowMax || $isBelowMin)) $match = false;
+            if ($status == 'normal' && ($isBelowMin || $isBelowMax)) $match = false;
         }
-
-        $allWarehouses = array_merge($listMain, $listSub);
-        $warehouseIds = $warehouseId
-            ? [$warehouseId]
-            : array_column($allWarehouses, 'id');
-
-        $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
-        $rows = $data['rows'];
+        
+        // 3. ค้นหาแบบเร็ว (ป้องกันค่า null ใน item_code/item_name)
+        if ($search && $match) {
+            $s = mb_strtolower($search, 'UTF-8');
+            $itemCode = mb_strtolower($item['item_code'] ?? '', 'UTF-8');
+            $itemName = mb_strtolower($item['item_name'] ?? '', 'UTF-8');
+            
+            if (strpos($itemCode, $s) === false && strpos($itemName, $s) === false) {
+                $match = false;
+            }
+        }
+        
+        return $match;
+    });
+        
+        // คำนวณ Summary ใหม่หลังจากกรอง
+        $summary = [
+            'total_value' => array_sum(array_column($rows, 'value')),
+            'items_count' => count($rows),
+            'below_min_count' => count(array_filter($rows, fn($r) => $r['below_min'])),
+            'below_max_count' => count(array_filter($rows, fn($r) => $r['below_max'] && !$r['below_min'])),
+        ];
+    } else {
         $summary = $data['summary'];
-
-        $this->view->params['active'] = 'report-balance';
-        return $this->render('balance-by-warehouse', [
-            'warehouseId' => $warehouseId,
-            'warehouses' => $warehouses,
-            'rows' => $rows,
-            'summary' => $summary,
-        ]);
     }
+
+    // ดึงรายการประเภทวัสดุไปแสดงใน Dropdown
+    $categories = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => 'MATER'])->all(), '', 'title');
+
+    return $this->render('balance-by-warehouse', [
+        'warehouseId' => $warehouseId,
+        'warehouses' => $warehouses,
+        'rows' => $rows,
+        'summary' => $summary,
+        'categories' => $categories,
+        'categoryId' => $categoryId,
+        'status' => $status,
+        'search' => $search,
+    ]);
+}
 
     /**
      * ดึงข้อมูลรายการวัสดุคงเหลือตามคลัง (ใช้ทั้งหน้าแสดงและ export Excel)
@@ -149,8 +191,8 @@ class ReportController extends Controller
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
             ->where(['sb.warehouse_id' => $warehouseIds])
-            ->andWhere(['>', 'sb.balance_qty', 0])
-            ->groupBy('sb.warehouse_id', 'sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
+            // ->andWhere(['>', 'sb.balance_qty', 0]) // แสดงรายการที่มียอดคงเหลือ 0 ด้วย (เพื่อให้เห็นว่ามีรายการอะไรบ้างที่เคยมีการรับเข้ามาในคลัง แต่ตอนนี้หมดแล้ว)
+            ->groupBy('sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
 
         $raw = $query->all();
         $warehouseNames = [];
@@ -303,13 +345,13 @@ class ReportController extends Controller
         $categoryId = $this->request->get('category_id') !== null && $this->request->get('category_id') !== ''
             ? (string) $this->request->get('category_id') : null;
 
-        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId);
+        $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId,$categoryId);
         $rows = $data['rows'];
         $listMain = $data['listMain'];
         $listSub = $data['listSub'];
 
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
-            Categorise::find()->where(['name' => 'asset_type', 'category_id' => 4])->orderBy('title')->all(),
+            Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->orderBy('title')->all(),
             'code',
             'title'
         );
@@ -398,7 +440,8 @@ class ReportController extends Controller
      * ดึงข้อมูลรายงานวัสดุไม่พอจ่าย (ใช้ทั้งหน้าแสดงและ export Excel)
      * @return array { rows: array, listMain: Warehouse[] }
      */
-    protected function getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId)
+    // --- เพิ่ม $categoryId = null ใน signature ---
+    protected function getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId, $categoryId = null)
     {
         $listMain = Warehouse::find()
             ->where(['warehouse_type' => 'MAIN'])
@@ -477,6 +520,11 @@ class ReportController extends Controller
                 ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
                 ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
         }
+
+        // --- เพิ่มเงื่อนไขค้นหาด้วย $categoryId ---
+        // ใช้ andFilterWhere() เพื่อให้ถ้าค่า $categoryId ว่างเปล่า หรือ null ระบบจะไม่นำไปต่อท้ายเงื่อนไข WHERE
+        $query->andFilterWhere(['i.category_id' => $categoryId]);
+
         $query->orderBy(['shortfall' => SORT_DESC]);
         $rows = $query->all();
 

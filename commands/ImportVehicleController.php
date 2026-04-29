@@ -24,11 +24,11 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use mdm\autonumber\AutoNumber;
 use yii\helpers\BaseFileHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\modules\hr\models\Employees;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
-use app\modules\hr\models\LeaveEntitlements;
+use app\modules\leave\models\LeaveEntitlements;
 use app\modules\booking\models\VehicleDetail;
 
 /**

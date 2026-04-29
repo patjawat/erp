@@ -12919,7 +12919,7 @@ textarea:focus {
 }
 
 .page-content-wrapper {
-  background-color: #f7f7f7;
+  background-color: #e3e9f1;
 }
 
 .page-content-wrapper .page-title-box {
@@ -13802,7 +13802,7 @@ a:hover {
 }
 
 .page-title-box {
-  padding: 12px 12px 54px 12px;
+  padding: 12px 12px 85px 12px;
   margin: 0 -12px;
 }
 
@@ -13810,6 +13810,7 @@ a:hover {
   margin-bottom: 1.5rem;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.03);
   border-width: 0;
+  border-radius: var(--bs-border-radius-lg);
 }
 
 .card .card-title {
@@ -15425,10 +15426,75 @@ small, .small {
   color: #f44336;
 }
 
+.report-usage__header {
+  margin-bottom: 24px;
+}
+.report-usage__card {
+  padding: 24px;
+  border-radius: 16px;
+  color: #fff;
+  font-weight: 500;
+}
+.report-usage__card--green {
+  background: linear-gradient(135deg, #00a86b, #00c48c);
+}
+.report-usage__card--blue {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+}
+.report-usage__card--orange {
+  background: linear-gradient(135deg, #ff7a18, #ffb347);
+}
+.report-usage__card--purple {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+}
+.report-usage__label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+.report-usage__value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
 @media (min-width: 768px) and (max-width: 991.98px) {
   .modal-dialog {
     max-width: 90%;
   }
+}
+.dashboard-card {
+  padding: 24px;
+  border-radius: 16px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+}
+.dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+}
+.dashboard-card {
+  /* glass highlight */
+}
+.dashboard-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+  opacity: 0.4;
+}
+.dashboard-card--green {
+  background: linear-gradient(135deg, #34d399, #059669);
+}
+.dashboard-card--blue {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+.dashboard-card--orange {
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+}
+.dashboard-card--purple {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
 }
 
 /*# sourceMappingURL=custom.css.map */

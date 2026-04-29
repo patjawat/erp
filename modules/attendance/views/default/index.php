@@ -8,7 +8,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $name = $employee->fullname ?? trim($employee->fname . ' ' . $employee->lname);
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/me/menu', ['active' => 'checkin']) ?>
+<?= $this->render('@app/modules/attendance/menu', ['active' => 'checkin']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>

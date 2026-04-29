@@ -10,7 +10,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\models\ApproveSearch;
 use app\components\UserHelper;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use yii\web\NotFoundHttpException;
 
 class ApproveLeaveController extends \yii\web\Controller

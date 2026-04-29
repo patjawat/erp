@@ -163,10 +163,17 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                             <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
                         </div>
                         <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'residual_value', [
-                                'template' => '{label}<div class="input-group"><span class="input-group-text">฿</span>{input}</div>{hint}{error}',
-                            ])->textInput(['type' => 'number', 'step' => '0.01', 'placeholder' => '0.00', 'class' => 'form-control'])->label('มูลค่าซาก(ค่าเหลือเมื่อสิ้นอายุการใช้งาน)'); ?>
+                            <?= $form->field($model, 'depreciation_rate', [
+                                'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
+                            ])->textInput([
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => '0',
+                                'placeholder' => 'เช่น 20.00',
+                                'class' => 'form-control',
+                            ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -394,8 +401,10 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                             <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'อาคาร/ห้อง/คลัง'])->label('สถานที่ตั้ง/คลัง/ห้อง'); ?>
                         </div>
                         <div class="col-12 col-md-6">
+                 
                             <?php
                             $url = \yii\helpers\Url::to(['/depdrop/employee']);
+
 
                             // 1. หาข้อมูลพนักงานก่อน
                             $employee = !empty($model->owner) ? Employees::findOne($model->owner) : null;
@@ -421,12 +430,6 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                     'templateResult' => new JsExpression('function(city) { return city.text; }'),
                                     'templateSelection' => new JsExpression('function (city) { return city.text; }'),
                                 ],
-                                'pluginEvents' => [
-                                    // "select2:select" => "function(result) { 
-                                    //     var data = $(this).select2('data')[0]
-                                    //     $('#asset-data_json-method_get_text').val(data.text)
-                                    //  }",
-                                ]
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>

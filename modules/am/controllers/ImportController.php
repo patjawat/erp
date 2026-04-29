@@ -155,47 +155,66 @@ class ImportController extends Controller
             return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
         }
 
-        $rowsData = [];
+        $rowsByCode = []; // รหัสครุภัณฑ์ซ้ำในไฟล์ → แถวหลังแทนที่แถวก่อน (อัปเดตล่าสุด)
+        $rowsNoCode = [];
         $errorRows = [];
         $rowNumber = 0;
-        $codesInFile = []; // หมายเลขครุภัณฑ์ที่เจอในไฟล์นี้ (ไม่ให้ซ้ำในไฟล์) — หมายเลข FSN ซ้ำได้
 
         if (($handle = fopen($filePath, "r")) !== false) {
-            while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+            $columnIndexes = null;
+            while (($data = fgetcsv($handle, 0, ",")) !== false) {
                 $rowNumber++;
-                if ($rowNumber == 1) continue; // ข้าม header
+                if ($rowNumber == 1) {
+                    $columnIndexes = $this->equipImportColumnIndexes($data);
+                    continue; // ข้าม header
+                }
 
                 $code = trim((string) ($data[0] ?? ''));
+
+                $model = null;
                 if ($code !== '') {
-                    if (Asset::find()->where(['code' => $code])->exists()) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในระบบ']]];
-                        continue;
-                    }
-                    if (isset($codesInFile[$code])) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['หมายเลขครุภัณฑ์ซ้ำในไฟล์นี้']]];
-                        continue;
-                    }
-                    $codesInFile[$code] = true;
-                }
-
-                // มีรหัสผู้ขายแต่ชื่อว่าง และไม่เจอรหัสในฐานข้อมูล → ไม่นำเข้าแถวนี้
-                $vendorCode = trim((string) ($data[18] ?? ''));
-                $vendorName = trim((string) ($data[19] ?? ''));
-                if ($vendorCode !== '' && $vendorName === '') {
-                    $vendorExists = Categorise::find()->where(['name' => 'vendor', 'code' => $vendorCode])->exists();
-                    if (!$vendorExists) {
-                        $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['vendor' => ['ไม่พบรหัสผู้ขาย/ผู้บริจาคในระบบ — ไม่นำเข้าแถวนี้']]];
-                        continue;
+                    $existing = Asset::find()->where(['code' => $code])->one();
+                    if ($existing !== null) {
+                        $gid = $existing->asset_group_id;
+                        if ($gid != 4 && (string) $gid !== '4') {
+                            $errorRows[] = [
+                                'row' => $rowNumber,
+                                'code' => $code,
+                                'errors' => ['code' => ['รหัสนี้มีในระบบเป็นประเภทอื่น — นำเข้าครุภัณฑ์อัปเดตได้เฉพาะรายการในกลุ่มครุภัณฑ์']],
+                            ];
+                            continue;
+                        }
+                        $model = $existing;
                     }
                 }
+                if ($model === null) {
+                    $model = new Asset();
+                }
 
-                $model = new Asset();
+                $ci = $columnIndexes ?? $this->equipImportColumnIndexes([]);
+                $usefulLifeIdx = $ci['useful_life'];
+                $orderIdx = $ci['order_number'];
+                $noteIdx = $ci['note'];
+
+                $depreciationParsed = ['value' => null, 'error' => null];
+                if ($ci['depreciation'] !== null) {
+                    $depreciationParsed = $this->parseDepreciationRateForImport($data[$ci['depreciation']] ?? '');
+                    if ($depreciationParsed['error'] !== null) {
+                        $errorRows[] = [
+                            'row' => $rowNumber,
+                            'code' => $code,
+                            'errors' => ['depreciation' => [$depreciationParsed['error']]],
+                        ];
+                        continue;
+                    }
+                }
+
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
                 $model->code = $data[0];
                 $model->fsn_number = $data[1]; // หมายเลข FSN ซ้ำได้
                 $model->asset_name = $data[2];
-                $model->data_json = [
+                $incomingJson = [
                     'brand' => $data[3],
                     'asset_model' => $data[4],
                     'color_name' => $data[5],
@@ -208,9 +227,14 @@ class ImportController extends Controller
                     'fsn_old' => $data[0],
                     'vendor_id' => $this->resolveVendorFromImport($data[18] ?? '', $data[19] ?? ''),
                     'vendor_name' => trim((string) ($data[19] ?? '')),
-                    'order_number' => trim((string) ($data[21] ?? '')),
-                    'note' => trim((string) ($data[22] ?? '')),
+                    'order_number' => trim((string) ($data[$orderIdx] ?? '')),
+                    'note' => trim((string) ($data[$noteIdx] ?? '')),
                 ];
+                $baseJson = $model->isNewRecord ? [] : $this->assetImportDataJsonAsArray($model->data_json);
+                $model->data_json = array_merge($baseJson, $incomingJson);
+                if ($depreciationParsed['value'] !== null) {
+                    $model->depreciation_rate = $depreciationParsed['value'];
+                }
                 $model->price = $data[8];
                 $model->purchase = $this->resolvePurchaseFromImport($data[10] ?? '');
                 $model->receive_date = $this->normalizeDateForDb($data[13] ?? '');
@@ -219,7 +243,7 @@ class ImportController extends Controller
                     $model->on_year = $data[15]; // ปีงบประมาณ (ซ้ำ) ถ้ามีให้ใช้ค่านี้แทน
                 }
                 $model->license_plate = $data[17];
-                $model->useful_life = (int) ($data[20] ?? 0); // อายุการใช้งาน (ปี)
+                $model->useful_life = (int) ($data[$usefulLifeIdx] ?? 0); // อายุการใช้งาน (ปี)
                 $model->asset_status = 1;
                 $model->asset_group_id = 4;
 
@@ -236,9 +260,13 @@ class ImportController extends Controller
                         'code' => $data[0],
                         'errors' => $errors
                     ];
+                } else {
+                    if ($code !== '') {
+                        $rowsByCode[$code] = $model;
+                    } else {
+                        $rowsNoCode[] = $model;
+                    }
                 }
-
-                $rowsData[] = $model;
             }
             fclose($handle);
 
@@ -251,19 +279,105 @@ class ImportController extends Controller
                 ];
             }
 
-            // บันทึกทุกแถว
+            $rowsData = array_merge(array_values($rowsByCode), $rowsNoCode);
+
             $imported = 0;
+            $created = 0;
+            $updated = 0;
             foreach ($rowsData as $model) {
-                if ($model->save(false)) $imported++;
+                $wasNew = $model->isNewRecord;
+                if ($model->save(false)) {
+                    $imported++;
+                    if ($wasNew) {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
+                }
+            }
+
+            $msg = "นำเข้าข้อมูลเรียบร้อย {$imported} แถว";
+            if ($created > 0 || $updated > 0) {
+                $msg .= " (สร้างใหม่ {$created}, อัปเดต {$updated})";
             }
 
             return [
                 'status' => 'success',
-                'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว"
+                'message' => $msg,
+                'created' => $created,
+                'updated' => $updated,
             ];
         }
 
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
+    }
+
+    /**
+     * @param mixed $dataJson ค่า data_json จาก Asset (array หรือ JSON string)
+     * @return array<string, mixed>
+     */
+    protected function assetImportDataJsonAsArray($dataJson): array
+    {
+        if (is_array($dataJson)) {
+            return $dataJson;
+        }
+        if (is_string($dataJson) && $dataJson !== '') {
+            $decoded = json_decode($dataJson, true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    /**
+     * แมปดัชนีคอลัมน์จากแถวหัวตาราง (รองรับเทมเพลตเก่าที่ไม่มีคอลัมน์อัตราค่าเสื่อม)
+     *
+     * @return array{useful_life: int, depreciation: int|null, order_number: int, note: int}
+     */
+    protected function equipImportColumnIndexes(array $headerRow): array
+    {
+        $norm = array_map(static fn ($h) => trim((string) $h), $headerRow);
+        $find = static function (string $name) use ($norm): ?int {
+            $i = array_search($name, $norm, true);
+
+            return $i === false ? null : (int) $i;
+        };
+        $idxDep = $find('อัตราค่าเสื่อม');
+        $idxOrder = $find('เลขที่ใบกำกับ/ใบส่งของ');
+        $idxNote = $find('หมายเหตุ');
+        $idxUseful = $find('อายุการใช้งาน');
+
+        return [
+            'useful_life' => $idxUseful ?? 20,
+            'depreciation' => $idxDep,
+            'order_number' => $idxOrder ?? ($idxDep !== null ? $idxDep + 1 : 21),
+            'note' => $idxNote ?? ($idxDep !== null ? $idxDep + 2 : 22),
+        ];
+    }
+
+    /**
+     * อัตราค่าเสื่อมจาก CSV — ว่างได้, ตัวเลขทศนิยม 2 ตำแหน่ง (รองรับจุดทศนิยมหรือจุลภาค)
+     *
+     * @return array{value: float|null, error: string|null}
+     */
+    protected function parseDepreciationRateForImport($raw): array
+    {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return ['value' => null, 'error' => null];
+        }
+        $normalized = str_replace(["\xc2\xa0", ' '], '', $raw);
+        $normalized = str_replace(',', '.', $normalized);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return ['value' => null, 'error' => 'อัตราค่าเสื่อมต้องเป็นตัวเลข (ทศนิยมได้สูงสุด 2 ตำแหน่ง)'];
+        }
+        $v = round((float) $normalized, 2);
+        if ($v < 0) {
+            return ['value' => null, 'error' => 'อัตราค่าเสื่อมต้องไม่ติดลบ'];
+        }
+
+        return ['value' => $v, 'error' => null];
     }
 
     /**
@@ -452,8 +566,9 @@ class ImportController extends Controller
 
     /**
      * รหัส/ชื่อผู้ขายจาก CSV → vendor code ใน categorise (name='vendor') โครงสร้างเดียวกับ /sm/vendor
-     * - มีรหัส: ค้น WHERE name='vendor' AND code=รหัส ถ้าเจอคืน code (ไม่แก้ไข) ถ้าไม่เจอสร้างใหม่
-     * - รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — ค้น/สร้างผู้ขายอัตโนมัติจากชื่อ (findVendor)
+     * - มีรหัสและพบในระบบ: คืน code (อัปเดตชื่อถ้าส่งชื่อมาและไม่ตรง)
+     * - มีรหัสแต่ไม่พบในระบบ: ไม่บันทึกรหัสจาก CSV — ถ้ามีชื่อให้ค้น/สร้างจากชื่อ (findVendor) มิฉะนั้นคืนค่าว่าง
+     * - รหัสว่างแต่มีชื่อ: ค้น/สร้างผู้ขายอัตโนมัติจากชื่อ (findVendor)
      */
     protected function resolveVendorFromImport($vendorCode = '', $vendorName = '')
     {
@@ -470,20 +585,17 @@ class ImportController extends Controller
                 }
                 return $byCode->code;
             }
-            // มีรหัสแต่ชื่อว่างและไม่เจอใน DB → caller จะข้ามแถว ไม่สร้าง vendor
-            if ($vendorName === '') {
-                return '';
+            // ไม่พบรหัสในระบบ — ไม่สร้างผู้ขายด้วยรหัสจาก CSV
+            if ($vendorName !== '') {
+                return $this->findVendor($vendorName);
             }
-            // ไม่พบรหัสในทะเบียนแต่มีชื่อ → สร้างใหม่
-            $newVender = new Categorise(['name' => 'vendor', 'title' => $vendorName]);
-            $newVender->code = $vendorCode;
-            $newVender->save(false);
-            return $newVender->code;
+
+            return '';
         }
 
-        // รหัสว่างแต่มีชื่อ: ไม่แจ้งเตือน — นำเข้า/สร้างผู้ขายอัตโนมัติตามโครงสร้างระบบผู้แทนจำหน่าย (categorise name=vendor เหมือน /sm/vendor)
+        // รหัสว่างแต่มีชื่อ: นำเข้า/สร้างผู้ขายอัตโนมัติจากชื่อ (categorise name=vendor เหมือน /sm/vendor)
         if ($vendorName !== '') {
-            return $this->findVendor($vendorName); // ค้นจาก title หรือสร้างใหม่ (code อัตโนมัติ)
+            return $this->findVendor($vendorName);
         }
 
         return '';

@@ -1,8 +1,9 @@
 <?php
-use yii\helpers\Url;
+use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
-$this->title = 'อาคาร/สิ่งปลูกสร้าง';
+$this->title = 'อาคาร';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -10,13 +11,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2 mb-1">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 12h4"></path>
-            <path d="M10 8h4"></path>
-            <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path>
-            <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path>
-            <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
-        </svg>
+<i data-lucide="building-2"></i>  
         ทะเบียน<?= $this->title ?>
     </h4>
 </div>
@@ -130,37 +125,33 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="align-middle text-center">
                             <?= $item->viewStatus() ?>
                         </td>
-
-                        <td class="text-center py-2">
-                            <div class="d-flex justify-content-center">
-                                <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <i class="fa-regular fa-eye"></i></a>
-                                <a href="<?= Url::to(['update', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                 <i class="fa-regular fa-pen-to-square"></i></a>
-                                <a href="<?= Url::to(['qrcode', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary" title="ดูรายละเอียด">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect width="5" height="5" x="3" y="3" rx="1"></rect>
-                                        <rect width="5" height="5" x="16" y="3" rx="1"></rect>
-                                        <rect width="5" height="5" x="3" y="16" rx="1"></rect>
-                                        <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
-                                        <path d="M21 21v.01"></path>
-                                        <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
-                                        <path d="M3 12h.01"></path>
-                                        <path d="M12 3h.01"></path>
-                                        <path d="M12 16v.01"></path>
-                                        <path d="M16 12h1"></path>
-                                        <path d="M21 12v.01"></path>
-                                        <path d="M12 21v-1"></path>
-                                    </svg>
-                                </a>
-                                <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
-                                    'class' => 'btn btn-icon btn-ghost-danger',
-                                    'title' => 'ลบ',
-                                    'data' => [
-                                        'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
-                                        'method' => 'post',
-                                    ],
+  <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
+                            <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
+                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-primary',
+                                    'title' => 'ดูรายละเอียด',
+                                    'data-pjax' => 0,
                                 ]) ?>
+                                <?php if (Yii::$app->user->can('asset')): ?>
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-warning',
+                                        'title' => 'แก้ไข',
+                                        'data-pjax' => 0,
+                                    ]) ?>
+                                <?php endif; ?>
+                                  <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                    'class' => 'btn btn-sm btn-light',
+                                    'title' => 'พิมพ์',
+                                    'data-pjax' => 0,
+                                    'target' => '_blank',
+                                ]) ?>
+                                <?php if (Yii::$app->user->can('admin')): ?>
+                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-danger delete-asset',
+                                        'title' => 'ลบ',
+                                        'data-pjax' => 0,
+                                    ]) ?>
+                                <?php endif; ?>
                             </div>
                         </td>
 
@@ -171,4 +162,12 @@ $this->params['breadcrumbs'][] = $this->title;
             </tbody>
         </table>
     </div>
+    <div class="card-footer bg-body border-top py-3 px-4">
+    <?php
+    echo DataSummaryWidget::widget([
+        'dataProvider' => $dataProvider,
+        'pagerOptions' => [],
+    ]);
+    ?>
+</div>
 </div>

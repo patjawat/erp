@@ -21,6 +21,7 @@ use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
+use app\modules\booking\components\VehicleTelegramNotify;
 
 /**
  * BookingVehicleController implements the CRUD actions for Vehicle model.
@@ -278,6 +279,7 @@ class BookingVehicleController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $previousDriverId = $model->driver_id;
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
 
@@ -288,6 +290,7 @@ class BookingVehicleController extends Controller
             $model->date_end = AppHelper::convertToGregorian($model->date_end);
             $model->status =  $model->vehicle_type_id == "personal" ? 'Pass' : 'Pending';
             if ($model->save()) {
+                VehicleTelegramNotify::notifyDriverChanged($model, $previousDriverId);
                 return [
                     'status' => 'success',
                     'message' => 'บันทึกข้อมูลเรียบร้อยแล้ว',

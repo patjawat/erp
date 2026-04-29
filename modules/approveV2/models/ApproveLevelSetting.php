@@ -97,7 +97,7 @@ class ApproveLevelSetting extends \yii\db\ActiveRecord
     public static function approverTypeOptions()
     {
         return [
-            self::TYPE_ORG_LEADER1 => 'หัวหน้า/ผู้ควบคุม/ประสานงาน (จากผังองค์กร)',
+            self::TYPE_ORG_LEADER1 => 'หัวหน้าผู้ควบคุม',
             self::TYPE_ROLE => 'ตามบทบาท (Role)',
             self::TYPE_DIRECTOR => 'ผู้อำนวยการ',
             self::TYPE_FIXED => 'ระบุพนักงาน (emp_id)',

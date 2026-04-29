@@ -208,16 +208,19 @@ class AssetController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="fa-solid fa-chart-line"></i> ' . $asset_name,
-                'content' => $this->renderAjax('depreciation_list', [
+                'content' => $this->renderAjax('depreciation_list_new', [
                     'model' => $model,
                 ]),
             ];
         } else {
-            return $this->render('depreciation_list', [
+            return $this->render('depreciation_list_new', [
                 'model' => $model,
             ]);
         }
     }
+
+
+
 
     /**
      * Creates a new Asset model.
@@ -464,6 +467,72 @@ class AssetController extends Controller
         ];
     }
 
+    public function actionViewQrPdf($id)
+    {
+        $model = $this->findModel($id);
+        
+        // ใช้ view เฉพาะสำหรับ PDF เพื่อแก้ปัญหาภาษาไทยและตัดปุ่มออก
+        $html = $this->renderPartial('qr-code/pdf_qrcode', [
+            'model' => $model
+        ]);
+
+        // กำหนด Path ของฟอนต์ไทยให้ชี้ไปที่โฟลเดอร์ที่มีไฟล์ .ttf จริงๆ
+        $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+
+        // ดึงค่าเริ่มต้นของ mPDF มาเพื่อใช้งานร่วมกับฟอนต์ใหม่
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $config = [
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 15,
+            'margin_bottom' => 18,
+            'fontDir' => array_merge($fontDirs, [$fontPath]),
+            'fontdata' => $fontData + [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                    'I' => 'THSarabunNew-Italic.ttf',
+                    'BI' => 'THSarabunNew BoldItalic.ttf',
+                ]
+            ],
+            'default_font' => 'thsarabun',
+            // ตั้งค่าให้ mPDF รองรับภาษาไทยและเลือกฟอนต์ให้อัตโนมัติ
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+        ];
+
+        $tmpDir = Yii::getAlias('@runtime/mpdf');
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0777, true);
+        }
+        $config['tempDir'] = $tmpDir;
+
+        $mpdf = new \Mpdf\Mpdf($config);
+        $mpdf->SetTitle('QR Code - ' . $model->code);
+        
+        // โหลด CSS สำหรับ mPDF ที่รองรับภาษาไทย
+        $cssFile = Yii::getAlias('@webroot/css/kv-mpdf-bootstrap.css');
+        if (file_exists($cssFile)) {
+            $stylesheet = file_get_contents($cssFile);
+            $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+        }
+        
+        // เขียน HTML ลงใน PDF
+        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+        
+        $filename = 'QRCode_' . $model->code . '.pdf';
+
+        return $mpdf->Output($filename, \Mpdf\Output\Destination::INLINE);
+    }
+
 
     public function actionNextCode()
     {
@@ -685,250 +754,6 @@ class AssetController extends Controller
         }
     }
 
-    // public function actionImportCsv()
-    // {
-    //     $current_data;
-    //     $model = new UploadCsv([
-    //         'name' => 'vendor',
-    //         'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
-    //     ]);
-    //     $basePath = Yii::getAlias('@app/web/import-csv/');
-    //     AppHelper::CreateDir($basePath);
-
-    //     $error = [];
-    //     if ($model->load(Yii::$app->request->post())) {
-    //         $model->file = UploadedFile::getInstance($model, 'file');
-    //         $model->file->saveAs($basePath . $model->file->name);
-
-    //         $importer = new CSVImporter();
-    //         $filename = $basePath . $model->file->name;
-    //         $importer->setData(new CSVReader([
-    //             'filename' => $filename,
-    //             'tableName' => Asset::tableName(),
-    //             'fgetcsvOptions' => [
-    //                 'delimiter' => ';',
-    //             ],
-    //         ]));
-
-    //         for ($x = 1; $x <= count($importer->getData()); $x++) {
-    //             $data_check_error = $importer->getData()[$x][0];
-    //             $data_check_error = AppHelper::GetDataCsv(explode(',', $data_check_error));
-
-    //             if (CategoriseHelper::TitleAndName($data_check_error[10], "purchase")->one() == null) {
-    //                 $codeP = CategoriseHelper::CodePurchase();
-    //                 $model_assetItemx = new Vendor([
-    //                     "code" => (string) $codeP,
-    //                     "name" => "purchase",
-    //                     "title" => $data_check_error[10],
-    //                 ]);
-    //                 $model_assetItemx->save();
-    //             }
-    //             if (CategoriseHelper::TitleAndName($data_check_error[1], "asset_item")->one() == null) {
-
-    //                 $model_assetItem = new Vendor([
-    //                     "code" => substr($data_check_error[2], 0, 13),
-    //                     "name" => "asset_item",
-    //                     "title" => $data_check_error[1],
-    //                 ]);
-    //                 $model_assetItem->save();
-    //             }
-    //             if ($data_check_error[4] != "ไม่ระบุ") {
-    //                 if (CategoriseHelper::TitleAndName($data_check_error[4], "vendor")->one() == null) {
-
-    //                     $model_Vendor = new Vendor([
-    //                         "code" => $data_check_error[5],
-    //                         "name" => "vendor",
-    //                         "title" => $data_check_error[4],
-    //                     ]);
-    //                     $model_Vendor->save();
-    //                 }
-    //             }
-    //         }
-    //         if (empty($error)) {
-    //             $numberRowsAffected = $importer->import(new MultipleImportStrategy([
-    //                 'tableName' => Asset::tableName(), // change your model names accordingly
-    //                 'configs' => [
-    //                     [
-    //                         'attribute' => 'ref',
-    //                         'value' => function ($data) {
-    //                             return substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-    //                         },
-    //                     ],
-    //                     [
-    //                         //ประเภทครุภัณฑ์
-    //                         'attribute' => 'asset_group_id',
-    //                         'value' => function ($data) {
-    //                             return 3;
-    //                         },
-    //                     ],
-    //                     [
-    //                         //หมายเลขครุภัณฑ์
-    //                         'attribute' => 'asset_item',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             return substr($data[2], 0, 13);
-    //                         },
-    //                     ],
-    //                     [
-    //                         //หมายเลขครุภัณฑ์
-    //                         'attribute' => 'code',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             return $data[2];
-    //                         },
-    //                     ],
-    //                     [
-    //                         'attribute' => 'purchase',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             if ($data[10] == "เฉพาะเจาะจง") {
-    //                                 return 1;
-    //                             } elseif ($data[10] == "บริจาค") {
-    //                                 return 2;
-    //                             } elseif ($data[10] == "ตกลงราคา") {
-    //                                 return 3;
-    //                             }
-    //                             return;
-    //                         },
-    //                     ],
-    //                     [
-    //                         //วันที่รับเข้า
-    //                         'attribute' => 'receive_date',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             return date('Y-m-d', strtotime($data[7]));
-    //                         },
-    //                     ],
-    //                     [
-    //                         //วันที่รับเข้า
-    //                         'attribute' => 'on_year',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             return $data[8];
-    //                         },
-    //                     ],
-    //                     [
-    //                         //ราคา
-    //                         'attribute' => 'price',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             return $data[12] == "" ? 0 : $data[12];
-    //                         },
-    //                     ],
-    //                     [
-    //                         //หน่วยงานภายในตามโครงสร้าง
-    //                         'attribute' => 'department',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             $organization = Organization::find()->where(['name' => $data[7]])->one();
-    //                             return $organization ? $organization->id : null;
-    //                         },
-    //                     ],
-    //                     [
-    //                         //สถานะ
-    //                         'attribute' => 'asset_status',
-    //                         'allowEmptyValues' => false,
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             $status_data = CategoriseHelper::Title($data[18])->one();
-    //                             return $status_data ? $status_data->code : null;
-    //                         },
-    //                     ],
-    //                     [
-    //                         'attribute' => 'data_json',
-    //                         'value' => function ($data) {
-    //                             $data = explode(',', $data[0]);
-    //                             $data = AppHelper::GetDataCsv($data);
-    //                             $vendor_id = CategoriseHelper::Title($data[4])->one();
-    //                             $purchase = CategoriseHelper::Title($data[10])->one();
-    //                             $method_get = CategoriseHelper::Title($data[9])->one();
-    //                             $budget_type = CategoriseHelper::Title($data[11])->one();
-    //                             $jsonData = [
-    //                                 //'vendor_id' => "test_vendor_id",
-    //                                 //ผู้แทนจำหน่าย
-    //                                 'vendor_id' => $data[4] == "ไม่ระบุ" ? 00 : ($vendor_id ? $vendor_id->code : null),
-    //                                 'vendor' => $vendor_id,
-    //                                 //เลขครุภัณฑ์เดิม
-    //                                 'fsn_old' => $data[3],
-    //                                 //'purchase' => "test_purchase_code",
-    //                                 //การจัดซื้อ
-    //                                 'purchase' => $purchase ? $purchase->code : null,
-    //                                 'purchase_text' => $purchase ? $data[10] : null,
-    //                                 //'method_get' => "test_method_get_code",
-    //                                 //วิธีได้มา
-    //                                 'method_get' => $method_get ? $method_get->code : null,
-    //                                 'method_get_text' => $method_get ? $data[9] : null,
-    //                                 //'budget_type' => "budget_type",
-    //                                 //ประเภทเงิน
-    //                                 'budget_type' => $budget_type ? $budget_type->code : null,
-    //                                 'budget_type_text' => $budget_type ? $data[11] : null,
-    //                                 //ปีงบประมาณ
-    //                                 'on_year' => $data[8],
-    //                                 //รายละเอียดยี่ห้อครุภัณฑ์
-    //                                 'detail' => $data[13],
-    //                                 //S/N
-    //                                 'serial_number' => $data[14],
-    //                                 //หน่วยนับ
-    //                                 'unit' => $data[15],
-    //                                 //วันหมดประกัน
-    //                                 'expire_date' => $data[16],
-    //                                 //สถานะ
-    //                                 'status_name' => $data[17],
-    //                                 //ชื่อครุภัณฑ์
-    //                                 'asset_name' => $data[1],
-    //                                 //ประเภท
-    //                                 'asset_type' => $data[0],
-    //                                 //หน่วยงานภายในตามโครงสร้างครับ
-    //                                 'department_name' => $data[7],
-
-    //                                 'asset_type_text' => $data[0],
-    //                             ];
-
-    //                             return Json::encode($jsonData);
-    //                         },
-    //                     ],
-
-    //                 ],
-
-    //             ]));
-    //             unlink($filename);
-    //             Yii::$app->session->setFlash('data', [
-    //                 'status' => true,
-    //                 'error' => $error,
-    //             ]);
-    //             return $this->redirect(['import-status']);
-    //         } else {
-    //             unlink($filename);
-    //             Yii::$app->session->setFlash('data', [
-    //                 'status' => false,
-    //                 'error' => $error,
-    //             ]);
-    //             return $this->redirect(['import-status']);
-    //         }
-
-    //         // return var_dump($importer->getData());
-    //     } else {
-    //         return $this->render('import_csv',
-    //             ['model' => $model,
-    //                 'error' => $error,
-    //                 'success' => false]);
-    //     }
-    // }
 
     public function actionImportStatus()
     {
@@ -948,4 +773,5 @@ class AssetController extends Controller
             'data' => AppHelper::GetDepreciation(5, 10000, 40),
         ]);
     }
+
 }

@@ -14,7 +14,7 @@ use app\components\SiteHelper;
 use PhpOffice\PhpWord\Settings;
 use yii\helpers\BaseFileHelper;
 use app\modules\am\models\Asset;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use yii\web\NotFoundHttpException;
 
 class Documentv2Controller extends \yii\web\Controller

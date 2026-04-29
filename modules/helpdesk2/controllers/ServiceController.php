@@ -28,6 +28,28 @@ use yii\helpers\ArrayHelper;
 class ServiceController extends \yii\web\Controller
 {
     /**
+     * จำกัด URL ย้อนกลับให้เป็น path ภายในแอปใต้ /helpdesk/ เท่านั้น (กันพาไปเว็บภายนอก)
+     */
+    private function sanitizeHelpdeskReturnUrl($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $value = trim(is_string($value) ? $value : (string) $value);
+        if ($value === '' || $value[0] !== '/') {
+            return null;
+        }
+        if (strpos($value, '://') !== false || substr($value, 0, 2) === '//') {
+            return null;
+        }
+        if (!preg_match('#^/helpdesk/#', $value)) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    /**
      * Asset lookup for TomSelect (repair form).
      * Route: /helpdesk/service/asset-lookup?q=...
      */
@@ -216,6 +238,8 @@ class ServiceController extends \yii\web\Controller
             $model->data_json = $dataJson;
 
             if ($model->save()) {
+                $returnUrl = $this->sanitizeHelpdeskReturnUrl($this->request->post('returnUrl'));
+
                 // Write technician log to timeline (service_record)
                 $logTitle = (string) ($model->data_json['work_performed_v2'] ?? '');
                 $logTitle = $logTitle !== '' ? $logTitle : 'อัปเดตการซ่อม (v2)';
@@ -233,18 +257,25 @@ class ServiceController extends \yii\web\Controller
                 ];
                 $log->save(false);
 
+                $viewV2Route = ['view-v2', 'id' => $model->id];
+                if ($returnUrl !== null) {
+                    $viewV2Route['returnUrl'] = $returnUrl;
+                }
+
                 if ($this->request->isAjax) {
                     return $this->asJson([
                         'status' => 'success',
                         'message' => 'บันทึกข้อมูลเรียบร้อย',
                         'reload' => true,
-                        'url' => Url::to(['view-v2', 'id' => $model->id]),
+                        'url' => Url::to($viewV2Route),
                     ]);
                 }
 
-                return $this->redirect(['view-v2', 'id' => $model->id]);
+                return $this->redirect($viewV2Route);
             }
         }
+
+        $returnUrl = $this->sanitizeHelpdeskReturnUrl($this->request->get('returnUrl'));
 
         if ($this->request->isAjax) {
             return $this->asJson([
@@ -252,6 +283,7 @@ class ServiceController extends \yii\web\Controller
                 'content' => $this->renderAjax('update-v2', [
                     'model' => $model,
                     'me' => $me,
+                    'returnUrl' => $returnUrl,
                 ]),
                 'footer' => '',
             ]);
@@ -260,6 +292,7 @@ class ServiceController extends \yii\web\Controller
         return $this->render('update-v2', [
             'model' => $model,
             'me' => $me,
+            'returnUrl' => $returnUrl,
         ]);
     }
 
@@ -360,6 +393,7 @@ class ServiceController extends \yii\web\Controller
      public function actionViewV2($id)
     {
         $model = $this->findModel($id);
+        $returnUrl = $this->sanitizeHelpdeskReturnUrl($this->request->get('returnUrl'));
         // ถ้ายังไม่มีชุดข้อมูลบันทึกการซ่อม ให้สร้างรายการเริ่มต้นอัตโนมัติ
         try {
             $hasServiceRecord = HelpdeskDetail::find()
@@ -403,12 +437,14 @@ class ServiceController extends \yii\web\Controller
                 'content' => $this->renderAjax('view-v2', [
                     'model' => $model,
                     'logs' => $logs,
+                    'returnUrl' => $returnUrl,
                 ])
             ];
         } else {
             return $this->render('view-v2', [
                 'model' => $model,
                 'logs' => $logs,
+                'returnUrl' => $returnUrl,
             ]);
         }
     }
@@ -756,9 +792,15 @@ class ServiceController extends \yii\web\Controller
         $serviceRecord->status = 'รับเรื่อง';
         $serviceRecord->title = 'รับเรื่องเรียบร้อยแล้วรอให้ช่างดำเนินการตรวจเช็ค';
         $serviceRecord->save();
+        $returnUrl = $this->sanitizeHelpdeskReturnUrl($this->request->get('returnUrl'));
+        $viewRoute = ['/helpdesk/service/view-v2', 'id' => $model->id];
+        if ($returnUrl !== null) {
+            $viewRoute['returnUrl'] = $returnUrl;
+        }
+
         return [
             'status' => 'success',
-            'url' => Url::to(['/helpdesk/service/view-v2', 'id' => $model->id]),
+            'url' => Url::to($viewRoute),
         ];
     }
 
@@ -814,7 +856,13 @@ class ServiceController extends \yii\web\Controller
         } else {
             Yii::$app->session->setFlash('danger', 'บันทึกการส่งซ่อมไม่สำเร็จ');
         }
-        return $this->redirect(['view-v2', 'id' => $model->id]);
+        $ret = $this->sanitizeHelpdeskReturnUrl($this->request->get('returnUrl'));
+        $sendRedirect = ['view-v2', 'id' => $model->id];
+        if ($ret !== null) {
+            $sendRedirect['returnUrl'] = $ret;
+        }
+
+        return $this->redirect($sendRedirect);
     }
 
 

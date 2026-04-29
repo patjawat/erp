@@ -8,8 +8,6 @@ use kartik\depdrop\DepDrop;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
-use app\components\AppHelper;
-use kartik\tree\TreeViewInput;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\am\components\AssetHelper;
@@ -24,7 +22,11 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
     || !empty($model->method_get) || !empty($model->budget_type) || !empty($model->on_year) || !empty($model->q_receive_date)
     || !empty($model->po_number) || (isset($model->price1) && $model->price1 !== '') || (isset($model->price2) && $model->price2 !== '') || !empty($model->price_below);
 
+$toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
+
 ?>
+
+<style>
 
 </style>
 
@@ -36,16 +38,27 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
     ],
 ]); ?>
 
-<!-- ตัวกรองหลัก: แสดงเสมอ | ปุ่ม action อยู่ด้านขวา -->
-<div class="row g-3 align-items-end">
- 
-    <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+<!-- ตัวกรองหลัก: ค้นหา · หมวด · สภาพ | ปุ่ม action ด้านขวา -->
+<div class="equip-search-toolbar">
+<div class="row g-2 g-lg-3 align-items-center">
+    <div class="col-12 col-lg-3">
+        <div class="input-group w-100">
+            <span class="input-group-text bg-body border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+            <?= $form->field($model, 'q', [
+                'template' => '{input}',
+                'options' => ['class' => 'flex-grow-1 min-w-0 mb-0'],
+            ])
+                ->textInput(['placeholder' => 'ค้นหา...', 'class' => 'form-control border-start-0'])
+                ->label(false) ?>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
 
-        echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+        echo $form->field($model, 'asset_type_id', $toolbarFieldOpts)->widget(Select2::classname(), [
             'data' => AssetHelper::listAssetType(),
             'options' => [
-                'placeholder' => 'ทุกประเภท',
+                'placeholder' => 'ทุกประเภท (หมวดหลัก)',
                 'id' => 'asset_type_id'
             ],
             'pluginOptions' => [
@@ -59,11 +72,11 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
         ])->label(false);
         ?>
     </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-4">
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
-        echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
+        echo $form->field($model, 'asset_category_id', $toolbarFieldOpts)->widget(DepDrop::classname(), [
             'options' => [
-                'placeholder' => 'ทุกหมวดหมู่',
+                'placeholder' => 'ทุกหมวด',
             ],
             'type' => DepDrop::TYPE_SELECT2,
             'select2Options' => ['pluginOptions' => ['allowClear' => true]],
@@ -83,11 +96,11 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
 
         ])->label(false); ?>
     </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-4">
+    <div class="col-12 col-sm-6 col-lg-2">
         <?php
-        echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
+        echo $form->field($model, 'asset_status', $toolbarFieldOpts)->widget(Select2::classname(), [
             'data' => $model->ListAssetStatus(),
-            'options' => ['placeholder' => 'สถานะทั้งหมด...'],
+            'options' => ['placeholder' => 'ทุกสภาพ'],
             'pluginOptions' => [
                 'allowClear' => true,
             ],
@@ -100,36 +113,26 @@ $hasAdvancedFilters = !empty($model->q_department) || !empty($model->owner) || !
         ])->label(false);
         ?>
     </div>
-       <div class="col-12 col-sm-6 col-md-4 col-lg-8">
-        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหารหัส / ชื่อครุภัณฑ์...'])->label(false) ?>
-    </div>
-    <div class="col-12 col-lg-auto">
-        <div class="row g-2 justify-content-end">
-            <div class="col-12 col-sm-auto">
-                <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary w-100 w-sm-auto']) ?>
-            </div>
-            <div class="col-12 col-sm-auto">
-                <button class="btn btn-outline-primary w-100 w-sm-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                    aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
-                    <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
-                </button>
-            </div>
-            <div class="col-12 col-sm-auto">
-                <div class="dropdown">
-                    <button class="btn btn-success shadow dropdown-toggle w-100 w-sm-auto" type="button"
-                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa-solid fa-file-excel"></i> Excel
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                        <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
-                        <li><?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel', '#', ['class' => 'dropdown-item delete-all-item', 'data-order-id' => 1]) ?></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                    </ul>
-                </div>
-            </div>
+    <div class="col-12 col-lg-auto ms-lg-auto d-flex align-items-center justify-content-start justify-content-lg-end flex-wrap gap-2 equip-search-actions">
+        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary flex-grow-1 flex-sm-grow-0']) ?>
+        <button class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
+            <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
+        </button>
+        <div class="dropdown flex-grow-1 flex-sm-grow-0">
+            <button class="btn btn-success dropdown-toggle w-100 w-sm-auto" type="button"
+                id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                <li><button type="button" class="dropdown-item btn-export-excel"><i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel</button></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+            </ul>
         </div>
     </div>
+</div>
 </div>
 
 
@@ -274,6 +277,28 @@ $(".filter-asset-close").on("click", function(){
 
 // const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 // const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+$('.btn-export-excel').click(function(e) {
+    e.preventDefault();
+    Swal.fire({
+        title: 'ยืนยันการดาวน์โหลด?',
+        text: "คุณต้องการส่งออกข้อมูลตามเงื่อนไขนี้เป็นไฟล์ Excel ใช่หรือไม่?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        confirmButtonText: 'ใช่, ดาวน์โหลดเลย!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let form = $('.equip-search-form');
+            form.append('<input type="hidden" name="export" value="excel" id="export-excel-input">');
+            form[0].submit(); // Use native submit to bypass PJAX/AJAX
+            setTimeout(() => {
+                $('#export-excel-input').remove();
+            }, 500);
+        }
+    });
+});
 
 JS;
 $this->registerJS($js);

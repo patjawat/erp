@@ -494,9 +494,36 @@ class PdfTemplateService
 
                 $level = null;
                 if (in_array($lookupKey, ['approver_fullname', 'approver_position', 'approver_approve_date', 'approver_signature'], true)) {
-                    $level = isset($item['approval_level']) && (int) $item['approval_level'] >= 1 && (int) $item['approval_level'] <= 4 ? (int) $item['approval_level'] : 1;
+                    // approval levels in leave module can be 1..8, but templates usually use 1..4.
+                    $level = isset($item['approval_level']) && is_numeric($item['approval_level']) && (int) $item['approval_level'] >= 1 && (int) $item['approval_level'] <= 8 ? (int) $item['approval_level'] : 1;
                     $suffix = str_replace('approver_', '', $lookupKey);
-                    $text = (string) ($values['approver_' . $level . '_' . $suffix] ?? '');
+
+                    // Build candidate keys to support legacy and alternate naming conventions.
+                    $candidates = [];
+                    $candidates[] = 'approver_' . $level . '_' . $suffix; // preferred new-style key
+                    // legacy / other possible keys
+                    if ($suffix === 'fullname') {
+                        $candidates[] = 'approve_' . $level . '_name';
+                        $candidates[] = 'approve_' . $level . '_fullname';
+                    } elseif ($suffix === 'position') {
+                        $candidates[] = 'approve_' . $level . '_position';
+                    } elseif ($suffix === 'approve_date') {
+                        $candidates[] = 'approve_date_' . $level;
+                        $candidates[] = 'approve_' . $level . '_date';
+                    } elseif ($suffix === 'signature') {
+                        $candidates[] = 'approver_' . $level . '_signature';
+                    }
+                    // global fallbacks without level
+                    $candidates[] = 'approver_' . $suffix;
+                    $candidates[] = 'approve_' . $level . '_name';
+
+                    $text = '';
+                    foreach ($candidates as $k) {
+                        if (array_key_exists($k, $values) && $values[$k] !== null && $values[$k] !== '') {
+                            $text = (string) $values[$k];
+                            break;
+                        }
+                    }
                 } else {
                     $fieldKey = trim((string) ($item['field'] ?? ''));
                     $fieldNameKey = trim((string) ($item['field_name'] ?? ''));

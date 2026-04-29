@@ -7,6 +7,12 @@ $this->params['mobileSubtitle'] = 'เลือกบริการที่ต
 
 $services = [
     [
+        'icon'  => 'clock',
+        'label' => 'ลงเวลาเข้า-ออก',
+        'desc'  => 'บันทึกเวลาเข้างานและออกงาน',
+        'url'   => \yii\helpers\Url::to(['/mobile/default/attendance']),
+    ],
+    [
         'icon'  => 'car',
         'label' => 'จองรถราชการ',
         'desc'  => 'จองรถสำหรับการเดินทางราชการ',
@@ -54,6 +60,13 @@ $services = [
         'desc'  => 'แจ้งปัญหาการใช้งานระบบ',
         'url'   => '#',
     ],
+];
+
+$services[] = [
+    'icon'  => 'clipboard-check',
+    'label' => 'อนุมัติใบลา',
+    'desc'  => 'ดูรายการใบลาที่รออนุมัติจากคุณ',
+    'url'   => \yii\helpers\Url::to(['/mobile/default/leave-approvals']),
 ];
 ?>
 <style>

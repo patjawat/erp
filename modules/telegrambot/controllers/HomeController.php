@@ -20,19 +20,15 @@ class HomeController extends Controller
     {
         return $this->render('index');
     }
-    public function actionSendMsg()
-    {
- 
-
-        // $clientId = '8177437409';
-        $clientId = '7501172744';
-        $bot = new TelegramBot(); // จะใช้ token จาก DB
-        $bot->sendMessage($clientId, 'ข้อความทดสอบจาก Yii2 ดึง token จาก database');
-    }
+    
 
     public function actionSetMenu()
     {
-       $botToken = '7760493857:AAEqmuAH5eDi0iEqct656owBRP0qJXPypc8';
+        $setting = \app\models\Categorise::findOne(['name' => 'telegram_setting']);
+        $botToken = $setting->data_json['bot_token'] ?? $setting->data_json['token'] ?? null;
+        if (empty($botToken)) {
+            throw new \RuntimeException('ไม่พบ bot token ใน Telegram Settings');
+        }
 
         $data = [
             'menu_button' => [

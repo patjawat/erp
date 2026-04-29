@@ -101,6 +101,9 @@ class BookingMeetingController extends \yii\web\Controller
             $model = $this->findModel($this->request->post('id'));
             $model->status = $this->request->post('status');
             if ($model->save(false)) {
+                if ($model->status === 'Pass') {
+                    $model->notifyBookerMeetingApprovedTelegram();
+                }
                 return [
                     'status' => 'success'
                 ];

@@ -91,8 +91,8 @@ order by m1) as x1) as x2) as x3";
     $querys = Yii::$app->db->createCommand($new_sql)
         ->bindValue(':id', $model->id)
         ->bindValue(':receive_date', $model->receive_date)
-        // ->getRawSql();
         ->queryAll();
+        // ->getRawSql();
     // $depre = 50;
     // $price = 10000
     // print_r($querys);

@@ -38,7 +38,7 @@ $isNew = $model->isNewRecord;
                     ->hint('ลำดับขั้นการอนุมัติ (1, 2, 3...) — ใช้ในระบบจริง: ระดับ 1 อนุมัติก่อน ระดับ 2 ตามมา ไม่ซ้ำในแต่ละระบบ') ?>
             </div>
             <div class="col-md-8">
-                <?= $form->field($model, 'label')->textInput(['placeholder' => 'เช่น หัวหน้าเห็นชอบ']) ?>
+                <?= $form->field($model, 'label')->textInput(['placeholder' => 'เช่น เห็นชอบ, ผ่าน, อนุมัติ'])->label('คำที่ใช้ลงความเห็น') ?>
             </div>
         </div>
 

@@ -8,6 +8,9 @@ use iamsaint\datetimepicker\Datetimepicker;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
+/** @var string|null $returnUrl */
+
+$returnUrl = $returnUrl ?? null;
 
 $this->title = 'บันทึกงานซ่อม (ช่าง)';
 $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
@@ -63,7 +66,13 @@ if ($finishAtValue !== '') {
                             </div>
                         </div>
                         <div class="d-flex gap-2 flex-wrap flex-shrink-0">
-                            <?= Html::a('<i class="bi bi-eye me-1"></i>ดูใบงาน', ['view-v2', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
+                            <?php
+                            $viewV2Params = ['view-v2', 'id' => $model->id];
+                            if ($returnUrl !== null && $returnUrl !== '') {
+                                $viewV2Params['returnUrl'] = $returnUrl;
+                            }
+                            ?>
+                            <?= Html::a('<i class="bi bi-eye me-1"></i>ดูใบงาน', $viewV2Params, ['class' => 'btn btn-outline-secondary']) ?>
                             <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับรายการ', ['technician-v2'], ['class' => 'btn btn-outline-secondary']) ?>
                         </div>
                     </div>
@@ -106,6 +115,9 @@ if ($finishAtValue !== '') {
         <!-- ฟอร์มบันทึกงานซ่อม -->
         <div class="col-12">
             <?php $form = ActiveForm::begin(['id' => 'form-update-v2']); ?>
+            <?php if ($returnUrl !== null && $returnUrl !== ''): ?>
+                <?= Html::hiddenInput('returnUrl', $returnUrl) ?>
+            <?php endif; ?>
             <div class="row g-3">
                 <div class="col-12">
                     <div class="card border-0 shadow-sm">

@@ -13,6 +13,7 @@ use app\modules\usermanager\models\User;
  */
 class LoginForm extends Model
 {
+    public $telegram_id;
     public $username;
     public $password;
     public $rememberMe = true;
@@ -38,6 +39,7 @@ class LoginForm extends Model
     public function attributeLabels()
     {
         return [
+            'telegram_id' => 'Telegram ID',
             'username' => 'ชื่อเข้าใช้งาน',
             'password' => 'รหัสผ่าน',
             'rememberMe' => 'จำการเข้าสู่ระบบไว้ในอุปกรณ์นี้ (สูงสุด 1 วัน)',

@@ -19,17 +19,50 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('action'); ?>
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-    <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
-    <form method="get" action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="d-flex align-items-center gap-2">
-        <select name="warehouse_id" class="form-select border shadow-sm" style="width: 240px; height: 38px;">
-            <?php foreach ($warehouses as $wid => $wname): ?>
-                <option value="<?= $wid === '' ? '' : (int)$wid ?>" <?= (string)$warehouseId === (string)$wid ? 'selected' : '' ?>><?= Html::encode($wname) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <button type="submit" class="btn btn-primary px-4" style="height: 38px;">
-            <i class="bi bi-search me-1"></i> แสดง
-        </button>
-        <?= Html::a('<i class="bi bi-file-earmark-excel me-1"></i> Excel', array_merge(['/inventory-v2/report/export-balance-by-warehouse'], $warehouseId !== null && $warehouseId !== '' ? ['warehouse_id' => $warehouseId] : []), ['class' => 'btn btn-success', 'style' => 'height: 38px;']) ?>
+    <?= Html::a('<i class="bi bi-arrow-left"></i> กลับ', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+    
+    <form method="get" action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="row g-2 align-items-center">
+        <div class="col-auto">
+            <?= Html::dropDownList('warehouse_id', $warehouseId, $warehouses, ['class' => 'form-select border shadow-sm', 'style' => 'width: 200px;']) ?>
+        </div>
+        
+        <div class="col-auto">
+            <?= Html::dropDownList('category_id', $categoryId, $categories, [
+                'prompt' => '-- ทุกประเภท --',
+                'class' => 'form-select border shadow-sm',
+                'style' => 'width: 160px;'
+            ]) ?>
+        </div>
+
+        <div class="col-auto">
+            <?= Html::dropDownList('status', $status, [
+                'below_min' => 'ต่ำกว่า Min',
+                'below_max' => 'ต่ำกว่า Max',
+                'normal' => 'ปกติ (พอดี)',
+            ], [
+                'prompt' => '-- ทุกสถานะ --',
+                'class' => 'form-select border shadow-sm',
+                'style' => 'width: 140px;'
+            ]) ?>
+        </div>
+
+        <!-- <div class="col-auto">
+            <div class="input-group shadow-sm" style="width: 220px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="รหัส/ชื่อวัสดุ..." value="<?= Html::encode($search) ?>">
+            </div>
+        </div> -->
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary px-3">
+                แสดงผล
+            </button>
+            <?= Html::a('<i class="bi bi-file-earmark-excel"></i>', 
+                array_merge(['/inventory-v2/report/export-balance-by-warehouse'], Yii::$app->request->getQueryParams()), 
+                ['class' => 'btn btn-success', 'title' => 'Export Excel']
+            ) ?>
+            <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="btn btn-outline-danger" title="ล้างค่า"><i class="bi bi-x-lg"></i></a>
+        </div>
     </form>
 </div>
 <?php $this->endBlock(); ?>

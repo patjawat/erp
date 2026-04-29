@@ -3,9 +3,8 @@
 namespace app\modules\dms\models;
 
 use yii\base\Model;
-use app\components\AppHelper;
 use yii\data\ActiveDataProvider;
-use app\components\DateFilterHelper;
+
 use app\modules\dms\models\Documents;
 
 /**
@@ -20,7 +19,7 @@ class DocumentSearch extends Documents
     {
         return [
             [['id'], 'integer'],
-            [['date_start','date_end','q_status','date_filter', 'q', 'show_reading', 'document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json', 'document_group', 'status', 'ref'], 'safe'],
+            [['date_start','date_end','q_status','date_filter', 'q', 'show_reading', 'document_type', 'topic', 'document_org', 'thai_year', 'doc_regis_number', 'doc_number', 'doc_speed', 'secret', 'doc_date', 'doc_expire', 'doc_transactions_date', 'doc_time', 'data_json', 'document_group', 'status', 'ref','q_department'], 'safe'],
         ];
     }
 
@@ -85,7 +84,7 @@ class DocumentSearch extends Documents
             ->andFilterWhere(['like', 'secret', $this->secret])
             ->andFilterWhere(['like', 'doc_date', $this->doc_date])
             ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])
-            ->andFilterWhere(['like', 'doc_transactions_date', $this->doc_transactions_date])
+            // ->andFilterWhere(['like', 'doc_transactions_date', $this->doc_transactions_date])
             ->andFilterWhere(['like', 'doc_time', $this->doc_time])
             ->andFilterWhere(['like', 'documents.data_json', $this->data_json]);
 

@@ -8,8 +8,8 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use app\modules\hr\models\LeavePolicies;
-use app\modules\hr\models\LeavePoliciesSearch;
+use app\modules\leave\models\LeavePolicies;
+use app\modules\leave\models\LeavePoliciesSearch;
 
 /**
  * นโยบายการลา — ย้ายจาก hr
@@ -49,7 +49,7 @@ class LeavePoliciesController extends Controller
 
     public function actionView($id)
     {
-        return $this->render('@app/modules/hr/views/leave-policies/view', ['model' => $this->findModel($id)]);
+        return $this->render('view', ['model' => $this->findModel($id)]);
     }
 
     public function actionCreate()
@@ -66,10 +66,10 @@ class LeavePoliciesController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave-policies/create', ['model' => $model]),
+                'content' => $this->renderAjax('create', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/leave-policies/create', ['model' => $model]);
+        return $this->render('create', ['model' => $model]);
     }
 
     public function actionUpdate($id)
@@ -82,10 +82,10 @@ class LeavePoliciesController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('@app/modules/hr/views/leave-policies/update', ['model' => $model]),
+                'content' => $this->renderAjax('update', ['model' => $model]),
             ];
         }
-        return $this->render('@app/modules/hr/views/leave-policies/update', ['model' => $model]);
+        return $this->render('update', ['model' => $model]);
     }
 
     public function actionDelete($id)

@@ -4,7 +4,7 @@ namespace app\modules\approve\controllers;
 
 use Yii;
 use yii\web\Controller;
-use app\modules\hr\models\Leave;
+use app\modules\leave\models\Leave;
 use app\components\EventCalendar;
 
 class CalendarController extends Controller

@@ -5,6 +5,9 @@ use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
+/** @var string|null $returnUrl */
+
+$returnUrl = $returnUrl ?? null;
 
 $ticketId = $model->id ?? '-';
 $titleText = 'หมายเลขงานซ่อม #' . $ticketId;
@@ -176,8 +179,14 @@ $hasExternal = $model->isExternalRepair();
 $hasRootCauseData = trim((string) ($model->data_json['root_cause'] ?? '')) !== ''
     || trim((string) ($model->data_json['diagnosis'] ?? '')) !== '';
 
-$receiveUrl = Url::to(['/helpdesk/service/receive', 'id' => $model->id]);
-$sendRepairUrl = Url::to(['/helpdesk/service/send-repair', 'id' => $model->id]);
+$receiveRoute = ['/helpdesk/service/receive', 'id' => $model->id];
+$sendRepairRoute = ['/helpdesk/service/send-repair', 'id' => $model->id];
+if ($returnUrl !== null && $returnUrl !== '') {
+    $receiveRoute['returnUrl'] = $returnUrl;
+    $sendRepairRoute['returnUrl'] = $returnUrl;
+}
+$receiveUrl = Url::to($receiveRoute);
+$sendRepairUrl = Url::to($sendRepairRoute);
 $recordMethodUrl = Url::to(['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number]);
 $partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
 $expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
@@ -239,6 +248,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                 'statusBadge' => $statusBadge,
                 'priorityBadge' => $priorityBadge,
                 'slaBadgeHtml' => $slaBadgeHtml,
+                'returnUrl' => $returnUrl,
             ]); ?>
 
             <div class="card shadow-sm mt-3">

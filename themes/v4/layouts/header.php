@@ -10,7 +10,7 @@ use app\components\SiteHelper;
 $site = Categorise::findOne(['name' => 'site']);
 $dataJson = ($site && is_array($site->data_json)) ? $site->data_json : [];
 $colorName = $dataJson['theme_color_name'] ?? 'blue';
-$headerBrand = SiteHelper::resolveHeaderBrand($dataJson);
+$headerBrand = SiteHelper::resolveHeaderBrand($dataJson, \Yii::$app->user->isGuest);
 if (!empty($headerBrand['google_font_href'])) {
     $this->registerLinkTag([
         'rel' => 'stylesheet',
@@ -81,12 +81,7 @@ $total = $notify['total'];
     </div>
     <div class="d-flex align-items-center">
         <div class="d-flex align-items-center gap-1">
-            <button type="button" class="header-btn d-none" id="erp-install-pwa" title="ติดตั้งแอป (PWA)">
-                <i data-lucide="download"></i>
-            </button>
-            <!-- <button type="button" class="header-btn" id="erp-test-notification" title="ทดสอบการแจ้งเตือน (Push)">
-                <i data-lucide="bell-ring"></i>
-            </button> -->
+
             <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="header-btn position-relative">
                 <i data-lucide="bell"></i>
                 <?php if ($total > 0): ?>
@@ -114,7 +109,7 @@ $total = $notify['total'];
                     </div>
                 <?php endif; ?>
 
-                <div class="d-none d-md-block text-white fw-medium"><?= UserHelper::GetEmployee()->fullname ?></div>
+                <div class="d-none d-md-block text-white fw-medium"><?= UserHelper::GetEmployee()->fullname ?? '-' ?></div>
             </div>
 
 

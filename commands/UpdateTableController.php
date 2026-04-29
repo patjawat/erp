@@ -86,6 +86,7 @@ class UpdateTableController extends Controller
             ['name' => 'health', 'type' => 1, 'description' => 'ตรวจสุขภาพ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
+
             // การตรวจสุขภาพ
             ['name' => '/health/*', 'type' => 2, 'description' => ''],
             ['name' => '/health/me/*', 'type' => 2, 'description' => ''],
@@ -98,6 +99,7 @@ class UpdateTableController extends Controller
             ['name' => '/booking/vehicle/events', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/list-event-tomorrow', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/list-event-todays', 'type' => 2, 'description' => ''],
+            ['name' => '/booking/vehicle/list-cars', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/view', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/print', 'type' => 2, 'description' => ''],
             ['name' => '/booking/vehicle/create', 'type' => 2, 'description' => ''],
@@ -231,6 +233,8 @@ class UpdateTableController extends Controller
             ['name' => '/warehouse/*', 'type' => 2, 'description' => ''],
             ['name' => 'purchase/po-order/index', 'type' => 2, 'description' => ''],
             ['name' => '/ms-word/*', 'type' => 2, 'description' => ''],
+
+            ['name' => '/mobile/*', 'type' => 2, 'description' => 'App Mobile'],
         ];
     }
 
@@ -267,6 +271,7 @@ class UpdateTableController extends Controller
             ['child' => '/booking/asset/*', 'parent' => 'vehicle'],
             ['child' => '/booking/vehicle/list-event-todays', 'parent' => 'user'],
             ['child' => '/booking/vehicle/list-event-tomorrow', 'parent' => 'user'],
+            ['child' => '/booking/vehicle/list-cars', 'parent' => 'user'],
             ['child' => '/booking/vehicle/view', 'parent' => 'user'],
             ['child' => '/booking/vehicle/print', 'parent' => 'user'],
             ['child' => '/booking/vehicle/create', 'parent' => 'user'],
@@ -440,6 +445,7 @@ class UpdateTableController extends Controller
 
             ['child' => '/plan/*', 'parent' => 'user'],
             ['child' => '/health/*', 'parent' => 'health'],
+            ['child' => '/mobile/*', 'parent' => 'user'],
         ];
     }
 

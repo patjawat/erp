@@ -10,14 +10,9 @@ namespace app\commands;
 
 use Yii;
 use app\modules\hr\models\Employees;
-use app\modules\hr\models\EmployeeDetail;
-use app\modules\hr\models\Organization;
 use yii\console\Controller;
 use yii\helpers\BaseConsole;
-use yii\helpers\ArrayHelper;
 use app\models\Categorise;
-use DirectoryIterator;
-use app\modules\filemanager\models\Uploads;
 
 /**
  * แก้ไขรหัสตำแหน่งใหม่ v2
@@ -75,62 +70,53 @@ class FixController extends Controller
         // echo  $data;
     }
 
-    // public function actionClearUpload()
-    // {
-    //     $directoryPath = Yii::getAlias('@app') . '/modules/filemanager/fileupload/';
+    // ปรับปรุงเลเวลที่เขียนผิดจากเอไอ
+    public function actionApprove()
+    {
+        if (\yii\helpers\BaseConsole::confirm("คุณแน่ใจหรือไม่ที่จะปรับปรุงข้อมูลสถานะการอนุมัติ?")) {
 
+            // นำคำสั่ง SQL มาแยกเก็บใน Array
+            $queries = [
+                // 1. เปลี่ยน เจ้าหน้าที่ตรวจสอบ -> ผ่าน
+                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'ผ่าน') WHERE `data_json`->>'$.label' = 'เจ้าหน้าที่ตรวจสอบ'",
 
-    //         // Usage
+                // 2. เปลี่ยน หัวหน้าเห็นชอบ -> เห็นชอบ
+                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'เห็นชอบ') WHERE `data_json`->>'$.label' = 'หัวหน้าเห็นชอบ'",
 
+                // 3. เปลี่ยน หัวหน้ากลุ่มงานเห็นชอบ -> เห็นชอบ
+                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'เห็นชอบ') WHERE `data_json`->>'$.label' = 'หัวหน้ากลุ่มงานเห็นชอบ'",
 
+                // 4. เปลี่ยน ผอ.อนุมัติ -> อนุมัติ
+                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'อนุมัติ') WHERE `data_json`->>'$.label' = 'ผอ.อนุมัติ'"
+            ];
 
-    //     // Create a DirectoryIterator instance
-    //     $directory = new DirectoryIterator($directoryPath);
+            // เริ่มต้น Transaction
+            $transaction = \Yii::$app->db->beginTransaction();
+            $totalAffected = 0;
 
-    //     // Loop through the directory
-    //     foreach ($directory as $fileinfo) {
-    //         // Skip the current (.) and parent (..) directory links
-    //         if (!$fileinfo->isDot()) {
-    //             $filename = $fileinfo->getFilename();
-    //             $model = Uploads::findOne(['ref' => $filename]);
-    //             if($model){
-    //                 echo $fileinfo->getFilename() .  "\n";
-    //             }else{
-    //                 if ($this->deleteDirectory($directoryPath)) {
-    //                     echo "Directory and its contents deleted successfully. \n";
-    //                 } else {
-    //                     echo "Failed to delete the directory. \n";
-    //                 }
-                    
-    //             }
-    //         }
-    //     }
-    // }
+            try {
+                // วนลูปรันทีละคำสั่ง
+                foreach ($queries as $index => $sql) {
+                    $affectedRows = \Yii::$app->db->createCommand($sql)->execute();
+                    $totalAffected += $affectedRows;
 
-    // function deleteDirectory($dir) {
-    //     if (!file_exists($dir)) {
-    //         return false;
-    //     }
-    
-    //     // Loop through the directory contents
-    //     foreach (new DirectoryIterator($dir) as $fileinfo) {
-    //         if ($fileinfo->isDot()) {
-    //             continue;
-    //         }
-            
-    //         // Recursively delete subdirectories
-    //         if ($fileinfo->isDir()) {
-    //             $this->deleteDirectory($fileinfo->getRealPath());
-    //         } else {
-    //             // Delete files
-    //             unlink($fileinfo->getRealPath());
-    //         }
-    //     }
-    
-    //     // Delete the directory itself
-    //     return rmdir($dir);
-    // }
-    
+                    // แสดงผลความคืบหน้าทีละคำสั่ง
+                    \yii\helpers\BaseConsole::output("ชุดที่ " . ($index + 1) . " ปรับปรุงสำเร็จ: $affectedRows รายการ");
+                }
 
+                // ยืนยันการบันทึกข้อมูล (Commit)
+                $transaction->commit();
 
+                \yii\helpers\BaseConsole::output("-------------------------------------");
+                \yii\helpers\BaseConsole::output("เสร็จสมบูรณ์! ปรับปรุงข้อมูลรวมทั้งหมด: $totalAffected รายการ");
+            } catch (\Exception $e) {
+                // ยกเลิกการบันทึกหากเกิดข้อผิดพลาด (Rollback)
+                $transaction->rollBack();
+                \yii\helpers\BaseConsole::error("เกิดข้อผิดพลาด: " . $e->getMessage());
+                \yii\helpers\BaseConsole::error("ได้ทำการยกเลิกคำสั่งทั้งหมดแล้ว (Rolled back)");
+            }
+        } else {
+            \yii\helpers\BaseConsole::output("ยกเลิกการทำงาน");
+        }
+    }
 }

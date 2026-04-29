@@ -77,7 +77,6 @@ $emp = UserHelper::GetEmployee();
                                 data-total="<?php echo $item->SumStockQty(); ?>">
                                 <i class="fa-solid fa-minus"></i>
                             </span>
-<?= $item->SumStockQty() ?>
                             <input
                                 name="qty"
                                 id="<?= $item->id ?>"

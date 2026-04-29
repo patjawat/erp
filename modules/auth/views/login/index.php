@@ -10,6 +10,16 @@ use kartik\widgets\ActiveForm;
 $site = Categorise::findOne(['name' => 'site']);
 $color = isset($site->data_json['theme_color']) ? $site->data_json['theme_color'] : '';
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : '';
+$dataJson = ($site && is_array($site->data_json)) ? $site->data_json : [];
+/** ข้อความบรรทัด 1–2 และไอคอน: ดึงจากตั้งค่าองค์กร (Header) เมื่อมีการกำหนด — ถ้าเว้นว่างใช้ HOSPITAL / ERP SYSTEM ตาม SiteHelper */
+$loginHeaderBrand = SiteHelper::resolveHeaderBrand($dataJson);
+if (!empty($loginHeaderBrand['google_font_href'])) {
+    $this->registerLinkTag([
+        'rel' => 'stylesheet',
+        'href' => $loginHeaderBrand['google_font_href'],
+    ]);
+}
+$loginBrandFontFamily = trim($loginHeaderBrand['brand_font_family_css'] ?? '');
 $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -35,6 +45,11 @@ $this->registerCss(<<<CSS
   --bs-form-check-bg: transparent;
   background-color: transparent;
 }
+.erp-login-brand-icon svg {
+  width: 42px;
+  height: 42px;
+  stroke-width: 1.25;
+}
 CSS
 );
 ?>
@@ -45,17 +60,13 @@ CSS
             <div class="col-12 col-sm-11 col-md-10 col-lg-6 col-xl-5">
                 <div class="card border-0 shadow-lg rounded-3 bg-white overflow-hidden">
                     <div class="card-body p-4 p-md-5">
-                        <!-- Header: Logo + HOSPITAL ERP SYSTEM -->
+                        <!-- Header: ไอคอน + บรรทัด 1–2 จากตั้งค่าองค์กร (หรือค่าเริ่มต้น HOSPITAL / ERP SYSTEM) -->
                         <div class="text-center mb-4">
                             <div class="rounded-3 bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center p-3 mb-3 shadow-sm text-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box text-[#0767ad]" aria-hidden="true">
-                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-                                    <path d="m3.3 7 8.7 5 8.7-5"></path>
-                                    <path d="M12 22V12"></path>
-                                </svg>
+                                <span class="erp-login-brand-icon d-inline-flex align-items-center justify-content-center" aria-hidden="true"><i data-lucide="<?= Html::encode($loginHeaderBrand['lucide_icon']) ?>"></i></span>
                             </div>
-                            <h1 class="h4 fw-bold text-primary mb-1">HOSPITAL</h1>
-                            <p class="small text-muted">ERP SYSTEM</p>
+                            <h1 class="h4 fw-bold text-primary mb-1"<?= $loginBrandFontFamily !== '' ? ' style="' . Html::encode($loginBrandFontFamily) . '"' : '' ?>><?= Html::encode($loginHeaderBrand['line1']) ?></h1>
+                            <p class="small text-muted"<?= $loginBrandFontFamily !== '' ? ' style="' . Html::encode($loginBrandFontFamily) . '"' : '' ?>><?= Html::encode($loginHeaderBrand['line2']) ?></p>
                             <p class="text-muted small mb-0">กรอกข้อมูลเพื่อเข้าสู่บัญชีของคุณ</p>
                         </div>
                         <div class="text-center mb-4">
@@ -157,6 +168,7 @@ CSS
 
 <?php
 $js = <<< JS
+if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 $('#btnAwait').hide();
 $('#btn-login').show();
 $('#blank-form').on('beforeSubmit', function (e) {

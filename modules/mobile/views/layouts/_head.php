@@ -5,9 +5,11 @@
  */
 use yii\bootstrap5\Html;
 ?>
+
 <meta charset="<?= Yii::$app->charset ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
 <?php $this->registerCsrfMetaTags() ?>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title><?= Html::encode($this->title) ?></title>
 <?php $this->head() ?>
 <style>

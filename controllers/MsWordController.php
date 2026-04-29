@@ -144,23 +144,60 @@ class MsWordController extends \yii\web\Controller
             $templateProcessor->setValue('amount', '1');  // จำนวน
             $templateProcessor->setValue('price_unit', number_format($model->price, 2));  // จำนวนเงินที่แสดงถึงราคาต่อหน่วย
             $templateProcessor->setValue('price', number_format($model->price, 2));  // จำนวนเงินที่แสดงถึงราคาต่อหน่วย
-            $templateProcessor->setValue('life', $model->data_json['service_life']);  // อายุการใช้งาน
-            $templateProcessor->setValue('dep_year', number_format($model->price / $model->data_json['service_life'], 2));  // ค่าเสื่อมต่อปี
+            $templateProcessor->setValue(
+                'life',
+                $model->data_json['service_life'] ?? '-'
+            ); // อายุการใช้งาน
+            $templateProcessor->setValue(
+                'dep_year',
+                number_format($model->price / ($model->data_json['service_life'] ?? 1), 2)
+            );  // ค่าเสื่อมต่อปี
 
-            $datas = AssetHelper::Depreciation($model->id, $number);
+            $datas = AssetHelper::Depreciation($model->id, $number) ?? [];
 
-            $templateProcessor->cloneRow('asset_name', count($datas));
+            $templateProcessor->cloneRow('asset_name', count($datas) ?: 1);
             $i = 1;
             foreach ($datas as $data) {
-                $templateProcessor->setValue('date#' . $i, Yii::$app->thaiFormatter->asDate($data['end_date'], 'php:d/m/Y'));  // วันที่รับเข้า
-                $templateProcessor->setValue('doc_number#' . $i, '');  // เลขที่เอกสารแสดงการได้มาของทรัพย์สิน
-                $templateProcessor->setValue('asset_name#' . $i, $model->AssetitemName());  // ชื่อหรือชนิดของทรัพย์สิน
-                $templateProcessor->setValue('price_unit#' . $i, number_format($data['price'], 2));  // จำนวนเงินที่แสดงถึงราคาต่อหน่วย
-                $templateProcessor->setValue('asset_life#' . $i, $data['service_life']);  // อายุการใช้งาน
-                $templateProcessor->setValue('deprate#' . $i, $data['price_month']);  // ระบุอัตราค่าเสื่อมราคาของทรัพย์สิน
-                $templateProcessor->setValue('accdep#' . $i, number_format($data['total_price'], 2));  // จำนวนเงินค่าเสื่อมราคาที่สะสม
-                $templateProcessor->setValue('total#' . $i, number_format($data['total'], 2));  // มูลค่าสุทธิ
-                $templateProcessor->setValue('remart#' . $i, '');  // หมายเหตุ
+
+                $templateProcessor->setValue(
+                    'date#' . $i,
+                    Yii::$app->thaiFormatter->asDate($data['end_date'] ?? null, 'php:d/m/Y')
+                );
+
+                $templateProcessor->setValue('doc_number#' . $i, '');
+
+                $templateProcessor->setValue(
+                    'asset_name#' . $i,
+                    $model->AssetitemName()
+                );
+
+                $templateProcessor->setValue(
+                    'price_unit#' . $i,
+                    number_format($data['price'] ?? 0, 2)
+                );
+
+                $templateProcessor->setValue(
+                    'asset_life#' . $i,
+                    $data['service_life'] ?? '-'
+                );
+
+                $templateProcessor->setValue(
+                    'deprate#' . $i,
+                    $data['price_month'] ?? 0
+                );
+
+                $templateProcessor->setValue(
+                    'accdep#' . $i,
+                    number_format($data['total_price'] ?? 0, 2)
+                );
+
+                $templateProcessor->setValue(
+                    'total#' . $i,
+                    number_format($data['total'] ?? 0, 2)
+                );
+
+                $templateProcessor->setValue('remart#' . $i, '');
+
                 $i++;
             }
             $filename = 'ค่าเสื่อม' . (isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-') . ' วันที่ ' . Yii::$app->thaiFormatter->asDate($date, 'medium') . '.docx';
@@ -738,8 +775,8 @@ class MsWordController extends \yii\web\Controller
                     'price' =>  number_format($model->calculateVAT()['priceAfterVAT'], 2),
                     'price_text' => AppHelper::convertNumberToWords($model->calculateVAT()['priceAfterVAT'], 2),
                     'director_name' => SiteHelper::viewDirector()['fullname'], // ชื่อผู้บริหาร ผอ.
-                    'leader_fullname' => $this->getInfo()['leader_fullname'],//หัวหน้าเจ้าหน้าที่
-                    'leader_position' => $this->getInfo()['leader_position'],//ตำแหน่งหัวหน้าเจ้าหน้าที่
+                    'leader_fullname' => $this->getInfo()['leader_fullname'], //หัวหน้าเจ้าหน้าที่
+                    'leader_position' => $this->getInfo()['leader_position'], //ตำแหน่งหัวหน้าเจ้าหน้าที่
                     'me' => $model->getMe()['fullname'],
                     'me_position' => $model->getMe()['position'],
                     'leader' => $model->getMe()['leader']['leader1_fullname'],

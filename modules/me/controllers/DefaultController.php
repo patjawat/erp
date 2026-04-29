@@ -2,18 +2,19 @@
 
 namespace app\modules\me\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use app\modules\hr\models\Employees;
-use app\modules\hr\models\LeaveSearch;
-use app\modules\helpdesk\models\HelpdeskSearch;
-use app\modules\attendance\models\CheckinRecord;
 use app\modules\appreciation\models\Appreciation;
+use app\modules\attendance\models\CheckinRecord;
+use app\modules\helpdesk\models\HelpdeskSearch;
+use app\modules\hr\models\Employees;
+use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveSearch;
 use app\modules\usermanager\models\User;
+use Yii;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * Default controller for the `me` module
@@ -216,5 +217,14 @@ class DefaultController extends Controller
                 'dataProvider' => $dataProvider,
             ])
         ];
+    }
+
+    public function actionTest()
+    {
+        $model = new Leave();
+        $model->emp_id = 123;   
+        return $this->render('test', [
+            'model' => $model,
+        ]);
     }
 }

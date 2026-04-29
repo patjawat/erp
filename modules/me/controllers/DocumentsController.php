@@ -2,24 +2,22 @@
 
 namespace app\modules\me\controllers;
 
-use Yii;
-use yii\web\Response;
-use yii\db\Expression;
-use app\models\Uploads;
-use app\models\Categorise;
-use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
+use app\components\DateFilterHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
-use app\components\DateFilterHelper;
+use app\models\Categorise;
+use app\models\Uploads;
 use app\modules\dms\models\Documents;
-use app\modules\dms\models\DocumentSearch;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentsDetailSearch;
+use app\modules\dms\models\DocumentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Organization;
-use yii\web\ForbiddenHttpException;
+use Yii;
+use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 class DocumentsController extends \yii\web\Controller
 {
@@ -56,12 +54,116 @@ class DocumentsController extends \yii\web\Controller
         return in_array($empId, $allowed, true);
     }
 
-    public function actionIndex()
+    /**
+     * documents_detail.id ที่ยังไม่ได้อ่าน — SQL เดียวกับ actionShowHome / actionShowHomeV2 (ห้ามแก้ต่างจากตรงนั้น)
+     */
+    private function unreadDetailIdsShowHomeExact($department, $empId): array
+    {
+        $sql = "SELECT d.id
+                FROM documents_detail d
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
+                WHERE d.name = 'department' AND d.to_id = :department AND r.doc_read IS NULL
+
+                UNION
+
+                SELECT d.id
+                FROM documents_detail d
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
+                WHERE d.name = 'tags' AND d.to_id = :emp_id AND r.doc_read IS NULL";
+
+        return Yii::$app->db->createCommand($sql, [
+            ':department' => $department,
+            ':emp_id' => $empId,
+        ])->queryColumn();
+    }
+
+    /** เงื่อนไขแถว tags ถึงพนักงาน (รองรับ to_id หลายรูปแบบในฐานข้อมูล) */
+    private function tagsToEmployeeCondition(int $empId): array
+    {
+        return [
+            'or',
+            ['d_tags.to_id' => (string) $empId],
+            ['d_tags.to_id' => $empId],
+            new \yii\db\Expression(
+                'CAST([[d_tags]].[[to_id]] AS UNSIGNED) = :tagEmpCast',
+                [':tagEmpCast' => (int) $empId]
+            ),
+        ];
+    }
+
+    /** แถว read ของพนักงานคนปัจจุบัน — สอดคล้อง actionBookmark (name=read, to_id=พนักงาน, bookmark=Y) */
+    private function readRowToEmployeeCondition(int $empId): array
+    {
+        return [
+            'or',
+            ['d_read.to_id' => (string) $empId],
+            ['d_read.to_id' => $empId],
+            new \yii\db\Expression(
+                'CAST([[d_read]].[[to_id]] AS UNSIGNED) = :readEmpCast',
+                [':readEmpCast' => (int) $empId]
+            ),
+        ];
+    }
+
+    /**
+     * สร้าง search model พร้อม hydrate ช่วงวันที่จาก query เพื่อให้หน้า render ใช้ state เดียวกับการค้นหา
+     */
+    private function createDocumentsSearchModel(): DocumentSearch
+    {
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+        ]);
+        $searchModel->load($this->request->queryParams);
+        $this->hydrateDocumentSearchDates($searchModel);
+
+        return $searchModel;
+    }
+
+    /**
+     * เติมค่า date_start/date_end จาก date_filter เมื่อยังไม่มีค่า และคืนช่วงวันที่แบบ Gregorian สำหรับ query
+     *
+     * @return array{0:?string,1:?string}
+     */
+    private function hydrateDocumentSearchDates(DocumentSearch $searchModel): array
+    {
+        $dateStart = $searchModel->date_start ? AppHelper::convertToGregorian($searchModel->date_start) : null;
+        $dateEnd = $searchModel->date_end ? AppHelper::convertToGregorian($searchModel->date_end) : null;
+
+        if (($dateStart === null || $dateEnd === null) && is_string($searchModel->date_filter) && $searchModel->date_filter !== '') {
+            $range = DateFilterHelper::getRange($searchModel->date_filter);
+            if ($range !== null) {
+                if ($dateStart === null) {
+                    $dateStart = date('Y-m-d', strtotime($range[0]));
+                    $searchModel->date_start = AppHelper::convertToThai($dateStart);
+                }
+                if ($dateEnd === null) {
+                    $dateEnd = date('Y-m-d', strtotime($range[1]));
+                    $searchModel->date_end = AppHelper::convertToThai($dateEnd);
+                }
+            }
+        }
+
+        return [$dateStart, $dateEnd];
+    }
+
+    /**
+     * ข้อมูลหน้า index ทะเบียนหนังสือ
+     *
+     * @return array{
+     *   searchModel: DocumentSearch,
+     *   dataProvider: \yii\data\ActiveDataProvider,
+     *   unreadOpenDetailIdByDocument: array,
+     *   unreadOpenDocumentsDetailById: array,
+     *   readAtByRoutingId: array,
+     *   emp: object
+     * }
+     */
+    private function buildDocumentsIndexViewData(): array
     {
         $emp = UserHelper::GetEmployee();
-        $searchModel = new DocumentSearch([
-            'date_filter' => 'today'
-        ]);
+
+        $searchModel = $this->createDocumentsSearchModel();
+        [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
         $dataProvider = $searchModel->search($this->request->queryParams);
         /** @var \yii\db\ActiveQuery $query */
         $query = $dataProvider->query;
@@ -88,103 +190,304 @@ class DocumentsController extends \yii\web\Controller
         ]);
         if ($searchModel->q_status == 'Y') {
             $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
+            $dataProvider->query->andWhere($this->readRowToEmployeeCondition((int) $emp->id));
         } else {
             $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
         }
-        $dataProvider->query->andFilterWhere(['d_tags.to_id' => $emp->id]);
-        $dataProvider->query->andFilterWhere([
-            'between',
-            'doc_transactions_date',
-            AppHelper::convertToGregorian($searchModel->date_start),
-            AppHelper::convertToGregorian($searchModel->date_end)
-        ]);
-        
+        $query
+            ->andFilterWhere(['>=', 'doc_transactions_date', $dateStart])
+            ->andFilterWhere(['<=', 'doc_transactions_date', $dateEnd]);
 
+        // JOIN หลายแถวต่อ 1 เอกสาร — ต้อง group ที่ documents.id ไม่เช่นนั้น LIMIT ของ pagination นับแถว join → เห็นแค่ไม่กี่รายการต่อหน้า
+        $query->groupBy(['documents.id']);
+
+        // $dataProvider->query->andWhere($this->tagsToEmployeeCondition((int) $emp->id));
+
+        $dataProvider->setPagination([
+            'pageSize' => 20,
+            'pageSizeParam' => false,
+        ]);
 
         $dataProvider->setSort(['defaultOrder' => [
-            // 'doc_regis_number' => SORT_DESC,
-            // 'thai_year' => SORT_DESC,
+            'doc_transactions_date' => SORT_DESC,
+            'doc_regis_number' => SORT_DESC,
         ]]);
+
+        $unreadOpenDetailIdByDocument = [];
+        $unreadOpenDocumentsDetailById = [];
+
+        $routingIdsForReadStatus = [];
+        foreach ($dataProvider->getModels() as $m) {
+            $dt = $m->documentTags ?? $m->documentDepartment ?? null;
+            if ($dt !== null) {
+                $routingIdsForReadStatus[] = (int) $dt->id;
+            }
+        }
+        $readAtByRoutingId = $routingIdsForReadStatus !== []
+            ? DocumentsDetail::readRecordTimesByRoutingFromIds($routingIdsForReadStatus, (int) $emp->id)
+            : [];
+
+        return [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument,
+            'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById,
+            'readAtByRoutingId' => $readAtByRoutingId,
+            'emp' => $emp,
+        ];
+    }
+
+    public function actionIndex()
+    {
+        // $d = $this->buildDocumentsIndexViewData();
+        // $emp = $d['emp'];
+
+        // return $this->render('index', [
+        //     'searchModel' => $d['searchModel'],
+        //     'dataProvider' => $d['dataProvider'],
+        //     'unreadOpenDetailIdByDocument' => $d['unreadOpenDetailIdByDocument'],
+        //     'unreadOpenDocumentsDetailById' => $d['unreadOpenDocumentsDetailById'],
+        //     'readAtByRoutingId' => $d['readAtByRoutingId'],
+        //     'action' => 'index',
+        //     'to' => 'ถึง' . $emp->fullname(),
+        // ]);
+        // $me = UserHelper::GetEmployee();
+
+        // $empId = $me->id ?? null;
+        // $depId = $me->department ?? null;
+
+        // $searchModel = new DocumentSearch();
+        // $dataProvider = $searchModel->search($this->request->queryParams);
+
+        // $query = $dataProvider->query;
+
+
+        // $query->addSelect([
+        //     'documents.*',
+        //     't.id AS detail_id',
+        //     't.name AS detail_name',
+        //     't.to_id',
+        //     't.doc_read AS doc_read',
+        // ]);
+
+        // $q = trim($searchModel->q ?? '');
+
+        // $dateStart =  AppHelper::convertToGregorian($searchModel->date_start);
+        // $dateEnd =  AppHelper::convertToGregorian($searchModel->date_end);
+
+
+
+        // $query
+        //     ->andFilterWhere(['>=', 'documents.doc_transactions_date', $dateStart])
+        //     ->andFilterWhere(['<=', 'documents.doc_transactions_date', $dateEnd]);
+
+        // $query->andFilterWhere([
+        //     'or',
+        //     ['like', 'topic', $q],
+        //     ['like', 'doc_regis_number', $q],
+        //     ['like', 'doc_number', $q],
+        //     ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
+        // ]);
+
+
+        // $query->leftJoin('documents_detail t', "
+        //         t.document_id = documents.id 
+        //         AND t.name IN ('tags','department')
+        //     ");
+
+        // $query->leftJoin('employees e', "
+        //         e.id = t.to_id AND t.name = 'tags'
+        //     ");
+
+        // $query->leftJoin('tree dep', "
+        //         dep.id = t.to_id AND t.name = 'department'
+        //     ");
+
+        // if ($me) {
+        //     $query->andWhere([
+        //         'or',
+        //         ['and', ['t.name' => 'tags'], ['t.to_id' => $empId]],
+        //         ['and', ['t.name' => 'department'], ['t.to_id' => $depId]],
+        //     ]);
+        // } else {
+        //     $query->andWhere('0=1'); // ไม่ให้มีข้อมูลเลย
+        // }
+
+        // $query->groupBy('documents.id');
+
+        // $query->orderBy([
+        //     'doc_transactions_date' => SORT_DESC,
+        //     'doc_regis_number' => SORT_DESC,
+        // ]);
+
+
+        $me = UserHelper::GetEmployee();
+
+        $empId = $me->id ?? null;
+        $depId = $me->department ?? null;
+
+       $searchModel = new DocumentSearch([
+                'date_filter' => 'today'
+            ]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $q = trim($searchModel->q ?? '');
+
+       [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
+
+        $query = $dataProvider->query;
+
+        $query->leftJoin('documents_detail te', "
+    te.document_id = documents.id
+    AND te.name='tags'
+    AND te.to_id=$empId
+");
+
+        $query->leftJoin('documents_detail td', "
+    td.document_id = documents.id
+    AND td.name='department'
+    AND td.to_id=$depId
+");
+
+        /* join สถานะอ่าน */
+        $query->leftJoin('documents_detail tr', "
+    tr.document_id = documents.id
+    AND tr.name='read'
+    AND tr.to_id=$empId
+");
+
+        $query->addSelect([
+    'documents.*',
+    'COALESCE(te.id, td.id) AS detail_id',
+    'tr.id AS read_id',
+    new \yii\db\Expression('IF(tr.id IS NULL,0,1) AS doc_read'),
+]);
+
+        $query->andWhere([
+            'or',
+            ['not', ['te.id' => null]],
+            ['not', ['td.id' => null]],
+        ]);
+        $query
+            ->andFilterWhere(['>=', 'documents.doc_transactions_date', $dateStart])
+            ->andFilterWhere(['<=', 'documents.doc_transactions_date', $dateEnd]);
+
+        $query->andFilterWhere([
+            'or',
+            ['like', 'topic', $q],
+            ['like', 'doc_regis_number', $q],
+            ['like', 'doc_number', $q],
+            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
+        ]);
+
+if ($searchModel->q_status === 'read') {
+    $query->andWhere(['IS NOT', 'tr.id', null]);
+}
+
+if ($searchModel->q_status === 'unread') {
+    $query->andWhere(['tr.id' => null]);
+}
+        $query->orderBy([
+            'doc_transactions_date' => SORT_DESC,
+            'doc_regis_number' => SORT_DESC,
+        ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'action' => 'index',
-            'to' => 'ถึง'.$emp->fullname()
         ]);
+    }
+
+    /** ดาวน์โหลดเทมเพลต Excel (รอพัฒนาระบบไฟล์) */
+    public function actionDownloadTemplate()
+    {
+        Yii::$app->session->setFlash('info', 'ฟีเจอร์ดาวน์โหลดเทมเพลตสำหรับทะเบียนหนังสืออยู่ระหว่างพัฒนา');
+        return $this->redirect(array_merge(['index'], $this->request->getQueryParams()));
+    }
+
+    /** ส่งออก Excel (รอเชื่อมต่อรายงาน) */
+    public function actionExportExcel()
+    {
+        Yii::$app->session->setFlash('info', 'ฟีเจอร์ส่งออก Excel อยู่ระหว่างพัฒนา');
+        return $this->redirect(array_merge(['index'], $this->request->getQueryParams()));
+    }
+
+    /** นำเข้าข้อมูล Excel (รอหน้าอัปโหลด) */
+    public function actionImportExcel()
+    {
+        Yii::$app->session->setFlash('info', 'ฟีเจอร์นำเข้าข้อมูลอยู่ระหว่างพัฒนา');
+        return $this->redirect(array_merge(['index'], $this->request->getQueryParams()));
     }
 
     //ถึงหน่วยงาน
-    public function actionDepartment()
-    {
-        $emp = UserHelper::GetEmployee();
-        $department = $emp->department;
-        if (!$this->isDeptHeadOrDeputy((int) $department, (int) $emp->id)) {
-            $searchModel = new DocumentSearch([
-                'date_filter' => 'today'
-            ]);
-            $dataProvider = $searchModel->search($this->request->queryParams);
-            $dataProvider->query->andWhere('1=0');
+    // public function actionDepartment()
+    // {
+    //     $emp = UserHelper::GetEmployee();
+    //     $department = $emp->department;
+    //     if (!$this->isDeptHeadOrDeputy((int) $department, (int) $emp->id)) {
+    //         $searchModel = new DocumentSearch([
+    //             'date_filter' => 'today'
+    //         ]);
+    //         $dataProvider = $searchModel->search($this->request->queryParams);
+    //         $dataProvider->query->andWhere('1=0');
 
-            return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-                'action' => 'department',
-                'to' => 'ถึงหน่วยงาน',
-            ]);
-        }
+    //         return $this->render('index', [
+    //             'searchModel' => $searchModel,
+    //             'dataProvider' => $dataProvider,
+    //             'action' => 'department',
+    //             'to' => 'ถึงหน่วยงาน',
+    //         ]);
+    //     }
 
-        $searchModel = new DocumentSearch([
-            'date_filter' => 'today'
-        ]);
+    //     $searchModel = new DocumentSearch([
+    //         'date_filter' => 'today'
+    //     ]);
 
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        /** @var \yii\db\ActiveQuery $query */
-        $query = $dataProvider->query;
-        $query->joinWith([
-            'documentDepartment' => function ($query) {
-                $query->alias('d_department')
-                    ->andOnCondition(['d_department.name' => 'department']);
-            }
-        ]);
-        $query->joinWith([
-            'docRead' => function ($query) {
-                $query->alias('d_read')
-                    ->andOnCondition(['d_read.name' => 'read']);
-            }
-        ]);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'topic', $searchModel->q],
-            ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-            ['like', 'doc_number', $searchModel->q],
-            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
-        ]);
-        if ($searchModel->q_status == 'Y') {
-            $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
-        } else {
-            $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
-        }
+    //     $dataProvider = $searchModel->search($this->request->queryParams);
+    //     /** @var \yii\db\ActiveQuery $query */
+    //     $query = $dataProvider->query;
+    //     $query->joinWith([
+    //         'documentDepartment' => function ($query) {
+    //             $query->alias('d_department')
+    //                 ->andOnCondition(['d_department.name' => 'department']);
+    //         }
+    //     ]);
+    //     $query->joinWith([
+    //         'docRead' => function ($query) {
+    //             $query->alias('d_read')
+    //                 ->andOnCondition(['d_read.name' => 'read']);
+    //         }
+    //     ]);
+    //     $dataProvider->query->andFilterWhere([
+    //         'or',
+    //         ['like', 'topic', $searchModel->q],
+    //         ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
+    //         ['like', 'doc_number', $searchModel->q],
+    //         ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
+    //     ]);
+    //     if ($searchModel->q_status == 'Y') {
+    //         $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
+    //     } else {
+    //         $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
+    //     }
 
-        $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
+    //     $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
 
-                $dataProvider->query->andFilterWhere([
-            'between',
-            'doc_transactions_date',
-            AppHelper::convertToGregorian($searchModel->date_start),
-            AppHelper::convertToGregorian($searchModel->date_end)
-        ]);
-
+    //             $dataProvider->query->andFilterWhere([
+    //         'between',
+    //         'doc_transactions_date',
+    //         AppHelper::convertToGregorian($searchModel->date_start),
+    //         AppHelper::convertToGregorian($searchModel->date_end)
+    //     ]);
 
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'action' => 'department',
-             'to' => 'ถึงหน่วยงาน'
-        ]);
-    }
+
+    //     return $this->render('index', [
+    //         'searchModel' => $searchModel,
+    //         'dataProvider' => $dataProvider,
+    //         'action' => 'department',
+    //          'to' => 'ถึงหน่วยงาน'
+    //     ]);
+    // }
 
     //แสดงหน้า Mydashboard
     public function actionShowHome()
@@ -193,28 +496,13 @@ class DocumentsController extends \yii\web\Controller
         $emp = UserHelper::GetEmployee();
         $department = $emp->department;
 
-        $sql = "SELECT d.id
-                FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'department' AND d.to_id = :department AND r.doc_read IS NULL
+        $ids = $this->unreadDetailIdsShowHomeExact($department, $emp->id);
 
-                UNION
-
-                SELECT d.id
-                FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'tags' AND d.to_id = :emp_id AND r.doc_read IS NULL;";
-
-        $ids = Yii::$app->db->createCommand($sql, [
-            ':department' => $department,
-            ':emp_id' => $emp->id
-        ])->queryColumn();
-
-          $searchModel = new DocumentsDetailSearch();
+        $searchModel = new DocumentsDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['IN','id', $ids]);
+        $dataProvider->query->andWhere(['IN', 'id', $ids]);
 
-        
+
 
 
         if ($this->request->isAjax) {
@@ -233,34 +521,19 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
-     public function actionShowHomeV2()
+    public function actionShowHomeV2()
     {
 
         $emp = UserHelper::GetEmployee();
         $department = $emp->department;
 
-        $sql = "SELECT d.id
-                FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'department' AND d.to_id = :department AND r.doc_read IS NULL
+        $ids = $this->unreadDetailIdsShowHomeExact($department, $emp->id);
 
-                UNION
-
-                SELECT d.id
-                FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'tags' AND d.to_id = :emp_id AND r.doc_read IS NULL;";
-
-        $ids = Yii::$app->db->createCommand($sql, [
-            ':department' => $department,
-            ':emp_id' => $emp->id
-        ])->queryColumn();
-
-          $searchModel = new DocumentsDetailSearch();
+        $searchModel = new DocumentsDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['IN','id', $ids]);
+        $dataProvider->query->andWhere(['IN', 'id', $ids]);
 
-        
+
 
 
         if ($this->request->isAjax) {
@@ -281,19 +554,19 @@ class DocumentsController extends \yii\web\Controller
 
     public function actionView($id)
     {
-        // $this->layout = '@app/themes/v3/layouts/theme-v/document_layout';
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
-        if ($detail && $detail->name === 'department') {
-            $deptId = (int) $detail->to_id;
-            if (!$this->isDeptHeadOrDeputy($deptId, (int) $emp->id)) {
-                throw new ForbiddenHttpException('ไม่อนุญาตให้เข้าถึงเอกสารของหน่วยงานนี้');
-            }
-        }
+        // เงื่อนไขเดิม เมื่อส่งถึงหน่วยงาน
+        // if ($detail && $detail->name === 'department') {
+        //     $deptId = (int) $detail->to_id;
+        //     if (!$this->isDeptHeadOrDeputy($deptId, (int) $emp->id)) {
+        //         throw new ForbiddenHttpException('ไม่อนุญาตให้เข้าถึงเอกสารของหน่วยงานนี้');
+        //     }
+        // }
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
-        
+
         $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
         if (!$checkReading) {
             $reading = new DocumentsDetail;
@@ -310,7 +583,7 @@ class DocumentsController extends \yii\web\Controller
             }
         }
 
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -328,6 +601,8 @@ class DocumentsController extends \yii\web\Controller
             ]);
         }
     }
+
+
 
 
     //สร้าง bookmark บันทึกหนังสือ
@@ -381,13 +656,13 @@ class DocumentsController extends \yii\web\Controller
             }
 
             try {
-            //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
-            if (in_array($director, $model->tags_employee)) {
-                $docStatus =  $model->document;
-                $docStatus->status = 'DS3';
-                $docStatus->save(false);
-            }
-                        } catch (\Throwable $th) {
+                //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
+                if (in_array($director, $model->tags_employee)) {
+                    $docStatus =  $model->document;
+                    $docStatus->status = 'DS3';
+                    $docStatus->save(false);
+                }
+            } catch (\Throwable $th) {
             }
 
 
@@ -401,7 +676,7 @@ class DocumentsController extends \yii\web\Controller
                 // return $this->redirect(['view', 'id' => $model->id]);
             }
         }
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -438,7 +713,7 @@ class DocumentsController extends \yii\web\Controller
                 // ];
             }
         }
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -479,7 +754,7 @@ class DocumentsController extends \yii\web\Controller
 
         $model = $this->findModel($id);
 
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -502,7 +777,7 @@ class DocumentsController extends \yii\web\Controller
     public function actionFileComment($id)
     {
         $model = $this->findModel($id);
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -522,7 +797,7 @@ class DocumentsController extends \yii\web\Controller
     public function actionShareFile($id)
     {
         $model = $this->findModel($id);
-        if ($this->request->isAJax) {
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
@@ -577,17 +852,16 @@ class DocumentsController extends \yii\web\Controller
 
     public function actionListCommentTemplate()
     {
-         Yii::$app->response->format = Response::FORMAT_JSON;
+        Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
-        $data  = Categorise::find()->where(['name' => 'comment_template','emp_id' => $me->id])->all();
+        $data  = Categorise::find()->where(['name' => 'comment_template', 'emp_id' => $me->id])->all();
         return [
             'title' => '',
             'totalCount' => count($data),
-            'content' =>  $this->renderAjax('list_comment_template',[
-            'data' => $data
-        ])
+            'content' =>  $this->renderAjax('list_comment_template', [
+                'data' => $data
+            ])
         ];
-       
     }
     //บันทึกข้อความที่ใช้บ่อย
     public function actionSaveCommentTemplate()
@@ -595,42 +869,42 @@ class DocumentsController extends \yii\web\Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
         $text = $this->request->post('text');
-        if($text !==""){
+        if ($text !== "") {
 
-        $checkTemplate = Categorise::find()->where(['name' => 'comment_template','title' => $text,'emp_id' => $me->id])->one();
-        if(!$checkTemplate){
-            $model = new Categorise;
-            $model->name = 'comment_template';
-            $model->title = $text;
-            $model->emp_id = $me->id;
-            $model->save(false);
-            return $model;
-        }else{
-             return $checkTemplate;
+            $checkTemplate = Categorise::find()->where(['name' => 'comment_template', 'title' => $text, 'emp_id' => $me->id])->one();
+            if (!$checkTemplate) {
+                $model = new Categorise;
+                $model->name = 'comment_template';
+                $model->title = $text;
+                $model->emp_id = $me->id;
+                $model->save(false);
+                return $model;
+            } else {
+                return $checkTemplate;
+            }
         }
-        }
-        }
-        
+    }
 
-public function actionDeleteCommentTemplate()
+
+    public function actionDeleteCommentTemplate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
         $id = $this->request->post('id');
         $model = Categorise::findOne($id);
-        if($model){
+        if ($model) {
             $model->delete(false);
             return [
                 'status' => 'success'
             ];
-        }else{
-              return [
+        } else {
+            return [
                 'status' => 'error'
             ];
         }
-        }
+    }
 
-    
+
 
     /**
      * Finds the Documents model based on its primary key value.

@@ -21,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr><th class="text-muted" style="width: 160px;">ชื่อจุด</th><td><?= Html::encode($model->name) ?></td></tr>
                 <tr><th class="text-muted">Latitude</th><td><?= Html::encode($model->lat ?? '-') ?></td></tr>
                 <tr><th class="text-muted">Longitude</th><td><?= Html::encode($model->lng ?? '-') ?></td></tr>
-                <tr><th class="text-muted">รัศมี (เมตร)</th><td><?= (int)$model->radius_m ?></td></tr>
+                <tr><th class="text-muted">รัศมีอนุญาต (เมตร)</th><td><?= (int)$model->radius_m > 0 ? (int)$model->radius_m . ' เมตรจากจุดศูนย์กลาง' : '0 — ไม่ใช้รัศมีกับจุดนี้' ?></td></tr>
                 <tr><th class="text-muted">ค่า QR</th><td><code><?= Html::encode($model->qr_token ?? '-') ?></code></td></tr>
                 <tr><th class="text-muted">สถานะ</th><td><?= $model->active ? 'เปิดใช้งาน' : 'ปิด' ?></td></tr>
             </tbody>

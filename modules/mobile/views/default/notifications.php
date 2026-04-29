@@ -1,44 +1,85 @@
 <?php
 
+use app\components\ThaiDateHelper;
 use yii\bootstrap5\Html;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
+/** @var app\modules\approveV2\models\Approve[] $pendingLeaveApprovals */
+/** @var app\modules\leave\models\Leave[] $recentLeaveRequests */
 $this->params['current_page']   = $current_page ?? 'home';
 $this->params['mobileTitle']    = 'การแจ้งเตือน';
 $this->params['mobileSubtitle'] = 'รายการแจ้งเตือนทั้งหมด';
 
-$items = [
-    [
-        'icon' => 'check-circle',
-        'iconColor' => 'success',
-        'title' => 'คำขอลาของคุณได้รับการอนุมัติแล้ว',
-        'desc' => 'จองห้องประชุม ห้อง A — 15 มี.ค. 2568',
-        'time' => 'วันนี้ 09:30',
-    ],
-    [
+$pendingLeaveApprovals = $pendingLeaveApprovals ?? [];
+$recentLeaveRequests = $recentLeaveRequests ?? [];
+
+$formatDateTimeText = static function ($datetime): string {
+    if (empty($datetime)) {
+        return '-';
+    }
+    $timestamp = strtotime((string) $datetime);
+    if (!$timestamp) {
+        return '-';
+    }
+
+    return ThaiDateHelper::formatThaiDate(date('Y-m-d', $timestamp)) . ' ' . date('H:i', $timestamp) . ' น.';
+};
+
+$leaveStatusMeta = static function ($leave): array {
+    $statusCode = (string) ($leave->status ?? '');
+    $statusTitle = $leave->leaveStatus->title ?? $statusCode ?: 'รอดำเนินการ';
+
+    if (in_array($statusCode, ['Approve', 'Pass'], true)) {
+        return ['icon' => 'check-circle', 'color' => 'success', 'label' => $statusTitle];
+    }
+    if (in_array($statusCode, ['Reject', 'Cancel', 'ReqCancel'], true)) {
+        return ['icon' => 'x-circle', 'color' => 'danger', 'label' => $statusTitle];
+    }
+
+    return ['icon' => 'clock', 'color' => 'warning', 'label' => $statusTitle];
+};
+
+$items = [];
+foreach ($pendingLeaveApprovals as $approve) {
+    $leave = $approve->leave;
+    if (!$leave) {
+        continue;
+    }
+
+    $requesterName = $leave->employee->fullname ?? '-';
+    $leaveType = $leave->leaveType->title ?? 'ใบลา';
+    $dateRange = trim(preg_replace('/\s+/', ' ', strip_tags((string) $leave->showLeaveDate())));
+    $items[] = [
         'icon' => 'clock',
         'iconColor' => 'warning',
-        'title' => 'มีงานที่รอการอนุมัติจากคุณ',
-        'desc' => 'คำขอลาของนายสมชาย ต้องการการอนุมัติ',
-        'time' => 'วันนี้ 08:15',
-    ],
-    [
-        'icon' => 'car',
-        'iconColor' => 'info',
-        'title' => 'การจองรถราชการของคุณได้รับการยืนยัน',
-        'desc' => 'กก 1234 กรุงเทพ — 10 มี.ค. 2568 เวลา 08:00',
-        'time' => 'เมื่อวาน 14:20',
-    ],
-    [
-        'icon' => 'file-check',
-        'iconColor' => 'success',
-        'title' => 'คำขอลาของคุณได้รับการอนุมัติแล้ว',
-        'desc' => 'ขอลาป่วย 3 วัน — 12–14 มี.ค. 2568',
-        'time' => 'เมื่อวาน 11:00',
-    ],
-];
+        'title' => 'มีใบลารออนุมัติจากคุณ',
+        'desc' => trim($requesterName . ' · ' . $leaveType . ($dateRange !== '' ? ' · ' . $dateRange : '')),
+        'time' => $formatDateTimeText($approve->created_at ?: $leave->created_at),
+        'url' => Url::to(['/mobile/default/approve-leave', 'id' => $approve->id]),
+        'sortTs' => strtotime((string) ($approve->created_at ?: $leave->created_at)) ?: 0,
+    ];
+}
+
+foreach ($recentLeaveRequests as $leave) {
+    $meta = $leaveStatusMeta($leave);
+    $leaveType = $leave->leaveType->title ?? 'ใบลา';
+    $dateRange = trim(preg_replace('/\s+/', ' ', strip_tags((string) $leave->showLeaveDate())));
+    $items[] = [
+        'icon' => $meta['icon'],
+        'iconColor' => $meta['color'],
+        'title' => 'สถานะใบลาของคุณ: ' . $meta['label'],
+        'desc' => trim($leaveType . ($dateRange !== '' ? ' · ' . $dateRange : '')),
+        'time' => $formatDateTimeText($leave->updated_at ?: $leave->created_at),
+        'url' => Url::to(['/mobile/default/leave-request-view', 'id' => $leave->id]),
+        'sortTs' => strtotime((string) ($leave->updated_at ?: $leave->created_at)) ?: 0,
+    ];
+}
+
+usort($items, static function (array $a, array $b) {
+    return ($b['sortTs'] ?? 0) <=> ($a['sortTs'] ?? 0);
+});
 ?>
 <style>
 .notif-card { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
@@ -53,24 +94,33 @@ $items = [
 </style>
 
 <div class="d-flex flex-column gap-3">
-    <p class="small text-body-secondary mb-0">รายการแจ้งเตือนล่าสุด — ตัวอย่างการแสดงผล</p>
+    <p class="small text-body-secondary mb-0">รายการแจ้งเตือนจากงานอนุมัติและสถานะใบลาล่าสุดของคุณ</p>
 
-    <div class="card notif-card">
-        <div class="card-body p-0">
-            <?php foreach ($items as $item): ?>
-                <a href="#" class="notif-item px-3">
-                    <div class="notif-icon text-<?= $item['iconColor'] ?>">
-                        <i data-lucide="<?= $item['icon'] ?>"></i>
-                    </div>
-                    <div class="flex-grow-1 min-w-0">
-                        <span class="fw-medium small d-block"><?= Html::encode($item['title']) ?></span>
-                        <p class="mb-0 small text-body-secondary"><?= Html::encode($item['desc']) ?></p>
-                        <span class="small text-body-secondary"><?= Html::encode($item['time']) ?></span>
-                    </div>
-                </a>
-            <?php endforeach; ?>
+    <?php if (empty($items)): ?>
+        <div class="card notif-card">
+            <div class="card-body py-5 text-center text-muted">
+                <div class="fw-semibold text-dark mb-2">ยังไม่มีการแจ้งเตือน</div>
+                <div class="small">เมื่อมีงานอนุมัติหรือสถานะใบลาเปลี่ยน รายการจะปรากฏที่หน้านี้</div>
+            </div>
         </div>
-    </div>
+    <?php else: ?>
+        <div class="card notif-card">
+            <div class="card-body p-0">
+                <?php foreach ($items as $item): ?>
+                    <a href="<?= Html::encode($item['url']) ?>" class="notif-item px-3">
+                        <div class="notif-icon text-<?= Html::encode($item['iconColor']) ?>">
+                            <i data-lucide="<?= Html::encode($item['icon']) ?>"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <span class="fw-medium small d-block"><?= Html::encode($item['title']) ?></span>
+                            <p class="mb-0 small text-body-secondary"><?= Html::encode($item['desc']) ?></p>
+                            <span class="small text-body-secondary"><?= Html::encode($item['time']) ?></span>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <div class="text-center py-2">
         <a href="<?= Html::encode(Url::to(['/mobile/default/index'])) ?>" class="btn btn-outline-primary" style="border-radius: 12px;">

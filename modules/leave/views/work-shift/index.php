@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/leave/views/menu_admin', ['active' => 'setting']) ?>
+<?= $this->render('@app/modules/leave/menu_admin', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'leave']); ?>
@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="mb-0"><i class="bi bi-search me-1"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?= $this->render('@app/modules/hr/views/work-shift/_search', ['model' => $searchModel]) ?>
+        <?= $this->render('_search', ['model' => $searchModel]) ?>
     </div>
 </div>
 <div class="card">
