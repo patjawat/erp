@@ -93,6 +93,9 @@ use yii\helpers\Url;
                 <?= Html::a('<i class="fa-solid fa-hashtag me-1"></i> รูปแบบ FSN ครุภัณฑ์', ['/am/setting/fsn-format'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>
+                <?= Html::a('<i data-lucide="receipt-text" class="me-1"></i> สภาพครุภัณฑ์', ['/am/asset-condition'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
                 <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน (ทั้งหมด)', ['/am/setting'], ['class' => 'dropdown-item']) ?>
             </li>
 

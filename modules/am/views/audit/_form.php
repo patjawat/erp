@@ -32,6 +32,20 @@ $loadAssetsUrl = Url::to(['/am/audit/assets-by-department']);
 $initialIndex = count($items);
 ?>
 
+<?php $this->beginBlock('page-title'); ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="receipt-text" class="me-2"></i>
+        <?= $this->title ?>
+    </h4>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/components/ui/btnReturn') ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="card border-0 shadow-sm">
     <div class="card-body">
         <?php $form = ActiveForm::begin(['id' => 'asset-audit-form']); ?>
@@ -134,14 +148,19 @@ $initialIndex = count($items);
                     <?php foreach ($items as $i => $item): ?>
                         <tr class="audit-item-row">
                             <td>
-                                <input type="hidden" name="AssetAuditItem[<?= $i ?>][asset_id]" class="asset-id-input" value="<?= Html::encode($item->asset_id ?? '') ?>">
-                                <?= Html::textInput("AssetAuditItem[{$i}][asset_code]", $item->asset_code, [
-                                    'class' => 'form-control asset-code-input',
-                                    'placeholder' => 'รหัสครุภัณฑ์',
-                                ]) ?>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">
-                                        ค้นหา
+                                <input type="hidden"
+                                    name="AssetAuditItem[<?= $i ?>][asset_id]"
+                                    class="asset-id-input"
+                                    value="<?= Html::encode($item->asset_id ?? '') ?>">
+
+                                <div class="input-group">
+                                    <?= Html::textInput("AssetAuditItem[{$i}][asset_code]", $item->asset_code, [
+                                        'class' => 'form-control asset-code-input',
+                                        'placeholder' => 'รหัสครุภัณฑ์',
+                                    ]) ?>
+
+                                    <button type="button" class="btn btn-light lookup-asset-btn">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
                                     </button>
                                 </div>
                             </td>

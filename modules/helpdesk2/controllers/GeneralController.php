@@ -17,6 +17,11 @@ use app\modules\helpdesk2\helpers\RepairDashboardV2Helper;
 
 class GeneralController extends \yii\web\Controller
 {
+    public function actionIndexV2()
+    {
+        return $this->render('index-v2');
+    }
+
     public function actionIndex()
     {
 
