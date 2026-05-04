@@ -239,7 +239,6 @@ class BookingMeetingController extends \yii\web\Controller
     {
 
         $me = UserHelper::GetEmployee();
-        $carType = $this->request->get('type');
         $dateStart = $this->request->get('date_start');
         $room_id = $this->request->get('room_id');
         $model = new Meeting([
@@ -266,7 +265,6 @@ class BookingMeetingController extends \yii\web\Controller
                     return [
                         'status' => 'success'
                     ];
-                    // return $this->redirect(['/me/booking-meeting/index', 'id' => $model->id]);
                 }
             }
         } else {
@@ -276,7 +274,6 @@ class BookingMeetingController extends \yii\web\Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                // 'title' => $this->request->get('title'),
                 'title' => 'จองห้องประชุม',
                 'content' => $this->renderAjax('@app/modules/booking/views/meeting/_form', [
                     'model' => $model
