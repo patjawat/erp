@@ -73,16 +73,28 @@ $initialIndex = count($items);
                     'fontAwesome' => true,
                     'asDropdown' => true,
                     'multiple' => false,
-                    'options' => ['class' => 'form-select', 'id' => 'audit-department'],
-                    'pluginOptions' => [
-                        'closeOnSelect' => true,
+                    'dropdownConfig' => [
+                        'input' => [
+                            'placeholder' => '--หน่วยงานทั้งหมด--',
+                        ],
                     ],
+                    'options' => ['class' => 'form-select', 'id' => 'audit-department'],
                     'pluginEvents' => [
-                        'select2:select' => new JsExpression('function() {
-                            var $el = $(this);
+                        'treeview:change' => new JsExpression('function() {
+                            var $container = $(this).closest(".kv-tree-dropdown-container");
                             setTimeout(function() {
-                                try { $el.select2("close"); } catch (e) {}
-                            }, 50);
+                                var $toggle = $container.find(".kv-tree-input");
+                                $toggle.removeClass("show open").attr("aria-expanded", "false");
+                                $container.find(".kv-tree-dropdown").removeClass("show open");
+                                if (window.bootstrap && bootstrap.Dropdown && $toggle.length) {
+                                    try {
+                                        var instance = bootstrap.Dropdown.getInstance($toggle[0]) || bootstrap.Dropdown.getOrCreateInstance($toggle[0]);
+                                        if (instance) {
+                                            instance.hide();
+                                        }
+                                    } catch (e) {}
+                                }
+                            }, 0);
                         }'),
                     ],
                 ])->label('หน่วยงานที่ตรวจนับ') ?>
