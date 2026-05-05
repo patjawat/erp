@@ -101,7 +101,7 @@ $models = $dataProvider->getModels();
                                     <?= Html::a(
                                         '<i class="bi bi-pencil me-2"></i> แก้ไข',
                                         ['/leave/leave/update', 'id' => $item->id],
-                                        ['class' => 'dropdown-item']
+                                        ['class' => 'dropdown-item open-modal','data' => ['size' => 'modal-xl']]
                                     ) ?>
                                 </li>
                                 <?php // endif; ?>
@@ -116,6 +116,15 @@ $models = $dataProvider->getModels();
                                             'data-pjax' => '0',
                                             'title' => 'ใช้เทมเพลตจาก /pdf-template ก่อน; ถ้ายังไม่ตั้งจะใช้แบบฟอร์มใบลาเดิม — พิมพ์ได้ทุกสถานะ',
                                         ]
+                                    ) ?>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <?= Html::a(
+                                        '<i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ',
+                                        ['/leave/approver/change-approver', 'id' => $item->id,
+                                            'title' => '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
                                     ) ?>
                                 </li>
                             </ul>

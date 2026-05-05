@@ -4,7 +4,9 @@ namespace app\modules\leave\controllers;
 
 use Yii;
 use yii\web\Controller;
+use yii\web\Response;
 use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\components\ThaiDateHelper;
@@ -13,6 +15,7 @@ use yii\db\Expression;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\leave\models\LeaveType;
+use app\modules\approveV2\models\Approve;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -125,6 +128,137 @@ class ApproverController extends Controller
             'summaryByLeaveType' => $summaryByLeaveType,
             'leaveTypeColors' => $leaveTypeColors,
         ]);
+    }
+
+    /**
+     * เปลี่ยนผู้อนุมัติ (admin only) — แสดง modal form + บันทึก
+     */
+    public function actionChangeApprover($id)
+    {
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการนี้');
+        }
+
+        $leave = Leave::find()
+            ->andWhere(['id' => (int) $id])
+            ->with(['employee', 'leaveType'])
+            ->one();
+        if ($leave === null) {
+            throw new NotFoundHttpException('ไม่พบรายการวันลา');
+        }
+
+        $approves = Approve::find()
+            ->where(['name' => 'leave', 'from_id' => (string) $leave->id])
+            ->orderBy(['level' => SORT_ASC])
+            ->all();
+
+        if (Yii::$app->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $data = Yii::$app->request->post('approves', []);
+
+            $allowedStatuses = ['Pending', 'Pass', 'Reject', 'None'];
+            $errors = [];
+
+            foreach ($data as $approveId => $fields) {
+                $approveId = (int) $approveId;
+                if ($approveId <= 0) continue;
+
+                $record = Approve::findOne(['id' => $approveId, 'name' => 'leave', 'from_id' => (string) $leave->id]);
+                if (!$record) {
+                    $errors[] = "ไม่พบรายการอนุมัติ #{$approveId}";
+                    continue;
+                }
+
+                $newEmpId = isset($fields['emp_id']) ? (int) $fields['emp_id'] : 0;
+                if ($newEmpId > 0) {
+                    $record->emp_id = $newEmpId;
+                }
+
+                $newStatus = $fields['status'] ?? '';
+                if ($newStatus !== '' && in_array($newStatus, $allowedStatuses, true)) {
+                    $record->status = $newStatus;
+                }
+
+                if (!$record->save(false)) {
+                    $errors[] = "บันทึกรายการ #{$approveId} ไม่สำเร็จ";
+                }
+            }
+
+            if (!empty($errors)) {
+                return ['status' => 'error', 'message' => implode('<br>', $errors)];
+            }
+
+            // sync leave.status ตามสถานะผู้อนุมัติ
+            $leaveStatus = $this->syncLeaveStatus($leave);
+            $leaveStatusLabels = [
+                'Pending'  => 'ใบลาอยู่ระหว่างรอการอนุมัติ',
+                'Approve'  => 'ใบลาได้รับการอนุมัติแล้ว',
+                'Reject'   => 'ใบลาถูกปฏิเสธ',
+                'Cancel'   => 'ใบลาถูกยกเลิก',
+            ];
+
+            return [
+                'status'             => 'success',
+                'leave_status'       => $leaveStatus,
+                'leave_status_label' => 'สถานะใบลา: ' . ($leaveStatusLabels[$leaveStatus] ?? $leaveStatus),
+            ];
+        }
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $title = Yii::$app->request->get('title', '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ');
+            return [
+                'title'   => $title,
+                'content' => $this->renderAjax('_change_approver', [
+                    'leave'    => $leave,
+                    'approves' => $approves,
+                ]),
+                'footer'  => '',
+            ];
+        }
+
+        return $this->render('_change_approver', [
+            'leave'    => $leave,
+            'approves' => $approves,
+        ]);
+    }
+
+    /**
+     * คำนวณและอัพเดต leave.status ตามสถานะของผู้อนุมัติทั้งหมด
+     * Reject ใด ๆ → Reject | ทั้งหมด Pass → Approve | มี Pending → Pending
+     */
+    protected function syncLeaveStatus(Leave $leave): string
+    {
+        $activeApproves = Approve::find()
+            ->where(['name' => 'leave', 'from_id' => (string) $leave->id])
+            ->andWhere(['!=', 'status', 'None'])
+            ->all();
+
+        if (empty($activeApproves)) {
+            return $leave->status;
+        }
+
+        $hasReject  = false;
+        $hasPending = false;
+        foreach ($activeApproves as $ap) {
+            if ($ap->status === 'Reject')  { $hasReject  = true; break; }
+            if ($ap->status === 'Pending') { $hasPending = true; }
+        }
+
+        if ($hasReject) {
+            $newStatus = 'Reject';
+        } elseif ($hasPending) {
+            $newStatus = 'Pending';
+        } else {
+            $newStatus = 'Approve';
+        }
+
+        if ($leave->status !== $newStatus) {
+            $leave->status = $newStatus;
+            $leave->save(false);
+        }
+
+        return $newStatus;
     }
 
     /**
