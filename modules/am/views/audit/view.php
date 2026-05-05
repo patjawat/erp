@@ -50,6 +50,51 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="card-body">
+        <?php $summary = $model->progressSummary; ?>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="card border-0 bg-light h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">ตรวจแล้ว</div>
+                        <div class="fs-3 fw-bold text-success"><?= number_format((int) $summary['checked']) ?></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="card border-0 bg-light h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">ยังไม่ตรวจ</div>
+                        <div class="fs-3 fw-bold text-danger"><?= number_format((int) $summary['remaining']) ?></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="card border-0 bg-light h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">รายการทั้งหมด</div>
+                        <div class="fs-3 fw-bold"><?= number_format((int) $summary['total']) ?></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="card border-0 bg-light h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">อัตราการตรวจนับ</div>
+                        <div class="fs-3 fw-bold text-primary"><?= Html::encode($summary['percent']) ?>%</div>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <?php $percent = (float) ($summary['percent'] ?? 0); ?>
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?= Html::encode($percent) ?>%" aria-valuenow="<?= Html::encode($percent) ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?php if (empty($summary['scopeResolved'])): ?>
+            <div class="alert alert-warning">
+                ยังไม่สามารถคำนวณ KPI ครบถ้วนได้ เพราะใบตรวจนับนี้ยังไม่ได้ระบุหน่วยงาน
+            </div>
+        <?php endif; ?>
 
         <div class="row g-3">
             <div class="col-12 col-md-3">
@@ -79,6 +124,41 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-12">
                 <div class="text-muted small">หมายเหตุรวม</div>
                 <div><?= nl2br(Html::encode($model->summary_note ?: '-')) ?></div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">KPI ตามประเภททรัพย์สิน</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ประเภท</th>
+                            <th class="text-end">ตรวจแล้ว</th>
+                            <th class="text-end">ทั้งหมด</th>
+                            <th class="text-end">เหลือ</th>
+                            <th class="text-end">เปอร์เซ็นต์</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach (($summary['types'] ?? []) as $row): ?>
+                            <tr>
+                                <td><?= Html::encode($row['type']) ?></td>
+                                <td class="text-end"><?= number_format((int) $row['checked']) ?></td>
+                                <td class="text-end"><?= number_format((int) $row['total']) ?></td>
+                                <td class="text-end"><?= number_format((int) $row['remaining']) ?></td>
+                                <td class="text-end"><?= Html::encode($row['percent']) ?>%</td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php if (empty($summary['types'])): ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">ไม่มีข้อมูลประเภททรัพย์สินสำหรับคำนวณ</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -162,19 +162,47 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
         <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">หน่วยงาน & ผู้รับผิดชอบ</span>
         <div class="row g-3">
             <div class="col-12 col-md-6">
-                <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                'name' => 'department',
-                'id' => 'treeID',
-                'query' => Organization::find()->addOrderBy('root, lft'),
-                'value' => null,
-                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                'fontAwesome' => true,
-                'asDropdown' => true,
-                'multiple' => false,
-                'options' => ['class' => 'close', 'allowClear' => true],
-                'pluginOptions' => ['allowClear' => true, 'placeholder' => 'เลือกหน่วยงาน...'],
-            ])->label('หน่วยงาน'); ?>
+                <div class="d-flex align-items-end align-items-center gap-2">
+                    <div class="flex-grow-1">
+                        <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+                            'name' => 'department',
+                            'query' => Organization::find()->addOrderBy('root, lft'),
+                            'value' => !empty($model->q_department) ? $model->q_department : null,
+                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                            'fontAwesome' => true,
+                            'asDropdown' => true,
+                            'multiple' => false,
+                            'options' => ['disabled' => false],
+                            'dropdownConfig' => [
+                                'input' => [
+                                    'placeholder' => 'เลือกหน่วยงาน...',
+                                ],
+                            ],
+                            'pluginEvents' => [
+                                'treeview:change' => new JsExpression('function() {
+                                    var $container = $(this).closest(".kv-tree-dropdown-container");
+                                    setTimeout(function() {
+                                        var $toggle = $container.find(".kv-tree-input");
+                                        $toggle.removeClass("show open").attr("aria-expanded", "false");
+                                        $container.find(".kv-tree-dropdown").removeClass("show open");
+                                        if (window.bootstrap && bootstrap.Dropdown && $toggle.length) {
+                                            try {
+                                                var instance = bootstrap.Dropdown.getInstance($toggle[0]) || bootstrap.Dropdown.getOrCreateInstance($toggle[0]);
+                                                if (instance) {
+                                                    instance.hide();
+                                                }
+                                            } catch (e) {}
+                                        }
+                                    }, 0);
+                                }'),
+                            ],
+                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary flex-shrink-0 mt-3" id="clear-q-department">
+                        <i class="fa-solid fa-eraser me-1"></i> ล้าง
+                    </button>
+                </div>
             </div>
             <div class="col-12 col-md-6">
                 <?php
@@ -319,5 +347,56 @@ $('.btn-export-excel').click(function(e) {
 
 JS;
 $this->registerJS($js);
-
 ?>
+
+<?php
+$clearDepartmentJs = <<<'JS'
+$('#clear-q-department').on('click', function() {
+    const $field = $('.field-assetsearch-q_department');
+    const $input = $field.find('#assetsearch-q_department, input[name="AssetSearch[q_department]"]').first();
+    const treeInput = $input.data('treeinput');
+    const treeView = $input.data('treeview');
+
+    if (!$input.length) {
+        return;
+    }
+
+    $input.val('');
+    $input.trigger('treeview:change', ['', '']);
+    $input.trigger('change');
+
+    if (treeView && treeView.$tree) {
+        treeView.$tree.find('.kv-selected').removeClass('kv-selected');
+        if (typeof treeView.disableToolbar === 'function') {
+            treeView.disableToolbar();
+        }
+    }
+
+    if (treeInput && typeof treeInput.setInput === 'function') {
+        treeInput.setInput([]);
+    } else if (treeInput && treeInput.$input) {
+        treeInput.$input.html(treeInput.caret + treeInput.placeholder);
+    }
+
+    const $toggle = $field.find('.kv-tree-input').first();
+    if ($toggle.length) {
+        $toggle.attr('aria-expanded', 'false');
+    }
+
+    const $container = $field.find('.kv-tree-dropdown-container').first();
+    if ($container.length) {
+        $container.removeClass('show open');
+        if (window.bootstrap && bootstrap.Dropdown && $toggle.length) {
+            try {
+                var instance = bootstrap.Dropdown.getInstance($toggle[0]) || bootstrap.Dropdown.getOrCreateInstance($toggle[0]);
+                if (instance) {
+                    instance.hide();
+                }
+            } catch (e) {}
+        }
+    }
+});
+JS;
+$this->registerJS($clearDepartmentJs);
+      
+      ?> 

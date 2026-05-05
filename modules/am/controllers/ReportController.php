@@ -5,9 +5,11 @@ namespace app\modules\am\controllers;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\data\SqlDataProvider;
+use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
 use app\modules\am\services\ReportExportService;
+use app\modules\am\services\AnnualRemainingReportService;
 use app\modules\am\services\MonthlyDepreciationService;
 use app\modules\am\models\AssetType;
 use app\components\SiteHelper;
@@ -103,35 +105,39 @@ class ReportController extends \yii\web\Controller
     }
 
     /**
-     * Asset register report. format=csv for Excel export.
+     * Annual remaining asset report. format=csv or xlsx for export.
      */
     public function actionRegister()
     {
-        $searchModel = new AssetSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['asset.deleted_at' => null]);
-        $dataProvider->setPagination(['pageSize' => 50]);
+        $thaiYear = (int) $this->request->get('year', AppHelper::YearBudget());
+        $reportData = AnnualRemainingReportService::getReportData($thaiYear);
+
+        if ($this->request->get('format') === 'xlsx') {
+            $output = AnnualRemainingReportService::saveXlsx($thaiYear);
+            return Yii::$app->response->sendFile($output['filePath'], $output['fileName']);
+        }
 
         if ($this->request->get('format') === 'csv') {
             $rows = [];
-            $headers = ['รหัส', 'ชื่อ', 'ประเภท', 'หน่วยงาน', 'วันที่รับ', 'ราคา', 'สถานะ'];
-            foreach ($dataProvider->getModels() as $a) {
+            $headers = ['หมวด', 'รหัส', 'วันที่รับ', 'รายการ', 'ราคาทุน', 'ค่าเสื่อมสะสม', 'คงเหลือ', 'อายุการใช้งาน'];
+            foreach ($reportData['rows'] as $row) {
                 $rows[] = [
-                    'รหัส' => $a->code ?? '',
-                    'ชื่อ' => $a->asset_name ?? $a->AssetitemName() ?? '',
-                    'ประเภท' => $a->type_name ?? '',
-                    'หน่วยงาน' => $a->departmentName() ?? '',
-                    'วันที่รับ' => $a->receive_date ? date('d/m/Y', strtotime($a->receive_date)) : '',
-                    'ราคา' => $a->price ?? '',
-                    'สถานะ' => $a->lifecycle_status ?? $a->asset_status ?? '',
+                    'หมวด' => $row['bucket'] ?? '',
+                    'รหัส' => $row['code'] ?? '',
+                    'วันที่รับ' => $row['receive_date'] ?? '',
+                    'รายการ' => $row['name'] ?? '',
+                    'ราคาทุน' => $row['cost'] ?? '',
+                    'ค่าเสื่อมสะสม' => $row['accumulated_current'] ?? '',
+                    'คงเหลือ' => $row['remaining_current'] ?? '',
+                    'อายุการใช้งาน' => $row['useful_life'] ?? '',
                 ];
             }
-            ReportExportService::sendCsv('asset-register-' . date('Y-m-d') . '.csv', $rows, $headers);
+            ReportExportService::sendCsv('annual-remaining-report-' . $thaiYear . '.csv', $rows, $headers);
         }
 
         return $this->render('register', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+            'thaiYear' => $thaiYear,
+            'reportData' => $reportData,
         ]);
     }
 

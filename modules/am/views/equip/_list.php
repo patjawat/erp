@@ -1,7 +1,6 @@
 <?php
 
 use yii\helpers\Html;
-use app\components\widgets\DataSummaryWidget;
 use app\modules\hr\models\Employees;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
@@ -193,12 +192,4 @@ $equipSubtitle = static function ($item): string {
             </tbody>
         </table>
     </div>
-</div>
-<div class="card-footer bg-body border-top py-3 px-4">
-    <?php
-    echo DataSummaryWidget::widget([
-        'dataProvider' => $dataProvider,
-        'pagerOptions' => [],
-    ]);
-    ?>
 </div>

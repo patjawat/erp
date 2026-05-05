@@ -1,5 +1,6 @@
 <?php
 
+use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
@@ -53,53 +54,54 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 </div>
 
 
-<div class="row g-3 mt-1">
-    <div class="col-12">
-        <div class="card">
-             <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="border-color: rgb(241, 245, 249); background-color: rgba(248, 250, 252, 0.5);">
-            <div class="d-flex align-items-center gap-2">
-                <div class="p-2 rounded-3" style="background-color: rgb(219, 234, 254);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E4E91" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list" aria-hidden="true">
-                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                        <path d="M12 11h4"></path>
-                        <path d="M12 16h4"></path>
-                        <path d="M8 11h.01"></path>
-                        <path d="M8 16h.01"></path>
-                    </svg></div>
-                <h3 class="m-0 fw-bold" style="font-size: 16px; color: rgb(30, 41, 59);">รายการทะเบียนคุมครุภัณฑ์</h3><span class="badge rounded-pill fw-bold" style="background-color: rgb(226, 232, 240); color: rgb(71, 85, 105); font-size: 10px; padding: 4px 8px;"><?=number_format($dataProvider->getTotalCount(),0)?> รายการ</span>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">
 
-                    <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
-                        'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                        'data-pjax' => 0,
-                    ]) ?>
-                    <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
-                        'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                        'data-pjax' => 0,
-                    ]) ?>
 
-                </div>
-                  <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
-                            'class' => 'btn btn-primary fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm',
-                            'data-pjax' => 0,
-                        ]) ?>
+<div class="card">
+    <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="border-color: rgb(241, 245, 249); background-color: rgba(248, 250, 252, 0.5);">
+        <div class="d-flex align-items-center gap-2">
+            <div class="p-2 rounded-3" style="background-color: rgb(219, 234, 254);">
+                <i data-lucide="notepad-text" class="text-primary"></i>
             </div>
+            <h5 class="m-0 fw-bold">รายการทะเบียนคุมครุภัณฑ์</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ
+            </span>
         </div>
-
-            <div class="card-body p-0">
-                <?php if ($isTableView): ?>
-                    <?= $this->render('_list', [
-                        'dataProvider' => $dataProvider,
-                    ]) ?>
-                <?php else: ?>
-                    <?= $this->render('_grid', [
-                        'dataProvider' => $dataProvider,
-                    ]) ?>
-                <?php endif; ?>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">
+                <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
+                    'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                    'data-pjax' => 0,
+                ]) ?>
+                <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
+                    'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                    'data-pjax' => 0,
+                ]) ?>
             </div>
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
+                'class' => 'btn btn-primary fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm',
+                'data-pjax' => 0,
+            ]) ?>
         </div>
+    </div>
+    <div class="card-body p-0">
+        <?php if ($isTableView): ?>
+            <?= $this->render('_list', [
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        <?php else: ?>
+            <?= $this->render('_grid', [
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        <?php endif; ?>
+    </div>
+    <div class="card-footer bg-body border-top py-3 px-4">
+        <?php
+        echo DataSummaryWidget::widget([
+            'dataProvider' => $dataProvider,
+            'pagerOptions' => [],
+        ]);
+        ?>
     </div>
 </div>
 

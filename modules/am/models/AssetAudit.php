@@ -32,6 +32,8 @@ class AssetAudit extends \yii\db\ActiveRecord
     const STATUS_ACTIVE = 'active';
     const STATUS_CLOSED = 'closed';
 
+    private ?array $_progressSummary = null;
+
     public static function tableName()
     {
         return '{{%asset_audits}}';
@@ -139,5 +141,119 @@ class AssetAudit extends \yii\db\ActiveRecord
     {
         $list = self::statusList();
         return $list[$this->status] ?? $this->status;
+    }
+
+    /**
+     * สรุป KPI การตรวจนับ: ตรวจแล้ว / คงเหลือ / เปอร์เซ็นต์ และแยกตามประเภททรัพย์สิน
+     */
+    public function getProgressSummary(): array
+    {
+        if ($this->_progressSummary !== null) {
+            return $this->_progressSummary;
+        }
+
+        $auditedAssetIds = [];
+        $auditedItemsByType = [];
+        foreach ($this->auditItems as $item) {
+            if (!empty($item->asset_id)) {
+                $auditedAssetIds[(int) $item->asset_id] = true;
+            }
+
+            $asset = $item->asset;
+            $typeLabel = trim((string) ($asset && $asset->assetType ? $asset->assetType->title : ($asset ? $asset->AssetTypeName() : '')));
+            if ($typeLabel === '' && $asset) {
+                $typeLabel = trim((string) ($asset->asset_kind ?? ''));
+            }
+            if ($typeLabel === '') {
+                $typeLabel = 'ไม่ระบุประเภท';
+            }
+            if (!isset($auditedItemsByType[$typeLabel])) {
+                $auditedItemsByType[$typeLabel] = [
+                    'type' => $typeLabel,
+                    'total' => 0,
+                    'checked' => 0,
+                    'remaining' => 0,
+                    'percent' => 0.0,
+                ];
+            }
+            $auditedItemsByType[$typeLabel]['checked']++;
+        }
+
+        if (empty($this->department)) {
+            $types = array_values($auditedItemsByType);
+            usort($types, static function (array $a, array $b): int {
+                return $b['checked'] <=> $a['checked'] ?: strcmp($a['type'], $b['type']);
+            });
+
+            $this->_progressSummary = [
+                'scopeResolved' => false,
+                'total' => 0,
+                'checked' => 0,
+                'remaining' => 0,
+                'percent' => 0.0,
+                'types' => $types,
+            ];
+
+            return $this->_progressSummary;
+        }
+
+        $scopeQuery = Asset::find()
+            ->alias('a')
+            ->with(['assetType'])
+            ->where(['a.deleted_at' => null])
+            ->andWhere(['a.department' => $this->department]);
+
+        $scopeAssets = $scopeQuery
+            ->orderBy(['a.asset_type_id' => SORT_ASC, 'a.code' => SORT_ASC, 'a.id' => SORT_ASC])
+            ->all();
+
+        $total = count($scopeAssets);
+        $checked = 0;
+        $types = [];
+
+        foreach ($scopeAssets as $asset) {
+            $typeLabel = trim((string) ($asset->assetType->title ?? $asset->AssetTypeName() ?? $asset->asset_kind ?? 'ไม่ระบุประเภท'));
+            if ($typeLabel === '') {
+                $typeLabel = 'ไม่ระบุประเภท';
+            }
+
+            if (!isset($types[$typeLabel])) {
+                $types[$typeLabel] = [
+                    'type' => $typeLabel,
+                    'total' => 0,
+                    'checked' => 0,
+                    'remaining' => 0,
+                    'percent' => 0.0,
+                ];
+            }
+
+            $types[$typeLabel]['total']++;
+            if (isset($auditedAssetIds[(int) $asset->id])) {
+                $checked++;
+                $types[$typeLabel]['checked']++;
+            } else {
+                $types[$typeLabel]['remaining']++;
+            }
+        }
+
+        foreach ($types as &$row) {
+            $row['percent'] = $row['total'] > 0 ? round(($row['checked'] / $row['total']) * 100, 1) : 0.0;
+        }
+        unset($row);
+
+        usort($types, static function (array $a, array $b): int {
+            return $b['total'] <=> $a['total'] ?: strcmp($a['type'], $b['type']);
+        });
+
+        $this->_progressSummary = [
+            'scopeResolved' => !empty($this->department),
+            'total' => $total,
+            'checked' => $checked,
+            'remaining' => max(0, $total - $checked),
+            'percent' => $total > 0 ? round(($checked / $total) * 100, 1) : 0.0,
+            'types' => $types,
+        ];
+
+        return $this->_progressSummary;
     }
 }

@@ -30,7 +30,7 @@ class AssetAuditSearch extends AssetAudit
     {
         $query = AssetAudit::find()
             ->alias('aa')
-            ->with(['auditItems', 'departmentRef', 'auditorEmp'])
+            ->with(['auditItems.asset.assetType', 'departmentRef', 'auditorEmp'])
             ->leftJoin(['ae' => Employees::tableName()], 'ae.id = aa.emp_id');
 
         $dataProvider = new ActiveDataProvider([

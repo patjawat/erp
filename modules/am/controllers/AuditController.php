@@ -48,12 +48,136 @@ class AuditController extends Controller
     public function actionIndex()
     {
         $searchModel = new AssetAuditSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $queryParams = Yii::$app->request->queryParams;
+        $dataProvider = $searchModel->search($queryParams);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    public function actionDashboard()
+    {
+        $searchModel = new AssetAuditSearch();
+        $searchModel->load(Yii::$app->request->queryParams);
+
+        $kpiFiscalYear = null;
+        if ($searchModel->fiscal_year !== null && $searchModel->fiscal_year !== '') {
+            $kpiFiscalYear = (int) $searchModel->fiscal_year;
+        }
+
+        $kpiData = $this->buildAuditKpiData($kpiFiscalYear);
+        $noDepartmentCount = $this->countAssetsWithoutDepartment();
+
+        return $this->render('dashboard', [
+            'searchModel' => $searchModel,
+            'overallKpi' => $kpiData['overall'],
+            'typeTotals' => $kpiData['typeTotals'],
+            'kpiFiscalYear' => $kpiFiscalYear,
+            'noDepartmentCount' => $noDepartmentCount,
+        ]);
+    }
+
+    /**
+     * @return array{overall: array<string, int|float>, typeTotals: array<int, array<string, int|float|string>>}
+     */
+    private function buildAuditKpiData(?int $fiscalYear): array
+    {
+        $overall = [
+            'total' => 0,
+            'checked' => 0,
+            'remaining' => 0,
+            'percent' => 0.0,
+        ];
+        $typeTotals = [];
+
+        $allAssets = Asset::find()
+            ->alias('a')
+            ->with(['assetType'])
+            ->where(['a.deleted_at' => null])
+            ->orderBy(['a.asset_type_id' => SORT_ASC, 'a.code' => SORT_ASC, 'a.id' => SORT_ASC])
+            ->all();
+
+        $checkedAssetIds = $this->getCheckedAssetIdsByFiscalYear($fiscalYear);
+        $checkedAssetIdMap = array_fill_keys(array_map('intval', $checkedAssetIds), true);
+
+        foreach ($allAssets as $asset) {
+            $typeLabel = $this->resolveAssetTypeLabel($asset);
+            if (!isset($typeTotals[$typeLabel])) {
+                $typeTotals[$typeLabel] = [
+                    'type' => $typeLabel,
+                    'total' => 0,
+                    'checked' => 0,
+                    'remaining' => 0,
+                ];
+            }
+
+            $overall['total']++;
+            $typeTotals[$typeLabel]['total']++;
+
+            if (isset($checkedAssetIdMap[(int) $asset->id])) {
+                $overall['checked']++;
+                $typeTotals[$typeLabel]['checked']++;
+            } else {
+                $overall['remaining']++;
+                $typeTotals[$typeLabel]['remaining']++;
+            }
+        }
+
+        $overall['percent'] = $overall['total'] > 0 ? round(($overall['checked'] / $overall['total']) * 100, 1) : 0.0;
+        foreach ($typeTotals as &$row) {
+            $row['percent'] = $row['total'] > 0 ? round(($row['checked'] / $row['total']) * 100, 1) : 0.0;
+        }
+        unset($row);
+        uasort($typeTotals, static function (array $a, array $b): int {
+            return $b['total'] <=> $a['total'] ?: strcmp($a['type'], $b['type']);
+        });
+
+        return [
+            'overall' => $overall,
+            'typeTotals' => array_values($typeTotals),
+        ];
+    }
+
+    /**
+     * @return int[]
+     */
+    private function getCheckedAssetIdsByFiscalYear(?int $fiscalYear): array
+    {
+        $query = AssetAuditItem::find()
+            ->alias('ai')
+            ->select(['ai.asset_id'])
+            ->distinct()
+            ->innerJoin(['aa' => AssetAudit::tableName()], 'aa.id = ai.audit_id')
+            ->where(['not', ['ai.asset_id' => null]]);
+
+        if ($fiscalYear !== null) {
+            $query->andWhere(['aa.fiscal_year' => $fiscalYear]);
+        }
+
+        $ids = $query->column();
+        return array_values(array_filter(array_map('intval', $ids)));
+    }
+
+    private function resolveAssetTypeLabel(Asset $asset): string
+    {
+        $typeLabel = trim((string) ($asset->assetType->title ?? $asset->AssetTypeName() ?? $asset->asset_kind ?? ''));
+        return $typeLabel !== '' ? $typeLabel : 'ไม่ระบุประเภท';
+    }
+
+    private function countAssetsWithoutDepartment(): int
+    {
+        return (int) Asset::find()
+            ->alias('a')
+            ->where(['a.deleted_at' => null])
+            ->andWhere([
+                'or',
+                ['a.department' => null],
+                ['a.department' => 0],
+                ['a.department' => ''],
+            ])
+            ->count('DISTINCT a.id');
     }
 
     public function actionView($id)
@@ -275,9 +399,11 @@ class AuditController extends Controller
 
     protected function findModel($id)
     {
-        $model = AssetAudit::find()->with(['departmentRef', 'auditorEmp', 'auditItems' => function ($query) {
-            $query->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC]);
-        }])->where(['id' => (int) $id])->one();
+        $model = AssetAudit::find()->with([
+            'departmentRef',
+            'auditorEmp',
+            'auditItems.asset.assetType',
+        ])->where(['id' => (int) $id])->one();
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบใบตรวจนับ');
         }

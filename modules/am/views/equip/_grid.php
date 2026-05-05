@@ -1,7 +1,6 @@
 <?php
 
 use yii\helpers\Html;
-use app\components\widgets\DataSummaryWidget;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
@@ -84,12 +83,4 @@ use app\components\widgets\DataSummaryWidget;
     <?php endforeach; ?>
         </div>
     </div>
-</div>
-<div class="card-footer bg-body py-3 px-4 border-top">
-    <?php
-    echo DataSummaryWidget::widget([
-        'dataProvider' => $dataProvider,
-        'pagerOptions' => [],
-    ]);
-    ?>
 </div>
