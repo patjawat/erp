@@ -5,7 +5,9 @@ namespace app\modules\am\controllers;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\data\SqlDataProvider;
+use yii\base\Model;
 use app\components\AppHelper;
+use app\components\DateFilterHelper;
 use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
 use app\modules\am\services\ReportExportService;
@@ -109,11 +111,42 @@ class ReportController extends \yii\web\Controller
      */
     public function actionRegister()
     {
-        $thaiYear = (int) $this->request->get('year', AppHelper::YearBudget());
-        $reportData = AnnualRemainingReportService::getReportData($thaiYear);
+        $thaiYear = (int) $this->request->get('year', 0);
+        if ($thaiYear < 2500) {
+            $thaiYear = (int) AppHelper::YearBudget();
+        }
+        if ($thaiYear < 2500) {
+            $thaiYear = (int) date('Y') + 543;
+        }
+        $assetTypeId = trim((string) $this->request->get('asset_type_id', ''));
+        $filterModel = new class extends Model {
+            public $date_filter = '';
+            public $date_start = '';
+            public $date_end = '';
+
+            public function formName()
+            {
+                return '';
+            }
+
+            public function rules()
+            {
+                return [[['date_filter', 'date_start', 'date_end'], 'safe']];
+            }
+        };
+        $filterModel->date_filter = trim((string) $this->request->get('date_filter', ''));
+        $filterModel->date_start = trim((string) $this->request->get('date_start', ''));
+        $filterModel->date_end = trim((string) $this->request->get('date_end', ''));
+
+        [$receiveDateFrom, $receiveDateTo] = $this->resolveRegisterReceiveDateRange($filterModel);
+        $assetTypes = AssetType::find()
+            ->where(['name' => 'asset_type'])
+            ->orderBy(['title' => SORT_ASC])
+            ->all();
+        $reportData = AnnualRemainingReportService::getReportData($thaiYear, $assetTypeId, $receiveDateFrom, $receiveDateTo);
 
         if ($this->request->get('format') === 'xlsx') {
-            $output = AnnualRemainingReportService::saveXlsx($thaiYear);
+            $output = AnnualRemainingReportService::saveXlsx($thaiYear, $assetTypeId, $receiveDateFrom, $receiveDateTo);
             return Yii::$app->response->sendFile($output['filePath'], $output['fileName']);
         }
 
@@ -137,8 +170,56 @@ class ReportController extends \yii\web\Controller
 
         return $this->render('register', [
             'thaiYear' => $thaiYear,
+            'assetTypeId' => $assetTypeId,
+            'dateFilterModel' => $filterModel,
+            'assetTypes' => $assetTypes,
             'reportData' => $reportData,
         ]);
+    }
+
+    private function resolveRegisterReceiveDateRange(Model $filterModel): array
+    {
+        $start = $this->normalizeReportDate((string) ($filterModel->date_start ?? ''));
+        $end = $this->normalizeReportDate((string) ($filterModel->date_end ?? ''));
+
+        if (($start === '' || $end === '') && trim((string) ($filterModel->date_filter ?? '')) !== '') {
+            $range = DateFilterHelper::getRange((string) $filterModel->date_filter);
+            if ($range !== null) {
+                if ($start === '') {
+                    $start = date('Y-m-d', strtotime($range[0]));
+                    $filterModel->date_start = AppHelper::convertToThai($start);
+                }
+                if ($end === '') {
+                    $end = date('Y-m-d', strtotime($range[1]));
+                    $filterModel->date_end = AppHelper::convertToThai($end);
+                }
+            }
+        }
+
+        if ($start === '' && $filterModel->date_start !== '') {
+            $filterModel->date_start = (string) $filterModel->date_start;
+        }
+        if ($end === '' && $filterModel->date_end !== '') {
+            $filterModel->date_end = (string) $filterModel->date_end;
+        }
+
+        return [$start, $end];
+    }
+
+    private function normalizeReportDate(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value) === 1) {
+            return substr($value, 0, 10);
+        }
+        if (strpos($value, '/') !== false) {
+            $converted = AppHelper::convertToGregorian($value);
+            return is_string($converted) ? $converted : '';
+        }
+        return $value;
     }
 
     /**
@@ -330,9 +411,9 @@ class ReportController extends \yii\web\Controller
         ksort($summaryByType, SORT_FLAG_CASE | SORT_NATURAL);
 
         $thaiMonths = [
-            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
-            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
-            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+            1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.',
+            5 => 'พ.ค.', 6 => 'มิ.ย.', 7 => 'ก.ค.', 8 => 'ส.ค.',
+            9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.',
         ];
         $periodLabel = $thaiMonths[$month] . ' ' . ($fiscalYear + 543);
 

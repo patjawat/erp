@@ -40,6 +40,8 @@ class AuditController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'bulk-delete' => ['POST'],
+                    'sync-audit' => ['POST'],
                 ],
             ],
         ];
@@ -49,6 +51,9 @@ class AuditController extends Controller
     {
         $searchModel = new AssetAuditSearch();
         $queryParams = Yii::$app->request->queryParams;
+        if (empty($queryParams['AssetAuditSearch'])) {
+            $searchModel->thai_year = (int) AppHelper::YearBudget();
+        }
         $dataProvider = $searchModel->search($queryParams);
 
         return $this->render('index', [
@@ -60,11 +65,15 @@ class AuditController extends Controller
     public function actionDashboard()
     {
         $searchModel = new AssetAuditSearch();
+        $queryParams = Yii::$app->request->queryParams;
+        if (empty($queryParams['AssetAuditSearch'])) {
+            $searchModel->thai_year = (int) AppHelper::YearBudget();
+        }
         $searchModel->load(Yii::$app->request->queryParams);
 
         $kpiFiscalYear = null;
-        if ($searchModel->fiscal_year !== null && $searchModel->fiscal_year !== '') {
-            $kpiFiscalYear = (int) $searchModel->fiscal_year;
+        if ($searchModel->thai_year !== null && $searchModel->thai_year !== '') {
+            $kpiFiscalYear = (int) $searchModel->thai_year;
         }
 
         $kpiData = $this->buildAuditKpiData($kpiFiscalYear);
@@ -152,8 +161,9 @@ class AuditController extends Controller
             ->innerJoin(['aa' => AssetAudit::tableName()], 'aa.id = ai.audit_id')
             ->where(['not', ['ai.asset_id' => null]]);
 
-        if ($fiscalYear !== null) {
-            $query->andWhere(['aa.fiscal_year' => $fiscalYear]);
+        $yearCandidates = AssetAudit::fiscalYearCandidates($fiscalYear);
+        if (!empty($yearCandidates)) {
+            $query->andWhere(['aa.thai_year' => $yearCandidates]);
         }
 
         $ids = $query->column();
@@ -190,9 +200,19 @@ class AuditController extends Controller
     public function actionCreate()
     {
         $model = new AssetAudit();
-        $model->fiscal_year = (int) AppHelper::YearBudget();
+        $model->thai_year = (int) AppHelper::YearBudget();
         $model->status = AssetAudit::STATUS_DRAFT;
         $model->audit_date = AppHelper::convertToThai(date('Y-m-d'));
+
+        $currentEmployee = Yii::$app->user->identity->employee ?? null;
+        if ($currentEmployee !== null) {
+            if (empty($model->department) && !empty($currentEmployee->department)) {
+                $model->department = (int) $currentEmployee->department;
+            }
+            if (empty($model->emp_id) && !empty($currentEmployee->id)) {
+                $model->emp_id = (string) $currentEmployee->id;
+            }
+        }
 
         $items = [new AssetAuditItem()];
 
@@ -253,6 +273,106 @@ class AuditController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionBulkDelete()
+    {
+        $ids = Yii::$app->request->post('ids', []);
+        $ids = array_values(array_filter(array_map('intval', (array) $ids)));
+
+        if (empty($ids)) {
+            Yii::$app->session->setFlash('warning', 'กรุณาเลือกรายการที่ต้องการลบ');
+            return $this->redirect(['index']);
+        }
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $audits = AssetAudit::find()->where(['id' => $ids])->all();
+            if (empty($audits)) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('warning', 'ไม่พบรายการที่เลือก');
+                return $this->redirect(['index']);
+            }
+
+            foreach ($audits as $audit) {
+                AssetAuditItem::deleteAll(['audit_id' => $audit->id]);
+                $audit->delete();
+            }
+
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'ลบใบตรวจนับที่เลือกเรียบร้อย');
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', 'ลบไม่สำเร็จ: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['index']);
+    }
+
+    public function actionSyncAudit()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $id = (int) Yii::$app->request->post('id', 0);
+        if ($id <= 0) {
+            return ['success' => false, 'message' => 'ไม่พบใบตรวจนับที่เลือก'];
+        }
+
+        $model = $this->findModel($id);
+        if ($model->status !== AssetAudit::STATUS_ACTIVE) {
+            return [
+                'success' => false,
+                'message' => 'บันทึกผลได้เฉพาะใบตรวจนับที่สถานะเสร็จสิ้น',
+                'status_label' => $model->getStatusLabel(),
+            ];
+        }
+
+        if (empty($model->department)) {
+            return [
+                'success' => false,
+                'message' => 'ใบตรวจนับนี้ยังไม่ได้ระบุหน่วยงาน',
+                'status_label' => $model->getStatusLabel(),
+            ];
+        }
+
+        $updated = 0;
+        $assetIds = [];
+        foreach ($model->auditItems as $item) {
+            if (empty($item->asset_id)) {
+                continue;
+            }
+
+            $asset = Asset::findOne((int) $item->asset_id);
+            if ($asset === null) {
+                continue;
+            }
+
+            $updateFields = [];
+
+            if (!empty($item->asset_condition)) {
+                $asset->asset_condition = $item->asset_condition;
+                $updateFields[] = 'asset_condition';
+            }
+
+            $asset->department = (int) $model->department;
+            $updateFields[] = 'department';
+
+            if (!empty($updateFields)) {
+                $asset->save(false, array_unique($updateFields));
+                $updated++;
+                $assetIds[] = (int) $asset->id;
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => 'บันทึกผลเข้าทะเบียนทรัพย์สินเรียบร้อย',
+            'status_label' => $model->getStatusLabel(),
+            'updated' => $updated,
+            'asset_ids' => $assetIds,
+        ];
+    }
+
     public function actionExportExcel($id)
     {
         $model = $this->findModel($id);
@@ -272,7 +392,7 @@ class AuditController extends Controller
         $sheet->setCellValue('A2', 'เลขที่ ' . $model->audit_no);
 
         $sheet->setCellValue('A4', 'ปีงบประมาณ');
-        $sheet->setCellValue('B4', $model->fiscal_year);
+        $sheet->setCellValue('B4', $model->thai_year);
         $sheet->setCellValue('C4', 'หน่วยงาน');
         $sheet->setCellValue('D4', $departmentName);
 
@@ -347,7 +467,7 @@ class AuditController extends Controller
             'data' => [
                 'asset_id' => $asset->id,
                 'asset_code' => $this->resolveAssetCode($asset, $code),
-                'asset_name' => $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: $code,
+                'asset_name' => trim((string) ($asset->asset_name ?? '')) ?: trim((string) ($asset->AssetitemName() ?? '')) ?: $code,
                 'asset_condition' => $asset->asset_condition,
                 'asset_condition_name' => $asset->assetCondition->name ?? '',
             ],
@@ -376,10 +496,14 @@ class AuditController extends Controller
 
         $rows = [];
         foreach ($assets as $asset) {
+            $assetName = trim((string) ($asset->asset_name ?? ''));
+            if ($assetName === '') {
+                $assetName = trim((string) ($asset->AssetitemName() ?? ''));
+            }
             $rows[] = [
                 'asset_id' => $asset->id,
                 'asset_code' => $this->resolveAssetCode($asset),
-                'asset_name' => $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: '',
+                'asset_name' => $assetName,
                 'asset_condition' => $asset->asset_condition ?: '',
                 'asset_condition_name' => $asset->assetCondition->name ?? '',
                 'note' => '',
@@ -455,7 +579,7 @@ class AuditController extends Controller
                 if ($asset !== null) {
                     $item->asset_id = $asset->id;
                     $item->asset_code = $this->resolveAssetCode($asset, $code);
-                    $item->asset_name = $asset->asset_name ?: $asset->AssetitemName() ?: $asset->name ?: $code;
+                    $item->asset_name = trim((string) ($asset->asset_name ?? '')) ?: trim((string) ($asset->AssetitemName() ?? '')) ?: $code;
                     $item->asset_condition = $condition !== '' ? $condition : $asset->asset_condition;
                 } else {
                     $item->asset_code = $code;
@@ -505,17 +629,17 @@ class AuditController extends Controller
         $transaction = $db->beginTransaction();
         try {
             $model->audit_date = $model->audit_date ? AppHelper::convertToGregorian($model->audit_date) : null;
-            if ($model->fiscal_year === null || $model->fiscal_year === '') {
-                $model->fiscal_year = (int) AppHelper::YearBudget($model->audit_date ?: null);
+            if ($model->thai_year === null || $model->thai_year === '') {
+                $model->thai_year = (int) AppHelper::YearBudget($model->audit_date ?: null);
             }
 
             if ($insert) {
                 $seqNo = (int) $db->createCommand(
-                    'SELECT COALESCE(MAX([[seq_no]]), 0) + 1 FROM {{%asset_audits}} WHERE [[fiscal_year]] = :year',
-                    [':year' => $model->fiscal_year]
+                    'SELECT COALESCE(MAX([[seq_no]]), 0) + 1 FROM {{%asset_audits}} WHERE [[thai_year]] = :year',
+                    [':year' => $model->thai_year]
                 )->queryScalar();
                 $model->seq_no = $seqNo;
-                $model->audit_no = sprintf('ตน.%03d/%d', $seqNo, $model->fiscal_year);
+                $model->audit_no = sprintf('ตน.%03d/%d', $seqNo, $model->thai_year);
             }
 
             if (empty($items)) {

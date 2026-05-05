@@ -221,11 +221,7 @@ class DisposalController extends Controller
 
     protected function getConditionOptions()
     {
-        return ArrayHelper::map(
-            AssetCondition::find()->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC, 'name' => SORT_ASC])->all(),
-            'id',
-            'name'
-        );
+        return (new Asset())->ListAssetCondition();
     }
 
     protected function getDepartmentOptions()

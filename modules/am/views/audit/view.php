@@ -14,10 +14,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
-  <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-<i data-lucide="file-check" class="me-2"></i>
-    <?= $this->title ?>
-  </h4>
+    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="file-check" class="me-2"></i>
+        <?= $this->title ?>
+    </h4>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div>
                 <h3 class="mb-1"><?= Html::encode($model->audit_no) ?></h3>
                 <div class="text-muted">
-                    ปีงบประมาณ <?= Html::encode($model->fiscal_year) ?>
+                    ปีงบประมาณ <?= Html::encode($model->thai_year) ?>
                     <?php if ($model->audit_date): ?>
                         | วันที่ตรวจนับ <?= Html::encode(AppHelper::convertToThai($model->audit_date)) ?>
                     <?php endif; ?>
@@ -103,7 +103,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="col-12 col-md-3">
                 <div class="text-muted small">ปีงบประมาณ</div>
-                <div class="fw-semibold"><?= Html::encode($model->fiscal_year) ?></div>
+                <div class="fw-semibold"><?= Html::encode($model->thai_year) ?></div>
             </div>
             <div class="col-12 col-md-3">
                 <div class="text-muted small">หน่วยงาน</div>
@@ -115,7 +115,11 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="col-12 col-md-3">
                 <div class="text-muted small">สถานะ</div>
-                <div><span class="badge bg-primary"><?= Html::encode($model->getStatusLabel()) ?></span></div>
+                <div>
+                    <span class="badge bg-<?= $model->status === AssetAudit::STATUS_ACTIVE ? 'success' : 'warning' ?>">
+                        <?= Html::encode($model->getStatusLabel()) ?>
+                    </span>
+                </div>
             </div>
             <div class="col-12">
                 <div class="text-muted small">ผู้ตรวจนับ</div>
@@ -168,32 +172,37 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header bg-white">
         <h5 class="mb-0">รายการที่ตรวจนับ</h5>
     </div>
-    <div class="table-responsive">
-        <table class="table table-bordered align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>รหัส</th>
-                    <th>ชื่อครุภัณฑ์</th>
-                    <th>สภาพ</th>
-                    <th>หมายเหตุ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($model->auditItems as $item): ?>
+    <div class="card-body">
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <td><?= Html::encode($item->asset_code) ?></td>
-                        <td><?= Html::encode($item->asset_name) ?></td>
-                        <td><?= Html::encode($item->condition->name ?? $item->asset_condition ?? '-') ?></td>
-                        <td><?= nl2br(Html::encode($item->note ?: '-')) ?></td>
+                        <th style="width: 70px;" class="text-center">ลำดับ</th>
+                        <th>รหัส</th>
+                        <th>ชื่อครุภัณฑ์</th>
+                        <th>สภาพ</th>
+                        <th>หมายเหตุ</th>
                     </tr>
-                <?php endforeach; ?>
-                <?php if (empty($model->auditItems)): ?>
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">ไม่มีรายการ</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($model->auditItems as $index => $item): ?>
+                        <tr>
+                            <td class="text-center fw-semibold"><?= $index + 1 ?></td>
+                            <td><?= Html::encode($item->asset_code) ?></td>
+                            <td><?= Html::encode($item->asset_name) ?></td>
+                            <td><?= Html::encode($item->condition->name ?? $item->asset_condition ?? '-') ?></td>
+                            <td><?= nl2br(Html::encode($item->note ?: '-')) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($model->auditItems)): ?>
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">ไม่มีรายการ</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 </div>

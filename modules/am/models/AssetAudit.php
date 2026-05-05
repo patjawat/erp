@@ -15,12 +15,12 @@ use app\modules\hr\models\Employees;
  * @property int $id
  * @property string $audit_no
  * @property int $seq_no
- * @property int $fiscal_year
+ * @property int $thai_year
  * @property int|null $department
  * @property string|null $emp_id
  * @property string|null $audit_date
  * @property string|null $summary_note
- * @property string $status draft|active|closed
+ * @property string $status draft|active
  * @property int|null $created_by
  * @property int|null $updated_by
  * @property string|null $created_at
@@ -30,7 +30,6 @@ class AssetAudit extends \yii\db\ActiveRecord
 {
     const STATUS_DRAFT = 'draft';
     const STATUS_ACTIVE = 'active';
-    const STATUS_CLOSED = 'closed';
 
     private ?array $_progressSummary = null;
 
@@ -42,31 +41,18 @@ class AssetAudit extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fiscal_year', 'emp_id'], 'required'],
-            [['seq_no', 'fiscal_year', 'department', 'created_by', 'updated_by'], 'integer'],
+            [['thai_year', 'emp_id'], 'required'],
+            [['seq_no', 'thai_year', 'department', 'created_by', 'updated_by'], 'integer'],
             [['emp_id'], 'string', 'max' => 255],
             [['audit_date', 'summary_note', 'created_at', 'updated_at'], 'safe'],
             [['summary_note'], 'string'],
             [['audit_no'], 'string', 'max' => 255],
             [['status'], 'string', 'max' => 20],
-            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_ACTIVE, self::STATUS_CLOSED]],
+            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_ACTIVE]],
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
             [['audit_no'], 'unique'],
-            [['fiscal_year', 'seq_no'], 'unique', 'targetAttribute' => ['fiscal_year', 'seq_no']],
+            [['thai_year', 'seq_no'], 'unique', 'targetAttribute' => ['thai_year', 'seq_no']],
         ];
-    }
-
-    public function beforeValidate()
-    {
-        if (!parent::beforeValidate()) {
-            return false;
-        }
-
-        if (($this->audit_no === null || $this->audit_no === '') && $this->fiscal_year) {
-            $this->audit_no = 'TEMP';
-        }
-
-        return true;
     }
 
     public function attributeLabels()
@@ -75,7 +61,7 @@ class AssetAudit extends \yii\db\ActiveRecord
             'id' => 'ID',
             'audit_no' => 'เลขที่ตรวจนับ',
             'seq_no' => 'ลำดับ',
-            'fiscal_year' => 'ปีงบประมาณ',
+            'thai_year' => 'ปีงบประมาณ',
             'department' => 'หน่วยงาน',
             'emp_id' => 'ผู้ตรวจนับ',
             'audit_date' => 'วันที่ตรวจนับ',
@@ -132,8 +118,7 @@ class AssetAudit extends \yii\db\ActiveRecord
     {
         return [
             self::STATUS_DRAFT => 'ฉบับร่าง',
-            self::STATUS_ACTIVE => 'ใช้งาน',
-            self::STATUS_CLOSED => 'ปิดแล้ว',
+            self::STATUS_ACTIVE => 'เสร็จสิ้น',
         ];
     }
 
@@ -141,6 +126,30 @@ class AssetAudit extends \yii\db\ActiveRecord
     {
         $list = self::statusList();
         return $list[$this->status] ?? $this->status;
+    }
+
+    /**
+     * รองรับปีงบประมาณทั้ง พ.ศ. และ ค.ศ. สำหรับข้อมูลเก่าที่อาจบันทึกไม่สม่ำเสมอ
+     *
+     * @return int[]
+     */
+    public static function fiscalYearCandidates(?int $fiscalYear): array
+    {
+        if ($fiscalYear === null || $fiscalYear === 0) {
+            return [];
+        }
+
+        $candidates = [$fiscalYear];
+        $alternateYear = $fiscalYear >= 2500 ? $fiscalYear - 543 : $fiscalYear + 543;
+        $candidates[] = $alternateYear;
+
+        // รองรับข้อมูลเก่าที่อาจเก็บเป็นเลขปีสองหลัก เช่น 68 หรือ 25
+        $candidates[] = (int) substr((string) $fiscalYear, -2);
+        $candidates[] = (int) substr((string) $alternateYear, -2);
+
+        $candidates = array_values(array_unique(array_filter($candidates, static fn ($value) => $value !== null && $value !== 0)));
+        sort($candidates, SORT_NUMERIC);
+        return $candidates;
     }
 
     /**

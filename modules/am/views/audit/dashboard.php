@@ -101,7 +101,7 @@ $this->params['breadcrumbs'][] = 'KPI Dashboard';
             <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['dashboard']]); ?>
             <div class="row g-2 align-items-end">
                 <div class="col-12 col-md-3">
-                    <?= $form->field($searchModel, 'fiscal_year')->textInput(['placeholder' => 'ปีงบประมาณ'])->label('ปีงบประมาณ') ?>
+                    <?= $form->field($searchModel, 'thai_year')->textInput(['placeholder' => 'ปีงบประมาณ'])->label('ปีงบประมาณ') ?>
                 </div>
                 <div class="col-12 col-md-2">
                     <?= Html::submitButton('แสดงผล', ['class' => 'btn btn-outline-primary w-100']) ?>

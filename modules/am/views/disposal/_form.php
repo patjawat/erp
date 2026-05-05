@@ -61,19 +61,20 @@ $initialIndex = count($items);
             <div class="col-12 col-md-3">
                 <?= $form->field($model, 'status')->dropDownList($statusOptions, ['class' => 'form-select']) ?>
             </div>
-            <div class="col-12 col-md-6">
+       
+            <div class="col-6">
+                <?= $form->field($model, 'disposal_method')->textInput([
+                    'class' => 'form-control',
+                    'placeholder' => 'เช่น ขายทอดตลาด, โอนออก, ทำลาย, บริจาค',
+                ]) ?>
+            </div>
+                 <div class="col-12 col-md-6">
                 <?= $this->render('@app/components/ui/input_emp', [
                     'form' => $form,
                     'model' => $model,
                     'fieldName' => 'responsible_emp_id',
                     'label' => 'ผู้รับผิดชอบ',
                     'placeholder' => 'เลือกผู้รับผิดชอบ',
-                ]) ?>
-            </div>
-            <div class="col-12">
-                <?= $form->field($model, 'disposal_method')->textInput([
-                    'class' => 'form-control',
-                    'placeholder' => 'เช่น ขายทอดตลาด, โอนออก, ทำลาย, บริจาค',
                 ]) ?>
             </div>
             <div class="col-12">
@@ -87,10 +88,18 @@ $initialIndex = count($items);
 
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
-                <h5 class="mb-0">รายการพัสดุที่ขอจำหน่าย</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="mb-0">รายการพัสดุที่ขอจำหน่าย</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                        ทั้งหมด <span class="disposal-item-total-count">0</span> รายการ
+                    </span>
+                </div>
                 <div class="text-muted small">หนึ่งใบขอจำหน่ายสามารถมีหลายรายการ และโหลดจากทรัพย์สินที่มีสถานะรอจำหน่ายได้</div>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" id="delete-selected-disposal-items" class="btn btn-outline-danger d-none">
+                    <i class="bi bi-trash me-1"></i> ลบรายการที่เลือก <span class="selected-disposal-item-count">(0)</span>
+                </button>
                 <button type="button" id="open-load-assets-modal" class="btn btn-outline-primary">
                     <i class="bi bi-collection me-1"></i> โหลดข้อมูล
                 </button>
@@ -104,6 +113,11 @@ $initialIndex = count($items);
             <table class="table table-bordered align-middle" id="disposal-item-table">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 44px;" class="text-center">
+                            <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                                <input class="form-check-input disposal-select-all" type="checkbox" id="disposal-select-all">
+                            </div>
+                        </th>
                         <th style="width: 18%">รหัส</th>
                         <th style="width: 26%">ชื่อ</th>
                         <th style="width: 16%">สภาพ</th>
@@ -114,14 +128,21 @@ $initialIndex = count($items);
                 <tbody>
                     <?php foreach ($items as $i => $item): ?>
                         <tr class="disposal-item-row">
+                            <td class="text-center align-middle">
+                                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                                    <input class="form-check-input disposal-item-select" type="checkbox" name="selected_items[]" value="<?= (int) $i ?>">
+                                </div>
+                            </td>
                             <td>
                                 <input type="hidden" name="AssetDisposalItem[<?= $i ?>][asset_id]" class="asset-id-input" value="<?= Html::encode($item->asset_id ?? '') ?>">
-                                <?= Html::textInput("AssetDisposalItem[{$i}][asset_code]", $item->asset_code, [
-                                    'class' => 'form-control asset-code-input',
-                                    'placeholder' => 'รหัส',
-                                ]) ?>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">ค้นหา</button>
+                                <div class="input-group">
+                                    <?= Html::textInput("AssetDisposalItem[{$i}][asset_code]", $item->asset_code, [
+                                        'class' => 'form-control asset-code-input',
+                                        'placeholder' => 'รหัสครุภัณฑ์',
+                                    ]) ?>
+                                    <button type="button" class="btn btn-light lookup-asset-btn">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </button>
                                 </div>
                             </td>
                             <td>
@@ -139,7 +160,8 @@ $initialIndex = count($items);
                             <td>
                                 <?= Html::textarea("AssetDisposalItem[{$i}][reason]", $item->reason, [
                                     'class' => 'form-control asset-reason-input',
-                                    'rows' => 2,
+                                    'rows' => 1,
+                                     'style' => 'height: 23px;',
                                     'placeholder' => 'เหตุผล',
                                 ]) ?>
                             </td>
@@ -227,11 +249,18 @@ $initialIndex = count($items);
 <table class="d-none">
     <tbody id="disposal-item-template">
         <tr class="disposal-item-row">
+            <td class="text-center align-middle">
+                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                    <input class="form-check-input disposal-item-select" type="checkbox" name="selected_items[]" value="{idx}">
+                </div>
+            </td>
             <td>
                 <input type="hidden" name="AssetDisposalItem[{idx}][asset_id]" class="asset-id-input" value="">
-                <input type="text" name="AssetDisposalItem[{idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัส">
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">ค้นหา</button>
+                <div class="input-group">
+                    <input type="text" name="AssetDisposalItem[{idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์">
+                    <button type="button" class="btn btn-light lookup-asset-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </div>
             </td>
             <td>
@@ -246,7 +275,7 @@ $initialIndex = count($items);
                 </select>
             </td>
             <td>
-                <textarea name="AssetDisposalItem[{idx}][reason]" class="form-control asset-reason-input" rows="2" placeholder="เหตุผล"></textarea>
+                <textarea name="AssetDisposalItem[{idx}][reason]" class="form-control asset-reason-input" rows="2"  style="height: 23px;" placeholder="เหตุผล"></textarea>
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger remove-disposal-item">
@@ -283,6 +312,27 @@ function fillDisposalRow(row, data) {
     }
 }
 
+function updateDisposalSelectionUI() {
+    const $rows = $('#disposal-item-table tbody tr.disposal-item-row');
+    const $selected = $rows.find('.disposal-item-select:checked');
+    const selectedCount = $selected.length;
+    const totalCount = $rows.length;
+    const $selectAll = $('#disposal-select-all');
+    const $deleteSelected = $('#delete-selected-disposal-items');
+
+    if ($selectAll.length) {
+        $selectAll.prop('checked', totalCount > 0 && selectedCount === totalCount);
+        $selectAll.prop('indeterminate', selectedCount > 0 && selectedCount < totalCount);
+    }
+
+    if ($deleteSelected.length) {
+        $deleteSelected.toggleClass('d-none', selectedCount === 0);
+        $deleteSelected.find('.selected-disposal-item-count').text('(' + selectedCount + ')');
+    }
+
+    $('.disposal-item-total-count').text(totalCount);
+}
+
 function lookupDisposalAsset(row) {
     const code = (row.find('.asset-code-input').val() || '').trim();
     if (!code) {
@@ -312,11 +362,18 @@ function buildDisposalRowHtml(idx, item) {
 
     return `
         <tr class="disposal-item-row">
+            <td class="text-center align-middle">
+                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                    <input class="form-check-input disposal-item-select" type="checkbox" name="selected_items[]" value="${idx}">
+                </div>
+            </td>
             <td>
                 <input type="hidden" name="AssetDisposalItem[${idx}][asset_id]" class="asset-id-input" value="${escapeHtml(item.asset_id || '')}">
-                <input type="text" name="AssetDisposalItem[${idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัส" value="${escapeHtml(item.asset_code || '')}">
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">ค้นหา</button>
+                <div class="input-group">
+                    <input type="text" name="AssetDisposalItem[${idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์" value="${escapeHtml(item.asset_code || '')}">
+                    <button type="button" class="btn btn-light lookup-asset-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </div>
             </td>
             <td>
@@ -328,7 +385,7 @@ function buildDisposalRowHtml(idx, item) {
                 </select>
             </td>
             <td>
-                <textarea name="AssetDisposalItem[${idx}][reason]" class="form-control asset-reason-input" rows="2" placeholder="เหตุผล">${escapeHtml(item.reason || '')}</textarea>
+                <textarea name="AssetDisposalItem[${idx}][reason]" class="form-control asset-reason-input" rows="2" style="height: 23px;" placeholder="เหตุผล">${escapeHtml(item.reason || '')}</textarea>
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger remove-disposal-item">
@@ -343,6 +400,7 @@ function appendDisposalRow() {
     const row = $(html);
     $('#disposal-item-table tbody').append(row);
     disposalItemIndex++;
+    updateDisposalSelectionUI();
     return row;
 }
 
@@ -359,6 +417,7 @@ function appendLoadedDisposalRows(items) {
         }
         disposalItemIndex++;
     });
+    updateDisposalSelectionUI();
 }
 
 function loadPendingAssets() {
@@ -366,7 +425,10 @@ function loadPendingAssets() {
     const assetTypeId = $('#load-asset-type-id').val();
 
     const doLoad = function() {
-        $.getJSON(loadAssetsUrl, { department_id: departmentId, asset_type_id: assetTypeId })
+        $.getJSON(loadAssetsUrl, {
+            department_id: departmentId,
+            asset_type_id: assetTypeId,
+        })
             .done(function(res) {
                 if (res && res.success) {
                     $('#disposal-item-table tbody').empty();
@@ -375,6 +437,8 @@ function loadPendingAssets() {
                     if ((res.items || []).length === 0) {
                         appendDisposalRow();
                     }
+                    $('#disposal-select-all').prop('checked', false).prop('indeterminate', false);
+                    updateDisposalSelectionUI();
                     if (typeof Swal !== 'undefined') {
                         const deptLabel = res.department ? (' หน่วยงาน ' + res.department.name) : '';
                         const typeLabel = res.asset_type ? (' ประเภท ' + res.asset_type.name) : '';
@@ -417,6 +481,52 @@ $(document).on('click', '#add-disposal-item', function() {
     row.find('.asset-code-input').focus();
 });
 
+$(document).on('change', '#disposal-select-all', function() {
+    const checked = $(this).is(':checked');
+    $('#disposal-item-table tbody .disposal-item-select').prop('checked', checked);
+    updateDisposalSelectionUI();
+});
+
+$(document).on('change', '.disposal-item-select', function() {
+    updateDisposalSelectionUI();
+});
+
+$(document).on('click', '#delete-selected-disposal-items', function() {
+    const $rows = $('#disposal-item-table tbody tr.disposal-item-row');
+    const $selectedRows = $rows.has('.disposal-item-select:checked');
+    if ($selectedRows.length === 0) {
+        return;
+    }
+
+    const removeRows = function() {
+        $selectedRows.remove();
+        if ($('#disposal-item-table tbody tr.disposal-item-row').length === 0) {
+            appendDisposalRow();
+        } else {
+            updateDisposalSelectionUI();
+        }
+        $('#disposal-select-all').prop('checked', false).prop('indeterminate', false);
+        updateDisposalSelectionUI();
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'ลบรายการที่เลือก?',
+            text: 'รายการที่เลือกจะถูกลบออกจากฟอร์ม',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                removeRows();
+            }
+        });
+    } else if (window.confirm('ลบรายการที่เลือกใช่หรือไม่?')) {
+        removeRows();
+    }
+});
+
 $(document).on('click', '#open-load-assets-modal', function() {
     if (window.bootstrap && $('#load-assets-modal').length) {
         loadAssetsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('load-assets-modal'));
@@ -444,9 +554,12 @@ $(document).on('click', '.remove-disposal-item', function() {
         const row = rows.first();
         row.find('input, textarea').val('');
         row.find('select').val('');
+        row.find('.disposal-item-select').prop('checked', false);
+        updateDisposalSelectionUI();
         return;
     }
     $(this).closest('tr').remove();
+    updateDisposalSelectionUI();
 });
 
 $('#asset-disposal-form').on('beforeSubmit', function(e) {
@@ -486,6 +599,10 @@ $(document).on('select2:select', '#load-department-id', function() {
     try {
         $(this).select2('close');
     } catch (e) {}
+});
+
+$(function() {
+    updateDisposalSelectionUI();
 });
 JS;
 $conditionJs = '';

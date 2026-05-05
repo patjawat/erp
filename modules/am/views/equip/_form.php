@@ -442,12 +442,12 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                     'allowClear' => true,
                                 ],
                                 'pluginEvents' => [
-                                    "select2:select" => "function(result) { 
+                                        "select2:select" => "function(result) { 
                                             var data = $(this).select2('data')[0]
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                 ]
-                            ])->label('สถานะ'); ?>
+                            ])->label('สถานะสุขภาพครุภัณฑ์')->hint('ดึงข้อมูลสถานะจาก `ListAssetStatus()`'); ?>
                         </div>
                         <div class="col-12 col-md-3">
                             <?php

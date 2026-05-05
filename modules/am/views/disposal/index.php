@@ -82,11 +82,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['class' => 'text-center'],
                     ],
                     [
-                        'attribute' => 'department',
-                        'label' => 'หน่วยงาน',
-                        'value' => fn ($model) => $model->departmentRef->name ?? '-',
-                    ],
-                    [
                         'attribute' => 'disposal_date',
                         'label' => 'วันที่',
                         'value' => fn ($model) => $model->disposal_date ? AppHelper::convertToThai($model->disposal_date) : '-',
@@ -117,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 AssetDisposal::STATUS_DONE => 'bg-success',
                                 default => 'bg-warning text-dark',
                             };
-                            return '<span class="badge ' . $class . '">' . Html::encode($model->getStatusLabel()) . '</span>';
+                            return '<span class="badge text-' . $class . '">' . Html::encode($model->getStatusLabel()) . '</span>';
                         },
                         'contentOptions' => ['class' => 'text-center'],
                     ],

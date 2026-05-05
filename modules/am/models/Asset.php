@@ -179,7 +179,14 @@ class Asset extends \yii\db\ActiveRecord
 
     public function ListAssetCondition()
     {
-        return ArrayHelper::map(AssetCondition::find()->all(), 'id', 'name');
+        return ArrayHelper::map(
+            AssetCondition::find()
+                ->where(['is_active' => 1])
+                ->orderBy(['sort_order' => SORT_ASC, 'name' => SORT_ASC])
+                ->all(),
+            'id',
+            'name'
+        );
     }
 
 

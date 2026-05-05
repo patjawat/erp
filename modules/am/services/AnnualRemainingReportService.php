@@ -21,10 +21,19 @@ class AnnualRemainingReportService
     /**
      * ดึงข้อมูลรายงานพร้อมสรุปยอดรวมรายชีต
      */
-    public static function getReportData(int $thaiYear): array
+    public static function getReportData(int $thaiYear, string $assetTypeId = '', string $receiveDateFrom = '', string $receiveDateTo = ''): array
     {
-        $assets = self::fetchAssets();
-        $periodEnd = new DateTimeImmutable(((int) ($thaiYear - 543)) . '-09-30');
+        if ($thaiYear < 2500) {
+            $thaiYear = (int) Yii::$app->db->createCommand(
+                'SELECT IF(MONTH(NOW())>9,YEAR(NOW())+1,YEAR(NOW())) + 543'
+            )->queryScalar();
+            if ($thaiYear < 2500) {
+                $thaiYear = (int) date('Y') + 543;
+            }
+        }
+        $assets = self::fetchAssets($assetTypeId, $receiveDateFrom, $receiveDateTo);
+        $gregorianYear = max(1, $thaiYear - 543);
+        $periodEnd = new DateTimeImmutable(sprintf('%04d-09-30', $gregorianYear));
         $previousEnd = $periodEnd->modify('-1 year');
 
         $buckets = [
@@ -39,8 +48,11 @@ class AnnualRemainingReportService
 
         foreach ($assets as $asset) {
             $bucket = self::classifyAsset($asset);
-            if ($bucket === null || !array_key_exists($bucket, $buckets)) {
+            if ($bucket === null) {
                 continue;
+            }
+            if (!array_key_exists($bucket, $buckets)) {
+                $buckets[$bucket] = [];
             }
 
             $snapshot = self::buildDepreciationSnapshot($asset, $previousEnd, $periodEnd);
@@ -76,10 +88,10 @@ class AnnualRemainingReportService
 
         return [
             'thaiYear' => $thaiYear,
-            'periodStartLabel' => '1 ตุลาคม ' . ($thaiYear - 1),
-            'periodEndLabel' => '30 กันยายน ' . $thaiYear,
-            'surveyLabel' => '1 ตุลาคม ' . $thaiYear,
-            'finishLabel' => '31 ตุลาคม ' . $thaiYear,
+            'periodStartLabel' => '1 ต.ค. ' . ($thaiYear - 1),
+            'periodEndLabel' => '30 ก.ย. ' . $thaiYear,
+            'surveyLabel' => '1 ต.ค. ' . $thaiYear,
+            'finishLabel' => '31 ต.ค. ' . $thaiYear,
             'organizationName' => self::getOrganizationName(),
             'buckets' => $buckets,
             'summary' => $summary,
@@ -90,9 +102,9 @@ class AnnualRemainingReportService
     /**
      * สร้างไฟล์ Excel และบันทึกลง downloads
      */
-    public static function saveXlsx(int $thaiYear): array
+    public static function saveXlsx(int $thaiYear, string $assetTypeId = '', string $receiveDateFrom = '', string $receiveDateTo = ''): array
     {
-        $workbook = self::buildWorkbook($thaiYear);
+        $workbook = self::buildWorkbook($thaiYear, $assetTypeId, $receiveDateFrom, $receiveDateTo);
         $filename = 'รายงานครุภัณฑ์คงเหลือประจำปี_' . $thaiYear . '.xlsx';
         $dirPath = Yii::getAlias('@webroot') . '/downloads';
         if (!is_dir($dirPath)) {
@@ -112,9 +124,9 @@ class AnnualRemainingReportService
     /**
      * สร้าง workbook ตามรายงานตัวอย่าง
      */
-    public static function buildWorkbook(int $thaiYear): Spreadsheet
+    public static function buildWorkbook(int $thaiYear, string $assetTypeId = '', string $receiveDateFrom = '', string $receiveDateTo = ''): Spreadsheet
     {
-        $data = self::getReportData($thaiYear);
+        $data = self::getReportData($thaiYear, $assetTypeId, $receiveDateFrom, $receiveDateTo);
 
         $workbook = new Spreadsheet();
         $workbook->getProperties()
@@ -140,16 +152,33 @@ class AnnualRemainingReportService
         return $workbook;
     }
 
-    private static function fetchAssets(): array
+    private static function fetchAssets(string $assetTypeId = '', string $receiveDateFrom = '', string $receiveDateTo = ''): array
     {
-        return Asset::find()
+        $query = Asset::find()
             ->alias('a')
-            ->with(['assetCondition'])
+            ->with(['assetCondition', 'assetType'])
             ->where(['a.deleted_at' => null])
-            ->andWhere(['not', ['a.receive_date' => null]])
-            ->andWhere(['>', 'a.price', 0])
-            ->andWhere(['>', 'a.useful_life', 0])
-            ->andWhere(['a.asset_group_id' => [2, 3, 7]])
+            // ->andWhere(['not', ['a.receive_date' => null]])
+            // ->andWhere(['>', 'a.price', 0])
+            // ->andWhere(['>', 'a.useful_life', 0])
+            // ->andWhere(['a.asset_group_id' => [2, 3, 7]]);
+            ->andWhere(['a.asset_group_id' => [4]]);
+
+        $assetTypeId = trim($assetTypeId);
+        if ($assetTypeId !== '') {
+            $query->andWhere(['a.asset_type_id' => $assetTypeId]);
+        }
+
+        $receiveDateFrom = trim($receiveDateFrom);
+        $receiveDateTo = trim($receiveDateTo);
+        if ($receiveDateFrom !== '') {
+            $query->andWhere(['>=', 'a.receive_date', $receiveDateFrom]);
+        }
+        if ($receiveDateTo !== '') {
+            $query->andWhere(['<=', 'a.receive_date', $receiveDateTo]);
+        }
+
+        return $query
             ->orderBy(['a.receive_date' => SORT_ASC, 'a.code' => SORT_ASC, 'a.id' => SORT_ASC])
             ->all();
     }
@@ -158,6 +187,10 @@ class AnnualRemainingReportService
     {
         $groupId = (int) ($asset->asset_group_id ?? 0);
         $assetName = self::normalizeText(self::resolveAssetName($asset));
+        if ($groupId === 4) {
+            $assetTypeTitle = trim((string) ($asset->assetType->title ?? $asset->AssetTypeName() ?? ''));
+            return $assetTypeTitle !== '' ? $assetTypeTitle : 'ครุภัณฑ์';
+        }
         $buildingType = self::normalizeText((string) ($asset->data_json['building_type_name'] ?? ''));
         $structureType = self::normalizeText((string) ($asset->data_json['structure_type_name'] ?? ''));
         $combined = trim($assetName . ' ' . $buildingType . ' ' . $structureType);
@@ -194,15 +227,15 @@ class AnnualRemainingReportService
         $sheet->mergeCells('A2:C2');
         $sheet->setCellValue('A2', 'บัญชีแสดงการรับ - จ่ายพัสดุคงเหลือ');
         $sheet->mergeCells('K2:Q2');
-        $sheet->setCellValue('K2', 'งวดตั้งแต่วันที่ 1 ตุลาคม ' . $prevThaiYear . ' - 30 กันยายน ' . $thaiYear);
+        $sheet->setCellValue('K2', 'งวดตั้งแต่วันที่ 1 ต.ค. ' . $prevThaiYear . ' - 30 ก.ย. ' . $thaiYear);
         $sheet->mergeCells('A3:C3');
         $sheet->setCellValue('A3', $data['organizationName']);
         $sheet->mergeCells('K3:Q3');
-        $sheet->setCellValue('K3', 'สำรวจเมื่อ 1 ตุลาคม ' . $thaiYear);
+        $sheet->setCellValue('K3', 'สำรวจเมื่อ 1 ต.ค. ' . $thaiYear);
         $sheet->mergeCells('A4:C4');
         $sheet->setCellValue('A4', $title);
         $sheet->mergeCells('K4:Q4');
-        $sheet->setCellValue('K4', 'วันเสร็จสิ้น 31 ตุลาคม ' . $thaiYear);
+        $sheet->setCellValue('K4', 'วันเสร็จสิ้น 31 ต.ค. ' . $thaiYear);
 
         $sheet->mergeCells('A5:A8');
         $sheet->setCellValue('A5', 'ลำดับที่');

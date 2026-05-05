@@ -16,7 +16,7 @@ class AssetAuditSearch extends AssetAudit
     public function rules()
     {
         return [
-            [['id', 'seq_no', 'fiscal_year'], 'integer'],
+            [['id', 'seq_no', 'thai_year'], 'integer'],
             [['audit_no', 'audit_date', 'emp_id', 'summary_note', 'status', 'q'], 'safe'],
         ];
     }
@@ -34,17 +34,17 @@ class AssetAuditSearch extends AssetAudit
             ->leftJoin(['ae' => Employees::tableName()], 'ae.id = aa.emp_id');
 
         $dataProvider = new ActiveDataProvider([
-            'query' => $query,
-            'pagination' => [
-                'pageSize' => 20,
-            ],
-            'sort' => [
-                'defaultOrder' => [
-                    'fiscal_year' => SORT_DESC,
-                    'seq_no' => SORT_DESC,
-                    'id' => SORT_DESC,
+                'query' => $query,
+                'pagination' => [
+                    'pageSize' => 20,
                 ],
-            ],
+                'sort' => [
+                    'defaultOrder' => [
+                        'thai_year' => SORT_DESC,
+                        'seq_no' => SORT_DESC,
+                        'id' => SORT_DESC,
+                    ],
+                ],
         ]);
 
         $this->load($params);
@@ -56,7 +56,10 @@ class AssetAuditSearch extends AssetAudit
         $query->andFilterWhere([
             'aa.id' => $this->id,
             'aa.seq_no' => $this->seq_no,
-            'aa.fiscal_year' => $this->fiscal_year,
+        ]);
+
+        $query->andFilterWhere([
+            'thai_year' => $this->thai_year,
         ]);
 
         $query->andFilterWhere(['like', 'aa.audit_no', $this->audit_no])

@@ -61,7 +61,7 @@ $initialIndex = count($items);
                 ])->hint('ตัวอย่าง: ตน.002/2568') ?>
             </div>
             <div class="col-12 col-md-3">
-                <?= $form->field($model, 'fiscal_year')->dropDownList($yearOptions, [
+                <?= $form->field($model, 'thai_year')->dropDownList($yearOptions, [
                     'class' => 'form-select',
                 ]) ?>
             </div>
@@ -144,18 +144,33 @@ $initialIndex = count($items);
 
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
-                <h5 class="mb-0">รายการที่ตรวจนับ</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="mb-0">รายการที่ตรวจนับ</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                        ทั้งหมด <span class="audit-item-total-count">0</span> รายการ
+                    </span>
+                </div>
                 <div class="text-muted small">หนึ่งใบตรวจนับสามารถมีได้หลายรายการ และโหลดจากหน่วยงานที่เลือกได้</div>
             </div>
-            <button type="button" id="add-audit-item" class="btn btn-outline-primary">
-                <i class="bi bi-plus-lg me-1"></i> เพิ่มรายการ
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" id="delete-selected-audit-items" class="btn btn-outline-danger d-none">
+                    <i class="bi bi-trash me-1"></i> ลบรายการที่เลือก <span class="selected-audit-item-count">(0)</span>
+                </button>
+                <button type="button" id="add-audit-item" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-lg me-1"></i> เพิ่มรายการ
+                </button>
+            </div>
         </div>
 
         <div class="table-responsive">
             <table class="table table-bordered align-middle" id="audit-item-table">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 44px;" class="text-center">
+                            <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                                <input class="form-check-input audit-select-all" type="checkbox" id="audit-select-all">
+                            </div>
+                        </th>
                         <th style="width: 20%">รหัส</th>
                         <th style="width: 34%">ชื่อครุภัณฑ์</th>
                         <th style="width: 18%">สภาพ</th>
@@ -166,6 +181,11 @@ $initialIndex = count($items);
                 <tbody>
                     <?php foreach ($items as $i => $item): ?>
                         <tr class="audit-item-row">
+                            <td class="text-center align-middle">
+                                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                                    <input class="form-check-input audit-item-select" type="checkbox" name="selected_items[]" value="<?= (int) $i ?>">
+                                </div>
+                            </td>
                             <td>
                                 <input type="hidden"
                                     name="AssetAuditItem[<?= $i ?>][asset_id]"
@@ -199,6 +219,7 @@ $initialIndex = count($items);
                                 <?= Html::textarea("AssetAuditItem[{$i}][note]", $item->note, [
                                     'class' => 'form-control asset-note-input',
                                     'rows' => 2,
+                                    'style' => 'height: 23px;',
                                     'placeholder' => 'หมายเหตุ',
                                 ]) ?>
                             </td>
@@ -225,11 +246,18 @@ $initialIndex = count($items);
 <table class="d-none">
     <tbody id="audit-item-template">
         <tr class="audit-item-row">
+            <td class="text-center align-middle">
+                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                    <input class="form-check-input audit-item-select" type="checkbox" name="selected_items[]" value="{idx}">
+                </div>
+            </td>
             <td>
                 <input type="hidden" name="AssetAuditItem[{idx}][asset_id]" class="asset-id-input" value="">
-                <input type="text" name="AssetAuditItem[{idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์">
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">ค้นหา</button>
+                <div class="input-group">
+                    <input type="text" name="AssetAuditItem[{idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์">
+                    <button type="button" class="btn btn-light lookup-asset-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </div>
             </td>
             <td>
@@ -244,7 +272,7 @@ $initialIndex = count($items);
                 </select>
             </td>
             <td>
-                <textarea name="AssetAuditItem[{idx}][note]" class="form-control asset-note-input" rows="2" placeholder="หมายเหตุ"></textarea>
+                <textarea name="AssetAuditItem[{idx}][note]" class="form-control asset-note-input" rows="1" style="height: 23px;" placeholder="หมายเหตุ"></textarea>
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger remove-audit-item">
@@ -280,6 +308,27 @@ function fillAuditRow(row, data) {
     }
 }
 
+function updateAuditSelectionUI() {
+    const $rows = $('#audit-item-table tbody tr.audit-item-row');
+    const $selected = $rows.find('.audit-item-select:checked');
+    const selectedCount = $selected.length;
+    const totalCount = $rows.length;
+    const $selectAll = $('#audit-select-all');
+    const $deleteSelected = $('#delete-selected-audit-items');
+
+    if ($selectAll.length) {
+        $selectAll.prop('checked', totalCount > 0 && selectedCount === totalCount);
+        $selectAll.prop('indeterminate', selectedCount > 0 && selectedCount < totalCount);
+    }
+
+    if ($deleteSelected.length) {
+        $deleteSelected.toggleClass('d-none', selectedCount === 0);
+        $deleteSelected.find('.selected-audit-item-count').text('(' + selectedCount + ')');
+    }
+
+    $('.audit-item-total-count').text(totalCount);
+}
+
 function lookupAuditAsset(row) {
     const code = (row.find('.asset-code-input').val() || '').trim();
     if (!code) {
@@ -309,11 +358,18 @@ function buildAuditRowHtml(idx, item) {
 
     return `
         <tr class="audit-item-row">
+            <td class="text-center align-middle">
+                <div class="form-check d-inline-flex align-items-center justify-content-center m-0">
+                    <input class="form-check-input audit-item-select" type="checkbox" name="selected_items[]" value="${idx}">
+                </div>
+            </td>
             <td>
                 <input type="hidden" name="AssetAuditItem[${idx}][asset_id]" class="asset-id-input" value="${escapeHtml(item.asset_id || '')}">
-                <input type="text" name="AssetAuditItem[${idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์" value="${escapeHtml(item.asset_code || '')}">
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary lookup-asset-btn">ค้นหา</button>
+                <div class="input-group">
+                    <input type="text" name="AssetAuditItem[${idx}][asset_code]" class="form-control asset-code-input" placeholder="รหัสครุภัณฑ์" value="${escapeHtml(item.asset_code || '')}">
+                    <button type="button" class="btn btn-light lookup-asset-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </div>
             </td>
             <td>
@@ -325,7 +381,7 @@ function buildAuditRowHtml(idx, item) {
                 </select>
             </td>
             <td>
-                <textarea name="AssetAuditItem[${idx}][note]" class="form-control asset-note-input" rows="2" placeholder="หมายเหตุ">${escapeHtml(item.note || '')}</textarea>
+                <textarea name="AssetAuditItem[${idx}][note]" class="form-control asset-note-input" rows="1" style="height: 23px;" placeholder="หมายเหตุ">${escapeHtml(item.note || '')}</textarea>
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger remove-audit-item">
@@ -340,6 +396,7 @@ function appendAuditRow() {
     const row = $(html);
     $('#audit-item-table tbody').append(row);
     auditItemIndex++;
+    updateAuditSelectionUI();
     return row;
 }
 
@@ -356,6 +413,7 @@ function appendLoadedAuditRows(items) {
         }
         auditItemIndex++;
     });
+    updateAuditSelectionUI();
 }
 
 function loadAssetsByDepartment() {
@@ -377,6 +435,8 @@ function loadAssetsByDepartment() {
                     if ((res.items || []).length === 0) {
                         appendAuditRow();
                     }
+                    $('#audit-select-all').prop('checked', false).prop('indeterminate', false);
+                    updateAuditSelectionUI();
                     if (typeof Swal !== 'undefined') {
                         Swal.fire('โหลดแล้ว', 'โหลดครุภัณฑ์ตามหน่วยงาน ' + (res.department ? res.department.name : '') + ' จำนวน ' + (res.count || 0) + ' รายการ', 'success');
                     }
@@ -414,6 +474,52 @@ $(document).on('click', '#add-audit-item', function() {
     row.find('.asset-code-input').focus();
 });
 
+$(document).on('change', '#audit-select-all', function() {
+    const checked = $(this).is(':checked');
+    $('#audit-item-table tbody .audit-item-select').prop('checked', checked);
+    updateAuditSelectionUI();
+});
+
+$(document).on('change', '.audit-item-select', function() {
+    updateAuditSelectionUI();
+});
+
+$(document).on('click', '#delete-selected-audit-items', function() {
+    const $rows = $('#audit-item-table tbody tr.audit-item-row');
+    const $selectedRows = $rows.has('.audit-item-select:checked');
+    if ($selectedRows.length === 0) {
+        return;
+    }
+
+    const removeRows = function() {
+        $selectedRows.remove();
+        if ($('#audit-item-table tbody tr.audit-item-row').length === 0) {
+            appendAuditRow();
+        } else {
+            updateAuditSelectionUI();
+        }
+        $('#audit-select-all').prop('checked', false).prop('indeterminate', false);
+        updateAuditSelectionUI();
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'ลบรายการที่เลือก?',
+            text: 'รายการที่เลือกจะถูกลบออกจากฟอร์ม',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                removeRows();
+            }
+        });
+    } else if (window.confirm('ลบรายการที่เลือกใช่หรือไม่?')) {
+        removeRows();
+    }
+});
+
 $(document).on('click', '#load-assets-by-department', function() {
     loadAssetsByDepartment();
 });
@@ -432,9 +538,12 @@ $(document).on('click', '.remove-audit-item', function() {
         const row = rows.first();
         row.find('input, textarea').val('');
         row.find('select').val('');
+        row.find('.audit-item-select').prop('checked', false);
+        updateAuditSelectionUI();
         return;
     }
     $(this).closest('tr').remove();
+    updateAuditSelectionUI();
 });
 
 $('#asset-audit-form').on('beforeSubmit', function(e) {
@@ -475,6 +584,8 @@ $(document).on('select2:select', '#audit-department', function() {
         $(this).select2('close');
     } catch (e) {}
 });
+
+updateAuditSelectionUI();
 JS;
 $conditionJs = '';
 foreach ($conditionOptions as $condId => $condName) {
