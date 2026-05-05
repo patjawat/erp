@@ -512,8 +512,8 @@ class LeaveController extends Controller
             'draftRef'   => $draftRef,
         ]);
     }
-
-    public function actionCreateV2()
+    // ฟอร์มการลาแบบเดิม
+    public function actionCreateOld()
     {
 
         $model = new Leave();
@@ -531,10 +531,10 @@ class LeaveController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
-                'content' => $this->renderAjax('_form_v2', ['model' => $model]),
+                'content' => $this->renderAjax('_form_old_version', ['model' => $model]),
             ];
         }else{
-            return $this->render('_form_v2', ['model' => $model]);
+            return $this->render('_form_old_version', ['model' => $model]);
         }
 
     }
