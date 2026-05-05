@@ -156,6 +156,7 @@ $typeTheme = [
                                 </ul>
                             </div>
                             <?= Html::a('<i data-lucide="plus" style="width:1rem;height:1rem" class="me-1 align-middle"></i> สร้างใบลา', ['/leave/leave/create'], ['class' => 'btn btn-primary rounded-3']) ?>
+                            <?php //  Html::a('<i data-lucide="plus" style="width:1rem;height:1rem" class="me-1 align-middle"></i> สร้างใบลา-popp', ['/leave/leave/create-v2','title' => 'สร้างใบลา'], ['class' => 'btn btn-primary rounded-3 open-modal','data' => ['size' => 'modal-xl']]) ?>
                         </div>
                     </div>
                 </div>

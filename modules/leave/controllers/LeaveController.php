@@ -513,6 +513,32 @@ class LeaveController extends Controller
         ]);
     }
 
+    public function actionCreateV2()
+    {
+
+        $model = new Leave();
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return [
+                    'status' => 'success',
+                ];
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        
+        if ($this->request->isAJax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('_form_v2', ['model' => $model]),
+            ];
+        }else{
+            return $this->render('_form_v2', ['model' => $model]);
+        }
+
+    }
+
     public function actionConfirm()
     {
         $me = UserHelper::GetEmployee();
