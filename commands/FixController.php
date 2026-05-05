@@ -77,6 +77,12 @@ class FixController extends Controller
 
             // นำคำสั่ง SQL มาแยกเก็บใน Array
             $queries = [
+                // แก้คำผิด 
+                "UPDATE `approve_level_setting` SET `label` = 'เห็นชอบ' WHERE `system` = 'leave' AND `level` = 1",
+                "UPDATE `approve_level_setting` SET `label` = 'เห็นชอบ' WHERE `system` = 'leave' AND `level` = 2",
+                "UPDATE `approve_level_setting` SET `label` = 'ผาน' WHERE `system` = 'leave' AND `level` = 3",
+                "UPDATE `approve_level_setting` SET `label` = 'อนุมัติ' WHERE `system` = 'leave' AND `level` = 4",
+
                 // 1. เปลี่ยน เจ้าหน้าที่ตรวจสอบ -> ผ่าน
                 "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'ผ่าน') WHERE `data_json`->>'$.label' = 'เจ้าหน้าที่ตรวจสอบ'",
 
