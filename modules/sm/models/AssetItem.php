@@ -72,63 +72,65 @@ class AssetItem extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
-        if (is_string($this->data_json)) {
-            $decoded = Json::decode($this->data_json, true);
-            $this->data_json = is_array($decoded) ? $decoded : [];
-        }
-        $this->normalizeJsonFields();
+        // if (is_string($this->data_json) && $this->data_json !== '') {
+        //     $decoded = json_decode($this->data_json, true);
+        //     $this->data_json = is_array($decoded) ? $decoded : [];
+        // } elseif (!is_array($this->data_json)) {
+        //     $this->data_json = [];
+        // }
+        // $this->normalizeJsonFields();
         parent::afterFind();
         // $this->ma = Json::encode($this->data_json['ma_items']);
     }
 
-    protected function jsonData(): array
-    {
-        if (is_array($this->data_json)) {
-            return $this->data_json;
-        }
+    // protected function jsonData(): array
+    // {
+    //     if (is_array($this->data_json)) {
+    //         return $this->data_json;
+    //     }
 
-        if (is_string($this->data_json) && $this->data_json !== '') {
-            $decoded = Json::decode($this->data_json, true);
-            return is_array($decoded) ? $decoded : [];
-        }
+    //     if (is_string($this->data_json) && $this->data_json !== '') {
+    //         $decoded = json_decode($this->data_json, true);
+    //         return is_array($decoded) ? $decoded : [];
+    //     }
 
-        return [];
-    }
+    //     return [];
+    // }
 
-    protected function normalizeJsonScalarValue($value)
-    {
-        if (!is_array($value)) {
-            return $value;
-        }
+    // protected function normalizeJsonScalarValue($value)
+    // {
+    //     if (!is_array($value)) {
+    //         return $value;
+    //     }
 
-        foreach ($value as $item) {
-            if (is_array($item)) {
-                continue;
-            }
+    //     foreach ($value as $item) {
+    //         if (is_array($item)) {
+    //             continue;
+    //         }
 
-            if ($item !== null && $item !== '') {
-                return $item;
-            }
-        }
+    //         if ($item !== null && $item !== '') {
+    //             return $item;
+    //         }
+    //     }
 
-        return '';
-    }
+    //     return '';
+    // }
 
-    protected function normalizeJsonFields(): void
-    {
-        if (!is_array($this->data_json)) {
-            return;
-        }
+    // protected function normalizeJsonFields(): void
+    // {
+    //     if (!is_array($this->data_json)) {
+    //         return;
+    //     }
 
-        $dataJson = $this->data_json;
-        foreach (['price', 'fsn', 'unit', 'depreciation', 'service_life'] as $field) {
-            if (array_key_exists($field, $dataJson)) {
-                $dataJson[$field] = $this->normalizeJsonScalarValue($dataJson[$field]);
-            }
-        }
+    //     $dataJson = $this->data_json;
+    //     foreach (['price', 'fsn', 'unit', 'depreciation', 'service_life'] as $field) {
+    //         if (array_key_exists($field, $dataJson)) {
+    //             $dataJson[$field] = $this->normalizeJsonScalarValue($dataJson[$field]);
+    //         }
+    //     }
 
-        $this->data_json = $dataJson;
-    }
+    //     $this->data_json = $dataJson;
+    // }
 
     public function getAssetType()
     {
@@ -217,10 +219,10 @@ class AssetItem extends \yii\db\ActiveRecord
             }
         }
 
-        $this->normalizeJsonFields();
-        if (is_array($this->data_json)) {
-            $this->data_json = Json::encode($this->data_json);
-        }
+        // $this->normalizeJsonFields();
+        // if (is_array($this->data_json)) {
+        //     $this->data_json = Json::encode($this->data_json);
+        // }
 
         return parent::beforeSave($insert);
     }

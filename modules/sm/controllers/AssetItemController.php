@@ -226,12 +226,13 @@ class AssetItemController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $model->code = $model->nextCode();
-                $model->save();
-                $this->UpdateUnit($model);
-                return [
-                    'status' => 'success',
-                    'container' => '#sm-container',
-                ];
+                if ($model->save()) {
+                    $this->UpdateUnit($model);
+                    return [
+                        'status' => 'success',
+                        'container' => '#sm-container',
+                    ];
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -277,6 +278,7 @@ class AssetItemController extends Controller
         if ($this->request->isPost) {
             
             if ($model->load($this->request->post()) && $model->save()) {
+                $this->UpdateUnit($model);
                 return [
                     'status' => 'success',
                     'container' => '#sm-container',
@@ -297,11 +299,22 @@ class AssetItemController extends Controller
        
     }
 
-        protected function UpdateUnit($model)
+    protected function UpdateUnit(AssetItem $model)
     {
-        // try {
-        $title = $model->data_json['unit'];
-        $check = Categorise::find()->where(['name' => 'document_org', 'title' => $title])->one();
+        $dataJson = $model->data_json;
+        if (is_string($dataJson) && $dataJson !== '') {
+            $decoded = json_decode($dataJson, true);
+            $dataJson = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($dataJson)) {
+            $dataJson = [];
+        }
+
+        $title = trim((string)($dataJson['unit'] ?? ''));
+        if ($title === '') {
+            return null;
+        }
+
+        $check = Categorise::find()->where(['name' => 'unit', 'title' => $title])->one();
         if (!$check) {
             $newModel = new Categorise();
             $newModel->name = 'unit';
@@ -310,8 +323,7 @@ class AssetItemController extends Controller
             return $newModel->title;
         }
 
-        // } catch (\Throwable $th) {
-        // }
+        return $check->title;
     }
     
     /**
@@ -326,8 +338,8 @@ class AssetItemController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            $model->save();
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            $this->UpdateUnit($model);
             return [
                 'status' => 'success',
                 'container' => '#sm-container',
@@ -358,7 +370,8 @@ class AssetItemController extends Controller
         if($model->delete())
         {
             return [
-                'status' => 'success'
+                'status' => 'success',
+                 'container' => '#sm-container',
             ];
         }
 
