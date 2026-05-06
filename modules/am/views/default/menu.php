@@ -30,7 +30,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> สิ่งปลูกสร้าง', ['/am/construction'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ครุภัณฑ์', ['/am/asset'], ['class' => 'dropdown-item']) ?>
         <div class="dropdown-divider"></div>
-        <?= Html::a('<i class="fa-solid fa-boxes-stacked me-2"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset/bulk-create'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-boxes-stacked me-2"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset-bulk/bulk-create'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-arrow-right-arrow-left me-2"></i> โอนย้าย', ['/am/asset/transfer'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-wrench me-2"></i> ส่งซ่อม', ['/am/asset/repair'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-trash me-2"></i> จำหน่าย', ['/am/asset/dispose'], ['class' => 'dropdown-item']) ?>

@@ -31,7 +31,7 @@ use yii\helpers\Url;
             งานครุภัณฑ์
         </button>
         <ul class="dropdown-menu">
-            <li><?= Html::a('<i data-lucide="package-plus" class="me-2" style="width:1rem;height:1rem;"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset/bulk-create'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="package-plus" class="me-2" style="width:1rem;height:1rem;"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset-bulk/bulk-create'], ['class' => 'dropdown-item']) ?></li>
             <!-- <li>
                 <hr class="dropdown-divider">
             </li> -->
