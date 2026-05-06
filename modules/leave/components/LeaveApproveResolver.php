@@ -43,7 +43,7 @@ class LeaveApproveResolver
     private static function getSettings(): array
     {
         return Yii::$app->db->createCommand(
-            'SELECT id, level, label, approver_type, approver_value, org_node_level
+            'SELECT id, level, title, label, approver_type, approver_value, org_node_level
              FROM approve_level_setting
              WHERE `system` = :sys AND active = 1
              ORDER BY level ASC'
@@ -108,7 +108,7 @@ class LeaveApproveResolver
 
     /**
      * Resolve ผู้อนุมัติแต่ละระดับ
-     * คืน array ของ [ 'level', 'title', 'emp_id', 'approver_type' ]
+     * คืน array ของ [ 'level', 'title', 'label', 'emp_id', 'approver_type' ]
      */
     public static function resolve(int $empId): array
     {
@@ -128,6 +128,10 @@ class LeaveApproveResolver
                        ? (int) $setting['org_node_level']
                        : null;
             $resolvedEmpId = null;
+            $title = trim((string) ($setting['title'] ?? ''));
+            if ($title === '') {
+                $title = (string) $setting['label'];
+            }
 
             if ($type === 'org_leader1' || $type === 'org_leader2') {
                 // หา node ตาม tree lvl ที่ตั้งค่าไว้
@@ -150,7 +154,8 @@ class LeaveApproveResolver
 
             $result[] = [
                 'level'         => (int) $setting['level'],
-                'title'         => $setting['label'],
+                'title'         => $title,
+                'label'         => $setting['label'],
                 'approver_type' => $type,
                 'emp_id'        => $resolvedEmpId,
             ];
@@ -170,7 +175,7 @@ class LeaveApproveResolver
         $first = true;
 
         foreach ($resolved as $r) {
-            $dataJson = ['label' => $r['title']];
+            $dataJson = ['label' => $r['label'], 'title' => $r['title']];
             if ($r['approver_type'] === 'role') {
                 // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
                 $dataJson['role'] = 'role'; // placeholder

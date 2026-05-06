@@ -33,11 +33,16 @@ $isNew = $model->isNewRecord;
         <?= $form->field($model, 'system')->hiddenInput()->label(false) ?>
 
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <?= $form->field($model, 'level')->textInput(['type' => 'number', 'min' => 1])
                     ->hint('ลำดับขั้นการอนุมัติ (1, 2, 3...) — ใช้ในระบบจริง: ระดับ 1 อนุมัติก่อน ระดับ 2 ตามมา ไม่ซ้ำในแต่ละระบบ') ?>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-4">
+                <?= $form->field($model, 'title')->textInput(['placeholder' => 'เช่น หัวหน้างาน, หัวหน้ากลุ่มงาน, ผู้อำนวยการ'])
+                    ->label('ชื่อขั้นอนุมัติ')
+                    ->hint('ชื่อที่ใช้แสดงผลในลำดับการอนุมัติ') ?>
+            </div>
+            <div class="col-md-5">
                 <?= $form->field($model, 'label')->textInput(['placeholder' => 'เช่น เห็นชอบ, ผ่าน, อนุมัติ'])->label('คำที่ใช้ลงความเห็น') ?>
             </div>
         </div>

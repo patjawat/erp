@@ -224,7 +224,7 @@ foreach ($rows as $r) {
                         ?>
                     </div>
                     <span class="step-label d-block text-truncate">
-                        <?= Html::encode($step['label']) ?>
+                        <?= Html::encode($step['title'] ?? $step['label']) ?>
                     </span>
 
                 </div>
