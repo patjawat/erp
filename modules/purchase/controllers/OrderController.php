@@ -535,6 +535,16 @@ class OrderController extends Controller
             $dataProvider->query->andFilterWhere(['category_id' => $model->category_id]);
         }
 
+         $q = trim($searchModel->q ?? '');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $q],
+            ['like', 'code', $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.unit')"), $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.price')"), $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.fsn')"), $q],
+        ]);
+
         $dataProvider->pagination->pageSize = 10;
 
         if ($this->request->isAjax) {
@@ -574,6 +584,8 @@ class OrderController extends Controller
             'category_id' =>  $order_id,
             'name' => 'order_item',
             'asset_item' => $product->code,
+            'qty' => 1,
+            'price' => $product->data_json['price']  ?? 0,
             'asset_type' => $product->category_id,
             'pr_number' => $order->pr_number,
             'pq_number' => $order->pq_number,

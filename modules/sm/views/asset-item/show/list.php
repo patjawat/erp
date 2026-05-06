@@ -42,7 +42,7 @@ use yii\helpers\Html;
                         <td><?= $item->title ?></td>
                         <td><?= $item->data_json['unit'] ?? '-' ?></td>
                         <td><?php echo $item->assetType->title ?? '-';?></td>
-                        <td class="text-end fw-blod"><?= number_format($item->data_json['price'] ?? 0) ?></td>
+                       <td class="text-end fw-bold"><?= number_format((float)($item->data_json['price'] ?? 0)) ?></td>
                         <td class="text-center">
                             <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>

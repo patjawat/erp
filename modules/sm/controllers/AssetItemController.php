@@ -325,12 +325,8 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
-        $oldDataJson = is_array($model->data_json) ? $model->data_json : [];
 
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $newDataJson = is_array($model->data_json) ? $model->data_json : [];
-            $model->data_json = ArrayHelper::merge($oldDataJson, $newDataJson);
-
             $model->save();
             return [
                 'status' => 'success',
@@ -356,10 +352,14 @@ class AssetItemController extends Controller
      */
     public function actionDelete($id)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
         $model = $this->findModel($id);
         if($model->delete())
         {
-                 return $this->redirect(['/sm/asset-item','group' => $model->category_id]);
+            return [
+                'status' => 'success'
+            ];
         }
 
     }
