@@ -12,6 +12,16 @@ $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = ['label' => $title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'ทะเบียนทะเบียนครุภัณฑ์';
 
+$equipStats = $equipStats ?? [
+    'total' => 0,
+    'good' => 0,
+    'fair' => 0,
+    'damaged' => 0,
+    'repairing' => 0,
+    'waiting_dispose' => 0,
+    'total_value' => 0.0,
+];
+
 ?>
 
 <?php $this->beginBlock('page-title'); ?>

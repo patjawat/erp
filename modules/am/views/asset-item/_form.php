@@ -35,15 +35,22 @@ use kartik\widgets\ActiveForm;
     <?php
     echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
         'options' => ['placeholder' => 'เลือกหมวดรัพย์สิน ...'],
-        'data' => $model->listAssetCategory(),
+        'data' => $model->asset_category_id && $model->category
+            ? [$model->asset_category_id => $model->category->title]
+            : [],
         'type' => DepDrop::TYPE_SELECT2,
-        'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+        'select2Options' => [
+            'pluginOptions' => [
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
+            ],
+        ],
         'pluginOptions' => [
             'depends' => ['assetitem-asset_group_id'],
             'url' => Url::to(['/am/asset-item/get-asset-category']),
             'loadingText' => 'กำลังโหลด ...',
-            'params' => ['depdrop_all_params' => 'assetitem-asset_type_id'],
-            'initDepends' => ['assetitem-asset_type_id'],
+            'params' => ['depdrop_all_params' => 'assetitem-asset_group_id'],
+            'initDepends' => ['assetitem-asset_group_id'],
             'initialize' => true,
 
         ]

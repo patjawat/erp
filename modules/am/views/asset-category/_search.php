@@ -25,7 +25,7 @@ use yii\widgets\ActiveForm;
 
 <div class="row">
     <div class="col-lg-7 col-md-7 col-sm-12">
-        <?= $form->field($model, 'title')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
+        <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12">
         <?php

@@ -61,7 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col" style="width: 15%">รหัส</th>
                     <th scope="col">ชื่อรายการ</th>
                     <th scope="col">ประเภท</th>
-                    <th class="text-center" scope="col">ดำเนินการ</th>
+                    <th class="text-center" scope="col" style="width:120px;">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
@@ -72,9 +72,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="fw-semibold"><?= $item->title ?></td>
                         <td><?= $item->assetType?->title ?? '-' ?></td>
                         <td class="text-center">
+                             <div class="d-flex justify-content-center gap-3">
                             <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูล' . $this->title], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-md']]) ?>
                             <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข' . $this->title], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
+                </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

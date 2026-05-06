@@ -9,9 +9,9 @@ use yii\helpers\Html;
         <i data-lucide="file-text"></i>
         รายละเอียด
     </a>
-    <?= Html::a('<i data-lucide="arrow-left-right"></i> โอนย้าย', ['/am/asset/transfer', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
-    <?= Html::a('<i data-lucide="wrench"></i> ส่งซ่อม', ['/am/asset/repair', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
-    <?= Html::a('<i data-lucide="trash-2"></i> จำหน่าย', ['/am/asset/dispose', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?php // Html::a('<i data-lucide="arrow-left-right"></i> โอนย้าย', ['/am/asset/transfer', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?php // Html::a('<i data-lucide="wrench"></i> ส่งซ่อม', ['/am/asset/repair', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
+    <?php //  Html::a('<i data-lucide="trash-2"></i> จำหน่าย', ['/am/asset/dispose', 'asset_id' => $model->id], ['class' => 'btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn bg-body']) ?>
    
     <?php if ($model->asset_group_id == 4): ?>
         <a href="<?= Url::to(['repair-history', 'id' => $model->id]) ?>" class="btn fw-medium d-flex align-items-center gap-2 px-3 border-0 rounded-3 tab-btn <?= $menu === 'repair_history'  ? 'btn-primary' : 'bg-body' ?>">

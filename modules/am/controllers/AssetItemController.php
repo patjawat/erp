@@ -95,6 +95,7 @@ class AssetItemController extends Controller
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->id = $model->NextId();
+                $model->asset_type_id = $model->asset_group_id;
                 $model->save(false);
                 return [
                     'status' => 'success',
