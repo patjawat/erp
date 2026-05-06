@@ -371,6 +371,67 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
         </h6>
         <?= $isUpdate ? $model->Upload('leave_file') : FileManagerHelper::FileUpload($draftRef, 'leave_file') ?>
 
+        <?php
+        $existingSigType = is_array($model->data_json) ? ($model->data_json['signature_type'] ?? 'canvas') : 'canvas';
+        $existingSigData = is_array($model->data_json) ? ($model->data_json['signature_data'] ?? '') : '';
+        $signatureSystemUrl = null;
+        if ($employee && method_exists($employee, 'SignatureShow')) {
+            try { $signatureSystemUrl = $employee->SignatureShow(); } catch (\Throwable $e) {}
+        }
+        ?>
+
+        <!-- ── ลายเซ็น ──────────────────────────────────────────── -->
+        <div class="mb-4 mt-3">
+            <h6 class="d-flex align-items-center gap-2 fw-bold text-body mb-3">
+                <span class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3 d-flex align-items-center justify-content-center" style="width:2rem;height:2rem;">
+                    <i class="bi bi-pen" style="font-size:.9rem;"></i>
+                </span>
+                ลายเซ็น
+            </h6>
+
+            <!-- ตัวเลือกโหมด -->
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn btn-sm rounded-3 btn-sig-tab <?= $existingSigType !== 'system' ? 'btn-primary' : 'btn-outline-primary' ?>" data-sig-type="canvas">
+                    <i class="bi bi-pen me-1"></i> เซ็นสด
+                </button>
+                <button type="button" class="btn btn-sm rounded-3 btn-sig-tab <?= $existingSigType === 'system' ? 'btn-primary' : 'btn-outline-primary' ?>" data-sig-type="system">
+                    <i class="bi bi-person-badge me-1"></i> ลายเซ็นระบบ
+                </button>
+            </div>
+
+            <!-- แผง: เซ็นสด -->
+            <div id="sig-panel-canvas" class="<?= $existingSigType === 'system' ? 'd-none' : '' ?>">
+                <div class="border rounded-3 bg-white overflow-hidden" style="touch-action:none;max-width:560px;">
+                    <canvas id="sig-canvas" width="560" height="180" style="display:block;width:100%;height:180px;cursor:crosshair;"></canvas>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" id="sig-clear-btn">
+                        <i class="bi bi-eraser me-1"></i> ล้างลายเซ็น
+                    </button>
+                </div>
+            </div>
+
+            <!-- แผง: ลายเซ็นระบบ -->
+            <div id="sig-panel-system" class="<?= $existingSigType !== 'system' ? 'd-none' : '' ?>">
+                <?php if ($signatureSystemUrl): ?>
+                    <div class="border rounded-3 p-3 d-inline-block bg-body-secondary">
+                        <img src="<?= Html::encode($signatureSystemUrl) ?>" alt="ลายเซ็นระบบ"
+                             style="max-height:120px;max-width:300px;display:block;">
+                    </div>
+                    <div class="form-text mt-1">ลายเซ็นจากระบบ HR จะถูกแนบในใบลาโดยอัตโนมัติ</div>
+                <?php else: ?>
+                    <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-center gap-2 py-2 px-3" style="max-width:480px;">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                        ไม่พบลายเซ็นในระบบ กรุณาใช้การเซ็นสดแทน
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- hidden fields -->
+            <?= $form->field($model, 'data_json[signature_type]')->hiddenInput(['id' => 'sig-type-input'])->label(false) ?>
+            <?= $form->field($model, 'data_json[signature_data]')->hiddenInput(['id' => 'sig-data-input'])->label(false) ?>
+        </div>
+
         <div class="d-flex justify-content-center">
             <button type="submit" class="btn btn-primary rounded-3 px-4">
                 <i class="bi bi-check2-circle me-1"></i> บันทึก
@@ -611,4 +672,112 @@ $js = <<<JS
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_END);
+
+// ── Signature JS ────────────────────────────────────────────────────────
+$existingSigDataJs = json_encode($existingSigData);
+$sigJs = <<<JS
+(function(){
+    var canvas   = document.getElementById('sig-canvas');
+    var typeInp  = document.getElementById('sig-type-input');
+    var dataInp  = document.getElementById('sig-data-input');
+    if (!canvas || !typeInp || !dataInp) return;
+
+    var ctx      = canvas.getContext('2d');
+    var drawing  = false;
+    var lastX    = 0, lastY    = 0;
+    var hasDrawn = false;
+
+    // ── ขนาด canvas จริง vs แสดงผล ──────────────────────────────
+    function scaleXY(clientX, clientY) {
+        var rect  = canvas.getBoundingClientRect();
+        var scaleX = canvas.width  / rect.width;
+        var scaleY = canvas.height / rect.height;
+        return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
+    }
+
+    function startDraw(x, y) {
+        drawing = true;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        lastX = x; lastY = y;
+    }
+    function moveDraw(x, y) {
+        if (!drawing) return;
+        ctx.lineWidth   = 2;
+        ctx.lineCap     = 'round';
+        ctx.lineJoin    = 'round';
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        lastX = x; lastY = y;
+        hasDrawn = true;
+    }
+    function endDraw() { drawing = false; ctx.beginPath(); }
+
+    // mouse
+    canvas.addEventListener('mousedown',  function(e){ var p=scaleXY(e.clientX,e.clientY); startDraw(p[0],p[1]); });
+    canvas.addEventListener('mousemove',  function(e){ var p=scaleXY(e.clientX,e.clientY); moveDraw(p[0],p[1]); });
+    canvas.addEventListener('mouseup',    endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+
+    // touch
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); var t=e.touches[0]; var p=scaleXY(t.clientX,t.clientY); startDraw(p[0],p[1]); }, {passive:false});
+    canvas.addEventListener('touchmove',  function(e){ e.preventDefault(); var t=e.touches[0]; var p=scaleXY(t.clientX,t.clientY); moveDraw(p[0],p[1]);  }, {passive:false});
+    canvas.addEventListener('touchend',   endDraw);
+
+    // ── ล้างลายเซ็น ──────────────────────────────────────────────
+    document.getElementById('sig-clear-btn')?.addEventListener('click', function(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        dataInp.value = '';
+        hasDrawn = false;
+    });
+
+    // ── สลับแท็บ ─────────────────────────────────────────────────
+    document.querySelectorAll('.btn-sig-tab').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var t = this.dataset.sigType;
+            typeInp.value = t;
+            document.querySelectorAll('.btn-sig-tab').forEach(function(b){
+                b.classList.remove('btn-primary');
+                b.classList.add('btn-outline-primary');
+            });
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+            document.getElementById('sig-panel-canvas').classList.toggle('d-none', t !== 'canvas');
+            document.getElementById('sig-panel-system').classList.toggle('d-none', t !== 'system');
+            if (t === 'system') dataInp.value = '';
+        });
+    });
+
+    // ── restore ลายเซ็นเดิม (กรณีแก้ไข) ─────────────────────────
+    var existingData = {$existingSigDataJs};
+    if (existingData && typeof existingData === 'string' && existingData.startsWith('data:image')) {
+        var img = new Image();
+        img.onload = function(){
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            hasDrawn = true;
+        };
+        img.src = existingData;
+    }
+
+    // ── capture canvas → hidden field ก่อน submit ─────────────────
+    function captureSignature() {
+        if (typeInp.value === 'canvas' && hasDrawn) {
+            dataInp.value = canvas.toDataURL('image/png');
+        }
+    }
+
+    var formCreate = document.getElementById('leave-create-form');
+    var formUpdate = document.getElementById('form-leave-update');
+    [formCreate, formUpdate].forEach(function(f){
+        if (f) f.addEventListener('submit', captureSignature, true);
+    });
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).on('beforeSubmit', '#leave-create-form, #form-leave-update', captureSignature);
+    }
+})();
+JS;
+$this->registerJs($sigJs, \yii\web\View::POS_END);
 ?>

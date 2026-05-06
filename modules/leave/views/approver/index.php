@@ -59,12 +59,44 @@ $totalCount = (int) $dataProvider->getTotalCount();
                 <i class="bi bi-ui-checks"></i> ทะเบียนวันลา
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= number_format($totalCount, 0) ?></span> รายการ
             </h6>
+
+<!-- ── Bulk action bar ─────────────────────────────────────────── -->
+<div id="bulk-action-bar" class="d-none align-items-center gap-3 px-3 py-2 mb-3 rounded-3 border bg-primary bg-opacity-10 border-primary-subtle">
+    <i class="bi bi-check2-square text-primary fs-5"></i>
+    <span class="fw-semibold text-primary small" id="bulk-count-label">เลือก 0 รายการ</span>
+
+    <div class="ms-auto d-flex gap-2 align-items-center">
+        <div class="dropdown">
+            <button class="btn btn-primary btn-sm rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-lightning-fill me-1"></i> ดำเนินการ
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <button type="button" class="dropdown-item" id="btn-bulk-change-approver">
+                        <i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button type="button" class="dropdown-item text-success" id="btn-bulk-approve">
+                        <i class="bi bi-check-circle me-2"></i> อนุมัติ (ผ่าน)
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="dropdown-item text-danger" id="btn-bulk-reject">
+                        <i class="bi bi-x-circle me-2"></i> ไม่อนุมัติ (ไม่ผ่าน)
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" id="btn-bulk-clear">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+
             <div class="d-flex gap-2">
-                <?= Html::a(
-                    '<i class="bi bi-printer me-1"></i> พิมพ์',
-                    array_merge(['/leave/approver/print'], Yii::$app->request->queryParams),
-                    ['class' => 'btn btn-outline-secondary btn-sm', 'target' => '_blank', 'rel' => 'noopener']
-                ) ?>
+               
                 <?= Html::a(
                     '<i class="bi bi-file-earmark-excel me-1"></i> ส่งออก Excel',
                     array_merge(['/leave/approver/export'], Yii::$app->request->queryParams),
@@ -74,6 +106,7 @@ $totalCount = (int) $dataProvider->getTotalCount();
         </div>
     </div>
     <div class="card-body p-0" >
+        
         <?= $this->render('list', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

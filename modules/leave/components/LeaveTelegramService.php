@@ -17,36 +17,49 @@ class LeaveTelegramService
         }
 
         $chatId = $approve->employee->user->telegram_id ?? null;
-        $leave = $approve->leave;
+        $leave  = $approve->leave;
         if (empty($chatId) || !$leave) {
             return false;
         }
 
         $requesterName = $leave->employee->fullname ?? '-';
-        $leaveType = $leave->leaveType->title ?? 'ใบลา';
-        $dateRange = trim(strip_tags((string) $leave->showLeaveDate()));
-        $levelLabel = $approve->data_json['label'] ?? $approve->title ?? 'ผู้อนุมัติ';
-        $url = $this->buildMobileUrl(['/mobile/default/approve-leave', 'id' => $approve->id]);
+        $leaveType     = $leave->leaveType->title ?? 'ใบลา';
+        $totalDays     = (float) $leave->total_days;
+        $dateRange     = trim(strip_tags((string) $leave->showLeaveDate()));
+        $levelLabel    = $approve->data_json['label'] ?? $approve->title ?? 'ผู้อนุมัติ';
+        $reason        = $leave->data_json['reason'] ?? '';
 
-        $messageLines = [
-            'แจ้งเตือนงานอนุมัติใบลา',
-            'ผู้ขอ: ' . $requesterName,
-            'ประเภท: ' . $leaveType,
-            'ช่วงเวลา: ' . $dateRange,
-            'ขั้นตอน: ' . $levelLabel,
+        // ระดับสุดท้าย ใช้คำว่า อนุมัติ/ไม่อนุมัติ, ระดับกลาง ใช้คำว่า เห็นชอบ/ไม่เห็นชอบ
+        $isFinal     = (bool) $approve->maxLevel();
+        $passLabel   = $isFinal ? '✅ อนุมัติ'    : '✅ เห็นชอบ';
+        $rejectLabel = $isFinal ? '❌ ไม่อนุมัติ' : '❌ ไม่เห็นชอบ';
+
+        $lines = [
+            '📋 <b>แจ้งเตือนการอนุมัติใบลา</b>',
+            '',
+            '👤 ผู้ขอ: '    . htmlspecialchars($requesterName, ENT_QUOTES),
+            '📌 ประเภท: '   . htmlspecialchars($leaveType, ENT_QUOTES),
+            '📅 ช่วงเวลา: ' . htmlspecialchars($dateRange, ENT_QUOTES),
+            '🗓 จำนวน: '    . $totalDays . ' วัน',
         ];
-        if ($url) {
-            $messageLines[] = '';
-            $messageLines[] = 'กรุณาเปิดหน้าอนุมัติใน Telegram Mini App';
-        } else {
-            $messageLines[] = '';
-            $messageLines[] = 'กรุณาเปิดระบบ ERP Mobile เพื่อตรวจสอบรายการอนุมัติ';
+        if ($reason !== '') {
+            $lines[] = '📝 เหตุผล: ' . htmlspecialchars(mb_substr($reason, 0, 80), ENT_QUOTES);
         }
+        $lines[] = '';
+        $lines[] = '🔖 ขั้นตอน: ' . htmlspecialchars($levelLabel, ENT_QUOTES);
+
+        // inline keyboard: ปุ่มเห็นชอบ/ไม่เห็นชอบ
+        $keyboard = [
+            [
+                ['text' => $passLabel,   'callback_data' => 'leave_approve:' . $approve->id . ':Pass'],
+                ['text' => $rejectLabel, 'callback_data' => 'leave_approve:' . $approve->id . ':Reject'],
+            ],
+        ];
 
         return (bool) Yii::$app->telegram->sendDirectMessage(
             $chatId,
-            implode("\n", $messageLines),
-            $this->buildWebAppOptions($url, 'เปิดหน้าอนุมัติ')
+            implode("\n", $lines),
+            ['reply_markup' => ['inline_keyboard' => $keyboard]]
         );
     }
 

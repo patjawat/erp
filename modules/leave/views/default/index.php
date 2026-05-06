@@ -229,6 +229,7 @@ $stats      = $stats ?? [];
                                 <th class="small fw-semibold">ประเภท</th>
                                 <th class="small fw-semibold">ช่วงเวลา</th>
                                 <th class="small fw-semibold text-center">จำนวน</th>
+                                 <th class="small fw-semibold">เอกสารแนบ</th>
                                 <th class="small fw-semibold">ผู้อนุมัติ</th>
                                 <th class="small fw-semibold">สถานะ/ความคืบหน้า</th>
                                 <th class="small fw-semibold text-end">จัดการ</th>
@@ -239,6 +240,7 @@ $stats      = $stats ?? [];
                             $offset = (int) ($dataProvider->pagination->offset ?? 0);
                             foreach ($dataProvider->getModels() as $index => $item):
                                 $no = $offset + $index + 1;
+                                 $attachments = $item->getAttachmentList();
                             ?>
                                 <tr>
                                     <td class="small text-center text-muted"><?= $no ?></td>
@@ -255,6 +257,22 @@ $stats      = $stats ?? [];
                                         $d = (float) $item->total_days;
                                         echo $d == (int) $d ? (string) (int) $d : number_format($d, 1, '.', '');
                                     ?></td>
+                                    <td>
+                        <?php if (!empty($attachments)): ?>
+                            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                                <?php foreach ($attachments as $att): ?>
+                                <li>
+                                    <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>"
+                                       class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50"
+                                       data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>"
+                                       data-open="new-tab" target="_blank" rel="noopener noreferrer">
+                                        <i class="fa-solid fa-paperclip text-primary"></i>
+                                    </a>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </td>
                                     <td class="small py-3 px-3">
                                         <?= $item->stackChecker() ?: '<span class="text-muted">—</span>' ?>
                                     </td>
