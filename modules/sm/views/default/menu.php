@@ -48,6 +48,9 @@ $active = $active ?? '';
                 <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> วัสดุ', ['/sm/product', 'title' => 'ตั้งค่่าวัสดุ'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>
+                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> ครุภัณฑ์', ['/sm/asset-item', 'title' => 'ตั้งค่่าวัสดุ'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
                 <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> ประเภทวัสดุ', ['/sm/product-type', 'title' => 'ตั้งค่่าประเภทวัสดุ'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>

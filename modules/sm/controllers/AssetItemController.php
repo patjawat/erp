@@ -77,31 +77,25 @@ class AssetItemController extends Controller
     public function actionIndex()
     {
 
-        $group = $this->request->get('group');
-        $category_id = $this->request->get('category_id');
-        $title = $this->request->get('title');
-        $name = $this->request->get('name');
-        $model = Categorise::findAll(['name' => 'asset_type',]);
         $searchModel = new AssetItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['name' => 'asset_item','group_id' => 3,'active' => true]);
-        if($model){
-            $dataProvider->query->andFilterWhere(['name' => 'asset_item','group_id' => 3,'active' => true]);
+        $dataProvider->query->andFilterWhere(['name' => 'asset_item']);
+        $dataProvider->query->andFilterWhere(['group_id' => 'EQUIP']);
+        $dataProvider->query->andFilterWhere(['active' => true]);
+        $q = trim($searchModel->q ?? '');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $q],
+            ['like', 'code', $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.unit')"), $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.price')"), $q],
+            ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.fsn')"), $q],
+        ]);
             
-        }
-        
-        $dataProviderGroup = $searchModel->search($this->request->queryParams);
-        $dataProviderGroup->query->andFilterWhere(['name' => 'asset_item ','group_id' => 3,'active' => true]);
-        $dataProviderGroup->query->orderBy(['id' => SORT_DESC]);
-
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'dataProviderGroup' => $dataProviderGroup,
-            'title' => $title,
-            'name' => $name,
-            'model' => $model
         ]);
     }
 
@@ -114,7 +108,6 @@ class AssetItemController extends Controller
     public function actionNext()
     {
         $group = $this->request->get('group');
-        $category_id = $this->request->get('category_id');
         $title = $this->request->get('title');
         $name = $this->request->get('name');
         $model = Categorise::findOne(['name' => 'asset_type','category_id' => $group]);
@@ -127,7 +120,6 @@ class AssetItemController extends Controller
         }
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
         $dataProviderGroup->query->andFilterWhere(['name' => 'asset_type','category_id' => $group, 'active' => true]);
-        // $dataProvider->query->andFilterWhere(['category_id' => $code]);
 
 
         return $this->render('index_copy', [
@@ -167,7 +159,6 @@ class AssetItemController extends Controller
                     'model' => $model,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'dataProvider' => $dataProvider,
                     'dataProviderGroup' => $dataProviderGroup,
                 ]),
             ];
@@ -175,7 +166,6 @@ class AssetItemController extends Controller
             return $this->render('view_type', [
                 'model' => $model,
                 'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
                 'dataProvider' => $dataProvider,
                 'dataProviderGroup' => $dataProviderGroup,
 
@@ -210,7 +200,6 @@ class AssetItemController extends Controller
                     'model' => $model,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
-                    'dataProvider' => $dataProvider,
                     'dataProviderGroup' => $dataProviderGroup,
                 ]),
             ];
@@ -219,19 +208,10 @@ class AssetItemController extends Controller
                 'model' => $model,
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'dataProvider' => $dataProvider,
                 'dataProviderGroup' => $dataProviderGroup,
 
             ]);
         }
-        // $small_model = Fsn::find()->where(['name' => 'asset_name','category_id'=>$model->code])->all();
-        return $this->render('view', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'model' => $model,
-            'btn' => true,
-
-        ]);
     }
 
 
@@ -240,10 +220,12 @@ class AssetItemController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $model = new Assetitem([
-            'group_id' => 3
+            'group_id' => 'EQUIP',
+            'name' => 'asset_item'
         ]);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                $model->code = $model->nextCode();
                 $model->save();
                 $this->UpdateUnit($model);
                 return [
@@ -257,7 +239,7 @@ class AssetItemController extends Controller
 
         return [
             'title' => "สร้างครุภัณฑ์" ,
-            'content' => $this->renderAjax('_form_item_', [
+            'content' => $this->renderAjax('create', [
                 'model' => $model,
                 'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
             ]),
@@ -343,7 +325,11 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
+        $oldDataJson = is_array($model->data_json) ? $model->data_json : [];
+
         if ($this->request->isPost && $model->load($this->request->post())) {
+            $newDataJson = is_array($model->data_json) ? $model->data_json : [];
+            $model->data_json = ArrayHelper::merge($oldDataJson, $newDataJson);
 
             $model->save();
             return [
@@ -353,15 +339,10 @@ class AssetItemController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-/*         $model->data_json = [
-            "unit"=>$model->data_json["unit"],
-            "id" => $assetType->id
-        ]; */
         return [
             'title' => $this->request->get('title'),
             'content' => $this->renderAjax('update', [
                 'model' => $model,
-                'ref' => $model->ref
             ]),
         ];
     }
@@ -399,51 +380,34 @@ class AssetItemController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    // ตรวจสอบความถูกต้อง
+       // ตรวจสอบความถูกต้อง
     public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = new Assetitem();
+        $model = new AssetItem();
+        $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
-     $fsnAuto = $this->request->post('AssetItem');
-    //  return isset($fsnAuto['fsn_auto']);
-            //  return  $model->ref;
-            // ตรวจระหัสซ้ำ
-                $checkCode = Assetitem::find()->where(['code' => $model->code])
-                ->andWhere(['<>','ref',$model->ref])
-                ->andWhere(['not', ['code' => null]])
-                ->andWhere(['not', ['code' => ""]])
-                ->one();
-                // return $checkCode;
-            if ($checkCode) {
-                    $codeStatus = true;
-            } else {
-                $codeStatus = false;
-            }
-            // จบตรวจสอลรหัสซ้ำ
-            $requiredName = "ต้องระบุ";
-            //ตรวจสอบตำแหน่ง
-            if ($model->name == "asset_group") {
-                $model->data_json['depreciation'] == "" ? $model->addError('data_json[depreciation]', $requiredName) : null;
-                $model->data_json['service_life'] == "" ? $model->addError('data_json[service_life]', $requiredName) : null; 
-                    // $checkCode ? $model->addError('code', 'รหัสน้ำถูกใช้แล้ว') : null;
+            $code = trim((string) $model->code);
+            $categoryId = trim((string) $model->category_id);
+
+            if ($code !== '' && $categoryId !== '') {
+                $checkCode = AssetItem::find()
+                    ->where([
+                        'code' => $code,
+                        'group_id' => 'EQUIP',
+                        'category_id' => $categoryId,
+                    ])
+                    ->andWhere(['<>', 'ref', $model->ref])
+                    ->andWhere(['not', ['code' => null]])
+                    ->andWhere(['not', ['code' => '']])
+                    ->one();
+
+                $checkCode ? $model->addError('code', 'รหัสซ้ำ') : null;
             }
 
-            if ($model->name == "asset_item") {
-
-                // ถ้าสร้างรหัสอัตโนมัติ
-                if(!isset($fsnAuto['fsn_auto']) || $fsnAuto['fsn_auto'] == "1"){
-                    $model->title == "" ? $model->addError('title', $requiredName) : null;
-                }
-                // ถ้ากำหนดรหัวเอง
-                if(isset($fsnAuto['fsn_auto']) && $fsnAuto['fsn_auto'] == "0"){
-                    $model->title == "" ? $model->addError('title', $requiredName) : null;
-                    $model->code == "" ? $model->addError('code', $requiredName) : null;
-                }
-  
-            }
-
-            $codeStatus ? $model->addError('code', 'รหัสน้ำถูกใช้แล้ว') : null;
+            $model->title == '' ? $model->addError('title', $requiredName) : null;
+            $model->group_id == '' ? $model->addError('group_id', $requiredName) : null;
+            $model->category_id == '' ? $model->addError('category_id', $requiredName) : null;
 
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;

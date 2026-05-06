@@ -70,12 +70,12 @@ use kartik\widgets\ActiveForm;
             <?= $form->field($model, 'depreciation')->textInput(['maxlength' => true])->label('ค่าเสื่อมราคา') ?>
             <?= $form->field($model, 'service_life')->textInput()->label('อายุการใช้งาน') ?>
         </div>
-
     </div>
 
-    <div class="form-group mt-3 d-flex justify-content-center">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
-    </div>
+    <div class="form-group mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap">
+            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+            <?= Html::button('<i class="fa-solid fa-circle-xmark"></i> ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
+        </div>
 
     <?php ActiveForm::end(); ?>
 
