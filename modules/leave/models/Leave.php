@@ -232,7 +232,7 @@ class Leave extends \yii\db\ActiveRecord
                     'title'     => 'ผู้อำนวยการ',
                     'emp_id'    => $dirId,
                     'status'    => 'Pending',
-                    'data_json' => ['label' => 'ผู้อำนวยการ'],
+                    'data_json' => ['label' => 'ผู้อำนวยการ', 'title' => 'ผู้อำนวยการ'],
                 ]];
             } else {
                 return; // ไม่มีทั้ง settings และ director — ไม่สร้าง approve
@@ -247,7 +247,12 @@ class Leave extends \yii\db\ActiveRecord
         $first = true;
 
         foreach ($rows as $r) {
-             $dataJson = ['label' => $r['label']];
+            $title = trim((string) ($r['title'] ?? ''));
+            if ($title === '') {
+                $title = (string) ($r['label'] ?? '');
+            }
+
+            $dataJson = ['label' => $r['label'], 'title' => $title];
             if ($r['approver_type'] === 'role') {
                 // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
                 $dataJson['role'] = 'role'; // placeholder
@@ -258,12 +263,12 @@ class Leave extends \yii\db\ActiveRecord
             $a->from_id = (string) $this->id;
             $a->name    = 'leave';
             $a->level   = $r['level'];
-            $a->title   = $r['label'];
+            $a->title   = $title;
 
             if ($isDirector) {
                 $a->emp_id    = (int) $this->emp_id;
                 $a->status    = 'Pass';
-                $a->data_json = ['label' => $r['label'], 'approve_date' => $approveDate];
+                $a->data_json = ['label' => $r['label'], 'title' => $title, 'approve_date' => $approveDate];
             } else {
                 $a->emp_id    = $r['emp_id'];
                 $a->status    =  $first ? 'Pending' : 'None';

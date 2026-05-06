@@ -21,7 +21,9 @@ use kartik\select2\Select2;
 <div>
 
 <div class="row">
-
+<div class="col-4">
+    <?php echo $form->field($searchModel, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
+</div>
 <div class="col-4">
 <?php
   
@@ -42,9 +44,7 @@ use kartik\select2\Select2;
         ])->label('ประเภท');
         ?>
 </div>
-<div class="col-4">
-    <?php echo $form->field($searchModel, 'title')->textInput(['placeholder' => 'ค้นหา...'])->label('คำค้นหา') ?>
-</div>
+
 <div class="col-2">
 
 <?php if($dataProvider->getTotalCount() == 0 ):?>

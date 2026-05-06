@@ -2,6 +2,7 @@
 
 namespace app\modules\am\controllers;
 
+use app\components\SiteHelper;
 use app\models\Categorise;
 use app\modules\am\models\AssetItem;
 use app\modules\am\models\AssetItemSearch;
@@ -34,6 +35,15 @@ class AssetItemController extends Controller
         );
     }
 
+    public function beforeAction($action)
+    {
+        if ($this->request->get('view')) {
+            SiteHelper::setDisplay($this->request->get('view'));
+        }
+
+        return parent::beforeAction($action);
+    }
+
     /**
      * Lists all AssetItem models.
      *
@@ -50,7 +60,6 @@ class AssetItemController extends Controller
         ]);
     }
 
-
     /**
      * Displays a single AssetItem model.
      * @param string $id รหัสทรัพย์สิน
@@ -59,7 +68,6 @@ class AssetItemController extends Controller
      */
     public function actionView($id)
     {
-
         $model = $this->findModel($id);
 
         if ($this->request->isAjax) {
@@ -70,11 +78,11 @@ class AssetItemController extends Controller
                     'model' => $model,
                 ]),
             ];
-        } else {
-            return $this->render('view', [
-                'model' => $model,
-            ]);
         }
+
+        return $this->render('view', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -84,21 +92,23 @@ class AssetItemController extends Controller
      */
     public function actionCreate()
     {
-           Yii::$app->response->format = Response::FORMAT_JSON;
-            $model = new AssetItem([
-                'asset_group_id' => $this->request->get('asset_type_id'),
-                'asset_category_id' => $this->request->get('category_id'),
-                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10)
-            ]);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new AssetItem([
+            'asset_group_id' => $this->request->get('asset_type_id'),
+            'asset_category_id' => $this->request->get('category_id'),
+            'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+        ]);
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->id = $model->NextId();
+                $model->asset_type_id = $model->asset_group_id;
                 $model->save(false);
+
                 return [
                     'status' => 'success',
-                    'container' => '#am-container',
+                    'container' => '#sm-container',
                 ];
             }
         } else {
@@ -113,11 +123,11 @@ class AssetItemController extends Controller
                     'model' => $model,
                 ]),
             ];
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
         }
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -129,10 +139,10 @@ class AssetItemController extends Controller
      */
     public function actionUpdate($id)
     {
-
         $model = $this->findModel($id);
         //$model->asset_type_id = $model->type->code;
         //$model->category_id = $model->category->code;
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -153,13 +163,12 @@ class AssetItemController extends Controller
                     'model' => $model,
                 ]),
             ];
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
         }
-    }
 
+        return $this->render('update', [
+            'model' => $model,
+        ]);
+    }
 
     public function actionGetAssetType()
     {
@@ -175,9 +184,11 @@ class AssetItemController extends Controller
                     ->select(['code as id', 'title as name'])
                     ->asArray()
                     ->all();
+
                 return ['output' => $out, 'selected' => ''];
             }
         }
+
         return ['output' => '', 'selected' => ''];
     }
 
@@ -196,13 +207,13 @@ class AssetItemController extends Controller
                     ->select(['code as id', 'title as name'])
                     ->asArray()
                     ->all();
+
                 return ['output' => $out, 'selected' => ''];
             }
         }
+
         return ['output' => '', 'selected' => ''];
     }
-
-
 
     /**
      * Deletes an existing AssetItem model.
@@ -227,8 +238,8 @@ class AssetItemController extends Controller
             ['LIKE', 'code', $searchModel->q],
             ['LIKE', 'title', $searchModel->q],
         ]);
-        if ($this->request->isAjax) {
 
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
@@ -237,12 +248,12 @@ class AssetItemController extends Controller
                     'dataProvider' => $dataProvider,
                 ]),
             ];
-        } else {
-            return $this->render('list_item', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
         }
+
+        return $this->render('list_item', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     // ตรวจสอบความถูกต้อง
@@ -251,12 +262,11 @@ class AssetItemController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new AssetItem();
         $requiredName = 'ต้องระบุ';
-    if ($this->request->isPost && $model->load($this->request->post())) {
-
+        if ($this->request->isPost && $model->load($this->request->post())) {
             $model->title == '' ? $model->addError('title', $requiredName) : null;
             $model->asset_group_id == '' ? $model->addError('asset_group_id', $requiredName) : null;
             $model->asset_category_id == '' ? $model->addError('asset_category_id', $requiredName) : null;
-           
+
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
             }
@@ -265,12 +275,6 @@ class AssetItemController extends Controller
             }
         }
     }
-
-
-    
-
-
-
 
     /**
      * Finds the AssetItem model based on its primary key value.

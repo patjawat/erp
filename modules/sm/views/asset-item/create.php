@@ -12,9 +12,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="fsn-create">
 
     <?= $this->render('_form', [
-        'model' => $model,
-        'title' => $title,
-        'itemType' => $itemType,
+        'model' => $model
     ]) ?>
 
 </div>

@@ -35,15 +35,22 @@ use kartik\widgets\ActiveForm;
     <?php
     echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
         'options' => ['placeholder' => 'เลือกหมวดรัพย์สิน ...'],
-        'data' => $model->listAssetCategory(),
+        'data' => $model->asset_category_id && $model->category
+            ? [$model->asset_category_id => $model->category->title]
+            : [],
         'type' => DepDrop::TYPE_SELECT2,
-        'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+        'select2Options' => [
+            'pluginOptions' => [
+                'allowClear' => true,
+                'dropdownParent' => '#main-modal',
+            ],
+        ],
         'pluginOptions' => [
             'depends' => ['assetitem-asset_group_id'],
             'url' => Url::to(['/am/asset-item/get-asset-category']),
             'loadingText' => 'กำลังโหลด ...',
-            'params' => ['depdrop_all_params' => 'assetitem-asset_type_id'],
-            'initDepends' => ['assetitem-asset_type_id'],
+            'params' => ['depdrop_all_params' => 'assetitem-asset_group_id'],
+            'initDepends' => ['assetitem-asset_group_id'],
             'initialize' => true,
 
         ]
@@ -63,12 +70,12 @@ use kartik\widgets\ActiveForm;
             <?= $form->field($model, 'depreciation')->textInput(['maxlength' => true])->label('ค่าเสื่อมราคา') ?>
             <?= $form->field($model, 'service_life')->textInput()->label('อายุการใช้งาน') ?>
         </div>
-
     </div>
 
-    <div class="form-group mt-3 d-flex justify-content-center">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
-    </div>
+    <div class="form-group mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap">
+            <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+            <?= Html::button('<i class="fa-solid fa-circle-xmark"></i> ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
+        </div>
 
     <?php ActiveForm::end(); ?>
 

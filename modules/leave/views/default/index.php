@@ -209,11 +209,16 @@ $stats      = $stats ?? [];
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
+<<<<<<< HEAD
                             <?= Html::a(
                                 '<i class="bi bi-plus-lg me-1"></i> สร้างใบลา',
                                 ['/leave/leave/create', 'title' => '<i class="bi bi-calendar-plus me-1"></i> สร้างใบลาใหม่'],
                                 ['class' => 'btn btn-primary rounded-3 open-modal', 'data' => ['size' => 'modal-lg']]
                             ) ?>
+=======
+                            <?= Html::a('<i data-lucide="plus" style="width:1rem;height:1rem" class="me-1 align-middle"></i> สร้างใบลา', ['/leave/leave/create'], ['class' => 'btn btn-primary rounded-3']) ?>
+                            <?php // Html::a('<i data-lucide="plus" style="width:1rem;height:1rem" class="me-1 align-middle"></i> สร้างใบลา-popp', ['/leave/leave/create-old','title' => 'สร้างใบลา'], ['class' => 'btn btn-primary rounded-3 open-modal','data' => ['size' => 'modal-xl']]) ?>
+>>>>>>> dev
                         </div>
                     </div>
                 </div>

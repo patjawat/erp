@@ -18,7 +18,7 @@ class AssetCategorySearch extends AssetCategory
     {
         return [
             [['id', 'qty', 'active'], 'integer'],
-            [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items'], 'safe'],
+            [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json', 'ma_items','q'], 'safe'],
         ];
     }
 

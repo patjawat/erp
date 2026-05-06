@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use app\components\widgets\DataSummaryWidget;
 
@@ -42,13 +43,19 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between align-item-center">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> จำนวน <span class="badge bg-light"><?=number_format($dataProvider->getTotalCount(),0)?></span> รายการ</h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', 
-            ['create','asset_type_id' => $searchModel->asset_type_id,
-            'category_id' => $searchModel->asset_category_id,
-            'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-light shadow open-modal','data' => ['size' => 'modal-lg']]) ?>
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i> จำนวน <span class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
+            <?= Html::a(
+                '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่',
+                [
+                    'create',
+                    'asset_type_id' => $searchModel->asset_type_id,
+                    'category_id' => $searchModel->asset_category_id,
+                    'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'
+                ],
+                ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]
+            ) ?>
         </div>
-</div>
+    </div>
     <div class="card-body">
 
         <table class="table table-striped table-hover">
@@ -66,40 +73,37 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
-                <?php foreach($dataProvider->getModels() as $key => $item):?>
-                <tr>
-                    <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1)+$key)?></td>
-                    <td><?= $item->id?></td>
-                    <td class="fw-semibold text-primary"><?=$item->fsn?></td>
-                    <td><?=$item->title?></td>
-                    <td><?=$item->data_json['unit'] ?? '-'?></td>
-                    <td><?php
-                    // echo $item->asset_type_id;
-                    echo $item->assetType->title ?? '-';
-                    ?></td>
-                    <td><?=$item->category->title ?? '-'?></td>
-                    <td class="text-end fw-blod"><?=$item->price ?? '-'?></td>
-                    <td class="text-center">
-                          <?=Html::a('<i class="bi bi-eye"></i>',['view','id' => $item->id,'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'],['class' => 'btn btn-sm btn-info open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="bi bi-pencil"></i>',['update','id' => $item->id,'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'],['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-lg']])?>
-                                <?=Html::a('<i class="bi bi-trash"></i>',['delete','id' => $item->id],['class' => 'btn btn-sm btn-danger delete-item'])?>
+                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <tr>
+                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                        <td><?= $item->id ?></td>
+                        <td class="fw-semibold text-primary"><?= $item->fsn ?></td>
+                        <td><?= $item->title ?></td>
+                        <td><?= $item->data_json['unit'] ?? '-' ?></td>
+                        <td><?php
+                            // echo $item->asset_type_id;
+                            echo $item->assetType->title ?? '-';
+                            ?></td>
+                        <td><?= $item->category->title ?? '-' ?></td>
+                        <td class="text-end fw-blod"><?= $item->price ?? '-' ?></td>
+                        <td class="text-center">
+                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
 
-                    </td>
-                </tr>
-                <?php endforeach;?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
-
         </table>
-
-
         <div class="card-footer bg-body border-top py-3 px-4">
-    <?php
-    echo DataSummaryWidget::widget([
-        'dataProvider' => $dataProvider,
-        'pagerOptions' => [],
-    ]);
-    ?>
-</div>
+            <?php
+            echo DataSummaryWidget::widget([
+                'dataProvider' => $dataProvider,
+                'pagerOptions' => [],
+            ]);
+            ?>
+        </div>
 
     </div>
 </div>

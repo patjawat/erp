@@ -27,6 +27,7 @@ class AssetCategory extends \yii\db\ActiveRecord
 {
 
 
+    public $q;
     /**
      * {@inheritdoc}
      */
@@ -45,7 +46,7 @@ class AssetCategory extends \yii\db\ActiveRecord
             [['active'], 'default', 'value' => 1],
             [['name'], 'required'],
             [['qty', 'active'], 'integer'],
-            [['data_json', 'ma_items'], 'safe'],
+            [['data_json', 'ma_items','q'], 'safe'],
             [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
     }

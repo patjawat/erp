@@ -84,9 +84,9 @@ use yii\helpers\Url;
             <li>
                 <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN', ['/am/fsn'], ['class' => 'dropdown-item']) ?>
             </li>
-            <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์', ['/am/asset-item'], ['class' => 'dropdown-item']) ?>
-            </li>
+            <!-- <li> -->
+                <?php // Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์', ['/am/asset-item'], ['class' => 'dropdown-item']) ?>
+            <!-- </li> -->
             <li>
                 <hr class="dropdown-divider">
             </li>

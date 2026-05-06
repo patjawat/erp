@@ -254,6 +254,7 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
             <?php
             $searchEmpUrl = \yii\helpers\Url::to(['/leave/leave/search-employee']);
             ?>
+<<<<<<< HEAD
             <?php
             $leaveSendWidgetOpts = [
                 'options'       => ['id' => 'leave-work_send_id', 'placeholder' => 'พิมพ์ชื่อเพื่อค้นหา...'],
@@ -319,6 +320,28 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
             ])->label('มอบหมายงานให้')
             ?>
             <?= $form->field($model, $attrLeaveName)->hiddenInput(['id' => 'leave-work_send_name'])->label(false) ?>
+=======
+            <?php foreach ($listApprove as $i => $step): ?>
+                <?php
+                $approveEmployee = Employees::findOne(['id' => $step['emp_id']]);
+                ?>
+                <div class="col-3 workflow-step ">
+
+
+                    <div class="step-dot">
+                        <?php
+                        if ($approveEmployee) {
+                            echo Html::img($approveEmployee->showAvatar(), ['class' => 'rounded-circle', 'width' => 35, 'height' => 35, 'style' => 'min-width: 35px; min-height: 35px;', 'alt' => $approveEmployee->fullname]);
+                        }
+                        ?>
+                    </div>
+                    <span class="step-label d-block text-truncate">
+                        <?= Html::encode($step['title'] ?? $step['label']) ?>
+                    </span>
+
+                </div>
+            <?php endforeach; ?>
+>>>>>>> dev
         </div>
 
         <div class="mb-3">
@@ -672,6 +695,7 @@ $js = <<<JS
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_END);
+<<<<<<< HEAD
 
 // ── Signature JS ────────────────────────────────────────────────────────
 $existingSigDataJs = json_encode($existingSigData);
@@ -781,3 +805,6 @@ $sigJs = <<<JS
 JS;
 $this->registerJs($sigJs, \yii\web\View::POS_END);
 ?>
+=======
+?>
+>>>>>>> dev

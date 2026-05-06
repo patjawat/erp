@@ -165,6 +165,17 @@ class MedicalController extends \yii\web\Controller
         if ($searchModel->price1 && $searchModel->price2) {
             $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
+
+        $baseQuery = $dataProvider->query;
+        $equipStats = [
+            'total' => (int) (clone $baseQuery)->count('DISTINCT asset.id'),
+            'good' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => 'good'])->count('DISTINCT asset.id'),
+            'fair' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => 'fair'])->count('DISTINCT asset.id'),
+            'damaged' => (int) (clone $baseQuery)->andWhere(['asset.asset_condition' => ['damaged', 'worn']])->count('DISTINCT asset.id'),
+            'repairing' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => 'repair'])->count('DISTINCT asset.id'),
+            'waiting_dispose' => (int) (clone $baseQuery)->andWhere(['asset.asset_status' => 'wait_dispose'])->count('DISTINCT asset.id'),
+            'total_value' => (float) ((clone $baseQuery)->sum(new Expression('COALESCE(asset.price, 0)'))) ?: 0.0,
+        ];
         $dataProvider->setSort([
             'defaultOrder' => [
                 'code' => 'SORT_DESC',
@@ -179,6 +190,7 @@ class MedicalController extends \yii\web\Controller
             'listAssetType' => $listAssetType,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'equipStats' => $equipStats,
         ]);
     }
 
