@@ -91,11 +91,53 @@ class AssetItemController extends Controller
             ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.price')"), $q],
             ['like', new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.fsn')"), $q],
         ]);
-            
+
+        $duplicateCodeSql = <<<SQL
+SELECT title, category_id, code, COUNT(id) AS total
+FROM categorise
+WHERE group_id = 'EQUIP'
+    AND category_id IS NOT NULL
+GROUP BY code, category_id
+HAVING COUNT(id) > 1
+SQL;
+        try {
+            $duplicateCodeSummary = Yii::$app->db->createCommand($duplicateCodeSql)->queryAll();
+        } catch (\Throwable $e) {
+            Yii::warning('Duplicate code summary query fallback used: ' . $e->getMessage(), __METHOD__);
+            $duplicateCodeFallbackSql = <<<SQL
+SELECT MIN(title) AS title, category_id, code, COUNT(id) AS total
+FROM categorise
+WHERE group_id = 'EQUIP'
+    AND category_id IS NOT NULL
+GROUP BY code, category_id
+HAVING COUNT(id) > 1
+SQL;
+            $duplicateCodeSummary = Yii::$app->db->createCommand($duplicateCodeFallbackSql)->queryAll();
+        }
+        usort($duplicateCodeSummary, static function (array $a, array $b) {
+            $totalCompare = (int) ($b['total'] ?? 0) <=> (int) ($a['total'] ?? 0);
+            if ($totalCompare !== 0) {
+                return $totalCompare;
+            }
+
+            return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+        });
+
+        $duplicateCodeGroupCount = count($duplicateCodeSummary);
+        $duplicateCodeTotalCount = array_sum(array_map(static function (array $row): int {
+            return (int) ($row['total'] ?? 0);
+        }, $duplicateCodeSummary));
+        $duplicateCodeExtraCount = array_sum(array_map(static function (array $row): int {
+            return max(0, (int) ($row['total'] ?? 0) - 1);
+        }, $duplicateCodeSummary));
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'duplicateCodeSummary' => $duplicateCodeSummary,
+            'duplicateCodeGroupCount' => $duplicateCodeGroupCount,
+            'duplicateCodeTotalCount' => $duplicateCodeTotalCount,
+            'duplicateCodeExtraCount' => $duplicateCodeExtraCount,
         ]);
     }
 

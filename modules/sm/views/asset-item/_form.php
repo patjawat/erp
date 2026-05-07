@@ -45,7 +45,7 @@ $title = Yii::$app->request->get('title');
                 <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อครุภัณฑ์...'])->label("ชื่อรายการ") ?>
             </div>
             <div class="col-8">
-                <?=$form->field($model, 'code')->textInput()->label("รหัสครุภัณฑ์(ปล่อยว่างระบบจะสร้างอัตโนมัติ)")?>
+                <?=$form->field($model, 'code')->textInput(['readonly' => true])->label("รหัสคระบบจะสร้างอัตโนมัติ")?>
             </div>
             <div class="col-4">
                 <?php

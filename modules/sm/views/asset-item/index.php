@@ -7,6 +7,10 @@ use yii\widgets\Pjax;
 /** @var app\modules\sm\models\AssetItemSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 /** @var yii\data\ActiveDataProvider $dataProviderGroup */
+/** @var array $duplicateCodeSummary */
+/** @var int $duplicateCodeGroupCount */
+/** @var int $duplicateCodeTotalCount */
+/** @var int $duplicateCodeExtraCount */
 
 $this->title = 'การตั้งค่าครุภัณฑ์';
 $this->params['breadcrumbs'][] = $this->title;
@@ -44,6 +48,13 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $this->render('@app/modules/sm/views/asset-item/_search', ['model' => $searchModel]) ?>
     </div>
 </div>
+
+<?= $this->render('@app/modules/sm/views/asset-item/_duplicate_code_kpi', [
+    'duplicateCodeSummary' => $duplicateCodeSummary ?? [],
+    'duplicateCodeGroupCount' => $duplicateCodeGroupCount ?? 0,
+    'duplicateCodeTotalCount' => $duplicateCodeTotalCount ?? 0,
+    'duplicateCodeExtraCount' => $duplicateCodeExtraCount ?? 0,
+]) ?>
 
 <?= $this->render('@app/modules/sm/views/asset-item/show/list', [
     'searchModel' => $searchModel,
