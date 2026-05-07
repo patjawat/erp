@@ -26,7 +26,7 @@
         <div class="row g-3">
             <div class="col-12 col-md-6">
                 <dl class="row mb-0 text-sm" style="font-size: 0.9rem;">
-                    <dt class="col-sm-4 text-secondary fw-normal mb-3">รหัสทรัพย์สิน</dt>
+                    <dt class="col-sm-4 text-secondary fw-normal mb-3">หมายเลขครุภัณฑ์</dt>
                     <dd class="col-sm-8 text-dark fw-medium mb-3"><?= $model->code ?></dd>
 
                     <dt class="col-sm-4 text-secondary fw-normal mb-3">ชื่อรายการ</dt>

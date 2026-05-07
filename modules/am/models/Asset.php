@@ -823,8 +823,8 @@ class Asset extends \yii\db\ActiveRecord
     public function getOwner()
     {
         try {
-            $cid = $this->owner;
-            $employee = Employees::find()->where(['cid' => $cid])->one();
+            $id = $this->owner;
+            $employee = Employees::find()->where(['id' => $id])->one();
             return $employee->getAvatar(false);
         } catch (\Throwable $th) {
             return null;
