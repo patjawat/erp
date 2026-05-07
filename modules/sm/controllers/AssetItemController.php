@@ -100,20 +100,7 @@ WHERE group_id = 'EQUIP'
 GROUP BY code, category_id
 HAVING COUNT(id) > 1
 SQL;
-        try {
-            $duplicateCodeSummary = Yii::$app->db->createCommand($duplicateCodeSql)->queryAll();
-        } catch (\Throwable $e) {
-            Yii::warning('Duplicate code summary query fallback used: ' . $e->getMessage(), __METHOD__);
-            $duplicateCodeFallbackSql = <<<SQL
-SELECT MIN(title) AS title, category_id, code, COUNT(id) AS total
-FROM categorise
-WHERE group_id = 'EQUIP'
-    AND category_id IS NOT NULL
-GROUP BY code, category_id
-HAVING COUNT(id) > 1
-SQL;
-            $duplicateCodeSummary = Yii::$app->db->createCommand($duplicateCodeFallbackSql)->queryAll();
-        }
+        $duplicateCodeSummary = Yii::$app->db->createCommand($duplicateCodeSql)->queryAll();
         usort($duplicateCodeSummary, static function (array $a, array $b) {
             $totalCompare = (int) ($b['total'] ?? 0) <=> (int) ($a['total'] ?? 0);
             if ($totalCompare !== 0) {
@@ -453,32 +440,6 @@ SQL;
             
             $code = trim((string) $model->code);
             $categoryId = trim((string) $model->category_id);
-
-
-            if($id && $code !== '' && $categoryId !== ''){
-                $checkCode = AssetItem::find()
-                    ->where([
-                        'code' => $code,
-                        'group_id' => 'EQUIP',
-                        'category_id' => $categoryId,
-                    ])
-                     ->andWhere(['<>', 'id', $model->id])
-                    ->one();
-
-                $checkCode ? $model->addError('code', 'รหัสซ้ำ') : null;
-            }
-
-            if ($code !== '' && $categoryId !== '') {
-                $checkCode = AssetItem::find()
-                    ->where([
-                        'code' => $code,
-                        'group_id' => 'EQUIP',
-                        'category_id' => $categoryId,
-                    ])
-                    ->one();
-
-                $checkCode ? $model->addError('code', 'รหัสซ้ำ') : null;
-            }
 
             $model->title == '' ? $model->addError('title', $requiredName) : null;
             $model->group_id == '' ? $model->addError('group_id', $requiredName) : null;
