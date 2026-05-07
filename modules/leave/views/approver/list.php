@@ -13,15 +13,54 @@ use app\modules\leave\models\Leave;
 
 $offset        = (int) ($dataProvider->pagination->offset ?? 0);
 $models        = $dataProvider->getModels();
-$levelSettings = \app\modules\approveV2\models\ApproveLevelSetting::getLevelsBySystem('leave');
 
 $searchEmpUrl  = Url::to(['/leave/leave/search-employee']);
+$changeApproverOnChangeUrl = Url::to(['/leave/approver/change-approver-on-change']);
 $bulkActionUrl = Url::to(['/leave/approver/bulk-action']);
 $csrfParam     = Yii::$app->request->csrfParam;
 $csrfToken     = Yii::$app->request->csrfToken;
 ?>
 
+<div class="row">
+<div class="col-3">
 
+<!-- ── Bulk action bar ─────────────────────────────────────────── -->
+<div id="bulk-action-bar" class="d-none align-items-center gap-3 px-3 py-2 mb-3 ms-3 mt-3 ms-3 rounded-3 border bg-primary bg-opacity-10 border-primary-subtle">
+    <i class="bi bi-check2-square text-primary fs-5"></i>
+    <span class="fw-semibold text-primary small" id="bulk-count-label">เลือก 0 รายการ</span>
+
+    <div class="ms-auto d-flex gap-2 align-items-center">
+        <div class="dropdown">
+            <button class="btn btn-primary btn-sm rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-lightning-fill me-1"></i> ดำเนินการ
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <button type="button" class="dropdown-item" id="btn-bulk-change-approver">
+                        <i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button type="button" class="dropdown-item text-success" id="btn-bulk-approve">
+                        <i class="bi bi-check-circle me-2"></i> อนุมัติ (ผ่าน)
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="dropdown-item text-danger" id="btn-bulk-reject">
+                        <i class="bi bi-x-circle me-2"></i> ไม่อนุมัติ (ไม่ผ่าน)
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" id="btn-bulk-clear">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+    
+</div>
+</div>
 <!-- ── Table ──────────────────────────────────────────────────── -->
 <div class="table-responsive" style="min-height: 500px;">
     <table class="table table-hover align-middle mb-0" id="leave-approver-table">
@@ -56,7 +95,12 @@ $csrfToken     = Yii::$app->request->csrfToken;
                     return (int) $y->level - (int) $x->level;
                 });
                 ?>
-                <tr data-leave-id="<?= $item->id ?>">
+                <tr
+                    data-leave-id="<?= $item->id ?>"
+                    data-employee-name="<?= Html::encode($item->employee ? ($item->employee->fullname ?? '') : '') ?>"
+                    data-leave-type="<?= Html::encode($item->leaveType ? $item->leaveType->title : '') ?>"
+                    data-leave-range="<?= Html::encode(trim(strip_tags((string) $item->showLeaveDate()))) ?>"
+                >
                     <td class="text-center py-3 px-3">
                         <input type="checkbox" class="form-check-input chk-leave-row" value="<?= $item->id ?>">
                     </td>
@@ -135,7 +179,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                                     ) ?>
                                 </li>
 
-                                <?php if($item->status == "Checking2_pass"): ?>
+                                <?php if (in_array($item->status, ['Checking2_pass', 'Checkup_pass'], true)): ?>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <?= Html::a(
@@ -165,7 +209,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
 
 <!-- ── Bulk change-approver modal ─────────────────────────────── -->
 <div class="modal fade" id="bulk-approver-modal" tabindex="-1" aria-labelledby="bulk-approver-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-semibold" id="bulk-approver-modal-label">
@@ -177,28 +221,16 @@ $csrfToken     = Yii::$app->request->csrfToken;
 
                 <div class="alert alert-info border-0 rounded-3 small d-flex align-items-start gap-2 py-2 px-3 mb-3">
                     <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
-                    <span>การเปลี่ยนแปลงจะมีผลกับใบลา <strong id="bulk-selected-count">0</strong> รายการที่เลือก</span>
+                    <span>คุณเลือกใบลา <strong id="bulk-selected-count">0</strong> รายการ</span>
                 </div>
 
-                <!-- Level -->
                 <div class="mb-3">
                     <label class="form-label small fw-semibold">
-                        <i class="bi bi-list-ol me-1"></i> ลำดับผู้อนุมัติ (Level)
+                        <i class="bi bi-list-check me-1"></i> รายชื่อที่เลือก
                     </label>
-                    <select id="bulk-level" class="form-select rounded-3">
-                        <option value="">-- เลือกลำดับ --</option>
-                        <?php foreach ($levelSettings as $ls): ?>
-                            <option value="<?= (int) $ls->level ?>">
-                                ลำดับ <?= (int) $ls->level ?> — <?= Html::encode($ls->title) ?>
-                            </option>
-                        <?php endforeach; ?>
-                        <?php if (empty($levelSettings)): ?>
-                            <option value="" disabled>ไม่พบการตั้งค่าลำดับ</option>
-                        <?php endif; ?>
-                    </select>
+                    <div id="bulk-selected-list" class="d-grid gap-2" style="max-height: 280px; overflow:auto;"></div>
                 </div>
 
-                <!-- Approver Select2 -->
                 <div class="mb-3">
                     <label class="form-label small fw-semibold">
                         <i class="bi bi-person me-1"></i> ผู้อนุมัติใหม่ (เว้นว่างถ้าไม่เปลี่ยน)
@@ -208,24 +240,15 @@ $csrfToken     = Yii::$app->request->csrfToken;
                     </select>
                 </div>
 
-                <!-- Status -->
-                <div class="mb-1">
-                    <label class="form-label small fw-semibold">
-                        <i class="bi bi-flag me-1"></i> สถานะ (เว้นว่างถ้าไม่เปลี่ยน)
-                    </label>
-                    <select id="bulk-status-select" class="form-select rounded-3">
-                        <option value="">-- ไม่เปลี่ยนสถานะ --</option>
-                        <option value="Pending">รอดำเนินการ</option>
-                        <option value="Pass">อนุมัติ</option>
-                        <option value="Reject">ไม่อนุมัติ</option>
-                        <option value="None">ไม่ใช้งาน</option>
-                    </select>
+                <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-start gap-2 py-2 px-3 mb-0">
+                    <i class="bi bi-shield-check flex-shrink-0 mt-1"></i>
+                    <span>ระบบจะอัปเดตผู้อนุมัติชั้นที่ 4 ของรายการที่เลือก และผ่านชั้นที่ 3 ตาม flow ปกติ</span>
                 </div>
 
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-primary rounded-3 px-4" id="btn-bulk-approver-save">
-                    <i class="bi bi-check2-circle me-1"></i> บันทึก
+                    <i class="bi bi-check2-circle me-1"></i> บันทึกการเปลี่ยนแปลง
                 </button>
                 <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">ยกเลิก</button>
             </div>
@@ -238,10 +261,11 @@ $js = <<<JS
 (function () {
     var bulkActionUrl = "{$bulkActionUrl}";
     var searchEmpUrl  = "{$searchEmpUrl}";
+    var changeApproverOnChangeUrl = "{$changeApproverOnChangeUrl}";
     var csrfParam     = "{$csrfParam}";
     var csrfToken     = "{$csrfToken}";
 
-    // ── Init Select2 for bulk approver ───────────────────────────
+    // ── Init Select2 for bulk change-approver ─────────────────────
     if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
         jQuery('#bulk-emp-select').select2({
             dropdownParent: jQuery('#bulk-approver-modal'),
@@ -260,6 +284,110 @@ $js = <<<JS
             templateResult: function (r) { return r.text || r.id; },
             templateSelection: function (r) { return r.text || r.id; },
         });
+    }
+
+    function getSelectedApproverItems() {
+        return Array.from(document.querySelectorAll('.chk-leave-row:checked')).map(function (c) {
+            var row = c.closest('tr');
+            return {
+                id: c.value,
+                name: row ? (row.dataset.employeeName || '') : '',
+                leaveType: row ? (row.dataset.leaveType || '') : '',
+                leaveRange: row ? (row.dataset.leaveRange || '') : ''
+            };
+        });
+    }
+
+    function renderSelectedApproverItems(items) {
+        var list = document.getElementById('bulk-selected-list');
+        if (!list) return;
+
+        list.innerHTML = '';
+        if (!items.length) {
+            var empty = document.createElement('div');
+            empty.className = 'text-muted small';
+            empty.textContent = 'ยังไม่มีรายการที่เลือก';
+            list.appendChild(empty);
+            return;
+        }
+
+        items.forEach(function (item, idx) {
+            var card = document.createElement('div');
+            card.className = 'border rounded-3 p-2 bg-body-secondary bg-opacity-50';
+
+            var row = document.createElement('div');
+            row.className = 'd-flex align-items-start gap-2';
+
+            var badge = document.createElement('span');
+            badge.className = 'badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle flex-shrink-0 mt-1';
+            badge.textContent = String(idx + 1);
+
+            var content = document.createElement('div');
+            content.className = 'flex-grow-1';
+
+            var title = document.createElement('div');
+            title.className = 'fw-semibold text-body';
+            title.textContent = item.name || ('#' + item.id);
+            content.appendChild(title);
+
+            var metaParts = [];
+            if (item.leaveType) metaParts.push(item.leaveType);
+            if (item.leaveRange) metaParts.push(item.leaveRange);
+            if (metaParts.length) {
+                var meta = document.createElement('div');
+                meta.className = 'small text-muted';
+                meta.textContent = metaParts.join(' · ');
+                content.appendChild(meta);
+            }
+
+            row.appendChild(badge);
+            row.appendChild(content);
+            card.appendChild(row);
+            list.appendChild(card);
+        });
+    }
+
+    function clearBulkApproverModalState() {
+        window.leaveApproverBulkSelectedItems = [];
+        var countEl = document.getElementById('bulk-selected-count');
+        if (countEl) {
+            countEl.textContent = '0';
+        }
+        renderSelectedApproverItems([]);
+        if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
+            jQuery('#bulk-emp-select').val(null).trigger('change');
+        }
+    }
+
+    function openBulkApproverModal(items) {
+        if (!Array.isArray(items) || !items.length) return;
+
+        window.leaveApproverBulkSelectedItems = items.slice();
+        var countEl = document.getElementById('bulk-selected-count');
+        if (countEl) {
+            countEl.textContent = String(items.length);
+        }
+        renderSelectedApproverItems(items);
+        if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
+            jQuery('#bulk-emp-select').val(null).trigger('change');
+        }
+
+        var modalEl = document.getElementById('bulk-approver-modal');
+        if (modalEl) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            } else if (typeof jQuery !== 'undefined') {
+                jQuery(modalEl).modal('show');
+            }
+        }
+    }
+
+    var bulkApproverModal = document.getElementById('bulk-approver-modal');
+    if (bulkApproverModal && !bulkApproverModal.dataset.bound) {
+        bulkApproverModal.addEventListener('hidden.bs.modal', function () {
+            clearBulkApproverModalState();
+        });
+        bulkApproverModal.dataset.bound = '1';
     }
 
     // ── Checkbox logic ────────────────────────────────────────────
@@ -302,6 +430,13 @@ $js = <<<JS
         document.querySelectorAll('.chk-leave-row').forEach(function (c) { c.checked = false; });
         document.getElementById('chk-select-all').checked       = false;
         document.getElementById('chk-select-all').indeterminate = false;
+        clearBulkApproverModalState();
+        var modalEl = document.getElementById('bulk-approver-modal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getInstance(modalEl)?.hide();
+        } else if (typeof jQuery !== 'undefined') {
+            jQuery('#bulk-approver-modal').modal('hide');
+        }
         updateBar();
     });
 
@@ -382,58 +517,96 @@ $js = <<<JS
         }
     });
 
-    // ── Open bulk-change-approver modal ───────────────────────────
+    // ── Open bulk change-approver modal ──────────────────────────
     document.getElementById('btn-bulk-change-approver')?.addEventListener('click', function () {
-        var ids = getSelectedIds();
-        if (!ids.length) return;
-        document.getElementById('bulk-selected-count').textContent = ids.length;
-        document.getElementById('bulk-level').value = '';
-        if (typeof jQuery !== 'undefined') {
-            jQuery('#bulk-emp-select').val(null).trigger('change');
+        var items = getSelectedApproverItems();
+        if (!items.length) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'warning', text: 'กรุณาเลือกรายการอย่างน้อย 1 รายการ' });
+            }
+            return;
         }
-        document.getElementById('bulk-status-select').value = '';
-        var modal = new bootstrap.Modal(document.getElementById('bulk-approver-modal'));
-        modal.show();
+
+        openBulkApproverModal(items);
     });
 
-    // ── Save bulk change-approver ─────────────────────────────────
+    // ── Save bulk change-approver-on-change ──────────────────────
     document.getElementById('btn-bulk-approver-save')?.addEventListener('click', function () {
-        var ids    = getSelectedIds();
-        var level  = document.getElementById('bulk-level').value.trim();
-        var empId  = typeof jQuery !== 'undefined' ? (jQuery('#bulk-emp-select').val() || '') : '';
-        var status = document.getElementById('bulk-status-select').value;
+        var items = Array.isArray(window.leaveApproverBulkSelectedItems) ? window.leaveApproverBulkSelectedItems : getSelectedApproverItems();
+        var ids   = items.map(function (item) { return item.id; }).filter(function (id) { return !!id; });
+        var empId = typeof jQuery !== 'undefined' ? (jQuery('#bulk-emp-select').val() || '') : '';
 
-        if (!level || parseInt(level) < 1) {
+        if (!ids.length) {
             if (typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', text: 'กรุณาระบุลำดับผู้อนุมัติ (Level)' });
+                Swal.fire({ icon: 'warning', text: 'ไม่ได้เลือกรายการ' });
             }
             return;
         }
 
-        if (!empId && !status) {
+        if (!empId) {
             if (typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', text: 'กรุณาระบุผู้อนุมัติใหม่หรือสถานะอย่างใดอย่างหนึ่ง' });
+                Swal.fire({ icon: 'warning', text: 'กรุณาเลือกผู้อนุมัติใหม่' });
             }
             return;
         }
 
-        var payload = { action: 'change-approver', leave_ids: ids, level: level };
-        if (empId)  payload.emp_id  = empId;
-        if (status) payload.status  = status;
+        var fd = new FormData();
+        fd.append(csrfParam, csrfToken);
+        ids.forEach(function (id) {
+            fd.append('leave_ids[]', id);
+        });
+        fd.append('emp_id', empId);
 
         if (typeof Swal !== 'undefined') {
-            Swal.fire({ title: 'ยืนยันการบันทึก?', icon: 'question', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก' })
+            Swal.fire({ title: 'ยืนยันการเปลี่ยนผู้อนุมัติ?', icon: 'question', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก' })
                 .then(function (r) {
                     if (r.isConfirmed) {
-                        bootstrap.Modal.getInstance(document.getElementById('bulk-approver-modal'))?.hide();
-                        doBulkPost(payload, 'เปลี่ยนผู้อนุมัติสำเร็จ');
+                        doBulkChangeApprover(fd);
                     }
                 });
         } else {
-            bootstrap.Modal.getInstance(document.getElementById('bulk-approver-modal'))?.hide();
-            doBulkPost(payload, 'เปลี่ยนผู้อนุมัติสำเร็จ');
+            doBulkChangeApprover(fd);
         }
     });
+
+    function doBulkChangeApprover(fd) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+        }
+
+        fetch(changeApproverOnChangeUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (res.status === 'success') {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        bootstrap.Modal.getInstance(document.getElementById('bulk-approver-modal'))?.hide();
+                    } else if (typeof jQuery !== 'undefined') {
+                        jQuery('#bulk-approver-modal').modal('hide');
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ',
+                            text: res.message || 'เปลี่ยนผู้อนุมัติสำเร็จ',
+                            showConfirmButton: false,
+                            timer: 1600
+                        }).then(function () { location.reload(); });
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', html: res.message || 'เปลี่ยนผู้อนุมัติไม่สำเร็จ' });
+                    }
+                }
+            })
+            .catch(function () {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+                }
+            });
+    }
 
 })();
 JS;

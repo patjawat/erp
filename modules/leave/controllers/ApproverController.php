@@ -193,24 +193,29 @@ class ApproverController extends Controller
                     throw new \RuntimeException(implode('<br>', $errors));
                 }
 
-                $level3Approve = Approve::findOne([
-                    'name'    => 'leave',
-                    'from_id' => (string) $leave->id,
-                    'level'   => 3,
-                    'status'  => 'Pending',
-                ]);
-                if ($level3Approve === null) {
-                    throw new \RuntimeException('ไม่พบรายการอนุมัติระดับ 3 ที่รอดำเนินการ');
-                }
+                $approvalResult = ['ok' => true, 'leave' => $leave];
+                if ($leave->status === 'Checking2_pass') {
+                    $level3Approve = Approve::findOne([
+                        'name'    => 'leave',
+                        'from_id' => (string) $leave->id,
+                        'level'   => 3,
+                        'status'  => 'Pending',
+                    ]);
+                    if ($level3Approve === null) {
+                        throw new \RuntimeException('ไม่พบรายการอนุมัติระดับ 3 ที่รอดำเนินการ');
+                    }
 
-                $approvalResult = (new LeaveApprovalService())->process(
-                    $level3Approve,
-                    'Pass',
-                    $me ? (int) $me->id : null,
-                    true
-                );
-                if (!($approvalResult['ok'] ?? false)) {
-                    throw new \RuntimeException($approvalResult['message'] ?? 'บันทึกไม่สำเร็จ');
+                    $approvalResult = (new LeaveApprovalService())->process(
+                        $level3Approve,
+                        'Pass',
+                        $me ? (int) $me->id : null,
+                        true
+                    );
+                    if (!($approvalResult['ok'] ?? false)) {
+                        throw new \RuntimeException($approvalResult['message'] ?? 'บันทึกไม่สำเร็จ');
+                    }
+                } elseif ($leave->status !== 'Checkup_pass') {
+                    throw new \RuntimeException('สถานะใบลาไม่รองรับการเปลี่ยนผู้อนุมัติ');
                 }
 
                 $transaction->commit();
@@ -259,6 +264,70 @@ class ApproverController extends Controller
     }
 
     /**
+     * เปลี่ยนผู้อนุมัติจากรายการที่เลือกใน checkbox
+     */
+    public function actionChangeApproverOnChange()
+    {
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการนี้');
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $leaveIds = array_values(array_filter(array_map('intval', (array) Yii::$app->request->post('leave_ids', []))));
+        $newEmpId = (int) Yii::$app->request->post('emp_id', 0);
+
+        if (empty($leaveIds)) {
+            return ['status' => 'error', 'message' => 'ไม่ได้เลือกรายการ'];
+        }
+
+        if ($newEmpId <= 0) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกผู้อนุมัติใหม่'];
+        }
+
+        $leaves = Leave::find()
+            ->where(['in', 'id', $leaveIds])
+            ->with(['employee', 'leaveType'])
+            ->all();
+
+        if (count($leaves) !== count(array_unique($leaveIds))) {
+            $foundIds = array_map(static function (Leave $leave) {
+                return (int) $leave->id;
+            }, $leaves);
+            $missingIds = array_values(array_diff($leaveIds, $foundIds));
+            return [
+                'status'  => 'error',
+                'message' => 'ไม่พบรายการวันลา #' . implode(', #', $missingIds),
+            ];
+        }
+
+        $me = UserHelper::GetEmployee();
+        $actorEmpId = $me ? (int) $me->id : null;
+        $transaction = Yii::$app->db->beginTransaction();
+        $updated = 0;
+
+        try {
+            foreach ($leaves as $leave) {
+                $this->applyChangeApproverFlowForLeave($leave, $newEmpId, $actorEmpId);
+                $updated++;
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+
+        return [
+            'status'  => 'success',
+            'message' => 'เปลี่ยนผู้อนุมัติสำเร็จ ' . $updated . ' รายการ',
+        ];
+    }
+
+    /**
      * ดำเนินการแบบ bulk กับใบลาที่เลือก
      * action: approve | reject | change-approver
      */
@@ -281,71 +350,17 @@ class ApproverController extends Controller
             return ['status' => 'error', 'message' => 'ไม่พบรายการที่เลือก'];
         }
 
+        $me = UserHelper::GetEmployee();
+        $actorEmpId = $me ? (int) $me->id : null;
+
         // ── อนุมัติทั้งหมด ────────────────────────────────────────
         if ($action === 'approve') {
-            [$valid, $invalid] = $this->partitionByApproverCondition($leaves);
-            if (!empty($invalid)) {
-                $names = implode(', ', array_map(function ($l) {
-                    return $l->employee ? $l->employee->fullname : "#$l->id";
-                }, $invalid));
-                if (empty($valid)) {
-                    return ['status' => 'warning', 'message' => "ข้อมูลยังไม่ถูกเห็นชอบ: {$names}"];
-                }
-                // ประมวลผลเฉพาะรายการที่ผ่านเงื่อนไข
-                foreach ($valid as $leave) {
-                    Approve::updateAll(
-                        ['status' => 'Pass'],
-                        ['name' => 'leave', 'from_id' => (string) $leave->id, 'status' => 'Pending']
-                    );
-                    $this->syncLeaveStatus($leave);
-                }
-                return [
-                    'status'  => 'partial',
-                    'message' => 'อนุมัติสำเร็จ ' . count($valid) . ' รายการ'
-                               . ' — ข้อมูลยังไม่ถูกเห็นชอบ: ' . $names,
-                ];
-            }
-            foreach ($valid as $leave) {
-                Approve::updateAll(
-                    ['status' => 'Pass'],
-                    ['name' => 'leave', 'from_id' => (string) $leave->id, 'status' => 'Pending']
-                );
-                $this->syncLeaveStatus($leave);
-            }
-            return ['status' => 'success', 'message' => 'อนุมัติสำเร็จ ' . count($valid) . ' รายการ'];
+            return $this->bulkProcessLeaveApprovals($leaves, 'Pass', $actorEmpId, 'อนุมัติ');
         }
 
         // ── ไม่อนุมัติทั้งหมด ────────────────────────────────────
         if ($action === 'reject') {
-            [$valid, $invalid] = $this->partitionByApproverCondition($leaves);
-            if (!empty($invalid)) {
-                $names = implode(', ', array_map(function ($l) {
-                    return $l->employee ? $l->employee->fullname : "#$l->id";
-                }, $invalid));
-                if (empty($valid)) {
-                    return ['status' => 'warning', 'message' => "ข้อมูลยังไม่ถูกเห็นชอบ: {$names}"];
-                }
-                foreach ($valid as $leave) {
-                    $pending = Approve::find()
-                        ->where(['name' => 'leave', 'from_id' => (string) $leave->id, 'status' => 'Pending'])
-                        ->orderBy(['level' => SORT_ASC])->one();
-                    if ($pending) { $pending->status = 'Reject'; $pending->save(false); }
-                    $this->syncLeaveStatus($leave);
-                }
-                return [
-                    'status'  => 'partial',
-                    'message' => 'ไม่อนุมัติสำเร็จ ' . count($valid) . ' รายการ'
-                               . ' — ข้อมูลยังไม่ถูกเห็นชอบ: ' . $names,
-                ];
-            }
-            foreach ($valid as $leave) {
-                $pending = Approve::find()
-                    ->where(['name' => 'leave', 'from_id' => (string) $leave->id, 'status' => 'Pending'])
-                    ->orderBy(['level' => SORT_ASC])->one();
-                if ($pending) { $pending->status = 'Reject'; $pending->save(false); }
-                $this->syncLeaveStatus($leave);
-            }
-            return ['status' => 'success', 'message' => 'ไม่อนุมัติสำเร็จ ' . count($valid) . ' รายการ'];
+            return $this->bulkProcessLeaveApprovals($leaves, 'Reject', $actorEmpId, 'ไม่อนุมัติ');
         }
 
         // ── เปลี่ยนผู้อนุมัติ ────────────────────────────────────
@@ -394,6 +409,121 @@ class ApproverController extends Controller
         }
 
         return ['status' => 'error', 'message' => 'ไม่รู้จัก action นี้'];
+    }
+
+    /**
+     * ใช้ flow เดียวกับ change-approver รายใบ เพื่ออัปเดต level 4 และผ่าน level 3
+     */
+    protected function applyChangeApproverFlowForLeave(Leave $leave, int $newEmpId, ?int $actorEmpId): array
+    {
+        $level4Records = Approve::find()
+            ->where(['name' => 'leave', 'from_id' => (string) $leave->id, 'level' => 4])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        if (empty($level4Records)) {
+            throw new \RuntimeException('ไม่พบรายการอนุมัติระดับ 4 ของใบลา #' . $leave->id);
+        }
+
+        foreach ($level4Records as $record) {
+            $record->emp_id = $newEmpId;
+            if (!$record->save(false)) {
+                throw new \RuntimeException("บันทึกรายการอนุมัติ #{$record->id} ไม่สำเร็จ");
+            }
+
+            if ($record->status === 'Pending') {
+                try {
+                    (new LeaveTelegramService())->notifyPendingApprove($record);
+                } catch (\Throwable $e) {
+                    Yii::warning('Telegram notify failed: ' . $e->getMessage(), __METHOD__);
+                }
+            }
+        }
+
+        if ($leave->status === 'Checking2_pass') {
+            $level3Approve = Approve::findOne([
+                'name'    => 'leave',
+                'from_id' => (string) $leave->id,
+                'level'   => 3,
+                'status'  => 'Pending',
+            ]);
+            if ($level3Approve === null) {
+                throw new \RuntimeException('ไม่พบรายการอนุมัติระดับ 3 ที่รอดำเนินการของใบลา #' . $leave->id);
+            }
+
+            $approvalResult = (new LeaveApprovalService())->process(
+                $level3Approve,
+                'Pass',
+                $actorEmpId,
+                true
+            );
+            if (!($approvalResult['ok'] ?? false)) {
+                throw new \RuntimeException($approvalResult['message'] ?? 'บันทึกไม่สำเร็จ');
+            }
+        } elseif ($leave->status === 'Checkup_pass') {
+            $approvalResult = ['ok' => true, 'leave' => $leave];
+        } else {
+            throw new \RuntimeException('สถานะใบลาไม่รองรับการเปลี่ยนผู้อนุมัติ');
+        }
+
+        return $approvalResult;
+    }
+
+    /**
+     * ดำเนินการอนุมัติ/ไม่อนุมัติแบบ bulk ตาม approve ที่ยัง Pending อยู่จริง
+     */
+    protected function bulkProcessLeaveApprovals(array $leaves, string $status, ?int $actorEmpId, string $label): array
+    {
+        $updated = 0;
+        $invalid = [];
+
+        foreach ($leaves as $leave) {
+            $pending = Approve::find()
+                ->where([
+                    'name'    => 'leave',
+                    'from_id' => (string) $leave->id,
+                    'status'  => 'Pending',
+                ])
+                ->orderBy(['level' => SORT_ASC])
+                ->one();
+
+            if ($pending === null) {
+                $invalid[] = $leave;
+                continue;
+            }
+
+            try {
+                $result = (new LeaveApprovalService())->process($pending, $status, $actorEmpId);
+                if (!($result['ok'] ?? false)) {
+                    $invalid[] = $leave;
+                    continue;
+                }
+                $updated++;
+            } catch (\Throwable $e) {
+                Yii::warning('Bulk leave approval failed: ' . $e->getMessage(), __METHOD__);
+                $invalid[] = $leave;
+            }
+        }
+
+        if (empty($invalid)) {
+            return ['status' => 'success', 'message' => "{$label}สำเร็จ {$updated} รายการ"];
+        }
+
+        $names = implode(', ', array_map(static function (Leave $leave) {
+            return $leave->employee ? $leave->employee->fullname : "#{$leave->id}";
+        }, $invalid));
+
+        if ($updated === 0) {
+            return [
+                'status'  => 'warning',
+                'message' => "ไม่มีรายการที่อยู่ในขั้นตอนอนุมัติ: {$names}",
+            ];
+        }
+
+        return [
+            'status'  => 'partial',
+            'message' => "{$label}สำเร็จ {$updated} รายการ — รายการที่ยังไม่อยู่ในขั้นตอนอนุมัติ: {$names}",
+        ];
     }
 
     /**
