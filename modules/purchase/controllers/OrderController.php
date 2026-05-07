@@ -585,7 +585,9 @@ class OrderController extends Controller
             'name' => 'order_item',
             'asset_item' => $product->code,
             'qty' => 1,
-            'price' => $product->data_json['price']  ?? 0,
+            'price' => is_array($product->data_json['price'] ?? null)
+            ? ($product->data_json['price']['value'] ?? 0)
+            : ($product->data_json['price'] ?? 0),
             'asset_type' => $product->category_id,
             'pr_number' => $order->pr_number,
             'pq_number' => $order->pq_number,

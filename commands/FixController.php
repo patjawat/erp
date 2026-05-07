@@ -29,7 +29,15 @@ class FixController extends Controller
      * @param string $message the message to be echoed.
      * @return int Exit code
      */
-    public function actionIndex() {}
+    public function actionIndex()
+    {
+        // แก้ bug price ที่เป็น array
+        if (BaseConsole::confirm("แก้ bug price ที่เป็น array?")) {
+            $sql = "UPDATE categorise SET data_json = JSON_SET( data_json, '$.price', CAST( JSON_UNQUOTE( JSON_EXTRACT(data_json, '$.price[1]') ) AS DECIMAL(15,2) ) ) WHERE JSON_TYPE(JSON_EXTRACT(data_json, '$.price')) = 'ARRAY';";
+            Yii::$app->db->createCommand($sql)->execute();
+        }
+    }
+
     public function actionEmployee()
     {
         if (BaseConsole::confirm("Are you sure?")) {

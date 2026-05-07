@@ -47,6 +47,13 @@ class AssetItem extends \yii\db\ActiveRecord
             [['data_json', 'fsn_auto', 'ma_items', 'group_id','q'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+            [
+                ['code'],
+                'unique',
+                'targetAttribute' => ['category_id', 'code'],
+                'filter' => ['group_id' => 'EQUIP'],
+                'message' => 'รหัสซ้ำ',
+            ],
         ];
     }
 
@@ -294,21 +301,18 @@ class AssetItem extends \yii\db\ActiveRecord
 
     public function NextCode()
     {
-        $prefix = $this->category_id;
+        $prefix = trim((string) $this->category_id);
 
-        $last = self::find()
-            ->where(['like', 'code', $prefix . '-%', false])
-            ->orderBy(new \yii\db\Expression(
-                "CAST(SUBSTRING_INDEX(id,'-',-1) AS UNSIGNED) DESC"
-            ))
-            ->one();
+        $lastNumber = self::find()
+            ->where([
+                'group_id' => 'EQUIP',
+                'name' => 'asset_item',
+            ])
+            ->andWhere(['like', 'code', $prefix . '-%', false])
+            ->select(new \yii\db\Expression("MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED))"))
+            ->scalar();
 
-        if ($last) {
-            $parts = explode('-', $last->code);
-            $number = (int)$parts[1] + 1;
-        } else {
-            $number = 1;
-        }
+        $number = ((int) $lastNumber) + 1;
 
         return $prefix . '-' . $number;
     }

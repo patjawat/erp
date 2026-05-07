@@ -15,9 +15,12 @@ $title = Yii::$app->request->get('title');
 <?php $form = ActiveForm::begin([
     'id' => 'form-fsn',
     'enableAjaxValidation'=> true,//เปิดการใช้งาน AjaxValidation
-    'validationUrl' =>['/sm/asset-item/validator']
+    'validationUrl' => $model->isNewRecord
+        ? ['/sm/asset-item/validator']
+        : ['/sm/asset-item/validator', 'id' => $model->id]
     ]); ?>
 
+<?= !$model->isNewRecord ? $form->field($model, 'id')->hiddenInput()->label(false) : '' ?>
 <?php $form->field($model, 'data_json[title]')->textInput(['maxlength' => true])->label(false) ?>
 <?= $form->field($model, 'group_id')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'name')->hiddenInput(['maxlength' => true])->label(false) ?>

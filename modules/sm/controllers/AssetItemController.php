@@ -337,6 +337,13 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel($id);
+        try {
+        } catch (\Throwable $th) {
+             $model->data_json = [
+            'price' => $model->data_json['price'] ?? 0
+        ];
+        }
+      
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             $this->UpdateUnit($model);
@@ -398,10 +405,26 @@ class AssetItemController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new AssetItem();
+        $id = $this->request->get('id');
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
+            
             $code = trim((string) $model->code);
             $categoryId = trim((string) $model->category_id);
+
+
+            if($id && $code !== '' && $categoryId !== ''){
+                $checkCode = AssetItem::find()
+                    ->where([
+                        'code' => $code,
+                        'group_id' => 'EQUIP',
+                        'category_id' => $categoryId,
+                    ])
+                     ->andWhere(['<>', 'id', $model->id])
+                    ->one();
+
+                $checkCode ? $model->addError('code', 'รหัสซ้ำ') : null;
+            }
 
             if ($code !== '' && $categoryId !== '') {
                 $checkCode = AssetItem::find()
@@ -410,9 +433,6 @@ class AssetItemController extends Controller
                         'group_id' => 'EQUIP',
                         'category_id' => $categoryId,
                     ])
-                    ->andWhere(['<>', 'ref', $model->ref])
-                    ->andWhere(['not', ['code' => null]])
-                    ->andWhere(['not', ['code' => '']])
                     ->one();
 
                 $checkCode ? $model->addError('code', 'รหัสซ้ำ') : null;
