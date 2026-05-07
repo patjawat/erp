@@ -134,6 +134,8 @@ $csrfToken     = Yii::$app->request->csrfToken;
                                         ]
                                     ) ?>
                                 </li>
+
+                                <?php if($item->status == "Checking2_pass"): ?>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <?= Html::a(
@@ -143,6 +145,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                                         ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
                                     ) ?>
                                 </li>
+                                <?php endif;?>
                             </ul>
                         </div>
                     </td>

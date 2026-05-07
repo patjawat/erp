@@ -83,7 +83,7 @@ $statusBadge = [
 
                     <div class="row g-3">
                         <!-- เลือกผู้อนุมัติ -->
-                        <div class="col-md-7">
+                        <div class="col-md-12">
                             <label class="form-label small text-muted mb-1">
                                 <i class="bi bi-person me-1"></i> ผู้อนุมัติ
                             </label>
@@ -112,22 +112,6 @@ $statusBadge = [
                             ]) ?>
                         </div>
 
-                        <!-- เลือกสถานะ -->
-                        <div class="col-md-5">
-                            <label class="form-label small text-muted mb-1">
-                                <i class="bi bi-flag me-1"></i> สถานะ
-                            </label>
-                            <select id="<?= $statusId ?>"
-                                    name="approves[<?= $ap->id ?>][status]"
-                                    class="form-select status-select"
-                                    data-approve-id="<?= $ap->id ?>">
-                                <?php foreach ($statusOptions as $val => $label): ?>
-                                    <option value="<?= $val ?>" <?= $ap->status === $val ? 'selected' : '' ?>>
-                                        <?= $label ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
                     </div>
 
                 </div>

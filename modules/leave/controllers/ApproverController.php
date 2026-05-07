@@ -15,6 +15,7 @@ use yii\db\Expression;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\leave\models\LeaveType;
+use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\components\LeaveTelegramService;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveLevelSetting;
@@ -144,6 +145,7 @@ class ApproverController extends Controller
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการนี้');
         }
 
+        $me = UserHelper::GetEmployee();
         $leave = Leave::find()
             ->andWhere(['id' => (int) $id])
             ->with(['employee', 'leaveType'])
@@ -153,60 +155,81 @@ class ApproverController extends Controller
         }
 
         $approves = Approve::find()
-            ->where(['name' => 'leave', 'from_id' => (string) $leave->id])
+            ->where(['name' => 'leave', 'from_id' => (string) $leave->id,'level' => 4])
             ->orderBy(['level' => SORT_ASC])
             ->all();
 
         if (Yii::$app->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             $data = Yii::$app->request->post('approves', []);
-
-            $allowedStatuses = ['Pending', 'Pass', 'Reject', 'None'];
             $errors = [];
+            $approvalResult = [];
+            $transaction = Yii::$app->db->beginTransaction();
 
-            foreach ($data as $approveId => $fields) {
-                $approveId = (int) $approveId;
-                if ($approveId <= 0) continue;
+            try {
+                foreach ($data as $approveId => $fields) {
+                    $approveId = (int) $approveId;
+                    if ($approveId <= 0) {
+                        continue;
+                    }
 
-                $record = Approve::findOne(['id' => $approveId, 'name' => 'leave', 'from_id' => (string) $leave->id]);
-                if (!$record) {
-                    $errors[] = "ไม่พบรายการอนุมัติ #{$approveId}";
-                    continue;
-                }
+                    $record = Approve::findOne(['id' => $approveId, 'name' => 'leave', 'from_id' => (string) $leave->id]);
+                    if (!$record) {
+                        $errors[] = "ไม่พบรายการอนุมัติ #{$approveId}";
+                        continue;
+                    }
 
-                $newEmpId = isset($fields['emp_id']) ? (int) $fields['emp_id'] : 0;
-                if ($newEmpId > 0) {
-                    $record->emp_id = $newEmpId;
-                }
+                    $newEmpId = isset($fields['emp_id']) ? (int) $fields['emp_id'] : 0;
+                    if ($newEmpId > 0) {
+                        $record->emp_id = $newEmpId;
+                    }
 
-                $newStatus = $fields['status'] ?? '';
-                if ($newStatus !== '' && in_array($newStatus, $allowedStatuses, true)) {
-                    $record->status = $newStatus;
-                }
-
-                if (!$record->save(false)) {
-                    $errors[] = "บันทึกรายการ #{$approveId} ไม่สำเร็จ";
-                } elseif ($record->status === 'Pending') {
-                    // แจ้งเตือนผู้อนุมัติใหม่ที่มีสถานะ Pending
-                    try {
-                        (new LeaveTelegramService())->notifyPendingApprove($record);
-                    } catch (\Throwable $e) {
-                        Yii::warning('Telegram notify failed: ' . $e->getMessage(), __METHOD__);
+                    if (!$record->save(false)) {
+                        $errors[] = "บันทึกรายการ #{$approveId} ไม่สำเร็จ";
                     }
                 }
+
+                if (!empty($errors)) {
+                    throw new \RuntimeException(implode('<br>', $errors));
+                }
+
+                $level3Approve = Approve::findOne([
+                    'name'    => 'leave',
+                    'from_id' => (string) $leave->id,
+                    'level'   => 3,
+                    'status'  => 'Pending',
+                ]);
+                if ($level3Approve === null) {
+                    throw new \RuntimeException('ไม่พบรายการอนุมัติระดับ 3 ที่รอดำเนินการ');
+                }
+
+                $approvalResult = (new LeaveApprovalService())->process(
+                    $level3Approve,
+                    'Pass',
+                    $me ? (int) $me->id : null,
+                    true
+                );
+                if (!($approvalResult['ok'] ?? false)) {
+                    throw new \RuntimeException($approvalResult['message'] ?? 'บันทึกไม่สำเร็จ');
+                }
+
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                return ['status' => 'error', 'message' => $e->getMessage()];
             }
 
-            if (!empty($errors)) {
-                return ['status' => 'error', 'message' => implode('<br>', $errors)];
-            }
-
-            // sync leave.status ตามสถานะผู้อนุมัติ
-            $leaveStatus = $this->syncLeaveStatus($leave);
+            $leaveStatus = $approvalResult['leave']->status ?? $leave->status;
             $leaveStatusLabels = [
-                'Pending'  => 'ใบลาอยู่ระหว่างรอการอนุมัติ',
-                'Approve'  => 'ใบลาได้รับการอนุมัติแล้ว',
-                'Reject'   => 'ใบลาถูกปฏิเสธ',
-                'Cancel'   => 'ใบลาถูกยกเลิก',
+                'Pending'        => 'ใบลาอยู่ระหว่างรอการอนุมัติ',
+                'Checking1_pass' => 'ใบลาอยู่ระหว่างการอนุมัติชั้นที่ 1',
+                'Checking2_pass' => 'ใบลาอยู่ระหว่างการอนุมัติชั้นที่ 2',
+                'Checkup_pass'   => 'ใบลาผ่านชั้นที่ 3 แล้ว',
+                'Approve'        => 'ใบลาได้รับการอนุมัติแล้ว',
+                'Reject'         => 'ใบลาถูกปฏิเสธ',
+                'Cancel'         => 'ใบลาถูกยกเลิก',
             ];
 
             return [

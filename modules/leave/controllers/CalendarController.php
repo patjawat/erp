@@ -221,7 +221,12 @@ class CalendarController extends Controller
         return match ($status) {
             'Approve'                          => ['bg' => '#198754', 'border' => '#157347', 'label' => 'success'],
             'Checking', 'Checking1_pass',
-            'Checking2_pass'                   => ['bg' => '#fd7e14', 'border' => '#dc6c02', 'label' => 'warning'],
+            'Checking2_pass',
+            'Checkup_pass'                     => ['bg' => '#fd7e14', 'border' => '#dc6c02', 'label' => 'warning'],
+            'Checking1_reject',
+            'Checking2_reject',
+            'Checkup_reject',
+            'Reject'                           => ['bg' => '#dc3545', 'border' => '#b02a37', 'label' => 'danger'],
             'Pending'                          => ['bg' => '#6c757d', 'border' => '#5a6268', 'label' => 'secondary'],
             default                            => ['bg' => '#0d6efd', 'border' => '#0b5ed7', 'label' => 'primary'],
         };
@@ -234,8 +239,13 @@ class CalendarController extends Controller
             'Checking'         => 'รอตรวจสอบ',
             'Checking1_pass'   => 'ผ่านชั้นที่ 1',
             'Checking2_pass'   => 'ผ่านชั้นที่ 2',
+            'Checkup_pass'     => 'ผ่านชั้นที่ 3',
             'Pending'          => 'รอดำเนินการ',
+            'Checking1_reject' => 'ไม่ผ่านชั้นที่ 1',
+            'Checking2_reject' => 'ไม่ผ่านชั้นที่ 2',
+            'Checkup_reject'   => 'ไม่ผ่านชั้นที่ 3',
             'ReqCancel'        => 'ขอยกเลิก',
+            'Reject'           => 'ไม่อนุมัติ',
             default            => $status,
         };
     }
