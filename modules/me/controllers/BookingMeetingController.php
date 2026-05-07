@@ -10,6 +10,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\booking\models\Room;
@@ -113,6 +114,15 @@ class BookingMeetingController extends \yii\web\Controller
             'status' => 'error',
             'message' => 'ไม่สามารถบันทึกข้อมูลได้'
         ];
+    }
+
+    protected function canEditMeeting(Meeting $model): bool
+    {
+        $me = UserHelper::GetEmployee();
+
+        return $me !== null
+            && $model->status !== 'Cancel'
+            && (Yii::$app->user->can('meeting') || $me->id == $model->emp_id);
     }
 
     public function actionSelectFormDepartment($id)
@@ -293,6 +303,10 @@ class BookingMeetingController extends \yii\web\Controller
         $dateStart = $this->request->get('date_start');
         $room_id = $this->request->get('room_id');
         $model = $this->findModel($id);
+
+        if (!$this->canEditMeeting($model)) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์แก้ไขรายการนี้');
+        }
 
         $model->date_start =  AppHelper::convertToThai($model->date_start);
 
