@@ -4,17 +4,8 @@ use yii\helpers\Html;
 <div class="d-flex flex-wrap gap-2">
 
     <?php if(Yii::$app->user->can('asset')):?>
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button"
-                id="dropdownNewButton" data-bs-toggle="dropdown" aria-expanded="false">
-                <i id="dropdownNewIcon" class="fa-solid fa-circle-chevron-down"></i> สร้างใหม่
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                <li> <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> สร้างใหม่', ['create'], ['class' => 'dropdown-item']) ?></li>
-                <li><?= Html::a('<i class="fa-solid fa-copy me-2"></i> สร้างใหม่จากสำเนานี้', ['create', 'id' => $model->id], ['class' => 'dropdown-item']) ?></li>
+        <?= Html::a('<i class="fa-solid fa-copy me-2"></i> ทำสำเนา', ['create', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
 
-            </ul>
-        </div>
         <?= Yii::$app->user->can('asset') ?  Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning'])  : ''?>
         <?= Yii::$app->user->can('asset') ? Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',

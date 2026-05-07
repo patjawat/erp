@@ -13,6 +13,8 @@ use yii\db\Expression;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\leave\models\LeaveType;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -42,10 +44,9 @@ class ApproverController extends Controller
         $searchModel = new LeaveSearch([
             'status' => 'Checking2_pass'
         ]);
-        // $params['LeaveSearch']['status'] = 'Checking2_pass'; // หน.กลุ่มงานเห็นชอบ — default หน้าแรก
+        
         $params = $this->request->queryParams;
-        // if (!isset($params['LeaveSearch']['status']) || $params['LeaveSearch']['status'] === '') {
-        // }
+
         $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
         $query->joinWith([
@@ -132,10 +133,41 @@ class ApproverController extends Controller
      */
     protected function getEmpIdsByDepartment($q_department)
     {
-        if (isset(Yii::$app->params['leave.empIdsByDepartment']) && is_callable(Yii::$app->params['leave.empIdsByDepartment'])) {
-            return call_user_func(Yii::$app->params['leave.empIdsByDepartment'], $q_department);
+        if (empty($q_department)) {
+            return null;
         }
-        return null;
+
+        if (isset(Yii::$app->params['leave.empIdsByDepartment']) && is_callable(Yii::$app->params['leave.empIdsByDepartment'])) {
+            $empIds = call_user_func(Yii::$app->params['leave.empIdsByDepartment'], $q_department);
+            if ($empIds !== null) {
+                return is_array($empIds) ? array_values(array_filter($empIds)) : [$empIds];
+            }
+        }
+
+        $org = Organization::findOne($q_department);
+        if (!$org) {
+            return [];
+        }
+
+        $departmentIds = [$org->id];
+        if ((int) $org->lvl === 1) {
+            $query = Organization::find()
+                ->select('id')
+                ->where(['root' => $org->root])
+                ->andWhere(['>', 'lft', $org->lft])
+                ->andWhere(['<', 'rgt', $org->rgt])
+                ->andWhere(['lvl' => $org->lvl + 1]);
+
+            $childDepartmentIds = $query->column();
+            if (!empty($childDepartmentIds)) {
+                $departmentIds = $childDepartmentIds;
+            }
+        }
+
+        return Employees::find()
+            ->select('id')
+            ->where(['department' => $departmentIds])
+            ->column();
     }
 
     /**

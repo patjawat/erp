@@ -78,7 +78,7 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
                     'data-pjax' => 0,
                 ]) ?>
             </div>
-            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['create'], [
                 'class' => 'btn btn-primary fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm',
                 'data-pjax' => 0,
             ]) ?>
