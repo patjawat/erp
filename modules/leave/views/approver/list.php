@@ -2,8 +2,6 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\web\JsExpression;
-use kartik\widgets\Select2;
 use app\components\ApproveHelper;
 use app\modules\leave\models\Leave;
 
@@ -14,9 +12,8 @@ use app\modules\leave\models\Leave;
 $offset        = (int) ($dataProvider->pagination->offset ?? 0);
 $models        = $dataProvider->getModels();
 
-$searchEmpUrl  = Url::to(['/leave/leave/search-employee']);
-$changeApproverOnChangeUrl = Url::to(['/leave/approver/change-approver-on-change']);
 $bulkActionUrl = Url::to(['/leave/approver/bulk-action']);
+$bulkChangeApproverUrl = Url::to(['/leave/approver/bulk-change-approver', 'title' => '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ (หลายรายการ)']);
 $csrfParam     = Yii::$app->request->csrfParam;
 $csrfToken     = Yii::$app->request->csrfToken;
 ?>
@@ -36,9 +33,18 @@ $csrfToken     = Yii::$app->request->csrfToken;
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                 <li>
-                    <button type="button" class="dropdown-item" id="btn-bulk-change-approver">
-                        <i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ
-                    </button>
+                    <?= Html::a(
+                        '<i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ',
+                        $bulkChangeApproverUrl,
+                        [
+                            'id' => 'btn-bulk-change-approver',
+                            'class' => 'dropdown-item open-modal',
+                            'data' => [
+                                'size' => 'modal-lg',
+                                'base-url' => $bulkChangeApproverUrl,
+                            ],
+                        ]
+                    ) ?>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -91,6 +97,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                 $stackApproves = $item->approves ? array_filter($item->approves, function ($a) {
                     return !in_array($a->status, ['None', 'Pending'], true);
                 }) : [];
+                $isLockedStatus = !in_array($item->status, ['Checkup_pass', 'Checking2_pass'], true);
                 usort($stackApproves, function ($x, $y) {
                     return (int) $y->level - (int) $x->level;
                 });
@@ -102,7 +109,12 @@ $csrfToken     = Yii::$app->request->csrfToken;
                     data-leave-range="<?= Html::encode(trim(strip_tags((string) $item->showLeaveDate()))) ?>"
                 >
                     <td class="text-center py-3 px-3">
-                        <input type="checkbox" class="form-check-input chk-leave-row" value="<?= $item->id ?>">
+                        <input
+                            type="checkbox"
+                            class="form-check-input chk-leave-row<?= $isLockedStatus ? ' opacity-50' : '' ?>"
+                            value="<?= $item->id ?>"
+                            <?= $isLockedStatus ? 'disabled aria-disabled="true" title="สถานะนี้ไม่สามารถเลือกได้"' : '' ?>
+                        >
                     </td>
                     <td class="text-center py-3 px-3 text-muted small"><?= $no ?></td>
                     <td class="text-center py-3 px-3 small">
@@ -207,195 +219,24 @@ $csrfToken     = Yii::$app->request->csrfToken;
     </table>
 </div>
 
-<!-- ── Bulk change-approver modal ─────────────────────────────── -->
-<div class="modal fade" id="bulk-approver-modal" tabindex="-1" aria-labelledby="bulk-approver-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-semibold" id="bulk-approver-modal-label">
-                    <i class="bi bi-person-gear me-1 text-warning"></i> เปลี่ยนผู้อนุมัติ (หลายรายการ)
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-3">
-
-                <div class="alert alert-info border-0 rounded-3 small d-flex align-items-start gap-2 py-2 px-3 mb-3">
-                    <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
-                    <span>คุณเลือกใบลา <strong id="bulk-selected-count">0</strong> รายการ</span>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">
-                        <i class="bi bi-list-check me-1"></i> รายชื่อที่เลือก
-                    </label>
-                    <div id="bulk-selected-list" class="d-grid gap-2" style="max-height: 280px; overflow:auto;"></div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">
-                        <i class="bi bi-person me-1"></i> ผู้อนุมัติใหม่ (เว้นว่างถ้าไม่เปลี่ยน)
-                    </label>
-                    <select id="bulk-emp-select" class="form-control" style="width:100%;" placeholder="พิมพ์ชื่อเพื่อค้นหา...">
-                        <option value=""></option>
-                    </select>
-                </div>
-
-                <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-start gap-2 py-2 px-3 mb-0">
-                    <i class="bi bi-shield-check flex-shrink-0 mt-1"></i>
-                    <span>ระบบจะอัปเดตผู้อนุมัติชั้นที่ 4 ของรายการที่เลือก และผ่านชั้นที่ 3 ตาม flow ปกติ</span>
-                </div>
-
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-primary rounded-3 px-4" id="btn-bulk-approver-save">
-                    <i class="bi bi-check2-circle me-1"></i> บันทึกการเปลี่ยนแปลง
-                </button>
-                <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">ยกเลิก</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <?php
 $js = <<<JS
 (function () {
     var bulkActionUrl = "{$bulkActionUrl}";
-    var searchEmpUrl  = "{$searchEmpUrl}";
-    var changeApproverOnChangeUrl = "{$changeApproverOnChangeUrl}";
+    var bulkChangeApproverUrl = "{$bulkChangeApproverUrl}";
     var csrfParam     = "{$csrfParam}";
     var csrfToken     = "{$csrfToken}";
-
-    // ── Init Select2 for bulk change-approver ─────────────────────
-    if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
-        jQuery('#bulk-emp-select').select2({
-            dropdownParent: jQuery('#bulk-approver-modal'),
-            placeholder: 'พิมพ์ชื่อเพื่อค้นหา...',
-            allowClear: true,
-            minimumInputLength: 1,
-            ajax: {
-                url: searchEmpUrl,
-                dataType: 'json',
-                delay: 250,
-                data: function (params) { return { q: params.term }; },
-                processResults: function (data) { return { results: data.results }; },
-                cache: true,
-            },
-            escapeMarkup: function (m) { return m; },
-            templateResult: function (r) { return r.text || r.id; },
-            templateSelection: function (r) { return r.text || r.id; },
-        });
-    }
-
-    function getSelectedApproverItems() {
-        return Array.from(document.querySelectorAll('.chk-leave-row:checked')).map(function (c) {
-            var row = c.closest('tr');
-            return {
-                id: c.value,
-                name: row ? (row.dataset.employeeName || '') : '',
-                leaveType: row ? (row.dataset.leaveType || '') : '',
-                leaveRange: row ? (row.dataset.leaveRange || '') : ''
-            };
-        });
-    }
-
-    function renderSelectedApproverItems(items) {
-        var list = document.getElementById('bulk-selected-list');
-        if (!list) return;
-
-        list.innerHTML = '';
-        if (!items.length) {
-            var empty = document.createElement('div');
-            empty.className = 'text-muted small';
-            empty.textContent = 'ยังไม่มีรายการที่เลือก';
-            list.appendChild(empty);
-            return;
-        }
-
-        items.forEach(function (item, idx) {
-            var card = document.createElement('div');
-            card.className = 'border rounded-3 p-2 bg-body-secondary bg-opacity-50';
-
-            var row = document.createElement('div');
-            row.className = 'd-flex align-items-start gap-2';
-
-            var badge = document.createElement('span');
-            badge.className = 'badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle flex-shrink-0 mt-1';
-            badge.textContent = String(idx + 1);
-
-            var content = document.createElement('div');
-            content.className = 'flex-grow-1';
-
-            var title = document.createElement('div');
-            title.className = 'fw-semibold text-body';
-            title.textContent = item.name || ('#' + item.id);
-            content.appendChild(title);
-
-            var metaParts = [];
-            if (item.leaveType) metaParts.push(item.leaveType);
-            if (item.leaveRange) metaParts.push(item.leaveRange);
-            if (metaParts.length) {
-                var meta = document.createElement('div');
-                meta.className = 'small text-muted';
-                meta.textContent = metaParts.join(' · ');
-                content.appendChild(meta);
-            }
-
-            row.appendChild(badge);
-            row.appendChild(content);
-            card.appendChild(row);
-            list.appendChild(card);
-        });
-    }
-
-    function clearBulkApproverModalState() {
-        window.leaveApproverBulkSelectedItems = [];
-        var countEl = document.getElementById('bulk-selected-count');
-        if (countEl) {
-            countEl.textContent = '0';
-        }
-        renderSelectedApproverItems([]);
-        if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
-            jQuery('#bulk-emp-select').val(null).trigger('change');
-        }
-    }
-
-    function openBulkApproverModal(items) {
-        if (!Array.isArray(items) || !items.length) return;
-
-        window.leaveApproverBulkSelectedItems = items.slice();
-        var countEl = document.getElementById('bulk-selected-count');
-        if (countEl) {
-            countEl.textContent = String(items.length);
-        }
-        renderSelectedApproverItems(items);
-        if (typeof jQuery !== 'undefined' && jQuery('#bulk-emp-select').length) {
-            jQuery('#bulk-emp-select').val(null).trigger('change');
-        }
-
-        var modalEl = document.getElementById('bulk-approver-modal');
-        if (modalEl) {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                bootstrap.Modal.getOrCreateInstance(modalEl).show();
-            } else if (typeof jQuery !== 'undefined') {
-                jQuery(modalEl).modal('show');
-            }
-        }
-    }
-
-    var bulkApproverModal = document.getElementById('bulk-approver-modal');
-    if (bulkApproverModal && !bulkApproverModal.dataset.bound) {
-        bulkApproverModal.addEventListener('hidden.bs.modal', function () {
-            clearBulkApproverModalState();
-        });
-        bulkApproverModal.dataset.bound = '1';
-    }
 
     // ── Checkbox logic ────────────────────────────────────────────
     var bar   = document.getElementById('bulk-action-bar');
     var label = document.getElementById('bulk-count-label');
 
     function getSelectedIds() {
-        return Array.from(document.querySelectorAll('.chk-leave-row:checked')).map(function (c) { return c.value; });
+        return Array.from(document.querySelectorAll('.chk-leave-row:not(:disabled):checked')).map(function (c) { return c.value; });
+    }
+
+    function getSelectableCheckboxes() {
+        return Array.from(document.querySelectorAll('.chk-leave-row:not(:disabled)'));
     }
 
     function updateBar() {
@@ -412,14 +253,14 @@ $js = <<<JS
     }
 
     document.getElementById('chk-select-all')?.addEventListener('change', function () {
-        document.querySelectorAll('.chk-leave-row').forEach(function (c) { c.checked = this.checked; }.bind(this));
+        getSelectableCheckboxes().forEach(function (c) { c.checked = this.checked; }.bind(this));
         updateBar();
     });
 
     document.querySelectorAll('.chk-leave-row').forEach(function (c) {
         c.addEventListener('change', function () {
-            var all  = document.querySelectorAll('.chk-leave-row');
-            var chkd = document.querySelectorAll('.chk-leave-row:checked');
+            var all  = getSelectableCheckboxes();
+            var chkd = document.querySelectorAll('.chk-leave-row:not(:disabled):checked');
             document.getElementById('chk-select-all').indeterminate = chkd.length > 0 && chkd.length < all.length;
             document.getElementById('chk-select-all').checked = chkd.length === all.length && all.length > 0;
             updateBar();
@@ -427,17 +268,30 @@ $js = <<<JS
     });
 
     document.getElementById('btn-bulk-clear')?.addEventListener('click', function () {
-        document.querySelectorAll('.chk-leave-row').forEach(function (c) { c.checked = false; });
+        getSelectableCheckboxes().forEach(function (c) { c.checked = false; });
         document.getElementById('chk-select-all').checked       = false;
         document.getElementById('chk-select-all').indeterminate = false;
-        clearBulkApproverModalState();
-        var modalEl = document.getElementById('bulk-approver-modal');
-        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            bootstrap.Modal.getInstance(modalEl)?.hide();
-        } else if (typeof jQuery !== 'undefined') {
-            jQuery('#bulk-approver-modal').modal('hide');
-        }
         updateBar();
+    });
+
+    document.getElementById('btn-bulk-change-approver')?.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        var ids = getSelectedIds();
+        if (!ids.length) {
+            e.stopPropagation();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'warning', text: 'กรุณาเลือกรายการอย่างน้อย 1 รายการ' });
+            }
+            return;
+        }
+
+        var baseUrl = this.dataset.baseUrl || bulkChangeApproverUrl || this.getAttribute('href') || '';
+        var query = ids.map(function (id) {
+            return 'leave_ids[]=' + encodeURIComponent(id);
+        }).join('&');
+        var href = baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + query;
+        this.setAttribute('href', href);
     });
 
     // ── Helper: POST to bulk action ───────────────────────────────
@@ -517,96 +371,7 @@ $js = <<<JS
         }
     });
 
-    // ── Open bulk change-approver modal ──────────────────────────
-    document.getElementById('btn-bulk-change-approver')?.addEventListener('click', function () {
-        var items = getSelectedApproverItems();
-        if (!items.length) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', text: 'กรุณาเลือกรายการอย่างน้อย 1 รายการ' });
-            }
-            return;
-        }
-
-        openBulkApproverModal(items);
-    });
-
-    // ── Save bulk change-approver-on-change ──────────────────────
-    document.getElementById('btn-bulk-approver-save')?.addEventListener('click', function () {
-        var items = Array.isArray(window.leaveApproverBulkSelectedItems) ? window.leaveApproverBulkSelectedItems : getSelectedApproverItems();
-        var ids   = items.map(function (item) { return item.id; }).filter(function (id) { return !!id; });
-        var empId = typeof jQuery !== 'undefined' ? (jQuery('#bulk-emp-select').val() || '') : '';
-
-        if (!ids.length) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', text: 'ไม่ได้เลือกรายการ' });
-            }
-            return;
-        }
-
-        if (!empId) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({ icon: 'warning', text: 'กรุณาเลือกผู้อนุมัติใหม่' });
-            }
-            return;
-        }
-
-        var fd = new FormData();
-        fd.append(csrfParam, csrfToken);
-        ids.forEach(function (id) {
-            fd.append('leave_ids[]', id);
-        });
-        fd.append('emp_id', empId);
-
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({ title: 'ยืนยันการเปลี่ยนผู้อนุมัติ?', icon: 'question', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก' })
-                .then(function (r) {
-                    if (r.isConfirmed) {
-                        doBulkChangeApprover(fd);
-                    }
-                });
-        } else {
-            doBulkChangeApprover(fd);
-        }
-    });
-
-    function doBulkChangeApprover(fd) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
-        }
-
-        fetch(changeApproverOnChangeUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { return r.json(); })
-            .then(function (res) {
-                if (res.status === 'success') {
-                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                        bootstrap.Modal.getInstance(document.getElementById('bulk-approver-modal'))?.hide();
-                    } else if (typeof jQuery !== 'undefined') {
-                        jQuery('#bulk-approver-modal').modal('hide');
-                    }
-
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'สำเร็จ',
-                            text: res.message || 'เปลี่ยนผู้อนุมัติสำเร็จ',
-                            showConfirmButton: false,
-                            timer: 1600
-                        }).then(function () { location.reload(); });
-                    } else {
-                        location.reload();
-                    }
-                } else {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', html: res.message || 'เปลี่ยนผู้อนุมัติไม่สำเร็จ' });
-                    }
-                }
-            })
-            .catch(function () {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({ icon: 'error', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
-                }
-            });
-    }
+    updateBar();
 
 })();
 JS;

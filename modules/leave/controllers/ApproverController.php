@@ -264,6 +264,89 @@ class ApproverController extends Controller
     }
 
     /**
+     * เปิด modal สำหรับเปลี่ยนผู้อนุมัติแบบหลายรายการจากรายการที่เลือก
+     */
+    public function actionBulkChangeApprover()
+    {
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการนี้');
+        }
+
+        $isAjax = Yii::$app->request->isAjax;
+        if ($isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+        }
+
+        $title = Yii::$app->request->get('title', '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ (หลายรายการ)');
+        $leaveIds = array_values(array_filter(array_map('intval', (array) Yii::$app->request->get('leave_ids', []))));
+
+        if (empty($leaveIds)) {
+            $content = '<div class="alert alert-warning border-0 rounded-3 mb-0">กรุณาเลือกรายการอย่างน้อย 1 รายการ</div>';
+
+            if ($isAjax) {
+                return [
+                    'title'   => $title,
+                    'content' => $content,
+                    'footer'  => '',
+                ];
+            }
+
+            Yii::$app->session->setFlash('warning', 'กรุณาเลือกรายการอย่างน้อย 1 รายการ');
+            return $this->redirect(['index']);
+        }
+
+        $leaveMap = Leave::find()
+            ->where(['in', 'id', $leaveIds])
+            ->with(['employee', 'leaveType'])
+            ->indexBy('id')
+            ->all();
+
+        $leaves = [];
+        $missingIds = [];
+        foreach ($leaveIds as $leaveId) {
+            if (isset($leaveMap[$leaveId])) {
+                $leaves[] = $leaveMap[$leaveId];
+            } else {
+                $missingIds[] = $leaveId;
+            }
+        }
+
+        if (!empty($missingIds)) {
+            $missingText = implode(', #', $missingIds);
+            $content = '<div class="alert alert-danger border-0 rounded-3 mb-0">ไม่พบรายการวันลา #' . $missingText . '</div>';
+
+            if ($isAjax) {
+                return [
+                    'title'   => $title,
+                    'content' => $content,
+                    'footer'  => '',
+                ];
+            }
+
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการวันลา #' . $missingText);
+            return $this->redirect(['index']);
+        }
+
+        if (count($leaves) > 0) {
+            $title .= ' <span class="badge bg-primary ms-1">' . count($leaves) . '</span>';
+        }
+
+        if ($isAjax) {
+            return [
+                'title'   => $title,
+                'content' => $this->renderAjax('_bulk_change_approver', [
+                    'leaves' => $leaves,
+                ]),
+                'footer'  => '',
+            ];
+        }
+
+        return $this->render('_bulk_change_approver', [
+            'leaves' => $leaves,
+        ]);
+    }
+
+    /**
      * เปลี่ยนผู้อนุมัติจากรายการที่เลือกใน checkbox
      */
     public function actionChangeApproverOnChange()
