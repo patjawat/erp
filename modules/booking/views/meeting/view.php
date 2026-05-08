@@ -118,13 +118,13 @@ if (!is_array($equipments)) {
         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/booking-meeting/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
     <?php endif; ?>
 
-    <?php if ($model->status == 'Pending'): ?>
+    <?php if ($model->status == 'Pending' && Yii::$app->user->can('meeting')): ?>
         <button type="button" class="btn btn-primary confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
             <i class="fa-regular fa-circle-check"></i> อนุมัติ
         </button>
     <?php endif; ?>
 
-    <?php if ($model->status !== 'Cancel'): ?>
+<?php if ($canEditMeeting): ?>
         <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
             <i class="fa-solid fa-xmark"></i> ยกเลิกการจอง
         </button>
