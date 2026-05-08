@@ -42,8 +42,9 @@ class DefaultController extends Controller
                     ],
                 ],
                 'denyCallback' => function ($rule, $action) {
-                    Yii::$app->user->setReturnUrl(Yii::$app->request->url);
-                    return Yii::$app->response->redirect(['/mobile/auth/login']);
+                    $ref = Yii::$app->request->url;
+                    Yii::$app->user->setReturnUrl($ref);
+                    return Yii::$app->response->redirect(['/mobile/auth/login', 'ref' => $ref]);
                 },
             ],
         ];
