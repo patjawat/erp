@@ -647,105 +647,177 @@ if ($searchModel->q_status === 'unread') {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             //## ตรวจสอบสถานะส่งเสนอ ผอ.
-            $director = SiteHelper::getInfo()['director']->id;
-            $me = UserHelper::GetEmployee();
-            if ($me->id == $director) {
-                $docStatus =  $model->document;
-                $docStatus->status = 'DS4';
-                $docStatus->save(false);
-            }
-
             try {
-                //ตรวจว่ามีการ Tags ถึง ผอฬหรือไม่
-                if (in_array($director, $model->tags_employee)) {
+                $director = SiteHelper::getInfo()['director']->id;
+                if ($emp->id == $director) {
                     $docStatus =  $model->document;
-                    $docStatus->status = 'DS3';
-                    $docStatus->save(false);
+                    if ($docStatus) {
+                        $docStatus->status = 'DS4';
+                        $docStatus->save(false);
+                    }
+                }
+                if (is_array($model->tags_employee) && in_array($director, $model->tags_employee)) {
+                    $docStatus =  $model->document;
+                    if ($docStatus) {
+                        $docStatus->status = 'DS3';
+                        $docStatus->save(false);
+                    }
                 }
             } catch (\Throwable $th) {
             }
 
-
-
             if ($model->save()) {
-                $model->UpdateDocumentsDetail();
-                return [
-                    'status' => 'success'
-                ];
-                // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
-                // return $this->redirect(['view', 'id' => $model->id]);
+                $this->saveCommentTags($model);
+                return ['status' => 'success'];
             }
+            return ['status' => 'error', 'errors' => $model->getErrors()];
         }
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
             return [
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('@app/modules/dms/views/documents/_form_comment', [
                     'model' => $model,
                 ])
             ];
-        } else {
-            return $this->render('@app/modules/dms/views/documents/_form_comment', [
-                'model' => $model,
-            ]);
         }
+        return $this->render('@app/modules/dms/views/documents/_form_comment', [
+            'model' => $model,
+        ]);
     }
 
     public function actionUpdateComment($id)
     {
-        $emp = UserHelper::GetEmployee();
         $model = DocumentsDetail::findOne($id);
+        if (!$model) {
+            throw new \yii\web\NotFoundHttpException();
+        }
+        if ((int) $model->created_by !== (int) Yii::$app->user->id) {
+            throw new \yii\web\ForbiddenHttpException('แก้ไขได้เฉพาะความเห็นของตัวเอง');
+        }
 
-        $tags = DocumentsDetail::find()->where(['name' => 'comment', 'document_id' => $model->document_id])->all();
-        $list = ArrayHelper::map($tags, 'tag_id', 'tag_id');
+        // pre-fill tags จาก children (from_id link)
+        $childTags = DocumentsDetail::find()
+            ->where(['from_id' => $model->id])
+            ->andWhere(['in', 'name', ['comment_emp', 'comment_dept']])
+            ->all();
+        $tagsEmp = [];
+        $tagsDept = [];
+        foreach ($childTags as $t) {
+            if ($t->name === 'comment_emp') { $tagsEmp[] = $t->to_id; }
+            elseif ($t->name === 'comment_dept') { $tagsDept[] = $t->to_id; }
+        }
+        $model->tags_employee = $tagsEmp;
+        $model->tags_department = $tagsDept;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             if ($model->save()) {
-                $model->UpdateDocumentsDetail();
-                return [
-                    'status' => 'success'
-                ];
-                // return [
-                //     'status' => 'success',
-                //     'data' => $model,
-                // ];
+                $this->saveCommentTags($model);
+                return ['status' => 'success'];
             }
+            return ['status' => 'error', 'errors' => $model->getErrors()];
         }
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
             return [
-                'title' => 'xxx',
+                'title' => 'แก้ไขความเห็น',
                 'content' => $this->renderAjax('@app/modules/dms/views/documents/_form_comment', [
                     'model' => $model,
                 ])
             ];
-        } else {
-            return $this->render('@app/modules/dms/views/documents/_form_comment', [
-                'model' => $model,
-            ]);
         }
+        return $this->render('@app/modules/dms/views/documents/_form_comment', [
+            'model' => $model,
+        ]);
     }
 
+    /**
+     * บันทึก tags บุคคล/หน่วยงาน เป็น children rows (link ผ่าน from_id = comment.id)
+     * ลบ children เก่าออกก่อน (เฉพาะของผู้แก้) ถ้าไม่อยู่ในรายการใหม่
+     */
+    protected function saveCommentTags(DocumentsDetail $comment)
+    {
+        $userId = (int) Yii::$app->user->id;
+        $empIds = is_array($comment->tags_employee) ? array_filter(array_map('intval', $comment->tags_employee)) : [];
+        $deptIds = is_array($comment->tags_department) ? array_filter(array_map('intval', $comment->tags_department)) : [];
+
+        // กันส่งหน่วยงานซ้ำ — ตัด dept ที่เอกสารนี้ส่งไปแล้ว (รวม department + comment_dept อื่น)
+        if (!empty($deptIds)) {
+            $alreadyForwarded = DocumentsDetail::find()
+                ->select('to_id')
+                ->where(['document_id' => $comment->document_id])
+                ->andWhere(['in', 'name', ['department', 'comment_dept']])
+                ->andWhere(['not', ['from_id' => $comment->id]])
+                ->column();
+            $alreadyForwarded = array_map('intval', $alreadyForwarded);
+            $deptIds = array_values(array_diff($deptIds, $alreadyForwarded));
+        }
+
+        // ลบ children ที่ไม่ได้อยู่ใน list ใหม่ (เฉพาะของ user คนนี้)
+        DocumentsDetail::deleteAll([
+            'and',
+            ['from_id' => $comment->id, 'name' => 'comment_emp', 'created_by' => $userId],
+            $empIds ? ['not in', 'to_id', $empIds] : [],
+        ]);
+        DocumentsDetail::deleteAll([
+            'and',
+            ['from_id' => $comment->id, 'name' => 'comment_dept', 'created_by' => $userId],
+            $deptIds ? ['not in', 'to_id', $deptIds] : [],
+        ]);
+
+        foreach ($empIds as $empId) {
+            $exists = DocumentsDetail::findOne([
+                'from_id' => $comment->id,
+                'name' => 'comment_emp',
+                'to_id' => (string) $empId,
+            ]);
+            if ($exists) { continue; }
+            $row = new DocumentsDetail();
+            $row->document_id = $comment->document_id;
+            $row->name = 'comment_emp';
+            $row->from_id = (string) $comment->id;
+            $row->from_type = 'comment';
+            $row->to_id = (string) $empId;
+            $row->to_type = 'employee';
+            $row->save(false);
+        }
+
+        foreach ($deptIds as $deptId) {
+            $exists = DocumentsDetail::findOne([
+                'from_id' => $comment->id,
+                'name' => 'comment_dept',
+                'to_id' => (string) $deptId,
+            ]);
+            if ($exists) { continue; }
+            $row = new DocumentsDetail();
+            $row->document_id = $comment->document_id;
+            $row->name = 'comment_dept';
+            $row->from_id = (string) $comment->id;
+            $row->from_type = 'comment';
+            $row->to_id = (string) $deptId;
+            $row->to_type = 'department';
+            $row->save(false);
+        }
+    }
 
     public function actionDeleteComment($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = DocumentsDetail::findOne($id);
-        if ($model->created_by == Yii::$app->user->id) {
-
-            $model->delete();
-            return [
-                'status' => 'success',
-                'data' => $model,
-            ];
-        } else {
-            return [
-                'status' => 'error',
-            ];
+        if (!$model) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
         }
+        if ((int) $model->created_by !== (int) Yii::$app->user->id) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => 'error', 'message' => 'ลบได้เฉพาะความเห็นของตัวเอง'];
+        }
+        // cascade: ลบ children (comment_emp, comment_dept) ที่ link ผ่าน from_id
+        DocumentsDetail::deleteAll(['from_id' => $model->id, 'name' => ['comment_emp', 'comment_dept']]);
+        $model->delete();
+        return ['status' => 'success'];
     }
 
     // แสดง File และแสดงความเห็น

@@ -64,6 +64,8 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $comment;
     public $status;
     public $date_filter;
+    public $tags_employee;
+    public $tags_department;
     public static function tableName()
     {
         return 'documents_detail';
@@ -174,6 +176,42 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
+
+    /**
+     * รายการ id ของหน่วยงานที่เอกสารนี้ส่งไปแล้ว (รวม forwarding card + comment_dept)
+     * ใช้กรอง dept dropdown ใน composer
+     */
+    public function listForwardedDepartmentIds()
+    {
+        try {
+            return self::find()
+                ->select('to_id')
+                ->where(['document_id' => $this->document_id])
+                ->andWhere(['in', 'name', ['department', 'comment_dept']])
+                ->andWhere(['not', ['to_id' => null]])
+                ->andWhere(['<>', 'to_id', ''])
+                ->distinct()
+                ->column();
+        } catch (\Throwable $th) {
+            return [];
+        }
+    }
+
+    /**
+     * รายการหน่วยงานที่ "ยังไม่ได้" ส่ง — ใช้ใน Select2 ของ composer
+     */
+    public function listAvailableDepartments()
+    {
+        $forwarded = $this->listForwardedDepartmentIds();
+        // ถ้ากำลังแก้ comment เดิม ให้แสดง dept ที่เคยเลือกของ comment นี้ด้วย
+        $myCurrent = is_array($this->tags_department) ? $this->tags_department : [];
+        $exclude = array_diff($forwarded, $myCurrent);
+        $query = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC]);
+        if (!empty($exclude)) {
+            $query->andWhere(['not in', 'id', $exclude]);
+        }
+        return ArrayHelper::map($query->all(), 'id', 'name');
+    }
 
     // ดึงค่าไปแสดงตอนที่เรา update
     public function listEmployeeSelectTag()

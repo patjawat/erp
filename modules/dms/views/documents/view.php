@@ -3,14 +3,37 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
-use yii\widgets\DetailView;
+use app\models\Uploads;
 use app\components\UserHelper;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 
+// รายชื่อหน่วยงานที่เอกสารนี้ "ส่งถึง" (รวม forwarding ทั้ง direct + จาก comment) แบบ unique
+$forwardedDeptIds = DocumentsDetail::find()
+    ->select('to_id')
+    ->where(['document_id' => $model->id])
+    ->andWhere(['in', 'name', ['department', 'comment_dept']])
+    ->andWhere(['not', ['to_id' => null]])
+    ->andWhere(['<>', 'to_id', ''])
+    ->distinct()
+    ->column();
+$forwardedDepts = [];
+if (!empty($forwardedDeptIds)) {
+    $forwardedDepts = Organization::find()
+        ->where(['id' => $forwardedDeptIds])
+        ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+        ->all();
+}
+
+// ผู้อ่านเอกสาร (สำหรับ summary + offcanvas)
+$readers = $model->viewHistory();
+
+// นับไฟล์แนบ (เพื่อโชว์จำนวนใน header)
+$attachmentCount = (int) Uploads::find()->where(['ref' => $model->ref, 'name' => 'document_clip'])->count();
+
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\Documents $model */
+
 $this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
 
@@ -19,10 +42,6 @@ $currentDeptIds = DocumentsDetail::find()
     ->select('to_id')
     ->column();
 $currentDeptIdsStr = array_map('strval', $currentDeptIds ?: []);
-$deptOptions = Organization::find()
-    ->where(['active' => 1])
-    ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
-    ->all();
 
 $emp = UserHelper::GetEmployee();
 $isDeptHeadOrDeputy = false;
@@ -45,621 +64,406 @@ if ($emp && (int) ($emp->department ?? 0) > 0) {
 $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
 ?>
 
-<div class="container-fluid p-0 min-vh-100 overflow-x-hidden">
-    <div class="row g-0 min-vh-100">
+<div class="container-fluid p-0">
+    <div class="d-lg-none position-sticky top-0 bg-white border-bottom shadow-sm" style="z-index:1030;">
+        <div class="d-flex p-2 gap-2" id="mobile-pane-toggle">
+            <button type="button" class="btn btn-primary rounded-pill flex-fill py-2 small fw-semibold" data-target-pane="pdf">
+                <i class="fa-regular fa-file-lines me-1"></i> เอกสาร
+            </button>
+            <button type="button" class="btn btn-light text-secondary rounded-pill flex-fill py-2 small fw-semibold" data-target-pane="work">
+                <i class="fa-regular fa-comments me-1"></i> รายละเอียด
+                <span class="badge text-bg-light text-muted ms-1" id="mobile-badge-count" style="display:none;">0</span>
+            </button>
+        </div>
+    </div>
 
-        <section class="col-12 col-lg-6 col-xl-6 d-flex flex-column bg-secondary bg-opacity-25 p-2 p-lg-3">
-            <div
-                class="flex-grow-1 overflow-auto bg-dark rounded-3 shadow-inner d-flex justify-content-center align-items-start p-2">
-                <div id="iframeWrapper" style="width: 100%; max-width: 1000px; min-height: 600px; height: 85vh;">
-                    <iframe id="myIframe"
-                        src="<?= \yii\helpers\Url::to(['/me/documents/show', 'ref' => $model->ref]); ?>&embedded=true"
-                        frameborder="0" class="w-100 h-100 rounded-3 shadow-sm bg-white">
-                    </iframe>
-                </div>
+    <div class="row g-0" id="doc-split-pane">
+
+        <div class="col-12 col-lg-6 bg-body-secondary" id="doc-pdf-pane" data-pane="pdf">
+            <div id="iframeWrapper" class="w-100 h-100">
+                <iframe id="myIframe"
+                    src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]) ?>#view=FitH&toolbar=1&navpanes=0"
+                    class="w-100 h-100 border-0 d-block bg-white">
+                </iframe>
             </div>
-        </section>
+        </div>
 
-        <section class="col-12 col-lg-6 col-xl-6 bg-white border-start shadow-sm d-flex flex-column">
-            <div class="p-3 p-lg-4 h-100 d-flex flex-column">
+        <div class="col-12 col-lg-6 bg-body-tertiary" id="doc-work-pane" data-pane="work">
+            <div class="d-flex flex-column h-100">
 
-                <div class="tabs-container mb-4">
-                    <ul class="nav nav-tabs-minimal flex-nowrap overflow-auto pb-1" id="custom-tab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="home-tab" data-bs-toggle="pill" href="#home" role="tab"
-                                aria-controls="home" aria-selected="true">
-                                <i class="fa-regular fa-comment-dots me-1"></i> ลงความเห็น
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="comment-tab" data-bs-toggle="pill" href="#comment" role="tab"
-                                aria-controls="comment" aria-selected="false">
-                                <i class="fa-regular fa-history me-1"></i> ประวัติการลงความเห็น
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="viewHistory-tab" data-bs-toggle="pill" href="#viewHistory"
-                                role="tab" aria-controls="viewHistory" aria-selected="false">
-                                <i class="fa-regular fa-eye me-1"></i> ประวัติการอ่าน
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="viewFile-tab" data-bs-toggle="pill" href="#viewFile"
-                                role="tab" aria-controls="viewFile" aria-selected="false">
-                                <i class="fa-solid fa-paperclip me-1"></i> ไฟล์แนบ
-                            </a>
-                        </li>
-                    </ul>
+                <div class="bg-white border-bottom border-light-subtle px-4 py-3 flex-shrink-0">
+                    <div class="d-flex align-items-start gap-3">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3 flex-shrink-0" style="width:44px;height:44px;">
+                            <i class="fa-regular fa-file-lines fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 min-width-0">
+                            <div class="text-uppercase small text-primary fw-semibold opacity-75" style="letter-spacing:.05em;">
+                                <?= Html::encode($model->documentOrg->title ?? '-') ?>
+                            </div>
+                            <div class="fw-bold text-dark text-truncate" title="<?= Html::encode($model->topic) ?>">
+                                <?= Html::encode($model->topic) ?>
+                            </div>
+                            <div class="d-flex flex-wrap gap-3 small text-muted mt-1 align-items-center">
+                                <?php if ($model->doc_regis_number): ?>
+                                    <span><i class="fa-regular fa-hashtag me-1"></i>เลขที่ <?= Html::encode($model->doc_regis_number) ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($model->viewDocDate())): ?>
+                                    <span><i class="fa-regular fa-calendar me-1"></i><?= $model->viewDocDate() ?></span>
+                                <?php endif; ?>
+                                <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-0 small d-inline-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAttachments" aria-controls="offcanvasAttachments">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                    ไฟล์แนบ
+                                    <?php if ($attachmentCount > 0): ?>
+                                        <span class="badge text-bg-primary rounded-pill"><?= $attachmentCount ?></span>
+                                    <?php endif; ?>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-1 flex-shrink-0">
+                            <?php if ($model->doc_speed === 'ด่วนที่สุด'): ?>
+                                <span class="badge text-bg-danger rounded-pill"><i class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
+                            <?php endif; ?>
+                            <?php if ($model->secret === 'ลับที่สุด'): ?>
+                                <span class="badge text-bg-dark rounded-pill"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top border-light-subtle d-flex flex-column gap-2">
+                        <div id="forwarded-summary-wrapper">
+                            <?= $this->render('_forwarded_summary', ['forwardedDepts' => $forwardedDepts]) ?>
+                        </div>
+                        <div id="read-summary-wrapper">
+                            <?= $this->render('_read_summary', ['readers' => $readers]) ?>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card border border-primary-subtle p-3 mb-3"
-                    style="background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);">
-                    <div>
-                        <div class="d-flex justify-content-between">
+                <div class="flex-grow-1 overflow-auto p-4">
+                    <div class="d-flex flex-column gap-4">
 
-                            <strong class="text-primary d-block mb-1"><?= $model->documentOrg->title ?></strong>
-
-                        </div>
-                        <span class="fs-6 text-dark"><?= $model->topic ?></span>
-                    </div>
-                    <div class="mt-2">
-                        <?php if ($model->doc_speed == 'ด่วนที่สุด'): ?>
-                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1"><i
-                                    class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
-                        <?php endif; ?>
-                        <?php if ($model->secret == 'ลับที่สุด'): ?>
-                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1"><i class="fa-solid fa-lock me-1"></i>ลับที่สุด</span>
-                        <?php endif; ?>
-                    </div>
-
-
-                </div>
-
-
-                <div class="tab-content flex-grow-1">
-                    <div id="home" class="tab-pane fade show active">
-
-
-                        <div class="small mb-3">
-                            <span class="text-muted fw-bold">ถึงหน่วยงาน:</span>
-                            <div id="to-dept-tags" class="d-inline-block gap-2"><?= $model->viewTagsDepartment() ?></div>
+                        <div id="approval-card-wrapper">
+                            <?= $this->render('req_approve_tags', ['model' => $model]) ?>
                         </div>
 
-                        <?php if ($canManageDepartmentExtra): ?>
-                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 mb-3">
-                                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
-                                    <div class="small text-muted fw-bold">
-                                        <i class="fas fa-plus me-1"></i> เลือกถึงหน่วยงานเพิ่มเติม
-                                    </div>
-                                    <button type="button" id="btn-update-to-dept" class="btn btn-sm btn-primary shadow-sm">
-                                        บันทึก
-                                    </button>
-                                </div>
-                                <div class="w-100">
-                                    <?= \kartik\tree\TreeViewInput::widget([
-                                        'query' => Organization::find()->addOrderBy('root, lft'),
-                                        'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                        'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                        'fontAwesome' => true,
-                                        'asDropdown' => true,
-                                        'multiple' => true,
-                                        'name' => 'tags_department',
-                                        'value' => implode(',', $currentDeptIdsStr),
-                                        'options' => [
-                                            'id' => 'to-dept-tree',
-                                            'disabled' => false,
-                                        ],
-                                        // ลดความสูงเพื่อให้เหมาะกับหน้าจอฝั่งขวา (เมื่อเปิด dropdown)
-                                        'treeOptions' => ['style' => 'height: 220px;'],
-                                    ]) ?>
-                                </div>
-                                <div class="text-muted small mt-2" id="to-dept-status"></div>
-                            </div>
-                        <?php endif; ?>
+                        <div id="forwarding-card-wrapper">
+                            <?= $this->render('_forwarding_card', [
+                                'model' => $model,
+                                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+                                'currentDeptIdsStr' => $currentDeptIdsStr,
+                            ]) ?>
+                        </div>
 
-                        <div class="card border-light bg-light bg-opacity-50 mb-3">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="text-uppercase fw-bold text-muted small mb-0">
-                                        <i class="fas fa-magic me-1"></i> ข้อความที่ใช้บ่อย (<span
-                                            id="counttemplate">0</span>)
-                                    </h6>
-                                    <button id="btn-save-temp-now" class="btn btn-sm btn-success shadow-sm"
-                                        style="display: none;">
-                                        <i class="fas fa-save me-1"></i> บันทึกแม่แบบ
-                                    </button>
-                                </div>
-                                <div id="viewlistCommenttemplate"></div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="text-muted fw-bold">การลงความเห็น >> </span>
-                            <?= $model->StackDocumentTags('comment') ?>
-                        </div>
-                        <div class="viewFormComment border-top pt-3 mt-3">
-                        </div>
-                    </div>
-
-                    <div id="comment" class="tab-pane fade h-100">
-                        <div class="card shadow-none border-0 d-flex flex-column h-100" style="min-height: 500px;">
-                            <div class="card-header bg-transparent border-0 ps-0">
-                                <h5 class="mb-0 fw-bold">รายการลงความเห็น</h5>
-                            </div>
-                            <div class="listComment flex-grow-1 overflow-y-auto pe-2" style="max-height: 70vh;">
-                                <div class="text-center p-5 text-muted">
-                                    <div class="spinner-border spinner-border-sm me-2"></div> กำลังโหลด...
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="viewHistory" class="tab-pane fade h-100">
-                        <div class="py-2">
-                            <?php echo $this->render('@app/modules/dms/views/documents/history', ['model' => $model]) ?>
-                        </div>
-                    </div>
-                    <div id="viewFile" class="tab-pane fade h-100">
-                        <div class="py-2">
-                            <?php echo $model->viewFile() ?>
-                        </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+
     </div>
 </div>
 
-<style>
-    /* ปรับแต่งความสวยงามของหน้าจอเล็ก */
-    @media (max-width: 991.98px) {
-        #iframeWrapper {
-            height: 60vh !important;
-            /* บนมือถือให้ Iframe เตี้ยลงหน่อยเพื่อให้เห็นฟอร์มข้างล่าง */
-            min-height: 400px !important;
-        }
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasReadHistory" aria-labelledby="offcanvasReadHistoryLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasReadHistoryLabel">
+            <i class="fa-regular fa-eye text-info me-2"></i>ประวัติการอ่าน
+            <span class="badge text-bg-light text-muted ms-2 small fw-normal"><?= count($readers) ?> คน</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <?= $this->render('_read_list', ['readers' => $readers]) ?>
+    </div>
+</div>
 
-        .border-start {
-            border-left: none !important;
-            border-top: 1px solid #dee2e6 !important;
-        }
-    }
-
-    /* สไตล์ Scrollbar สำหรับความเห็น */
-    .listComment::-webkit-scrollbar {
-        width: 5px;
-    }
-
-    .listComment::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    .listComment::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 10px;
-    }
-</style>
-
-
-
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAttachments" aria-labelledby="offcanvasAttachmentsLabel" style="--bs-offcanvas-width: 480px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasAttachmentsLabel">
+            <i class="fa-solid fa-paperclip text-primary me-2"></i>ไฟล์แนบ
+            <?php if ($attachmentCount > 0): ?>
+                <span class="badge text-bg-light text-muted ms-2 small fw-normal"><?= $attachmentCount ?> รายการ</span>
+            <?php endif; ?>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        <?= $this->render('_attachment_list', ['model' => $model]) ?>
+    </div>
+</div>
 
 <?php
 $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
-$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
 $saveCommentTemplate = Url::to(['/me/documents/save-comment-template']);
-$updateToDepartmentsUrl = Url::to(['/dms/documents/update-to-departments', 'id' => $model->id]);
+$forwardingCardUrl = Url::to(['/dms/documents/forwarding-card', 'id' => $model->id]);
 $js = <<<JS
-(function(){
+(function () {
+    $('[data-bs-toggle="popover"]').popover();
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    updateCharCount();
 
-    // เลือกเปิดใช้งานผ่าน attribute data-toggle หรือ data-bs-toggle
- 
-$('[data-toggle="popover"]').popover(); 
-$('[data-bs-toggle="popover"]').popover(); // สำหรับ Bootstrap 5
-listCommentTemplate()
- updateCharCount()
-
-    $(function(){
-        // ฟังก์ชันปรับความสูง Iframe ตามขนาดหน้าจอ
-        function updateIframeHeight() {
-            let iframe = document.getElementById("myIframe");
-            if (iframe) {
-                let winHeight = window.innerHeight;
-                let winWidth = window.innerWidth;
-                
-                if (winWidth < 992) {
-                    // มือถือ/แท็บเล็ตแนวตั้ง
-                    iframe.style.height = "500px";
-                } else {
-                    // จอคอมพิวเตอร์
-                    iframe.style.height = (winHeight - 200) + "px";
-                }
-            }
+    function updateIframeHeight() {
+        var iframe = document.getElementById('myIframe');
+        var splitPane = document.getElementById('doc-split-pane');
+        var workPane = document.getElementById('doc-work-pane');
+        var pdfPane = document.getElementById('doc-pdf-pane');
+        var wrapper = document.getElementById('iframeWrapper');
+        if (!iframe || !splitPane) return;
+        var winHeight = window.innerHeight;
+        var winWidth = window.innerWidth;
+        if (winWidth < 992) {
+            // mobile/tablet: pane เดียวต่อหน้าจอ — เติมเต็ม viewport (หัก toggle bar)
+            var toggleBar = document.querySelector('.d-lg-none.position-sticky');
+            var toggleH = toggleBar ? toggleBar.offsetHeight : 0;
+            var available = Math.max(400, winHeight - toggleH);
+            splitPane.style.height = '';
+            if (pdfPane) { pdfPane.style.height = available + 'px'; }
+            if (workPane) { workPane.style.height = available + 'px'; }
+            if (wrapper) { wrapper.style.height = available + 'px'; }
+            iframe.style.height = available + 'px';
+        } else {
+            // desktop: split-view เต็ม viewport
+            var offsetTop = splitPane.getBoundingClientRect().top + window.scrollY;
+            var available = Math.max(500, winHeight - offsetTop);
+            splitPane.style.height = available + 'px';
+            if (pdfPane) { pdfPane.style.height = ''; }
+            if (workPane) { workPane.style.height = available + 'px'; }
+            if (wrapper) { wrapper.style.height = available + 'px'; }
+            iframe.style.height = available + 'px';
         }
+    }
 
+    function applyMobilePaneVisibility(target) {
+        var winWidth = window.innerWidth;
+        var pdfPane = document.getElementById('doc-pdf-pane');
+        var workPane = document.getElementById('doc-work-pane');
+        if (!pdfPane || !workPane) return;
+        if (winWidth >= 992) {
+            // desktop: แสดงทั้งคู่
+            pdfPane.classList.remove('d-none');
+            workPane.classList.remove('d-none');
+            return;
+        }
+        if (target === 'work') {
+            pdfPane.classList.add('d-none');
+            workPane.classList.remove('d-none');
+        } else {
+            pdfPane.classList.remove('d-none');
+            workPane.classList.add('d-none');
+        }
+    }
+
+    \$(document).off('click.mobilePane').on('click.mobilePane', '#mobile-pane-toggle [data-target-pane]', function () {
+        var target = \$(this).data('target-pane');
+        \$('#mobile-pane-toggle button').removeClass('btn-primary').addClass('btn-light text-secondary');
+        \$(this).removeClass('btn-light text-secondary').addClass('btn-primary');
+        applyMobilePaneVisibility(target);
         updateIframeHeight();
-        $(window).on('resize', updateIframeHeight);
-
-        getComment();
-        listComment();
     });
+
+    // initial state mobile = แสดง PDF ก่อน
+    applyMobilePaneVisibility('pdf');
+    updateIframeHeight();
+    \$(window).on('resize', function () {
+        var active = \$('#mobile-pane-toggle .btn-primary').data('target-pane') || 'pdf';
+        applyMobilePaneVisibility(active);
+        updateIframeHeight();
+    });
+
+    // textarea auto-grow + ความสูงสบายตามอนเปิด
+    \$(document).off('input.taGrow focus.taGrow').on('input.taGrow focus.taGrow', '#documentsdetail-data_json-comment', function () {
+        var ta = this;
+        ta.style.height = 'auto';
+        var minH = (window.innerWidth < 992) ? 96 : 56;
+        ta.style.height = Math.max(minH, ta.scrollHeight) + 'px';
+    });
+
+    getComment();
 })();
 
 async function getComment() {
-    await $.ajax({
-        type: "get",
-        url: "$getCommentUrl",
-        dataType: "json",
+    await \$.ajax({
+        type: 'get',
+        url: '$getCommentUrl',
+        dataType: 'json',
         success: function (res) {
-            $('.viewFormComment').html(res.content);
+            \$('.viewFormComment').html(res.content);
+            // composer มี #viewlistCommenttemplate อยู่ภายใน → load รายการ template หลัง composer มา
+            if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
         }
     });
 }
 
-async function listComment() {
-    await $.ajax({
-        type: "get",
-        url: "$listCommentUrl",
-        dataType: "json",
-        success: function (res) {
-            $('.listComment').html(res.content);
-        }
+function reloadTimeline() {
+    var \$cardWrap = \$('#forwarding-card-wrapper');
+    var \$summaryWrap = \$('#forwarded-summary-wrapper');
+    if (!\$cardWrap.length) { return \$.Deferred().resolve().promise(); }
+    return \$.ajax({
+        url: '$forwardingCardUrl',
+        type: 'get',
+        cache: false,
+        dataType: 'json'
+    }).then(function (res) {
+        if (res && res.card) { \$cardWrap.html(res.card); }
+        if (res && res.summary && \$summaryWrap.length) { \$summaryWrap.html(res.summary); }
+    }, function () {
+        window.location.reload();
     });
 }
 
-// Event delegation สำหรับการทำงานใน AJAX content
-$("body").on("click", ".update-comment", function (e) {
+\$('body').on('click', '.update-comment', function (e) {
     e.preventDefault();
-    $.ajax({
-        type: "get",
-        url: $(this).attr('href'),
-        dataType: "json",
+    \$.ajax({
+        type: 'get',
+        url: \$(this).attr('href'),
+        dataType: 'json',
         success: function (res) {
-            // ลบ class active/show จาก tab อื่นๆ ก่อน (ถ้ามี)
-           // ค้นหาลิงก์ที่มี href="#home" แล้วสั่งคลิก หรือเติม class
-            let homeTab = $('a[href="#home"]');
-            
-            // ลบ active จากตัวอื่น
-            $('.nav-link, .tab-pane').removeClass('active show');
-            
-            // เพิ่ม active ให้เมนูและเนื้อหา
-            homeTab.addClass('active').attr('aria-selected', 'true');
-            $('#home').addClass('active show');
-            $('.viewFormComment').html(res.content);
-            // Scroll down ไปที่ฟอร์มแก้ไขในมือถือ
-            if($(window).width() < 992) {
-                $('html, body').animate({ scrollTop: $('.viewFormComment').offset().top - 100 }, 500);
+            \$('.viewFormComment').html(res.content);
+            // scroll work pane down to composer
+            var workPane = document.getElementById('doc-work-pane');
+            var composerEl = document.querySelector('.viewFormComment');
+            if (workPane && composerEl) {
+                var scroller = workPane.querySelector('.overflow-auto') || workPane;
+                var rect = composerEl.getBoundingClientRect();
+                var scrollerRect = scroller.getBoundingClientRect();
+                scroller.scrollTo({
+                    top: scroller.scrollTop + (rect.top - scrollerRect.top) - 24,
+                    behavior: 'smooth'
+                });
             }
+            // focus textarea
+            setTimeout(function () {
+                var ta = document.getElementById('documentsdetail-data_json-comment');
+                if (ta) { ta.focus(); }
+            }, 200);
         }
     });
 });
 
-$("body").on("click", ".delete-comment", function (e) {
+\$('body').on('click', '.delete-comment', function (e) {
     e.preventDefault();
+    var url = \$(this).attr('href');
     Swal.fire({
         title: 'ยืนยัน',
         text: 'ต้องการลบหรือไม่',
-        icon: "warning",
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: "ใช่, ยืนยัน!",
-        cancelButtonText: "ยกเลิก",
-    }).then((result) => {
-        if(result.isConfirmed) {
-            $.ajax({
-                type: "post",
-                url: $(this).attr('href'),
-                dataType: "json",
-                success: function (res) {
-                    if(res.status == 'success'){
-                        listComment();
-                    }
-                }
+        confirmButtonText: 'ใช่, ยืนยัน!',
+        cancelButtonText: 'ยกเลิก',
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            \$.ajax({
+                type: 'post',
+                url: url,
+                dataType: 'json',
+                success: function (res) { if (res.status === 'success') { reloadTimeline(); } }
             });
         }
-    }); 
+    });
 });
 
-
-$("body").off("click", ".text-template").on("click", ".text-template", function (e) {
+\$('body').off('click', '.text-template').on('click', '.text-template', function (e) {
     e.preventDefault();
-    var textDist = $('#documentsdetail-data_json-comment');
-    var text = $(this).text().trim(); 
-    
-    textDist.val(function(i, oldVal) {
-        return oldVal + ' '+text;
-    });
-    
+    var textDist = \$('#documentsdetail-data_json-comment');
+    var text = \$(this).text().trim();
+    textDist.val(function (i, oldVal) { return oldVal + ' ' + text; });
     textDist.focus();
-    if (typeof updateCharCount === "function") updateCharCount();
+    if (typeof updateCharCount === 'function') updateCharCount();
 });
 
-
-$(document).ready(function() {
-    // อ้างอิง Element ปุ่มด้วยชื่อตัวแปรปกติ
-    var saveBtn = $('#btn-save-temp-now');
-    var selectedText = "";
-
-    // 1. ดักจับการเลือกข้อความใน Textarea
-    $("body").on("mouseup", "#documentsdetail-data_json-comment", function (e) {
-        var el = $(this);
-        var start = el.prop('selectionStart');
-        var end = el.prop('selectionEnd');
-        console.log('ดักจับการเลือกข้อความใน Textarea');
-        
-        
-        // ดึงข้อความที่เลือก (Highlight)
-        selectedText = el.val().substring(start, end).trim();
-
-        // เงื่อนไข: ถ้ามีข้อความที่เลือกให้แสดงปุ่ม ถ้าไม่มีให้ซ่อน
-        if (selectedText.length > 0) {
-            saveBtn.show(); 
-        } else {
-            saveBtn.hide();
-        }
-    });
-
-    // 2. เมื่อคลิกปุ่มบันทึก
-    saveBtn.on('click', function(e) {
-        e.preventDefault();
-
-        if (selectedText !== "") {
-            // ส่ง AJAX บันทึกลง Database
-            $.ajax({
-                url:"$saveCommentTemplate", // ตรวจสอบว่าตัวแปร PHP นี้มีค่า
-                type: 'POST',
-                data: { 
-                    text: selectedText, 
-                },
-                success: function(res) {
-                    listCommentTemplate()
-                    saveBtn.hide(); 
-                    selectedText = ""; 
-                },
-                error: function() {
-                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
-                }
-            });
-        }
-    });
+// ใช้ closure เก็บ selectedText ให้ทั้ง mouseup + click handler เข้าถึงได้
+// (delegation จำเป็นเพราะปุ่ม #btn-save-temp-now อยู่ใน composer ที่โหลดผ่าน AJAX)
+var __selectedTextForTemplate = '';
+\$(document).off('mouseup.tplSel keyup.tplSel').on('mouseup.tplSel keyup.tplSel', '#documentsdetail-data_json-comment', function () {
+    var el = \$(this);
+    var start = el.prop('selectionStart');
+    var end = el.prop('selectionEnd');
+    __selectedTextForTemplate = (el.val() || '').substring(start, end).trim();
+    var \$btn = \$('#btn-save-temp-now');
+    if (__selectedTextForTemplate.length > 0) { \$btn.show(); } else { \$btn.hide(); }
 });
 
-// Update เพิ่มเติม "ถึงหน่วยงาน" (department tags)
-$(document).on('click', '#btn-update-to-dept', function (e) {
+\$(document).off('click.tplSave').on('click.tplSave', '#btn-save-temp-now', function (e) {
     e.preventDefault();
-    var selectedVal = $('input[name="tags_department"]').val() || '';
-    var selected = selectedVal
-        ? selectedVal.toString().split(',').map(function (s) { return s.trim(); }).filter(Boolean)
-        : [];
-    if (!selected.length) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'กรุณาเลือกหน่วยงานอย่างน้อย 1 รายการ',
-            showConfirmButton: true
-        });
-        return;
-    }
-
-    $('#to-dept-status').html('กำลังบันทึก...');
-    $.ajax({
-        url: "$updateToDepartmentsUrl",
+    if (!__selectedTextForTemplate) { return; }
+    var \$btn = \$(this);
+    \$btn.prop('disabled', true);
+    \$.ajax({
+        url: '$saveCommentTemplate',
         type: 'POST',
-        dataType: 'json',
-        data: {
-            tags_department: selected
-        },
-        success: function (res) {
-            if (res.status === 'success') {
-                $('#to-dept-tags').html(res.html);
-                $('#to-dept-status').html('<span class="text-success">บันทึกสำเร็จ</span>');
-            } else {
-                $('#to-dept-status').html('<span class="text-danger">บันทึกไม่สำเร็จ</span>');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ไม่สำเร็จ',
-                    text: res.message || 'ไม่สามารถอัปเดตถึงหน่วยงานได้'
-                });
-            }
+        data: { text: __selectedTextForTemplate },
+        success: function () {
+            if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
+            \$btn.hide();
+            __selectedTextForTemplate = '';
+            if (typeof success === 'function') { success('บันทึกแม่แบบเรียบร้อย'); }
         },
         error: function () {
-            $('#to-dept-status').html('<span class="text-danger">เกิดข้อผิดพลาด</span>');
-            Swal.fire({
-                icon: 'error',
-                title: 'ไม่สำเร็จ',
-                text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'
-            });
-        }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถบันทึกแม่แบบได้' });
+            }
+        },
+        complete: function () { \$btn.prop('disabled', false); }
     });
 });
 
-function listCommentTemplate()
-{
-    $.ajax({
-        type: "get",
-        url: "/me/documents/list-comment-template",
-        dataType: "json",
+function listCommentTemplate() {
+    \$.ajax({
+        type: 'get',
+        url: '/me/documents/list-comment-template',
+        dataType: 'json',
         success: function (res) {
-            // 1. อัปเดตตัวเลขจำนวนแม่แบบ
-            if (res.totalCount !== undefined) {
-                $('#counttemplate').html(res.totalCount);
-            }
-            $('#viewlistCommenttemplate').html(res.content)
+            if (res.totalCount !== undefined) { \$('#counttemplate').html(res.totalCount); }
+            \$('#viewlistCommenttemplate').html(res.content);
         }
     });
 }
 
 function updateCharCount() {
-    // ใช้ตัวแปรอ้างอิงและเช็คก่อนว่ามีอยู่จริงไหม
-    var textArea = $('#documentsdetail-data_json-comment');
-    
-    // ตรวจสอบว่า textArea มีค่าหรือไม่ (length > 0 หมายถึงหา element เจอ)
+    var textArea = \$('#documentsdetail-data_json-comment');
     if (textArea.length > 0) {
-        var content = textArea.val(); // ดึงค่า
-        
-        // กันเหนียว: ถ้า content เป็น null หรือ undefined ให้ใช้ค่าว่าง ""
-        var len = (content ? content.length : 0);
-        
-        // อัปเดตไปยัง Badge
-        $('#char-count').html(len + ' ตัวอักษร');
-        
-        // ปรับ Opacity
+        var content = textArea.val();
+        var len = content ? content.length : 0;
+        \$('#char-count').html(len + ' ตัวอักษร');
         if (len > 0) {
-            $('#char-count').removeClass('opacity-50').addClass('opacity-100');
+            \$('#char-count').removeClass('opacity-50').addClass('opacity-100');
         } else {
-            $('#char-count').removeClass('opacity-100').addClass('opacity-50');
+            \$('#char-count').removeClass('opacity-100').addClass('opacity-50');
         }
-    } else {
-        // console.error("ไม่พบ Element ID: #documentsdetail-data_json-comment");
     }
 }
 
-// การเรียกใช้งาน
-$(document).on('input keyup', '#documentsdetail-data_json-comment', function() {
-    updateCharCount();
-});
+\$(document).on('input keyup', '#documentsdetail-data_json-comment', updateCharCount);
 
-    // 3. กรณีพิเศษ: หากมีการเพิ่มข้อความผ่านปุ่มแม่แบบ (JS .val())
-    // ให้สั่งเรียกฟังก์ชันนี้ต่อท้ายคำสั่ง .val() ในส่วนของปุ่มแม่แบบด้วย
-    // หรือใช้ trigger ช่วย:
-    // $('#documentsdetail-data_json-comment').val(newText).trigger('input');
-
-    // 4. เรียกทำงานทันทีเมื่อโหลดหน้า (เผื่อมีข้อมูลเก่า)
-
-$(document).on('click', '.btn-delete-action', function(e) {
+\$(document).on('click', '.btn-delete-action', function (e) {
     e.preventDefault();
-    var btnDelete = $(this);
+    var btnDelete = \$(this);
     var templateId = btnDelete.data('id');
-
-    // เรียกใช้งาน SweetAlert2
     Swal.fire({
         title: 'ยืนยันการลบ?',
-        text: "คุณต้องการลบแม่แบบนี้ใช่หรือไม่? ข้อมูลจะหายไปถาวร",
+        text: 'คุณต้องการลบแม่แบบนี้ใช่หรือไม่?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#ef4444', // สีแดง
-        cancelButtonColor: '#6b7280', // สีเทา
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
         confirmButtonText: 'ใช่, ลบเลย!',
         cancelButtonText: 'ยกเลิก',
-        reverseButtons: false // ให้ปุ่มยกเลิกอยู่ซ้าย ปุ่มยืนยันอยู่ขวา
-    }).then((result) => {
-        console.log(result.isConfirmed);
-        
-        // ถ้าผู้ใช้กดปุ่มยืนยัน (Confirm)
+    }).then(function (result) {
         if (result.isConfirmed) {
-            
-            $.ajax({
+            \$.ajax({
                 url: '/me/documents/delete-comment-template',
                 type: 'POST',
-                data: { 
-                    id: templateId,
+                data: { id: templateId },
+                success: function (res) {
+                    if (res.status === 'success') {
+                        listCommentTemplate();
+                        btnDelete.closest('.template-item, li, .template-wrapper').fadeOut(300, function () { \$(this).remove(); });
+                        Swal.fire({ title: 'ลบสำเร็จ!', icon: 'success', timer: 1500, showConfirmButton: false });
+                    }
                 },
-                success: function(res) {
-                   
-                    if(res.status == 'success'){
-                    listCommentTemplate()
-                   
-                    // 2. ลบออกจากหน้าจอด้วย Animation
-                    // ถ้าใช้ Dropdown แบบล่าสุดที่ผมออกแบบ ให้เปลี่ยนจาก .template-wrapper เป็น li หรือคลาสที่คุณใช้ครอบแถวนั้น
-                    btnDelete.closest('.template-item, li, .template-wrapper').fadeOut(300, function() {
-                        $(this).remove();
-                    });
-                    // 3. แจ้งเตือนว่าลบสำเร็จ
-                    Swal.fire({
-                        title: 'ลบสำเร็จ!',
-                        text: 'แม่แบบของคุณถูกลบออกแล้ว',
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                     }
-                },
-                error: function() {
-                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่', 'error');
-                }
+                error: function () { Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถลบข้อมูลได้', 'error'); }
             });
         }
     });
 });
-
-
 JS;
 $this->registerJS($js, View::POS_END);
 ?>
-
-<style>
-    .avatar-stack .avatar-item-link:hover .avatar-sm {
-        transform: translateY(-5px);
-        /* เลื่อนขึ้นเล็กน้อยเมื่อชี้ */
-        z-index: 10;
-        position: relative;
-    }
-
-    /* ปรับแต่งหน้าตาของ Popover */
-    .popover {
-        border: none;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-
-    .popover-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #eee;
-    }
-
-    /* คอนเทนเนอร์สำหรับจัดการการ Scroll แนวนอนในมือถือ */
-    .tabs-container {
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .nav-tabs-minimal {
-        gap: 1.5rem;
-        /* ระยะห่างระหว่าง Tab */
-        border-bottom: none;
-        display: flex;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .nav-tabs-minimal .nav-link {
-        color: #6c757d;
-        background: none;
-        border: none;
-        padding: 0.75rem 0.25rem;
-        font-weight: 500;
-        font-size: 0.95rem;
-        position: relative;
-        transition: all 0.2s ease;
-    }
-
-    /* เอฟเฟกต์เมื่อ Hover */
-    .nav-tabs-minimal .nav-link:hover {
-        color: #0d6efd;
-    }
-
-    /* เส้นขีดใต้เมื่อ Active */
-    .nav-tabs-minimal .nav-link.active {
-        color: #0d6efd;
-        background: none;
-    }
-
-    .nav-tabs-minimal .nav-link.active::after {
-        content: "";
-        position: absolute;
-        bottom: -1px;
-        /* วางทับเส้น border-bottom ของ container */
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background-color: #0d6efd;
-        border-radius: 10px 10px 0 0;
-    }
-
-    /* ซ่อน Scrollbar สำหรับ Chrome, Safari และ Opera */
-    .nav-tabs-minimal::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* ซ่อน Scrollbar สำหรับ IE, Edge และ Firefox */
-    .nav-tabs-minimal {
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        scrollbar-width: none;
-        /* Firefox */
-    }
-</style>

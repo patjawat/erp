@@ -12,6 +12,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
 use app\components\UserHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentTags;
@@ -84,32 +85,80 @@ class DocumentTagsController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                if($model->save()){
+
+                $targets = [];
+                if (is_array($model->tags_employee) && !empty($model->tags_employee)) {
+                    $targets = array_filter(array_map('trim', $model->tags_employee), 'strlen');
+                } elseif (!empty($model->tag_id)) {
+                    $targets = [$model->tag_id];
+                }
+
+                if (empty($targets)) {
+                    Yii::$app->response->statusCode = 422;
                     return [
-                        'title' => $this->request->get('title'),
-                        'status' => 'success',
-                        'container' => '#document-tag',
+                        'status' => 'error',
+                        'message' => 'กรุณาเลือกบุคคลอย่างน้อย 1 คน',
                     ];
                 }
+
+                $comment = '';
+                if (is_array($model->data_json) && isset($model->data_json['comment'])) {
+                    $comment = $model->data_json['comment'];
+                }
+
+                $created = 0;
+                $skipped = 0;
+                foreach ($targets as $tagId) {
+                    $exists = DocumentTags::find()
+                        ->where([
+                            'document_id' => $model->document_id,
+                            'name' => $model->name,
+                            'tag_id' => $tagId,
+                        ])
+                        ->one();
+                    if ($exists) {
+                        $skipped++;
+                        continue;
+                    }
+                    $row = new DocumentTags();
+                    $row->document_id = $model->document_id;
+                    $row->ref = $model->ref;
+                    $row->name = $model->name;
+                    $row->doc_number = $model->doc_number;
+                    $row->doc_regis_number = $model->doc_regis_number;
+                    $row->status = $model->status;
+                    $row->tag_id = (string) $tagId;
+                    $row->data_json = $comment !== '' ? ['comment' => $comment] : null;
+                    if ($row->save()) {
+                        $created++;
+                    }
+                }
+
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#document-tag',
+                    'created' => $created,
+                    'skipped' => $skipped,
+                ];
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        if($this->request->isAJax){
+        if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-
-                return [
-                    'title' => $this->request->get('tilte'),
-                    'content' => $this->renderAjax('create', [
-                        'model' => $model,
-                    ])
-                 ];
-            }else{
-                return $this->render('create', [
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('create', [
                     'model' => $model,
-                ]);
-            }
+                ]),
+            ];
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     public function actionReqApprove()
@@ -161,10 +210,30 @@ class DocumentTagsController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = $this->findModel($id);
+        $model = $this->findOwnedModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if ($model->save()) {
+                if ($this->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'title' => $this->request->get('title'),
+                        'status' => 'success',
+                        'container' => '#document-tag',
+                    ];
+                }
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title'),
+                'content' => $this->renderAjax('update', [
+                    'model' => $model,
+                ]),
+            ];
         }
 
         return $this->render('update', [
@@ -255,7 +324,16 @@ class DocumentTagsController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findOwnedModel($id);
+        $model->delete();
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'success',
+                'container' => '#document-tag',
+            ];
+        }
 
         return $this->redirect(['index']);
     }
@@ -274,5 +352,21 @@ class DocumentTagsController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * โหลด tag และตรวจว่าเป็นเจ้าของ ถ้าไม่ใช่ทิ้ง 403
+     * @param int $id
+     * @return DocumentTags
+     * @throws NotFoundHttpException
+     * @throws ForbiddenHttpException
+     */
+    protected function findOwnedModel($id)
+    {
+        $model = $this->findModel($id);
+        if (!$model->isOwnedByCurrentUser()) {
+            throw new ForbiddenHttpException('คุณสามารถแก้ไขหรือลบได้เฉพาะ tag ที่ตัวเองสร้างเท่านั้น');
+        }
+        return $model;
     }
 }

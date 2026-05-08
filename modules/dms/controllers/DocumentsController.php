@@ -16,6 +16,7 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
@@ -294,6 +295,105 @@ class DocumentsController extends Controller
             'html' => $model->viewTagsDepartment(),
         ];
     }
+
+    /**
+     * ลบรายการส่งต่อ (documents_detail) เฉพาะของที่ตัวเองสร้าง
+     */
+    public function actionDeleteForwarding($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $detail = DocumentsDetail::findOne($id);
+        if (!$detail) {
+            Yii::$app->response->statusCode = 404;
+            return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
+        }
+        if ((int) $detail->created_by !== (int) Yii::$app->user->id) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => 'error', 'message' => 'ลบได้เฉพาะรายการที่ตัวเอง tag ไปเท่านั้น'];
+        }
+        $detail->delete();
+        return ['status' => 'success'];
+    }
+
+    /**
+     * แสดง partial ของ "การ์ดไทม์ไลน์เอกสาร" + สรุป "ส่งถึง" สำหรับเรียก AJAX มา refresh
+     * คืน JSON: { card: html, summary: html }
+     */
+    public function actionForwardingCard($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel((int) $id);
+        $emp = UserHelper::GetEmployee();
+        $isDeptHeadOrDeputy = $emp ? $this->isDeptHeadOrDeputy((int) $emp->department, (int) $emp->id) : false;
+        $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
+        $currentDeptIds = DocumentsDetail::find()
+            ->where(['document_id' => $model->id, 'name' => 'department'])
+            ->select('to_id')
+            ->column();
+        $currentDeptIdsStr = array_map('strval', $currentDeptIds ?: []);
+
+        $forwardedDeptIds = DocumentsDetail::find()
+            ->select('to_id')
+            ->where(['document_id' => $model->id])
+            ->andWhere(['in', 'name', ['department', 'comment_dept']])
+            ->andWhere(['not', ['to_id' => null]])
+            ->andWhere(['<>', 'to_id', ''])
+            ->distinct()
+            ->column();
+        $forwardedDepts = [];
+        if (!empty($forwardedDeptIds)) {
+            $forwardedDepts = Organization::find()
+                ->where(['id' => $forwardedDeptIds])
+                ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+                ->all();
+        }
+
+        return [
+            'card' => $this->renderPartial('_forwarding_card', [
+                'model' => $model,
+                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+                'currentDeptIdsStr' => $currentDeptIdsStr,
+            ]),
+            'summary' => $this->renderPartial('_forwarded_summary', [
+                'forwardedDepts' => $forwardedDepts,
+            ]),
+        ];
+    }
+
+    /**
+     * แก้ไขรายการส่งต่อ (เปลี่ยน to_id หรือ comment) เฉพาะของที่ตัวเองสร้าง
+     * รับ POST: to_id, data_json[comment]
+     */
+    public function actionUpdateForwarding($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $detail = DocumentsDetail::findOne($id);
+        if (!$detail) {
+            Yii::$app->response->statusCode = 404;
+            return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
+        }
+        if ((int) $detail->created_by !== (int) Yii::$app->user->id) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => 'error', 'message' => 'แก้ไขได้เฉพาะรายการที่ตัวเอง tag ไปเท่านั้น'];
+        }
+
+        $toId = $this->request->post('to_id');
+        $comment = $this->request->post('comment');
+        if ($toId !== null && $toId !== '') {
+            $detail->to_id = (string) $toId;
+        }
+        if ($comment !== null) {
+            $dataJson = is_array($detail->data_json) ? $detail->data_json : [];
+            $dataJson['comment'] = $comment;
+            $detail->data_json = $dataJson;
+        }
+        if ($detail->save()) {
+            return ['status' => 'success'];
+        }
+        Yii::$app->response->statusCode = 422;
+        return ['status' => 'error', 'errors' => $detail->getErrors()];
+    }
+
     protected function ExportExcel($dataProvider, $searchModel, $title)
     {
         // ดึงข้อมูลทั้งหมดจาก dataProvider
