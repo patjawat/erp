@@ -64,7 +64,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                 <th class="py-3 px-3 small">ระหว่างวันที่</th>
                 <th class="py-3 px-3 small">หน่วยงาน</th>
                 <th class="text-center py-3 px-3 small">เอกสารแนบ</th>
-                <th class="py-3 px-3 small">ผู้อนุมัติ</th>
+                <th class="py-3 px-3 small" style="min-width: 150px;">ผู้อนุมัติ</th>
                 <th class="py-3 px-3 small">สถานะ/ความคืบหน้า</th>
                 <th class="text-end py-3 px-3 small">ดำเนินการ</th>
             </tr>
