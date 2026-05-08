@@ -15,15 +15,12 @@ use yii\db\Expression;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\leave\models\LeaveType;
-<<<<<<< HEAD
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
-=======
 use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\components\LeaveTelegramService;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveLevelSetting;
->>>>>>> leave
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
