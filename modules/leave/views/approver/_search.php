@@ -10,34 +10,28 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
 /** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<style>
-    .offcanvas-footer {
-        padding: 1rem 1rem;
-        border-top: 1px solid #dee2e6;
-    }
-</style>
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
     'method' => 'get',
     'options' => [
         'data-pjax' => 0
     ],
-    'fieldConfig' => ['options' => ['class' => 'form-group mb-2 mr-2 me-2']] // spacing form field groups
+    'fieldConfig' => ['options' => ['class' => 'mb-3']] // spacing form field groups
 ]); ?>
 
-<div class="row">
-    <div class="col-2">
+<div class="row g-3 align-items-end">
+    <div class="col-12 col-md-6 col-xl-2">
         <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
 
-    <div class="col-2">
+    <div class="col-12 col-md-6 col-xl-2">
         <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-2">
+    <div class="col-12 col-md-6 col-xl-2">
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
 
-    <div class="col-2">
+    <div class="col-12 col-md-6 col-xl-2">
         <?= $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => $model->listStatus(),
             'options' => ['placeholder' => 'สถานะทั้งหมด'],
@@ -47,27 +41,32 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
             ],
         ])->label(false); ?>
     </div>
-    <div class="col-2">
+    <div class="col-12 col-md-6 col-xl-2">
         <?= $this->render('@app/components/ui/input_emp', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
-    <div class="col-2">
-        <div class="col-12 col-lg-auto ms-lg-auto d-flex align-items-center justify-content-start justify-content-lg-end flex-wrap gap-2 equip-search-actions">
+    <div class="col-12 col-xl-auto ms-xl-auto">
+        <div class="d-flex flex-wrap justify-content-start justify-content-xl-end gap-2">
             <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary flex-grow-1 flex-sm-grow-0']) ?>
-            <button class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-                aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
+            <button
+                class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseFilter"
+                aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>"
+                aria-controls="collapseFilter"
+                id="btnToggleFilter"
+            >
                 <i class="fa-solid fa-sliders me-1"></i> ตัวกรอง
             </button>
         </div>
     </div>
-
-
 </div>
 
 <div class="collapse mt-3 pt-3 border-top <?= $hasAdvancedFilters ? 'show' : '' ?>" id="collapseFilter">
     <!-- การกรองแบบละเอียด -->
-    <div class="row">
+    <div class="row g-3">
 
-        <div class="col-2">
+        <div class="col-12 col-md-6 col-xl-2">
 
             <?= $form->field($model, 'position_type_id')->widget(Select2::classname(), [
                 'data' => $model->ListPositionType(),
@@ -78,7 +77,7 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
             ])->label(false) ?>
 
         </div>
-        <div class="col-2">
+        <div class="col-12 col-md-6 col-xl-2">
 
             <?= $form->field($model, 'leave_type_id')->widget(Select2::classname(), [
                 'data' => $model->listLeaveType(),
@@ -91,7 +90,7 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
 
 
 
-        <div class="col-5">
+        <div class="col-12 col-xl-5">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                 'name' => 'department',
                 'id' => 'treeID',
