@@ -276,7 +276,9 @@ $this->registerJs(<<<JS
             log(res);
 
             if(res.success){
-                window.location.href = res.redirect || "/mobile/default/index";
+                // ใช้ ref จาก query param ก่อน (ส่งมาจาก denyCallback) เพื่อไม่พึ่ง session
+                var ref = new URLSearchParams(window.location.search).get('ref');
+                window.location.href = ref || res.redirect || "/mobile/default/index";
             }
 
         },

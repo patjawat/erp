@@ -589,12 +589,17 @@ class Leave extends \yii\db\ActiveRecord
                     $icon = '<i class="bi bi-hourglass-split"></i>';
                     break;
                 case 'Checking1_pass':
+                case 'Checking2_pass':
+                case 'Checkup_pass':
                     $color = 'info';
                     $icon = '<i class="fa-solid fa-circle-check"></i>';
                     break;
-                case 'Checking2_pass':
-                    $color = 'info';
-                    $icon = '<i class="fa-solid fa-circle-check"></i>';
+                case 'Checking1_reject':
+                case 'Checking2_reject':
+                case 'Checkup_reject':
+                case 'Reject':
+                    $color = 'danger';
+                    $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
                     break;
                 case 'Approve':
                     $color = 'success';
@@ -611,10 +616,6 @@ class Leave extends \yii\db\ActiveRecord
                 case 'Checking':
                     $color = 'warning';
                     $icon = '<i class="fa-solid fa-magnifying-glass"></i>';
-                    break;
-                case 'Reject':
-                    $color = 'danger';
-                    $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
                     break;
 
                 default:

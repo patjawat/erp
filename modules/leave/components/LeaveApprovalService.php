@@ -8,7 +8,7 @@ use app\modules\approveV2\models\Approve;
 
 class LeaveApprovalService
 {
-    public function process(Approve $approve, string $status, ?int $actorEmpId = null): array
+    public function process(Approve $approve, string $status, ?int $actorEmpId = null, bool $forceStampActorEmpId = false): array
     {
         if (!in_array($status, ['Pass', 'Reject'], true)) {
             return ['ok' => false, 'message' => 'Invalid status'];
@@ -28,7 +28,7 @@ class LeaveApprovalService
         );
         $approve->status = $status;
 
-        if (empty($approve->emp_id) && !empty($actorEmpId)) {
+        if (!empty($actorEmpId) && ($forceStampActorEmpId || empty($approve->emp_id))) {
             $approve->emp_id = (int) $actorEmpId;
         }
 

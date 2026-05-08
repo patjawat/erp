@@ -287,23 +287,37 @@ $this->registerJs(<<<JS
                 var dateStr = info.dateStr ? info.dateStr.substring(0, 10) : '';
                 if (!dateStr || !CREATE_URL) return;
                 var dateLabel = formatThDate(info.date);
-                var url = CREATE_URL + (CREATE_URL.indexOf('?') >= 0 ? '&' : '?') + 'date=' + encodeURIComponent(dateStr);
-                if (typeof Swal === 'undefined') {
-                    window.location.href = url;
-                    return;
-                }
-                Swal.fire({
-                    title: 'ขอลา',
-                    html: 'คุณต้องการ<b>ขอลาวันที่ ' + dateLabel + '</b> ใช่หรือไม่?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'ใช่ ขอลา',
-                    cancelButtonText: 'ยกเลิก',
-                    confirmButtonColor: '#0d6efd',
-                    cancelButtonColor: '#6c757d'
-                }).then(function(result) {
-                    if (result && result.isConfirmed) {
-                        window.location.href = url;
+                var title = '<i class="bi bi-calendar-plus me-1"></i> สร้างใบลา — ' + dateLabel;
+                var url = CREATE_URL
+                    + (CREATE_URL.indexOf('?') >= 0 ? '&' : '?')
+                    + 'date=' + encodeURIComponent(dateStr)
+                    + '&title=' + encodeURIComponent(title);
+                var modal = jQuery('#main-modal');
+                if (!modal.length) { window.location.href = url; return; }
+                modal.find('#main-modal-label').html('<span class="placeholder col-4"></span>');
+                modal.find('.modal-body').html(
+                    '<div class="d-flex justify-content-center align-items-center py-5">'
+                    + '<div class="spinner-border text-primary" role="status"></div></div>'
+                );
+                modal.find('.modal-footer').html('');
+                modal.find('.modal-dialog')
+                    .removeClass('modal-sm modal-md modal-lg modal-xl modal-xxl')
+                    .addClass('modal-xl');
+                modal.modal('show');
+                jQuery.ajax({
+                    type: 'get', url: url, dataType: 'json',
+                    success: function(res) {
+                        modal.find('#main-modal-label').html(res.title);
+                        modal.find('.modal-body').html(res.content);
+                        modal.find('.modal-footer').html(res.footer || '');
+                        if (res.initCallback && typeof window[res.initCallback] === 'function') {
+                            try { window[res.initCallback](); } catch(e) {}
+                        }
+                    },
+                    error: function() {
+                        modal.find('.modal-body').html(
+                            '<div class="alert alert-danger m-3">โหลดฟอร์มไม่สำเร็จ</div>'
+                        );
                     }
                 });
             },
