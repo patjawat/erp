@@ -61,7 +61,7 @@ if (!empty($model->created_at)) {
                                 <?php if ($authorDept !== ''): ?>
                                     <div class="small text-secondary"><?= Html::encode($authorDept) ?></div>
                                 <?php endif; ?>
-                                
+
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
@@ -69,11 +69,11 @@ if (!empty($model->created_at)) {
                         </div>
                     </div>
                     <?php if ($leaveWrittenAt !== null): ?>
-                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
-                                        <div class="small text-muted">วันเวลาที่เขียนใบลา</div>
-                                        <div class="small fw-medium text-body"><?= Html::encode($leaveWrittenAt) ?></div>
-                                    </div>
-                                <?php endif; ?>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
+                            <div class="small text-muted">วันเวลาที่เขียนใบลา</div>
+                            <div class="small fw-medium text-body"><?= Html::encode($leaveWrittenAt) ?></div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -119,13 +119,13 @@ if (!empty($model->created_at)) {
                     <?php if (!empty($attachments)): ?>
                         <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
                             <?php foreach ($attachments as $att): ?>
-                            <li>
-                                <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" data-open="new-tab" target="_blank" rel="noopener noreferrer" title="คลิกเพื่อเปิดแท็บใหม่">
-                                    <i class="bi bi-file-earmark-arrow-down text-primary"></i>
-                                    <span class="small"><?= Html::encode($att->file_name) ?></span>
-                                    <i class="bi bi-eye small text-muted"></i>
-                                </a>
-                            </li>
+                                <li>
+                                    <a href="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" class="leave-attachment-link d-inline-flex align-items-center gap-2 text-decoration-none text-body border rounded-3 px-3 py-2 bg-body-secondary bg-opacity-50" data-url="<?= Html::encode(Url::to(['/leave/leave/show-file', 'id' => $att->id])) ?>" data-open="new-tab" target="_blank" rel="noopener noreferrer" title="คลิกเพื่อเปิดแท็บใหม่">
+                                        <i class="bi bi-file-earmark-arrow-down text-primary"></i>
+                                        <span class="small"><?= Html::encode($att->file_name) ?></span>
+                                        <i class="bi bi-eye small text-muted"></i>
+                                    </a>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                     <?php else: ?>
@@ -181,41 +181,41 @@ if (!empty($model->created_at)) {
             </div>
 
             <?php if ($signatureData !== ''): ?>
-            <?php $signatureLabel = ($signatureType === 'system') ? 'ใช้ในระบบ' : 'เซ็นเอง'; ?>
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
-                    <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
-                        <i class="bi bi-pen text-primary"></i>
-                        ลายเซ็นผู้ขอลา
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($signatureLabel) ?></span>
-                    </h6>
-                </div>
-                <div class="card-body p-3">
-                    <div class="bg-white border rounded-3 p-2 d-inline-block">
-                        <img src="<?= Html::encode($signatureData) ?>" alt="ลายเซ็น" class="d-block img-fluid">
+                <?php $signatureLabel = ($signatureType === 'system') ? 'ใช้ในระบบ' : 'เซ็นเอง'; ?>
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
+                        <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
+                            <i class="bi bi-pen text-primary"></i>
+                            ลายเซ็นผู้ขอลา
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($signatureLabel) ?></span>
+                        </h6>
                     </div>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if (!empty($substitute)): ?>
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
-                    <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
-                        <i class="bi bi-person-check text-primary"></i>
-                        ผู้ปฏิบัติหน้าที่แทน
-                    </h6>
-                </div>
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <?= $substitute->getAvatar(false, 'ผู้ปฏิบัติหน้าที่แทน') ?>
-                        <div>
-                            <div class="fw-bold text-body"><?= Html::encode($substitute->fullname) ?></div>
-                            <div class="small text-muted"><?= Html::encode($substitute->positionName()) ?></div>
+                    <div class="card-body p-3">
+                        <div class="bg-white border rounded-3 p-2 d-inline-block">
+                            <img src="<?= Html::encode($signatureData) ?>" alt="ลายเซ็น" class="d-block img-fluid">
                         </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($substitute)): ?>
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-primary bg-opacity-10 border-0 py-2 px-3">
+                        <h6 class="mb-0 fw-bold text-body small d-flex align-items-center gap-2">
+                            <i class="bi bi-person-check text-primary"></i>
+                            ผู้ปฏิบัติหน้าที่แทน
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <?= $substitute->getAvatar(false, 'ผู้ปฏิบัติหน้าที่แทน') ?>
+                            <div>
+                                <div class="fw-bold text-body"><?= Html::encode($substitute->fullname) ?></div>
+                                <div class="small text-muted"><?= Html::encode($substitute->positionName()) ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -298,7 +298,8 @@ if (!empty($model->created_at)) {
     </div>
 </div>
 <?php
-$this->registerJs(<<<'JS'
+$this->registerJs(
+    <<<'JS'
 (function() {
     var modal = document.getElementById('leave-attachment-modal');
     var iframe = document.getElementById('leave-attachment-iframe');

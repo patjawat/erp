@@ -19,7 +19,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
 ?>
 
 <div class="row">
-<div class="col-3">
+<div class="col-4">
 
 <!-- ── Bulk action bar ─────────────────────────────────────────── -->
 <div id="bulk-action-bar" class="d-none align-items-center gap-3 px-3 py-2 mb-3 ms-3 mt-3 ms-3 rounded-3 border bg-primary bg-opacity-10 border-primary-subtle">
@@ -27,38 +27,18 @@ $csrfToken     = Yii::$app->request->csrfToken;
     <span class="fw-semibold text-primary small" id="bulk-count-label">เลือก 0 รายการ</span>
 
     <div class="ms-auto d-flex gap-2 align-items-center">
-        <div class="dropdown">
-            <button class="btn btn-primary btn-sm rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-lightning-fill me-1"></i> ดำเนินการ
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li>
-                    <?= Html::a(
-                        '<i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ',
+        <?= Html::a(
+                        '<i class="bi bi-person-gear me-2"></i> เปลี่ยนผู้อนุมัติ(ผู้ปฏิบัติหน้าที่แทน ผอ.)',
                         $bulkChangeApproverUrl,
                         [
                             'id' => 'btn-bulk-change-approver',
-                            'class' => 'dropdown-item open-modal',
+                            'class' => 'btn btn-warning btn-sm rounded-3 open-modal',
                             'data' => [
                                 'size' => 'modal-lg',
                                 'base-url' => $bulkChangeApproverUrl,
                             ],
                         ]
                     ) ?>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <button type="button" class="dropdown-item text-success" id="btn-bulk-approve">
-                        <i class="bi bi-check-circle me-2"></i> อนุมัติ (ผ่าน)
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="dropdown-item text-danger" id="btn-bulk-reject">
-                        <i class="bi bi-x-circle me-2"></i> ไม่อนุมัติ (ไม่ผ่าน)
-                    </button>
-                </li>
-            </ul>
-        </div>
         <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" id="btn-bulk-clear">
             <i class="bi bi-x-lg"></i>
         </button>
@@ -190,18 +170,6 @@ $csrfToken     = Yii::$app->request->csrfToken;
                                         ]
                                     ) ?>
                                 </li>
-
-                                <?php if (in_array($item->status, ['Checking2_pass', 'Checkup_pass'], true)): ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <?= Html::a(
-                                        '<i class="bi bi-person-gear me-2 text-warning"></i> เปลี่ยนผู้อนุมัติ',
-                                        ['/leave/approver/change-approver', 'id' => $item->id,
-                                            'title' => '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ'],
-                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
-                                    ) ?>
-                                </li>
-                                <?php endif;?>
                             </ul>
                         </div>
                     </td>
