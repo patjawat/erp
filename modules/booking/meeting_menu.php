@@ -4,12 +4,6 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
 <div class="d-flex gap-2">
-    <!-- <a href="<?= Url::to(['/hr/default/index']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-<i data-lucide="layout-grid"></i>  
-        ภาพรวม
-    </a> -->
-
-
     <a href="<?= Url::to(['/booking/meeting/calendar']) ?>"
         class="btn <?= $active !== 'calendar' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,21 +43,20 @@ use yii\helpers\Url;
         </button>
 
         <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
-<li>
-    
-    <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> ห้องประชุม', ['/booking/room'], ['class' => 'dropdown-item']) ?>
-</li>
-<li>
-    <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รูปแบบห้องประชุม', ['/booking/room-layout'], ['class' => 'dropdown-item']) ?>
-</li>
-<li>
-    <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> สถานะห้องประชุม', ['/booking/meeting-status'], ['class' => 'dropdown-item']) ?>
-</li>
-<li>
-<?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รายการอุปกรณ์', ['/booking/room-device'], ['class' => 'dropdown-item']) ?>
-</li>
-        </div>
+            <li>
 
-        </ul>
+                <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> ห้องประชุม', ['/booking/room'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รูปแบบห้องประชุม', ['/booking/room-layout'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> สถานะห้องประชุม', ['/booking/meeting-status'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> รายการอุปกรณ์', ['/booking/room-device'], ['class' => 'dropdown-item']) ?>
+            </li>
     </div>
+
+    </ul>
 </div>

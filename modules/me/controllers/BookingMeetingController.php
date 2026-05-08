@@ -10,7 +10,6 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\UserHelper;
-use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\booking\models\Room;
@@ -40,40 +39,105 @@ class BookingMeetingController extends \yii\web\Controller
         );
     }
 
+
     public function actionIndex()
     {
-        $me = UserHelper::GetEmployee();
+          $me = UserHelper::GetEmployee();
 
-        $lastDay = (new DateTime(date('Y-m-d')))->modify('last day of this month')->format('Y-m-d');
         $searchModel = new MeetingSearch([
-            'thai_year' => AppHelper::YearBudget(),
-            'date_start' => AppHelper::convertToThai(date('Y-m') . '-01'),
-            'date_end' => AppHelper::convertToThai($lastDay),
-            'date_filter' => 'this_month',
-            'status' => ['Pending']
+            'date_filter' => 'this_month'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        if ($searchModel->date_filter) {
-            $range = DateFilterHelper::getRange($searchModel->date_filter);
-            $searchModel->date_start = AppHelper::convertToThai($range[0]);
-            $searchModel->date_end = AppHelper::convertToThai($range[1]);
+        [$dateStart, $dateEnd] = $this->resolveSearchDateRange($searchModel);
+
+        // Meeting เก็บวันจริงไว้ที่ date_start วันเดียว
+        if ($dateStart !== null) {
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart]);
         }
-
-        if ($searchModel->thai_year !== '' && $searchModel->date_filter == '') {
-            $searchModel->date_start = AppHelper::convertToThai(($searchModel->thai_year - 544) . '-10-01');
-            $searchModel->date_end = AppHelper::convertToThai(($searchModel->thai_year - 543) . '-09-30');
+        if ($dateEnd !== null) {
+            $dataProvider->query->andFilterWhere(['<=', 'date_start', $dateEnd]);
         }
+        $this->applyDepartmentFilter($dataProvider->query, $searchModel);
+         $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
+
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
 
 
-        $dataProvider->query->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'date_start', AppHelper::convertToGregorian($searchModel->date_end)]);
-
-        $dataProvider->query->andFilterWhere(['emp_id' => $me->id]);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    /**
+     * คืนช่วงวันที่สำหรับค้นหาในรูปแบบ Gregorian
+     * - ถ้าผู้ใช้กรอก date_start/date_end เองให้ใช้ค่านั้น
+     * - ถ้ายังไม่มีค่า ให้เติมจาก date_filter
+     *
+     * @return array{0:?string,1:?string}
+     */
+    private function resolveSearchDateRange(MeetingSearch $searchModel): array
+    {
+        $dateStart = trim((string) ($searchModel->date_start ?? ''));
+        $dateEnd = trim((string) ($searchModel->date_end ?? ''));
+
+        $dateStart = $dateStart !== '' ? AppHelper::convertToGregorian($dateStart) : null;
+        $dateEnd = $dateEnd !== '' ? AppHelper::convertToGregorian($dateEnd) : null;
+
+        if (($dateStart === null || $dateEnd === null) && trim((string) ($searchModel->date_filter ?? '')) !== '') {
+            $range = DateFilterHelper::getRange((string) $searchModel->date_filter);
+            if ($range !== null) {
+                if ($dateStart === null) {
+                    $dateStart = date('Y-m-d', strtotime($range[0]));
+                    $searchModel->date_start = AppHelper::convertToThai($dateStart);
+                }
+
+                if ($dateEnd === null) {
+                    $dateEnd = date('Y-m-d', strtotime($range[1]));
+                    $searchModel->date_end = AppHelper::convertToThai($dateEnd);
+                }
+            }
+        }
+
+        return [$dateStart, $dateEnd];
+    }
+
+     /**
+     * กรองรายการตามหน่วยงานของผู้ขอผ่าน relation employees.department
+     * รองรับทั้งการเลือกหน่วยงานตรง ๆ และกรณีเลือกหน่วยงานแม่ที่มีหน่วยงานย่อย
+     */
+    private function applyDepartmentFilter($query, MeetingSearch $searchModel): void
+    {
+        $departmentId = trim((string) ($searchModel->q_department ?? ''));
+        if ($departmentId === '') {
+            return;
+        }
+
+        $query->joinWith(['employee']);
+
+        $org = Organization::findOne($departmentId);
+        if ($org && (int) $org->lvl === 1) {
+            $sql = 'SELECT t1.id
+                FROM tree t1
+                JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+                WHERE t2.name = :name;';
+            $querys = Yii::$app->db->createCommand($sql)
+                ->bindValue(':name', $org->name)
+                ->queryColumn();
+
+            $arrDepartment = array_values(array_filter(array_map('intval', $querys)));
+            if (!empty($arrDepartment)) {
+                $arrDepartment[] = (int) $departmentId;
+                $query->andWhere(['in', 'employees.department', array_values(array_unique($arrDepartment))]);
+                return;
+            }
+        }
+
+        $query->andWhere(['employees.department' => (int) $departmentId]);
+    }
+
+
 
 
 
@@ -114,15 +178,6 @@ class BookingMeetingController extends \yii\web\Controller
             'status' => 'error',
             'message' => 'ไม่สามารถบันทึกข้อมูลได้'
         ];
-    }
-
-    protected function canEditMeeting(Meeting $model): bool
-    {
-        $me = UserHelper::GetEmployee();
-
-        return $me !== null
-            && $model->status !== 'Cancel'
-            && (Yii::$app->user->can('meeting') || $me->id == $model->emp_id);
     }
 
     public function actionSelectFormDepartment($id)
@@ -304,10 +359,6 @@ class BookingMeetingController extends \yii\web\Controller
         $room_id = $this->request->get('room_id');
         $model = $this->findModel($id);
 
-        if (!$this->canEditMeeting($model)) {
-            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์แก้ไขรายการนี้');
-        }
-
         $model->date_start =  AppHelper::convertToThai($model->date_start);
 
         $old_data_json = $model->data_json;
@@ -371,69 +422,69 @@ class BookingMeetingController extends \yii\web\Controller
 
 
     // ตรวจสอบความถูกต้อง
-public function actionValidator($id = null)
-{
-    \Yii::$app->response->format = Response::FORMAT_JSON;
+    public function actionValidator($id = null)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
 
-    // ถ้ามี $id แสดงว่าเป็น update → โหลด model เดิม
-    $model = $id === null ? new Meeting() : Meeting::findOne($id);
+        // ถ้ามี $id แสดงว่าเป็น update → โหลด model เดิม
+        $model = $id === null ? new Meeting() : Meeting::findOne($id);
 
-    $requiredName = 'ต้องระบุ';
-    $result = [];
+        $requiredName = 'ต้องระบุ';
+        $result = [];
 
-    if ($this->request->isPost && $model->load($this->request->post())) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
 
-        // ✅ ตรวจสอบว่าเบอร์โทรถูกกรอกหรือยัง
-        if (empty($model->data_json['phone'])) {
-            $model->addError('data_json[phone]', $requiredName);
-        }
+            // ✅ ตรวจสอบว่าเบอร์โทรถูกกรอกหรือยัง
+            if (empty($model->data_json['phone'])) {
+                $model->addError('data_json[phone]', $requiredName);
+            }
 
-        // ✅ ตรวจสอบว่าเลือกช่วงเวลาหรือยัง
-        if (empty($model->data_json['period_time'])) {
-            $model->addError('data_json[period_time]', $requiredName);
-        }
+            // ✅ ตรวจสอบว่าเลือกช่วงเวลาหรือยัง
+            if (empty($model->data_json['period_time'])) {
+                $model->addError('data_json[period_time]', $requiredName);
+            }
 
-        // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น
-        if (!empty($model->time_start) && !empty($model->time_end)) {
-            if (strtotime($model->time_end) <= strtotime($model->time_start)) {
-                $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+            // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น
+            if (!empty($model->time_start) && !empty($model->time_end)) {
+                if (strtotime($model->time_end) <= strtotime($model->time_start)) {
+                    $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+                }
+            }
+
+            // ✅ ตรวจสอบว่าห้อง + วัน + เวลา ทับกันหรือไม่
+            if (!empty($model->time_start) && !empty($model->time_end)) {
+                $query = Meeting::find()
+                    ->where([
+                        'room_id' => $model->room_id,
+                        'date_start' => AppHelper::convertToGregorian($model->date_start),
+                    ])
+                    ->andWhere(['<>', 'status', 'Cancel'])   // newStart < existEnd
+                    ->andWhere(['<', 'time_start', $model->time_end])   // newStart < existEnd
+                    ->andWhere(['>', 'time_end', $model->time_start]); // newEnd > existStart
+
+
+                // ถ้าเป็น update → ตัด record ตัวเองออก
+                if (!$model->isNewRecord) {
+                    $query->andWhere(['<>', 'id', $model->id]);
+                }
+
+                if ($query->exists()) {
+                    $model->addError('room_id', 'ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาใหม่');
+                }
             }
         }
 
-        // ✅ ตรวจสอบว่าห้อง + วัน + เวลา ทับกันหรือไม่
-        if (!empty($model->time_start) && !empty($model->time_end)) {
-            $query = Meeting::find()
-                ->where([
-                    'room_id' => $model->room_id,
-                    'date_start' => AppHelper::convertToGregorian($model->date_start),
-                ])
-                ->andWhere(['<>', 'status', 'Cancel'])   // newStart < existEnd
-                ->andWhere(['<', 'time_start', $model->time_end])   // newStart < existEnd
-                ->andWhere(['>', 'time_end', $model->time_start]); // newEnd > existStart
-            
-
-            // ถ้าเป็น update → ตัด record ตัวเองออก
-            if (!$model->isNewRecord) {
-                $query->andWhere(['<>', 'id', $model->id]);
-            }
-
-            if ($query->exists()) {
-                $model->addError('room_id', 'ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาใหม่');
-            }
+        // ส่ง error กลับไปเป็น JSON ที่ AjaxValidation ต้องการ
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Html::getInputId($model, $attribute)] = $errors;
         }
+
+        return $this->asJson($result);
     }
 
-    // ส่ง error กลับไปเป็น JSON ที่ AjaxValidation ต้องการ
-    foreach ($model->getErrors() as $attribute => $errors) {
-        $result[Html::getInputId($model, $attribute)] = $errors;
-    }
-
-    return $this->asJson($result);
-}
 
 
 
-    
 
 
 
@@ -553,7 +604,7 @@ public function actionValidator($id = null)
                 'title' => $this->request->get('title'),
                 'content' =>  $this->renderAjax('@app/modules/booking/views/meeting/list_events_item', [
                     'title' => 'ปฏิทินวันนี้',
-                   'date' => AppHelper::convertToThai($date),
+                    'date' => AppHelper::convertToThai($date),
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ]),

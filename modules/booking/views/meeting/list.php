@@ -7,10 +7,10 @@ use yii\helpers\Html;
     <thead>
         <tr>
             <th class="text-center" style="width:30px">ลำดับ</th>
-            <th>วันที่ต้องการใช้</th>
-            <th>ห้องประชุม</th>
-            <th>หัวข้อการประชุม</th>
             <th>ผู้ขอ</th>
+            <th>ห้องประชุม</th>
+            <th>วันที่ต้องการใช้</th>
+            <th>หัวข้อการประชุม</th>
             <th>หน่วยงาน</th>
             <th class="fw-semibold text-center">สถานะ</th>
             <th class="fw-semibold text-center">ดำเนินการ</th>
@@ -22,17 +22,17 @@ use yii\helpers\Html;
             <tr>
                 <td class="text-center">
                     <?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                <td>
+                    <td><?= $item->getUserReq()['avatar'] ?></td>
+                    <td class="fs-13"><?= $item->room?->title ?? '-' ?></td>
+                    <td>
                     <?= $item->viewMeetingDate() ?>
                     <p class="text-muted mb-0 fs-13">
                         เริ่มเวลา <?= $item->viewTime()['full'] ?>
                     </p>
                 </td>
-                <td class="fs-13"><?= $item->room?->title ?? '-' ?></td>
                 <td class="fs-13">
                     <?= $item->title ?>
                 </td>
-                <td><?= $item->getUserReq()['avatar'] ?></td>
                 <td><?= $item->getUserReq()['department'] ?></td>
                 <td class="text-center"><?= $item->viewStatus()['view'] ?>
                 </td>
@@ -53,15 +53,3 @@ use yii\helpers\Html;
         <?php endforeach; ?>
     </tbody>
 </table>
-
-<div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-    <?= yii\bootstrap5\LinkPager::widget([
-        'pagination' => $dataProvider->pagination,
-        'firstPageLabel' => 'หน้าแรก',
-        'lastPageLabel' => 'หน้าสุดท้าย',
-        'options' => [
-            'listOptions' => 'pagination pagination-sm',
-            'class' => 'pagination-sm',
-        ],
-    ]); ?>
-</div>
