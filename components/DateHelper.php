@@ -16,7 +16,7 @@ class DateHelper extends Component
      * 
      * @param string|int|\DateTime $startDate วันที่เริ่มต้น
      * @param string|int|\DateTime|null $endDate วันที่สิ้นสุด (ถ้าไม่มีจะแสดงเป็นวันเดียว)
-     * @param string $dateFormat รูปแบบวันที่ที่ต้องการ
+     * @param string $dateFormat รูปแบบวันที่ที่ต้องการ (short, medium, long, numeric, form)
      * @return string วันที่ในรูปแบบไทย
      */
     public static function formatThaiDateRange($startDate, $endDate = null, $dateFormat = 'short')
@@ -48,6 +48,15 @@ class DateHelper extends Component
         // แปลงปีเป็นพุทธศักราช
         $startYearThai = $startYear + 543;
         $endYearThai = $endYear + 543;
+
+        if (in_array($dateFormat, ['numeric', 'form'], true)) {
+            if ($startDay == $endDay && $startMonth == $endMonth && $startYear == $endYear) {
+                return static::formatThaiDateNumeric($startDay, $startMonth, $startYearThai);
+            }
+
+            return static::formatThaiDateNumeric($startDay, $startMonth, $startYearThai) . ' - ' .
+                   static::formatThaiDateNumeric($endDay, $endMonth, $endYearThai);
+        }
         
         // ชื่อเดือนภาษาไทยแบบย่อ
         $thaiMonths = [
@@ -81,7 +90,7 @@ class DateHelper extends Component
      * แปลงวันที่เป็นรูปแบบไทย
      * 
      * @param string|int|\DateTime $date วันที่ที่ต้องการแปลง
-     * @param string $format รูปแบบที่ต้องการ (short, medium, long)
+     * @param string $format รูปแบบที่ต้องการ (short, medium, long, numeric, form)
      * @return string วันที่ในรูปแบบไทย
      */
     public static function formatThaiDate($date, $format = 'short')
@@ -112,6 +121,9 @@ class DateHelper extends Component
         $month = date('n', $timestamp);
         
         switch ($format) {
+            case 'numeric':
+            case 'form':
+                return static::formatThaiDateNumeric($day, $month, $yearThai);
             case 'short':
                 return $day . ' ' . $thaiMonthsShort[$month] . ' ' . $yearThai;
             case 'medium':
@@ -123,6 +135,14 @@ class DateHelper extends Component
             default:
                 return $day . ' ' . $thaiMonthsShort[$month] . ' ' . $yearThai;
         }
+    }
+
+    /**
+     * แปลงวันที่เป็นรูปแบบตัวเลข dd/mm/yyyy (พ.ศ.)
+     */
+    protected static function formatThaiDateNumeric($day, $month, $yearThai)
+    {
+        return sprintf('%02d/%02d/%04d', (int) $day, (int) $month, (int) $yearThai);
     }
     
     /**
