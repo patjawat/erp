@@ -8,6 +8,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
+use app\components\LineMsg;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\SiteHelper;
@@ -15,6 +16,7 @@ use app\components\UserHelper;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\modules\dms\models\Documents;
+use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentTagsSearch;
 
@@ -77,10 +79,10 @@ class DocumentTagsController extends Controller
      */
     public function actionCreate()
     {
-        $model = new DocumentTags();
+        $model = new DocumentsDetail();
         $model->document_id = $this->request->get('document_id');
         $model->ref = $this->request->get('ref');
-        $model->name = $this->request->get('name');
+        $model->name = 'tags';
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -91,6 +93,8 @@ class DocumentTagsController extends Controller
                     $targets = array_filter(array_map('trim', $model->tags_employee), 'strlen');
                 } elseif (!empty($model->tag_id)) {
                     $targets = [$model->tag_id];
+                } elseif (!empty($model->to_id)) {
+                    $targets = [$model->to_id];
                 }
 
                 if (empty($targets)) {
@@ -109,28 +113,33 @@ class DocumentTagsController extends Controller
                 $created = 0;
                 $skipped = 0;
                 foreach ($targets as $tagId) {
-                    $exists = DocumentTags::find()
+                    $exists = DocumentsDetail::find()
                         ->where([
                             'document_id' => $model->document_id,
-                            'name' => $model->name,
-                            'tag_id' => $tagId,
+                            'name' => 'tags',
+                            'to_id' => $tagId,
                         ])
                         ->one();
                     if ($exists) {
                         $skipped++;
                         continue;
                     }
-                    $row = new DocumentTags();
+                    $row = new DocumentsDetail();
                     $row->document_id = $model->document_id;
                     $row->ref = $model->ref;
-                    $row->name = $model->name;
-                    $row->doc_number = $model->doc_number;
-                    $row->doc_regis_number = $model->doc_regis_number;
-                    $row->status = $model->status;
-                    $row->tag_id = (string) $tagId;
+                    $row->name = 'tags';
+                    $row->to_id = (string) $tagId;
+                    $row->to_type = 'employee';
                     $row->data_json = $comment !== '' ? ['comment' => $comment] : null;
                     if ($row->save()) {
                         $created++;
+                        try {
+                            $line_id = $row->employee->user->line_id;
+                            if (!empty($line_id)) {
+                                LineMsg::sendDocument($row, $line_id);
+                            }
+                        } catch (\Throwable $th) {
+                        }
                     }
                 }
 
@@ -163,41 +172,56 @@ class DocumentTagsController extends Controller
 
     public function actionReqApprove()
     {
-       
         if ($this->request->isPost) {
-
             Yii::$app->response->format = Response::FORMAT_JSON;
+
             $info = SiteHelper::getInfo();
-            $emp_id = $info['director_name'];
-            $document_id =$this->request->post('document_id');
-            $name =$this->request->post('name');
-            $check = DocumentTags::findOne(['document_id' =>$document_id,'name' => $name,'emp_id' => $emp_id,'status' => 'DS4']);
-            if($check){
+            $directorId = (int) ($info['director_name'] ?? 0);
+            $documentId = (int) $this->request->post('document_id');
+
+            if ($directorId <= 0 || $documentId <= 0) {
+                Yii::$app->response->statusCode = 422;
+                return [
+                    'status' => 'error',
+                    'container' => '#document-tag',
+                    'message' => 'ข้อมูลไม่ครบถ้วน',
+                ];
+            }
+
+            $exists = DocumentsDetail::findOne([
+                'document_id' => $documentId,
+                'name' => 'req_approve',
+                'to_id' => (string) $directorId,
+            ]);
+            if ($exists) {
                 return [
                     'status' => 'error',
                     'container' => '#document-tag',
                 ];
             }
-            
-                $model = new DocumentTags();
-                $model->document_id = $document_id;
-                $model->ref = $this->request->post('ref');
-                $model->name = $name;
-                $model->status = 'DS3';
-                $model->emp_id = $info['director_name'];
-                $model->data_json = ['req_approve_date' => date('Y-m-d H:i:s')];
-                $document = Documents::findOne($document_id);
+
+            $model = new DocumentsDetail();
+            $model->document_id = $documentId;
+            $model->ref = $this->request->post('ref');
+            $model->name = 'req_approve';
+            $model->to_id = (string) $directorId;
+            $model->to_type = 'employee';
+            $model->data_json = ['req_approve_date' => date('Y-m-d H:i:s')];
+
+            $document = Documents::findOne($documentId);
+            if ($document) {
                 $document->status = 'DS3';
-                $document->save();
-                // return $model;
-                if($model->save()){
-                    return [
-                        'title' => $this->request->get('title'),
-                        'status' => 'success',
-                        'container' => '#document-tag',
-                    ];
-                }
-        } 
+                $document->save(false);
+            }
+
+            if ($model->save()) {
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#document-tag',
+                ];
+            }
+        }
     }
 
 
@@ -210,9 +234,25 @@ class DocumentTagsController extends Controller
      */
     public function actionUpdate($id)
     {
-        $model = $this->findOwnedModel($id);
+        $model = $this->findOwnedDetailModel($id);
+        if ($model instanceof DocumentsDetail) {
+            $model->tag_id = $model->to_id;
+        }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
+            if ($model instanceof DocumentsDetail) {
+                $model->name = 'tags';
+                $model->to_id = !empty($model->tag_id) ? (string) $model->tag_id : $model->to_id;
+                $model->to_type = 'employee';
+                if (is_string($model->data_json)) {
+                    $decoded = json_decode($model->data_json, true);
+                    $model->data_json = is_array($decoded) ? $decoded : [];
+                }
+                if (!is_array($model->data_json)) {
+                    $model->data_json = [];
+                }
+            }
+
             if ($model->save()) {
                 if ($this->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
@@ -324,7 +364,7 @@ class DocumentTagsController extends Controller
      */
     public function actionDelete($id)
     {
-        $model = $this->findOwnedModel($id);
+        $model = $this->findOwnedDetailModel($id);
         $model->delete();
 
         if ($this->request->isAjax) {
@@ -336,6 +376,31 @@ class DocumentTagsController extends Controller
         }
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Finds the DocumentsDetail model used by the tag UI.
+     * Falls back to the legacy DocumentTags record only if needed.
+     */
+    protected function findEditableTagModel($id)
+    {
+        if (($model = DocumentsDetail::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        return $this->findModel($id);
+    }
+
+    /**
+     * โหลด tag ที่แก้ไข/ลบได้และตรวจว่าเป็นเจ้าของ
+     */
+    protected function findOwnedDetailModel($id)
+    {
+        $model = $this->findEditableTagModel($id);
+        if ((int) $model->created_by !== (int) Yii::$app->user->id) {
+            throw new ForbiddenHttpException('คุณสามารถแก้ไขหรือลบได้เฉพาะ tag ที่ตัวเองสร้างเท่านั้น');
+        }
+        return $model;
     }
 
     /**

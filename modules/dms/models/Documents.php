@@ -463,7 +463,18 @@ class Documents extends \yii\db\ActiveRecord
     // การติดตาม
     public function listTrack()
     {
-        return DocumentTags::find()->where(['document_id' => $this->id])->andWhere(['in', 'name', ['employee_tag', 'req_approve']])->all();
+        $rows = DocumentsDetail::find()
+            ->with(['document.documentStatus', 'employee'])
+            ->where(['document_id' => $this->id])
+            ->andWhere(['in', 'name', ['employee_tag', 'tags', 'employee', 'req_approve']])
+            ->orderBy(['created_at' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        foreach ($rows as $row) {
+            $row->status = $row->document ? $row->document->status : null;
+        }
+
+        return $rows;
     }
 
     // นับจำนวนที่ส่งต่อ
@@ -680,7 +691,7 @@ class Documents extends \yii\db\ActiveRecord
     public function documentApprove()
     {
         try {
-            return DocumentTags::findOne(['document_id' => $this->id, 'name' => 'req_approve']);
+            return DocumentsDetail::findOne(['document_id' => $this->id, 'name' => 'req_approve']);
         } catch (\Throwable $th) {
             return [];
         }

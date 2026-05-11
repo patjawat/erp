@@ -55,21 +55,21 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
-     * documents_detail.id ที่ยังไม่ได้อ่าน — SQL เดียวกับ actionShowHome / actionShowHomeV2 (ห้ามแก้ต่างจากตรงนั้น)
+     * documents_detail.id ที่ยังไม่ได้อ่านของ "คนนี้" — SQL เดียวกับ actionShowHome / actionShowHomeV2
      */
     private function unreadDetailIdsShowHomeExact($department, $empId): array
     {
         $sql = "SELECT d.id
                 FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'department' AND d.to_id = :department AND r.doc_read IS NULL
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read' AND r.to_id = :emp_id
+                WHERE d.name IN ('comment_emp','comment_dept','department', 'tags', 'employee_tag', 'employee') AND d.to_id = :department AND r.doc_read IS NULL
 
                 UNION
 
                 SELECT d.id
                 FROM documents_detail d
-                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read'
-                WHERE d.name = 'tags' AND d.to_id = :emp_id AND r.doc_read IS NULL";
+                LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read' AND r.to_id = :emp_id
+                WHERE d.name IN ('comment_emp','comment_dept','department', 'tags', 'employee_tag', 'employee') AND d.to_id = :emp_id AND r.doc_read IS NULL";
 
         return Yii::$app->db->createCommand($sql, [
             ':department' => $department,
@@ -489,7 +489,7 @@ if ($searchModel->q_status === 'unread') {
     //     ]);
     // }
 
-    //แสดงหน้า Mydashboard
+    //แสดงหน้า ถ้าเป็นหัวหน้าหน่วยงานที่ ที่ส่งถึง หรือ tag บุคคล
     public function actionShowHome()
     {
 

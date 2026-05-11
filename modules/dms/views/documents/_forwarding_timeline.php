@@ -6,7 +6,6 @@ use yii\widgets\Pjax;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentsDetail;
 
 /** @var yii\web\View $this */
@@ -14,16 +13,10 @@ use app\modules\dms\models\DocumentsDetail;
 
 $currentUserId = (int) Yii::$app->user->id;
 
-// ดึงประวัติการ tag ที่เกี่ยวข้อง: ส่งหน่วยงาน, tag บุคคล, request approve
+// ดึงประวัติการ tag ที่เกี่ยวข้องจาก documents_detail เท่านั้น
 $detailRows = DocumentsDetail::find()
     ->where(['document_id' => $model->id])
-    ->andWhere(['in', 'name', ['department', 'employee_tag', 'tags', 'employee']])
-    ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC])
-    ->all();
-
-$tagRows = DocumentTags::find()
-    ->where(['document_id' => $model->id])
-    ->andWhere(['in', 'name', ['employee_tag', 'employee', 'req_approve']])
+    ->andWhere(['in', 'name', ['department', 'employee_tag', 'tags', 'employee', 'comment', 'req_approve']])
     ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC])
     ->all();
 
@@ -32,9 +25,6 @@ $events = [];
 
 $creatorIds = [];
 foreach ($detailRows as $r) {
-    $creatorIds[(int) $r->created_by] = true;
-}
-foreach ($tagRows as $r) {
     $creatorIds[(int) $r->created_by] = true;
 }
 $creatorIds = array_keys(array_filter($creatorIds));
@@ -57,6 +47,16 @@ foreach ($detailRows as $r) {
         $icon = 'fa-building';
         $badgeClass = 'text-bg-success';
         $kindLabel = 'ส่งหน่วยงาน';
+    } elseif ($kind === 'comment') {
+        $icon = 'fa-comment-dots';
+        $badgeClass = 'text-bg-info';
+        $kindLabel = 'ลงความเห็น';
+    } elseif ($kind === 'req_approve') {
+        $icon = 'fa-file-signature';
+        $kindLabel = 'เสนอผู้อำนวยการ';
+        $director = $r->to_id ? Employees::findOne((int) $r->to_id) : null;
+        $targetLabel = $director ? $director->fullname : ('บุคคล #' . $r->to_id);
+        $badgeClass = 'text-bg-warning';
     } else {
         $emp = Employees::findOne((int) $r->to_id);
         $targetLabel = $emp ? $emp->fullname : ('บุคคล #' . $r->to_id);
@@ -71,35 +71,6 @@ foreach ($detailRows as $r) {
         'created_at' => $r->created_at,
         'created_by' => (int) $r->created_by,
         'kind' => $kind,
-        'kind_label' => $kindLabel,
-        'icon' => $icon,
-        'badge_class' => $badgeClass,
-        'target' => $targetLabel,
-        'comment' => $comment,
-        'is_owner' => (int) $r->created_by === $currentUserId,
-    ];
-}
-
-foreach ($tagRows as $r) {
-    if ($r->name === 'req_approve') {
-        $kindLabel = 'เสนอผู้อำนวยการ';
-        $icon = 'fa-file-signature';
-        $badgeClass = 'text-bg-warning';
-    } else {
-        $kindLabel = 'Tag บุคคล';
-        $icon = 'fa-user';
-        $badgeClass = 'text-bg-primary';
-    }
-    $targetId = $r->tag_id;
-    $emp = $targetId ? Employees::findOne((int) $targetId) : null;
-    $targetLabel = $emp ? $emp->fullname : ($targetId ? ('บุคคล #' . $targetId) : '-');
-    $comment = is_array($r->data_json) && isset($r->data_json['comment']) ? $r->data_json['comment'] : '';
-    $events[] = [
-        'source' => 'tag',
-        'id' => $r->id,
-        'created_at' => $r->created_at,
-        'created_by' => (int) $r->created_by,
-        'kind' => $r->name,
         'kind_label' => $kindLabel,
         'icon' => $icon,
         'badge_class' => $badgeClass,
@@ -157,7 +128,9 @@ usort($events, function ($a, $b) {
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                     <span class="fw-semibold text-dark"><?= Html::encode($creatorName) ?></span>
                                     <i class="fa-solid fa-arrow-right text-muted small"></i>
-                                    <span class="text-primary fw-medium"><?= Html::encode($event['target']) ?></span>
+                                    <?php if (!empty($event['target'])): ?>
+                                        <span class="text-primary fw-medium"><?= Html::encode($event['target']) ?></span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="small text-muted d-flex flex-wrap gap-3">
                                     <?php if ($creatorDept): ?>
@@ -174,26 +147,24 @@ usort($events, function ($a, $b) {
                             </div>
                             <?php if ($event['is_owner']): ?>
                                 <div class="flex-shrink-0 d-flex gap-1">
-                                    <?php if ($event['source'] === 'tag' && $event['kind'] !== 'req_approve'): ?>
+                                    <?php if ($event['kind'] === 'comment'): ?>
                                         <?= Html::a(
                                             '<i class="fa-regular fa-pen-to-square"></i>',
-                                            ['/dms/document-tags/update', 'id' => $event['id'], 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข tag'],
+                                            ['/me/documents/update-comment', 'id' => $event['id']],
                                             [
-                                                'class' => 'btn btn-sm btn-outline-secondary rounded-circle open-modal',
-                                                'data' => ['size' => 'modal-md'],
+                                                'class' => 'btn btn-sm btn-outline-secondary rounded-circle update-comment',
                                                 'title' => 'แก้ไข',
                                             ]
                                         ) ?>
                                         <?= Html::a(
                                             '<i class="fa-regular fa-trash-can"></i>',
-                                            ['/dms/document-tags/delete', 'id' => $event['id']],
+                                            ['/me/documents/delete-comment', 'id' => $event['id']],
                                             [
-                                                'class' => 'btn btn-sm btn-outline-danger rounded-circle delete-tag',
-                                                'data-method' => 'post',
+                                                'class' => 'btn btn-sm btn-outline-danger rounded-circle delete-comment',
                                                 'title' => 'ลบ',
                                             ]
                                         ) ?>
-                                    <?php elseif ($event['source'] === 'detail'): ?>
+                                    <?php elseif ($event['kind'] !== 'req_approve'): ?>
                                         <?= Html::a(
                                             '<i class="fa-regular fa-trash-can"></i>',
                                             ['/dms/documents/delete-forwarding', 'id' => $event['id']],
@@ -217,7 +188,7 @@ usort($events, function ($a, $b) {
 <?php
 $js = <<< 'JS'
 $(document).off('click.forwardingTimeline');
-$(document).on('click.forwardingTimeline', '.delete-forwarding, .delete-tag', function (e) {
+$(document).on('click.forwardingTimeline', '.delete-forwarding', function (e) {
     e.preventDefault();
     var url = $(this).attr('href');
     Swal.fire({

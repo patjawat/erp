@@ -5,7 +5,6 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
-use app\modules\dms\models\DocumentTags;
 use app\modules\dms\models\DocumentsDetail;
 
 /** @var yii\web\View $this */
@@ -19,28 +18,13 @@ $detailTags = DocumentsDetail::find()
     ->orderBy(['id' => SORT_DESC])
     ->all();
 
-$legacyTags = DocumentTags::find()
-    ->where(['document_id' => $model->id, 'name' => 'employee_tag'])
-    ->orderBy(['id' => SORT_DESC])
-    ->all();
-
-// รวมและ dedupe by target+source
+// แสดงรายการ tag บุคคลจาก documents_detail เท่านั้น
 $rows = [];
 foreach ($detailTags as $r) {
     $rows[] = [
         'source' => 'detail',
         'id' => $r->id,
         'to_id' => (int) $r->to_id,
-        'created_by' => (int) $r->created_by,
-        'created_at' => $r->created_at,
-        'comment' => is_array($r->data_json) && isset($r->data_json['comment']) ? $r->data_json['comment'] : '',
-    ];
-}
-foreach ($legacyTags as $r) {
-    $rows[] = [
-        'source' => 'tag',
-        'id' => $r->id,
-        'to_id' => (int) $r->tag_id,
         'created_by' => (int) $r->created_by,
         'created_at' => $r->created_at,
         'comment' => is_array($r->data_json) && isset($r->data_json['comment']) ? $r->data_json['comment'] : '',
@@ -146,7 +130,7 @@ $creatorMap = $creatorIds ? Employees::find()->where(['user_id' => $creatorIds])
     <div class="card-footer bg-white border-top">
         <?= Html::a(
             '<i class="fa-solid fa-circle-plus me-1"></i> Tag บุคคลเพิ่มเติม',
-            ['/dms/document-tags/create', 'document_id' => $model->id, 'ref' => $model->ref, 'name' => 'employee_tag', 'title' => '<i class="fa-solid fa-user-tag"></i> Tag บุคคล'],
+            ['/dms/document-tags/create', 'document_id' => $model->id, 'ref' => $model->ref, 'name' => 'tags', 'title' => '<i class="fa-solid fa-user-tag"></i> Tag บุคคล'],
             ['class' => 'btn btn-sm btn-primary rounded-pill open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-md']]
         ) ?>
     </div>

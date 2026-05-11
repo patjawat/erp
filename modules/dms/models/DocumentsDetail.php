@@ -66,6 +66,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $date_filter;
     public $tags_employee;
     public $tags_department;
+    public $tag_id;
     public static function tableName()
     {
         return 'documents_detail';
@@ -77,7 +78,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status','date_filter','date_start','date_start'], 'safe'],
+            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'tag_id', 'data_json', 'status','date_filter','date_start','date_start'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by', 'doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];
@@ -128,6 +129,13 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
+
+    public function getDocumentStatus()
+    {
+        $document = $this->document;
+        return $document ? $document->documentStatus : null;
+    }
+
     // บุคลากร
     public function getEmployee()
     {

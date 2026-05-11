@@ -1086,6 +1086,60 @@ class DocumentsController extends Controller
         }
     }
 
+    public function actionReqApprove()
+    {
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $info = SiteHelper::getInfo();
+            $directorId = (int) ($info['director_name'] ?? 0);
+            $documentId = (int) $this->request->post('document_id');
+
+            if ($directorId <= 0 || $documentId <= 0) {
+                Yii::$app->response->statusCode = 422;
+                return [
+                    'status' => 'error',
+                    'container' => '#document-tag',
+                    'message' => 'ข้อมูลไม่ครบถ้วน',
+                ];
+            }
+
+            $exists = DocumentsDetail::findOne([
+                'document_id' => $documentId,
+                'name' => 'req_approve',
+                'to_id' => (string) $directorId,
+            ]);
+            if ($exists) {
+                return [
+                    'status' => 'error',
+                    'container' => '#document-tag',
+                ];
+            }
+
+            $model = new DocumentsDetail();
+            $model->document_id = $documentId;
+            $model->ref = $this->request->post('ref');
+            $model->name = 'req_approve';
+            $model->to_id = (string) $directorId;
+            $model->to_type = 'employee';
+            $model->data_json = ['req_approve_date' => date('Y-m-d H:i:s')];
+
+            $document = Documents::findOne($documentId);
+            if ($document) {
+                $document->status = 'DS3';
+                $document->save(false);
+            }
+
+            if ($model->save()) {
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#document-tag',
+                ];
+            }
+        }
+    }
+
     // แสดง File และแสดงความเห็น
     public function actionComment($id)
     {
