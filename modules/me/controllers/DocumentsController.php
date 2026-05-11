@@ -872,13 +872,12 @@ if ($searchModel->q_status === 'unread') {
 
             return [
                 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น',
-                'content' => $this->renderAjax('list_comment', [
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/_comment_feed', [
                     'model' => $model,
-
                 ])
             ];
         } else {
-            return $this->render('list_comment', [
+            return $this->render('@app/modules/dms/views/documents/_comment_feed', [
                 'model' => $model,
             ]);
         }

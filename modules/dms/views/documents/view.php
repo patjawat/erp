@@ -8,23 +8,6 @@ use app\components\UserHelper;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentsDetail;
 
-// รายชื่อหน่วยงานที่เอกสารนี้ "ส่งถึง" (รวม forwarding ทั้ง direct + จาก comment) แบบ unique
-$forwardedDeptIds = DocumentsDetail::find()
-    ->select('to_id')
-    ->where(['document_id' => $model->id])
-    ->andWhere(['in', 'name', ['department', 'comment_dept']])
-    ->andWhere(['not', ['to_id' => null]])
-    ->andWhere(['<>', 'to_id', ''])
-    ->distinct()
-    ->column();
-$forwardedDepts = [];
-if (!empty($forwardedDeptIds)) {
-    $forwardedDepts = Organization::find()
-        ->where(['id' => $forwardedDeptIds])
-        ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
-        ->all();
-}
-
 // ผู้อ่านเอกสาร (สำหรับ summary + offcanvas)
 $readers = $model->viewHistory();
 
@@ -276,11 +259,14 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
                         </div>
                     </div>
 
-                    <div class="mt-3 pt-3 border-top border-light-subtle d-flex flex-column gap-2">
-                        <div id="forwarded-summary-wrapper">
-                            <?= $this->render('_forwarded_summary', ['forwardedDepts' => $forwardedDepts]) ?>
+                    <div class="mt-3 pt-3 border-top border-light-subtle d-flex flex-column flex-lg-row align-items-start justify-content-between gap-2 gap-lg-3">
+                        <div id="timeline-summary-wrapper" class="flex-grow-1 min-width-0">
+                            <?= $this->render('_timeline_summary', [
+                                'model' => $model,
+                                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+                            ]) ?>
                         </div>
-                        <div id="read-summary-wrapper">
+                        <div id="read-summary-wrapper" class="flex-shrink-0 ms-lg-auto">
                             <?= $this->render('_read_summary', ['readers' => $readers]) ?>
                         </div>
                     </div>
@@ -289,16 +275,32 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
                 <div class="document-work-scroll p-4">
                     <div class="d-flex flex-column gap-4">
 
-                        <div id="approval-card-wrapper">
-                            <?= $this->render('req_approve_tags', ['model' => $model]) ?>
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                            <div class="px-4 py-3 border-bottom border-light-subtle">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info rounded-circle" style="width:32px;height:32px;">
+                                        <i class="fa-regular fa-comments"></i>
+                                    </span>
+                                    <div>
+                                        <div class="text-uppercase small text-info fw-semibold opacity-75" style="letter-spacing:.05em;">Comment</div>
+                                        <div class="fw-bold text-dark">การลงความเห็น</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="listComment">
+                                <?= $this->render('_comment_feed', ['model' => $model]) ?>
+                            </div>
+                            <div class="border-top border-light-subtle bg-white px-4 py-3">
+                                <div class="viewFormComment">
+                                    <div class="text-center text-muted small py-2">
+                                        <div class="spinner-border spinner-border-sm me-2"></div> กำลังโหลดช่องเขียนความเห็น...
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="forwarding-card-wrapper">
-                            <?= $this->render('_forwarding_card', [
-                                'model' => $model,
-                                'canManageDepartmentExtra' => $canManageDepartmentExtra,
-                                'currentDeptIdsStr' => $currentDeptIdsStr,
-                            ]) ?>
+                        <div id="approval-card-wrapper">
+                            <?= $this->render('req_approve_tags', ['model' => $model]) ?>
                         </div>
 
                     </div>
@@ -322,6 +324,24 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
     </div>
 </div>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasTimeline" aria-labelledby="offcanvasTimelineLabel" style="--bs-offcanvas-width: min(100vw, 920px);">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasTimelineLabel">
+            <i class="fa-regular fa-clock text-primary me-2"></i>ไทม์ไลน์เอกสาร
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div id="timeline-detail-wrapper">
+            <?= $this->render('_forwarding_card', [
+                'model' => $model,
+                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+                'currentDeptIdsStr' => $currentDeptIdsStr,
+            ]) ?>
+        </div>
+    </div>
+</div>
+
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAttachments" aria-labelledby="offcanvasAttachmentsLabel" style="--bs-offcanvas-width: 480px;">
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title fw-bold" id="offcanvasAttachmentsLabel">
@@ -339,6 +359,7 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
 
 <?php
 $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);
+$listCommentUrl = Url::to(['/me/documents/list-comment', 'id' => $model->id]);
 $saveCommentTemplate = Url::to(['/me/documents/save-comment-template']);
 $forwardingCardUrl = Url::to(['/dms/documents/forwarding-card', 'id' => $model->id]);
 $js = <<<JS
@@ -572,18 +593,37 @@ async function getComment() {
     });
 }
 
+async function listComment() {
+    await \$.ajax({
+        type: 'get',
+        url: '$listCommentUrl',
+        dataType: 'json',
+        success: function (res) {
+            \$('.listComment').html(res.content);
+        }
+    });
+}
+
 function reloadTimeline() {
-    var \$cardWrap = \$('#forwarding-card-wrapper');
-    var \$summaryWrap = \$('#forwarded-summary-wrapper');
-    if (!\$cardWrap.length) { return \$.Deferred().resolve().promise(); }
+    var \$detailWrap = \$('#timeline-detail-wrapper');
+    var \$summaryWrap = \$('#timeline-summary-wrapper');
+    if (!\$detailWrap.length && !\$summaryWrap.length) { return \$.Deferred().resolve().promise(); }
     return \$.ajax({
         url: '$forwardingCardUrl',
         type: 'get',
         cache: false,
         dataType: 'json'
     }).then(function (res) {
-        if (res && res.card) { \$cardWrap.html(res.card); }
+        if (res && res.card && \$detailWrap.length) { \$detailWrap.html(res.card); }
         if (res && res.summary && \$summaryWrap.length) { \$summaryWrap.html(res.summary); }
+        if (typeof \$.fn.tooltip === 'function') {
+            \$detailWrap.find('[data-bs-toggle="tooltip"]').tooltip();
+            \$summaryWrap.find('[data-bs-toggle="tooltip"]').tooltip();
+        }
+        if (typeof \$.fn.popover === 'function') {
+            \$detailWrap.find('[data-bs-toggle="popover"]').popover();
+            \$summaryWrap.find('[data-bs-toggle="popover"]').popover();
+        }
     }, function () {
         window.location.reload();
     });
@@ -602,9 +642,8 @@ function reloadTimeline() {
                 if (typeof updateIframeHeight === 'function') {
                     updateIframeHeight();
                 }
-                var workPane = document.getElementById('doc-work-pane');
-                var scroller = workPane ? (workPane.querySelector('.document-work-scroll') || workPane) : null;
                 var target = document.getElementById('documentsdetail-data_json-comment') || document.querySelector('.viewFormComment');
+                var scroller = target ? (target.closest('.document-work-scroll, .offcanvas-body, .modal-body') || target.parentElement) : null;
                 if (scroller && target) {
                     var targetRect = target.getBoundingClientRect();
                     var scrollerRect = scroller.getBoundingClientRect();
@@ -639,7 +678,12 @@ function reloadTimeline() {
                 type: 'post',
                 url: url,
                 dataType: 'json',
-                success: function (res) { if (res.status === 'success') { reloadTimeline(); } }
+                success: function (res) {
+                    if (res.status === 'success') {
+                        if (typeof listComment === 'function') { listComment(); }
+                        if (typeof getComment === 'function') { getComment(); }
+                    }
+                }
             });
         }
     });

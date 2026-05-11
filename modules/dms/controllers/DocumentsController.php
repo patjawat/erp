@@ -332,30 +332,15 @@ class DocumentsController extends Controller
             ->column();
         $currentDeptIdsStr = array_map('strval', $currentDeptIds ?: []);
 
-        $forwardedDeptIds = DocumentsDetail::find()
-            ->select('to_id')
-            ->where(['document_id' => $model->id])
-            ->andWhere(['in', 'name', ['department', 'comment_dept']])
-            ->andWhere(['not', ['to_id' => null]])
-            ->andWhere(['<>', 'to_id', ''])
-            ->distinct()
-            ->column();
-        $forwardedDepts = [];
-        if (!empty($forwardedDeptIds)) {
-            $forwardedDepts = Organization::find()
-                ->where(['id' => $forwardedDeptIds])
-                ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
-                ->all();
-        }
-
         return [
             'card' => $this->renderPartial('_forwarding_card', [
                 'model' => $model,
                 'canManageDepartmentExtra' => $canManageDepartmentExtra,
                 'currentDeptIdsStr' => $currentDeptIdsStr,
             ]),
-            'summary' => $this->renderPartial('_forwarded_summary', [
-                'forwardedDepts' => $forwardedDepts,
+            'summary' => $this->renderPartial('_timeline_summary', [
+                'model' => $model,
+                'canManageDepartmentExtra' => $canManageDepartmentExtra,
             ]),
         ];
     }
@@ -1300,12 +1285,12 @@ class DocumentsController extends Controller
 
             return [
                 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น',
-                'content' => $this->renderAjax('list_comment', [
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/_comment_feed', [
                     'model' => $model,
                 ])
             ];
         } else {
-            return $this->render('list_comment', [
+            return $this->render('@app/modules/dms/views/documents/_comment_feed', [
                 'model' => $model,
             ]);
         }

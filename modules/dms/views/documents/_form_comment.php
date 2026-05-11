@@ -142,14 +142,8 @@ $js = <<< 'JS'
                 success: function (res) {
                     if (res && res.status === 'success') {
                         if (typeof success === 'function') { success('ลงความเห็นสำเร็จ'); }
-                        // เรียงลำดับ: รีโหลด timeline ก่อน เสร็จแล้วค่อย refresh composer
-                        var done = function () {
-                            if (typeof getComment === 'function') { getComment(); }
-                        };
-                        if (typeof reloadTimeline === 'function') {
-                            var p = reloadTimeline();
-                            if (p && p.then) { p.then(done, done); } else { done(); }
-                        } else { done(); }
+                        if (typeof listComment === 'function') { listComment(); }
+                        if (typeof getComment === 'function') { getComment(); }
                     } else {
                         Swal.fire({ icon: 'warning', title: (res && res.message) || 'บันทึกไม่สำเร็จ' });
                     }
