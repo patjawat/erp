@@ -59,7 +59,7 @@ class DocumentTags extends \yii\db\ActiveRecord
             'ref' => 'Ref',
             'name' => 'ชื่อการ tags เอกสาร',
             'doc_number' => 'เลขที่หนังสือ',
-            'emp_id' => 'Emp ID',
+            'tag_id' => 'บุคคล/หน่วยงานที่ tag',
             'status' => 'สถานะ',
             'department_id' => 'Department ID',
             'document_org_id' => 'จากหน่วยงาน',
@@ -108,6 +108,19 @@ class DocumentTags extends \yii\db\ActiveRecord
     public function getDocument()
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
+    }
+
+    public function getCreatedByEmployee()
+    {
+        return $this->hasOne(Employees::class, ['user_id' => 'created_by']);
+    }
+
+    public function isOwnedByCurrentUser()
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        return (int) $this->created_by === (int) Yii::$app->user->id;
     }
 
     // นับเวลาที่ผ่านมาแล้ว

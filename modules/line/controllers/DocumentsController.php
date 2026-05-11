@@ -45,6 +45,33 @@ class DocumentsController extends Controller
         );
     }
 
+    private function resolveCommentDocumentId($id, bool $preferDetail = true): ?int
+    {
+        if ($preferDetail) {
+            $documentDetail = DocumentsDetail::findOne($id);
+            if ($documentDetail) {
+                return (int) $documentDetail->document_id;
+            }
+
+            $document = Documents::findOne($id);
+            if ($document) {
+                return (int) $document->id;
+            }
+        } else {
+            $document = Documents::findOne($id);
+            if ($document) {
+                return (int) $document->id;
+            }
+
+            $documentDetail = DocumentsDetail::findOne($id);
+            if ($documentDetail) {
+                return (int) $documentDetail->document_id;
+            }
+        }
+
+        return null;
+    }
+
     
     /**
      * Lists all Documents models.
@@ -184,14 +211,17 @@ class DocumentsController extends Controller
     
 
        // แสดง File และแสดงความเห็น
-       public function actionComment($id)
+    public function actionComment($id)
        {
         try {
       
            $emp = UserHelper::GetEmployee();
-           $documentDetail = DocumentsDetail::findOne($id);
+           $documentId = $this->resolveCommentDocumentId($id, true);
+           if (empty($documentId)) {
+               return $this->redirect(['/line/profile']);
+           }
            $model = new DocumentsDetail([
-               'document_id' => $documentDetail->document_id,
+               'document_id' => $documentId,
                'to_id' => $emp->id,
                'name' => 'comment'
            ]);
@@ -201,6 +231,11 @@ class DocumentsController extends Controller
    
                if($model->save()){
                    $model->UpdateDocumentsDetail();
+                   try {
+                       $model->notifyCommentRecipients();
+                   } catch (\Throwable $th) {
+                       Yii::warning('Failed to notify document comment recipients: ' . $th->getMessage(), __METHOD__);
+                   }
                    return[
                        'status' => 'success'
                    ];
@@ -233,8 +268,12 @@ class DocumentsController extends Controller
     public function actionCommentxx($id)
     {
         $emp = UserHelper::GetEmployee();
+        $documentId = $this->resolveCommentDocumentId($id, false);
+        if (empty($documentId)) {
+            return $this->redirect(['/line/profile']);
+        }
         $model = new DocumentsDetail([
-            'document_id' => $id,
+            'document_id' => $documentId,
             'to_id' => $emp->id,
             'name' => 'comment'
         ]);
@@ -242,9 +281,13 @@ class DocumentsController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
 
-            $model->UpdateDocumentsDetail();
-
             if($model->save()){
+                $model->UpdateDocumentsDetail();
+                try {
+                    $model->notifyCommentRecipients();
+                } catch (\Throwable $th) {
+                    Yii::warning('Failed to notify document comment recipients: ' . $th->getMessage(), __METHOD__);
+                }
             // ส่งข้อมูลกลับไปยังหน้า view เพื่อให้เห็นว่ามีการ comment เข้ามา'
             // return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -263,6 +306,50 @@ class DocumentsController extends Controller
                 'model' => $model,
             ]);
         }
+    }
+
+    public function actionTestNotification($id)
+    {
+        if (!Yii::$app->user->can('admin')) {
+            Yii::$app->response->statusCode = 403;
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'error',
+                'message' => 'อนุญาตเฉพาะผู้ใช้สิทธิ admin เท่านั้น',
+            ];
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $emp = UserHelper::GetEmployee();
+        $empId = $emp ? $emp->id : null;
+        $documentId = (int) $id;
+        if (empty($documentId)) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบเอกสารสำหรับทดสอบการแจ้งเตือน',
+            ];
+        }
+
+        $model = new DocumentsDetail([
+            'document_id' => $documentId,
+            'to_id' => $empId,
+            'name' => 'comment',
+        ]);
+
+        if (!$this->request->isPost) {
+            return [
+                'status' => 'error',
+                'message' => 'Invalid request',
+            ];
+        }
+
+        $model->load($this->request->post());
+        if (empty($model->document_id)) {
+            $model->document_id = $documentId;
+        }
+
+        return $model->sendTestNotification();
     }
     /**
      * Finds the Documents model based on its primary key value.

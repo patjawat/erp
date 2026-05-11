@@ -12,7 +12,7 @@ $fabLabel = $this->params['fabLabel'] ?? 'สแกน';
 
 $navItems = [
     'home'     => ['label' => 'หน้าแรก', 'url' => ['/mobile/default/index'],    'icon' => 'house'],
-    'news'     => ['label' => 'ข่าวสาร', 'url' => ['/mobile/default/news'],      'icon' => 'newspaper'],
+    'news'     => ['label' => 'หนังสือราชการ', 'url' => ['/mobile/default/news'], 'icon' => 'file-text'],
     'services' => ['label' => 'บริการ',  'url' => ['/mobile/default/services'],   'icon' => 'grid-3x3'],
     'profile'  => ['label' => 'ส่วนตัว', 'url' => ['/mobile/default/profile'],   'icon' => 'user'],
 ];

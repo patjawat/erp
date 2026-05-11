@@ -3,165 +3,220 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
-// use softark\duallistbox\DualListbox;
 use kartik\widgets\ActiveForm;
-use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentTags;;
-
-// use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
-/** @var app\modules\dms\models\Documents $model */
-/** @var yii\widgets\ActiveForm $form */
-?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
+/** @var app\modules\dms\models\DocumentsDetail $model */
 
-<?php $this->beginBlock('page-action'); ?>
-<?php $this->endBlock(); ?>
+$me = UserHelper::GetEmployee();
+$avatarUrl = $me ? $me->showAvatar() : '';
+$myName = $me ? $me->fullname : 'ฉัน';
+$isEdit = !$model->isNewRecord;
+
+// dept ที่ยังไม่ได้ส่ง (กันส่งซ้ำ)
+$departmentList = $model->listAvailableDepartments();
+
+$action = $isEdit
+    ? Url::to(['/me/documents/update-comment', 'id' => $model->id])
+    : Url::to(['/me/documents/comment', 'id' => $model->document_id]);
+$testNotifyUrl = Url::to(['test-notification', 'id' => $model->document_id]);
+$canTestNotification = \Yii::$app->user->can('admin');
+?>
+
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',
-    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/dms/documents/comment-validator']
+    'action' => $action,
+    'enableAjaxValidation' => false,
+    'enableClientValidation' => false,
+    'options' => ['data-pjax' => 0, 'class' => 'fb-composer'],
 ]); ?>
-<!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
-<?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'name')->hiddenInput()->label(false); ?>
-<?= $form->field($model, 'data_json[comment]')->textArea(['rows' => 8,'placeholder' => 'พิมพ์ข้อความเกษียนหรือเลือกจากแม่แบบด้านบน...'])->label(false); ?>
-<div class="d-flex justify-content-between mt-2 px-1 mb-3">
-                    <div class="d-flex gap-3">
-                        <span id="clear-text" class="btn btn-link btn-sm text-muted text-decoration-none p-0"><i
-                                class="fas fa-trash-alt me-1"></i> ล้างข้อความ</span>
-                                
-                    </div>
-                   <span id="char-count" class="badge bg-secondary opacity-50 rounded-pill small text-white">0 ตัวอักษร</span>
+
+<?= $form->field($model, 'to_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'document_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false) ?>
+
+<div class="w-100">
+        <div class="rounded-4 bg-light bg-opacity-50 border border-light-subtle p-2">
+            <?= $form->field($model, 'data_json[comment]', ['options' => ['class' => 'mb-0']])->textarea([
+                'rows' => 1,
+                'placeholder' => $isEdit ? 'แก้ไขความเห็น...' : ('แสดงความเห็นในนาม ' . $myName . '...'),
+                'class' => 'form-control border-0 bg-transparent shadow-none p-2',
+                'style' => 'resize:none; min-height:40px;',
+            ])->label(false) ?>
+
+            <div class="collapse mt-2" id="composer-tag-people">
+                <div class="px-2 pb-2">
+                    <div class="small text-muted mb-1"><i class="fa-solid fa-user-tag me-1"></i>ส่งต่อถึงบุคคล</div>
+                    <?= $form->field($model, 'tags_employee', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
+                        'data' => $model->listEmployeeSelectTag(),
+                        'options' => ['placeholder' => 'พิมพ์ค้นหาบุคคล...', 'multiple' => true],
+                        'pluginOptions' => ['allowClear' => true, 'multiple' => true],
+                    ])->label(false) ?>
                 </div>
-<?php
+            </div>
 
-echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
-    'data' => $model->listEmployeeSelectTag(),
-    'options' => ['placeholder' => 'เลือกผู้ส่งต่อ ...'],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'multiple' => true,
-    ],
-])->label('<i class="fa-solid fa-user-tag text-primary me-2"></i> ส่งต่อถึง');
+            <div class="collapse mt-2" id="composer-tag-dept">
+                <div class="px-2 pb-2">
+                    <div class="small text-muted mb-1"><i class="fa-solid fa-building me-1"></i>ส่งต่อถึงหน่วยงาน</div>
+                    <?= $form->field($model, 'tags_department', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
+                        'data' => $departmentList,
+                        'options' => ['placeholder' => 'พิมพ์ค้นหาหน่วยงาน...', 'multiple' => true],
+                        'pluginOptions' => ['allowClear' => true, 'multiple' => true],
+                    ])->label(false) ?>
+                </div>
+            </div>
 
-?>
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-1 pt-2 border-top border-light-subtle mt-2">
+                <div class="d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-1 small" data-bs-toggle="collapse" data-bs-target="#composer-tag-people">
+                        <i class="fa-solid fa-user-tag me-1"></i>ส่งต่อถึง
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-1 small" data-bs-toggle="collapse" data-bs-target="#composer-tag-dept">
+                        <i class="fa-solid fa-building me-1"></i>ส่งหน่วยงาน
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-1 small" id="composer-toggle-templates">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>แม่แบบ
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+                    <span id="char-count" class="badge bg-secondary opacity-50 rounded-pill small text-white">0 ตัวอักษร</span>
+                    <?php if ($canTestNotification): ?>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 py-1 small fw-semibold btn-test-notification" data-test-notify-url="<?= Html::encode($testNotifyUrl) ?>">
+                            <i class="fa-solid fa-vial me-1"></i> ทดสอบแจ้งเตือน
+                        </button>
+                    <?php endif; ?>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3 py-1 small fw-semibold">
+                        <i class="fa-solid fa-paper-plane me-1"></i> <?= $isEdit ? 'บันทึก' : 'ลงความเห็น' ?>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-<?php if ($model->isNewRecord): ?>
-    <div class="d-flex justify-content-center">
-        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm']) ?>
+        <div class="collapse mt-2" id="composer-templates">
+            <div class="rounded-3 bg-white border border-light-subtle p-2">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="small text-muted fw-semibold">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>ข้อความที่ใช้บ่อย (<span id="counttemplate">0</span>)
+                    </div>
+                    <button id="btn-save-temp-now" type="button" class="btn btn-sm btn-primary rounded-pill px-2 py-1 small" style="display:none;">
+                        <i class="fa-regular fa-floppy-disk me-1"></i>บันทึกแม่แบบ
+                    </button>
+                </div>
+                <div id="viewlistCommenttemplate"></div>
+            </div>
+        </div>
     </div>
-    <?php else: ?>
-        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm']) ?>
-<?php endif; ?>
+</div>
+
 <?php ActiveForm::end(); ?>
 
 <?php
-$url = Url::to(['/dms/documents/get-items']);
-$js = <<<JS
-
-    if(\$('#documentsdetail-data_json-comment').val() == '')
-    {
-    \$('.save-comment').hide()    
-    }
-
-    \$('#documentsdetail-data_json-comment').keypress(function (e) { 
-        console.log('press');
-        
-        if(\$(this).val() == '')
-    {
-    \$('.save-comment').hide()    
-    }else{
-        \$('.save-comment').show()    
-        
-    }
+$js = <<< 'JS'
+(function () {
+    $(document).off('click.composerTpl').on('click.composerTpl', '#composer-toggle-templates', function (e) {
+        e.preventDefault();
+        var el = document.getElementById('composer-templates');
+        if (!el) return;
+        bootstrap.Collapse.getOrCreateInstance(el).toggle();
     });
-    
-   $('#form-comment').on('beforeSubmit', function (e) {
-    e.preventDefault();
-    var form = $(this);
 
-    // เรียกใช้ SweetAlert2 Confirm
-    Swal.fire({
-        title: 'ยืนยันการบันทึก?',
-        text: "คุณต้องการบันทึกความเห็นนี้ใช่หรือไม่!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ตกลง, บันทึกเลย!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // --- เริ่มต้นส่วนการทำงานเดิมของคุณหลังจากยืนยัน ---
-            
-           
-
-            // 3. ส่ง Ajax
+    var $form = $('#form-comment');
+    // bind capture-phase submit ผ่าน addEventListener เพื่อ block ActiveForm และทุก handler อื่น
+    var formEl = $form.get(0);
+    if (formEl && !formEl.__fbBound) {
+        formEl.__fbBound = true;
+        formEl.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            var form = $(formEl);
+            var $btn = form.find('button[type=submit]');
+            $btn.prop('disabled', true);
             $.ajax({
                 url: form.attr('action'),
                 type: 'post',
                 data: form.serialize(),
                 dataType: 'json',
-                success: async function (res) {
-                    if (res.status === 'success') {
-                        form[0].reset();
-                        
-                        // ใช้ SweetAlert แสดงความสำเร็จแทนการเรียก success() แบบเดิม (ถ้าต้องการ)
-                       await Swal.fire({
-                            title: 'สำเร็จ!',
-                            text: 'บันทึกข้อมูลของคุณเรียบร้อยแล้ว.',
-                            icon: 'success',
-                            timer: 2000, // หน่วยเป็นมิลลิวินาที (2000 = 2 วินาที)
-                            timerProgressBar: true, // แสดงแถบถอยหลัง (ใส่หรือไม่ก็ได้)
-                            showConfirmButton: false // ซ่อนปุ่ม "ตกลง" เพื่อให้ดูสวยงามขณะปิดอัตโนมัติ
-                        });
-
-                        await listComment(); // โหลดรายการ comment ใหม่
-                        await getComment();  // ฟังก์ชันอื่นๆ ของคุณ
-
-                         // 1. จัดการ UI Tabs (สลับไปที่ Tab Comment ตามที่คุณต้องการ)
-                        let homeTab = $('a[href="#comment"]');
-                        $('.nav-link, .tab-pane').removeClass('active show');
-                        homeTab.addClass('active').attr('aria-selected', 'true');
-                        $('#comment').addClass('active show');
-
-                        // 2. ซ่อน Form หรือแสดง Loading
-                        $('#viewFormComment').hide();
-
+                success: function (res) {
+                    if (res && res.status === 'success') {
+                        if (typeof success === 'function') { success('ลงความเห็นสำเร็จ'); }
+                        if (typeof listComment === 'function') { listComment(); }
+                        if (typeof getComment === 'function') { getComment(); }
                     } else {
-                        // กรณี Error จากฝั่ง Server
-                        Swal.fire('เกิดข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกได้', 'error');
-                        $('#viewFormComment').show(); 
+                        Swal.fire({ icon: 'warning', title: (res && res.message) || 'บันทึกไม่สำเร็จ' });
                     }
                 },
                 error: function (xhr) {
-                    console.error('AJAX Error:', xhr.responseText);
-                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
-                    $('#viewFormComment').show();
-                }
+                    var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'เกิดข้อผิดพลาด';
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: msg });
+                },
+                complete: function () { $btn.prop('disabled', false); }
             });
-        }
-    });
+            return false;
+        }, true);  // useCapture = true → fire ก่อน handler อื่นทั้งหมด
+    }
 
-    return false; // ป้องกันการ Submit แบบปกติของ HTML Form
-});
-
-    $('#clear-text').click(function (e) { 
+    $(document).off('click.testNotify', '.btn-test-notification').on('click.testNotify', '.btn-test-notification', function (e) {
         e.preventDefault();
-        $('#documentsdetail-data_json-comment').val('');
-        
+        var $btn = $(this);
+        var form = $btn.closest('form');
+        var url = $btn.data('test-notify-url');
+        if (!url || !form.length) {
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: url,
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+                if (res && (res.status === 'success' || res.status === 'warning')) {
+                    var safeMessage = $('<div>').text(res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว').html();
+                    var swalOptions = {
+                        icon: res.status === 'success' ? 'success' : 'warning',
+                        title: res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว',
+                    };
+                    if (res.status === 'warning' && res.details_html) {
+                        swalOptions.html = '<div class="text-start">' + safeMessage + '<hr class="my-2">' + res.details_html + '</div>';
+                    } else {
+                        swalOptions.text = 'LINE: ' + (res.line_sent || 0) + ' | Telegram: ' + (res.telegram_sent || 0);
+                    }
+                    Swal.fire(swalOptions);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: (res && res.message) || 'ทดสอบไม่สำเร็จ',
+                    });
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'เกิดข้อผิดพลาด';
+                Swal.fire({ icon: 'error', title: 'ทดสอบไม่สำเร็จ', text: msg });
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+            }
+        });
     });
-              
+
+    // char count
+    function updateCharCount() {
+        var ta = document.getElementById('documentsdetail-data_json-comment');
+        if (!ta) return;
+        var len = (ta.value || '').length;
+        var $cc = $('#char-count');
+        $cc.text(len + ' ตัวอักษร');
+        if (len > 0) { $cc.removeClass('opacity-50').addClass('opacity-100'); }
+        else { $cc.removeClass('opacity-100').addClass('opacity-50'); }
+    }
+    $(document).off('input.composer keyup.composer', '#documentsdetail-data_json-comment')
+        .on('input.composer keyup.composer', '#documentsdetail-data_json-comment', updateCharCount);
+    updateCharCount();
+})();
 JS;
-$this->registerJS($js, View::POS_END);
+$this->registerJs($js, View::POS_END);
 ?>

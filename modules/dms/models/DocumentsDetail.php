@@ -64,6 +64,9 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $comment;
     public $status;
     public $date_filter;
+    public $tags_employee;
+    public $tags_department;
+    public $tag_id;
     public static function tableName()
     {
         return 'documents_detail';
@@ -75,7 +78,7 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'data_json', 'status','date_filter','date_start','date_start'], 'safe'],
+            [['created_at', 'updated_at', 'deleted_at', 'thai_year', 'q', 'show_reading', 'tags_employee', 'tags_department', 'tag_id', 'data_json', 'status','date_filter','date_start','date_start'], 'safe'],
             [['created_by', 'updated_by', 'deleted_by', 'doc_read'], 'integer'],
             [['ref', 'name', 'document_id', 'to_id', 'to_name', 'to_type', 'from_id', 'from_name', 'from_type'], 'string', 'max' => 255],
         ];
@@ -126,6 +129,13 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documents::class, ['id' => 'document_id']);
     }
+
+    public function getDocumentStatus()
+    {
+        $document = $this->document;
+        return $document ? $document->documentStatus : null;
+    }
+
     // บุคลากร
     public function getEmployee()
     {
@@ -140,11 +150,21 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public function afterFind()
     {
         try {
+            $this->data_json = $this->normalizeJsonData($this->data_json);
             $this->comment = isset($this->data_json['comment']) ? $this->data_json['comment'] : '';
         } catch (\Throwable $th) {
         }
 
         parent::afterFind();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (is_array($this->data_json)) {
+            $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
+        }
+
+        return parent::beforeSave($insert);
     }
 
 
@@ -174,6 +194,42 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         return ArrayHelper::map($model, 'code', 'title');
     }
 
+
+    /**
+     * รายการ id ของหน่วยงานที่เอกสารนี้ส่งไปแล้ว (รวม forwarding card + comment_dept)
+     * ใช้กรอง dept dropdown ใน composer
+     */
+    public function listForwardedDepartmentIds()
+    {
+        try {
+            return self::find()
+                ->select('to_id')
+                ->where(['document_id' => $this->document_id])
+                ->andWhere(['in', 'name', ['department', 'comment_dept']])
+                ->andWhere(['not', ['to_id' => null]])
+                ->andWhere(['<>', 'to_id', ''])
+                ->distinct()
+                ->column();
+        } catch (\Throwable $th) {
+            return [];
+        }
+    }
+
+    /**
+     * รายการหน่วยงานที่ "ยังไม่ได้" ส่ง — ใช้ใน Select2 ของ composer
+     */
+    public function listAvailableDepartments()
+    {
+        $forwarded = $this->listForwardedDepartmentIds();
+        // ถ้ากำลังแก้ comment เดิม ให้แสดง dept ที่เคยเลือกของ comment นี้ด้วย
+        $myCurrent = is_array($this->tags_department) ? $this->tags_department : [];
+        $exclude = array_diff($forwarded, $myCurrent);
+        $query = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC]);
+        if (!empty($exclude)) {
+            $query->andWhere(['not in', 'id', $exclude]);
+        }
+        return ArrayHelper::map($query->all(), 'id', 'name');
+    }
 
     // ดึงค่าไปแสดงตอนที่เรา update
     public function listEmployeeSelectTag()
@@ -218,44 +274,542 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         }
     }
 
+    protected function normalizeJsonData($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    protected function commentDataJson(): array
+    {
+        return $this->normalizeJsonData($this->data_json);
+    }
+
+    protected function departmentLeaderIds(Organization $department): array
+    {
+        $dataJson = $this->normalizeJsonData($department->data_json);
+        $leaderIds = [];
+
+        foreach (['leader1', 'leader_1', 'leader2', 'leader_2'] as $key) {
+            $value = $dataJson[$key] ?? null;
+            if (is_numeric($value) && (int) $value > 0) {
+                $leaderIds[] = (int) $value;
+            }
+        }
+
+        return array_values(array_unique($leaderIds));
+    }
+
+    /**
+     * รายชื่อพนักงานที่ควรได้รับแจ้งเมื่อมีการ comment ในเอกสารนี้
+     */
+    public function commentNotificationRecipients(): array
+    {
+        $detailRows = self::find()
+            ->select(['name', 'to_id'])
+            ->where(['document_id' => $this->document_id])
+            ->andWhere(['in', 'name', ['department', 'employee', 'employee_tag', 'tags', 'req_approve']])
+            ->all();
+
+        if (!empty($this->id)) {
+            $commentRows = self::find()
+                ->select(['name', 'to_id'])
+                ->where(['document_id' => $this->document_id, 'from_id' => $this->id])
+                ->andWhere(['in', 'name', ['comment_emp', 'comment_dept']])
+                ->all();
+            $detailRows = array_merge($detailRows, $commentRows);
+        }
+
+        $legacyTagIds = DocumentTags::find()
+            ->select('tag_id')
+            ->where(['document_id' => $this->document_id, 'name' => 'employee'])
+            ->column();
+        if (!empty($legacyTagIds)) {
+            foreach ($legacyTagIds as $legacyTagId) {
+                $detailRows[] = (object) [
+                    'name' => 'employee',
+                    'to_id' => $legacyTagId,
+                ];
+            }
+        }
+
+        $employeeIds = [];
+        $departmentIds = [];
+
+        foreach ($detailRows as $row) {
+            $toId = (int) $row->to_id;
+            if ($toId <= 0) {
+                continue;
+            }
+
+            if (in_array($row->name, ['department', 'comment_dept'], true)) {
+                $departmentIds[] = $toId;
+            } else {
+                $employeeIds[] = $toId;
+            }
+        }
+
+        if (!empty($departmentIds)) {
+            $departments = Organization::find()
+                ->where(['id' => array_values(array_unique($departmentIds))])
+                ->all();
+
+            foreach ($departments as $department) {
+                $employeeIds = array_merge($employeeIds, $this->departmentLeaderIds($department));
+            }
+        }
+
+        $employeeIds = array_values(array_unique(array_filter(array_map('intval', $employeeIds))));
+        if (empty($employeeIds)) {
+            return [];
+        }
+
+        return Employees::find()
+            ->where(['id' => $employeeIds])
+            ->with('user')
+            ->all();
+    }
+
+    public function notifyCommentRecipients(): void
+    {
+        $document = $this->document;
+        if (!$document) {
+            return;
+        }
+
+        $recipients = $this->commentNotificationRecipients();
+        if (empty($recipients)) {
+            Yii::warning('No comment notification recipients found for document #' . (int) $this->document_id, __METHOD__);
+            return;
+        }
+
+        $commenter = Employees::find()->where(['user_id' => $this->created_by])->with('user')->one();
+        $commenterName = $commenter ? $commenter->fullname : ('ผู้ใช้ #' . $this->created_by);
+        $commentData = $this->commentDataJson();
+        $commentText = trim((string) ($commentData['comment'] ?? ''));
+        $commentText = $commentText !== '' ? $commentText : '-';
+        $documentUrl = Url::to(['/dms/documents/view', 'id' => $document->id], true);
+
+        $lineMessage = $this->buildCommentLineMessage($document, $commenterName, $commentText, $documentUrl);
+        $telegramMessage = $this->buildCommentTelegramMessage($document, $commenterName, $commentText, $documentUrl);
+
+        foreach ($recipients as $employee) {
+            if (!$employee || !$employee->user) {
+                continue;
+            }
+            if ((int) $employee->user_id === (int) $this->created_by) {
+                continue;
+            }
+
+            $lineId = trim((string) ($employee->user->line_id ?? ''));
+            if ($lineId !== '') {
+                try {
+                    $lineResult = LineMsg::PushMsg([
+                        'to' => $lineId,
+                        'messages' => [
+                            [
+                                'type' => 'text',
+                                'text' => $lineMessage,
+                            ],
+                        ],
+                    ]);
+                    if (!$lineResult) {
+                        Yii::warning('LINE notification returned empty result for employee #' . $employee->id, __METHOD__);
+                    }
+                } catch (\Throwable $th) {
+                    Yii::warning('Failed to send comment LINE notification: ' . $th->getMessage(), __METHOD__);
+                }
+            }
+
+            $telegramId = trim((string) ($employee->user->telegram_id ?? ''));
+            if ($telegramId !== '') {
+                try {
+                    $telegramResult = Yii::$app->telegram->sendDirectMessage($telegramId, $telegramMessage);
+                    if ($telegramResult === false) {
+                        Yii::warning('Telegram notification returned false for employee #' . $employee->id, __METHOD__);
+                    }
+                } catch (\Throwable $th) {
+                    Yii::warning('Failed to send comment Telegram notification: ' . $th->getMessage(), __METHOD__);
+                }
+            }
+        }
+    }
+
+    protected function buildCommentLineMessage(Documents $document, string $commenterName, string $commentText, string $documentUrl, string $heading = 'มีความเห็นใหม่ในเอกสาร'): string
+    {
+        $lines = [
+            $heading,
+        ];
+
+        if (!empty($document->doc_regis_number)) {
+            $lines[] = 'เลขรับ: ' . $document->doc_regis_number;
+        }
+        if (!empty($document->doc_number)) {
+            $lines[] = 'เลขที่: ' . $document->doc_number;
+        }
+
+        $lines[] = 'เรื่อง: ' . $document->topic;
+        $lines[] = 'โดย: ' . $commenterName;
+        $lines[] = 'ความเห็น: ' . $commentText;
+        $lines[] = 'เปิดดูเอกสาร: ' . $documentUrl;
+
+        return implode("\n", $lines);
+    }
+
+    protected function buildCommentTelegramMessage(Documents $document, string $commenterName, string $commentText, string $documentUrl, string $heading = 'มีความเห็นใหม่ในเอกสาร'): string
+    {
+        $lines = [
+            '<b>' . Html::encode($heading) . '</b>',
+        ];
+
+        if (!empty($document->doc_regis_number)) {
+            $lines[] = '<b>เลขรับ:</b> ' . Html::encode((string) $document->doc_regis_number);
+        }
+        if (!empty($document->doc_number)) {
+            $lines[] = '<b>เลขที่:</b> ' . Html::encode((string) $document->doc_number);
+        }
+
+        $lines[] = '<b>เรื่อง:</b> ' . Html::encode((string) $document->topic);
+        $lines[] = '<b>โดย:</b> ' . Html::encode($commenterName);
+        $lines[] = '<b>ความเห็น:</b> ' . Html::encode($commentText);
+        $lines[] = '<a href="' . Html::encode($documentUrl) . '">เปิดดูเอกสาร</a>';
+
+        return implode("\n", $lines);
+    }
+
+    protected function normalizeIdList($value): array
+    {
+        if (is_array($value)) {
+            $items = $value;
+        } elseif (is_string($value) && trim($value) !== '') {
+            $items = preg_split('/[\s,]+/', trim($value));
+        } elseif (is_numeric($value)) {
+            $items = [$value];
+        } else {
+            $items = [];
+        }
+
+        $items = array_map('intval', $items);
+        $items = array_filter($items, static function ($id) {
+            return $id > 0;
+        });
+
+        return array_values(array_unique($items));
+    }
+
+    protected function loadEmployeesByIds(array $employeeIds): array
+    {
+        $employeeIds = $this->normalizeIdList($employeeIds);
+        if (empty($employeeIds)) {
+            return [];
+        }
+
+        return Employees::find()
+            ->where(['id' => $employeeIds])
+            ->with('user')
+            ->all();
+    }
+
+    protected function resolveNotificationRecipientsFromSelection(array $employeeIds = [], array $departmentIds = [], bool $fallbackToSelf = false): array
+    {
+        $recipientsById = [];
+
+        foreach ($this->loadEmployeesByIds($employeeIds) as $employee) {
+            $recipientsById[(int) $employee->id] = $employee;
+        }
+
+        $departmentIds = $this->normalizeIdList($departmentIds);
+        if (!empty($departmentIds)) {
+            $departments = Organization::find()
+                ->where(['id' => $departmentIds])
+                ->all();
+
+            $leaderIds = [];
+            foreach ($departments as $department) {
+                $leaderIds = array_merge($leaderIds, $this->departmentLeaderIds($department));
+            }
+
+            foreach ($this->loadEmployeesByIds($leaderIds) as $employee) {
+                $recipientsById[(int) $employee->id] = $employee;
+            }
+        }
+
+        if (empty($recipientsById) && $fallbackToSelf) {
+            $me = UserHelper::GetEmployee();
+            if ($me && (int) $me->id > 0) {
+                $self = Employees::find()
+                    ->where(['id' => (int) $me->id])
+                    ->with('user')
+                    ->one();
+                if ($self) {
+                    $recipientsById[(int) $self->id] = $self;
+                }
+            }
+        }
+
+        return array_values($recipientsById);
+    }
+
+    protected function collectTestNotificationRecipients(): array
+    {
+        $recipientsById = [];
+
+        foreach ($this->commentNotificationRecipients() as $employee) {
+            if ($employee && (int) $employee->id > 0) {
+                $recipientsById[(int) $employee->id] = $employee;
+            }
+        }
+
+        $selectedEmployees = $this->normalizeIdList($this->tags_employee);
+        $selectedDepartments = $this->normalizeIdList($this->tags_department);
+        foreach ($this->resolveNotificationRecipientsFromSelection($selectedEmployees, $selectedDepartments, false) as $employee) {
+            if ($employee && (int) $employee->id > 0) {
+                $recipientsById[(int) $employee->id] = $employee;
+            }
+        }
+
+        $currentUserId = (int) Yii::$app->user->id;
+        if ($currentUserId > 0 && count($recipientsById) > 1) {
+            unset($recipientsById[$currentUserId]);
+        }
+
+        if (empty($recipientsById)) {
+            $fallbackRecipients = $this->resolveNotificationRecipientsFromSelection([], [], true);
+            foreach ($fallbackRecipients as $employee) {
+                if ($employee && (int) $employee->id > 0) {
+                    $recipientsById[(int) $employee->id] = $employee;
+                }
+            }
+        }
+
+        return array_values($recipientsById);
+    }
+
+    public function sendTestNotification(?string $commentText = null): array
+    {
+        $document = $this->document;
+        if (!$document) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบข้อมูลเอกสาร',
+            ];
+        }
+
+        $recipients = $this->collectTestNotificationRecipients();
+        if (empty($recipients)) {
+            Yii::warning('No test notification recipients found for document #' . (int) $this->document_id, __METHOD__);
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบผู้รับสำหรับทดสอบการแจ้งเตือน',
+            ];
+        }
+
+        $commenter = UserHelper::GetEmployee();
+        $commenterName = $commenter ? $commenter->fullname : ('ผู้ใช้ #' . Yii::$app->user->id);
+        $commentText = trim((string) ($commentText ?? ''));
+        if ($commentText === '') {
+            $commentData = $this->commentDataJson();
+            $commentText = trim((string) ($commentData['comment'] ?? ''));
+        }
+        if ($commentText === '') {
+            $commentText = 'ทดสอบการส่งการแจ้งเตือน';
+        }
+        $documentUrl = Url::to(['/dms/documents/view', 'id' => $document->id], true);
+
+        $lineMessage = $this->buildCommentLineMessage($document, $commenterName, $commentText, $documentUrl, 'ทดสอบการส่งการแจ้งเตือน');
+        $telegramMessage = $this->buildCommentTelegramMessage($document, $commenterName, $commentText, $documentUrl, 'ทดสอบการส่งการแจ้งเตือน');
+
+        $lineSent = 0;
+        $telegramSent = 0;
+        $noChannelCount = 0;
+        $failedCount = 0;
+        $missingChannelRecipients = [];
+
+        foreach ($recipients as $employee) {
+            if (!$employee || !$employee->user) {
+                $failedCount++;
+                $missingChannelRecipients[] = [
+                    'emp_id' => (int) ($employee->id ?? 0),
+                    'user_id' => (int) ($employee->user_id ?? 0),
+                    'name' => trim((string) ($employee->fullname ?? (($employee->prefix ?? '') . ($employee->fname ?? '') . ' ' . ($employee->lname ?? '')))),
+                ];
+                continue;
+            }
+
+            $sentAny = false;
+
+            $lineId = trim((string) ($employee->user->line_id ?? ''));
+            if ($lineId !== '') {
+                $sentAny = true;
+                try {
+                    $lineResult = LineMsg::PushMsg([
+                        'to' => $lineId,
+                        'messages' => [
+                            [
+                                'type' => 'text',
+                                'text' => $lineMessage,
+                            ],
+                        ],
+                    ]);
+                    if ($lineResult) {
+                        $lineSent++;
+                    } else {
+                        $failedCount++;
+                    }
+                } catch (\Throwable $th) {
+                    $failedCount++;
+                    Yii::warning('Failed to send test LINE notification: ' . $th->getMessage(), __METHOD__);
+                }
+            }
+
+            $telegramId = trim((string) ($employee->user->telegram_id ?? ''));
+            if ($telegramId !== '') {
+                $sentAny = true;
+                try {
+                    $telegramResult = Yii::$app->telegram->sendDirectMessage($telegramId, $telegramMessage);
+                    if ($telegramResult !== false) {
+                        $telegramSent++;
+                    } else {
+                        $failedCount++;
+                    }
+                } catch (\Throwable $th) {
+                    $failedCount++;
+                    Yii::warning('Failed to send test Telegram notification: ' . $th->getMessage(), __METHOD__);
+                }
+            }
+
+            if (!$sentAny) {
+                $noChannelCount++;
+                $missingChannelRecipients[] = [
+                    'emp_id' => (int) ($employee->id ?? 0),
+                    'user_id' => (int) ($employee->user_id ?? 0),
+                    'name' => trim((string) ($employee->fullname ?? (($employee->prefix ?? '') . ($employee->fname ?? '') . ' ' . ($employee->lname ?? '')))),
+                ];
+            }
+        }
+
+        if ($lineSent === 0 && $telegramSent === 0) {
+            $detailLines = [];
+            foreach ($missingChannelRecipients as $recipient) {
+                $detailLines[] = sprintf(
+                    'emp_id: %d, user_id: %d, name: %s',
+                    (int) ($recipient['emp_id'] ?? 0),
+                    (int) ($recipient['user_id'] ?? 0),
+                    trim((string) ($recipient['name'] ?? '-')) ?: '-'
+                );
+            }
+
+            $detailsHtml = '';
+            if (!empty($detailLines)) {
+                $detailsHtml = '<div class="text-start mt-2">'
+                    . '<div class="fw-semibold mb-1">รายละเอียดผู้รับ:</div>'
+                    . '<div style="white-space:pre-line;">'
+                    . Html::encode(implode("\n", $detailLines))
+                    . '</div></div>';
+            }
+
+            return [
+                'status' => 'warning',
+                'message' => 'พบผู้รับแล้ว แต่ไม่พบ line_id หรือ telegram_id สำหรับส่งการแจ้งเตือน',
+                'details_html' => $detailsHtml,
+                'details' => $detailLines,
+                'recipients' => count($recipients),
+                'line_sent' => $lineSent,
+                'telegram_sent' => $telegramSent,
+                'no_channel_count' => $noChannelCount,
+                'failed_count' => $failedCount,
+            ];
+        }
+
+        $messageParts = ['ส่งการแจ้งเตือนทดสอบแล้ว'];
+        if ($lineSent > 0) {
+            $messageParts[] = 'LINE ' . $lineSent;
+        }
+        if ($telegramSent > 0) {
+            $messageParts[] = 'Telegram ' . $telegramSent;
+        }
+        if ($noChannelCount > 0) {
+            $messageParts[] = 'ไม่มีช่องทาง ' . $noChannelCount;
+        }
+        if ($failedCount > 0) {
+            $messageParts[] = 'ล้มเหลว ' . $failedCount;
+        }
+
+        return [
+            'status' => 'success',
+            'message' => implode(' · ', $messageParts),
+            'recipients' => count($recipients),
+            'line_sent' => $lineSent,
+            'telegram_sent' => $telegramSent,
+            'no_channel_count' => $noChannelCount,
+            'failed_count' => $failedCount,
+        ];
+    }
+
 
     // บันทึก tag ไปยัง document
     public function UpdateDocumentsDetail()
     {
-        $me = UserHelper::GetEmployee();
-
         try {
-            if ($this->tags_employee) {
-                $clearDEmployeeTag = self::deleteAll([
-                    'and',
-                    ['not in', 'to_id', $this->tags_employee],
-                    ['document_id' => $this->document_id, 'name' => 'tags', 'created_by' => Yii::$app->user->id]
-                ]);
+            $userId = (int) Yii::$app->user->id;
+            $empIds = is_array($this->tags_employee) ? array_values(array_filter(array_map('intval', $this->tags_employee))) : [];
+            $deptIds = is_array($this->tags_department) ? array_values(array_filter(array_map('intval', $this->tags_department))) : [];
+
+            $deleteEmpCondition = [
+                'from_id' => $this->id,
+                'name' => 'comment_emp',
+                'created_by' => $userId,
+            ];
+            if (!empty($empIds)) {
+                $deleteEmpCondition[] = ['not in', 'to_id', $empIds];
             }
-            // foreach ($this->data_json['employee_tag'] as $key => $value):
-            foreach ($this->tags_employee as $key => $value):
-                $check = DocumentsDetail::find()->where(['name' => 'tags', 'document_id' => $this->document_id, 'to_id' => $value])->one();
+            self::deleteAll($deleteEmpCondition);
+
+            $deleteDeptCondition = [
+                'from_id' => $this->id,
+                'name' => 'comment_dept',
+                'created_by' => $userId,
+            ];
+            if (!empty($deptIds)) {
+                $deleteDeptCondition[] = ['not in', 'to_id', $deptIds];
+            }
+            self::deleteAll($deleteDeptCondition);
+
+            foreach ($empIds as $value) {
+                $check = DocumentsDetail::find()
+                    ->where(['name' => 'comment_emp', 'document_id' => $this->document_id, 'from_id' => $this->id, 'to_id' => (string) $value])
+                    ->one();
                 $model = $check ? $check : new DocumentsDetail();
-                $model->name = 'tags';
+                $model->name = 'comment_emp';
                 $model->document_id = $this->document_id;
-                $model->to_id = $value;
+                $model->from_id = (string) $this->id;
+                $model->from_type = 'comment';
+                $model->to_id = (string) $value;
+                $model->to_type = 'employee';
                 $model->save(false);
+            }
 
-                try {
-                    $line_id = $model->employee->user->line_id;
-                    $topic = $this->comment;
-                    // ส่ง msg ให้ Approve
-                    LineMsg::sendDocument($model, $line_id);
-                } catch (\Throwable $th) {
-                }
-
-            // if($new->employee->isDicrector())
-            // {
-            //     $dicrector = 1;
-            // }
-
-            endforeach;
-            //code...
+            foreach ($deptIds as $value) {
+                $check = DocumentsDetail::find()
+                    ->where(['name' => 'comment_dept', 'document_id' => $this->document_id, 'from_id' => $this->id, 'to_id' => (string) $value])
+                    ->one();
+                $model = $check ? $check : new DocumentsDetail();
+                $model->name = 'comment_dept';
+                $model->document_id = $this->document_id;
+                $model->from_id = (string) $this->id;
+                $model->from_type = 'comment';
+                $model->to_id = (string) $value;
+                $model->to_type = 'department';
+                $model->save(false);
+            }
         } catch (\Throwable $th) {
         }
         // return $dicrector;
@@ -288,7 +842,8 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
             $createdAt = Yii::$app->thaiFormatter->asDate($this->created_at, 'medium');
-            $msg = '<i class="fa-solid fa-quote-left"></i><span="fst-italic mb-0 ps-4">' . $this->data_json['comment'].'</span><i class="fa-solid fa-quote-right"></i>';
+            $commentData = $this->commentDataJson();
+            $msg = '<i class="fa-solid fa-quote-left"></i><span="fst-italic mb-0 ps-4">' . ($commentData['comment'] ?? '') . '</span><i class="fa-solid fa-quote-right"></i>';
             // $msg = $employee->departmentName();
             return [
                 'avatar' => $employee->getAvatar(false, $msg),

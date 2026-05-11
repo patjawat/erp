@@ -10,12 +10,17 @@ use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
 use app\modules\approveV2\models\Approve as ApproveModel;
+use app\modules\dms\models\Documents;
+use app\modules\dms\models\DocumentsDetail;
 use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
 use Yii;
+use yii\data\ActiveDataProvider;
+use yii\db\Expression;
 use yii\filters\AccessControl;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -56,35 +61,229 @@ class DefaultController extends Controller
     public function actionIndex()
     {
         $this->view->title = 'บริการออนไลน์';
+        $officialUnreadCount = $this->countOfficialDocuments(true);
         return $this->render('index', [
             'current_page' => 'home',
             'pendingLeaveApprovals' => $this->findPendingLeaveApprovals(3),
             'recentLeaveRequests' => $this->findRecentLeaveRequests(3),
             'recentMeetings' => $this->findRecentMeetings(3),
+            'officialDocumentsPreview' => $this->findOfficialDocuments(true, 3),
+            'officialUnreadCount' => $officialUnreadCount,
         ]);
     }
 
     /**
-     * Vertical news feed (ข่าวสารและประกาศ).
+     * หนังสือราชการที่ส่งมาถึงผู้ใช้ปัจจุบัน
      */
     public function actionNews()
     {
-        $this->view->title = 'ข่าวสาร';
+        $filter = trim((string) Yii::$app->request->get('filter', 'all'));
+        if (!in_array($filter, ['all', 'unread'], true)) {
+            $filter = 'all';
+        }
+
+        $this->view->title = 'หนังสือราชการ';
         return $this->render('news', [
             'current_page' => 'news',
+            'filter' => $filter,
+            'dataProvider' => $this->buildOfficialDocumentsProvider($filter === 'unread'),
+            'officialUnreadCount' => $this->countOfficialDocuments(true),
+            'officialTotalCount' => $this->countOfficialDocuments(false),
         ]);
     }
 
     /**
-     * ดูรายละเอียดข่าวสาร (ตัวอย่าง).
+     * ดูรายละเอียดหนังสือราชการ
      */
     public function actionNewsView($id)
     {
-        $this->view->title = 'รายละเอียดข่าว';
+        $detail = $this->findOfficialDocumentDetail((int) $id);
+        if (!$detail) {
+            throw new NotFoundHttpException('ไม่พบหนังสือราชการที่ร้องขอ');
+        }
+
+        $model = $detail->document;
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบข้อมูลเอกสาร');
+        }
+
+        $this->markOfficialDocumentAsRead($detail);
+
+        $this->view->title = $model->topic ?: 'หนังสือราชการ';
+        $this->view->params['current_page'] = 'news';
+        $this->view->params['mobileTitle'] = 'หนังสือราชการ';
+        $this->view->params['mobileSubtitle'] = $model->topic ?: 'รายละเอียดหนังสือ';
+
         return $this->render('news-view', [
             'current_page' => 'news',
-            'id' => (int) $id,
+            'model' => $model,
+            'detail' => $detail,
         ]);
+    }
+
+    /**
+     * สร้าง query หนังสือราชการที่ส่งถึงผู้ใช้ปัจจุบัน
+     */
+    protected function buildOfficialDocumentsQuery(bool $onlyUnread = false, bool $forCount = false)
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            return Documents::find()->where('0=1');
+        }
+
+        $empId = (int) $me->id;
+        $depId = (int) ($me->department ?? 0);
+
+        $query = Documents::find();
+        $query->leftJoin('documents_detail te', "
+            te.document_id = documents.id
+            AND te.name IN ('tags', 'employee_tag', 'employee', 'req_approve')
+            AND te.to_id = :empId
+        ", [':empId' => $empId]);
+        $query->leftJoin('documents_detail td', "
+            td.document_id = documents.id
+            AND td.name = 'department'
+            AND td.to_id = :depId
+        ", [':depId' => $depId]);
+        $query->leftJoin('documents_detail tr', "
+            tr.document_id = documents.id
+            AND tr.name = 'read'
+            AND tr.to_id = :empId
+        ", [':empId' => $empId]);
+
+        $query->andWhere(['documents.document_group' => 'receive']);
+        $query->andWhere([
+            'or',
+            ['not', ['te.id' => null]],
+            ['not', ['td.id' => null]],
+        ]);
+
+        if ($onlyUnread) {
+            $query->andWhere(['tr.id' => null]);
+        }
+
+        if ($forCount) {
+            return $query;
+        }
+
+        $query->select([
+            'documents.*',
+            new Expression('COALESCE(MIN(te.id), MIN(td.id)) AS detail_id'),
+            new Expression('MIN(tr.doc_read) AS doc_read'),
+        ]);
+        $query->groupBy('documents.id');
+        $query->with(['documentOrg']);
+        $query->orderBy(new Expression('CASE WHEN MIN(tr.id) IS NULL THEN 0 ELSE 1 END ASC, documents.doc_transactions_date DESC, documents.doc_regis_number DESC, documents.id DESC'));
+
+        return $query;
+    }
+
+    /**
+     * DataProvider สำหรับรายการหนังสือราชการ
+     */
+    protected function buildOfficialDocumentsProvider(bool $onlyUnread = false): ActiveDataProvider
+    {
+        return new ActiveDataProvider([
+            'query' => $this->buildOfficialDocumentsQuery($onlyUnread, false),
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+            'sort' => false,
+        ]);
+    }
+
+    /**
+     * ดึงรายการหนังสือราชการจาก query
+     *
+     * @return array<int, Documents>
+     */
+    protected function findOfficialDocuments(bool $onlyUnread = false, ?int $limit = null): array
+    {
+        $query = $this->buildOfficialDocumentsQuery($onlyUnread, false);
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query->all();
+    }
+
+    /**
+     * นับจำนวนหนังสือราชการ
+     */
+    protected function countOfficialDocuments(bool $onlyUnread = false): int
+    {
+        $query = $this->buildOfficialDocumentsQuery($onlyUnread, true);
+        return (int) $query->count('DISTINCT documents.id');
+    }
+
+    /**
+     * ตรวจสอบสิทธิ์และดึงรายละเอียดหนังสือจาก documents_detail
+     */
+    protected function findOfficialDocumentDetail(int $detailId): ?DocumentsDetail
+    {
+        $detail = DocumentsDetail::findOne($detailId);
+        if (!$detail) {
+            return null;
+        }
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            throw new ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
+        }
+
+        $empId = (int) $me->id;
+        $depId = (int) ($me->department ?? 0);
+        $toId = (int) ($detail->to_id ?? 0);
+
+        $isAllowed = false;
+        if (in_array($detail->name, ['tags', 'employee_tag', 'employee', 'req_approve'], true) && $toId === $empId) {
+            $isAllowed = true;
+        }
+        if ($detail->name === 'department' && $toId === $depId) {
+            $isAllowed = true;
+        }
+
+        if (!$isAllowed) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูหนังสือฉบับนี้');
+        }
+
+        return $detail;
+    }
+
+    /**
+     * บันทึกสถานะอ่านของหนังสือราชการในมุมมองมือถือ
+     */
+    protected function markOfficialDocumentAsRead(DocumentsDetail $detail): void
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me || !$detail->document_id) {
+            return;
+        }
+
+        $reading = DocumentsDetail::find()
+            ->where([
+                'document_id' => $detail->document_id,
+                'name' => 'read',
+                'to_id' => $me->id,
+                'from_id' => $detail->id,
+            ])
+            ->one();
+
+        if (!$reading) {
+            $reading = new DocumentsDetail();
+            $reading->document_id = $detail->document_id;
+            $reading->name = 'read';
+            $reading->to_id = $me->id;
+            $reading->from_id = $detail->id;
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
+            return;
+        }
+
+        if (empty($reading->doc_read)) {
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
+        }
     }
 
     /**

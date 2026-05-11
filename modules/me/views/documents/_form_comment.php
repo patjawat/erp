@@ -3,112 +3,141 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\widgets\Pjax;
 use kartik\select2\Select2;
-use yii\helpers\ArrayHelper;
-// use softark\duallistbox\DualListbox;
 use kartik\widgets\ActiveForm;
-use app\modules\hr\models\Organization;
-use app\modules\dms\models\DocumentTags;;
-
-// use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
+use app\components\UserHelper;
 
 /** @var yii\web\View $this */
-/** @var app\modules\dms\models\Documents $model */
-/** @var yii\widgets\ActiveForm $form */
-?>
-<?php $this->beginBlock('page-title'); ?>
-<i class="bi bi-journal-text fs-4"></i> <?= $this->title; ?>
-<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>
-<?php $this->endBlock(); ?>
+/** @var app\modules\dms\models\DocumentsDetail $model */
 
-<?php $this->beginBlock('page-action'); ?>
-<?php $this->endBlock(); ?>
+$me = UserHelper::GetEmployee();
+$avatarUrl = $me ? $me->showAvatar() : '';
+$myName = $me ? $me->fullname : 'ฉัน';
+$isEdit = !$model->isNewRecord;
+?>
+
 <?php $form = ActiveForm::begin([
     'id' => 'form-comment',
-    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/dms/documents/comment-validator']
+    'enableAjaxValidation' => true,
+    'validationUrl' => ['/dms/documents/comment-validator'],
+    'options' => ['data-pjax' => 0, 'class' => 'fb-composer'],
 ]); ?>
-<!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
-<?= $form->field($model, 'to_id')->textInput()->label(false); ?>
-<?= $form->field($model, 'document_id')->textInput()->label(false); ?>
-<?= $form->field($model, 'name')->textInput(['value' => 'comment'])->label(false); ?>
-<?php
 
-echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
-    'data' => $model->listEmployeeSelectTag(),
-    'options' => ['placeholder' => 'เลือกผู้ส่งต่อ ...'],
-    'pluginOptions' => [
-        'allowClear' => true,
-        'multiple' => true,
-    ],
-])->label('ส่งต่อ');
+<?= $form->field($model, 'to_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'document_id')->hiddenInput()->label(false) ?>
+<?= $form->field($model, 'name')->hiddenInput(['value' => 'comment'])->label(false) ?>
 
-?>
-
-<?= $form->field($model, 'data_json[comment]')->textArea(['rows' => 8,'placeholder' => 'พิมพ์ข้อความเกษียนหรือเลือกจากแม่แบบด้านบน...'])->label(false); ?>
-<?php if ($model->isNewRecord): ?>
-    <div class="d-flex justify-content-center">
-        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-primary rounded-pill shadow']) ?>
+<div class="d-flex gap-2 align-items-start">
+    <div class="flex-shrink-0">
+        <?php if ($avatarUrl): ?>
+            <img src="<?= Html::encode($avatarUrl) ?>" class="rounded-circle border" style="width:36px;height:36px;object-fit:cover;" alt="<?= Html::encode($myName) ?>">
+        <?php else: ?>
+            <span class="d-inline-flex align-items-center justify-content-center bg-secondary text-white rounded-circle" style="width:36px;height:36px;">
+                <i class="fa-solid fa-user"></i>
+            </span>
+        <?php endif; ?>
     </div>
-    <?php else: ?>
-        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-warning rounded-pill shadow']) ?>
-<?php endif; ?>
+
+    <div class="flex-grow-1 min-width-0">
+        <div class="rounded-4 bg-light bg-opacity-50 border border-light-subtle p-2 fb-composer-shell">
+            <?= $form->field($model, 'data_json[comment]', [
+                'options' => ['class' => 'mb-0'],
+            ])->textarea([
+                'rows' => 1,
+                'placeholder' => $isEdit ? 'แก้ไขความเห็น...' : ('แสดงความเห็นในนาม ' . $myName . '...'),
+                'class' => 'form-control border-0 bg-transparent shadow-none p-2 fb-composer-input',
+                'style' => 'resize:none; min-height:40px;',
+            ])->label(false) ?>
+
+            <div class="collapse mt-2" id="composer-tag-people">
+                <div class="px-2 pb-2">
+                    <div class="small text-muted mb-1"><i class="fa-solid fa-user-tag me-1"></i>เลือกบุคคลที่ต้องการส่งต่อ</div>
+                    <?= $form->field($model, 'tags_employee', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
+                        'data' => $model->listEmployeeSelectTag(),
+                        'options' => ['placeholder' => 'พิมพ์ค้นหา...', 'multiple' => true],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'multiple' => true,
+                        ],
+                    ])->label(false) ?>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-1 pt-1 border-top border-light-subtle mt-2">
+                <div class="d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-1 small" data-bs-toggle="collapse" data-bs-target="#composer-tag-people">
+                        <i class="fa-solid fa-user-tag me-1"></i>ส่งต่อถึง
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light text-secondary rounded-pill px-2 py-1 small" id="composer-toggle-templates">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>แม่แบบ
+                    </button>
+                </div>
+                <button type="submit" class="btn btn-primary rounded-pill px-3 py-1 small fw-semibold">
+                    <i class="fa-solid fa-paper-plane me-1"></i> <?= $isEdit ? 'บันทึก' : 'ลงความเห็น' ?>
+                </button>
+            </div>
+        </div>
+
+        <div class="collapse mt-2" id="composer-templates">
+            <div class="rounded-3 bg-white border border-light-subtle p-2">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="small text-muted fw-semibold">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>ข้อความที่ใช้บ่อย (<span id="counttemplate">0</span>)
+                    </div>
+                    <button id="btn-save-temp-now" type="button" class="btn btn-sm btn-primary rounded-pill px-2 py-1 small" style="display:none;">
+                        <i class="fa-regular fa-floppy-disk me-1"></i>บันทึกแม่แบบ
+                    </button>
+                </div>
+                <div id="viewlistCommenttemplate"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php ActiveForm::end(); ?>
 
 <?php
-$url = Url::to(['/dms/documents/get-items']);
-$js = <<<JS
-
-    if(\$('#documentsdetail-data_json-comment').val() == '')
-    {
-    \$('.save-comment').hide()    
-    }
-
-    \$('#documentsdetail-data_json-comment').keypress(function (e) { 
-        console.log('press');
-        
-        if(\$(this).val() == '')
-    {
-    \$('.save-comment').hide()    
-    }else{
-        \$('.save-comment').show()    
-        
-    }
-    });
-    
-    $('#form-comment').on('beforeSubmit', function (e) {
+$js = <<< 'JS'
+(function () {
+    // toggle templates panel
+    $(document).off('click.composerTpl').on('click.composerTpl', '#composer-toggle-templates', function (e) {
         e.preventDefault();
-        // var form = \$('#fullscreen-modal').find("#form-comment");
-        var form = \$("#form-comment");
-        $('#viewFormComment').hide()  
-        \$.ajax({
+        var el = document.getElementById('composer-templates');
+        if (!el) return;
+        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(el);
+        bsCollapse.toggle();
+    });
+
+    // submit handler — bypass ActiveForm's beforeSubmit so it always works
+    var $form = $('#form-comment');
+    $form.off('submit.fbComposer').on('submit.fbComposer', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var form = $(this);
+        var $btn = form.find('button[type=submit]');
+        $btn.prop('disabled', true);
+        $.ajax({
             url: form.attr('action'),
             type: 'post',
             data: form.serialize(),
             dataType: 'json',
             success: function (res) {
-
-                    if (res.status === 'success') {
-                       // รีเซ็ตฟอร์ม
-                       form[0].reset();
-                       success('ลงความเห็นสำเร็จ')
-                    //    listComment()
-                    //    getComment();
-                        // Handle success, such as closing modal or reloading data
+                if (res && res.status === 'success') {
+                    form[0].reset();
+                    if (typeof success === 'function') { success('ลงความเห็นสำเร็จ'); }
+                    if (typeof getComment === 'function') { getComment(); }
+                    if (typeof reloadTimeline === 'function') {
+                        reloadTimeline();
+                    } else if ($('#document-tag').length) {
+                        $.pjax.reload({ container: '#document-tag', history: false, timeout: false });
                     }
-                },
-                error: function (xhr) {
-                    console.error('AJAX Error:', xhr.responseText);
                 }
-            });
-            return false;
-
+            },
+            complete: function () { $btn.prop('disabled', false); }
+        });
+        return false;
     });
-
-              
-    JS;
-// $this->registerJS($js);
-$this->registerJS($js, View::POS_LOAD);
+})();
+JS;
+$this->registerJs($js, View::POS_END);
 ?>

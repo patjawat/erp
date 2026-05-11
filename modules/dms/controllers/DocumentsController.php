@@ -16,6 +16,7 @@ use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\modules\dms\components\WebhookSender;
 use app\components\ThaiDateHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
 use app\modules\dms\models\Documents;
@@ -294,6 +295,90 @@ class DocumentsController extends Controller
             'html' => $model->viewTagsDepartment(),
         ];
     }
+
+    /**
+     * ลบรายการส่งต่อ (documents_detail) เฉพาะของที่ตัวเองสร้าง
+     */
+    public function actionDeleteForwarding($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $detail = DocumentsDetail::findOne($id);
+        if (!$detail) {
+            Yii::$app->response->statusCode = 404;
+            return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
+        }
+        if ((int) $detail->created_by !== (int) Yii::$app->user->id) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => 'error', 'message' => 'ลบได้เฉพาะรายการที่ตัวเอง tag ไปเท่านั้น'];
+        }
+        $detail->delete();
+        return ['status' => 'success'];
+    }
+
+    /**
+     * แสดง partial ของ "การ์ดไทม์ไลน์เอกสาร" + สรุป "ส่งถึง" สำหรับเรียก AJAX มา refresh
+     * คืน JSON: { card: html, summary: html }
+     */
+    public function actionForwardingCard($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel((int) $id);
+        $emp = UserHelper::GetEmployee();
+        $isDeptHeadOrDeputy = $emp ? $this->isDeptHeadOrDeputy((int) $emp->department, (int) $emp->id) : false;
+        $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
+        $currentDeptIds = DocumentsDetail::find()
+            ->where(['document_id' => $model->id, 'name' => 'department'])
+            ->select('to_id')
+            ->column();
+        $currentDeptIdsStr = array_map('strval', $currentDeptIds ?: []);
+
+        return [
+            'card' => $this->renderPartial('_forwarding_card', [
+                'model' => $model,
+                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+                'currentDeptIdsStr' => $currentDeptIdsStr,
+            ]),
+            'summary' => $this->renderPartial('_timeline_summary', [
+                'model' => $model,
+                'canManageDepartmentExtra' => $canManageDepartmentExtra,
+            ]),
+        ];
+    }
+
+    /**
+     * แก้ไขรายการส่งต่อ (เปลี่ยน to_id หรือ comment) เฉพาะของที่ตัวเองสร้าง
+     * รับ POST: to_id, data_json[comment]
+     */
+    public function actionUpdateForwarding($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $detail = DocumentsDetail::findOne($id);
+        if (!$detail) {
+            Yii::$app->response->statusCode = 404;
+            return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
+        }
+        if ((int) $detail->created_by !== (int) Yii::$app->user->id) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => 'error', 'message' => 'แก้ไขได้เฉพาะรายการที่ตัวเอง tag ไปเท่านั้น'];
+        }
+
+        $toId = $this->request->post('to_id');
+        $comment = $this->request->post('comment');
+        if ($toId !== null && $toId !== '') {
+            $detail->to_id = (string) $toId;
+        }
+        if ($comment !== null) {
+            $dataJson = is_array($detail->data_json) ? $detail->data_json : [];
+            $dataJson['comment'] = $comment;
+            $detail->data_json = $dataJson;
+        }
+        if ($detail->save()) {
+            return ['status' => 'success'];
+        }
+        Yii::$app->response->statusCode = 422;
+        return ['status' => 'error', 'errors' => $detail->getErrors()];
+    }
+
     protected function ExportExcel($dataProvider, $searchModel, $title)
     {
         // ดึงข้อมูลทั้งหมดจาก dataProvider
@@ -986,6 +1071,60 @@ class DocumentsController extends Controller
         }
     }
 
+    public function actionReqApprove()
+    {
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $info = SiteHelper::getInfo();
+            $directorId = (int) ($info['director_name'] ?? 0);
+            $documentId = (int) $this->request->post('document_id');
+
+            if ($directorId <= 0 || $documentId <= 0) {
+                Yii::$app->response->statusCode = 422;
+                return [
+                    'status' => 'error',
+                    'container' => '#document-tag',
+                    'message' => 'ข้อมูลไม่ครบถ้วน',
+                ];
+            }
+
+            $exists = DocumentsDetail::findOne([
+                'document_id' => $documentId,
+                'name' => 'req_approve',
+                'to_id' => (string) $directorId,
+            ]);
+            if ($exists) {
+                return [
+                    'status' => 'error',
+                    'container' => '#document-tag',
+                ];
+            }
+
+            $model = new DocumentsDetail();
+            $model->document_id = $documentId;
+            $model->ref = $this->request->post('ref');
+            $model->name = 'req_approve';
+            $model->to_id = (string) $directorId;
+            $model->to_type = 'employee';
+            $model->data_json = ['req_approve_date' => date('Y-m-d H:i:s')];
+
+            $document = Documents::findOne($documentId);
+            if ($document) {
+                $document->status = 'DS3';
+                $document->save(false);
+            }
+
+            if ($model->save()) {
+                return [
+                    'title' => $this->request->get('title'),
+                    'status' => 'success',
+                    'container' => '#document-tag',
+                ];
+            }
+        }
+    }
+
     // แสดง File และแสดงความเห็น
     public function actionComment($id)
     {
@@ -1015,6 +1154,11 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 // บันทึก tag ไปยัง document
                 $model->UpdateDocumentsDetail();
+                try {
+                    $model->notifyCommentRecipients();
+                } catch (\Throwable $th) {
+                    Yii::warning('Failed to notify document comment recipients: ' . $th->getMessage(), __METHOD__);
+                }
 
                 return [
                     'status' => 'success'
@@ -1078,6 +1222,42 @@ class DocumentsController extends Controller
         }
     }
 
+    public function actionTestNotification($id)
+    {
+        if (!Yii::$app->user->can('admin')) {
+            Yii::$app->response->statusCode = 403;
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'error',
+                'message' => 'อนุญาตเฉพาะผู้ใช้สิทธิ admin เท่านั้น',
+            ];
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $emp = UserHelper::GetEmployee();
+        $empId = $emp ? $emp->id : null;
+        $model = new DocumentsDetail([
+            'document_id' => $id,
+            'to_id' => $empId,
+            'name' => 'comment',
+        ]);
+
+        if (!$this->request->isPost) {
+            return [
+                'status' => 'error',
+                'message' => 'Invalid request',
+            ];
+        }
+
+        $model->load($this->request->post());
+        if (empty($model->document_id)) {
+            $model->document_id = $id;
+        }
+
+        return $model->sendTestNotification();
+    }
+
     public function actionDeleteComment($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -1105,12 +1285,12 @@ class DocumentsController extends Controller
 
             return [
                 'title' => '<i class="fa-regular fa-comments fs-2"></i> การลงความเห็น',
-                'content' => $this->renderAjax('list_comment', [
+                'content' => $this->renderAjax('@app/modules/dms/views/documents/_comment_feed', [
                     'model' => $model,
                 ])
             ];
         } else {
-            return $this->render('list_comment', [
+            return $this->render('@app/modules/dms/views/documents/_comment_feed', [
                 'model' => $model,
             ]);
         }
@@ -1142,6 +1322,7 @@ class DocumentsController extends Controller
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
             $file_name = Yii::$app->request->get('file_name');
+            $download = Yii::$app->request->get('download');
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
 
@@ -1155,9 +1336,11 @@ class DocumentsController extends Controller
             }
 
 
-            $this->setHttpHeaders($type);
-            \Yii::$app->response->data = file_get_contents($filepath);
-            return \Yii::$app->response;
+            if ((string) $download === '1') {
+                return Yii::$app->response->sendFile($filepath, basename($filepath));
+            }
+
+            return Yii::$app->response->sendFile($filepath, basename($filepath), ['inline' => true]);
         } else {
             return false;
         }

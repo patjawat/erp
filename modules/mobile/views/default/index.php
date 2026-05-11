@@ -26,6 +26,8 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
 $pendingLeaveApprovals = $pendingLeaveApprovals ?? [];
 $recentLeaveRequests = $recentLeaveRequests ?? [];
 $recentMeetings = $recentMeetings ?? [];
+$officialDocumentsPreview = $officialDocumentsPreview ?? [];
+$officialUnreadCount = (int) ($officialUnreadCount ?? 0);
 
 $formatDateTimeText = static function ($datetime): string {
     if (empty($datetime)) {
@@ -172,9 +174,6 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
         </div>
     </div>
 
-    <div id="debug" style="position:fixed;bottom:0;left:0;background:#000;color:#0f0;padding:10px;z-index:9999;font-size:12px;max-height:200px;overflow:auto;"></div>
-
-
     <!-- Quick Actions: จองรถ, จองห้องประชุม, แจ้งซ่อม, ขอลา (ซ้าย→ขวา บน→ล่าง) -->
     <div>
         <h3 class="home-section-title d-flex align-items-center gap-2">
@@ -245,30 +244,48 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
         </div>
     </div>
 
-    <!-- Announcements -->
+    <!-- Official documents -->
     <div class="card mobile-card">
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h3 class="home-section-title mb-0 d-flex align-items-center gap-2">
-                    <i data-lucide="megaphone" style="width: 1.125rem; height: 1.125rem; color: var(--mobile-primary);"></i>
-                    ข่าวสารและประกาศ
-                </h3>
-                <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="small text-primary text-decoration-none">ดูทั้งหมด</a>
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <div class="min-w-0">
+                    <h3 class="home-section-title mb-1 d-flex align-items-center gap-2">
+                        <i data-lucide="file-text" style="width: 1.125rem; height: 1.125rem; color: var(--mobile-primary);"></i>
+                        หนังสือราชการ
+                    </h3>
+                    <p class="small text-body-secondary mb-0">หนังสือที่ส่งมาถึงคุณและยังไม่ได้อ่าน</p>
+                </div>
+                <div class="text-end flex-shrink-0">
+                    <div class="fw-semibold text-primary"><?= Html::encode((string) $officialUnreadCount) ?></div>
+                    <div class="small text-body-secondary">ยังไม่อ่าน</div>
+                </div>
             </div>
-            <div class="d-flex flex-column gap-2">
-                <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="border-start border-3 border-primary ps-2 py-1 text-decoration-none text-dark">
-                    <span class="fw-medium small">ระบบขอลาออนไลน์เปิดให้บริการแล้ว</span>
-                    <p class="mb-0 small text-body-secondary">ส่งคำขอลาและติดตามสถานะได้ผ่านแอป</p>
-                </a>
-                <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="border-start border-3 border-primary ps-2 py-1 text-decoration-none text-dark">
-                    <span class="fw-medium small">ประชุมใหญ่ประจำปี 2568</span>
-                    <p class="mb-0 small text-body-secondary">ขอเชิญพนักงานเข้าร่วมประชุมใหญ่ วันศุกร์ที่ 15 มี.ค. 2568 ณ ห้องประชุมใหญ่ ชั้น 3</p>
-                </a>
-                <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="border-start border-3 border-primary ps-2 py-1 text-decoration-none text-dark">
-                    <span class="fw-medium small">ปรับปรุงหน้าจองห้องประชุม</span>
-                    <p class="mb-0 small text-body-secondary">เพิ่มการแสดงผลปฏิทินและห้องว่างแบบรายชั่วโมง ให้จองได้สะดวกขึ้น</p>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                    <?= Html::encode((string) $officialUnreadCount) ?> ฉบับใหม่
+                </span>
+                <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="badge bg-light text-secondary border rounded-pill fw-medium px-2 py-1 text-decoration-none">
+                    ดูทั้งหมด
                 </a>
             </div>
+
+            <?php if (empty($officialDocumentsPreview)): ?>
+                <div class="text-center text-muted py-3 small">
+                    <i data-lucide="mail-open" class="d-block mx-auto mb-2 text-body-secondary" style="width: 2rem; height: 2rem;"></i>
+                    <div class="fw-medium text-dark mb-1">คุณอ่านหนังสือราชการครบแล้ว</div>
+                    <div class="mb-3">ไม่มีหนังสือฉบับใหม่ที่ยังไม่ได้อ่านในขณะนี้</div>
+                    <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="btn btn-outline-primary btn-sm rounded-pill">ดูรายการทั้งหมด</a>
+                </div>
+            <?php else: ?>
+                <?= $this->render('_official_documents_cards', [
+                    'documents' => $officialDocumentsPreview,
+                    'compact' => true,
+                ]) ?>
+                <div class="mt-3 pt-2 border-top">
+                    <p class="small text-body-secondary mb-0">แตะรายการเพื่อเปิดดูเอกสารและตอบกลับได้ทันที</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

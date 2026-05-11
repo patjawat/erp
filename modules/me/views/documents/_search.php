@@ -24,6 +24,7 @@ use app\components\DateFilterHelper;
 ]); ?>
 <div class="row g-2 align-items-start">
 <div class="col-12 col-lg">
+    <p class="mb-0"> ค้นหาสิ่งที่ต้องการ</p>
         <div class="input-group">
             <span class="input-group-text bg-body text-muted border-end-0">
                 <i class="bi bi-search" aria-hidden="true"></i>
@@ -37,19 +38,22 @@ use app\components\DateFilterHelper;
         </div>
     </div>
     
-    <div class="col-6 col-md-2">
+    <div class="col-6 col-md-2"> 
+        <p class="mb-0"> ช่วงวันที่เอกสาร</p>
         <?= $this->render('@app/components/ui/_date_filter', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-6 col-md-2">
+        <p class="mb-0"> ช่วงวันที่เริ่มต้น</p>
         <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
     <div class="col-6 col-md-2">
+        <p class="mb-0"> ช่วงวันที่สิ้นสุด</p>
         <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $model, 'label' => false]) ?>
     </div>
 
 
 
-    <div class="col-12 col-lg-auto d-flex flex-wrap align-items-stretch align-items-lg-center gap-2">
+    <div class="col-12 col-lg-auto d-flex flex-wrap align-items-stretch align-items-lg-center gap-2 mt-4">
         <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i> ค้นหา', [
             'class' => 'btn btn-primary flex-grow-1 flex-lg-grow-0',
         ]) ?>
