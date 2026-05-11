@@ -92,20 +92,27 @@ $this->registerCss(<<<CSS
 #doc-pdf-pane,
 #doc-work-pane {
     min-height: 0;
+    overflow: hidden;
+}
+
+#doc-work-pane {
+    display: flex;
+    flex-direction: column;
 }
 
 #doc-pdf-pane > #iframeWrapper,
 #doc-pdf-pane > #mobilePdfViewer,
-#doc-work-pane > .d-flex.flex-column.h-100 {
-    min-height: 0;
-}
-
-#doc-work-pane .overflow-auto {
+#doc-work-pane > .d-flex.flex-column.h-100,
+#doc-work-pane > .document-work-shell {
     min-height: 0;
 }
 
 .document-work-shell {
     min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .document-work-scroll {
@@ -116,7 +123,8 @@ $this->registerCss(<<<CSS
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     scroll-behavior: smooth;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
+    touch-action: pan-y;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
@@ -465,33 +473,40 @@ $js = <<<JS
         var pdfPane = document.getElementById('doc-pdf-pane');
         var wrapper = document.getElementById('iframeWrapper');
         var mobileViewer = document.getElementById('mobilePdfViewer');
+        var workScroll = workPane ? workPane.querySelector('.document-work-scroll') : null;
         if (!iframe || !splitPane) return;
-        var winHeight = window.innerHeight;
-        var winWidth = window.innerWidth;
         var modalBody = splitPane.closest('.modal-body');
         var modalBodyRect = modalBody ? modalBody.getBoundingClientRect() : null;
         var splitRect = splitPane.getBoundingClientRect();
-        var availableFromBody = modalBodyRect ? Math.floor(modalBodyRect.bottom - splitRect.top) : 0;
-        var availableFromWindow = Math.floor(winHeight - splitRect.top);
-        var availableBase = Math.max(0, availableFromBody || availableFromWindow);
-        if (winWidth < 992) {
-            // mobile/tablet: pane เดียวต่อหน้าจอ — เติมเต็มพื้นที่ที่เหลือของ modal-body
-            var available = Math.max(420, availableBase);
-            splitPane.style.height = '';
+        var workScrollRect = workScroll ? workScroll.getBoundingClientRect() : null;
+        var pdfTarget = isMobilePdfMode() ? mobileViewer : wrapper;
+        var pdfTargetRect = pdfTarget ? pdfTarget.getBoundingClientRect() : null;
+        var availableBase = modalBodyRect ? Math.max(0, Math.floor(modalBodyRect.bottom - splitRect.top)) : Math.max(0, Math.floor(window.innerHeight - splitRect.top));
+        var workAvailable = modalBodyRect && workScrollRect ? Math.max(0, Math.floor(modalBodyRect.bottom - workScrollRect.top)) : availableBase;
+        var pdfAvailable = modalBodyRect && pdfTargetRect ? Math.max(0, Math.floor(modalBodyRect.bottom - pdfTargetRect.top)) : availableBase;
+
+        splitPane.style.height = '';
+        if (pdfPane) { pdfPane.style.height = ''; }
+        if (workPane) { workPane.style.height = ''; }
+        if (wrapper) { wrapper.style.height = ''; }
+        if (mobileViewer) { mobileViewer.style.height = ''; }
+        if (workScroll) { workScroll.style.height = ''; }
+        iframe.style.height = '';
+        if (isMobilePdfMode()) {
+            var available = Math.max(420, pdfAvailable);
             if (pdfPane) { pdfPane.style.height = available + 'px'; }
             if (workPane) { workPane.style.height = available + 'px'; }
+            if (workScroll) { workScroll.style.height = Math.max(320, workAvailable) + 'px'; }
             if (wrapper) { wrapper.style.height = available + 'px'; }
             if (mobileViewer) { mobileViewer.style.height = available + 'px'; }
             iframe.style.height = available + 'px';
             renderMobilePdf();
-        } else {
-            // desktop: split-view เต็ม viewport
-            var available = Math.max(500, availableBase);
-            splitPane.style.height = available + 'px';
-            if (pdfPane) { pdfPane.style.height = ''; }
+        }
+        else {
+            var available = Math.max(500, pdfAvailable);
             if (workPane) { workPane.style.height = available + 'px'; }
+            if (workScroll) { workScroll.style.height = Math.max(320, workAvailable) + 'px'; }
             if (wrapper) { wrapper.style.height = available + 'px'; }
-            if (mobileViewer) { mobileViewer.style.height = ''; }
             iframe.style.height = available + 'px';
         }
     }
@@ -583,17 +598,22 @@ function reloadTimeline() {
         success: function (res) {
             \$('.viewFormComment').html(res.content);
             // scroll work pane down to composer
-            var workPane = document.getElementById('doc-work-pane');
-            var composerEl = document.querySelector('.viewFormComment');
-            if (workPane && composerEl) {
-                var scroller = workPane.querySelector('.document-work-scroll') || workPane;
-                var rect = composerEl.getBoundingClientRect();
-                var scrollerRect = scroller.getBoundingClientRect();
-                scroller.scrollTo({
-                    top: scroller.scrollTop + (rect.top - scrollerRect.top) - 24,
-                    behavior: 'smooth'
-                });
-            }
+            setTimeout(function () {
+                if (typeof updateIframeHeight === 'function') {
+                    updateIframeHeight();
+                }
+                var workPane = document.getElementById('doc-work-pane');
+                var scroller = workPane ? (workPane.querySelector('.document-work-scroll') || workPane) : null;
+                var target = document.getElementById('documentsdetail-data_json-comment') || document.querySelector('.viewFormComment');
+                if (scroller && target) {
+                    var targetRect = target.getBoundingClientRect();
+                    var scrollerRect = scroller.getBoundingClientRect();
+                    scroller.scrollTo({
+                        top: scroller.scrollTop + (targetRect.top - scrollerRect.top) - 24,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 0);
             // focus textarea
             setTimeout(function () {
                 var ta = document.getElementById('documentsdetail-data_json-comment');
