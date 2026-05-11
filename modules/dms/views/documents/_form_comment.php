@@ -21,6 +21,8 @@ $departmentList = $model->listAvailableDepartments();
 $action = $isEdit
     ? Url::to(['/me/documents/update-comment', 'id' => $model->id])
     : Url::to(['/me/documents/comment', 'id' => $model->document_id]);
+$testNotifyUrl = Url::to(['test-notification', 'id' => $model->document_id]);
+$canTestNotification = \Yii::$app->user->can('admin');
 ?>
 
 <?php $form = ActiveForm::begin([
@@ -78,8 +80,13 @@ $action = $isEdit
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i>แม่แบบ
                     </button>
                 </div>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-end">
                     <span id="char-count" class="badge bg-secondary opacity-50 rounded-pill small text-white">0 ตัวอักษร</span>
+                    <?php if ($canTestNotification): ?>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 py-1 small fw-semibold btn-test-notification" data-test-notify-url="<?= Html::encode($testNotifyUrl) ?>">
+                            <i class="fa-solid fa-vial me-1"></i> ทดสอบแจ้งเตือน
+                        </button>
+                    <?php endif; ?>
                     <button type="submit" class="btn btn-primary rounded-pill px-3 py-1 small fw-semibold">
                         <i class="fa-solid fa-paper-plane me-1"></i> <?= $isEdit ? 'บันทึก' : 'ลงความเห็น' ?>
                     </button>
@@ -156,6 +163,51 @@ $js = <<< 'JS'
             return false;
         }, true);  // useCapture = true → fire ก่อน handler อื่นทั้งหมด
     }
+
+    $(document).off('click.testNotify', '.btn-test-notification').on('click.testNotify', '.btn-test-notification', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var form = $btn.closest('form');
+        var url = $btn.data('test-notify-url');
+        if (!url || !form.length) {
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: url,
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+                if (res && (res.status === 'success' || res.status === 'warning')) {
+                    var safeMessage = $('<div>').text(res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว').html();
+                    var swalOptions = {
+                        icon: res.status === 'success' ? 'success' : 'warning',
+                        title: res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว',
+                    };
+                    if (res.status === 'warning' && res.details_html) {
+                        swalOptions.html = '<div class="text-start">' + safeMessage + '<hr class="my-2">' + res.details_html + '</div>';
+                    } else {
+                        swalOptions.text = 'LINE: ' + (res.line_sent || 0) + ' | Telegram: ' + (res.telegram_sent || 0);
+                    }
+                    Swal.fire(swalOptions);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: (res && res.message) || 'ทดสอบไม่สำเร็จ',
+                    });
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'เกิดข้อผิดพลาด';
+                Swal.fire({ icon: 'error', title: 'ทดสอบไม่สำเร็จ', text: msg });
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+            }
+        });
+    });
 
     // char count
     function updateCharCount() {

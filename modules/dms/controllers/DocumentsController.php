@@ -1169,6 +1169,11 @@ class DocumentsController extends Controller
             if ($model->save()) {
                 // บันทึก tag ไปยัง document
                 $model->UpdateDocumentsDetail();
+                try {
+                    $model->notifyCommentRecipients();
+                } catch (\Throwable $th) {
+                    Yii::warning('Failed to notify document comment recipients: ' . $th->getMessage(), __METHOD__);
+                }
 
                 return [
                     'status' => 'success'
@@ -1230,6 +1235,42 @@ class DocumentsController extends Controller
                 'model' => $model,
             ]);
         }
+    }
+
+    public function actionTestNotification($id)
+    {
+        if (!Yii::$app->user->can('admin')) {
+            Yii::$app->response->statusCode = 403;
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'status' => 'error',
+                'message' => 'อนุญาตเฉพาะผู้ใช้สิทธิ admin เท่านั้น',
+            ];
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $emp = UserHelper::GetEmployee();
+        $empId = $emp ? $emp->id : null;
+        $model = new DocumentsDetail([
+            'document_id' => $id,
+            'to_id' => $empId,
+            'name' => 'comment',
+        ]);
+
+        if (!$this->request->isPost) {
+            return [
+                'status' => 'error',
+                'message' => 'Invalid request',
+            ];
+        }
+
+        $model->load($this->request->post());
+        if (empty($model->document_id)) {
+            $model->document_id = $id;
+        }
+
+        return $model->sendTestNotification();
     }
 
     public function actionDeleteComment($id)
