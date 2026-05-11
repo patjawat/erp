@@ -38,6 +38,31 @@ $this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
 $this->registerJsFile(Url::to('/libs/pdf/pdf.min.js'), ['position' => View::POS_HEAD]);
 $this->registerCss(<<<CSS
+.modal-fullscreen .modal-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-fullscreen .modal-body > .container-fluid.document-modal-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.document-modal-shell {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.document-modal-split {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
 #mobilePdfViewer {
     background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
     -webkit-overflow-scrolling: touch;
@@ -62,6 +87,58 @@ $this->registerCss(<<<CSS
 #mobilePdfViewer .pdf-page-label {
     font-size: .825rem;
     letter-spacing: .02em;
+}
+
+#doc-pdf-pane,
+#doc-work-pane {
+    min-height: 0;
+}
+
+#doc-pdf-pane > #iframeWrapper,
+#doc-pdf-pane > #mobilePdfViewer,
+#doc-work-pane > .d-flex.flex-column.h-100 {
+    min-height: 0;
+}
+
+#doc-work-pane .overflow-auto {
+    min-height: 0;
+}
+
+.document-work-shell {
+    min-height: 0;
+}
+
+.document-work-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.document-work-scroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.document-work-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.document-work-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.55);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.document-work-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.8);
+    border: 2px solid transparent;
+    background-clip: content-box;
 }
 CSS);
 
@@ -96,7 +173,7 @@ $pdfUrlJs = json_encode($pdfUrl, JSON_UNESCAPED_SLASHES);
 $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED_SLASHES);
 ?>
 
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 document-modal-shell">
     <div class="d-lg-none position-sticky top-0 bg-white border-bottom shadow-sm" style="z-index:1030;">
         <div class="d-flex p-2 gap-2 align-items-center" id="mobile-pane-toggle">
             <button type="button" class="btn btn-primary rounded-pill flex-fill py-2 small fw-semibold" data-target-pane="pdf">
@@ -121,7 +198,7 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
         </div>
     </div>
 
-    <div class="row g-0" id="doc-split-pane">
+    <div class="row g-0 document-modal-split" id="doc-split-pane">
 
         <div class="col-12 col-lg-6 bg-body-secondary d-flex flex-column" id="doc-pdf-pane" data-pane="pdf">
             <div id="mobilePdfViewer" class="d-lg-none w-100 h-100 overflow-auto p-3">
@@ -139,7 +216,7 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
         </div>
 
         <div class="col-12 col-lg-6 bg-body-tertiary" id="doc-work-pane" data-pane="work">
-            <div class="d-flex flex-column h-100">
+            <div class="d-flex flex-column h-100 document-work-shell">
 
                 <div class="bg-white border-bottom border-light-subtle px-4 py-3 flex-shrink-0">
                     <div class="d-flex align-items-start gap-3">
@@ -201,7 +278,7 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
                     </div>
                 </div>
 
-                <div class="flex-grow-1 overflow-auto p-4">
+                <div class="document-work-scroll p-4">
                     <div class="d-flex flex-column gap-4">
 
                         <div id="approval-card-wrapper">
@@ -391,11 +468,15 @@ $js = <<<JS
         if (!iframe || !splitPane) return;
         var winHeight = window.innerHeight;
         var winWidth = window.innerWidth;
+        var modalBody = splitPane.closest('.modal-body');
+        var modalBodyRect = modalBody ? modalBody.getBoundingClientRect() : null;
+        var splitRect = splitPane.getBoundingClientRect();
+        var availableFromBody = modalBodyRect ? Math.floor(modalBodyRect.bottom - splitRect.top) : 0;
+        var availableFromWindow = Math.floor(winHeight - splitRect.top);
+        var availableBase = Math.max(0, availableFromBody || availableFromWindow);
         if (winWidth < 992) {
-            // mobile/tablet: pane เดียวต่อหน้าจอ — เติมเต็ม viewport (หัก toggle bar)
-            var toggleBar = document.querySelector('.d-lg-none.position-sticky');
-            var toggleH = toggleBar ? toggleBar.offsetHeight : 0;
-            var available = Math.max(420, winHeight - toggleH);
+            // mobile/tablet: pane เดียวต่อหน้าจอ — เติมเต็มพื้นที่ที่เหลือของ modal-body
+            var available = Math.max(420, availableBase);
             splitPane.style.height = '';
             if (pdfPane) { pdfPane.style.height = available + 'px'; }
             if (workPane) { workPane.style.height = available + 'px'; }
@@ -405,8 +486,7 @@ $js = <<<JS
             renderMobilePdf();
         } else {
             // desktop: split-view เต็ม viewport
-            var offsetTop = splitPane.getBoundingClientRect().top + window.scrollY;
-            var available = Math.max(500, winHeight - offsetTop);
+            var available = Math.max(500, availableBase);
             splitPane.style.height = available + 'px';
             if (pdfPane) { pdfPane.style.height = ''; }
             if (workPane) { workPane.style.height = available + 'px'; }
@@ -506,7 +586,7 @@ function reloadTimeline() {
             var workPane = document.getElementById('doc-work-pane');
             var composerEl = document.querySelector('.viewFormComment');
             if (workPane && composerEl) {
-                var scroller = workPane.querySelector('.overflow-auto') || workPane;
+                var scroller = workPane.querySelector('.document-work-scroll') || workPane;
                 var rect = composerEl.getBoundingClientRect();
                 var scrollerRect = scroller.getBoundingClientRect();
                 scroller.scrollTo({
