@@ -1296,6 +1296,7 @@ class DocumentsController extends Controller
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
             $file_name = Yii::$app->request->get('file_name');
+            $download = Yii::$app->request->get('download');
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
 
@@ -1309,9 +1310,11 @@ class DocumentsController extends Controller
             }
 
 
-            $this->setHttpHeaders($type);
-            \Yii::$app->response->data = file_get_contents($filepath);
-            return \Yii::$app->response;
+            if ((string) $download === '1') {
+                return Yii::$app->response->sendFile($filepath, basename($filepath));
+            }
+
+            return Yii::$app->response->sendFile($filepath, basename($filepath), ['inline' => true]);
         } else {
             return false;
         }

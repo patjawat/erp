@@ -36,6 +36,34 @@ $attachmentCount = (int) Uploads::find()->where(['ref' => $model->ref, 'name' =>
 
 $this->title = $model->topic;
 \yii\web\YiiAsset::register($this);
+$this->registerJsFile(Url::to('/libs/pdf/pdf.min.js'), ['position' => View::POS_HEAD]);
+$this->registerCss(<<<CSS
+#mobilePdfViewer {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+#mobilePdfViewer .pdf-page {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+#mobilePdfViewer canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+#mobilePdfViewer .pdf-page-label {
+    font-size: .825rem;
+    letter-spacing: .02em;
+}
+CSS);
 
 $currentDeptIds = DocumentsDetail::find()
     ->where(['document_id' => $model->id, 'name' => 'department'])
@@ -62,11 +90,15 @@ if ($emp && (int) ($emp->department ?? 0) > 0) {
     }
 }
 $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
+$pdfUrl = Url::to(['/me/documents/show', 'ref' => $model->ref]);
+$pdfDownloadUrl = Url::to(['/me/documents/show', 'ref' => $model->ref, 'download' => 1]);
+$pdfUrlJs = json_encode($pdfUrl, JSON_UNESCAPED_SLASHES);
+$pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED_SLASHES);
 ?>
 
 <div class="container-fluid p-0">
     <div class="d-lg-none position-sticky top-0 bg-white border-bottom shadow-sm" style="z-index:1030;">
-        <div class="d-flex p-2 gap-2" id="mobile-pane-toggle">
+        <div class="d-flex p-2 gap-2 align-items-center" id="mobile-pane-toggle">
             <button type="button" class="btn btn-primary rounded-pill flex-fill py-2 small fw-semibold" data-target-pane="pdf">
                 <i class="fa-regular fa-file-lines me-1"></i> เอกสาร
             </button>
@@ -74,15 +106,33 @@ $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDep
                 <i class="fa-regular fa-comments me-1"></i> รายละเอียด
                 <span class="badge text-bg-light text-muted ms-1" id="mobile-badge-count" style="display:none;">0</span>
             </button>
+            <?= Html::a(
+                '<i class="fa-solid fa-download"></i>',
+                $pdfDownloadUrl,
+                [
+                    'class' => 'btn btn-outline-primary rounded-pill py-2 px-3 flex-shrink-0',
+                    'title' => 'ดาวน์โหลด PDF',
+                    'aria-label' => 'ดาวน์โหลด PDF',
+                    'data-bs-toggle' => 'tooltip',
+                    'data-pjax' => '0',
+                    'download' => true,
+                ]
+            ) ?>
         </div>
     </div>
 
     <div class="row g-0" id="doc-split-pane">
 
-        <div class="col-12 col-lg-6 bg-body-secondary" id="doc-pdf-pane" data-pane="pdf">
-            <div id="iframeWrapper" class="w-100 h-100">
+        <div class="col-12 col-lg-6 bg-body-secondary d-flex flex-column" id="doc-pdf-pane" data-pane="pdf">
+            <div id="mobilePdfViewer" class="d-lg-none w-100 h-100 overflow-auto p-3">
+                <div id="mobilePdfStatus" class="d-flex flex-column align-items-center justify-content-center text-center gap-2 h-100 text-muted">
+                    <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                    <div class="small pdf-status-message">กำลังโหลด PDF...</div>
+                </div>
+            </div>
+            <div id="iframeWrapper" class="w-100 h-100 d-none d-lg-block">
                 <iframe id="myIframe"
-                    src="<?= Url::to(['/me/documents/show', 'ref' => $model->ref]) ?>#view=FitH&toolbar=1&navpanes=0"
+                    src="<?= Html::encode($pdfUrl) ?>#view=FitH&toolbar=1&navpanes=0"
                     class="w-100 h-100 border-0 d-block bg-white">
                 </iframe>
             </div>
@@ -117,6 +167,18 @@ $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDep
                                         <span class="badge text-bg-primary rounded-pill"><?= $attachmentCount ?></span>
                                     <?php endif; ?>
                                 </button>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-download"></i> ดาวน์โหลด PDF',
+                                    $pdfDownloadUrl,
+                                    [
+                                        'class' => 'btn btn-sm btn-outline-primary rounded-pill px-2 py-0 small d-none d-lg-inline-flex align-items-center gap-1 text-nowrap',
+                                        'title' => 'ดาวน์โหลด PDF',
+                                        'aria-label' => 'ดาวน์โหลด PDF',
+                                        'data-bs-toggle' => 'tooltip',
+                                        'data-pjax' => '0',
+                                        'download' => true,
+                                    ]
+                                ) ?>
                             </div>
                         </div>
                         <div class="d-flex flex-column gap-1 flex-shrink-0">
@@ -196,9 +258,128 @@ $saveCommentTemplate = Url::to(['/me/documents/save-comment-template']);
 $forwardingCardUrl = Url::to(['/dms/documents/forwarding-card', 'id' => $model->id]);
 $js = <<<JS
 (function () {
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = $pdfWorkerUrlJs;
+    }
+
+    var pdfUrl = $pdfUrlJs;
+    var mobilePdfViewer = document.getElementById('mobilePdfViewer');
+    var mobilePdfStatus = document.getElementById('mobilePdfStatus');
+    var mobilePdfRenderSeq = 0;
+    var mobilePdfLoadTask = null;
+
     $('[data-bs-toggle="popover"]').popover();
     $('[data-bs-toggle="tooltip"]').tooltip();
     updateCharCount();
+
+    function isMobilePdfMode() {
+        return window.innerWidth < 992;
+    }
+
+    function showPdfLoading(message) {
+        if (!mobilePdfViewer) return;
+        mobilePdfViewer.innerHTML = '' +
+            '<div id="mobilePdfStatus" class="d-flex flex-column align-items-center justify-content-center text-center gap-2 h-100 text-muted">' +
+                '<div class="spinner-border text-primary" role="status" aria-hidden="true"></div>' +
+                '<div class="small pdf-status-message">' + message + '</div>' +
+            '</div>';
+        mobilePdfStatus = document.getElementById('mobilePdfStatus');
+    }
+
+    function showPdfError(message) {
+        if (!mobilePdfViewer) return;
+        mobilePdfViewer.innerHTML = '' +
+            '<div id="mobilePdfStatus" class="d-flex flex-column align-items-center justify-content-center text-center gap-2 h-100 text-danger">' +
+                '<i class="fa-solid fa-triangle-exclamation fs-3"></i>' +
+                '<div class="small pdf-status-message">' + message + '</div>' +
+                '<a href="' + pdfUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-primary rounded-pill">เปิด PDF ในแท็บใหม่</a>' +
+            '</div>';
+        mobilePdfStatus = document.getElementById('mobilePdfStatus');
+    }
+
+    async function renderMobilePdf() {
+        if (!mobilePdfViewer || !window.pdfjsLib || !isMobilePdfMode()) return;
+        var viewerWidth = Math.floor(mobilePdfViewer.clientWidth || 0);
+        if (!viewerWidth) return;
+
+        if (mobilePdfViewer.dataset.rendered === '1' && mobilePdfViewer.dataset.renderWidth === String(viewerWidth)) {
+            return;
+        }
+
+        mobilePdfRenderSeq += 1;
+        var renderSeq = mobilePdfRenderSeq;
+        showPdfLoading('กำลังโหลด PDF...');
+
+        if (mobilePdfLoadTask && typeof mobilePdfLoadTask.destroy === 'function') {
+            try { mobilePdfLoadTask.destroy(); } catch (err) {}
+        }
+
+        try {
+            mobilePdfLoadTask = pdfjsLib.getDocument({ url: pdfUrl });
+            var pdfDoc = await mobilePdfLoadTask.promise;
+            if (renderSeq !== mobilePdfRenderSeq) return;
+
+            if (mobilePdfStatus) {
+                var statusMessage = mobilePdfStatus.querySelector('.pdf-status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = 'กำลังเตรียมเอกสาร...';
+                }
+            }
+
+            var pageCount = pdfDoc.numPages;
+            for (var pageNum = 1; pageNum <= pageCount; pageNum++) {
+                if (renderSeq !== mobilePdfRenderSeq) return;
+                var page = await pdfDoc.getPage(pageNum);
+                if (renderSeq !== mobilePdfRenderSeq) return;
+
+                var baseViewport = page.getViewport({ scale: 1 });
+                var availableWidth = Math.max(280, viewerWidth - 48);
+                var scale = availableWidth / baseViewport.width;
+                var viewport = page.getViewport({ scale: scale });
+
+                var pageWrap = document.createElement('div');
+                pageWrap.className = 'pdf-page flex-column';
+
+                var pageLabel = document.createElement('div');
+                pageLabel.className = 'pdf-page-label text-muted text-center mb-2 fw-semibold';
+                pageLabel.textContent = 'หน้า ' + pageNum + ' / ' + pageCount;
+                pageWrap.appendChild(pageLabel);
+
+                var canvas = document.createElement('canvas');
+                canvas.width = Math.floor(viewport.width);
+                canvas.height = Math.floor(viewport.height);
+                canvas.style.width = Math.floor(viewport.width) + 'px';
+                canvas.style.height = Math.floor(viewport.height) + 'px';
+                pageWrap.appendChild(canvas);
+                mobilePdfViewer.appendChild(pageWrap);
+
+                await page.render({
+                    canvasContext: canvas.getContext('2d', { alpha: false }),
+                    viewport: viewport
+                }).promise;
+
+                if (mobilePdfStatus) {
+                    var statusMessageAfterPage = mobilePdfStatus.querySelector('.pdf-status-message');
+                    if (statusMessageAfterPage) {
+                        statusMessageAfterPage.textContent = 'กำลังเรนเดอร์หน้า ' + pageNum + ' / ' + pageCount + '...';
+                    }
+                }
+            }
+
+            if (renderSeq !== mobilePdfRenderSeq) return;
+            if (mobilePdfStatus && mobilePdfStatus.parentNode === mobilePdfViewer) {
+                mobilePdfStatus.remove();
+            }
+            mobilePdfViewer.dataset.rendered = '1';
+            mobilePdfViewer.dataset.renderWidth = String(viewerWidth);
+            mobilePdfLoadTask = null;
+        } catch (error) {
+            if (renderSeq !== mobilePdfRenderSeq) return;
+            console.error(error);
+            mobilePdfLoadTask = null;
+            showPdfError('ไม่สามารถแสดง PDF ได้บนอุปกรณ์นี้');
+        }
+    }
 
     function updateIframeHeight() {
         var iframe = document.getElementById('myIframe');
@@ -206,6 +387,7 @@ $js = <<<JS
         var workPane = document.getElementById('doc-work-pane');
         var pdfPane = document.getElementById('doc-pdf-pane');
         var wrapper = document.getElementById('iframeWrapper');
+        var mobileViewer = document.getElementById('mobilePdfViewer');
         if (!iframe || !splitPane) return;
         var winHeight = window.innerHeight;
         var winWidth = window.innerWidth;
@@ -213,12 +395,14 @@ $js = <<<JS
             // mobile/tablet: pane เดียวต่อหน้าจอ — เติมเต็ม viewport (หัก toggle bar)
             var toggleBar = document.querySelector('.d-lg-none.position-sticky');
             var toggleH = toggleBar ? toggleBar.offsetHeight : 0;
-            var available = Math.max(400, winHeight - toggleH);
+            var available = Math.max(420, winHeight - toggleH);
             splitPane.style.height = '';
             if (pdfPane) { pdfPane.style.height = available + 'px'; }
             if (workPane) { workPane.style.height = available + 'px'; }
             if (wrapper) { wrapper.style.height = available + 'px'; }
+            if (mobileViewer) { mobileViewer.style.height = available + 'px'; }
             iframe.style.height = available + 'px';
+            renderMobilePdf();
         } else {
             // desktop: split-view เต็ม viewport
             var offsetTop = splitPane.getBoundingClientRect().top + window.scrollY;
@@ -227,6 +411,7 @@ $js = <<<JS
             if (pdfPane) { pdfPane.style.height = ''; }
             if (workPane) { workPane.style.height = available + 'px'; }
             if (wrapper) { wrapper.style.height = available + 'px'; }
+            if (mobileViewer) { mobileViewer.style.height = ''; }
             iframe.style.height = available + 'px';
         }
     }

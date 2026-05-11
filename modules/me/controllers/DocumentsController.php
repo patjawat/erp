@@ -890,6 +890,7 @@ if ($searchModel->q_status === 'unread') {
         // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
             $id = Yii::$app->request->get('id');
+            $download = Yii::$app->request->get('download');
             $fileUpload = Uploads::findOne(['ref' => $ref]);
             $type = 'pdf';
             if (!$fileUpload) {
@@ -902,9 +903,11 @@ if ($searchModel->q_status === 'unread') {
                 $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
             }
 
-            $this->setHttpHeaders($type);
-            \Yii::$app->response->data = file_get_contents($filepath);
-            return \Yii::$app->response;
+            if ((string) $download === '1') {
+                return Yii::$app->response->sendFile($filepath, basename($filepath));
+            }
+
+            return Yii::$app->response->sendFile($filepath, basename($filepath), ['inline' => true]);
         } else {
             return false;
         }
