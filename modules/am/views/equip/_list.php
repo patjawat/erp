@@ -154,7 +154,7 @@ $equipSubtitle = static function ($item): string {
                             </div>
                         </td>
                         <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
-                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price,2) ?></td>
+                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price, 2) ?></td>
                         <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
                         <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3  border-0">
@@ -171,19 +171,43 @@ $equipSubtitle = static function ($item): string {
                                         'data-pjax' => 0,
                                     ]) ?>
                                 <?php endif; ?>
-                                <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-light',
+                              
+                                <div class="dropdown flex-grow-1 flex-sm-grow-0">
+                                    <button class="btn btn-secondary dropdown-toggle w-100 w-sm-auto" type="button"
+                                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fa-solid fa-angle-down"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                        <li>
+                                              <?= Html::a('<i class="bi bi-qr-code-scan me-2"></i>พิมพ์สติกเกอร์', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                    'class' => 'dropdown-item',
                                     'title' => 'พิมพ์',
                                     'data-pjax' => 0,
                                     'target' => '_blank',
                                 ]) ?>
-                                <?php if (Yii::$app->user->can('admin')): ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-danger delete-asset',
-                                        'title' => 'ลบ',
-                                        'data-pjax' => 0,
-                                    ]) ?>
-                                <?php endif; ?>
+                                        </li>
+                                        <li>
+                                        <?= Html::a('<i class="fa-solid fa-print me-2"></i> พิมพ์ค่าเสื่อม', ['/am/asset/depreciation', 'id' => $item->id], ['class' => 'open-modal w-100 dropdown-item', 'data' => ['size' => 'modal-lg']]) ?>
+                                        </li>
+                                        <li>
+                                            <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $item->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'open-modal dropdown-item', 'data' => ['size' => 'modal-lg']]) ?>
+                                        </li>
+                                        
+                                        <?php if (Yii::$app->user->can('admin')): ?>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <?= Html::a('<i class="fa-regular fa-trash-can me-2"></i> ลบข้อมูล', ['delete', 'id' => $item->id], [
+                                                    'class' => 'dropdown-item delete-asset',
+                                                    'title' => 'ลบ',
+                                                    'data-pjax' => 0,
+                                                ]) ?>
+                                        </li>
+                                            <?php endif; ?>
+                                    </ul>
+                                </div>
+
                             </div>
                         </td>
                     </tr>

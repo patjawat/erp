@@ -4,6 +4,7 @@ namespace app\modules\am\controllers;
 
 use yii;
 use yii\helpers\Url;
+use yii\helpers\Json;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
@@ -15,6 +16,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\AssetHelper;
+use app\modules\am\components\AssetHelper as AmAssetHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
@@ -219,8 +221,357 @@ class AssetController extends Controller
         }
     }
 
+    public function actionDepreciationPdf($id, $number = null, $date = null)
+    {
+        $model = $this->findModel($id);
+        $report = $this->buildDepreciationPdfData($model, $number, $date);
+        $html = $this->renderPartial('depreciation_pdf', $report);
+        $stylesheet = '';
+        if (preg_match('/<style\b[^>]*>(.*?)<\/style>/is', $html, $matches)) {
+            $stylesheet = trim((string) $matches[1]);
+        }
+        $html = trim((string) preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html));
+
+        $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $config = [
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'L',
+            'margin_left' => 8,
+            'margin_right' => 8,
+            'margin_top' => 8,
+            'margin_bottom' => 8,
+            'fontDir' => array_merge($fontDirs, [$fontPath]),
+            'fontdata' => $fontData + [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                    'I' => 'THSarabunNew-Italic.ttf',
+                    'BI' => 'THSarabunNew BoldItalic.ttf',
+                ],
+            ],
+            'default_font' => 'thsarabun',
+            'autoScriptToLang' => false,
+            'autoLangToFont' => false,
+        ];
+
+        $tmpDir = Yii::getAlias('@runtime/mpdf');
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0777, true);
+        }
+        $config['tempDir'] = $tmpDir;
+
+        $mpdf = new \Mpdf\Mpdf($config);
+        $mpdf->SetTitle('ทะเบียนคุมทรัพย์สิน - ' . ($model->code ?: $model->id));
+        $mpdf->SetFooter('||หน้า {PAGENO}');
+        if ($stylesheet !== '') {
+            $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+        }
+        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+
+        $suffix = '';
+        if (!empty($date)) {
+            $suffix = '_' . $this->sanitizeFileName((string) $date);
+        } elseif (!empty($number)) {
+            $suffix = '_row_' . (int) $number;
+        }
+        $filename = 'Asset_Depreciation_' . $this->sanitizeFileName((string) ($model->code ?: $model->id)) . $suffix . '.pdf';
+
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
+        Yii::$app->response->content = $mpdf->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+
+        return Yii::$app->response;
+    }
 
 
+    private function buildDepreciationPdfData(Asset $model, $number = null, $date = null): array
+    {
+        $siteInfo = SiteHelper::getInfo();
+        $dataJsonRaw = $model->data_json;
+        if (is_string($dataJsonRaw)) {
+            $dataJson = Json::decode($dataJsonRaw, true) ?: [];
+        } elseif (is_array($dataJsonRaw)) {
+            $dataJson = $dataJsonRaw;
+        } else {
+            $dataJson = [];
+        }
+
+        $organizationName = trim((string) ($siteInfo['company_name'] ?? '')) ?: 'ส่วนราชการ';
+        $assetTypeTitle = trim((string) ($dataJson['asset_type_text'] ?? $model->assetType?->title ?? $model->AssetTypeName() ?? '')) ?: '-';
+        $assetName = trim((string) ($dataJson['asset_name'] ?? $model->asset_name ?? $model->AssetitemName() ?? '')) ?: '-';
+        $location = trim((string) ($dataJson['location'] ?? $model->departmentName() ?? '')) ?: '-';
+        $vendor = $this->resolveVendorDetails($model, $dataJson);
+        $budgetType = trim((string) ($model->budgetTypeName() ?? ($dataJson['budget_type_text'] ?? ''))) ?: '-';
+        $purchaseMethod = trim((string) ($model->methodGetName() ?? $dataJson['method_get_text'] ?? '')) ?: '-';
+        $docNo = $this->extractDocumentNumber($model, $dataJson);
+        $assetCode = trim((string) ($model->code ?? '')) ?: '-';
+        $unit = trim((string) ($dataJson['unit'] ?? '')) ?: 'เครื่อง';
+
+        $receiveDate = trim((string) ($model->receive_date ?? ''));
+        $price = (float) ($model->price ?? 0);
+        $usefulLife = (int) ($model->useful_life ?? 0);
+        $rate = $this->normalizeDecimal($model->depreciation_rate ?? ($dataJson['depreciation'] ?? null));
+        $annualDep = $usefulLife > 0 ? round($price / $usefulLife, 2) : 0.0;
+
+        $scheduleRows = $this->getDepreciationScheduleRows($model, $number);
+        $rows = [
+            [
+                'type' => 'data',
+                'date' => $receiveDate !== '' ? $this->formatThaiDateShortYear($receiveDate) : '-',
+                'doc_no' => $docNo,
+                'item' => $assetName,
+                'qty' => '1 ' . $unit,
+                'unit_price' => $price > 0 ? number_format($price, 2) : '',
+                'total' => $price > 0 ? number_format($price, 2) : '',
+                'life' => $usefulLife > 0 ? $usefulLife . ' ปี' : '',
+                'rate' => $rate !== null ? number_format($rate, 2) : '',
+                'annual' => $annualDep > 0 ? number_format($annualDep, 2) : '',
+                'accumulated' => '',
+                'net' => $price > 0 ? number_format($price, 2) : '',
+                'note' => '',
+            ],
+        ];
+
+        foreach ($scheduleRows as $row) {
+            $endDate = trim((string) ($row['end_date'] ?? ''));
+            $monthLabel = $endDate !== '' ? $this->formatThaiMonthYear($endDate) : '-';
+            $monthlyDep = round((float) ($row['price_month'] ?? 0), 2);
+            $accumulatedDep = round((float) ($row['total_price'] ?? 0), 2);
+            $currentNet = round((float) ($row['total'] ?? $price), 2);
+
+            $rows[] = [
+                'type' => 'data',
+                'date' => $endDate !== '' ? $this->formatThaiDateShortYear($endDate) : '-',
+                'doc_no' => '',
+                'item' => $monthLabel !== '-' ? "คำนวณค่าเสื่อมประจำเดือน\n" . $monthLabel : 'คำนวณค่าเสื่อมประจำเดือน',
+                'qty' => '',
+                'unit_price' => '',
+                'total' => '',
+                'life' => $this->formatElapsedPeriod((int) ($row['date_number'] ?? 0)),
+                'rate' => '',
+                'annual' => $monthlyDep > 0 ? number_format($monthlyDep, 2) : '',
+                'accumulated' => $accumulatedDep > 0 ? number_format($accumulatedDep, 2) : '',
+                'net' => $currentNet > 0 ? number_format($currentNet, 2) : '',
+                'note' => '',
+            ];
+        }
+
+        return [
+            'model' => $model,
+            'siteInfo' => $siteInfo,
+            'organizationName' => $organizationName,
+            'assetTypeTitle' => $assetTypeTitle,
+            'assetName' => $assetName,
+            'assetCode' => $assetCode,
+            'location' => $location,
+            'vendor' => $vendor,
+            'budgetType' => $budgetType,
+            'purchaseMethod' => $purchaseMethod,
+            'docNo' => $docNo,
+            'unit' => $unit,
+            'receiveDate' => $receiveDate,
+            'price' => $price,
+            'usefulLife' => $usefulLife,
+            'rate' => $rate,
+            'annualDep' => $annualDep,
+            'rows' => $rows,
+        ];
+    }
+
+    private function getDepreciationScheduleRows(Asset $model, $number = null): array
+    {
+        if (empty($model->useful_life) || empty($model->receive_date)) {
+            return [];
+        }
+        $limit = $number !== null && (int) $number > 0 ? (int) $number : 9999;
+        return AmAssetHelper::Depreciation($model->id, $limit);
+    }
+
+    private function resolveVendorDetails(Asset $model, array $dataJson = []): array
+    {
+        $title = '';
+        $address = '';
+        $phone = '';
+
+        $vendorModel = $model->vendor ?? null;
+        if ($vendorModel !== null) {
+            $title = trim((string) ($vendorModel->title ?? ''));
+            $vendorData = $vendorModel->data_json ?? [];
+            if (is_string($vendorData)) {
+                $vendorData = Json::decode($vendorData, true) ?: [];
+            }
+            if (is_array($vendorData)) {
+                $address = trim((string) ($vendorData['address'] ?? $vendorData['vendor_address'] ?? ''));
+                $phone = trim((string) ($vendorData['phone'] ?? $vendorData['vendor_phone'] ?? ''));
+                if ($title === '' && !empty($vendorData['title'])) {
+                    $title = trim((string) $vendorData['title']);
+                }
+            }
+        }
+
+        if ($title === '' && !empty($dataJson['vendor']) && is_array($dataJson['vendor'])) {
+            $title = trim((string) ($dataJson['vendor']['title'] ?? ''));
+            $nestedVendorData = $dataJson['vendor']['data_json'] ?? [];
+            if (is_string($nestedVendorData)) {
+                $nestedVendorData = Json::decode($nestedVendorData, true) ?: [];
+            }
+            if (is_array($nestedVendorData)) {
+                $address = $address !== '' ? $address : trim((string) ($nestedVendorData['address'] ?? $nestedVendorData['vendor_address'] ?? ''));
+                $phone = $phone !== '' ? $phone : trim((string) ($nestedVendorData['phone'] ?? $nestedVendorData['vendor_phone'] ?? ''));
+            }
+        }
+
+        if ($title === '' && !empty($dataJson['vendor_name'])) {
+            $title = trim((string) $dataJson['vendor_name']);
+        }
+        if ($address === '' && !empty($dataJson['address'])) {
+            $address = trim((string) $dataJson['address']);
+        }
+        if ($phone === '' && !empty($dataJson['phone'])) {
+            $phone = trim((string) $dataJson['phone']);
+        }
+
+        return [
+            'title' => $title !== '' ? $title : '-',
+            'address' => $address !== '' ? $address : '-',
+            'phone' => $phone !== '' ? $phone : '-',
+        ];
+    }
+
+    private function extractDocumentNumber(Asset $model, array $dataJson = []): string
+    {
+        $candidates = [
+            $dataJson['invoice_number'] ?? null,
+            $dataJson['po_number'] ?? null,
+            $model->po_number ?? null,
+            $dataJson['document_number'] ?? null,
+            $dataJson['bill_number'] ?? null,
+            $dataJson['ref_number'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            $value = trim((string) $candidate);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '-';
+    }
+
+    private function formatThaiDateShortYear(?string $date): string
+    {
+        if (empty($date)) {
+            return '-';
+        }
+
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        $months = [
+            1 => 'ม.ค.',
+            2 => 'ก.พ.',
+            3 => 'มี.ค.',
+            4 => 'เม.ย.',
+            5 => 'พ.ค.',
+            6 => 'มิ.ย.',
+            7 => 'ก.ค.',
+            8 => 'ส.ค.',
+            9 => 'ก.ย.',
+            10 => 'ต.ค.',
+            11 => 'พ.ย.',
+            12 => 'ธ.ค.',
+        ];
+
+        $month = (int) date('n', $timestamp);
+        $yearShort = substr((string) ((int) date('Y', $timestamp) + 543), -2);
+
+        return date('j', $timestamp) . ' ' . ($months[$month] ?? '') . $yearShort;
+    }
+
+    private function formatThaiMonthYear(?string $date): string
+    {
+        if (empty($date)) {
+            return '-';
+        }
+
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        $months = [
+            1 => 'มกราคม',
+            2 => 'กุมภาพันธ์',
+            3 => 'มีนาคม',
+            4 => 'เมษายน',
+            5 => 'พฤษภาคม',
+            6 => 'มิถุนายน',
+            7 => 'กรกฎาคม',
+            8 => 'สิงหาคม',
+            9 => 'กันยายน',
+            10 => 'ตุลาคม',
+            11 => 'พฤศจิกายน',
+            12 => 'ธันวาคม',
+        ];
+
+        $month = (int) date('n', $timestamp);
+        $yearThai = (int) date('Y', $timestamp) + 543;
+
+        return ($months[$month] ?? '') . ' ' . $yearThai;
+    }
+
+    private function formatElapsedPeriod(int $months): string
+    {
+        if ($months <= 0) {
+            return '-';
+        }
+
+        $years = intdiv($months, 12);
+        $remainMonths = $months % 12;
+
+        if ($years > 0 && $remainMonths > 0) {
+            return $years . ' ปี ' . $remainMonths . ' เดือน';
+        }
+
+        if ($years > 0) {
+            return $years . ' ปี';
+        }
+
+        return $months . ' เดือน';
+    }
+
+    private function normalizeDecimal($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $normalized = preg_replace('/\s+/u', '', (string) $value);
+        $normalized = str_replace(',', '.', $normalized);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return null;
+        }
+
+        return round((float) $normalized, 2);
+    }
+
+    private function sanitizeFileName(string $value): string
+    {
+        $value = preg_replace('/[^A-Za-z0-9\-_]+/', '_', $value);
+        $value = trim((string) $value, '_');
+
+        return $value !== '' ? $value : 'asset';
+    }
 
     /**
      * Creates a new Asset model.

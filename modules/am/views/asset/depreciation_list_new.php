@@ -229,7 +229,7 @@ echo "-";
 <th class="text-center">วัน</th>
 <th class="text-end">ค่าเสื่อมราคาสะสม</th>
 <th class="text-end">มูลค่าสุทธิ</th>
-<th class="text-center">print</th>
+<th class="text-center">พิมพ์</th>
 
 </tr>
 
@@ -275,11 +275,18 @@ echo "-";
 
 <td class="text-center">
 
-<?= Html::a(
-'<i class="fa-solid fa-print"></i>',
-['/ms-word/asset','id'=>$model->id,'number'=>$data['date_number'],'date'=>$data['end_date']],
-['class'=>'open-modal','data'=>['size'=>'modal-xl']]
-) ?>
+<div class="d-inline-flex align-items-center gap-2">
+    <?php Html::a(
+        '<i class="fa-solid fa-print"></i>',
+        ['/ms-word/asset','id'=>$model->id,'number'=>$data['date_number'],'date'=>$data['end_date']],
+        ['class'=>'open-modal','data'=>['size'=>'modal-xl'],'title'=>'พิมพ์เอกสาร Word']
+    ) ?>
+    <?= Html::a(
+        '<i class="fa-solid fa-file-pdf text-danger"></i>',
+        ['/am/asset/depreciation-pdf','id'=>$model->id,'number'=>$data['date_number'],'date'=>$data['end_date']],
+        ['target'=>'_blank','rel'=>'noopener noreferrer','data-pjax'=>0,'title'=>'พิมพ์ PDF']
+    ) ?>
+</div>
 
 </td>
 
