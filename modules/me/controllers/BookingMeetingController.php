@@ -325,6 +325,30 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'Pending';
+
+                // 🚫 ตรวจสอบการจองซ้อน (Overlap Check)
+                $overlapQuery = Meeting::find()
+                    ->where(['room_id' => $model->room_id])
+                    ->andWhere(['<>', 'status', 'Cancel'])
+                    ->andWhere(['<=', 'date_start', $model->date_end])
+                    ->andWhere(['>=', 'date_end', $model->date_start])
+                    ->all();
+
+                foreach ($overlapQuery as $item) {
+                    $existStart = strtotime($item->date_start . ' ' . $item->time_start);
+                    $existEnd = strtotime($item->date_end . ' ' . $item->time_end);
+                    $newStart = strtotime($model->date_start . ' ' . $model->time_start);
+                    $newEnd = strtotime($model->date_end . ' ' . $model->time_end);
+
+                    if ($newStart < $existEnd && $newEnd > $existStart) {
+                        \Yii::$app->response->format = Response::FORMAT_JSON;
+                        return [
+                            'status' => 'error',
+                            'message' => 'ห้องประชุมที่เลือกมีการขอใช้งานแล้ว โปรดเลือกวันอื่น'
+                        ];
+                    }
+                }
+
                 if ($model->save(false)) {
                     \Yii::$app->response->format = Response::FORMAT_JSON;
                     $model->SendMeeting();
@@ -372,6 +396,30 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
                 $model->date_end = AppHelper::convertToGregorian($model->date_end);
+
+                // 🚫 ตรวจสอบการจองซ้อน (Overlap Check)
+                $overlapQuery = Meeting::find()
+                    ->where(['room_id' => $model->room_id])
+                    ->andWhere(['<>', 'status', 'Cancel'])
+                    ->andWhere(['<>', 'id', $model->id])
+                    ->andWhere(['<=', 'date_start', $model->date_end])
+                    ->andWhere(['>=', 'date_end', $model->date_start])
+                    ->all();
+
+                foreach ($overlapQuery as $item) {
+                    $existStart = strtotime($item->date_start . ' ' . $item->time_start);
+                    $existEnd = strtotime($item->date_end . ' ' . $item->time_end);
+                    $newStart = strtotime($model->date_start . ' ' . $model->time_start);
+                    $newEnd = strtotime($model->date_end . ' ' . $model->time_end);
+
+                    if ($newStart < $existEnd && $newEnd > $existStart) {
+                        return [
+                            'status' => 'error',
+                            'message' => 'ห้องประชุมที่เลือกมีการขอใช้งานแล้ว โปรดเลือกวันอื่น'
+                        ];
+                    }
+                }
+
                 if ($model->save(false)) {
                     // $model->SendMeeting();
                     return [
@@ -436,66 +484,24 @@ class BookingMeetingController extends \yii\web\Controller
         $result = [];
 
         if ($this->request->isPost && $model->load($this->request->post())) {
-
-            // ✅ ตรวจสอบว่าเบอร์โทรถูกกรอกหรือยัง
+            
+            // ตรวจสอบเบอร์โทรและช่วงเวลาใน Controller แทน
             if (empty($model->data_json['phone'])) {
-                $model->addError('data_json[phone]', $requiredName);
+                $result[\yii\helpers\Html::getInputId($model, 'data_json[phone]')] = ['ต้องระบุเบอร์โทรศัพท์'];
             }
-
-            // ✅ ตรวจสอบว่าเลือกช่วงเวลาหรือยัง
             if (empty($model->data_json['period_time'])) {
-                $model->addError('data_json[period_time]', $requiredName);
+                $result[\yii\helpers\Html::getInputId($model, 'data_json[period_time]')] = ['ต้องระบุช่วงเวลา'];
             }
 
-<<<<<<< HEAD
-        // ✅ ตรวจสอบว่าวันที่สิ้นสุด >= วันที่เริ่มต้น
-        if (!empty($model->date_start) && !empty($model->date_end)) {
-            $start = strtotime(AppHelper::convertToGregorian($model->date_start));
-            $end = strtotime(AppHelper::convertToGregorian($model->date_end));
-            if ($end < $start) {
-                $model->addError('date_end', 'วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น');
+            // ตรวจสอบความถูกต้องเบื้องต้น (เช่น Required fields ปกติ)
+            $model->validate();
+
+            // ส่ง error กลับไปเป็น JSON ที่ AjaxValidation ต้องการ
+            foreach ($model->getErrors() as $attribute => $errors) {
+                // ข้าม error ของ emp_id, code ฯลฯ ที่ระบบจะสร้างเอง
+                if (in_array($attribute, ['code', 'thai_year', 'status', 'emp_id'])) continue;
+                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
             }
-        }
-
-        // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น (กรณีวันที่เดียวกัน)
-        if (!empty($model->time_start) && !empty($model->time_end) && ($model->date_start === $model->date_end)) {
-            if (strtotime($model->time_end) <= strtotime($model->time_start)) {
-                $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
-=======
-            // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น
-            if (!empty($model->time_start) && !empty($model->time_end)) {
-                if (strtotime($model->time_end) <= strtotime($model->time_start)) {
-                    $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
-                }
-            }
-
-            // ✅ ตรวจสอบว่าห้อง + วัน + เวลา ทับกันหรือไม่
-            if (!empty($model->time_start) && !empty($model->time_end)) {
-                $query = Meeting::find()
-                    ->where([
-                        'room_id' => $model->room_id,
-                        'date_start' => AppHelper::convertToGregorian($model->date_start),
-                    ])
-                    ->andWhere(['<>', 'status', 'Cancel'])   // newStart < existEnd
-                    ->andWhere(['<', 'time_start', $model->time_end])   // newStart < existEnd
-                    ->andWhere(['>', 'time_end', $model->time_start]); // newEnd > existStart
-
-
-                // ถ้าเป็น update → ตัด record ตัวเองออก
-                if (!$model->isNewRecord) {
-                    $query->andWhere(['<>', 'id', $model->id]);
-                }
-
-                if ($query->exists()) {
-                    $model->addError('room_id', 'ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาใหม่');
-                }
->>>>>>> c3ea37043ea67faa0b4c0acf5ca7b1a7925a24e8
-            }
-        }
-
-        // ส่ง error กลับไปเป็น JSON ที่ AjaxValidation ต้องการ
-        foreach ($model->getErrors() as $attribute => $errors) {
-            $result[Html::getInputId($model, $attribute)] = $errors;
         }
 
         return $this->asJson($result);
@@ -504,15 +510,12 @@ class BookingMeetingController extends \yii\web\Controller
 
 
 
-
-
-
-    // ตรวจสอบความถูกต้องยกเลิก
     public function actionValidatorCancel()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new Booking();
         $requiredName = 'ต้องระบุ';
+        $result = [];
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->reason == '' ? $model->addError('reason', $requiredName) : null;
             $model->data_json['cancel_note'] == '' ? $model->addError('data_json[cancel_note]', $requiredName) : null;
@@ -520,9 +523,7 @@ class BookingMeetingController extends \yii\web\Controller
         foreach ($model->getErrors() as $attribute => $errors) {
             $result[Html::getInputId($model, $attribute)] = $errors;
         }
-        if (!empty($result)) {
-            return $this->asJson($result);
-        }
+        return $this->asJson($result);
     }
 
 

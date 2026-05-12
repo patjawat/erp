@@ -251,67 +251,49 @@ class MeetingController extends Controller
         $end =  Yii::$app->formatter->asDate($this->request->get('end'), 'php:Y-m-d');
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
+        // ดึงเฉพาะรายการที่ยังไม่ถูกยกเลิก (รองรับทั้งจองวันเดียวและหลายวัน)
         $bookings = Meeting::find()
             ->andWhere(['<=', 'date_start', $end])
-            ->andWhere(['>=', 'date_end', $start])
+            ->andWhere([
+                'or',
+                ['>=', 'date_end', $start],
+                ['date_end' => null] // รองรับข้อมูลเก่าที่ไม่มี date_end
+            ])
+            ->andWhere(['<>', 'status', 'Cancel']) 
             ->orderBy(['id' => SORT_DESC])
             ->all();
         $data = [];
 
-
         foreach ($bookings as $item) {
             try {
-<<<<<<< HEAD
-   
-            $timeStart = $item->time_start ?? '00:00';
-            $timeEnd = $item->time_end ?? '00:00';
-            $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
-            $data[] = [
-                'id'               => $item->id,
-                'title'            => $item->title,
-                'start'            => $dateStart,
-                // 'time_start' => $timeStart,
-                'end'            => $dateEnd,
-                'time_end' => $timeEnd,
-                'allDay' => false,
-                'source' => 'vehicle',
-                'extendedProps' => [
-                    'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', ['model' => $item]),
-                    'code' => $item->code,
-                    'color' =>  (isset($item->room) && isset($item->room->data_json['color'])) ? $item->room->data_json['color'] : '',
-                ],
-            ];
-                         //code...
-=======
-
                 $timeStart = $item->time_start ?? '00:00';
                 $timeEnd = $item->time_end ?? '00:00';
+                
+                // ตรวจสอบวันที่สิ้นสุด ถ้าไม่มีให้ใช้วันที่เริ่มต้นแทน
+                $dateEndVal = !empty($item->date_end) ? $item->date_end : $item->date_start;
+
                 $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+                $dateEnd = Yii::$app->formatter->asDatetime(($dateEndVal . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+                
                 $data[] = [
                     'id'               => $item->id,
                     'title'            => $item->title,
                     'start'            => $dateStart,
-                    // 'time_start' => $timeStart,
-                    'end'            => $dateEnd,
-                    'time_end' => $timeEnd,
-                    'allDay' => false,
-                    'source' => 'vehicle',
-                    'extendedProps' => [
+                    'end'              => $dateEnd,
+                    'allDay'           => false,
+                    'extendedProps'    => [
                         'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', ['model' => $item]),
-                        'code' => $item->code,
-                        'color' => (isset($item->room) && isset($item->room->data_json['color'])) ? $item->room->data_json['color'] : '',
+                        'code'  => $item->code,
+                        // ถ้าไม่มีสีห้องประชุม ให้ใช้สีฟ้ามาตรฐาน
+                        'color' => (isset($item->room->data_json['color']) && !empty($item->room->data_json['color'])) ? $item->room->data_json['color'] : '#3aa3e3',
                     ],
                 ];
-                //code...
->>>>>>> c3ea37043ea67faa0b4c0acf5ca7b1a7925a24e8
             } catch (\Throwable $th) {
-                //throw $th;
+                // ข้ามรายการที่มีปัญหา
             }
         }
 
-        return  [
+        return [
             'events' => $data
         ];
     }
