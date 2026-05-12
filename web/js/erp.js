@@ -22,7 +22,7 @@ jQuery(document).on("pjax:start", function () {
 });
 jQuery(document).on("pjax:end", function () {
   erpHidePageLoading();
-  
+
   if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
   if (offcanvasElList.length > 0) {
@@ -46,7 +46,7 @@ $(document).on("click", "a[href]", function () {
   try {
     var sameOrigin = new URL(href, location.origin).origin === location.origin;
     if (sameOrigin) erpShowPageLoading();
-  } catch (e) {}
+  } catch (e) { }
 });
 
 // ซ่อน loading เมื่อโหลดหน้าเสร็จ (ทั้งเปิดหน้าแรกและหลัง full page)
@@ -364,35 +364,35 @@ $("body").on("click", ".setview", function (e) {
   });
 });
 $("body").on("click", ".open-modal", function (e) {
-    e.preventDefault();
-    var url = $(this).attr("href");
-    var size = $(this).data("size");
-    
-    // แสดง loading หรืออื่นๆ
-    if (typeof beforLoadModal === "function") beforLoadModal();
+  e.preventDefault();
+  var url = $(this).attr("href");
+  var size = $(this).data("size");
 
-    $.ajax({
-        type: "get",
-        url: url,
-        dataType: "json",
-        success: function (response) {
-            var modal = $("#main-modal");
-            modal.find("#main-modal-label").html(response.title);
-            modal.find(".modal-body").html(response.content);
-            modal.find(".modal-footer").html(response.footer);
-            
-            modal.find(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl")
-                 .addClass(size);
-            
-            modal.modal("show");
-            if (response.initCallback && typeof window[response.initCallback] === "function") {
-                try { window[response.initCallback](); } catch (err) { console.warn("initCallback error", err); }
-            }
-        },
-        error: function (xhr) {
-            // จัดการ error เหมือนเดิม
-        }
-    });
+  // แสดง loading หรืออื่นๆ
+  if (typeof beforLoadModal === "function") beforLoadModal();
+
+  $.ajax({
+    type: "get",
+    url: url,
+    dataType: "json",
+    success: function (response) {
+      var modal = $("#main-modal");
+      modal.find("#main-modal-label").html(response.title);
+      modal.find(".modal-body").html(response.content);
+      modal.find(".modal-footer").html(response.footer);
+
+      modal.find(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl")
+        .addClass(size);
+
+      modal.modal("show");
+      if (response.initCallback && typeof window[response.initCallback] === "function") {
+        try { window[response.initCallback](); } catch (err) { console.warn("initCallback error", err); }
+      }
+    },
+    error: function (xhr) {
+      // จัดการ error เหมือนเดิม
+    }
+  });
 });
 
 
@@ -446,13 +446,13 @@ $("body").on("click", ".confirm-order", async function (e) {
         dataType: "json",
         success: async function (response) {
 
-        
+
           if (response.status == "error") {
-                    Swal.fire(
-                    'ผิดพลาด!',
-                    response.msg,
-                    'error'
-                );
+            Swal.fire(
+              'ผิดพลาด!',
+              response.msg,
+              'error'
+            );
           }
           if (response.status == "success") {
             location.reload();
@@ -462,7 +462,7 @@ $("body").on("click", ".confirm-order", async function (e) {
       });
     }
   });
-}); 
+});
 
 // ใช้ .off("click") เพื่อเคลียร์ Event เก่าทิ้งก่อน
 $("body").off("click", ".delete-item").on("click", ".delete-item", async function (e) {
@@ -603,60 +603,60 @@ $(document).on("click", ".cancel-order", function (e) {
 
 //เพิ่ม function a-action สำหรับทำงานร้วมกัน
 $(document).on("click", ".a-action", function (e) {
-    e.preventDefault();
-    const url = $(this).attr('href');
+  e.preventDefault();
+  const url = $(this).attr('href');
 
-    // 1. ถามยืนยันก่อนดำเนินการ
-    Swal.fire({
-        title: 'คุณแน่ใจยกเลิกหรือไม่?',
-        text: "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ตกลง',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            
-            // แสดง Loading ระหว่างรอ AJAX
-            Swal.fire({
-                title: 'กำลังประมวลผล...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+  // 1. ถามยืนยันก่อนดำเนินการ
+  Swal.fire({
+    title: 'คุณแน่ใจยกเลิกหรือไม่?',
+    text: "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'ตกลง',
+    cancelButtonText: 'ยกเลิก'
+  }).then((result) => {
+    if (result.isConfirmed) {
 
-            // 2. ส่ง AJAX
-            $.ajax({
-                type: "post",
-                url: url,
-                dataType: "json",
-                success: function (res) {
-                    if (res.status === 'success') {
-                        // 3. แจ้งเตือนสำเร็จแล้วค่อย Reload
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'สำเร็จ!',
-                            text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        // กรณี Server ตอบกลับแต่สถานะไม่ใช่ success
-                        Swal.fire('เกิดข้อผิดพลาด', res.message || 'กรุณาลองใหม่อีกครั้ง', 'error');
-                    }
-                },
-                error: function (xhr, status, error) {
-                    // กรณี Server Error หรือ Connection มีปัญหา
-                    Swal.fire('ผิดพลาด!', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ (' + error + ')', 'error');
-                }
-            });
+      // แสดง Loading ระหว่างรอ AJAX
+      Swal.fire({
+        title: 'กำลังประมวลผล...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
         }
-    });
+      });
+
+      // 2. ส่ง AJAX
+      $.ajax({
+        type: "post",
+        url: url,
+        dataType: "json",
+        success: function (res) {
+          if (res.status === 'success') {
+            // 3. แจ้งเตือนสำเร็จแล้วค่อย Reload
+            Swal.fire({
+              icon: 'success',
+              title: 'สำเร็จ!',
+              text: res.message || 'ดำเนินการเรียบร้อยแล้ว',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            // กรณี Server ตอบกลับแต่สถานะไม่ใช่ success
+            Swal.fire('เกิดข้อผิดพลาด', res.message || 'กรุณาลองใหม่อีกครั้ง', 'error');
+          }
+        },
+        error: function (xhr, status, error) {
+          // กรณี Server Error หรือ Connection มีปัญหา
+          Swal.fire('ผิดพลาด!', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ (' + error + ')', 'error');
+        }
+      });
+    }
+  });
 });
 
 $(".show-setting").on("click", function () {

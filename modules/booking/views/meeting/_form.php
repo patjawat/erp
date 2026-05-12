@@ -224,14 +224,14 @@ HTML;
                 : ['/me/booking-meeting/validator', 'id' => $model->id],
         ]); ?>
 
-        <div class="row g-4 align-items-start">
-            <div class="col-12 col-xl-7">
-                <div class="card meeting-card">
-                    <div class="card-body">
-                        <div class="meeting-hero">
-                            <h4 class="fw-bold mb-2">จองห้องประชุม</h4>
-                            <p class="meeting-kicker mb-0">กรอกข้อมูลให้ครบถ้วน ระบบจะช่วยจัดเวลาและข้อมูลห้องประชุมแบบเหมาะกับทุกขนาดหน้าจอ</p>
-                        </div>
+
+
+    <div class="row">
+        <div class="col-7">
+            <div class="card text-start">
+                <div class="card-body">
+                    <h4 class="fw-medium mb-2">จองห้องประชุม</h4>
+                    <p class="card-text">กรอกข้อมูลเพื่อจองห้องประชุม</p>
 
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
@@ -273,7 +273,12 @@ HTML;
                             <div class="col-12 col-md-6">
                                 <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
                                     'options' => ['placeholder' => 'เลือกวันที่ต้องการประชุม'],
-                                ])->label('วันที่') ?>
+                                ])->label('เริ่มวันที่') ?>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                    'options' => ['placeholder' => 'เลือกวันที่สิ้นสุดการประชุม'],
+                                ])->label('ถึงวันที่') ?>
                             </div>
                             <div class="col-12 col-md-6">
                                 <?= $form->field($model, 'data_json[period_time]')->widget(Select2::classname(), [
