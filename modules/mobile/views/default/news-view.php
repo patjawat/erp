@@ -5,82 +5,22 @@ use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
-/** @var int $id */
-$this->params['current_page']   = $current_page ?? 'news';
-$this->params['mobileTitle']    = 'รายละเอียดข่าว';
-$this->params['mobileSubtitle'] = 'ข่าวสารและประกาศ';
+/** @var app\modules\dms\models\Documents $model */
+/** @var app\modules\dms\models\DocumentsDetail $detail */
 
-$items = [
-    1 => [
-        'badge' => 'ข่าวประชาสัมพันธ์',
-        'badgeClass' => 'primary',
-        'date' => '10 มี.ค. 2568',
-        'title' => 'ประชุมใหญ่ประจำปี 2568',
-        'summary' => 'ขอเชิญพนักงานทุกท่านเข้าร่วมประชุมใหญ่ประจำปี ในวันศุกร์ที่ 15 มีนาคม 2568 ณ ห้องประชุมใหญ่ ชั้น 3',
-        'body' => "เรียน พนักงานทุกท่าน\n\nหน่วยงานขอเชิญพนักงานเข้าร่วมประชุมใหญ่ประจำปี 2568 ในวันศุกร์ที่ 15 มีนาคม 2568 ระหว่างเวลา 09.00–12.00 น. ณ ห้องประชุมใหญ่ ชั้น 3 อาคารสำนักงาน\n\nวาระการประชุมประกอบด้วย รายงานผลการดำเนินงานประจำปี 2567 แผนงานปี 2568 และเรื่องอื่นๆ ตามที่ประธานร้องขอ\n\nจึงเรียนมาเพื่อทราบและเข้าร่วมประชุมโดยพร้อมเพรียงกัน",
-    ],
-    2 => [
-        'badge' => 'ประกาศ',
-        'badgeClass' => 'info',
-        'date' => '8 มี.ค. 2568',
-        'title' => 'ระบบขอลาออนไลน์เปิดให้บริการแล้ว',
-        'summary' => 'สามารถส่งคำขอลาผ่านแอปได้ทันที และติดตามสถานะการอนุมัติได้แบบเรียลไทม์',
-        'body' => "แจ้งให้พนักงานทราบว่า ระบบขอลาออนไลน์ผ่านแอปมือถือเปิดให้บริการแล้ว\n\nพนักงานสามารถดำเนินการได้ดังนี้\n• ส่งคำขอลาประเภทต่างๆ ผ่านเมนู บริการ > ขอลาออนไลน์\n• ตรวจสอบสิทธิ์วันลาคงเหลือก่อนส่งคำขอ\n• ติดตามสถานะการอนุมัติแบบเรียลไทม์\n• แนบเอกสารประกอบ (ถ้ามี)\n\nหากมีข้อสงสัยติดต่อฝ่าย HR ได้ที่ extension 1234",
-    ],
-    3 => [
-        'badge' => 'อัปเดต',
-        'badgeClass' => 'success',
-        'date' => '5 มี.ค. 2568',
-        'title' => 'ปรับปรุงหน้าจองห้องประชุม',
-        'summary' => 'เพิ่มการแสดงผลปฏิทินและห้องว่างแบบรายชั่วโมง ให้จองได้สะดวกขึ้น',
-        'body' => "ฝ่าย IT แจ้งปรับปรุงระบบจองห้องประชุมดังนี้\n\n• แสดงปฏิทินรายเดือน เลือกวันที่ได้สะดวก\n• แสดงสถานะห้องว่าง/ไม่ว่างแบบรายชั่วโมง (สีเขียว/แดง)\n• เลือกห้อง วันที่ เวลาเริ่ม–สิ้นสุด หัวข้อ และจำนวนผู้เข้าร่วม\n• ปุ่มตรวจสอบเวลาว่าง และยืนยันการจอง\n\nใช้งานได้ที่ บริการ > จองห้องประชุม",
-    ],
-    4 => [
-        'badge' => 'แจ้งซ่อม',
-        'badgeClass' => 'warning',
-        'date' => '3 มี.ค. 2568',
-        'title' => 'เปิดบริการแจ้งซ่อมผ่านแอปมือถือ',
-        'summary' => 'สามารถแจ้งซ่อมอุปกรณ์หรือสถานที่ พร้อมแนบรูปและสแกน QR ครุภัณฑ์ได้จากมือถือ',
-        'body' => "แจ้งเปิดบริการแจ้งซ่อมผ่านแอปมือถือ\n\nพนักงานสามารถแจ้งซ่อมได้จากมือถือโดย\n• เลือกประเภทปัญหา (ไฟฟ้า ประปา แอร์ อุปกรณ์ อาคาร ฯลฯ)\n• ระบุสถานที่และรายละเอียด\n• แนบรูปภาพได้ (ถ่ายรูปหรือเลือกจากแกลเลอรี)\n• สแกน QR ครุภัณฑ์เพื่อผูกกับรายการแจ้งซ่อม (ถ้ามี)\n\nเข้าได้ที่ บริการ > แจ้งซ่อม",
-    ],
-    5 => [
-        'badge' => 'นโยบาย',
-        'badgeClass' => 'secondary',
-        'date' => '1 มี.ค. 2568',
-        'title' => 'มาตรการประหยัดพลังงาน เดือน มี.ค. – เม.ย. 2568',
-        'summary' => 'ขอความร่วมมือปิดเครื่องปรับอากาศและไฟเมื่อไม่ใช้งาน ในช่วง 12.00–13.00 น.',
-        'body' => "ตามนโยบายประหยัดพลังงานของหน่วยงาน\n\nขอความร่วมมือพนักงานทุกท่านดังนี้\n• ปิดเครื่องปรับอากาศและไฟในพื้นที่เมื่อไม่ใช้งาน\n• ช่วงพักกลางวัน (12.00–13.00 น.) กรุณาปิดแสงและแอร์ในห้องที่ไม่มีผู้ใช้\n• หลังเวลาราชการ กรุณาตรวจสอบปิดอุปกรณ์ก่อนกลับ\n\nมาตรการมีผลระหว่าง 1 มี.ค. – 30 เม.ย. 2568",
-    ],
-];
-
-$item = $items[$id] ?? null;
-if (!$item) {
-    $item = $items[1];
-    $id = 1;
-}
+$this->params['current_page'] = $current_page ?? 'news';
+$this->params['mobileTitle'] = 'หนังสือราชการ';
+$this->params['mobileSubtitle'] = $model->topic ?? 'รายละเอียดหนังสือ';
 ?>
-<style>
-.news-view-card { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.news-view-body { white-space: pre-line; line-height: 1.6; }
-</style>
 
 <div class="d-flex flex-column gap-3">
-    <?php if ($item): ?>
-        <div class="card news-view-card">
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-                    <span class="badge bg-<?= $item['badgeClass'] ?> bg-opacity-10 text-<?= $item['badgeClass'] ?> border border-<?= $item['badgeClass'] ?>-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($item['badge']) ?></span>
-                    <span class="small text-body-secondary"><?= Html::encode($item['date']) ?></span>
-                </div>
-                <h5 class="fw-semibold mb-2"><?= Html::encode($item['title']) ?></h5>
-                <p class="small text-body-secondary mb-3"><?= Html::encode($item['summary']) ?></p>
-                <div class="news-view-body small"><?= Html::encode($item['body']) ?></div>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="btn btn-outline-primary" style="border-radius: 12px;">
+    <a href="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="btn btn-outline-secondary btn-sm rounded-pill align-self-start">
         <i data-lucide="arrow-left" class="me-1" style="width: 1rem; height: 1rem; vertical-align: -0.2em;"></i>
-        กลับรายการข่าวสาร
+        กลับรายการหนังสือ
     </a>
+
+    <?= $this->render('@app/modules/dms/views/documents/view', [
+        'model' => $model,
+        'detail' => $detail,
+    ]) ?>
 </div>

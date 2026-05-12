@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 use yii\helpers\Url;
 use yii\helpers\ArrayHelper;
@@ -14,19 +15,14 @@ use app\modules\approveV2\models\Approve as ApproveModel;
 use app\components\AppHelper;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveType;
-use app\modules\leave\models\LeaveCreateForm;
 use app\modules\leave\components\LeaveApprovalService;
 use app\components\SiteHelper;
 use app\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\leave\components\LeaveHelper;
 
-/**
- * สร้างใบลา (2 ขั้น: กรอกรายละเอียด → ตรวจสอบ + ลงลายมือชื่อ)
- */
 class LeaveController extends Controller
 {
-    const SESSION_KEY = 'leave_create_draft';
 
     /**
      * แสดงรายละเอียดใบลา (view ภายในโมดูล leave)
@@ -249,8 +245,20 @@ class LeaveController extends Controller
             throw new NotFoundHttpException('ไม่พบรายการ');
         }
         $me = UserHelper::GetEmployee();
-        if (!$me || $me->id != $leave->emp_id) {
-            throw new NotFoundHttpException('ไม่มีสิทธิ์ดูไฟล์นี้');
+        $canAdmin = Yii::$app->user->can('admin');
+        $canLeave = Yii::$app->user->can('leave');
+        $isApprover = false;
+        if ($me) {
+            $isApprover = ApproveModel::find()
+                ->where([
+                    'name' => 'leave',
+                    'from_id' => (string) $leave->id,
+                    'emp_id' => $me->id,
+                ])
+                ->exists();
+        }
+        if (!$me || ($me->id != $leave->emp_id && !$canAdmin && !$canLeave && !$isApprover)) {
+            throw new ForbiddenHttpException('ไม่มีสิทธิ์ดูไฟล์นี้');
         }
         $basePath = FileManagerHelper::getUploadPath() . $upload->ref . '/';
         $filePath = $basePath . $upload->real_filename;
@@ -272,35 +280,13 @@ class LeaveController extends Controller
         $ext = strtolower(pathinfo($upload->file_name ?? $upload->real_filename, PATHINFO_EXTENSION));
         $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
         $fileName = $upload->file_name ?: $upload->real_filename;
-        // ป้องกันไม่ให้มี output ปนกับ binary (แสดง PDF/ไฟล์ถูกต้อง)
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
         Yii::$app->response->format = Response::FORMAT_RAW;
         Yii::$app->response->headers->set('Content-Type', $mime);
         Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . addslashes($fileName) . '"');
-        return Yii::$app->response->sendFile($filePath, $fileName, [
-            'inline' => true,
-            'mimeType' => $mime,
-        ]);
+        Yii::$app->response->data = file_get_contents($filePath);
+        return Yii::$app->response;
     }
 
-    /**
-     * AJAX validation สำหรับฟอร์มสร้างใบลา (ใช้กับ Kartik ActiveForm enableAjaxValidation)
-     */
-    public function actionValidation()
-    {
-        $model = new LeaveCreateForm();
-        $me = UserHelper::GetEmployee();
-        if ($me) {
-            $model->emp_id = $me->id;
-        }
-        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return \yii\widgets\ActiveForm::validate($model);
-        }
-        return $this->redirect(['create']);
-    }
 
     /**
      * อนุมัติ/ไม่อนุมัติขั้นตอนการลา (ใช้ตาราง approve + approveV2)
@@ -395,240 +381,98 @@ class LeaveController extends Controller
             return $this->redirect(['/leave/default/index']);
         }
 
-        $thaiYear = (int) AppHelper::YearBudget();
+        $thaiYear   = (int) AppHelper::YearBudget();
         $roundLabel = 'รอบที่ 1 (1 ม.ค. ' . substr($thaiYear - 1, 2) . ' - 31 มี.ค. ' . substr($thaiYear, 2) . ')';
+        $types      = LeaveType::find()->where(['name' => 'leave_type', 'active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $stats      = $this->getStatsForCreate($me->id, $thaiYear, $me->gender ?? null);
 
-        $types = LeaveType::find()
-            ->where(['name' => 'leave_type', 'active' => 1])
-            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
-            ->all();
-        $stats = $this->getStatsForCreate($me->id, $thaiYear, $me->gender ?? null);
-        $model = new LeaveCreateForm();
+        $model = new Leave();
         $model->emp_id = $me->id;
-        $model->contact_phone = $me->phone ?? '';
-        $model->address = $me->fulladdress ?? '';
-        $model->work_shift = $me->work_shift ?? 'normal';
+        $model->ref    = substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
+        $model->data_json = [
+            'leave_contact_phone' => $me->phone ?? '',
+            'address'             => $me->fulladdress ?? '',
+            'work_shift'          => $me->work_shift ?? 'normal',
+            'date_start_type'     => '0',
+            'date_end_type'       => '0',
+        ];
 
-        // คลิกจากปฏิทินการลา: เซ็ต date_start และ date_end จาก GET date (Y-m-d)
+        FileManagerHelper::CreateDir($model->ref);
+
+        // คลิกจากปฏิทินการลา
         $dateParam = trim((string) Yii::$app->request->get('date', ''));
         if ($dateParam !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateParam)) {
             $dateThai = AppHelper::convertToThai($dateParam);
-            if ($dateThai !== '' && $dateThai !== null) {
-                $model->date_start = $dateThai;
-                $model->date_end   = $dateThai;
-            }
-        }
-
-        // สร้าง draft ref ล่วงหน้าสำหรับ FileInput AJAX upload
-        $existingDraft = Yii::$app->session->get(self::SESSION_KEY);
-        $draftRef = $existingDraft['ref'] ?? substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
-        if (!isset($existingDraft['ref'])) {
-            Yii::$app->session->set(self::SESSION_KEY, array_merge((array)$existingDraft, ['ref' => $draftRef]));
-            FileManagerHelper::CreateDir($draftRef);
+            if ($dateThai !== '') { $model->date_start = $dateThai; $model->date_end = $dateThai; }
         }
 
         if (Yii::$app->request->isPost) {
             $model->load(Yii::$app->request->post());
             $model->emp_id = $me->id;
-            if ($model->validate()) {
-                $leaveTypeId = $model->leave_type_id;
-                $dateStart = trim((string) $model->date_start);
-                $dateEnd = trim((string) $model->date_end);
-                $reason = trim((string) $model->reason);
-                $address = trim((string) $model->address);
-                $contactPhone = trim((string) $model->contact_phone);
-                $placeGo = trim((string) $model->place_go);
 
-                $dateStartGregorian = AppHelper::convertToGregorian($dateStart);
-                $dateEndGregorian = AppHelper::convertToGregorian($dateEnd);
-                // ใช้ค่าจากฟอร์ม (date_start_type / date_end_type) ให้ตรงกับ JS + actionCalDays — ไม่ใช้ leave_time_type เพราะฟอร์มปัจจุบันไม่ส่งฟิลด์นั้น
-                $dateStartType = (trim((string) $model->date_start_type) === '0.5') ? '0.5' : '0';
-                $dateEndType = (trim((string) $model->date_end_type) === '0.5') ? '0.5' : '0';
-                if ($dateStartGregorian && $dateEndGregorian && $dateStartGregorian === $dateEndGregorian) {
-                    $dateEndType = '0';
-                }
-                $leaveTimeType = ($dateStartGregorian && $dateEndGregorian && $dateStartGregorian === $dateEndGregorian && $dateStartType === '0.5')
-                    ? 0.5
-                    : 1.0;
-                $workShiftForm = $me->work_shift ?? 'normal';
-                $daySummary = $this->getDaySummary($dateStartGregorian, $dateEndGregorian, $me->id);
-                $allDays = (float) ($daySummary['allDays'] ?? 0);
-                $satsunDays = (float) ($daySummary['satsunDays'] ?? 0);
-                $holidayDays = (float) ($daySummary['holiday'] ?? 0);
-                $empShift = (string) ($daySummary['shift'] ?? 'normal');
-                $effectiveShift = $workShiftForm ?: $empShift;
-                $dstF = (float) $dateStartType;
-                $detF = (float) $dateEndType;
-                if ($leaveTypeId === 'LT2') {
-                    $totalDays = $allDays;
-                } elseif ($effectiveShift === 'normal') {
-                    $totalDays = $allDays - ($dstF + $detF) - $satsunDays - $holidayDays;
-                } else {
-                    $totalDays = $allDays - ($dstF + $detF);
-                }
-                $totalDays = max(0, round($totalDays, 2));
+            $dateStartTh = trim((string) $model->date_start);
+            $dateEndTh   = trim((string) $model->date_end);
 
-                $draft = [
-                    'ref'                  => $draftRef,
-                    'leave_type_id'        => $leaveTypeId,
-                    'date_start'           => $dateStart,
-                    'date_end'             => $dateEnd,
-                    'date_start_g'         => $dateStartGregorian,
-                    'date_end_g'           => $dateEndGregorian,
-                    'date_start_type'      => $dateStartType,
-                    'date_end_type'        => $dateEndType,
-                    'leave_time_type'      => $leaveTimeType,
-                    'total_days'           => $totalDays,
-                    'summary_calendar_days'=> $allDays,
-                    'summary_sat_sun'      => $satsunDays,
-                    'summary_holiday'      => $holidayDays,
-                    'work_shift'           => $effectiveShift,
-                    'leave_work_send_id'   => null,
-                    'leave_work_send_name' => '',
-                    'reason'               => $reason,
-                    'address'              => $address,
-                    'contact_phone'        => $contactPhone,
-                    'place_go'             => $placeGo,
-                ];
-                Yii::$app->session->set(self::SESSION_KEY, $draft);
-                return $this->redirect(['confirm']);
+            $errors = $this->validateCreateInput(
+                $me->id,
+                $model->leave_type_id,
+                $dateStartTh,
+                $dateEndTh,
+                $model->data_json['reason'] ?? '',
+                $model->data_json['address'] ?? ''
+            );
+
+            if (empty($errors)) {
+                $dateStartG = AppHelper::convertToGregorian($dateStartTh);
+                $dateEndG   = AppHelper::convertToGregorian($dateEndTh);
+                $model->date_start      = $dateStartG;
+                $model->date_end        = $dateEndG;
+                $model->thai_year       = (int) AppHelper::YearBudget($dateStartG);
+                $model->leave_time_type = 1;
+                $model->status = SiteHelper::isDirectorFromSettings($me->id) ? 'Approve' : 'Pending';
+                $model->data_json = array_merge((array) $model->data_json, [
+                    'director'          => SiteHelper::viewDirector()['id'] ?? null,
+                    'director_fullname' => SiteHelper::viewDirector()['fullname'] ?? '',
+                ]);
+
+                if ($model->save(false)) {
+                    $model->createApprove();
+                    Yii::$app->session->setFlash('success', 'สร้างใบลาสำเร็จ');
+                    if (Yii::$app->request->isAjax) {
+                        Yii::$app->response->format = Response::FORMAT_JSON;
+                        return ['success' => true, 'redirect' => Url::to(['/leave/default/index'])];
+                    }
+                    return $this->redirect(['/leave/default/index']);
+                }
+            }
+
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['success' => false, 'message' => implode('<br>', $errors) ?: 'บันทึกไม่สำเร็จ'];
             }
         }
 
-        return $this->render('create', [
+        $renderParams = [
             'model'      => $model,
             'employee'   => $me,
             'types'      => $types,
             'stats'      => $stats,
             'roundLabel' => $roundLabel,
             'thaiYear'   => $thaiYear,
-            'draftRef'   => $draftRef,
-        ]);
-    }
+            'draftRef'   => $model->ref,
+        ];
 
-    public function actionConfirm()
-    {
-        $me = UserHelper::GetEmployee();
-        if (!$me) {
-            return $this->redirect(['/leave/default/index']);
-        }
-        $draft = Yii::$app->session->get(self::SESSION_KEY);
-        if (!$draft) {
-            Yii::$app->session->setFlash('warning', 'ไม่พบข้อมูลกรอกใบลา กรุณากรอกใหม่');
-            return $this->redirect(['create']);
-        }
-
-        $leaveType = LeaveType::find()->where(['name' => 'leave_type', 'code' => $draft['leave_type_id']])->one();
-
-        $signatureSystemUrl = null;
-        if ($me && method_exists($me, 'SignatureShow')) {
-            $signatureSystemUrl = $me->SignatureShow();
-        }
-
-        return $this->render('confirm', [
-            'employee' => $me,
-            'draft' => $draft,
-            'leaveType' => $leaveType,
-            'signatureSystemUrl' => $signatureSystemUrl,
-        ]);
-    }
-
-    public function actionSave()
-    {
-        $me = UserHelper::GetEmployee();
-        if (!$me) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['success' => false, 'message' => 'ไม่พบข้อมูลพนักงาน'];
-            }
-            return $this->redirect(['/leave/default/index']);
-        }
-
-        $draft = Yii::$app->session->get(self::SESSION_KEY);
-        if (!$draft) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['success' => false, 'message' => 'หมดอายุ กรุณากรอกใบลาใหม่'];
-            }
-            return $this->redirect(['create']);
-        }
-
-        $signatureType = trim((string) Yii::$app->request->post('signature_type', 'canvas'));
-        $signatureData = Yii::$app->request->post('signature_data'); // base64 image or null
-
-        if ($signatureType === 'system' && $me && method_exists($me, 'signature')) {
-            $signaturePath = $me->signature();
-            if ($signaturePath && is_file($signaturePath)) {
-                $mime = 'image/png';
-                if (preg_match('/\.(jpe?g|gif|webp)$/i', $signaturePath)) {
-                    $mime = 'image/jpeg';
-                    if (preg_match('/\.gif$/i', $signaturePath)) $mime = 'image/gif';
-                    if (preg_match('/\.webp$/i', $signaturePath)) $mime = 'image/webp';
-                }
-                $signatureData = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($signaturePath));
-            }
-        }
-
-        // ใช้ ref จาก draft (ที่สร้างไว้ตั้งแต่ขั้น create เพื่อให้ FileInput AJAX ใช้ ref เดิม)
-        $draftRef = $draft['ref'] ?? substr(Yii::$app->getSecurity()->generateRandomString(), 0, 22);
-        $model = new Leave([
-            'ref' => $draftRef,
-            'leave_type_id' => $draft['leave_type_id'],
-            'date_start' => $draft['date_start_g'],
-            'date_end' => $draft['date_end_g'],
-            'leave_time_type' => (float) ($draft['leave_time_type'] ?? 1),
-            'total_days' => (float) $draft['total_days'],
-            'emp_id' => $me->id,
-            'on_holidays' => 0,
-            'thai_year' => (int) AppHelper::YearBudget($draft['date_start_g']),
-        ]);
-
-        $approve = $model->Approve();
-
-        // เก็บ approve_N id ทุกระดับ (dynamic ตาม settings) — ใช้จาก draft ถ้ามี (ฟอร์มสร้างเลือกผู้อนุมัติ)
-        $approveIds = [];
-        foreach ($approve as $key => $info) {
-            $approveIds[$key] = isset($draft[$key]) ? $draft[$key] : ($info['id'] ?? null);
-        }
-
-        $model->data_json = array_merge([
-            'reason'               => $draft['reason'] ?? '',
-            'address'              => $draft['address'] ?? '',
-            'work_shift'           => $draft['work_shift'] ?? $me->work_shift ?? null,
-            'date_start_type'      => $draft['date_start_type'] ?? '0',
-            'date_end_type'        => $draft['date_end_type'] ?? '0',
-            'leave_work_send_id'   => $draft['leave_work_send_id'] ?? null,
-            'leave_work_send_name' => $draft['leave_work_send_name'] ?? '',
-            'leave_contact_phone'  => $draft['contact_phone'] ?? $me->phone ?? '',
-            'place_go'             => $draft['place_go'] ?? '',
-            'director'             => SiteHelper::viewDirector()['id'] ?? null,
-            'director_fullname'    => SiteHelper::viewDirector()['fullname'] ?? '',
-            'signature_data'       => $signatureData,
-            'signature_type'       => ($signatureType === 'system' ? 'system' : 'canvas'),
-            'summary_calendar_days'=> (int) ($draft['summary_calendar_days'] ?? 0),
-            'summary_sat_sun'      => (int) ($draft['summary_sat_sun'] ?? 0),
-            'summary_holiday'      => (int) ($draft['summary_holiday'] ?? 0),
-        ], $approveIds);
-
-        // ผอ. ตามตั้งค่าองค์กร ให้สถานะ Approve; createApprove() จะสร้างทุกระดับเป็นผอ. และ Pass (อนุมัติตัวเองได้เลย)
-        $model->status = \app\components\SiteHelper::isDirectorFromSettings($me->id) ? 'Approve' : 'Pending';
-        if ($model->save(false)) {
-            $model->createApprove();
-            Yii::$app->session->remove(self::SESSION_KEY);
-            Yii::$app->session->setFlash('success', 'สร้างใบลาสำเร็จ');
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['success' => true, 'redirect' => Url::to(['/leave/default/index'])];
-            }
-            return $this->redirect(['/leave/default/index']);
-        }
-
-        Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ');
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['success' => false, 'message' => 'บันทึกไม่สำเร็จ'];
+            $title = Yii::$app->request->get('title', '<i class="bi bi-calendar-plus me-1"></i> สร้างใบลาใหม่');
+            return [
+                'title'   => $title,
+                'content' => $this->renderAjax('_form', $renderParams),
+                'footer'  => '',
+            ];
         }
-        return $this->redirect(['confirm']);
+
+        return $this->render('create', $renderParams);
     }
 
     protected function getStatsForCreate($empId, $thaiYear, $gender = null)

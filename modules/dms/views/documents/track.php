@@ -26,7 +26,6 @@
                         //throw $th;
                     }
                     ?>
-                    ?>
                 </td>
                 <td><?php echo $item->comment;?></td>
                 <td><?php echo $item->status;?></td>

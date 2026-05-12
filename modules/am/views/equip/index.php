@@ -1,5 +1,6 @@
 <?php
 
+use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\helpers\Url;
@@ -44,57 +45,63 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 
+<?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
+
 <div class="card">
     <div class="card-body p-3">
-    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
 
-<?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
 
-<div class="row g-3 mt-1">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-body border-bottom py-3 px-3 px-md-4">
-                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between gap-3">
-                    <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-pill">
-                    <i data-lucide="file-text"></i> 
+
+<div class="card">
+    <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="border-color: rgb(241, 245, 249); background-color: rgba(248, 250, 252, 0.5);">
+        <div class="d-flex align-items-center gap-2">
+            <div class="p-2 rounded-3" style="background-color: rgb(219, 234, 254);">
+                <i data-lucide="notepad-text" class="text-primary"></i>
             </div>
-                        ทะเบียนคุมครุภัณฑ์
-                    </h6>
-                    <div class="d-flex flex-wrap align-items-center gap-2 w-50 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
-                        <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียน', ['create'], [
-                            'class' => 'btn btn-sm btn-primary text-white shadow-sm',
-                            'data-pjax' => 0,
-                        ]) ?>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="มุมมอง">
-                            <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
-                                'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                'data-pjax' => 0,
-                            ]) ?>
-                            <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
-                                'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
-                                'data-pjax' => 0,
-                            ]) ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
- 
-            <div class="card-body p-0">
-                <?php if ($isTableView): ?>
-                    <?= $this->render('_list', [
-                        'dataProvider' => $dataProvider,
-                    ]) ?>
-                <?php else: ?>
-                    <?= $this->render('_grid', [
-                        'dataProvider' => $dataProvider,
-                    ]) ?>
-                <?php endif; ?>
-            </div>
+            <h5 class="m-0 fw-bold">รายการทะเบียนคุมครุภัณฑ์</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ
+            </span>
         </div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">
+                <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
+                    'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                    'data-pjax' => 0,
+                ]) ?>
+                <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, [
+                    'class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'),
+                    'data-pjax' => 0,
+                ]) ?>
+            </div>
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['create'], [
+                'class' => 'btn btn-primary fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm',
+                'data-pjax' => 0,
+            ]) ?>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <?php if ($isTableView): ?>
+            <?= $this->render('_list', [
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        <?php else: ?>
+            <?= $this->render('_grid', [
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        <?php endif; ?>
+    </div>
+    <div class="card-footer bg-body border-top py-3 px-4">
+        <?php
+        echo DataSummaryWidget::widget([
+            'dataProvider' => $dataProvider,
+            'pagerOptions' => [],
+        ]);
+        ?>
     </div>
 </div>
 

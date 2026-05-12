@@ -1,10 +1,6 @@
 <?php
 
-use yii\helpers\Url;
 use yii\helpers\Html;
-use yii\grid\GridView;
-use yii\grid\ActionColumn;
-use app\modules\am\models\AssetItem;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItemSearch $searchModel */
@@ -36,9 +32,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock() ?>
 
 <div class="card">
-    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
-        <h6 class="text-white mt-2"><i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ</h6>
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <div class="card-header bg-primary-gradient text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="text-white mb-0">
+                <i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+            </h6>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        </div>
     </div>
     <div class="card-body">
         <table class="table">
@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th class="text-center" scope="col" style="width: 5%">#ลำดับ</th>
                     <th scope="col" style="width: 15%">รหัส</th>
                     <th scope="col" style="width: 70%">ชื่อรายการ</th>
-                    <th scope="col" style="width: 120px">ดำเนินการ</th>
+                    <th class="text-center" scope="col">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
@@ -56,17 +56,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td class="fw-semibold text-primary"><?= $item->code ?></td>
                         <td><?= $item->title ?></td>
-                        <td class="text-center py-2">
-                            <div class="d-flex justify-content-center">
-                                    <a href="<?= Url::to(['update', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary open-modal" title="ดูรายละเอียด">
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </a>
-                                <a href="<?= Url::to(['delete', 'id' => $item->id]) ?>" class="btn btn-icon btn-ghost-secondary delete-item" title="ดูรายละเอียด" data-size="modal-md">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-3">
+                                <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูล' . $this->title], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไข' . $this->title], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
                             </div>
                         </td>
-
                     </tr>
                 <?php endforeach; ?>
             </tbody>

@@ -120,6 +120,9 @@ class PdfTemplateService
             if (!empty($item['source']) && is_string($item['source'])) {
                 $pos['source'] = $item['source'];
             }
+            if (!empty($item['leave_type_id']) && is_string($item['leave_type_id'])) {
+                $pos['leave_type_id'] = trim($item['leave_type_id']);
+            }
             if (!empty($item['date_format']) && is_string($item['date_format'])) {
                 $pos['date_format'] = $item['date_format'];
             }
@@ -194,6 +197,7 @@ class PdfTemplateService
                 'font_bold' => !empty($item['font_bold']) ? 1 : 0,
                 'alignment' => $item['alignment'] ?? 'L',
                 'date_format' => $item['date_format'] ?? '',
+                'leave_type_id' => $item['leave_type_id'] ?? '',
                 'line_height_percent' => isset($item['line_height_percent']) ? (float) $item['line_height_percent'] : 0.04,
                 'position_x_percent' => isset($item['position_x_percent']) ? (float) $item['position_x_percent'] : 0.5,
                 'approval_display_style' => $item['approval_display_style'] ?? 'text',
@@ -209,6 +213,39 @@ class PdfTemplateService
             'exported_at' => date('c'),
             'fields' => $fields,
         ];
+    }
+
+    private function isLeaveSummaryField(string $lookupKey): bool
+    {
+        return in_array($lookupKey, ['last_days', 'total_days', 'ld', 'sum', 'leaveType', 'leave_type_id', 'leave_type_title'], true);
+    }
+
+    private function resolveLeaveSummaryField(array $values, string $lookupKey, string $leaveTypeCode): string
+    {
+        $summaryByType = $values['leave_summary_by_type'] ?? [];
+        $row = [];
+        if ($leaveTypeCode !== '' && is_array($summaryByType) && isset($summaryByType[$leaveTypeCode]) && is_array($summaryByType[$leaveTypeCode])) {
+            $row = $summaryByType[$leaveTypeCode];
+        }
+        if ($lookupKey === 'leaveType' || $lookupKey === 'leave_type_title') {
+            return (string) ($row['title'] ?? $values['leaveType'] ?? $values['leave_type_title'] ?? '');
+        }
+        if ($lookupKey === 'leave_type_id') {
+            return $leaveTypeCode !== '' ? $leaveTypeCode : (string) ($values['leave_type_id'] ?? '');
+        }
+        if ($lookupKey === 'last_days') {
+            return (string) ($row['last_leave_days'] ?? $values['last_days'] ?? '');
+        }
+        if ($lookupKey === 'total_days') {
+            return (string) ($row['total_leave_days'] ?? $values['total_days'] ?? '');
+        }
+        if ($lookupKey === 'ld') {
+            return (string) ($row['entitlement_days'] ?? $values['ld'] ?? '');
+        }
+        if ($lookupKey === 'sum') {
+            return (string) ($row['entitlement_total_days'] ?? $values['sum'] ?? '');
+        }
+        return '';
     }
 
     /**
@@ -411,6 +448,10 @@ class PdfTemplateService
                     $fieldKey = trim((string) ($item['field'] ?? $item['field_name'] ?? ''));
                     $lookupKey = self::LABEL_TO_KEY[$fieldKey] ?? $fieldKey;
                 }
+                $leaveTypeCode = trim((string) ($item['leave_type_id'] ?? ''));
+                if ($leaveTypeCode === '') {
+                    $leaveTypeCode = (string) ($values['leave_type_id'] ?? '');
+                }
 
                 if ($lookupKey === 'travel_party_list') {
                     $members = isset($values['travel_party_members']) && is_array($values['travel_party_members']) ? $values['travel_party_members'] : [];
@@ -524,6 +565,8 @@ class PdfTemplateService
                             break;
                         }
                     }
+                } elseif ($this->isLeaveSummaryField($lookupKey)) {
+                    $text = $this->resolveLeaveSummaryField($values, $lookupKey, $leaveTypeCode);
                 } else {
                     $fieldKey = trim((string) ($item['field'] ?? ''));
                     $fieldNameKey = trim((string) ($item['field_name'] ?? ''));

@@ -11,6 +11,7 @@ use app\components\UserHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveSearch;
+use app\modules\leave\components\LeaveApprovalService;
 
 class LeaveController extends \yii\web\Controller
 {
@@ -67,68 +68,15 @@ class LeaveController extends \yii\web\Controller
         }
 
         if ($this->request->isPost) {
-            $me = UserHelper::GetEmployee();
+            $me     = UserHelper::GetEmployee();
             $status = $this->request->post('status');
 
-            // การ merge ข้อมูล JSON เพื่อให้ข้อมูลเก่ายังอยู่
-            $model->data_json = ArrayHelper::merge(
-                (array)$model->data_json,
-                ['approve_date' => date('Y-m-d H:i:s')]
-            );
+            $result = (new LeaveApprovalService())->process($model, $status, $me ? (int) $me->id : null);
 
-            $model->status = $status;
-
-            if (empty($model->emp_id)) {
-                $model->emp_id = $me->id;
-            }
-
-            if ($model->save()) {
-
-                // ถ้าไม่อนุมัติ
-                if ($model->status === 'Reject') {
-                    $model->leave->status = 'Reject';
-                    $model->leave->save(false);
-                    $model->leave->MsgReject();
-                    return ['status' => 'success'];
-                }
-
-                // ถ้าเป็น level สุดท้าย
-                if ($model->maxLevel() && $model->status === 'Pass') {
-                    $model->leave->status = 'Approve';
-                    $model->leave->save(false);
-                    $model->leave->MsgApprove();
-                    return ['status' => 'success'];
-                }
-
-                // หา nextApprove
-                $nextApprove = Approve::findOne([
-                    'from_id' => $model->from_id,
-                    'name' => 'leave',
-                    'level' => $model->level + 1
-                ]);
-
-                // Mapping สถานะ
-                $statusMap = [
-                    1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
-                    2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
-                    3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
-                    4 => ['Pass' => 'Approve', 'Reject' => 'Reject']
-                ];
-
-                // ตั้งค่าตาม map
-                if (isset($statusMap[$model->level][$model->status])) {
-                    $model->leave->status = $statusMap[$model->level][$model->status];
-                    $model->leave->save(false);
-                }
-
-                // ถ้ามีคนอนุมัติถัดไป และสถานะผ่าน
-                if ($nextApprove && $model->status === 'Pass') {
-                    $nextApprove->status = 'Pending';
-                    $nextApprove->save(false);
-                }
-
+            if ($result['ok'] ?? false) {
                 return ['status' => 'success'];
             }
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
         }
 
         if ($this->request->isAJax) {
@@ -150,125 +98,26 @@ class LeaveController extends \yii\web\Controller
     public function actionApproveAll()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
-        if ($this->request->isPost) {
-            $me = UserHelper::GetEmployee();
-            $status = $this->request->post('status'); // เช่น 'Pass' หรือ 'Reject'
-            $ids = $this->request->post('ids', []);   // array ของ id ที่ต้องการ update
-
-            if (empty($ids) || !is_array($ids)) {
-                return ['status' => 'error', 'message' => 'No items selected'];
-            }
-
-            $statusMap = [
-                1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
-                2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
-                3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
-                4 => ['Pass' => 'Approve', 'Reject' => 'Reject']
-            ];
-
-            foreach ($ids as $id) {
-                $model = Approve::findOne($id);
-                if (!$model) continue;
-
-                // Merge ข้อมูล JSON
-                $model->data_json = ArrayHelper::merge(
-                    (array)$model->data_json,
-                    ['approve_date' => date('Y-m-d H:i:s')]
-                );
-
-                $model->status = $status;
-
-                if (empty($model->emp_id)) {
-                    $model->emp_id = $me->id;
-                }
-
-                if ($model->save()) {
-
-                    // ถ้าไม่อนุมัติ
-                    if ($status === 'Reject') {
-                        $model->leave->status = 'Reject';
-                        $model->leave->save(false);
-                        $model->leave->MsgReject();
-                        continue; // ไปตัวถัดไป
-                    }
-
-                    // ถ้าเป็น level สุดท้าย และอนุมัติผ่าน
-                    if ($model->maxLevel() && $status === 'Pass') {
-                        $model->leave->status = 'Approve';
-                        $model->leave->save(false);
-                        $model->leave->MsgApprove();
-                        continue;
-                    }
-
-                    // หา nextApprove
-                    $nextApprove = Approve::findOne([
-                        'from_id' => $model->from_id,
-                        'name' => 'leave',
-                        'level' => $model->level + 1
-                    ]);
-
-                    // Mapping สถานะตาม level
-                    if (isset($statusMap[$model->level][$status])) {
-                        $model->leave->status = $statusMap[$model->level][$status];
-                        $model->leave->save(false);
-                    }
-
-                    // ถ้ามีคนอนุมัติถัดไป และ status ผ่าน
-                    if ($nextApprove && $status === 'Pass') {
-                        $nextApprove->status = 'Pending';
-                        $nextApprove->save(false);
-                    }
-                }
-            }
-
-            return ['status' => 'success'];
+        if (!$this->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request'];
         }
 
-        return ['status' => 'error', 'message' => 'Invalid request'];
-    }
+        $me     = UserHelper::GetEmployee();
+        $status = $this->request->post('status');
+        $ids    = $this->request->post('ids', []);
 
-
-
-    public function actionApproveAllOld()
-    {
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        $me = UserHelper::GetEmployee();
-        $approves = Approve::find()->where(['name' => 'leave', 'emp_id' => $me->id, 'status' => 'Pending'])->all();
-        foreach ($approves as $item) {
-            $model = Approve::findOne($item->id);
-            $model->status = 'Pass';
-            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
-            $model->data_json = ArrayHelper::merge($model->data_json, $approveDate);
-            // if ($model->save()) {
-            //     $nextApprove = Approve::findOne(['name' => 'leave', 'from_id' => $model->from_id, 'level' => ($model->level + 1)]);
-            //     if ($nextApprove && $model->status !== 'Reject') {
-            //         // เงื่อนไขระบบลา
-            //         if ($model->name == 'leave') {
-            //             if ($model->level == 2) {
-            //                 $model->leave->status = 'Checking';
-            //                 $model->leave->save();
-            //             }
-            //             if ($model->level == 3) {
-            //                 $model->leave->status = 'Verify';
-            //                 $model->leave->save();
-            //             } else {
-            //             }
-            //         }
-
-            //         $nextApprove->status = 'Pending';
-            //         $nextApprove->save();
-            //     }
-
-            //     if ($model->maxLevel() && $model->status == 'Pass' && $model->name == 'leave') {
-            //         $model->leave->status = 'Approve';
-            //         $model->leave->save();
-            //         $model->leave->MsgApprove();
-            //     }
-            // }
+        if (empty($ids) || !is_array($ids)) {
+            return ['status' => 'error', 'message' => 'No items selected'];
         }
-        return [
-            'status' => 'success'
-        ];
+
+        $service = new LeaveApprovalService();
+        foreach ($ids as $id) {
+            $model = Approve::findOne((int) $id);
+            if (!$model || $model->name !== 'leave') continue;
+            $service->process($model, $status, $me ? (int) $me->id : null);
+        }
+
+        return ['status' => 'success'];
     }
 
     protected function findModel($id)

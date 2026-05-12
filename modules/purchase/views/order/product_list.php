@@ -55,8 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td> <?=(isset($item->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$item->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
                 <td><?=$item->productType->title ?? '-'?></td>
                 <td class="align-middle">
-                    <?php echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->code, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']); ?> | 
-                    <?php echo Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->id, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-warning rounded-pill shadow text-center open-modal']); ?>
+                    <?php echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->code, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']); ?>
                 </td>
             </tr>
             <?php } ?>

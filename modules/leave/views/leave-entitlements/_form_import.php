@@ -165,7 +165,7 @@ $(document).ready(function() {
     formData.append('csvFile', file);
 
     $.ajax({
-        url: '/hr/leave-entitlements/preview',
+        url: '/leave/leave-entitlements/preview',
         type: 'POST',
         data: formData,
         processData: false,

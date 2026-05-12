@@ -13,6 +13,7 @@ use yii\helpers\ArrayHelper;
  * @property string $system ระบบ (leave, purchase, development, ...)
  * @property int $level ลำดับระดับ
  * @property string $label ชื่อระดับ
+ * @property string|null $title ชื่อขั้นอนุมัติ
  * @property string $approver_type org_leader1|org_leader2|role|director|fixed
  * @property string|null $approver_value
  * @property int|null $org_node_level ระดับโหนดในผังองค์กร (null=แผนกผู้ขอ, 1=ประเภท, 2=กลุ่มงาน)
@@ -51,7 +52,7 @@ class ApproveLevelSetting extends \yii\db\ActiveRecord
             [['org_node_level'], 'integer', 'min' => 0, 'max' => 10, 'skipOnEmpty' => true],
             [['created_at', 'updated_at'], 'safe'],
             [['system'], 'string', 'max' => 64],
-            [['label', 'approver_value'], 'string', 'max' => 255],
+            [['label', 'title', 'approver_value'], 'string', 'max' => 255],
             [['approver_type'], 'string', 'max' => 32],
             [['system', 'level'], 'unique', 'targetAttribute' => ['system', 'level']],
             [['approver_type'], 'in', 'range' => [self::TYPE_ORG_LEADER1, self::TYPE_ORG_LEADER2, self::TYPE_ROLE, self::TYPE_DIRECTOR, self::TYPE_FIXED]],
@@ -68,6 +69,7 @@ class ApproveLevelSetting extends \yii\db\ActiveRecord
             'system' => 'ระบบ',
             'level' => 'ระดับ',
             'label' => 'ชื่อระดับ',
+            'title' => 'ชื่อขั้นอนุมัติ',
             'approver_type' => 'ประเภทผู้อนุมัติ',
             'approver_value' => 'ค่า (บทบาท/พนักงาน)',
             'org_node_level' => 'ระดับในผังองค์กร',

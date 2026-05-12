@@ -232,7 +232,7 @@ class Leave extends \yii\db\ActiveRecord
                     'title'     => 'ผู้อำนวยการ',
                     'emp_id'    => $dirId,
                     'status'    => 'Pending',
-                    'data_json' => ['label' => 'ผู้อำนวยการ'],
+                    'data_json' => ['label' => 'ผู้อำนวยการ', 'title' => 'ผู้อำนวยการ'],
                 ]];
             } else {
                 return; // ไม่มีทั้ง settings และ director — ไม่สร้าง approve
@@ -247,7 +247,12 @@ class Leave extends \yii\db\ActiveRecord
         $first = true;
 
         foreach ($rows as $r) {
-             $dataJson = ['label' => $r['label']];
+            $title = trim((string) ($r['title'] ?? ''));
+            if ($title === '') {
+                $title = (string) ($r['label'] ?? '');
+            }
+
+            $dataJson = ['label' => $r['label'], 'title' => $title];
             if ($r['approver_type'] === 'role') {
                 // เก็บ role ไว้ใน data_json เพื่อใช้ตรวจสิทธิ์ทีหลัง
                 $dataJson['role'] = 'role'; // placeholder
@@ -258,12 +263,12 @@ class Leave extends \yii\db\ActiveRecord
             $a->from_id = (string) $this->id;
             $a->name    = 'leave';
             $a->level   = $r['level'];
-            $a->title   = $r['label'];
+            $a->title   = $title;
 
             if ($isDirector) {
                 $a->emp_id    = (int) $this->emp_id;
                 $a->status    = 'Pass';
-                $a->data_json = ['label' => $r['label'], 'approve_date' => $approveDate];
+                $a->data_json = ['label' => $r['label'], 'title' => $title, 'approve_date' => $approveDate];
             } else {
                 $a->emp_id    = $r['emp_id'];
                 $a->status    =  $first ? 'Pending' : 'None';
@@ -584,12 +589,17 @@ class Leave extends \yii\db\ActiveRecord
                     $icon = '<i class="bi bi-hourglass-split"></i>';
                     break;
                 case 'Checking1_pass':
+                case 'Checking2_pass':
+                case 'Checkup_pass':
                     $color = 'info';
                     $icon = '<i class="fa-solid fa-circle-check"></i>';
                     break;
-                case 'Checking2_pass':
-                    $color = 'info';
-                    $icon = '<i class="fa-solid fa-circle-check"></i>';
+                case 'Checking1_reject':
+                case 'Checking2_reject':
+                case 'Checkup_reject':
+                case 'Reject':
+                    $color = 'danger';
+                    $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
                     break;
                 case 'Approve':
                     $color = 'success';
@@ -606,10 +616,6 @@ class Leave extends \yii\db\ActiveRecord
                 case 'Checking':
                     $color = 'warning';
                     $icon = '<i class="fa-solid fa-magnifying-glass"></i>';
-                    break;
-                case 'Reject':
-                    $color = 'danger';
-                    $icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>';
                     break;
 
                 default:
@@ -1048,7 +1054,7 @@ class Leave extends \yii\db\ActiveRecord
     }
 
 //แสรุปการลาในใบลาแต่ละครั้ง
-    public function getLeaveSummary()
+    public function getLeaveSummary($leaveTypeId = null)
 {
     $sql = "
         SELECT 
@@ -1070,6 +1076,7 @@ class Leave extends \yii\db\ActiveRecord
                 AND l2.thai_year = l.thai_year
                 AND l2.date_start < l.date_start
                 AND l2.status = 'Approve'
+                " . ($leaveTypeId ? " AND l2.leave_type_id = :leave_type_id " : "") . "
             ) AS last_leave_days,
 
             -- รวมวันลาทั้งหมดจนถึงครั้งนี้
@@ -1080,6 +1087,7 @@ class Leave extends \yii\db\ActiveRecord
                 AND l3.thai_year = l.thai_year
                 AND l3.date_start <= l.date_start
                 AND l3.status = 'Approve'
+                " . ($leaveTypeId ? " AND l3.leave_type_id = :leave_type_id " : "") . "
             ) AS total_leave_days
 
         FROM `leave` l
@@ -1087,15 +1095,21 @@ class Leave extends \yii\db\ActiveRecord
         AND l.emp_id = :emp_id
         AND l.thai_year = :thai_year
         AND l.status = :status
+        " . ($leaveTypeId ? " AND l.leave_type_id = :leave_type_id " : "") . "
         LIMIT 1
     ";
 
-    return Yii::$app->db->createCommand($sql, [
+    $params = [
         ':id' => $this->id,
         ':emp_id' => $this->emp_id,
         ':thai_year' => $this->thai_year,
         ':status' => 'Approve',
-    ])->queryOne();
+    ];
+    if ($leaveTypeId) {
+        $params[':leave_type_id'] = $leaveTypeId;
+    }
+
+    return Yii::$app->db->createCommand($sql, $params)->queryOne();
 }
 
     public function listEmployees()

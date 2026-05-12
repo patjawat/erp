@@ -17,6 +17,16 @@ $this->params['breadcrumbs'][] = $this->title;
 $me = UserHelper::GetEmployee();
 $room = Room::findOne(['name' => 'meeting_room', 'code' => $model->room_id]);
 $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->room_layout_id]);
+$labels = $model::equipmentItems();
+$requester = $model->getUserReq();
+$canEditMeeting = $me && $model->status !== 'Cancel' && (Yii::$app->user->can('meeting') || $me->id == $model->emp_id);
+$meetingData = is_array($model->data_json ?? null)
+    ? $model->data_json
+    : (is_string($model->data_json ?? null) ? (json_decode($model->data_json, true) ?: []) : []);
+$equipments = $meetingData['equipment'] ?? [];
+if (!is_array($equipments)) {
+    $equipments = [$equipments];
+}
 
 ?>
 
@@ -50,6 +60,12 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
             <div class="col-sm-8"><?= $model->room->title; ?></div>
         </div>
         <div class="row mb-0 align-items-center">
+            <label class="col-sm-3 col-form-label text-end fw-medium">ผู้ขอใช้:</label>
+            <div class="col-sm-8">
+                <?= $requester['avatar'] ?: '-' ?>
+            </div>
+        </div>
+        <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">หัวข้อการประชุม:</label>
             <div class="col-sm-8"><?= $model->title; ?></div>
         </div>
@@ -63,10 +79,7 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
             <div class="col-sm-8">
 
                 <ul>
-                    <?php 
-                    $equipments = $model->data_json['equipment'] ?? [];
-                    foreach ($equipments as $item): 
-                     ?>
+                    <?php foreach ($equipments as $item): ?>
                         <li><?= $labels[$item] ?? $item ?></li>
                     <?php endforeach; ?>
                 </ul>
@@ -76,7 +89,7 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
         <div class="row mb-0 align-items-center">
             <label class="col-sm-3 col-form-label text-end fw-medium">เบอร์ติดต่อ:</label>
             <div class="col-sm-8">
-                <?= $model->data_json['phone'] ?? '-' ?>
+                <?= $meetingData['phone'] ?? '-' ?>
             </div>
         </div>
         <div class="row mb-0 align-items-center">
@@ -100,18 +113,18 @@ $roomLayout = RoomLayout::findOne(['name' => 'room_layout', 'code' => $model->ro
 
 <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-center gap-2 mt-3">
 
-    <!-- ถ้ายกเลิกแล้วไม่สามารถแก้ไขได้ -->
-    <?php if ($model->status !== 'Cancel'): ?>
+    <!-- แก้ไขได้เฉพาะเจ้าของหรือสิทธิ์ meeting และต้องไม่อยู่สถานะ Cancel -->
+    <?php if ($canEditMeeting): ?>
         <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/me/booking-meeting/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-warning rounded-pill shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
     <?php endif; ?>
 
-    <?php if ($model->status == 'Pending'): ?>
+    <?php if ($model->status == 'Pending' && Yii::$app->user->can('meeting')): ?>
         <button type="button" class="btn btn-primary confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Pass" data-text="อนุมัติการจอง" data-icon="success">
             <i class="fa-regular fa-circle-check"></i> อนุมัติ
         </button>
     <?php endif; ?>
 
-    <?php if ($model->status !== 'Cancel'): ?>
+<?php if ($canEditMeeting): ?>
         <button type="button" class="btn btn-danger confirm-meeting  rounded-pill" data-id="<?= $model->id ?>" data-status="Cancel" data-text="ปฏิเสธการจอง" data-icon="warning">
             <i class="fa-solid fa-xmark"></i> ยกเลิกการจอง
         </button>

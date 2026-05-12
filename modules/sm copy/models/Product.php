@@ -1,0 +1,265 @@
+<?php
+
+namespace app\modules\sm\models;
+
+use Yii;
+use yii\helpers\Html;
+use app\models\Categorise;
+use yii\helpers\ArrayHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
+
+/**
+ * This is the model class for table "asset".
+ *
+ * @property int $id
+ * @property string|null $ref
+ * @property string|null $asset_group แยกประเภทพัสดุ/ครุภัณฑ์
+ * @property string|null $asset_item
+ * @property string|null $code ครุภัณฑ์
+ * @property string|null $fsn_number หมายเลขครุภัณฑ์
+ * @property int|null $qty จำนวน
+ * @property string|null $receive_date วันที่รับเข้า
+ * @property float|null $price ราคา
+ * @property int|null $purchase
+ * @property int|null $department
+ * @property string|null $repair ประวัติการซ่อม
+ * @property string|null $owner
+ * @property int|null $life อายุการใช้งาน
+ * @property string|null $device_items อุปกรณ์ภายใน
+ * @property int|null $on_year
+ * @property int|null $dep_id ประจำอยู่หน่วยงาน
+ * @property int|null $depre_type ประเภทค่าเสื่อมราคา
+ * @property int|null $budget_year งบประมาณ
+ * @property string|null $asset_status สถานะทรัพย์สิน
+ * @property string|null $data_json
+ * @property string|null $updated_at วันเวลาแก้ไข
+ * @property string|null $created_at วันเวลาสร้าง
+ * @property int|null $created_by ผู้สร้าง
+ * @property int|null $updated_by ผู้แก้ไข
+ */
+class Product extends \yii\db\ActiveRecord
+{
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'categorise';
+    }
+
+    public $q_category;
+    public $unit;
+    public $unit_name;
+    public $auto;
+    public $q;
+    public $metter_type;
+    public $innovation_account;
+
+
+    public function init()
+{
+    parent::init();
+    if ($this->isNewRecord) {
+        $this->active = 1;
+    }
+}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['name'], 'required'],
+            [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account','qty_min','qty_max'], 'safe'],
+            [['active'], 'integer'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+            [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
+            ['active', 'default', 'value' => 1],
+
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'ref' => 'Ref',
+            'category_id' => 'Category ID',
+            'code' => 'Code',
+            'emp_id' => 'Emp ID',
+            'name' => 'Name',
+            'title' => 'Title',
+            'description' => 'Description',
+            'data_json' => 'Data Json',
+            'active' => 'Active',
+        ];
+    }
+
+
+    public function afterFind()
+    {
+        try {
+
+            $this->unit_name = isset($this->data_json['unit']) ? $this->data_json['unit'] : '-';
+        } catch (\Throwable $th) {
+        }
+
+        parent::afterFind();
+    }
+
+    public function getProductItem()
+    {
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_item']);
+    }
+
+    public function getProductType()
+    {
+        return $this->hasOne(self::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
+    }
+
+
+    public function listAssetType()
+    {
+        $items = self::find()->where(['category_id' => 4, 'name' => 'asset_type'])->all();
+        return ArrayHelper::map($items, 'code', 'title');
+    }
+
+
+    public function listMatterType()
+    {
+        $items = [
+            'วัสดุสิ้นเปลือง' => 'วัสดุสิ้นเปลือง',
+            'วัสดคงทน' => 'วัสดคงทน',
+        ];
+        return $items;
+    }
+
+    public function listPurchaseType()
+    {
+        $items = [
+            'ราคาสืบเขต' => 'ราคาสืบเขต',
+            'ราคาสืบจังหวัด' => 'ราคาสืบจังหวัด',
+            'ราคาจัดซื้อ รพ.' => 'ราคาจัดซื้อ รพ.',
+        ];
+        return $items;
+    }
+    
+    //สร้างรหัสวัสดุ
+    public static function nextCode($categoryId)
+    {
+        return Yii::$app->db->createCommand("
+        SELECT  CONCAT(
+        'M1-', 
+        IFNULL(
+            MAX(CAST(SUBSTRING_INDEX(code, '-', -1) AS UNSIGNED)), 
+            0
+        ) + 1
+    ) AS next_code
+        FROM categorise
+        WHERE group_id = :group_id
+          AND category_id = :category_id
+          AND name = :name
+          AND code LIKE :code_like
+    ")->bindValues([
+            ':group_id' => 4,
+            ':category_id' => $categoryId,
+            ':name' => 'asset_item',
+            ':code_like' => $categoryId . '-%',
+        ])->queryScalar();
+    }
+
+
+
+
+    public function ShowImg()
+    {
+        $model = Uploads::find()->where(['ref' => $this->ref])->one();
+        if ($model) {
+            return FileManagerHelper::getImg($model->id);
+        } else {
+            // return Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+            $filepath = Yii::getAlias('@webroot') . '/img/placeholder-img.jpg';
+            $type = pathinfo($filepath, PATHINFO_EXTENSION);
+            $data = file_get_contents($filepath);
+            return $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+    }
+
+    public function Avatar()
+    {
+        return '<div class="d-flex">
+        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
+                                <div class="avatar-detail">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        ' . $this->title . '
+                                    </h6>
+                                    <span class="text-primary">' . $this->code . '</span>
+                                </div>
+                            </div>';
+    }
+
+    //แสดงสำหรับ line
+    public function AvatarLine($msg = null)
+    {
+        return '<div class="d-flex">
+        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
+                                <div class="avatar-detail">
+                                    <h6 class="mb-1 fs-15" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        ' . $this->title . '
+                                    </h6>
+                                    <span class="text-primary">' . $msg . '</span>
+                                </div>
+                            </div>';
+    }
+
+
+
+    //แสดงรูปแบบประเภท
+    public function ViewTypeName()
+    {
+        try {
+
+            $model =  self::find()->where(['name' => $this->name])->one();
+
+            return [
+                'title' =>  isset($this->productType->title) ? $this->productType->title : 'ไม่ได้ระบุ',
+                'code' => (isset($model->data_json['unit']) ? $model->data_json['unit'] : '-')
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'title' =>  '',
+                'code' => ''
+            ];
+        }
+    }
+
+    public function AvatarXl()
+    {
+        return '<div class="d-flex">
+                        ' . Html::img($this->ShowImg(), ['class' => 'avatar']) . '
+                            <div class="avatar-detail">
+                                <h5 class="mb-15" data-bs-toggle="tooltip" data-bs-placement="top">' . $this->title . '</h5>
+                                    <p class="text-primary mb-0 fs-6">' . isset($this->productType) ? $this->productType->title : '-' . ' <code>(' . (isset($this->data_json['unit']) ? $this->data_json['unit'] : '-') . ')</code></p>
+                            </div>
+        </div>';
+    }
+    public function ListProductType()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->all(), 'code', 'title');
+    }
+
+    public function listUnit()
+    {
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'unit'])->all(), 'title', 'title');
+    }
+
+    public function ListProductUnit()
+    {
+        return Categorise::find()->where(['category_id' => $this->id, 'name' => 'product_unit'])->all();
+    }
+}

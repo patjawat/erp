@@ -1,22 +1,10 @@
 <?php
 
 use yii\helpers\Html;
-use app\components\widgets\DataSummaryWidget;
 use app\modules\hr\models\Employees;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$statusBadge = static function ($item): string {
-    $st = (int) $item->asset_status;
-    $label = Html::encode($item->statusName() ?: '-');
-    if ($st === 1) {
-        return '<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success-subtle fw-medium px-2 py-2">' . $label . '</span>';
-    }
-    if (in_array($st, [3, 5], true)) {
-        return '<span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger-subtle fw-medium px-2 py-2">' . $label . '</span>';
-    }
-    return '<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle fw-medium px-2 py-2">' . $label . '</span>';
-};
 
 $equipSubtitle = static function ($item): string {
     $dj = is_array($item->data_json) ? $item->data_json : [];
@@ -41,75 +29,80 @@ $equipSubtitle = static function ($item): string {
 };
 ?>
 <style>
-/* เฉพาะเลย์เอาต์ตาราง — สีตามธีมผ่านตัวแปร Bootstrap */
-.equip-register-table {
-    margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-.equip-register-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background-color: var(--bs-body-bg);
-    color: var(--bs-secondary-color);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    padding: 0.9rem 1rem;
-    border-bottom: 1px solid var(--bs-border-color);
-    white-space: nowrap;
-    vertical-align: middle;
-}
-.equip-register-table tbody td {
-    padding: 1rem 1rem;
-    border-bottom: 1px solid var(--bs-border-color);
-    vertical-align: middle;
-    font-size: 0.9375rem;
-    color: var(--bs-body-color);
-}
-.equip-register-table tbody tr:last-child td {
-    border-bottom: none;
-}
-.equip-register-table tbody tr:hover td {
-    background-color: var(--bs-secondary-bg);
-}
-.equip-list-scroll {
-    max-height: min(68vh, 760px);
-    overflow: auto;
-}
-/* คอลัมน์จัดการ: แคบเท่าที่จำเป็น + ปุ่มไม่หดคลิกยากบนมือถือ */
-.equip-register-table th.equip-actions-th,
-.equip-register-table td.equip-actions-cell {
-    width: 150px;
-}
-.equip-register-table .equip-actions-inner .btn {
-    flex-shrink: 0;
-    min-width: 2.375rem;
-    min-height: 2.375rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
+    /* เฉพาะเลย์เอาต์ตาราง — สีตามธีมผ่านตัวแปร Bootstrap */
+    .equip-register-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
 
+    .equip-register-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-secondary-color);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .equip-register-table tbody td {
+        padding: 1rem 1rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        vertical-align: middle;
+        font-size: 0.9375rem;
+        color: var(--bs-body-color);
+    }
+
+    .equip-register-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .equip-register-table tbody tr:hover td {
+        background-color: var(--bs-secondary-bg);
+    }
+
+    .equip-list-scroll {
+        max-height: min(68vh, 760px);
+        overflow: auto;
+    }
+
+    /* คอลัมน์จัดการ: แคบเท่าที่จำเป็น + ปุ่มไม่หดคลิกยากบนมือถือ */
+    .equip-register-table th.equip-actions-th,
+    .equip-register-table td.equip-actions-cell {
+        width: 150px;
+    }
+
+    .equip-register-table .equip-actions-inner .btn {
+        flex-shrink: 0;
+        min-width: 2.375rem;
+        min-height: 2.375rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
-<div class="bg-body">
-    <div class="equip-list-scroll">
-        <div class="table-responsive">
-            <table class="table equip-register-table mb-0">
-                <thead>
-                <tr>
-                    <th>รหัส</th>
-                    <th>ชื่อครุภัณฑ์ / ยี่ห้อ</th>
-                    <th>หมวด</th>
-                    <th class="text-end">ราคาแรกรับ</th>
-                    <th>ที่ตั้ง</th>
-                    <th>ผู้รับผิดชอบ</th>
-                    <th>วันรับ</th>
-                    <th class="text-center">สภาพ</th>
-                    <th class="text-center equip-actions-th" style="min-width: 200px;">จัดการ</th>
+
+<div class="equip-list-scroll">
+    <div class="table-responsive">
+        <table class="table equip-register-table mb-0">
+            <thead style="background-color: white;">
+                <tr style="border-bottom: 1px solid rgb(226, 232, 240);">
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ข้อมูลครุภัณฑ์</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 160px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">หมวดหมู่</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 224px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 128px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">วันที่รับ</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 <?php foreach ($dataProvider->getModels() as $item): ?>
                     <?php
                     $price = (float) ($item->price ?? 0);
@@ -128,49 +121,43 @@ $equipSubtitle = static function ($item): string {
                     }
                     $ownerName = $ownerEmp?->fullname ?: '';
                     ?>
-                    <tr>
-                        <td>
-                            <?= Html::a(Html::encode($item->code ?: '-'), ['view-asset', 'id' => $item->id], [
-                                'class' => 'fw-semibold link-primary text-decoration-none',
-                            ]) ?>
-                        </td>
-                        
-                        <td>
-                            <div class="d-flex gap-3 align-items-center">
-                                <?= Html::a(
-                                    Html::img(
+
+                    <tr style="border-bottom: 1px solid rgb(241, 245, 249);">
+                        <td class="px-4 py-3 border-0">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 border" style="width: 40px; height: 40px; background-color: rgb(248, 250, 252); border-color: rgb(226, 232, 240); color: rgb(148, 163, 184);">
+                                    <?= Html::img(
                                         $item->ShowImg()['image'],
                                         [
                                             'class' => 'rounded border flex-shrink-0',
                                             'style' => 'width:56px;height:56px;object-fit:cover;',
                                             'alt' => $titleName,
                                         ]
-                                    ),
-                                    ['view-asset', 'id' => $item->id],
-                                    [
-                                        'class' => 'flex-shrink-0 text-decoration-none',
-                                        'data-pjax' => 0,
-                                        'title' => 'ดูรายละเอียด',
-                                    ]
-                                ) ?>
-                                <div class="min-w-0 flex-grow-1">
-                                    <div class="fw-bold text-body"><?= Html::encode($titleName) ?></div>
-                                    <?php $sub = $equipSubtitle($item); ?>
-                                    <?php if ($sub !== ''): ?>
-                                        <div class="small text-muted mt-1 lh-sm text-break"><?= Html::encode($sub) ?></div>
-                                    <?php endif; ?>
+                                    ) ?>
+                                </div>
+                                <div><span class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 200px;"><?= $titleName; ?></span>
+                                    <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);"><span><?= $item->code; ?></span></div>
                                 </div>
                             </div>
                         </td>
-                        <td>
-                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle fw-medium px-3 py-2"><?= Html::encode($catTitle) ?></span>
+                        <td class="px-4 py-3 border-0"><span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= $catTitle ?></span></td>
+                        <td class="px-4 py-3 border-0">
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex align-items-center gap-2" style="color: rgb(30, 41, 59);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin flex-shrink-0" aria-hidden="true">
+                                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg><span class="fw-semibold text-truncate" style="font-size: 14px; max-width: 180px;"><?= $item->departmentName() ?></span></div>
+                                <div class="d-flex align-items-center gap-2" style="color: rgb(100, 116, 139);"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user flex-shrink-0" aria-hidden="true">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg><span class="text-truncate" style="font-size: 12px; max-width: 180px;"><?= $ownerName ?></span></div>
+                            </div>
                         </td>
-                        <td class="text-end text-nowrap"><span class="fw-bold text-body font-monospace"><?= Html::encode(number_format($price, 2)) ?></span></td>
-                        <td class="text-muted small"><?= Html::encode($location ?: '-') ?></td>
-                        <td class="text-muted small"><?= Html::encode($ownerName ?: '-') ?></td>
-                        <td class="text-muted small text-nowrap"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
-                        <td class="text-center"><?= $statusBadge($item) ?></td>
-                        <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
+                        <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
+                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price,2) ?></td>
+                        <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
+                        <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
+                        <td class="text-center align-middle equip-actions-cell px-2 px-md-3  border-0">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
                                 <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-primary',
@@ -184,7 +171,7 @@ $equipSubtitle = static function ($item): string {
                                         'data-pjax' => 0,
                                     ]) ?>
                                 <?php endif; ?>
-                                  <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-light',
                                     'title' => 'พิมพ์',
                                     'data-pjax' => 0,
@@ -200,17 +187,9 @@ $equipSubtitle = static function ($item): string {
                             </div>
                         </td>
                     </tr>
+
                 <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
     </div>
-</div>
-<div class="card-footer bg-body border-top py-3 px-4">
-    <?php
-    echo DataSummaryWidget::widget([
-        'dataProvider' => $dataProvider,
-        'pagerOptions' => [],
-    ]);
-    ?>
 </div>

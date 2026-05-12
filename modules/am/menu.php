@@ -22,7 +22,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="dropdown d-inline-block">
-        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= $active !== 'work' ? 'btn-outline-primary' : 'btn-primary' ?>" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 3v12" />
                 <path d="m8 11 4 4 4-4" />
@@ -31,7 +31,7 @@ use yii\helpers\Url;
             งานครุภัณฑ์
         </button>
         <ul class="dropdown-menu">
-            <li><?= Html::a('<i data-lucide="package-plus" class="me-2" style="width:1rem;height:1rem;"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset/bulk-create'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="package-plus" class="me-2" style="width:1rem;height:1rem;"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset-bulk/bulk-create'], ['class' => 'dropdown-item']) ?></li>
             <!-- <li>
                 <hr class="dropdown-divider">
             </li> -->
@@ -44,6 +44,9 @@ use yii\helpers\Url;
             </li> -->
             <li><?= Html::a('<i data-lucide="calendar" class="me-2" style="width:1rem;height:1rem;"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-text" class="me-2" style="width:1rem;height:1rem;"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="file-search" class="me-2" style="width:1rem;height:1rem;"></i> รายงานครุภัณฑ์คงเหลือ', ['/am/report/register'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="file-check" class="me-2" style="width:1rem;height:1rem;"></i> ตรวจนับพัสดุประจำปี', ['/am/audit'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="trash-2" class="me-2" style="width:1rem;height:1rem;"></i> จำหน่ายพัสดุ', ['/am/disposal'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 
@@ -81,14 +84,17 @@ use yii\helpers\Url;
             <li>
                 <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN', ['/am/fsn'], ['class' => 'dropdown-item']) ?>
             </li>
-            <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์', ['/am/asset-item'], ['class' => 'dropdown-item']) ?>
-            </li>
+            <!-- <li> -->
+                <?php // Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์', ['/am/asset-item'], ['class' => 'dropdown-item']) ?>
+            <!-- </li> -->
             <li>
                 <hr class="dropdown-divider">
             </li>
             <li>
                 <?= Html::a('<i class="fa-solid fa-hashtag me-1"></i> รูปแบบ FSN ครุภัณฑ์', ['/am/setting/fsn-format'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i data-lucide="receipt-text" class="me-1"></i> สภาพครุภัณฑ์', ['/am/asset-condition'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>
                 <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน (ทั้งหมด)', ['/am/setting'], ['class' => 'dropdown-item']) ?>

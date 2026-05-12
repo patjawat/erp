@@ -4,11 +4,10 @@ namespace app\modules\sm\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\modules\am\models\AssetItem;
 use app\models\Categorise;
 
 /**
- * AssetItemSearch represents the model behind the search form of `app\modules\am\models\AssetItem`.
+ * AssetItemSearch represents the model behind the search form of `app\modules\sm\models\AssetItem`.
  */
 class AssetItemSearch extends AssetItem
 {
@@ -17,12 +16,12 @@ class AssetItemSearch extends AssetItem
      */
 
 
-     public $category_id_type;
+    public $category_id_type;
     public function rules()
     {
         return [
             [['id', 'active'], 'integer'],
-            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto','group_id'], 'safe'],
+            [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description', 'data_json','fsn_auto','group_id','q'], 'safe'],
         ];
     }
 
@@ -44,7 +43,7 @@ class AssetItemSearch extends AssetItem
      */
     public function search($params)
     {
-        $query = Assetitem::find();
+        $query = AssetItem::find()->with(['assetType']);
 
         // add conditions that should always apply here
 
@@ -60,20 +59,34 @@ class AssetItemSearch extends AssetItem
             return $dataProvider;
         }
 
+        // $categoryCode = trim((string) $this->category_id);
+        // if ($categoryCode !== '') {
+        //     $category = Categorise::find()
+        //         ->select(['code'])
+        //         ->where(['name' => 'asset_type'])
+        //         ->andWhere(['or', ['code' => $categoryCode], ['title' => $categoryCode]])
+        //         ->asArray()
+        //         ->one();
+
+        //     if (!empty($category['code'])) {
+        //         $categoryCode = $category['code'];
+        //     }
+        // }
+
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
             'active' => $this->active,
+            'category_id' => $this->category_id,
         ]);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'category_id', $this->category_id != '' ? Categorise::findOne(['name' => 'asset_type','title'=>$this->category_id])->code : ''])
             ->andFilterWhere(['like', 'code', $this->code])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'name', $this->name])
             ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'JSON_UNQUOTE(JSON_EXTRACT(data_json, "$.asset_type.category_id"))', $this->data_json]);
+            ->andFilterWhere(['like', 'description', $this->description]);
+            // ->andFilterWhere(['like', 'JSON_UNQUOTE(JSON_EXTRACT(data_json, "$.asset_type.category_id"))', $this->data_json]);
 
         return $dataProvider;
     }

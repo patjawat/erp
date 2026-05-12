@@ -1,8 +1,11 @@
 <?php
 
-use yii\helpers\Html;
+use app\components\SiteHelper;
+use app\components\ThaiDateHelper;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+use yii\helpers\Html;
+$site = SiteHelper::getInfo();
 
 $code = $model->code;
 $result = Builder::create()
@@ -22,40 +25,19 @@ $base64 = base64_encode($result->getString());
         <td style="vertical-align: top;">
             <table style="width: 100%; border-collapse: collapse; line-height: 1.5;">
                 <tr>
-                    <td style="text-align: right; width: 30%; padding-right: 8px; vertical-align: top;">หมายเลข :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->code ?></strong></td>
+                    <td style="text-align: left; vertical-align: top; font-size: 35px;"><strong><?= $model->code ?></strong></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">รายการ :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->asset_name ?></strong></td>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $model->asset_name ?></strong></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">ประเภทเงิน :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->budgetTypeName() ?></strong></td>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $model->departmentName() ?></strong></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">วิธีการได้มา :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->methodGetName() ?></strong></td>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= number_format($model->price, 2) ?> :: <?= ThaiDateHelper::formatThaiDate($model->receive_date,'numeric')?></strong></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">หน่วยงาน :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->departmentName() ?></strong></td>
-                </tr>
-                <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">สถานที่ :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->data_json['location'] ?? '-' ?></strong></td>
-                </tr>
-                <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">สถานะ :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->statusName() ?></strong></td>
-                </tr>
-                <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">ราคา :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= number_format($model->price, 2) ?> บาท</strong></td>
-                </tr>
-                <tr>
-                    <td style="text-align: right; padding-right: 8px; vertical-align: top;">วันที่ได้มา :</td>
-                    <td style="text-align: left; vertical-align: top;"><strong><?= $model->viewReceiveDate()?></strong></td>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $site['company_name']?></strong></td>
                 </tr>
             </table>
         </td>

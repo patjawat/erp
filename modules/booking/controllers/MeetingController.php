@@ -1,14 +1,17 @@
 <?php
 
 namespace app\modules\booking\controllers;
-use Yii;
-use yii\web\Response;
-use yii\web\Controller;
-use yii\filters\VerbFilter;
+
 use app\components\AppHelper;
-use yii\web\NotFoundHttpException;
+use app\components\DateFilterHelper;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\MeetingSearch;
+use app\modules\hr\models\Organization;
+use Yii;
+use yii\filters\VerbFilter;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * MeetingController implements the CRUD actions for Meeting model.
@@ -57,15 +60,23 @@ class MeetingController extends Controller
     public function actionIndex()
     {
         $searchModel = new MeetingSearch([
-            'date_filter' => 'this_week'
-            // 'status' =>  ['Pending'],
+            'date_filter' => 'this_month'
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        
-        $dataProvider->query
-            ->andFilterWhere(['>=', 'date_start', AppHelper::convertToGregorian($searchModel->date_start)])
-            ->andFilterWhere(['<=', 'date_start', AppHelper::convertToGregorian($searchModel->date_end)])
-            ->orderBy(['date_start' => SORT_DESC]);
+
+        [$dateStart, $dateEnd] = $this->resolveSearchDateRange($searchModel);
+
+        // Meeting เก็บวันจริงไว้ที่ date_start วันเดียว
+        if ($dateStart !== null) {
+            $dataProvider->query->andFilterWhere(['>=', 'date_start', $dateStart]);
+        }
+        if ($dateEnd !== null) {
+            $dataProvider->query->andFilterWhere(['<=', 'date_start', $dateEnd]);
+        }
+
+        $this->applyDepartmentFilter($dataProvider->query, $searchModel);
+
+        $dataProvider->query->orderBy(['date_start' => SORT_DESC]);
 
 
         return $this->render('index', [
@@ -73,7 +84,74 @@ class MeetingController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    
+
+    /**
+     * คืนช่วงวันที่สำหรับค้นหาในรูปแบบ Gregorian
+     * - ถ้าผู้ใช้กรอก date_start/date_end เองให้ใช้ค่านั้น
+     * - ถ้ายังไม่มีค่า ให้เติมจาก date_filter
+     *
+     * @return array{0:?string,1:?string}
+     */
+    private function resolveSearchDateRange(MeetingSearch $searchModel): array
+    {
+        $dateStart = trim((string) ($searchModel->date_start ?? ''));
+        $dateEnd = trim((string) ($searchModel->date_end ?? ''));
+
+        $dateStart = $dateStart !== '' ? AppHelper::convertToGregorian($dateStart) : null;
+        $dateEnd = $dateEnd !== '' ? AppHelper::convertToGregorian($dateEnd) : null;
+
+        if (($dateStart === null || $dateEnd === null) && trim((string) ($searchModel->date_filter ?? '')) !== '') {
+            $range = DateFilterHelper::getRange((string) $searchModel->date_filter);
+            if ($range !== null) {
+                if ($dateStart === null) {
+                    $dateStart = date('Y-m-d', strtotime($range[0]));
+                    $searchModel->date_start = AppHelper::convertToThai($dateStart);
+                }
+
+                if ($dateEnd === null) {
+                    $dateEnd = date('Y-m-d', strtotime($range[1]));
+                    $searchModel->date_end = AppHelper::convertToThai($dateEnd);
+                }
+            }
+        }
+
+        return [$dateStart, $dateEnd];
+    }
+
+    /**
+     * กรองรายการตามหน่วยงานของผู้ขอผ่าน relation employees.department
+     * รองรับทั้งการเลือกหน่วยงานตรง ๆ และกรณีเลือกหน่วยงานแม่ที่มีหน่วยงานย่อย
+     */
+    private function applyDepartmentFilter($query, MeetingSearch $searchModel): void
+    {
+        $departmentId = trim((string) ($searchModel->q_department ?? ''));
+        if ($departmentId === '') {
+            return;
+        }
+
+        $query->joinWith(['employee']);
+
+        $org = Organization::findOne($departmentId);
+        if ($org && (int) $org->lvl === 1) {
+            $sql = 'SELECT t1.id
+                FROM tree t1
+                JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
+                WHERE t2.name = :name;';
+            $querys = Yii::$app->db->createCommand($sql)
+                ->bindValue(':name', $org->name)
+                ->queryColumn();
+
+            $arrDepartment = array_values(array_filter(array_map('intval', $querys)));
+            if (!empty($arrDepartment)) {
+                $arrDepartment[] = (int) $departmentId;
+                $query->andWhere(['in', 'employees.department', array_values(array_unique($arrDepartment))]);
+                return;
+            }
+        }
+
+        $query->andWhere(['employees.department' => (int) $departmentId]);
+    }
+
 
     /**
      * Displays a single Meeting model.
@@ -84,14 +162,14 @@ class MeetingController extends Controller
 
     public function actionView($id)
     {
-            $model = $this->findModel($id);
-           // return $this->asJson($model);
-            if ($this->request->isAJax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        // return $this->asJson($model);
+        if ($this->request->isAJax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 // 'title' => 'คำขอใช้ห้องประชุมที่#'.$model->code,
                 'title' => $model->getUserReq()['avatar'],
-                 'content' => $this->renderAjax('@app/modules/booking/views/meeting/view', [
+                'content' => $this->renderAjax('@app/modules/booking/views/meeting/view', [
                     'model' => $model,
                     'action' => false
                 ]),
@@ -164,7 +242,7 @@ class MeetingController extends Controller
     {
         return $this->render('calendar');
     }
-    
+
 
 
     public function actionEvents()
@@ -183,6 +261,7 @@ class MeetingController extends Controller
 
         foreach ($bookings as $item) {
             try {
+<<<<<<< HEAD
    
             $timeStart = $item->time_start ?? '00:00';
             $timeEnd = $item->time_end ?? '00:00';
@@ -204,6 +283,29 @@ class MeetingController extends Controller
                 ],
             ];
                          //code...
+=======
+
+                $timeStart = $item->time_start ?? '00:00';
+                $timeEnd = $item->time_end ?? '00:00';
+                $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
+                $dateEnd = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+                $data[] = [
+                    'id'               => $item->id,
+                    'title'            => $item->title,
+                    'start'            => $dateStart,
+                    // 'time_start' => $timeStart,
+                    'end'            => $dateEnd,
+                    'time_end' => $timeEnd,
+                    'allDay' => false,
+                    'source' => 'vehicle',
+                    'extendedProps' => [
+                        'title' => $this->renderAjax('@app/modules/booking/views/meeting/view_title', ['model' => $item]),
+                        'code' => $item->code,
+                        'color' => (isset($item->room) && isset($item->room->data_json['color'])) ? $item->room->data_json['color'] : '',
+                    ],
+                ];
+                //code...
+>>>>>>> c3ea37043ea67faa0b4c0acf5ca7b1a7925a24e8
             } catch (\Throwable $th) {
                 //throw $th;
             }
@@ -263,7 +365,7 @@ class MeetingController extends Controller
 
     //     return $data;
     // }
-        
+
 
 
     /**

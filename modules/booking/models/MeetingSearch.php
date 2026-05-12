@@ -18,7 +18,7 @@ class MeetingSearch extends Meeting
     {
         return [
             [['id', 'thai_year', 'document_id', 'emp_number', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['ref', 'code','room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'urgent', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter','room_layout_id'], 'safe'],
+            [['ref', 'code','room_id', 'title', 'date_start', 'date_end', 'time_start', 'time_end', 'urgent', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','q','date_filter','room_layout_id','q','q_department'], 'safe'],
         ];
     }
 

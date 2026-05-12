@@ -89,7 +89,7 @@ $me = UserHelper::GetEmployee();
             <?php endif;?>
      </a>
 
-     <a href="<?= Url::to(['/approve-v2/checkin']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'checkin' ? 'bg-white shadow-sm' : '' ?>">
+     <!-- <a href="<?= Url::to(['/approve-v2/checkin']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'checkin' ? 'bg-white shadow-sm' : '' ?>">
          <i data-lucide="clock"></i>
          ลงเวลา
              <?php if(!empty($totalCheckin) && $totalCheckin > 0):?>
@@ -97,7 +97,7 @@ $me = UserHelper::GetEmployee();
                     <?= $totalCheckin ?>
                   </span>
             <?php endif;?>
-     </a>
+     </a> -->
 
      <?php if (\Yii::$app->user->can('admin')): ?>
      <a href="<?= Url::to(['/approve-v2/setting/index']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= (isset($menu) && $menu === 'setting') ? 'bg-white shadow-sm' : '' ?>">

@@ -11,7 +11,13 @@ use yii\helpers\Url;
 
 $statusColorMap = [
     'Pending' => 'warning',
+    'Checking1_pass' => 'info',
+    'Checking2_pass' => 'info',
+    'Checkup_pass' => 'warning',
     'Approve' => 'success',
+    'Checking1_reject' => 'danger',
+    'Checking2_reject' => 'danger',
+    'Checkup_reject' => 'danger',
     'Reject' => 'danger',
     'Cancel' => 'secondary',
     'ReqCancel' => 'info',

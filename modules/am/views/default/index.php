@@ -3,10 +3,11 @@
 /** @var yii\web\View $this */
 /** @var array $dashboard */
 /** @var array|null $lifecycleStats */
+/** @var array $assetStatusStats */
+/** @var array $assetConditionStats */
 /** @var app\modules\am\models\AssetDetail[] $recentTransfers */
 
 use yii\web\View;
-use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use app\models\Categorise;
@@ -59,14 +60,19 @@ foreach ($ageAnalysis as $row) {
     $ageValues[] = (int) ($row['value'] ?? 0);
 }
 
-$healthLabels = ['ใช้งานดี', 'ใกล้ครบอายุ', 'ครบอายุแล้ว', 'ส่งซ่อม', 'รอจำหน่าย'];
-$healthValues = [
-    $health['healthy'] ?? 0,
-    $health['near_eol'] ?? 0,
-    $health['expired'] ?? 0,
-    $health['under_repair'] ?? 0,
-    $health['pending_disposal'] ?? 0,
-];
+$assetStatusLabels = [];
+$assetStatusValues = [];
+foreach (($assetStatusStats ?? []) as $row) {
+    $assetStatusLabels[] = $row['name'] ?? '';
+    $assetStatusValues[] = (int) ($row['total'] ?? 0);
+}
+
+$assetConditionLabels = [];
+$assetConditionValues = [];
+foreach (($assetConditionStats ?? []) as $row) {
+    $assetConditionLabels[] = $row['name'] ?? '';
+    $assetConditionValues[] = (int) ($row['total'] ?? 0);
+}
 
 $replacementLabels = $replacement['labels'] ?? [];
 $replacementCounts = $replacement['counts'] ?? [];
@@ -229,7 +235,7 @@ $disposals = $recentActivities['disposals'] ?? [];
   <?php endif; ?>
 
   <div class="row g-3">
-    <!-- Section 2 — Asset Health (Donut) -->
+    <!-- Section 2 — Asset Status (Donut) -->
     <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
@@ -243,8 +249,22 @@ $disposals = $recentActivities['disposals'] ?? [];
         </div>
       </div>
     </div>
-    <!-- Section 3 — Replacement Forecast (Stacked Bar) -->
-    <div class="col-12 col-lg-8">
+    <!-- Section 3 — Asset Condition (Donut) -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex align-items-center gap-2">
+          <div class="erp-icon-box bg-warning bg-opacity-10 text-warning">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <h6 class="text-uppercase text-secondary m-0">สรุปสภาพครุภัณฑ์</h6>
+        </div>
+        <div class="card-body">
+          <div id="chart-condition-donut" style="min-height: 280px;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Section 4 — Replacement Forecast (Stacked Bar) -->
+    <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex align-items-center gap-2">
           <div class="erp-icon-box bg-warning bg-opacity-10 text-warning">
@@ -440,8 +460,10 @@ $disposals = $recentActivities['disposals'] ?? [];
 </div>
 
 <?php
-$healthLabelsJs = Json::encode($healthLabels);
-$healthValuesJs = Json::encode($healthValues);
+$assetStatusLabelsJs = Json::encode($assetStatusLabels);
+$assetStatusValuesJs = Json::encode($assetStatusValues);
+$assetConditionLabelsJs = Json::encode($assetConditionLabels);
+$assetConditionValuesJs = Json::encode($assetConditionValues);
 $replacementLabelsJs = Json::encode($replacementLabels);
 $replacementCountsJs = Json::encode($replacementCounts);
 $categoryLabelsJs = Json::encode($categoryLabels);
@@ -456,18 +478,31 @@ $js = <<<JS
 (function() {
   if (typeof ApexCharts === 'undefined') return;
 
-  // Section 2 — Health Donut (Green / Orange / Red / Warning / Secondary)
+  // Section 2 — Asset Status Donut (from asset_status table)
   var healthOpt = {
-    series: $healthValuesJs,
+    series: $assetStatusValuesJs,
     chart: { type: 'donut', height: 280 },
-    labels: $healthLabelsJs,
-    colors: ['#22c55e', '#f97316', '#ef4444', '#eab308', '#6b7280'],
+    labels: $assetStatusLabelsJs,
+    colors: ['#22c55e', '#3b82f6', '#f97316', '#ef4444', '#eab308', '#6b7280'],
     legend: { position: 'bottom' },
     plotOptions: { pie: { donut: { size: '65%' } } },
     dataLabels: { enabled: true }
   };
   var healthEl = document.getElementById('chart-health-donut');
   if (healthEl) { new ApexCharts(healthEl, healthOpt).render(); }
+
+  // Section 3 — Asset Condition Donut (from asset_condition table)
+  var conditionOpt = {
+    series: $assetConditionValuesJs,
+    chart: { type: 'donut', height: 280 },
+    labels: $assetConditionLabelsJs,
+    colors: ['#22c55e', '#f59e0b', '#ef4444', '#64748b', '#3b82f6', '#a855f7'],
+    legend: { position: 'bottom' },
+    plotOptions: { pie: { donut: { size: '65%' } } },
+    dataLabels: { enabled: true }
+  };
+  var conditionEl = document.getElementById('chart-condition-donut');
+  if (conditionEl) { new ApexCharts(conditionEl, conditionOpt).render(); }
 
   // Section 3 — Replacement Stacked Bar
   var repOpt = {

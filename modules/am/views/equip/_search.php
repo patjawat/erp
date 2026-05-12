@@ -40,99 +40,118 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
 <!-- ตัวกรองหลัก: ค้นหา · หมวด · สภาพ | ปุ่ม action ด้านขวา -->
 <div class="equip-search-toolbar">
-<div class="row g-2 g-lg-3 align-items-center">
-    <div class="col-12 col-lg-3">
-        <div class="input-group w-100">
-            <span class="input-group-text bg-body border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
-            <?= $form->field($model, 'q', [
-                'template' => '{input}',
-                'options' => ['class' => 'flex-grow-1 min-w-0 mb-0'],
-            ])
-                ->textInput(['placeholder' => 'ค้นหา...', 'class' => 'form-control border-start-0'])
-                ->label(false) ?>
+    <div class="row g-2 g-lg-3 align-items-center">
+        <div class="col-12 col-lg-3">
+            <div class="input-group w-100">
+                <span class="input-group-text bg-body border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                <?= $form->field($model, 'q', [
+                    'template' => '{input}',
+                    'options' => ['class' => 'flex-grow-1 min-w-0 mb-0'],
+                ])
+                    ->textInput(['placeholder' => 'ค้นหา...', 'class' => 'form-control border-start-0'])
+                    ->label(false) ?>
+            </div>
         </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-2">
-        <?php
+        <div class="col-12 col-sm-6 col-lg-2">
+            <?php
 
-        echo $form->field($model, 'asset_type_id', $toolbarFieldOpts)->widget(Select2::classname(), [
-            'data' => AssetHelper::listAssetType(),
-            'options' => [
-                'placeholder' => 'ทุกประเภท (หมวดหลัก)',
-                'id' => 'asset_type_id'
-            ],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                "select2:select" => "function() { 
+            echo $form->field($model, 'asset_type_id', $toolbarFieldOpts)->widget(Select2::classname(), [
+                'data' => AssetHelper::listAssetType(),
+                'options' => [
+                    'placeholder' => 'ทุกประเภท (หมวดหลัก)',
+                    'id' => 'asset_type_id'
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function() { 
                                         // $(this).submit(); 
                                     }",
-            ],
-        ])->label(false);
-        ?>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-2">
-        <?php
-        echo $form->field($model, 'asset_category_id', $toolbarFieldOpts)->widget(DepDrop::classname(), [
-            'options' => [
-                'placeholder' => 'ทุกหมวด',
-            ],
-            'type' => DepDrop::TYPE_SELECT2,
-            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-            'pluginOptions' => [
-                'depends' => ['asset_type_id'],
-                'url' => Url::to(['/am/asset-item/get-asset-category']),
-                'loadingText' => 'กำลังโหลด ...',
-                'params' => ['depdrop_all_params' => 'assetitemsearch-asset_type_id'],
-                'initDepends' => ['asset_type_id'],
-                'initialize' => true,
-            ],
-            'pluginEvents' => [
-                "select2:select" => "function() { 
+                ],
+            ])->label(false);
+            ?>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <?php
+            echo $form->field($model, 'asset_category_id', $toolbarFieldOpts)->widget(DepDrop::classname(), [
+                'options' => [
+                    'placeholder' => 'ทุกหมวด',
+                ],
+                'type' => DepDrop::TYPE_SELECT2,
+                'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+                'pluginOptions' => [
+                    'depends' => ['asset_type_id'],
+                    'url' => Url::to(['/am/asset-item/get-asset-category']),
+                    'loadingText' => 'กำลังโหลด ...',
+                    'params' => ['depdrop_all_params' => 'assetitemsearch-asset_type_id'],
+                    'initDepends' => ['asset_type_id'],
+                    'initialize' => true,
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function() { 
 
                         }",
-            ],
+                ],
 
-        ])->label(false); ?>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-2">
-        <?php
-        echo $form->field($model, 'asset_status', $toolbarFieldOpts)->widget(Select2::classname(), [
-            'data' => $model->ListAssetStatus(),
-            'options' => ['placeholder' => 'ทุกสภาพ'],
-            'pluginOptions' => [
-                'allowClear' => true,
-            ],
-            'pluginEvents' => [
-                "select2:select" => "function(result) { 
+            ])->label(false); ?>
+        </div>
+        <div class="col-12 col-sm-3 col-lg-1">
+            <?php
+            echo $form->field($model, 'asset_condition', $toolbarFieldOpts)->widget(Select2::classname(), [
+                'data' => $model->ListAssetCondition(),
+                'options' => ['placeholder' => '--ทุกสภาพ--'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function(result) { 
                                             var data = $(this).select2('data')[0]
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
-            ]
-        ])->label(false);
-        ?>
-    </div>
-    <div class="col-12 col-lg-auto ms-lg-auto d-flex align-items-center justify-content-start justify-content-lg-end flex-wrap gap-2 equip-search-actions">
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary flex-grow-1 flex-sm-grow-0']) ?>
-        <button class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
-            aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
-            <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
-        </button>
-        <div class="dropdown flex-grow-1 flex-sm-grow-0">
-            <button class="btn btn-success dropdown-toggle w-100 w-sm-auto" type="button"
-                id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-file-excel"></i> Excel
+                ]
+            ])->label(false);
+            ?>
+        </div>
+        <div class="col-12 col-sm-3 col-lg-1">
+            <?php
+            echo $form->field($model, 'asset_status', $toolbarFieldOpts)->widget(Select2::classname(), [
+                'data' => $model->ListAssetStatus(),
+                'options' => ['placeholder' => '--ทุกสถานะ--'],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+                'pluginEvents' => [
+                    "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                ]
+            ])->label(false);
+            ?>
+        </div>
+        <div class="col-12 col-lg-auto ms-lg-auto d-flex align-items-center justify-content-start justify-content-lg-end flex-wrap gap-2 equip-search-actions">
+            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary flex-grow-1 flex-sm-grow-0']) ?>
+            <button class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
+                <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
-                <li><button type="button" class="dropdown-item btn-export-excel"><i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel</button></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-            </ul>
+            <div class="dropdown flex-grow-1 flex-sm-grow-0">
+                <button class="btn btn-success dropdown-toggle w-100 w-sm-auto" type="button"
+                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                    <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/import/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                    <li><button type="button" class="dropdown-item btn-export-excel"><i class="fa-solid fa-file-excel me-2"></i> ส่งออก Excel</button></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 
@@ -145,19 +164,47 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
         <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">หน่วยงาน & ผู้รับผิดชอบ</span>
         <div class="row g-3">
             <div class="col-12 col-md-6">
-                <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
-                'name' => 'department',
-                'id' => 'treeID',
-                'query' => Organization::find()->addOrderBy('root, lft'),
-                'value' => null,
-                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                'fontAwesome' => true,
-                'asDropdown' => true,
-                'multiple' => false,
-                'options' => ['class' => 'close', 'allowClear' => true],
-                'pluginOptions' => ['allowClear' => true, 'placeholder' => 'เลือกหน่วยงาน...'],
-            ])->label('หน่วยงาน'); ?>
+                <div class="d-flex align-items-end align-items-center gap-2">
+                    <div class="flex-grow-1">
+                        <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
+                            'name' => 'department',
+                            'query' => Organization::find()->addOrderBy('root, lft'),
+                            'value' => !empty($model->q_department) ? $model->q_department : null,
+                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                            'fontAwesome' => true,
+                            'asDropdown' => true,
+                            'multiple' => false,
+                            'options' => ['disabled' => false],
+                            'dropdownConfig' => [
+                                'input' => [
+                                    'placeholder' => 'เลือกหน่วยงาน...',
+                                ],
+                            ],
+                            'pluginEvents' => [
+                                'treeview:change' => new JsExpression('function() {
+                                    var $container = $(this).closest(".kv-tree-dropdown-container");
+                                    setTimeout(function() {
+                                        var $toggle = $container.find(".kv-tree-input");
+                                        $toggle.removeClass("show open").attr("aria-expanded", "false");
+                                        $container.find(".kv-tree-dropdown").removeClass("show open");
+                                        if (window.bootstrap && bootstrap.Dropdown && $toggle.length) {
+                                            try {
+                                                var instance = bootstrap.Dropdown.getInstance($toggle[0]) || bootstrap.Dropdown.getOrCreateInstance($toggle[0]);
+                                                if (instance) {
+                                                    instance.hide();
+                                                }
+                                            } catch (e) {}
+                                        }
+                                    }, 0);
+                                }'),
+                            ],
+                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary flex-shrink-0 mt-3" id="clear-q-department">
+                        <i class="fa-solid fa-eraser me-1"></i> ล้าง
+                    </button>
+                </div>
             </div>
             <div class="col-12 col-md-6">
                 <?php
@@ -208,10 +255,10 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
         <div class="row g-3">
             <div class="col-12 col-sm-6 col-md-4 col-lg">
                 <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
-                'data' => $model->ListMethodget(),
-                'options' => ['placeholder' => 'วิธีได้มาทั้งหมด'],
-                'pluginOptions' => ['allowClear' => true],
-            ])->label('วิธีได้มา'); ?>
+                    'data' => $model->ListMethodget(),
+                    'options' => ['placeholder' => 'วิธีได้มาทั้งหมด'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('วิธีได้มา'); ?>
             </div>
             <div class="col-12 col-sm-6 col-md-4 col-lg">
                 <?= $form->field($model, 'budget_type')->widget(Select2::classname(), [
@@ -302,5 +349,56 @@ $('.btn-export-excel').click(function(e) {
 
 JS;
 $this->registerJS($js);
+?>
+
+<?php
+$clearDepartmentJs = <<<'JS'
+$('#clear-q-department').on('click', function() {
+    const $field = $('.field-assetsearch-q_department');
+    const $input = $field.find('#assetsearch-q_department, input[name="AssetSearch[q_department]"]').first();
+    const treeInput = $input.data('treeinput');
+    const treeView = $input.data('treeview');
+
+    if (!$input.length) {
+        return;
+    }
+
+    $input.val('');
+    $input.trigger('treeview:change', ['', '']);
+    $input.trigger('change');
+
+    if (treeView && treeView.$tree) {
+        treeView.$tree.find('.kv-selected').removeClass('kv-selected');
+        if (typeof treeView.disableToolbar === 'function') {
+            treeView.disableToolbar();
+        }
+    }
+
+    if (treeInput && typeof treeInput.setInput === 'function') {
+        treeInput.setInput([]);
+    } else if (treeInput && treeInput.$input) {
+        treeInput.$input.html(treeInput.caret + treeInput.placeholder);
+    }
+
+    const $toggle = $field.find('.kv-tree-input').first();
+    if ($toggle.length) {
+        $toggle.attr('aria-expanded', 'false');
+    }
+
+    const $container = $field.find('.kv-tree-dropdown-container').first();
+    if ($container.length) {
+        $container.removeClass('show open');
+        if (window.bootstrap && bootstrap.Dropdown && $toggle.length) {
+            try {
+                var instance = bootstrap.Dropdown.getInstance($toggle[0]) || bootstrap.Dropdown.getOrCreateInstance($toggle[0]);
+                if (instance) {
+                    instance.hide();
+                }
+            } catch (e) {}
+        }
+    }
+});
+JS;
+$this->registerJS($clearDepartmentJs);
 
 ?>

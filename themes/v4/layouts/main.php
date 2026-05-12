@@ -266,7 +266,7 @@ AppAsset::register($this);
         <?php echo $this->render('page_title'); ?>
 
         <main class="px-0 mt-4">
-            <div class="container-fluid mt--45" style="max-width: 1600px;">
+            <div class="container-fluid mt--80" style="max-width: 1600px;">
                 <?= $content ?>
             </div>
         </main>

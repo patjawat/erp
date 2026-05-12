@@ -41,11 +41,15 @@ use yii\helpers\Html;
                     </div>
                     <div class="col">
                         <div class="text-secondary small mb-1">อายุการใช้งาน</div>
-                        <div class="fw-medium text-dark">- ปี</div>
+                        <div class="fw-medium text-dark"><?= $model->useful_life?> ปี</div>
                     </div>
                     <div class="col">
+                        <div class="text-secondary small mb-1">สภาพ</div>
+                        <?= $model->getConditionBadge() ?>
+                    </div>
+                     <div class="col">
                         <div class="text-secondary small mb-1">สถานะ</div>
-                        <?= $model->viewstatus() ?>
+                        <?= $model->getStatusBadge() ?>
                     </div>
                     <div class="col">
                         <div class="text-secondary small mb-1">ผู้รับผิดชอบ</div>
@@ -56,7 +60,7 @@ use yii\helpers\Html;
 
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ทะเบียนคุม', ['/am/asset/depreciation', 'id' => $model->id], ['class' => 'btn btn-white border text-secondary fw-medium open-modal w-100', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ค่าเสื่อม', ['/am/asset/depreciation', 'id' => $model->id], ['class' => 'btn btn-white border text-secondary fw-medium open-modal w-100', 'data' => ['size' => 'modal-lg']]) ?>
                     </div>
                     <div class="col-12 col-sm-6">
                         <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $model->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'btn btn-warning fw-medium shadow-sm open-modal w-100', 'data' => ['size' => 'modal-lg']]) ?>

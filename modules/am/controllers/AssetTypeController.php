@@ -9,7 +9,6 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use Yii;
-use yii\helpers\ArrayHelper;
 use app\models\Categorise;
 
 /**
@@ -91,9 +90,12 @@ class AssetTypeController extends Controller
     {
         $searchModel = new AssetTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->sort = ['defaultOrder' => ['id' => SORT_DESC]];
         $dataProvider->query->where(['name' => 'asset_type','group_id' =>'EQUIP']);
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
+        $dataProviderGroup->sort = ['defaultOrder' => ['id' => SORT_DESC]];
         $dataProviderGroup->query->andFilterWhere(['name' => 'asset_type', 'active' => true]);
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProviderGroup' => $dataProviderGroup,
@@ -115,7 +117,7 @@ class AssetTypeController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                     'searchModel' => $searchModel,
@@ -134,14 +136,6 @@ class AssetTypeController extends Controller
 
             ]);
         }
-        // $small_model = Fsn::find()->where(['name' => 'asset_name','category_id'=>$model->code])->all();
-        return $this->render('view', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'model' => $model,
-            'btn' => true,
-
-        ]);
     }
 
     /**

@@ -1,7 +1,9 @@
 <?php
 
-use yii\web\View;
+use app\components\DateFilterHelper;
+use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
+use yii\web\View;
 
 $this->title = 'ทะเบียนขอใช้ห้องประชุม';
 $this->params['breadcrumbs'][] = ['label' => 'จองห้องประชุม', 'url' => ['/booking/meeting/index']];
@@ -24,30 +26,12 @@ $this->params['breadcrumbs'][] =  $this->title;
 <?= $this->render('@app/modules/booking/meeting_menu', ['active' => 'list']) ?>
 <?php $this->endBlock(); ?>
 
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('menu', ['active' => 'index']) ?>
-<?php $this->endBlock(); ?>
-
-<!-- https://www.canva.com/ai/code/thread/52a8afb0-5caf-4151-a563-8a2106920508 -->
-
-<?php // $this->render('@app/modules/booking/views/meeting/summary',['model' => $searchModel]) 
-?>
+<?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
 <div class="card">
-  <div class="card-header bg-primary-gradient text-white">
-    <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-  </div>
-  <div class="card-body">
-    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-  </div>
-</div>
-
-
-<div class="card">
-  <div class="card-header bg-primary-gradient text-white">
+  <div class="card-header">
     <div class="d-flex justify-content-between">
-      <h6 class="text-white mt-2">
+      <h6 class="mt-2">
         <i class="bi bi-ui-checks"></i> ทะเบียนขอใช้ห้องประชุม
         <span class="badge text-bg-light">
           <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
@@ -64,7 +48,14 @@ $this->params['breadcrumbs'][] =  $this->title;
       'dataProvider' => $dataProvider,
       'url' => '/booking/meeting/',
     ]); ?>
-
+  </div>
+  <div class="card-footer bg-body border-top py-3 px-4">
+    <?php
+    echo DataSummaryWidget::widget([
+      'dataProvider' => $dataProvider,
+      'pagerOptions' => [],
+    ]);
+    ?>
   </div>
 </div>
 

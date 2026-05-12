@@ -78,7 +78,12 @@ class AssetCategoryController extends Controller
         $searchModel = new AssetCategorySearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'asset_category']);
-
+        $q = trim($searchModel->q ?? '');
+        $dataProvider->query->andFilterWhere([
+            'or',
+            ['like', 'title', $q],
+            ['like', 'code', $q],  // Fixed typo here
+        ]);
 
         return $this->render('index', [
             'searchModel' => $searchModel,

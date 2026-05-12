@@ -433,10 +433,26 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                             ])->label('ผู้รับผิดชอบ');
                             ?>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-3">
                             <?php
                             echo $form->field($model, 'asset_status')->widget(Select2::classname(), [
                                 'data' => $model->ListAssetStatus(),
+                                'options' => ['placeholder' => 'กรุณาเลือก...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                                'pluginEvents' => [
+                                        "select2:select" => "function(result) { 
+                                            var data = $(this).select2('data')[0]
+                                            $('#asset-data_json-method_get_text').val(data.text)
+                                         }",
+                                ]
+                            ])->label('สถานะสุขภาพครุภัณฑ์')->hint('ดึงข้อมูลสถานะจาก `ListAssetStatus()`'); ?>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <?php
+                            echo $form->field($model, 'asset_condition')->widget(Select2::classname(), [
+                                'data' => $model->ListAssetCondition(),
                                 'options' => ['placeholder' => 'กรุณาเลือก...'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
@@ -447,7 +463,7 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                             $('#asset-data_json-method_get_text').val(data.text)
                                          }",
                                 ]
-                            ])->label('สถานะ'); ?>
+                            ]); ?>
                         </div>
                     </div>
                 </div>

@@ -22,6 +22,63 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<style>
+    .building-register-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .building-register-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-secondary-color);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .building-register-table tbody td {
+        padding: 1rem 1rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        vertical-align: middle;
+        font-size: 0.9375rem;
+        color: var(--bs-body-color);
+    }
+
+    .building-register-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .building-register-table tbody tr:hover td {
+        background-color: var(--bs-secondary-bg);
+    }
+
+    .building-list-scroll {
+        max-height: min(68vh, 760px);
+        overflow: auto;
+    }
+
+    .building-register-table th.building-actions-th,
+    .building-register-table td.building-actions-cell {
+        width: 150px;
+    }
+
+    .building-register-table .building-actions-inner .btn {
+        flex-shrink: 0;
+        min-width: 2.375rem;
+        min-height: 2.375rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
 <div class="card border-0 shadow-sm rounded-2 mb-4">
     <div class="card-header border-bottom bg-white d-flex justify-content-between align-items-center">
         <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2">
@@ -73,94 +130,110 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="card-body p-0">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th class="text-center py-2 text-dark" style="width: 50px;">#</th>
-                      <th class="text-center" style="width:80px;">รูปภาพ</th>
-                    <th class="py-2 text-dark">รหัสพัสดุ / ชื่ออาคาร</th>
-                    <th class="py-2 text-dark">ประเภท</th>
-                    <th class="py-2 text-dark">ที่ตั้ง / ปีสร้าง</th>
-                    <th class="py-2 text-end text-dark">พื้นที่ (ตร.ม.)</th>
-                    <th class="py-2 text-end text-dark">มูลค่า</th>
-                    <th class="text-center" style="width: 130px;">สถานะ</th>
-                    <th class="text-center" style="width:200px;">จัดการ</th>
-                </tr>
-            </thead>
-            <tbody class="table-group-divider align-middle">
-                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr>
-                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                         <td style="width:70px;">
-                            <?= Html::a(
-                                Html::img(
-                                    $item->showImg()['image'],
-                                    [
-                                        'class' => 'rounded mx-auto d-block text-white lazyautosizes ls-is-cached lazyloaded',
-                                        'style' => 'max-width:60px; max-height:60px; object-fit:cover;',
-                                        'alt' => $item->asset_name
-                                    ]
-                                ),
-                                ['view', 'id' => $item->id],
-                                ['class' => '']
-                            ) ?>
-                        </td>
-                         <td class="align-middle">
-                            <div class="fw-semibold text-dark"><?= $item->code ?></div>
-                            <div class="text-muted small"><?= $item->asset_name ?></div>
-                        </td>
-                        <td class="align-middle"><?= $item->data_json['building_type_name'] ?? '-' ?></td>
-                        <td class="align-middle">
-                            <div class="fw-semibold text-dark"><?= $item->on_year ?></div>
-                            <div class="text-muted small"><?= $item->data_json['location'] ?? 'ไม่ระบุ' ?></div>
-                        </td>
-                        <td class="align-middle">
-                            <?= $item->data_json['area'] ?? 'ไม่ระบุ' ?>
-                        </td>
-                        <td class="align-middle text-end">
-                            <span class="fw-semibold">
-                                <?= number_format($item->price ?? 0, 2) ?>
-                        </td>
-                        </span>
-                        <td class="align-middle text-center">
-                            <?= $item->viewStatus() ?>
-                        </td>
-  <td class="text-center align-middle equip-actions-cell px-2 px-md-3">
-                            <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-primary',
-                                    'title' => 'ดูรายละเอียด',
-                                    'data-pjax' => 0,
-                                ]) ?>
-                                <?php if (Yii::$app->user->can('asset')): ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-warning',
-                                        'title' => 'แก้ไข',
-                                        'data-pjax' => 0,
-                                    ]) ?>
-                                <?php endif; ?>
-                                  <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-light',
-                                    'title' => 'พิมพ์',
-                                    'data-pjax' => 0,
-                                    'target' => '_blank',
-                                ]) ?>
-                                <?php if (Yii::$app->user->can('admin')): ?>
-                                    <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-danger delete-asset',
-                                        'title' => 'ลบ',
-                                        'data-pjax' => 0,
-                                    ]) ?>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-
-
-                    </tr>
-                <?php endforeach; ?>
-
-            </tbody>
-        </table>
+        <div class="building-list-scroll">
+            <div class="table-responsive">
+                <table class="table building-register-table mb-0">
+                    <thead style="background-color: white;">
+                        <tr style="border-bottom: 1px solid rgb(226, 232, 240);">
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 50px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">#</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 80px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">รูปภาพ</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">รหัสพัสดุ / ชื่ออาคาร</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 160px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ประเภท</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ที่ตั้ง / ปีสร้าง</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
+                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                            <?php
+                            $price = (float) ($item->price ?? 0);
+                            $titleName = $item->asset_name ?: '-';
+                            $location = '';
+                            if (is_array($item->data_json) && !empty($item->data_json['location'])) {
+                                $location = (string) $item->data_json['location'];
+                            }
+                            if ($location === '') {
+                                $location = $item->departmentName();
+                            }
+                            ?>
+                            <tr style="border-bottom: 1px solid rgb(241, 245, 249);">
+                                <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139);"><?= (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                                <td class="px-4 py-3 border-0" style="width:70px;">
+                                    <?= Html::a(
+                                        Html::img(
+                                            $item->showImg()['image'],
+                                            [
+                                                'class' => 'rounded border flex-shrink-0',
+                                                'style' => 'width:56px;height:56px;object-fit:cover;',
+                                                'alt' => $titleName
+                                            ]
+                                        ),
+                                        ['view', 'id' => $item->id],
+                                        ['class' => '']
+                                    ) ?>
+                                </td>
+                                <td class="px-4 py-3 border-0">
+                                    <div class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 260px;"><?= Html::encode($titleName) ?></div>
+                                    <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);">
+                                        <span><?= Html::encode($item->code) ?></span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 border-0">
+                                    <span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= Html::encode($item->data_json['building_type_name'] ?? '-') ?></span>
+                                </td>
+                                <td class="px-4 py-3 border-0">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="d-flex align-items-center gap-2" style="color: rgb(30, 41, 59);">
+                                            <i class="fa-solid fa-location-dot text-secondary flex-shrink-0"></i>
+                                            <span class="fw-semibold text-truncate" style="font-size: 14px; max-width: 180px;"><?= Html::encode($location ?: 'ไม่ระบุ') ?></span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" style="color: rgb(100, 116, 139);">
+                                            <i class="fa-regular fa-calendar text-secondary flex-shrink-0"></i>
+                                            <span class="text-truncate" style="font-size: 12px; max-width: 180px;"><?= Html::encode($item->on_year ?: '-') ?></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price, 2) ?></td>
+                                <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
+                                <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
+                                <td class="text-center align-middle building-actions-cell px-2 px-md-3 border-0">
+                                    <div class="building-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
+                                        <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
+                                            'class' => 'btn btn-sm btn-primary',
+                                            'title' => 'ดูรายละเอียด',
+                                            'data-pjax' => 0,
+                                        ]) ?>
+                                        <?php if (Yii::$app->user->can('asset')): ?>
+                                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
+                                                'class' => 'btn btn-sm btn-warning',
+                                                'title' => 'แก้ไข',
+                                                'data-pjax' => 0,
+                                            ]) ?>
+                                        <?php endif; ?>
+                                        <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                            'class' => 'btn btn-sm btn-light',
+                                            'title' => 'พิมพ์',
+                                            'data-pjax' => 0,
+                                            'target' => '_blank',
+                                        ]) ?>
+                                        <?php if (Yii::$app->user->can('admin')): ?>
+                                            <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $item->id], [
+                                                'class' => 'btn btn-sm btn-danger delete-asset',
+                                                'title' => 'ลบ',
+                                                'data-pjax' => 0,
+                                            ]) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <div class="card-footer bg-body border-top py-3 px-4">
     <?php

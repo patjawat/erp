@@ -19,7 +19,7 @@ class ApproveLevelResolver
      * คืนรายการระดับการอนุมัติที่ resolve แล้ว สำหรับระบบและผู้ขอ
      * @param string $system เช่น leave, purchase
      * @param int $requesterEmpId รหัสพนักงานผู้ขอ
-     * @return array[] แต่ละ element: [ level, label, approver_type, approver_value, emp_id, org_node_name (ชื่อหน่วยงาน/กลุ่มงาน) ]
+     * @return array[] แต่ละ element: [ level, title, label, approver_type, approver_value, emp_id, org_node_name (ชื่อหน่วยงาน/กลุ่มงาน) ]
      */
     public static function resolve($system, $requesterEmpId)
     {
@@ -52,6 +52,12 @@ class ApproveLevelResolver
                     $orgNodeName = $node->name;
                 }
             }
+
+            $title = trim((string) ($row->title ?? ''));
+            if ($title === '') {
+                $title = (string) $row->label;
+            }
+
             switch ($row->approver_type) {
                 case ApproveLevelSetting::TYPE_ORG_LEADER1:
                     if ($node && !empty($node->data_json['leader1'])) {
@@ -80,6 +86,7 @@ class ApproveLevelResolver
 
             $result[] = [
                 'level' => (int) $row->level,
+                'title' => $title,
                 'label' => $row->label,
                 'approver_type' => $row->approver_type,
                 'approver_value' => $row->approver_value,
@@ -106,14 +113,19 @@ class ApproveLevelResolver
         $rows = [];
         $first = true;
         foreach ($resolved as $r) {
+            $title = trim((string) ($r['title'] ?? ''));
+            if ($title === '') {
+                $title = (string) ($r['label'] ?? '');
+            }
+
             $rows[] = [
                 'from_id' => $fromId,
                 'name' => $system,
                 'level' => $r['level'],
-                'title' => $r['label'],
+                'title' => $title,
                 'emp_id' => $r['emp_id'],
                 'status' => $first ? 'Pending' : 'None',
-                'data_json' => ['label' => $r['label']] + ($r['approver_type'] === ApproveLevelSetting::TYPE_ROLE && $r['approver_value'] ? ['role' => $r['approver_value']] : []),
+                'data_json' => ['label' => $r['label'], 'title' => $title] + ($r['approver_type'] === ApproveLevelSetting::TYPE_ROLE && $r['approver_value'] ? ['role' => $r['approver_value']] : []),
             ];
             $first = false;
         }

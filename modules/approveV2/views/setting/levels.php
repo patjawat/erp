@@ -84,6 +84,7 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <thead class="table-light">
                     <tr>
                         <th class="text-nowrap">ระดับ</th>
+                        <th class="text-nowrap">ชื่อขั้นอนุมัติ</th>
                         <th class="text-nowrap">หน่วยงาน/กลุ่มงาน</th>
                         <th class="text-nowrap">ประเภท</th>
                         <th class="text-nowrap">คำที่ใช้ลงความเห็น</th>
@@ -93,12 +94,13 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <tbody class="align-middle table-group-divider">
                     <?php if (empty($resolvedLevels)): ?>
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-3">ไม่มีระดับการอนุมัติในระบบนี้ หรือยังไม่ได้ตั้งค่า</td>
+                        <td colspan="6" class="text-center text-muted py-3">ไม่มีระดับการอนุมัติในระบบนี้ หรือยังไม่ได้ตั้งค่า</td>
                     </tr>
                     <?php else: ?>
                     <?php foreach ($resolvedLevels as $r): ?>
                     <tr>
                         <td><strong><?= (int) $r['level'] ?></strong></td>
+                        <td><?= Html::encode($r['title'] ?? $r['label']) ?></td>
                         <td><?= !empty($r['org_node_name']) ? Html::encode($r['org_node_name']) : '<span class="text-muted">—</span>' ?></td>
                         <td><?= Html::encode($typeLabels[$r['approver_type']] ?? $r['approver_type']) ?></td>
                         <td><?= Html::encode($r['label']) ?></td>
@@ -120,6 +122,7 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <thead class="table-light">
                     <tr>
                         <th class="text-nowrap">ระดับ</th>
+                        <th class="text-nowrap">ชื่อขั้นอนุมัติ</th>
                         <th class="text-nowrap">ประเภทผู้อนุมัติ</th>
                         <th class="text-nowrap">ระดับในผังองค์กร</th>
                         <th class="text-nowrap">คำที่ใช้ลงความเห็น</th>
@@ -131,12 +134,13 @@ $selectedEmpText = $selectedEmployee ? $selectedEmployee->fullname : '';
                 <tbody class="align-middle table-group-divider">
                     <?php if (empty($models)): ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">ยังไม่มีระดับการอนุมัติ — กด «เพิ่มระดับ» เพื่อเพิ่ม</td>
+                        <td colspan="8" class="text-center text-muted py-4">ยังไม่มีระดับการอนุมัติ — กด «เพิ่มระดับ» เพื่อเพิ่ม</td>
                     </tr>
                     <?php else: ?>
                     <?php foreach ($models as $item): ?>
                     <tr>
                         <td><strong><?= (int) $item->level ?></strong></td>
+                        <td><?= Html::encode($item->title ?: $item->label) ?></td>
                         <td><?= Html::encode($typeLabels[$item->approver_type] ?? $item->approver_type) ?></td>
                         <td><?= in_array($item->approver_type, [ApproveLevelSetting::TYPE_ORG_LEADER1, ApproveLevelSetting::TYPE_ORG_LEADER2], true)
                             ? (isset($item->org_node_level) && $item->org_node_level !== null && $item->org_node_level !== ''

@@ -90,6 +90,8 @@ $this->title = $model->document->topic;
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
     'validationUrl' => ['/dms/documents/comment-validator']
 ]); ?>
+<?php $testNotifyUrl = Url::to(['test-notification', 'id' => $model->document_id]); ?>
+<?php $canTestNotification = \Yii::$app->user->can('admin'); ?>
 <!-- ุ้<h6><i class="fa-regular fa-comment"></i> ลงความเห็น</h6> -->
 <?= $form->field($model, 'to_id')->hiddenInput()->label(false); ?>
 <?= $form->field($model, 'document_id')->hiddenInput()->label(false); ?>
@@ -111,14 +113,22 @@ echo $form->field($model, 'tags_employee')->widget(Select2::classname(), [
 
 ?>
 
-<?php if ($model->isNewRecord): ?>
-        <div class="d-grid gap-2">
-        <?php echo Html::submitButton('<i class="fa-solid fa-paper-plane"></i> ลงความเห็น', ['class' => 'btn btn-lg btn-primary rounded-pill shadow']) ?>
+<?php
+$submitLabel = $model->isNewRecord ? '<i class="fa-solid fa-paper-plane"></i> ลงความเห็น' : '<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น';
+$submitClass = $model->isNewRecord ? 'btn btn-lg btn-primary rounded-pill shadow' : 'btn btn-lg btn-warning rounded-pill shadow';
+?>
+<div class="d-grid gap-2">
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <?php if ($canTestNotification): ?>
+            <?= Html::button('<i class="fa-solid fa-vial me-1"></i> ทดสอบแจ้งเตือน', [
+                'type' => 'button',
+                'class' => 'btn btn-outline-secondary rounded-pill shadow btn-test-notification',
+                'data-test-notify-url' => $testNotifyUrl,
+            ]) ?>
+        <?php endif; ?>
+        <?= Html::submitButton($submitLabel, ['class' => $submitClass]) ?>
     </div>
-
-    <?php else: ?>
-        <?php echo Html::submitButton('<i class="fa-regular fa-pen-to-square"></i> แก้ไขความเห็น', ['class' => 'btn btn-lg btn-warning rounded-pill shadow']) ?>
-<?php endif; ?>
+</div>
 <?php ActiveForm::end(); ?>
 
 
@@ -192,6 +202,51 @@ $js = <<<JS
             });
             return false;
 
+    });
+
+    $(document).off('click.testNotify', '.btn-test-notification').on('click.testNotify', '.btn-test-notification', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var form = $btn.closest('form');
+        var url = $btn.data('test-notify-url');
+        if (!url || !form.length) {
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: url,
+            type: 'post',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function (res) {
+                if (res && (res.status === 'success' || res.status === 'warning')) {
+                    var safeMessage = $('<div>').text(res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว').html();
+                    var swalOptions = {
+                        icon: res.status === 'success' ? 'success' : 'warning',
+                        title: res.message || 'ส่งการแจ้งเตือนทดสอบแล้ว',
+                    };
+                    if (res.status === 'warning' && res.details_html) {
+                        swalOptions.html = '<div class="text-start">' + safeMessage + '<hr class="my-2">' + res.details_html + '</div>';
+                    } else {
+                        swalOptions.text = 'LINE: ' + (res.line_sent || 0) + ' | Telegram: ' + (res.telegram_sent || 0);
+                    }
+                    Swal.fire(swalOptions);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: (res && res.message) || 'ทดสอบไม่สำเร็จ',
+                    });
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'เกิดข้อผิดพลาด';
+                Swal.fire({ icon: 'error', title: 'ทดสอบไม่สำเร็จ', text: msg });
+            },
+            complete: function () {
+                $btn.prop('disabled', false);
+            }
+        });
     });
 
               

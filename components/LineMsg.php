@@ -25,16 +25,40 @@ class LineMsg extends Component
         // }
     }
 
+    protected static function normalizeDataJson($data): array
+    {
+        if (is_array($data)) {
+            return $data;
+        }
+
+        if (is_string($data) && $data !== '') {
+            $decoded = json_decode($data, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
 
     //ส่ง ข้อความ
     public static function PushMsg($data)
     {
 
         try {
- 
-       $getData = Categorise::find()->where(['name' => 'site'])->one();
-       $channelAccessToken = $getData->data_json['line_channel_token'];
-       $url = 'https://api.line.me/v2/bot/message/push';
+            $getData = Categorise::find()->where(['name' => 'site'])->one();
+            if (!$getData) {
+                Yii::error('LINE site setting not found', __METHOD__);
+                return false;
+            }
+
+            $siteData = self::normalizeDataJson($getData->data_json ?? null);
+            $channelAccessToken = trim((string) ($siteData['line_channel_token'] ?? ''));
+            if ($channelAccessToken === '') {
+                Yii::error('LINE channel token is missing in site setting', __METHOD__);
+                return false;
+            }
+
+            $url = 'https://api.line.me/v2/bot/message/push';
 
 
         $client = new Client();
@@ -55,7 +79,8 @@ class LineMsg extends Component
 
         return true;
         } catch (\Throwable $th) {
-            //throw $th;
+            Yii::error('Failed to send LINE message: ' . $th->getMessage(), __METHOD__);
+            return false;
         }
     }
     
@@ -73,45 +98,54 @@ class LineMsg extends Component
         ];
 
         //ส่งข้อความ
-        self::PushMsg($data);
-        return true;
+        return self::PushMsg($data);
     }
 
      // ฟังก์ชันส่ง Flex Message
      public function sendFlexMessage($userId, $altText, $flexContent)
      {
-        $token = Categorise::find()->where(['name' => 'site'])->one();
-        $channelAccessToken = $token->data_json['line_channel_token'];
-         $url = 'https://api.line.me/v2/bot/message/push';
+        try {
+            $token = Categorise::find()->where(['name' => 'site'])->one();
+            $tokenData = self::normalizeDataJson($token->data_json ?? null);
+            $channelAccessToken = trim((string) ($tokenData['line_channel_token'] ?? ''));
+            if ($channelAccessToken === '') {
+                Yii::error('LINE channel token is missing in site setting', __METHOD__);
+                return false;
+            }
+            $url = 'https://api.line.me/v2/bot/message/push';
  
-         $data = [
-             'to' => $userId,
-             'messages' => [
-                 [
-                     'type' => 'flex',
-                     'altText' => $altText,
-                     'contents' => $flexContent,
-                 ],
-             ],
-         ];
+            $data = [
+                'to' => $userId,
+                'messages' => [
+                    [
+                        'type' => 'flex',
+                        'altText' => $altText,
+                        'contents' => $flexContent,
+                    ],
+                ],
+            ];
  
-         $client = new Client();
-         $response = $client->createRequest()
-             ->setMethod('POST')
-             ->setUrl($url)
-             ->addHeaders([
-                 'Authorization' => 'Bearer ' . $channelAccessToken,
-                 'Content-Type' => 'application/json',
-             ])
-             ->setContent(json_encode($data))
-             ->send();
+            $client = new Client();
+            $response = $client->createRequest()
+                ->setMethod('POST')
+                ->setUrl($url)
+                ->addHeaders([
+                    'Authorization' => 'Bearer ' . $channelAccessToken,
+                    'Content-Type' => 'application/json',
+                ])
+                ->setContent(json_encode($data))
+                ->send();
  
-         if (!$response->isOk) {
-             Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
-             return false;
-         }
+            if (!$response->isOk) {
+                Yii::error('Failed to send LINE Flex message: ' . $response->content, __METHOD__);
+                return false;
+            }
  
-         return true;
+            return true;
+        } catch (\Throwable $th) {
+            Yii::error('Failed to send LINE flex message: ' . $th->getMessage(), __METHOD__);
+            return false;
+        }
      }
 
      //ส่งข้อความขอนุมัติจัดซื้อจัดจ้าง

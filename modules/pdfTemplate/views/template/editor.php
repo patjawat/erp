@@ -14,6 +14,7 @@ use yii\helpers\Url;
 /** @var string $developmentPrintDataUrl */
 /** @var string $leavePrintDataUrl */
 /** @var string $bookingPrintDataUrl */
+/** @var array $leaveTypeOptions */
 
 $this->title = 'กำหนดตำแหน่ง — ' . Html::encode($template->name);
 $dataSources = $dataSources ?? [];
@@ -22,6 +23,7 @@ $fieldsForSourceUrl = $fieldsForSourceUrl ?? '';
 $developmentPrintDataUrl = $developmentPrintDataUrl ?? '';
 $leavePrintDataUrl = $leavePrintDataUrl ?? '';
 $bookingPrintDataUrl = $bookingPrintDataUrl ?? '';
+$leaveTypeOptions = $leaveTypeOptions ?? [];
 $this->params['breadcrumbs'][] = ['label' => 'Template รายงานขอไปราชการ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'แก้ไข';
 
@@ -218,6 +220,16 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                                 <option value="long">วันอาทิตย์ที่ 1 มกราคม พ.ศ. 2569</option>
                             </select>
                         </div>
+                        <div id="leave-type-settings" class="mb-2 d-none">
+                            <label class="form-label small">ประเภทการลา</label>
+                            <select id="sel-leave-type-id" class="form-select">
+                                <option value="">ใช้ตามใบลาปัจจุบัน</option>
+                                <?php foreach ($leaveTypeOptions as $leaveTypeOption): ?>
+                                <option value="<?= Html::encode($leaveTypeOption['code'] ?? '') ?>"><?= Html::encode(($leaveTypeOption['code'] ?? '') . ' - ' . ($leaveTypeOption['title'] ?? '')) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text">ใช้กับฟิลด์ยอดลา เช่น ลามาแล้ว / รวมวันลาที่ใช้ได้</div>
+                        </div>
                         <div id="approval-level-settings" class="d-none">
                             <hr class="my-2">
                             <p class="small fw-medium text-primary mb-2">ผู้อนุมัติ / สถานะผู้อนุมัติ</p>
@@ -296,6 +308,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
     var developmentPrintDataUrl = <?= json_encode($developmentPrintDataUrl) ?>;
     var leavePrintDataUrl = <?= json_encode($leavePrintDataUrl) ?>;
     var bookingPrintDataUrl = <?= json_encode($bookingPrintDataUrl) ?>;
+    var leaveTypeOptions = <?= json_encode($leaveTypeOptions) ?>;
     var saveUrl = <?= json_encode($saveUrl) ?>;
     var previewUrl = <?= json_encode($previewUrl) ?>;
     var csrfParam = <?= json_encode($csrf) ?>;
@@ -460,6 +473,49 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         return typeof lookupKey === 'string' && DATE_FIELD_KEYS.indexOf(lookupKey) >= 0;
     }
 
+    var LEAVE_SUMMARY_FIELD_KEYS = ['last_days', 'total_days', 'ld', 'sum', 'leaveType', 'leave_type_id', 'leave_type_title'];
+    function isLeaveSummaryField(lookupKey) {
+        return typeof lookupKey === 'string' && LEAVE_SUMMARY_FIELD_KEYS.indexOf(lookupKey) >= 0;
+    }
+
+    function getLeaveTypeTitle(code) {
+        if (!code || !leaveTypeOptions || !leaveTypeOptions.length) return '';
+        for (var i = 0; i < leaveTypeOptions.length; i++) {
+            if (String(leaveTypeOptions[i].code || '') === String(code)) {
+                return String(leaveTypeOptions[i].title || '');
+            }
+        }
+        return '';
+    }
+
+    function resolveLeaveSummaryValue(item, lookupKey) {
+        var selectedCode = String((item && item.leave_type_id) || '');
+        if (!selectedCode && state.realData && state.realData.leave_type_id) {
+            selectedCode = String(state.realData.leave_type_id || '');
+        }
+        var summaryByType = state.realData && state.realData.leave_summary_by_type ? state.realData.leave_summary_by_type : null;
+        var row = (summaryByType && selectedCode && summaryByType[selectedCode]) ? summaryByType[selectedCode] : null;
+        if (lookupKey === 'leaveType' || lookupKey === 'leave_type_title') {
+            return (row && row.title) ? String(row.title) : (getLeaveTypeTitle(selectedCode) || (state.realData && (state.realData.leave_type_title || state.realData.leaveType)) || '');
+        }
+        if (lookupKey === 'leave_type_id') {
+            return selectedCode || (state.realData && String(state.realData.leave_type_id || '')) || '';
+        }
+        if (lookupKey === 'last_days') {
+            return (row && row.last_leave_days != null && row.last_leave_days !== '') ? String(row.last_leave_days) : '';
+        }
+        if (lookupKey === 'total_days') {
+            return (row && row.total_leave_days != null && row.total_leave_days !== '') ? String(row.total_leave_days) : '';
+        }
+        if (lookupKey === 'ld') {
+            return (row && row.entitlement_days != null && row.entitlement_days !== '') ? String(row.entitlement_days) : '';
+        }
+        if (lookupKey === 'sum') {
+            return (row && row.entitlement_total_days != null && row.entitlement_total_days !== '') ? String(row.entitlement_total_days) : '';
+        }
+        return '';
+    }
+
     function formatApprovalStatus(status, style) {
         if (status === 'Pass') {
             if (style === 'checkmark') return '\u2713';
@@ -533,6 +589,8 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 if (showWhen === 'reject' && status !== 'Reject') status = '';
                 var style = item.approval_display_style || 'text';
                 text = formatApprovalStatus(status, style) || item.field_name || item.field;
+            } else if (isLeaveSummaryField(lookupKey)) {
+                text = resolveLeaveSummaryValue(item, lookupKey) || item.field_name || item.field;
             } else if (isApproverField && state.realData && lookupKey !== 'approval_status') {
                 var suffix = lookupKey.replace('approver_', '');
                 text = state.realData['approver_' + level + '_' + suffix] || '' || item.field_name || item.field;
@@ -581,6 +639,11 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 var positionXInput = document.getElementById('sel-position-x-percent');
                 if (lineHeightInput) lineHeightInput.value = isListField && (item.line_height_percent != null) ? (parseFloat(item.line_height_percent) * 100) : '4';
                 if (positionXInput) positionXInput.value = isListField && (item.position_x_percent != null) ? (parseFloat(item.position_x_percent) * 100) : '50';
+                var isLeaveField = isLeaveSummaryField(lookupKeySel);
+                var leaveTypeBlock = document.getElementById('leave-type-settings');
+                if (leaveTypeBlock) leaveTypeBlock.classList.toggle('d-none', !isLeaveField);
+                var leaveTypeSel = document.getElementById('sel-leave-type-id');
+                if (leaveTypeSel) leaveTypeSel.value = isLeaveField ? (item.leave_type_id || '') : '';
                 var showLevel = isApproverOrStatusField(lookupKeySel);
                 var approvalLevelBlock = document.getElementById('approval-level-settings');
                 if (approvalLevelBlock) approvalLevelBlock.classList.toggle('d-none', !showLevel);
@@ -662,6 +725,9 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                 out.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
                 out.position_x_percent = item.position_x_percent != null ? item.position_x_percent : 0.5;
             }
+            if (item.leave_type_id) {
+                out.leave_type_id = item.leave_type_id;
+            }
             if (src === 'approval_status') {
                 out.approval_display_style = (item.approval_display_style && ['checkmark', 'circle', 'text'].indexOf(item.approval_display_style) >= 0) ? item.approval_display_style : 'text';
                 out.approval_show_when = (item.approval_show_when === 'approve' || item.approval_show_when === 'reject') ? item.approval_show_when : '';
@@ -691,6 +757,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
                     font_bold: item.font_bold ? 1 : 0,
                     alignment: item.alignment || 'L',
                     date_format: item.date_format || '',
+                    leave_type_id: item.leave_type_id || '',
                 };
                 if (src === 'travel_party_list') {
                     row.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
@@ -713,6 +780,13 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         var id = document.getElementById('sel-field-id').value;
         var item = state.layout.find(function(x) { return String(x.id) === id; });
         if (item) item.date_format = this.value || '';
+    });
+    var selLeaveType = document.getElementById('sel-leave-type-id');
+    if (selLeaveType) selLeaveType.addEventListener('change', function() {
+        var id = document.getElementById('sel-field-id').value;
+        var item = state.layout.find(function(x) { return String(x.id) === id; });
+        if (item) item.leave_type_id = this.value || '';
+        renderOverlay();
     });
 
     document.getElementById('btn-remove-field').addEventListener('click', function() {

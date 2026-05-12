@@ -8,6 +8,7 @@ use yii\web\Response;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\leave\models\LeaveType;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\models\PdfTemplateField;
 use app\modules\pdfTemplate\services\PdfTemplateService;
@@ -20,7 +21,7 @@ class TemplateController extends Controller
 {
     private PdfTemplateService $templateService;
 
-    public function __construct($id, $module, PdfTemplateService $templateService = null, $config = [])
+    public function __construct($id, $module, ?PdfTemplateService $templateService = null, $config = [])
     {
         $this->templateService = $templateService ?? new PdfTemplateService();
         parent::__construct($id, $module, $config);
@@ -329,6 +330,7 @@ class TemplateController extends Controller
             'developmentPrintDataUrl' => $developmentPrintDataUrl,
             'leavePrintDataUrl' => $leavePrintDataUrl,
             'bookingPrintDataUrl' => $bookingPrintDataUrl,
+            'leaveTypeOptions' => $this->getLeaveTypeOptions(),
         ]);
     }
 
@@ -378,6 +380,31 @@ class TemplateController extends Controller
             }
         }
         return ['success' => $ok];
+    }
+
+    /**
+     * Leave type dropdown options for editor field settings.
+     *
+     * @return array<int, array{code: string, title: string}>
+     */
+    private function getLeaveTypeOptions(): array
+    {
+        $rows = LeaveType::find()
+            ->where(['name' => 'leave_type', 'active' => 1])
+            ->orderBy(['code' => SORT_ASC])
+            ->all();
+        $out = [];
+        foreach ($rows as $row) {
+            $code = (string) ($row->code ?? '');
+            if ($code === '') {
+                continue;
+            }
+            $out[] = [
+                'code' => $code,
+                'title' => (string) ($row->title ?? $code),
+            ];
+        }
+        return $out;
     }
 
     /**

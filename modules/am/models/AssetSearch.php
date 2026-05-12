@@ -24,8 +24,8 @@ class AssetSearch extends Asset
     public function rules()
     {
         return [
-            [['id', 'life', 'department', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
-            [['q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group_id','asset_type','q','purchase','on_year','owner','price1','price2','price_below','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id','asset_name','no_department','no_owner'], 'safe'],
+            [['id', 'department', 'depre_type', 'budget_year', 'created_by', 'updated_by'], 'integer'],
+            [['asset_condition','q_department','asset_group_id','asset_type_id','asset_category_id','ref', 'code', 'receive_date', 'data_json', 'updated_at', 'created_at','fsn_auto','fsn','asset_group_id','asset_type','q','purchase','on_year','owner','price1','price2','price_below','q_date','q_receive_date','q_month','q_year','budget_type','method_get','po_number','asset_status','q_lastDay','group_id','asset_name','no_department','no_owner'], 'safe'],
             [['price', 'price_below'], 'number'],
         [['no_department', 'no_owner'], 'boolean'],
         ];
@@ -74,13 +74,13 @@ class AssetSearch extends Asset
             'receive_date' => $this->receive_date,
             'asset_category_id' => $this->asset_category_id,
             'price' => $this->price,
-            'life' => $this->life,
             'department' => $this->department,
             'purchase' => $this->purchase,
             'fsn_number' => $this->fsn_number,
             'on_year' => $this->on_year,
             'owner' => $this->owner,
             'asset_status' => $this->asset_status,
+            'asset_condition' => $this->asset_condition,
             'depre_type' => $this->depre_type,
             'budget_year' => $this->budget_year,
             'updated_at' => $this->updated_at,

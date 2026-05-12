@@ -4,25 +4,16 @@ use yii\helpers\Html;
 <div class="d-flex flex-wrap gap-2">
 
     <?php if(Yii::$app->user->can('asset')):?>
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button"
-                id="dropdownNewButton" data-bs-toggle="dropdown" aria-expanded="false">
-                <i id="dropdownNewIcon" class="fa-solid fa-circle-chevron-down"></i> สร้างใหม่
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                <li> <?= Html::a('<i class="fa-regular fa-pen-to-square me-2"></i> สร้างใหม่', ['create'], ['class' => 'dropdown-item']) ?></li>
-                <li><?= Html::a('<i class="fa-solid fa-copy me-2"></i> สร้างใหม่จากสำเนานี้', ['create', 'id' => $model->id], ['class' => 'dropdown-item']) ?></li>
+        <?= Html::a('<i class="fa-solid fa-copy me-2"></i> ทำสำเนา', ['create', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
 
-            </ul>
-        </div>
-        <?= Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
-        <?= Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
+        <?= Yii::$app->user->can('asset') ?  Html::a('<i class="fa-solid fa-pen-to-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning'])  : ''?>
+        <?= Yii::$app->user->can('asset') ? Html::a('<i class="fa-solid fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
                 'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?',
                 'method' => 'post',
             ],
-        ]) ?>
+        ]) : '' ?>
         <?php endif;?>
         <?= Html::a(' <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="5" height="5" x="3" y="3" rx="1"></rect>
