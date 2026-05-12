@@ -241,12 +241,13 @@ class BookingMeetingController extends \yii\web\Controller
         $me = UserHelper::GetEmployee();
         $carType = $this->request->get('type');
         $dateStart = $this->request->get('date_start');
+        $dateEnd = $this->request->get('date_end');
         $room_id = $this->request->get('room_id');
         $model = new Meeting([
             'emp_id' => $me->id,
             'room_id' => $room_id,
             'date_start' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
-            // 'date_end' => $dateStart ? AppHelper::convertToThai($dateStart) : '',
+            'date_end' => $dateEnd ? AppHelper::convertToThai($dateEnd) : ($dateStart ? AppHelper::convertToThai($dateStart) : ''),
             'data_json' => [
                 'phone' => $me->phone,
             ]
@@ -258,7 +259,7 @@ class BookingMeetingController extends \yii\web\Controller
                 $model->code  = \mdm\autonumber\AutoNumber::generate('ME-' . date('ymd') . '-???');
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
-                // $model->date_end = AppHelper::convertToGregorian($model->date_end);
+                $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 $model->status = 'Pending';
                 if ($model->save(false)) {
                     \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -298,6 +299,7 @@ class BookingMeetingController extends \yii\web\Controller
         $model = $this->findModel($id);
 
         $model->date_start =  AppHelper::convertToThai($model->date_start);
+        $model->date_end =  AppHelper::convertToThai($model->date_end);
 
         $old_data_json = $model->data_json;
 
@@ -307,6 +309,7 @@ class BookingMeetingController extends \yii\web\Controller
 
                 $model->thai_year = AppHelper::YearBudget();
                 $model->date_start = AppHelper::convertToGregorian($model->date_start);
+                $model->date_end = AppHelper::convertToGregorian($model->date_end);
                 if ($model->save(false)) {
                     // $model->SendMeeting();
                     return [
@@ -382,8 +385,17 @@ public function actionValidator($id = null)
             $model->addError('data_json[period_time]', $requiredName);
         }
 
-        // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น
-        if (!empty($model->time_start) && !empty($model->time_end)) {
+        // ✅ ตรวจสอบว่าวันที่สิ้นสุด >= วันที่เริ่มต้น
+        if (!empty($model->date_start) && !empty($model->date_end)) {
+            $start = strtotime(AppHelper::convertToGregorian($model->date_start));
+            $end = strtotime(AppHelper::convertToGregorian($model->date_end));
+            if ($end < $start) {
+                $model->addError('date_end', 'วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น');
+            }
+        }
+
+        // ✅ ตรวจสอบว่าเวลาสิ้นสุด > เวลาเริ่มต้น (กรณีวันที่เดียวกัน)
+        if (!empty($model->time_start) && !empty($model->time_end) && ($model->date_start === $model->date_end)) {
             if (strtotime($model->time_end) <= strtotime($model->time_start)) {
                 $model->addError('time_end', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
             }

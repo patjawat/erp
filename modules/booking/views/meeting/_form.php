@@ -86,7 +86,11 @@ try {
 
                             <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
                                 'options' => ['placeholder' => 'เลือกวันที่ต้องการประชุม', 'class' => ''],
-                            ])->label('วันที่') ?>
+                            ])->label('เริ่มวันที่') ?>
+
+                            <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                'options' => ['placeholder' => 'เลือกวันที่สิ้นสุดการประชุม', 'class' => ''],
+                            ])->label('ถึงวันที่') ?>
                             
                             <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาเริ่มต้น') ?>
                         </div>

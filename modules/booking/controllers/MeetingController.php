@@ -174,7 +174,8 @@ class MeetingController extends Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         $bookings = Meeting::find()
-            ->andWhere(['between', 'date_start', $start, $end])
+            ->andWhere(['<=', 'date_start', $end])
+            ->andWhere(['>=', 'date_end', $start])
             ->orderBy(['id' => SORT_DESC])
             ->all();
         $data = [];
@@ -186,7 +187,7 @@ class MeetingController extends Controller
             $timeStart = $item->time_start ?? '00:00';
             $timeEnd = $item->time_end ?? '00:00';
             $dateStart = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeStart), "php:Y-m-d\TH:i");
-            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_start . ' ' . $timeEnd), "php:Y-m-d\TH:i");
+            $dateEnd = Yii::$app->formatter->asDatetime(($item->date_end . ' ' . $timeEnd), "php:Y-m-d\TH:i");
             $data[] = [
                 'id'               => $item->id,
                 'title'            => $item->title,
