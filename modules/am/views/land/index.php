@@ -41,7 +41,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
                 <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
             </h6>
-            <?= Html::a('<i data-lucide="circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+            <div class="d-flex gap-2">
+                <?= Html::a('<i class="fa-solid fa-file-import me-2"></i> ปรับปรุง GFMIS', ['/am/import/gfmis', 'title' => 'อัปเดต GFMIS'], ['class' => 'btn btn-outline-light open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                <?= Html::a('<i data-lucide="circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+            </div>
         </div>
     </div>
     <div class="card-body p-0">

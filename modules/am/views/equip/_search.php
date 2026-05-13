@@ -148,6 +148,9 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
                         <hr class="dropdown-divider">
                     </li>
                     <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/import', 'title' => 'นำเข้าไฟล์ CSV'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> อัปเดต GFMIS', ['/am/import/gfmis', 'title' => 'อัปเดต GFMIS'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                    <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template GFMIS', ['/am/import/download-gfmis-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                 </ul>
             </div>
         </div>

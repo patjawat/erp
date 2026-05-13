@@ -16,6 +16,13 @@ use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
 use app\modules\am\models\AssetImportForm;
 use app\modules\inventory\models\StockEvent;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Google\Service\AdExchangeBuyerII\Date;
 
 class ImportController extends Controller
@@ -45,6 +52,132 @@ class ImportController extends Controller
             'inline' => false,
         ]);
         \Yii::$app->end();
+    }
+
+    /**
+     * ดาวน์โหลดเทมเพลต Excel สำหรับอัปเดต GFMIS จากรหัสครุภัณฑ์
+     */
+    public function actionDownloadGfmisTemplate()
+    {
+        $config = require \Yii::getAlias('@app/modules/am/data/gfmis_update_columns.php');
+        $spreadsheet = $this->buildGfmisTemplateSpreadsheet($config);
+        $this->sendSpreadsheetAsFile(
+            $spreadsheet,
+            'template_update_gfmis_' . date('Ymd') . '.xlsx'
+        );
+    }
+
+    /**
+     * หน้าอัปโหลด Excel สำหรับอัปเดต GFMIS
+     */
+    public function actionGfmis()
+    {
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => $this->request->get('title') ?: 'นำเข้าอัปเดต GFMIS',
+                'content' => $this->renderAjax('gfmis'),
+            ];
+        }
+
+        return $this->render('gfmis');
+    }
+
+    /**
+     * AJAX: แสดงตัวอย่างไฟล์ Excel สำหรับอัปเดต GFMIS
+     */
+    public function actionPreviewGfmis()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $file = UploadedFile::getInstanceByName('xlsxFile');
+        if (!$file) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+
+        $ext = strtolower((string) $file->extension);
+        if (!in_array($ext, ['xlsx', 'xls', 'csv'], true)) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะไฟล์ Excel (.xlsx, .xls) หรือ CSV'];
+        }
+
+        $filePath = Yii::getAlias('@runtime') . '/gfmis_update_' . time() . '_' . Yii::$app->security->generateRandomString(8) . '.' . $ext;
+        $file->saveAs($filePath);
+
+        $parsed = $this->parseGfmisImportFile($filePath);
+        if (($parsed['status'] ?? null) !== 'success') {
+            return $parsed;
+        }
+
+        $parsed['filePath'] = $filePath;
+        return $parsed;
+    }
+
+    /**
+     * POST: อัปเดตค่า GFMIS ลง asset ที่มีรหัสตรงกัน
+     */
+    public function actionImportGfmis()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $filePath = Yii::$app->request->post('filePath');
+
+        if (!$filePath || !is_file($filePath)) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
+
+        $parsed = $this->parseGfmisImportFile($filePath);
+        if (($parsed['status'] ?? null) !== 'success') {
+            return $parsed;
+        }
+
+        if (!empty($parsed['errors'])) {
+            return [
+                'status' => 'error',
+                'message' => 'พบข้อผิดพลาดในไฟล์ กรุณาแก้ไขก่อนนำเข้า',
+                'errors' => $parsed['errors'],
+            ];
+        }
+
+        $updated = 0;
+        $skipped = 0;
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($parsed['rows'] as $row) {
+                $code = trim((string) ($row['code'] ?? ''));
+                if (($row['status_key'] ?? '') === 'same') {
+                    $skipped++;
+                    continue;
+                }
+                $asset = null;
+                if ($code !== '') {
+                    $asset = Asset::find()
+                        ->where(['code' => $code])
+                        ->andWhere('deleted_at IS NULL')
+                        ->one();
+                }
+                if ($asset === null) {
+                    throw new \RuntimeException('ไม่พบหมายเลขครุภัณฑ์ ' . ($code !== '' ? $code : '-'));
+                }
+                $asset->gfmis = $row['new_gfmis'];
+                if (!$asset->save(false)) {
+                    throw new \RuntimeException('ไม่สามารถอัปเดต GFMIS ของหมายเลขครุภัณฑ์ ' . ($code !== '' ? $code : '-'));
+                }
+                $updated++;
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            Yii::error($e->getMessage(), __METHOD__);
+            return ['status' => 'error', 'message' => 'เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล'];
+        }
+
+        return [
+            'status' => 'success',
+            'message' => "อัปเดต GFMIS เรียบร้อย {$updated} รายการ" . ($skipped > 0 ? " (ไม่เปลี่ยนแปลง {$skipped} รายการ)" : ''),
+            'updated' => $updated,
+            'skipped' => $skipped,
+        ];
     }
 
     /**
@@ -310,6 +443,341 @@ class ImportController extends Controller
         }
 
         return ['status' => 'error', 'message' => 'ไม่สามารถเปิดไฟล์ CSV ได้'];
+    }
+
+    /**
+     * สร้าง workbook ตัวอย่างสำหรับอัปเดต GFMIS
+     *
+     * @param array{sheet_name?: string, headers: array<int, string>, sample?: array<int, array<int, mixed>>} $config
+     */
+    protected function buildGfmisTemplateSpreadsheet(array $config): Spreadsheet
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheetName = (string) ($config['sheet_name'] ?? 'GFMIS Update');
+        $sheet->setTitle(mb_substr($sheetName, 0, 31));
+
+        $headers = array_values($config['headers'] ?? []);
+        $sampleRows = array_values($config['sample'] ?? []);
+
+        foreach ($headers as $colIndex => $header) {
+            $cell = Coordinate::stringFromColumnIndex($colIndex + 1) . '1';
+            $sheet->setCellValueExplicit($cell, (string) $header, DataType::TYPE_STRING);
+        }
+
+        $startRow = 2;
+        foreach ($sampleRows as $rowOffset => $sampleRow) {
+            foreach ($sampleRow as $colIndex => $value) {
+                $cell = Coordinate::stringFromColumnIndex($colIndex + 1) . ($startRow + $rowOffset);
+                $sheet->setCellValueExplicit($cell, (string) $value, DataType::TYPE_STRING);
+            }
+        }
+
+        $lastColumn = Coordinate::stringFromColumnIndex(max(1, count($headers)));
+        $lastRow = max(1, $startRow + count($sampleRows) - 1);
+
+        $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '2563EB'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '93C5FD'],
+                ],
+            ],
+        ]);
+
+        if ($lastRow >= 2) {
+            $sheet->getStyle('A2:' . $lastColumn . $lastRow)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => 'E2E8F0'],
+                    ],
+                ],
+            ]);
+        }
+
+        foreach (['A', 'B'] as $col) {
+            $sheet->getStyle($col . ':' . $col)->getNumberFormat()->setFormatCode('@');
+        }
+
+        $sheet->getColumnDimension('A')->setWidth(26);
+        $sheet->getColumnDimension('B')->setWidth(26);
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:' . $lastColumn . '1');
+        $sheet->getRowDimension(1)->setRowHeight(24);
+
+        return $spreadsheet;
+    }
+
+    /**
+     * ส่ง workbook เป็นไฟล์ดาวน์โหลด
+     */
+    protected function sendSpreadsheetAsFile(Spreadsheet $spreadsheet, string $filename): void
+    {
+        $writer = new Xlsx($spreadsheet);
+        ob_start();
+        $writer->save('php://output');
+        $content = (string) ob_get_clean();
+        $spreadsheet->disconnectWorksheets();
+        unset($writer, $spreadsheet);
+
+        \Yii::$app->response->sendContentAsFile($content, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ]);
+        \Yii::$app->end();
+    }
+
+    /**
+     * อ่านไฟล์ Excel/CSV เป็นแถวข้อมูล
+     *
+     * @return array<int, array{row:int, cells: array<int, string>}>
+     */
+    protected function readSpreadsheetRows(string $filePath): array
+    {
+        $reader = IOFactory::createReaderForFile($filePath);
+        if (method_exists($reader, 'setReadDataOnly')) {
+            $reader->setReadDataOnly(true);
+        }
+
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $highestRow = max(1, (int) $sheet->getHighestDataRow());
+        $highestColumn = $sheet->getHighestDataColumn();
+        $highestColumnIndex = max(1, Coordinate::columnIndexFromString($highestColumn));
+
+        $rows = [];
+        for ($rowNumber = 1; $rowNumber <= $highestRow; $rowNumber++) {
+            $cells = [];
+            for ($columnIndex = 1; $columnIndex <= $highestColumnIndex; $columnIndex++) {
+                $cellRef = Coordinate::stringFromColumnIndex($columnIndex) . $rowNumber;
+                $value = $sheet->getCell($cellRef)->getFormattedValue();
+                if (is_bool($value)) {
+                    $value = $value ? '1' : '0';
+                }
+                $cells[] = trim((string) ($value ?? ''));
+            }
+            $rows[] = [
+                'row' => $rowNumber,
+                'cells' => $cells,
+            ];
+        }
+
+        $spreadsheet->disconnectWorksheets();
+        unset($sheet, $spreadsheet);
+
+        return $rows;
+    }
+
+    /**
+     * นำไฟล์อัปเดต GFMIS ไปแปลงเป็นข้อมูลใช้งาน
+     *
+     * @return array{
+     *   status: string,
+     *   headers?: array<int, string>,
+     *   rows?: array<int, array<string, mixed>>,
+     *   errors?: array<int, array<string, mixed>>,
+     *   summary?: array<string, int>,
+     *   message?: string
+     * }
+     */
+    protected function parseGfmisImportFile(string $filePath): array
+    {
+        try {
+            $rows = $this->readSpreadsheetRows($filePath);
+        } catch (\Throwable $e) {
+            Yii::error($e->getMessage(), __METHOD__);
+            return ['status' => 'error', 'message' => 'ไม่สามารถอ่านไฟล์ Excel ได้'];
+        }
+
+        $rows = array_values(array_filter($rows, static function (array $row): bool {
+            foreach ($row['cells'] as $cell) {
+                if (trim((string) $cell) !== '') {
+                    return true;
+                }
+            }
+            return false;
+        }));
+
+        if (empty($rows)) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลในไฟล์'];
+        }
+
+        $config = require \Yii::getAlias('@app/modules/am/data/gfmis_update_columns.php');
+        $aliases = $config['aliases'] ?? [];
+        $headerInfo = $this->detectGfmisHeaderInfo($rows, $aliases);
+
+        $dataRows = array_slice($rows, $headerInfo['start_index']);
+        if (empty($dataRows)) {
+            return ['status' => 'error', 'message' => 'ไม่พบแถวข้อมูลสำหรับอัปเดต'];
+        }
+
+        $codeCounts = [];
+        foreach ($dataRows as $row) {
+            $code = trim((string) ($row['cells'][$headerInfo['code_index']] ?? ''));
+            if ($code === '') {
+                continue;
+            }
+            $codeCounts[$code] = ($codeCounts[$code] ?? 0) + 1;
+        }
+
+        $codes = array_keys($codeCounts);
+        $assetMap = [];
+        if (!empty($codes)) {
+            $assetMap = Asset::find()
+                ->where(['code' => $codes])
+                ->andWhere('deleted_at IS NULL')
+                ->indexBy('code')
+                ->all();
+        }
+
+        $parsedRows = [];
+        $errors = [];
+        $ready = 0;
+        $same = 0;
+
+        foreach ($dataRows as $row) {
+            $rowNumber = (int) $row['row'];
+            $cells = $row['cells'];
+            $code = trim((string) ($cells[$headerInfo['code_index']] ?? ''));
+            $gfmis = trim((string) ($cells[$headerInfo['gfmis_index']] ?? ''));
+
+            $rowErrors = [];
+            if ($code === '') {
+                $rowErrors['code'][] = 'ต้องระบุรหัสครุภัณฑ์';
+            }
+            if ($gfmis === '') {
+                $rowErrors['gfmis'][] = 'ต้องระบุ GFMIS';
+            }
+            if ($code !== '' && ($codeCounts[$code] ?? 0) > 1) {
+                $rowErrors['code'][] = 'รหัสครุภัณฑ์ซ้ำในไฟล์';
+            }
+
+            $asset = $code !== '' ? ($assetMap[$code] ?? null) : null;
+            if ($code !== '' && $asset === null) {
+                $rowErrors['code'][] = 'ไม่พบรหัสครุภัณฑ์นี้ในระบบ';
+            }
+
+            $assetName = $asset ? trim((string) ($asset->asset_name ?: $asset->AssetitemName() ?: '')) : '';
+            $currentGfmis = $asset ? trim((string) ($asset->gfmis ?? '')) : '';
+            $statusKey = 'error';
+            $statusLabel = 'ไม่พร้อมนำเข้า';
+            if (empty($rowErrors) && $asset !== null) {
+                if ($currentGfmis === $gfmis) {
+                    $statusKey = 'same';
+                    $statusLabel = 'ค่าเดิม';
+                    $same++;
+                } else {
+                    $statusKey = 'update';
+                    $statusLabel = 'พร้อมอัปเดต';
+                    $ready++;
+                }
+            }
+
+            if (!empty($rowErrors)) {
+                $errors[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'errors' => $rowErrors,
+                ];
+            }
+
+            $parsedRows[] = [
+                'row' => $rowNumber,
+                'code' => $code,
+                'asset_id' => $asset?->id,
+                'asset_name' => $assetName,
+                'current_gfmis' => $currentGfmis,
+                'new_gfmis' => $gfmis,
+                'status_key' => $statusKey,
+                'status_label' => $statusLabel,
+                'errors' => $rowErrors,
+            ];
+        }
+
+        return [
+            'status' => 'success',
+            'headers' => ['#', 'รหัสครุภัณฑ์', 'ชื่อรายการ', 'GFMIS ปัจจุบัน', 'GFMIS ใหม่', 'สถานะ'],
+            'rows' => $parsedRows,
+            'errors' => $errors,
+            'summary' => [
+                'total' => count($parsedRows),
+                'ready' => $ready,
+                'same' => $same,
+                'error' => count($errors),
+            ],
+        ];
+    }
+
+    /**
+     * ค้นหาตำแหน่งคอลัมน์จาก alias ที่กำหนด
+     */
+    protected function detectGfmisHeaderInfo(array $rows, array $aliases): array
+    {
+        $codeAliases = array_map([$this, 'normalizeImportText'], $aliases['code'] ?? []);
+        $gfmisAliases = array_map([$this, 'normalizeImportText'], $aliases['gfmis'] ?? []);
+
+        foreach ($rows as $index => $row) {
+            $normalized = array_map([$this, 'normalizeImportText'], $row['cells']);
+            $codeIndex = $this->findHeaderIndex($normalized, $codeAliases);
+            $gfmisIndex = $this->findHeaderIndex($normalized, $gfmisAliases);
+            if ($codeIndex !== null && $gfmisIndex !== null) {
+                return [
+                    'start_index' => $index + 1,
+                    'code_index' => $codeIndex,
+                    'gfmis_index' => $gfmisIndex,
+                    'header_row' => $row['row'],
+                ];
+            }
+        }
+
+        return [
+            'start_index' => 0,
+            'code_index' => 0,
+            'gfmis_index' => 1,
+            'header_row' => null,
+        ];
+    }
+
+    /**
+     * @param array<int, string> $normalizedRow
+     * @param array<int, string> $normalizedAliases
+     */
+    protected function findHeaderIndex(array $normalizedRow, array $normalizedAliases): ?int
+    {
+        foreach ($normalizedRow as $index => $value) {
+            if ($value === '') {
+                continue;
+            }
+            if (in_array($value, $normalizedAliases, true)) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * ทำความสะอาดข้อความสำหรับเทียบหัวคอลัมน์
+     */
+    protected function normalizeImportText($value): string
+    {
+        $value = mb_strtolower(trim((string) $value), 'UTF-8');
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/[^\p{L}\p{N}]+/u', '', $value);
+
+        return is_string($value) ? $value : '';
     }
 
     /**
