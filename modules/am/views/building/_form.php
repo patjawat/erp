@@ -263,6 +263,9 @@ use kartik\editors\Summernote;
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
                         <div class="col-md-6">
+                            <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
+                        </div>
+                        <div class="col-md-6">
                             <?php echo $form->field($model, 'data_json[floors]')->textInput()->label('จำนวนชั้น'); ?>
                         </div>
                         <div class="col-md-6">

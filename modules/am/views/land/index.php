@@ -79,6 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td class="py-2">
                             <div class="fw-semibold text-dark"><?= $item->code ?></div>
+                            <div class="text-muted small font-monospace">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
                             <div class="text-muted small">โฉนด: <?= $item->data_json['lan_number'] ?? 'ไม่ระบุ' ?></div>
                         </td>
                         <td class="align-middle"><?= $item->data_json['address'] ?? '-' ?></td>

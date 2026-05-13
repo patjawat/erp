@@ -180,6 +180,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);">
                                         <span><?= Html::encode($item->code) ?></span>
                                     </div>
+                                    <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: rgb(100, 116, 139);">
+                                        <span>GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 border-0">
                                     <span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= Html::encode($item->data_json['building_type_name'] ?? '-') ?></span>

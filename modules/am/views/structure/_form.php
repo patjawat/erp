@@ -265,6 +265,9 @@ $group = Yii::$app->request->get('group');
                                 'class' => 'form-control'  // Add background color
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
+                        <div class="col-md-6">
+                            <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
+                        </div>
 
 
 
