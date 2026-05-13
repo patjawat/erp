@@ -53,6 +53,7 @@ use app\modules\am\models\AssetDetail;
  * @property float|null $residual_value มูลค่าซาก
  * @property float|null $depreciation_rate อัตราค่าเสื่อม (% ต่อปี, ทศนิยม 2 ตำแหน่ง)
  * @property string|null $depreciation_method วิธีคำนวณค่าเสื่อม
+ * @property string|null $gfmis รหัสโครงสร้างงบประมาณ(GFMIS)
  * @property string|null $lifecycle_status received|active|repair|disposed
  * @property string|null $qr_code_path Path to saved QR image
  */
@@ -105,11 +106,12 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status','useful_life','asset_condition'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'gfmis', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
             [['department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
             [['ref', 'code'], 'string', 'max' => 255],
+            [['gfmis'], 'string', 'max' => 100],
         ];
     }
 
@@ -125,6 +127,7 @@ class Asset extends \yii\db\ActiveRecord
             'fsn' => 'ครุภัณฑ์',
             'asset_item_id' => 'ชื่อครุภัณฑ์',
             'fsn_number' => 'หมายเลขครุภัณฑ์',
+            'gfmis' => 'รหัสโครงสร้างงบประมาณ(GFMIS)',
             'receive_date' => 'วันที่รับเข้า',
             'on_year' => 'ปีงบประมาณ',
             'price' => 'ราคา',

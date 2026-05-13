@@ -216,6 +216,9 @@ use kartik\editors\Summernote;
                             'class' => 'form-control'  // Add background color
                         ])->label('หมายเลขครุภัณฑ์'); ?>
                     </div>
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
+                    </div>
                     <div class="col-md-12">
                         <?= $form->field($model, 'data_json[land_document_ref]')->textInput(['maxlength' => true])->label('ที่เอกสาร (ถ้ามี)') ?>
                     </div>

@@ -137,6 +137,7 @@ $equipSubtitle = static function ($item): string {
                                 </div>
                                 <div><span class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 200px;"><?= $titleName; ?></span>
                                     <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);"><span><?= $item->code; ?></span></div>
+                                    <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: rgb(100, 116, 139);"><span>GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></span></div>
                                 </div>
                             </div>
                         </td>

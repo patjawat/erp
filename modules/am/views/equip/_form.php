@@ -297,6 +297,9 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                 'class' => 'form-control'
                             ])->label('หมายเลขครุภัณฑ์')->hint('สามารถแก้ไขได้ตามต้องการ', ['class' => 'form-text text-muted small']); ?>
                         </div>
+                        <div class="col-12 col-md-6">
+                            <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
+                        </div>
 
 
                         <div class="col-12 col-md-6">

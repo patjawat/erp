@@ -96,6 +96,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template', ['/am/structure/download-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/am/structure/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> อัปเดต GFMIS', ['/am/import/gfmis', 'title' => 'อัปเดต GFMIS'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template GFMIS', ['/am/import/download-gfmis-template'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
             </ul>
         </div>
     </div>
@@ -181,6 +184,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 260px;"><?= Html::encode($titleName) ?></div>
                                     <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);">
                                         <span><?= Html::encode($item->code) ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: rgb(100, 116, 139);">
+                                        <span>GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 border-0">
