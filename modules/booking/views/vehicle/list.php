@@ -43,7 +43,7 @@ foreach ($models as $model) {
                     <?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <div class="d-flex justify-content-between">
-                <button class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <button type="button" class="btn btn-success export-leave"><i class="fa-solid fa-file-excel"></i> Excel</button>
             </div>
         </div>
     </div>

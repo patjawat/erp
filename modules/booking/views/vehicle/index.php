@@ -56,7 +56,7 @@ if ($this->beginCache($cacheKey, ['duration' => 60])):
 <?php Pjax::end(); ?>
 
 <?php
-$js = <<<JS
+$js = <<<'JS'
 $(document).on('click', '.cancel-order', function(e) {
     e.preventDefault();
     let url = $(this).attr('href');
@@ -92,6 +92,38 @@ $(document).on('click', '.cancel-order', function(e) {
                 }
             });
         }
+    });
+});
+
+$(document).on('click', '.export-leave', function(e) {
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'ยืนยันการส่งออก Excel?',
+        text: 'คุณต้องการดาวน์โหลดทะเบียนขอใช้รถยนต์ทั่วไปเป็นไฟล์ Excel ใช่หรือไม่?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ใช่, ส่งออก',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        let $form = $('.vehicle-search-form').first();
+        if (!$form.length) {
+            return;
+        }
+
+        $form.find('#vehicle-export-excel-input').remove();
+        $form.append('<input type="hidden" name="export" value="excel" id="vehicle-export-excel-input">');
+        $form[0].submit();
+
+        setTimeout(function () {
+            $('#vehicle-export-excel-input').remove();
+        }, 500);
     });
 });
 JS;
