@@ -36,7 +36,6 @@
  <div class="card">
    <div class="card-header bg-primary-gradient text-white d-flex align-items-center justify-content-between">
      <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-     <p class="text-white">จำนวนข้อมูล <?= number_format(count($querys)) ?> รายการ</p>
    </div>
    <div class="card-body">
      <?php echo $this->render('_search_by_item', ['model' => $searchModel]); ?>
