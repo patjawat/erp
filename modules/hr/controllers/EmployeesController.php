@@ -3,7 +3,6 @@
 namespace app\modules\hr\controllers;
 
 use app\components\AppHelper;
-use app\components\EmployeeHelper;
 use app\components\LineMsg;
 use app\components\UserHelper;
 use app\models\UploadCsvForm;
@@ -79,6 +78,8 @@ class EmployeesController extends Controller
             ['like', 'email', $q],
             ['like', 'fname', $q],
             ['like', 'lname', $q],
+            ['like', 'phone', $q],
+            ['like', 'cid', $q],
             ['like', new \yii\db\Expression("CONCAT(prefix,fname, ' ', lname)"), $q],
         ]);
 

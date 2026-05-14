@@ -1,12 +1,13 @@
 <?php
 
-use yii\web\View;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\widgets\Pjax;
 use app\components\AppHelper;
-use yii\bootstrap5\LinkPager;
 use app\components\SiteHelper;
+use app\components\widgets\DataSummaryWidget;
+use yii\bootstrap5\LinkPager;
+use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\web\View;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\EmployeesSearch $searchModel */
@@ -14,8 +15,6 @@ use app\components\SiteHelper;
 $this->title = 'ทะเบียนบุคลากร';
 $this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
-// ออกแบบ
-// https://www.canva.com/ai/code/thread/4c1031df-3a56-4eff-8b71-df1a519ca530
 ?>
 
 <?php Pjax::begin(['id' => 'hr-container', 'enablePushState' => true, 'timeout' => 50000]); ?>
@@ -35,13 +34,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
             <circle cx="9" cy="7" r="4"></circle>
         </svg>
-        <?=$this->title?>
+        <?= $this->title ?>
     </h4>
 </div>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?=$this->render('@app/modules/hr/menu',['active' => 'employees'])
+<?= $this->render('@app/modules/hr/menu', ['active' => 'employees'])
 ?>
 <?php $this->endBlock(); ?>
 
@@ -61,76 +60,84 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/hr/views/employees/menu', ['active' => 'employees']) ?>
 <?php $this->endBlock(); ?>
 
-
-<div class="card">
-    <div class="card-header bg-primary-gradient text-white d-flex justify-content-between">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-    </div>
-    <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
-    </div>
+<!-- การค้นหา -->
+<div class="mb-3">
+    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 </div>
 
+<!-- รายการบุคลากร -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white border-bottom rounded-top-4 py-3 d-flex justify-content-between align-items-center">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="p-3">
+                <h5 class="fw-semibold text-primary mb-1">
+                    <i class="fa-solid fa-users me-2"></i>ทะเบียนบุคลากร
+                </h5>
+                <p class="text-muted small mb-0">
+                    จัดการและตรวจสอบข้อมูลบุคลากรทั้งหมด
+                    <span class="fw-semibold text-body"><?= number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
+                    <?= $notStatus > 0 ? Html::a('· ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true], ['class' => 'text-decoration-none']) : '' ?>
+                </p>
+            </div>
 
-<?php if (SiteHelper::getDisplay() == 'list'): ?>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="btn-group" role="group">
+                <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-secondary setview' . (SiteHelper::getDisplay() == 'list' ? ' active' : '')]) ?>
+                <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-secondary setview' . (SiteHelper::getDisplay() != 'list' ? ' active' : '')]) ?>
+            </div>
+            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i><span class="d-none d-sm-inline">เพิ่มบุคลากร</span>', ['/hr/employees/create'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
-    <div class="card">
+            <div class="dropdown w-md-auto">
+                <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"
+                    id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span class="d-none d-sm-inline">Excel</span>
+                </button>
 
-        <div class="card-header bg-primary-gradient text-white">
-            <div class="d-flex justify-content-between">
-                <h6 class="text-white mt-2">
-                    <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
-                    <span class="badge text-bg-light">
-                        <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
-                </h6>
-                <div>
-                    <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-                    <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-                </div>
+                <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
+                    <li>
+                        <a href="#" id="download-button" class="dropdown-item">
+                            <i class="fa-solid fa-file-export me-1"></i>ส่งออก</a>
+                    </li>
+                    <li><?= Html::a(
+                            '<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',
+                            ['/hr/employees/import-csv', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'],
+                            ['class' => 'dropdown-item open-modal']
+                        ) ?>
+                    </li>
+                    <li><?= Html::a(
+                            '<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า',
+                            'https://docs.google.com/spreadsheets/d/1ZlqklxVlRZqxFNRrBK74jHHh8y5tgKGrWgXjHY7h8gw/edit#gid=0',
+                            ['class' => 'dropdown-item', 'target' => '_blank']
+                        ) ?>
+                    </li>
+                    </a>
+                </ul>
             </div>
         </div>
-        <div class="card-body">
+    </div>
+    <div class="card-body px-3 p-md-4">
+        <?php if (SiteHelper::getDisplay() == 'list'): ?>
             <?= $this->render('display/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]); ?>
-        </div>
+        <?php else: ?>
+            <?= $this->render('display/grid', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]); ?>
+        <?php endif ?>
+
     </div>
-
-
-<?php else: ?>
-
-    <div class="d-flex justify-content-between mb-3">
-        <h6>
-            <i class="bi bi-ui-checks"></i> ทะเบียนบุคลากร
-            <span class="badge rounded-pill text-bg-primary"><?= $dataProvider->getTotalCount() ?> </span> รายการ
-        </h6>
-        <div>
-            <?= Html::a('<i class="bi bi-list-ul"></i>', ['/setting/set-view', 'view' => 'list'], ['class' => 'btn btn-outline-light setview']) ?>
-            <?= Html::a('<i class="bi bi-grid"></i>', ['/setting/set-view', 'view' => 'grid'], ['class' => 'btn btn-outline-light setview']) ?>
-        </div>
-    </div>
-
-    <?= $this->render('display/grid', [
-        'searchModel' => $searchModel,
-        'dataProvider' => $dataProvider,
-    ]); ?>
-
-<?php endif ?>
-
-
-<div class="d-flex justify-content-center">
-
-    <div class="text-muted">
-        <?= LinkPager::widget([
-            'pagination' => $dataProvider->pagination,
-            'firstPageLabel' => 'หน้าแรก',
-            'lastPageLabel' => 'หน้าสุดท้าย',
-            'options' => [
-                'listOptions' => 'pagination pagination-sm',
-                'class' => 'pagination-sm',
-            ],
-        ]); ?>
+    <div class="card-footer bg-body border-top py-3 px-4">
+        <?php
+        echo DataSummaryWidget::widget([
+            'dataProvider' => $dataProvider,
+            'pagerOptions' => [],
+        ]);
+        ?>
     </div>
 </div>
 <span id="totalCount" class="d-none"><?= $dataProvider->getTotalCount(); ?></span>
