@@ -15,7 +15,6 @@ use app\modules\dms\models\DocumentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Organization;
 use Yii;
-use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -294,84 +293,7 @@ class DocumentsController extends \yii\web\Controller
      *   emp: object
      * }
      */
-    private function buildDocumentsIndexViewData(): array
-    {
-        $emp = UserHelper::GetEmployee();
-
-        $searchModel = $this->createDocumentsSearchModel();
-        [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        /** @var \yii\db\ActiveQuery $query */
-        $query = $dataProvider->query;
-        $query->joinWith([
-            'documentTags' => function ($query) {
-                $query->alias('d_tags')
-                    ->andOnCondition(['d_tags.name' => 'tags']);
-            }
-        ]);
-        $query->joinWith([
-            'docRead' => function ($query) {
-                $query->alias('d_read')
-                    ->andOnCondition(['d_read.name' => 'read']);
-            }
-        ]);
-        $q = trim($searchModel->q ?? '');
-
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'topic', $q],
-            ['like', 'doc_regis_number', $q],  // Fixed typo here
-            ['like', 'doc_number', $q],
-            ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
-        ]);
-        if ($searchModel->q_status == 'Y') {
-            $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
-            $dataProvider->query->andWhere($this->readRowToEmployeeCondition((int) $emp->id));
-        } else {
-            $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
-        }
-        $query
-            ->andFilterWhere(['>=', 'doc_transactions_date', $dateStart])
-            ->andFilterWhere(['<=', 'doc_transactions_date', $dateEnd]);
-
-        // JOIN หลายแถวต่อ 1 เอกสาร — ต้อง group ที่ documents.id ไม่เช่นนั้น LIMIT ของ pagination นับแถว join → เห็นแค่ไม่กี่รายการต่อหน้า
-        $query->groupBy(['documents.id']);
-
-        // $dataProvider->query->andWhere($this->tagsToEmployeeCondition((int) $emp->id));
-
-        $dataProvider->setPagination([
-            'pageSize' => 20,
-            'pageSizeParam' => false,
-        ]);
-
-        $dataProvider->setSort(['defaultOrder' => [
-            'doc_transactions_date' => SORT_DESC,
-            'doc_regis_number' => SORT_DESC,
-        ]]);
-
-        $unreadOpenDetailIdByDocument = [];
-        $unreadOpenDocumentsDetailById = [];
-
-        $routingIdsForReadStatus = [];
-        foreach ($dataProvider->getModels() as $m) {
-            $dt = $m->documentTags ?? $m->documentDepartment ?? null;
-            if ($dt !== null) {
-                $routingIdsForReadStatus[] = (int) $dt->id;
-            }
-        }
-        $readAtByRoutingId = $routingIdsForReadStatus !== []
-            ? DocumentsDetail::readRecordTimesByRoutingFromIds($routingIdsForReadStatus, (int) $emp->id)
-            : [];
-
-        return [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'unreadOpenDetailIdByDocument' => $unreadOpenDetailIdByDocument,
-            'unreadOpenDocumentsDetailById' => $unreadOpenDocumentsDetailById,
-            'readAtByRoutingId' => $readAtByRoutingId,
-            'emp' => $emp,
-        ];
-    }
+    
 
     public function actionIndex()
     {
@@ -453,76 +375,6 @@ class DocumentsController extends \yii\web\Controller
         return $this->redirect(array_merge(['index'], $this->request->getQueryParams()));
     }
 
-    //ถึงหน่วยงาน
-    // public function actionDepartment()
-    // {
-    //     $emp = UserHelper::GetEmployee();
-    //     $department = $emp->department;
-    //     if (!$this->isDeptHeadOrDeputy((int) $department, (int) $emp->id)) {
-    //         $searchModel = new DocumentSearch([
-    //             'date_filter' => 'today'
-    //         ]);
-    //         $dataProvider = $searchModel->search($this->request->queryParams);
-    //         $dataProvider->query->andWhere('1=0');
-
-    //         return $this->render('index', [
-    //             'searchModel' => $searchModel,
-    //             'dataProvider' => $dataProvider,
-    //             'action' => 'department',
-    //             'to' => 'ถึงหน่วยงาน',
-    //         ]);
-    //     }
-
-    //     $searchModel = new DocumentSearch([
-    //         'date_filter' => 'today'
-    //     ]);
-
-    //     $dataProvider = $searchModel->search($this->request->queryParams);
-    //     /** @var \yii\db\ActiveQuery $query */
-    //     $query = $dataProvider->query;
-    //     $query->joinWith([
-    //         'documentDepartment' => function ($query) {
-    //             $query->alias('d_department')
-    //                 ->andOnCondition(['d_department.name' => 'department']);
-    //         }
-    //     ]);
-    //     $query->joinWith([
-    //         'docRead' => function ($query) {
-    //             $query->alias('d_read')
-    //                 ->andOnCondition(['d_read.name' => 'read']);
-    //         }
-    //     ]);
-    //     $dataProvider->query->andFilterWhere([
-    //         'or',
-    //         ['like', 'topic', $searchModel->q],
-    //         ['like', 'doc_regis_number', $searchModel->q],  // Fixed typo here
-    //         ['like', 'doc_number', $searchModel->q],
-    //         ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $searchModel->q],
-    //     ]);
-    //     if ($searchModel->q_status == 'Y') {
-    //         $dataProvider->query->andFilterWhere(['d_read.bookmark' => 'Y']);
-    //     } else {
-    //         $dataProvider->query->andFilterWhere(['status' => $searchModel->q_status]);
-    //     }
-
-    //     $dataProvider->query->andWhere(['d_department.to_id' => $emp->department]);
-
-    //             $dataProvider->query->andFilterWhere([
-    //         'between',
-    //         'doc_transactions_date',
-    //         AppHelper::convertToGregorian($searchModel->date_start),
-    //         AppHelper::convertToGregorian($searchModel->date_end)
-    //     ]);
-
-
-
-    //     return $this->render('index', [
-    //         'searchModel' => $searchModel,
-    //         'dataProvider' => $dataProvider,
-    //         'action' => 'department',
-    //          'to' => 'ถึงหน่วยงาน'
-    //     ]);
-    // }
 
     //แสดงหน้า ถ้าเป็นหัวหน้าหน่วยงานที่ ที่ส่งถึง หรือ tag บุคคล
     public function actionShowHome()
