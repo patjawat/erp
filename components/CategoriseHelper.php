@@ -88,7 +88,8 @@ class CategoriseHelper extends Component
 //เพศ
     public static function Gender()
     {
-        return ArrayHelper::map(self::Categorise('gender'), 'title', 'title');
+         $data = Categorise::find()->where(['name' => 'gender'])->all();
+        return ArrayHelper::map($data, 'title', 'title');
     }
 
     //ครอบครัว
@@ -100,7 +101,8 @@ class CategoriseHelper extends Component
 //คำนำหน้าชื่อ EN
     public static function PrefixTh()
     {
-        return ArrayHelper::map(self::Categorise('prefix_th'), 'title', 'title');
+        $data = Categorise::find()->where(['name' => 'prefix_th'])->all();
+        return ArrayHelper::map($data, 'title', 'title');
     }
 
 // ภูมิลำเนาเดิม
@@ -112,7 +114,8 @@ class CategoriseHelper extends Component
 //คำนำหน้าชื่อ EN
     public static function PrefixEn()
     {
-        return ArrayHelper::map(self::Categorise('prefix_en'), 'title', 'title');
+        $data = Categorise::find()->where(['name' => 'prefix_en'])->all();
+        return ArrayHelper::map($data, 'title', 'title');
     }
 
 //เชื้อชาติ/สัญชาติ

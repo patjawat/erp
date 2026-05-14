@@ -23,9 +23,33 @@ class ThaidController extends \yii\web\Controller
         return $this->redirect(Yii::$app->thaidAuth->getLoginUrl());
     }
 
-    // callback กลับมาจาก ThaiD
-    public function actionCallback($code = null)
+    // เริ่ม flow "ดึงข้อมูลมาเติมฟอร์มเพิ่มบุคลากร" (เปิดผ่าน popup)
+    public function actionFillForm()
     {
+        return $this->redirect(Yii::$app->thaidAuth->getFillFormUrl());
+    }
+
+    // callback กลับมาจาก ThaiD
+    public function actionCallback($code = null, $state = null)
+    {
+        // flow: เติมข้อมูลฟอร์มเพิ่มบุคลากร — แยกออกจาก flow login เดิม
+        $fillState = Yii::$app->session->get('thaid_fill_form_state');
+        if ($fillState && $state !== null && hash_equals($fillState, (string) $state)) {
+            Yii::$app->session->remove('thaid_fill_form_state');
+            $user = Yii::$app->thaidAuth->getUserFromCode($code);
+
+            return $this->renderPartial('fill-callback', [
+                'data' => [
+                    'prefix' => $user['title'] ?? '',
+                    'fname' => $user['given_name'] ?? '',
+                    'lname' => $user['family_name'] ?? '',
+                    'cid' => $user['pid'] ?? ($user['sub'] ?? ''),
+                    'birthday' => $user['birthdate'] ?? '',
+                    'address' => $user['address'] ?? '',
+                ],
+            ]);
+        }
+
         $successRedirect = Yii::$app->session->get(self::SESSION_THAID_SUCCESS_REDIRECT);
 
         $user = Yii::$app->thaidAuth->getUserFromCode($code);
