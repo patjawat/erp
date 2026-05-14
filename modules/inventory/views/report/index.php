@@ -74,6 +74,10 @@ function trunc2($v) {
     return floor($v * 100) / 100;
 }
 
+$fmt5 = static function ($value): string {
+    return number_format((float) ($value ?? 0), 5);
+};
+
 foreach ($querys as $item):
 
     $begin   = $item['begin_price'] ?? 0;
@@ -88,24 +92,24 @@ foreach ($querys as $item):
 
 ?>
 
-<tr>
-    <td class="text-center"><?= $num++; ?></td>
+    <tr>
+        <td class="text-center"><?= $num++; ?></td>
 
-    <td>(<?= $item['asset_type_code'] ?>)<?= $item['asset_type_name'] ?></td>
+        <td>(<?= $item['asset_type_code'] ?>)<?= $item['asset_type_name'] ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($begin, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($begin) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($in, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($in) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($totalPriceBegin, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($totalPriceBegin) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($branch, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($branch) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sub, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sub) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($totalPriceOut, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($totalPriceOut) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($end, 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($end) ?></td>
 </tr>
 
 <?php endforeach; ?>
@@ -114,19 +118,19 @@ foreach ($querys as $item):
     <td></td>
     <td class="text-center">รวม</td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['begin_price'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['begin_price'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['price_in'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['price_in'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['total_price_begin'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['total_price_begin'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['branch_price_out'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['branch_price_out'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['price_out'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['price_out'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['total_price_out'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['total_price_out'] ?? 0) ?></td>
 
-    <td class="text-end fw-bolder"><?= number_format($sum['end_price'], 5) ?></td>
+    <td class="text-end fw-bolder"><?= $fmt5($sum['end_price'] ?? 0) ?></td>
 </tr>
 
 </tbody>
