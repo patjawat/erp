@@ -107,36 +107,6 @@ $remaining = max(0, $count - count($shown));
             <?php endif; ?>
         <?php else: ?>
             <button type="button" class="btn btn-link p-0 text-decoration-none d-inline-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTimeline" aria-controls="offcanvasTimeline">
-                <span class="d-inline-flex">
-                    <?php foreach ($shown as $i => $event): ?>
-                        <?php
-                        $creator = $creatorMap[$event['created_by']] ?? null;
-                        $name = $creator ? $creator->fullname : ('ผู้ใช้ #' . $event['created_by']);
-                        $thaiDate = '';
-                        try {
-                            $thaiDate = ThaiDateHelper::formatThaiDate($event['created_at']);
-                            $thaiDate .= ' ' . (explode(' ', (string) $event['created_at'])[1] ?? '');
-                        } catch (\Throwable $th) {
-                            $thaiDate = $event['created_at'];
-                        }
-                        $title = trim($event['kind_label'] . ' · ' . $name . ' · ' . $thaiDate);
-                        $img = $creator ? $creator->showAvatar() : '';
-                        ?>
-                        <?php if ($img): ?>
-                            <img src="<?= Html::encode($img) ?>"
-                                class="rounded-circle border border-2 border-white"
-                                style="width:28px;height:28px;object-fit:cover;<?= $i > 0 ? 'margin-left:-8px;' : '' ?>"
-                                title="<?= Html::encode($title) ?>"
-                                alt="<?= Html::encode($name) ?>">
-                        <?php else: ?>
-                            <span class="d-inline-flex align-items-center justify-content-center <?= $event['icon_bg'] ?> <?= $event['icon_color'] ?> rounded-circle border border-2 border-white"
-                                style="width:28px;height:28px;<?= $i > 0 ? 'margin-left:-8px;' : '' ?>"
-                                title="<?= Html::encode($title) ?>">
-                                <i class="fa-solid <?= $event['icon'] ?> small"></i>
-                            </span>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </span>
                 <?php if ($remaining > 0): ?>
                     <span class="badge text-bg-light text-muted rounded-pill small ms-1">+<?= $remaining ?></span>
                 <?php endif; ?>

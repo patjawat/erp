@@ -10,6 +10,7 @@ use app\components\widgets\DataSummaryWidget;
 /** @var array<int,\app\modules\dms\models\DocumentsDetail> $unreadOpenDocumentsDetailById */
 /** @var array<int,string> $readAtByRoutingId */
 
+$viewQueryParams = Yii::$app->request->queryParams;
 $unreadOpenDetailIdByDocument = $unreadOpenDetailIdByDocument ?? [];
 $unreadOpenDocumentsDetailById = $unreadOpenDocumentsDetailById ?? [];
 $readAtByRoutingId = $readAtByRoutingId ?? [];
@@ -52,8 +53,8 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
                         </div>
 
                         <?php if ($id): ?>
-                            <a href="<?= Url::to(['/me/documents/view', 'id' => $id]) ?>"
-                               class="open-modal fw-semibold text-body text-decoration-none"
+                            <a href="<?= Url::to(array_merge(['/me/documents/view', 'id' => $id], $viewQueryParams)) ?>"
+                               class="open-modal js-document-view-link fw-semibold text-body text-decoration-none"
                                data-size="modal-fullscreen">
                                 <?= Html::encode($item->topic) ?>
                             </a>
@@ -93,8 +94,8 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
                             <div class="d-flex justify-content-end gap-1 position-relative">
                                 <?= $item->isFile() ?>
                                 <?php if ($id): ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', ['view', 'id' => $id], [
-                                        'class' => 'btn btn-outline-primary btn-sm open-modal rounded-pill',
+                                    <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', array_merge(['/me/documents/view', 'id' => $id], $viewQueryParams), [
+                                        'class' => 'btn btn-outline-primary btn-sm open-modal js-document-view-link rounded-pill',
                                         'data' => ['size' => 'modal-fullscreen'],
                                     ]) ?>
                                 <?php endif; ?>

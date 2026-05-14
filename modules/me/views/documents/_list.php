@@ -10,15 +10,33 @@ use app\components\widgets\DataSummaryWidget;
 /** @var array<int,\app\modules\dms\models\DocumentsDetail> $unreadOpenDocumentsDetailById */
 /** @var array<int,string> $readAtByRoutingId */
 
+$viewQueryParams = Yii::$app->request->queryParams;
 $unreadOpenDetailIdByDocument = $unreadOpenDetailIdByDocument ?? [];
 $unreadOpenDocumentsDetailById = $unreadOpenDocumentsDetailById ?? [];
 $readAtByRoutingId = $readAtByRoutingId ?? [];
+$models = $dataProvider->getModels();
+$hasSelectableRows = false;
+foreach ($models as $model) {
+    if (empty($model->doc_read)) {
+        $hasSelectableRows = true;
+        break;
+    }
+}
 ?>
 
 <div class="table-responsive">
     <table class="table table-hover align-middle table-striped mb-0">
         <thead class="table-light">
             <tr>
+                <th class="text-center" style="width:42px;">
+                    <input
+                        type="checkbox"
+                        class="form-check-input"
+                        id="chk-select-all-documents"
+                        title="เลือกทั้งหมดเฉพาะรายการที่ยังไม่ได้อ่าน"
+                        <?= $hasSelectableRows ? '' : 'disabled' ?>
+                    >
+                </th>
                 <th class="text-center d-none d-md-table-cell">ลำดับ</th>
                 <th class="text-center" style="min-width:120px">เลขรับ/วันที่</th>
                 <th class="">วันที่หนังสือ</th>
@@ -30,15 +48,30 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
             </tr>
         </thead>
         <tbody class="align-middle table-group-divider">
-            <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+            <?php foreach ($models as $key => $item): ?>
                 <?php
+                $detailId = (int) ($item->detail_id ?? 0);
                 if ($unreadOpenDetailIdByDocument !== [] && isset($unreadOpenDetailIdByDocument[$item->id])) {
-                    $doc = $unreadOpenDocumentsDetailById[$id] ?? ($item->documentTags ?? $item->documentDepartment ?? null);
+                    $selectedDetailId = (int) $unreadOpenDetailIdByDocument[$item->id];
+                    $doc = $unreadOpenDocumentsDetailById[$selectedDetailId] ?? ($item->documentTags ?? $item->documentDepartment ?? null);
                 } else {
                     $doc = $item->documentTags ?? $item->documentDepartment ?? null;
                 }
                 ?>
-                <tr>
+                <tr class="js-document-row" data-detail-id="<?= $detailId ?>">
+                    <td class="text-center">
+                        <?php if (empty($item->doc_read)): ?>
+                            <input
+                                type="checkbox"
+                                class="form-check-input js-document-select-row"
+                                value="<?= $detailId ?>"
+                                <?= $detailId > 0 ? '' : 'disabled' ?>
+                                title="เลือกเอกสารนี้"
+                            >
+                        <?php else: ?>
+                            <span class="text-muted small" title="เอกสารนี้อ่านแล้ว">-</span>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-center d-none d-md-table-cell text-muted">
      
                         <?php
@@ -84,8 +117,8 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
 
                                 </div>
 
-                                <a href="<?= Url::to(['/me/documents/view', 'id' => $item->detail_id]) ?>"
-                                    class="open-modal fw-medium d-block text-primary text-decoration-none"
+                                <a href="<?= Url::to(array_merge(['/me/documents/view', 'id' => $item->detail_id], $viewQueryParams)) ?>"
+                                    class="open-modal js-document-view-link fw-medium d-block text-primary text-decoration-none"
                                     data-size="modal-fullscreen">
                                     <?= Html::encode($item->topic) ?>
                                 </a>
@@ -132,8 +165,8 @@ $readAtByRoutingId = $readAtByRoutingId ?? [];
                     </td>
                     <td class="text-end">
                         <div class="d-flex justify-content-end">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', ['view', 'id' =>$item->detail_id], [
-                                'class' => 'btn btn-outline-primary btn-sm open-modal rounded-pill',
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>', array_merge(['/me/documents/view', 'id' => $item->detail_id], $viewQueryParams), [
+                                'class' => 'btn btn-outline-primary btn-sm open-modal js-document-view-link rounded-pill',
                                 'data' => ['size' => 'modal-fullscreen'],
                             ]) ?>
                         </div>

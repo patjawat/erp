@@ -21,6 +21,31 @@ use yii\web\Response;
 
 class DocumentsController extends \yii\web\Controller
 {
+    /**
+     * ชุดชื่อ `documents_detail` ที่ควรเช็กเวลาไล่หาหนังสือของผู้ใช้
+     * ถ้ามี name ใหม่เพิ่มเข้ามา ให้แก้ list ตรงนี้ก่อนเสมอ
+     */
+    private const INDEX_EMPLOYEE_DETAIL_NAMES = [
+        'tags',
+        'employee_tag',
+        'employee',
+        'req_approve',
+    ];
+
+    private const INDEX_DEPARTMENT_DETAIL_NAMES = [
+        'department',
+    ];
+
+    private const HOME_DETAIL_NAMES = [
+        'comment_emp',
+        'comment_dept',
+        'department',
+        'tags',
+        'employee_tag',
+        'employee',
+        'req_approve',
+    ];
+
     private function isDeptHeadOrDeputy(int $departmentId, int $empId): bool
     {
         if ($departmentId <= 0 || $empId <= 0) {
@@ -55,21 +80,132 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
+     * แปลงชื่อ detail เป็น SQL `IN (...)` แบบปลอดภัย
+     */
+    private function quotedDetailNames(array $names): string
+    {
+        return implode(', ', array_map(static fn ($name) => Yii::$app->db->quoteValue($name), $names));
+    }
+
+    /**
+     * นับเอกสารแบบไม่ซ้ำ แม้ query จะ join หลายแถวต่อ 1 เอกสาร
+     */
+    private function countDistinctDocuments(\yii\db\ActiveQuery $query): int
+    {
+        $countQuery = clone $query;
+        $countQuery->groupBy(null);
+        $countQuery->orderBy([]);
+        $countQuery->limit(null);
+        $countQuery->offset(null);
+
+        return (int) $countQuery->count('DISTINCT [[documents]].[[id]]');
+    }
+
+    /**
+     * ฐาน query ของหน้า index สำหรับใช้ทั้งรายการและ KPI
+     * หมายเหตุ: ไม่ใส่เงื่อนไขค้นหาเข้ามาในตัว helper นี้
+     */
+    private function applyDocumentsIndexBaseQuery(\yii\db\ActiveQuery $query, int $empId, int $depId): \yii\db\ActiveQuery
+    {
+        $indexEmployeeDetailNames = $this->quotedDetailNames(self::INDEX_EMPLOYEE_DETAIL_NAMES);
+        $indexDepartmentDetailNames = $this->quotedDetailNames(self::INDEX_DEPARTMENT_DETAIL_NAMES);
+
+        $query->leftJoin(
+            ['te' => 'documents_detail'],
+            "te.document_id = documents.id AND te.name IN ({$indexEmployeeDetailNames}) AND te.to_id = :empId",
+            [
+                ':empId' => (string) $empId,
+            ]
+        );
+
+        $query->leftJoin(
+            ['td' => 'documents_detail'],
+            "td.document_id = documents.id AND td.name IN ({$indexDepartmentDetailNames}) AND td.to_id = :depId",
+            [
+                ':depId' => (string) $depId,
+            ]
+        );
+
+        $query->leftJoin(
+            ['tr' => 'documents_detail'],
+            'tr.document_id = documents.id AND tr.name = :readName AND tr.to_id = :empId',
+            [
+                ':readName' => 'read',
+                ':empId' => (string) $empId,
+            ]
+        );
+
+        $query->addSelect([
+            'documents.*',
+            new \yii\db\Expression('COALESCE(MIN(te.id), MIN(td.id)) AS detail_id'),
+            new \yii\db\Expression('MIN(tr.id) AS read_id'),
+            new \yii\db\Expression('MIN(tr.doc_read) AS doc_read'),
+        ]);
+
+        $query->groupBy(['documents.id']);
+        $query->andWhere([
+            'or',
+            ['not', ['te.id' => null]],
+            ['not', ['td.id' => null]],
+        ]);
+
+        return $query;
+    }
+
+    /**
+     * บันทึกสถานะอ่านของ detail หนึ่งรายการให้ผู้ใช้คนปัจจุบัน
+     */
+    private function markDetailAsRead(DocumentsDetail $detail, int $empId): bool
+    {
+        if ($empId <= 0 || !$detail || !$detail->id) {
+            return false;
+        }
+
+        $checkReading = DocumentsDetail::find()
+            ->where([
+                'document_id' => $detail->document_id,
+                'name' => 'read',
+                'to_id' => $empId,
+                'from_id' => $detail->id,
+            ])
+            ->one();
+
+        if (!$checkReading) {
+            $reading = new DocumentsDetail();
+            $reading->document_id = $detail->document_id;
+            $reading->name = 'read';
+            $reading->to_id = $empId;
+            $reading->from_id = $detail->id;
+            $reading->doc_read = date('Y-m-d H:i:s');
+            $reading->save(false);
+            return true;
+        }
+
+        if ($checkReading->doc_read === null) {
+            $checkReading->doc_read = date('Y-m-d H:i:s');
+            $checkReading->save(false);
+        }
+
+        return true;
+    }
+
+    /**
      * documents_detail.id ที่ยังไม่ได้อ่านของ "คนนี้" — SQL เดียวกับ actionShowHome / actionShowHomeV2
      */
     private function unreadDetailIdsShowHomeExact($department, $empId): array
     {
+        $detailNames = $this->quotedDetailNames(self::HOME_DETAIL_NAMES);
         $sql = "SELECT d.id
                 FROM documents_detail d
                 LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read' AND r.to_id = :emp_id
-                WHERE d.name IN ('comment_emp','comment_dept','department', 'tags', 'employee_tag', 'employee') AND d.to_id = :department AND r.doc_read IS NULL
+                WHERE d.name IN ({$detailNames}) AND d.to_id = :department AND r.doc_read IS NULL
 
                 UNION
 
                 SELECT d.id
                 FROM documents_detail d
                 LEFT JOIN documents_detail r ON r.from_id = d.id AND r.name = 'read' AND r.to_id = :emp_id
-                WHERE d.name IN ('comment_emp','comment_dept','department', 'tags', 'employee_tag', 'employee') AND d.to_id = :emp_id AND r.doc_read IS NULL";
+                WHERE d.name IN ({$detailNames}) AND d.to_id = :emp_id AND r.doc_read IS NULL";
 
         return Yii::$app->db->createCommand($sql, [
             ':department' => $department,
@@ -239,134 +375,23 @@ class DocumentsController extends \yii\web\Controller
 
     public function actionIndex()
     {
-        // $d = $this->buildDocumentsIndexViewData();
-        // $emp = $d['emp'];
-
-        // return $this->render('index', [
-        //     'searchModel' => $d['searchModel'],
-        //     'dataProvider' => $d['dataProvider'],
-        //     'unreadOpenDetailIdByDocument' => $d['unreadOpenDetailIdByDocument'],
-        //     'unreadOpenDocumentsDetailById' => $d['unreadOpenDocumentsDetailById'],
-        //     'readAtByRoutingId' => $d['readAtByRoutingId'],
-        //     'action' => 'index',
-        //     'to' => 'ถึง' . $emp->fullname(),
-        // ]);
-        // $me = UserHelper::GetEmployee();
-
-        // $empId = $me->id ?? null;
-        // $depId = $me->department ?? null;
-
-        // $searchModel = new DocumentSearch();
-        // $dataProvider = $searchModel->search($this->request->queryParams);
-
-        // $query = $dataProvider->query;
-
-
-        // $query->addSelect([
-        //     'documents.*',
-        //     't.id AS detail_id',
-        //     't.name AS detail_name',
-        //     't.to_id',
-        //     't.doc_read AS doc_read',
-        // ]);
-
-        // $q = trim($searchModel->q ?? '');
-
-        // $dateStart =  AppHelper::convertToGregorian($searchModel->date_start);
-        // $dateEnd =  AppHelper::convertToGregorian($searchModel->date_end);
-
-
-
-        // $query
-        //     ->andFilterWhere(['>=', 'documents.doc_transactions_date', $dateStart])
-        //     ->andFilterWhere(['<=', 'documents.doc_transactions_date', $dateEnd]);
-
-        // $query->andFilterWhere([
-        //     'or',
-        //     ['like', 'topic', $q],
-        //     ['like', 'doc_regis_number', $q],
-        //     ['like', 'doc_number', $q],
-        //     ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
-        // ]);
-
-
-        // $query->leftJoin('documents_detail t', "
-        //         t.document_id = documents.id 
-        //         AND t.name IN ('tags','department')
-        //     ");
-
-        // $query->leftJoin('employees e', "
-        //         e.id = t.to_id AND t.name = 'tags'
-        //     ");
-
-        // $query->leftJoin('tree dep', "
-        //         dep.id = t.to_id AND t.name = 'department'
-        //     ");
-
-        // if ($me) {
-        //     $query->andWhere([
-        //         'or',
-        //         ['and', ['t.name' => 'tags'], ['t.to_id' => $empId]],
-        //         ['and', ['t.name' => 'department'], ['t.to_id' => $depId]],
-        //     ]);
-        // } else {
-        //     $query->andWhere('0=1'); // ไม่ให้มีข้อมูลเลย
-        // }
-
-        // $query->groupBy('documents.id');
-
-        // $query->orderBy([
-        //     'doc_transactions_date' => SORT_DESC,
-        //     'doc_regis_number' => SORT_DESC,
-        // ]);
-
-
         $me = UserHelper::GetEmployee();
 
         $empId = $me->id ?? null;
         $depId = $me->department ?? null;
 
-       $searchModel = new DocumentSearch([
-                'date_filter' => 'today'
-            ]);
+        $searchModel = new DocumentSearch([
+            'date_filter' => 'today',
+        ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         $q = trim($searchModel->q ?? '');
 
-       [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
+        [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
 
         $query = $dataProvider->query;
+        $this->applyDocumentsIndexBaseQuery($query, (int) $empId, (int) $depId);
+        $summaryBaseQuery = $this->applyDocumentsIndexBaseQuery(Documents::find(), (int) $empId, (int) $depId);
 
-        $query->leftJoin('documents_detail te', "
-    te.document_id = documents.id
-    AND te.name='tags'
-    AND te.to_id=$empId
-");
-
-        $query->leftJoin('documents_detail td', "
-    td.document_id = documents.id
-    AND td.name='department'
-    AND td.to_id=$depId
-");
-
-        /* join สถานะอ่าน */
-        $query->leftJoin('documents_detail tr', "
-    tr.document_id = documents.id
-    AND tr.name='read'
-    AND tr.to_id=$empId
-");
-
-        $query->addSelect([
-    'documents.*',
-    'COALESCE(te.id, td.id) AS detail_id',
-    'tr.id AS read_id',
-    new \yii\db\Expression('IF(tr.id IS NULL,0,1) AS doc_read'),
-]);
-
-        $query->andWhere([
-            'or',
-            ['not', ['te.id' => null]],
-            ['not', ['td.id' => null]],
-        ]);
         $query
             ->andFilterWhere(['>=', 'documents.doc_transactions_date', $dateStart])
             ->andFilterWhere(['<=', 'documents.doc_transactions_date', $dateEnd]);
@@ -379,13 +404,22 @@ class DocumentsController extends \yii\web\Controller
             ['like', new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(documents.data_json, '$.des'))"), $q],
         ]);
 
-if ($searchModel->q_status === 'read') {
-    $query->andWhere(['IS NOT', 'tr.id', null]);
-}
+        $documentSummaryCounts = [
+            'total' => $this->countDistinctDocuments(clone $summaryBaseQuery),
+            'read' => $this->countDistinctDocuments((clone $summaryBaseQuery)->andWhere(['IS NOT', 'tr.id', null])),
+            'unread' => $this->countDistinctDocuments((clone $summaryBaseQuery)->andWhere(['tr.id' => null])),
+            'saved' => $this->countDistinctDocuments((clone $summaryBaseQuery)->andWhere(['tr.bookmark' => 'Y'])),
+        ];
 
-if ($searchModel->q_status === 'unread') {
-    $query->andWhere(['tr.id' => null]);
-}
+        if ($searchModel->q_status === 'Y') {
+            $query->andWhere(['tr.bookmark' => 'Y']);
+        } elseif ($searchModel->q_status === 'read') {
+            $query->andWhere(['IS NOT', 'tr.id', null]);
+        } elseif ($searchModel->q_status === 'unread') {
+            $query->andWhere(['tr.id' => null]);
+        } else {
+            $query->andFilterWhere(['status' => $searchModel->q_status]);
+        }
         $query->orderBy([
             'doc_transactions_date' => SORT_DESC,
             'doc_regis_number' => SORT_DESC,
@@ -394,6 +428,7 @@ if ($searchModel->q_status === 'unread') {
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'documentSummaryCounts' => $documentSummaryCounts,
         ]);
     }
 
@@ -567,21 +602,7 @@ if ($searchModel->q_status === 'unread') {
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
 
-        $checkReading = DocumentsDetail::find()->where(['document_id' => $detail->document_id, 'name' => 'read', 'to_id' => $emp->id, 'from_id' => $id])->one();
-        if (!$checkReading) {
-            $reading = new DocumentsDetail;
-            $reading->document_id = $detail->document_id;
-            $reading->name = 'read';
-            $reading->to_id = $emp->id;
-            $reading->from_id = $id;
-            $reading->doc_read = date('Y-m-d H:i:s');
-            $reading->save(false);
-        } else {
-            if ($checkReading->doc_read == null) {
-                $checkReading->doc_read = date('Y-m-d H:i:s');
-                $checkReading->save(false);
-            }
-        }
+        $this->markDetailAsRead($detail, (int) $emp->id);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -630,6 +651,59 @@ if ($searchModel->q_status === 'unread') {
             'action' => 'update',
             'status' => 'success',
             'data' => $bookmark
+        ];
+    }
+
+    /**
+     * อ่านเอกสารหลายรายการที่เลือกไว้
+     */
+    public function actionBulkRead()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!$this->request->isPost) {
+            return [
+                'status' => 'error',
+                'message' => 'Invalid request',
+            ];
+        }
+
+        $emp = UserHelper::GetEmployee();
+        if (!$emp || empty($emp->id)) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบข้อมูลผู้ใช้',
+            ];
+        }
+
+        $ids = $this->request->post('ids', []);
+        if (!is_array($ids)) {
+            $ids = [];
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+
+        if ($ids === []) {
+            return [
+                'status' => 'error',
+                'message' => 'กรุณาเลือกรายการอย่างน้อย 1 รายการ',
+            ];
+        }
+
+        $count = 0;
+        foreach ($ids as $detailId) {
+            $detail = DocumentsDetail::findOne($detailId);
+            if (!$detail) {
+                continue;
+            }
+            if ($this->markDetailAsRead($detail, (int) $emp->id)) {
+                $count++;
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'message' => 'บันทึกอ่านแล้ว ' . $count . ' รายการ',
+            'totalCount' => $count,
         ];
     }
 

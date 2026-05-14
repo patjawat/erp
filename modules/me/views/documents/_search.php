@@ -1,15 +1,15 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
-use app\components\DateFilterHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\dms\models\DocumentSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+$hasAdvancedFilters = !empty($model->q_status) || !empty($model->show_reading) || !empty($model->doc_speed);
+
 ?>
 
 
@@ -57,44 +57,19 @@ use app\components\DateFilterHelper;
         <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i> ค้นหา', [
             'class' => 'btn btn-primary flex-grow-1 flex-lg-grow-0',
         ]) ?>
-        <button class="btn btn-outline-primary flex-grow-1 flex-lg-grow-0" type="button" data-bs-toggle="collapse"
-            data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
-            <i class="fa-solid fa-sliders me-1" aria-hidden="true"></i> ตัวกรองเพิ่มเติม
-        </button>
-        <div class="dropdown flex-grow-1 flex-lg-grow-0">
-            <button class="btn btn-success dropdown-toggle w-100" type="button" id="documentsExcelMenu"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa-solid fa-file-excel me-1" aria-hidden="true"></i> Excel
+       <button class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+                aria-expanded="<?= $hasAdvancedFilters ? 'true' : 'false' ?>" aria-controls="collapseFilter" id="btnToggleFilter">
+                <i class="fa-solid fa-sliders me-1"></i> ตัวกรองเพิ่มเติม
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="documentsExcelMenu">
-                <li>
-                    <?= Html::a('<i class="fa-solid fa-table me-2" aria-hidden="true"></i> ดาวน์โหลด Template', Url::to(['/me/documents/download-template']), [
-                        'class' => 'dropdown-item',
-                        'data-pjax' => 0,
-                    ]) ?>
-                </li>
-                <li>
-                    <?= Html::a('<i class="fa-solid fa-file-excel me-2" aria-hidden="true"></i> ส่งออกข้อมูล', Url::to(['/me/documents/export-excel']), [
-                        'class' => 'dropdown-item',
-                        'data-pjax' => 0,
-                    ]) ?>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <?= Html::a('<i class="fa-solid fa-file-import me-2" aria-hidden="true"></i> นำเข้าข้อมูล', Url::to(['/me/documents/import-excel']), [
-                        'class' => 'dropdown-item',
-                        'data-pjax' => 0,
-                    ]) ?>
-                </li>
-            </ul>
-        </div>
+        
     </div>
 </div>
 
-<div class="collapse mt-3 pt-3 border-top" id="collapseFilter">
+<!-- ตัวกรองเพิ่มเติม: แสดงเมื่อกด "ตัวกรองเพิ่มเติม" (หรือเปิดอัตโนมัติถ้ามีค่ากรองอยู่) -->
+<div class="collapse mt-3 pt-3 border-top <?= $hasAdvancedFilters ? 'show' : '' ?>" id="collapseFilter">
     <div class="card border-0 shadow-sm bg-body-tertiary">
         <div class="card-body py-3">
-            <p class="small text-muted mb-0"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i> ตัวเลือกการกรองเพิ่มเติมจะเพิ่มในขั้นตอนถัดไป</p>
+            <p class="small text-muted mb-0"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i> เลือกตัวกรองสถานะ ความเร่งด่วน และการแสดงผู้อ่านได้จากส่วนนี้</p>
             <div class="row">
                 <div class="col-6 col-md-3">
       <?php
@@ -108,15 +83,29 @@ use app\components\DateFilterHelper;
                                 ])->label(false);?>
     </div>
                 <div class="col-6 col-md-3">
-        <?php 
-        //  $form->field($model, 'document_org')->widget(Select2::classname(), [
-        //     'data' => $model->ListDocumentOrg(),
-        //     'options' => ['placeholder' => 'หน่วยงานทั้งหมด'],
-        //     'pluginOptions' => ['allowClear' => true, 'tags' => true],
-        // ])->label(false); 
-        ?>
-    </div>
-    
+                    <?php echo $form->field($model, 'show_reading', [
+                        'options' => ['class' => 'form-check form-switch'],
+                    ])->checkbox([
+                        'class' => 'form-check-input',
+                        'id' => 'documentsearch-show_reading',
+                        'uncheck' => 0,
+                        'value' => 1,
+                    ], false)->label('แสดงผู้อ่านทั้งหมด', ['class' => 'form-check-label']); ?>
+                    <div class="small text-muted mt-1">เปิดเพื่อให้ดูรายชื่อผู้อ่านทั้งหมดในหน้ารายละเอียด</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <p class="mb-0"> ระดับความเร่งด่วน</p>
+                    <?php
+                    echo $form->field($model, 'doc_speed')->widget(Select2::classname(), [
+                        'data' => $model->DocSpeed(),
+                        'options' => ['placeholder' => 'ระดับความเร่งด่วนทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ])->label(false);
+                    ?>
+                </div>
+
             </div>
         </div>
     </div>
@@ -135,22 +124,38 @@ $js = <<< JS
         $('#documentsearch-thai_year, #documentsearch-date_filter').val(null).trigger('change');
     });
 
-    $( "#documentsdetailsearch-show_reading" ).prop( "checked", localStorage.getItem('show_reading') == 1 ? true : false );
-    $("body").on("change", "#documentsdetailsearch-show_reading", function (e) {
-        
-                            if (\$(this).is(':checked')) {
-                                // alert('Checkbox is checked!');
-                                localStorage.setItem('show_reading',1);
-                                
-                            } else {
-                                // alert('Checkbox is unchecked!');
-                                localStorage.setItem('show_reading',0);
-                            }
-                            \$(this).submit();
-                        });
+    (function () {
+        var \$showReading = \$('#documentsearch-show_reading');
+        if (\$showReading.length) {
+            var hasParam = new URLSearchParams(window.location.search).has('DocumentSearch[show_reading]');
+            var stored = localStorage.getItem('show_reading');
+            if (stored !== null && !hasParam) {
+                \$showReading.prop('checked', stored == 1);
+            }
+            localStorage.setItem('show_reading', \$showReading.is(':checked') ? 1 : 0);
+            if (window.syncDocumentDetailLinks) {
+                window.syncDocumentDetailLinks();
+            }
+
+            if (\$showReading.is(':checked')) {
+                var collapseEl = document.getElementById('collapseFilter');
+                if (collapseEl && !collapseEl.classList.contains('show') && window.bootstrap && bootstrap.Collapse) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                    \$('#btnToggleFilter').attr('aria-expanded', 'true');
+                }
+            }
+        }
+    })();
+
+    $("body").on("change", "#documentsearch-show_reading", function (e) {
+        localStorage.setItem('show_reading', \$(this).is(':checked') ? 1 : 0);
+        if (window.syncDocumentDetailLinks) {
+            window.syncDocumentDetailLinks();
+        }
+        \$('#document-search').trigger('submit');
+    });
 
                   
     JS;
 $this->registerJS($js)
 ?>
-

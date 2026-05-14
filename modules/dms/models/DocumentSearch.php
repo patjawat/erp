@@ -72,6 +72,7 @@ class DocumentSearch extends Documents
             'id' => $this->id,
             'document_group' => $this->document_group,
             'status' => $this->status,
+            'doc_speed' => $this->doc_speed,
         ]);
 
         $query->andFilterWhere(['like', 'document_type', $this->document_type])
@@ -80,7 +81,6 @@ class DocumentSearch extends Documents
             ->andFilterWhere(['like', 'thai_year', $this->thai_year])
             ->andFilterWhere(['like', 'doc_regis_number', $this->doc_regis_number])
             ->andFilterWhere(['like', 'doc_number', $this->doc_number])
-            ->andFilterWhere(['like', 'doc_speed', $this->doc_speed])
             ->andFilterWhere(['like', 'secret', $this->secret])
             ->andFilterWhere(['like', 'doc_date', $this->doc_date])
             ->andFilterWhere(['like', 'doc_expire', $this->doc_expire])
