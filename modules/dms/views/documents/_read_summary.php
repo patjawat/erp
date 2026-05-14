@@ -4,10 +4,11 @@ use yii\helpers\Html;
 use app\components\ThaiDateHelper;
 
 /** @var array $readers รายการ DocumentsDetail ที่ name='read' (มี ->employee และ ->doc_read) */
-$max = 5;
+$showAllReaders = in_array((string) Yii::$app->request->get('show_reading', 0), ['1', 'true', 'Y'], true);
+$max = $showAllReaders ? count($readers) : 5;
 $count = count($readers);
 $shown = array_slice($readers, 0, $max);
-$remaining = max(0, $count - $max);
+$remaining = $showAllReaders ? 0 : max(0, $count - $max);
 ?>
 <div class="d-flex align-items-center gap-2">
     <span class="d-inline-flex align-items-center text-info-emphasis small fw-semibold flex-shrink-0">

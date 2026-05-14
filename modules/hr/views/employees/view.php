@@ -97,8 +97,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
         </div>
-        <!-- <br> -->
-        <?php // $this->render('company',['model' => $model])?>
         <?php endif;?>
     </div>
 </div>

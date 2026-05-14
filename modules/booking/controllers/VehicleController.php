@@ -28,6 +28,12 @@ use app\modules\booking\models\VehicleDetailSearch;
 use app\modules\booking\components\VehicleTelegramNotify;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 /**
  * VehicleController implements the CRUD actions for Vehicle model.
@@ -177,6 +183,10 @@ class VehicleController extends Controller
             ->andWhere(['exists', $assignedExistsSubQuery])
             ->count();
 
+        if ($this->request->get('export') === 'excel') {
+            return $this->exportOfficialVehicleExcel($dataProvider);
+        }
+
         return $this->render('index', [
             'type' => $type,
             'icon' => '<i class="fa-solid fa-car-on"></i>',
@@ -189,6 +199,140 @@ class VehicleController extends Controller
             'waitingAllocationCount' => $waitingAllocationCount,
             'allocatedCount' => $allocatedCount,
         ]);
+    }
+
+    /**
+     * ส่งออกทะเบียนขอใช้รถยนต์ทั่วไปเป็นไฟล์ Excel
+     */
+    private function exportOfficialVehicleExcel($dataProvider): Response
+    {
+        $dataProvider->pagination = false;
+        $models = $dataProvider->getModels();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ทะเบียนรถทั่วไป');
+
+        $headers = [
+            'A1' => 'ลำดับ',
+            'B1' => 'รหัสขอใช้รถ',
+            'C1' => 'ผู้ขอ',
+            'D1' => 'หน่วยงาน',
+            'E1' => 'ความเร่งด่วน',
+            'F1' => 'สถานที่ไป',
+            'G1' => 'เหตุผล',
+            'H1' => 'วันที่เริ่ม',
+            'I1' => 'เวลาเริ่ม',
+            'J1' => 'วันที่สิ้นสุด',
+            'K1' => 'เวลาสิ้นสุด',
+            'L1' => 'ประเภทการเดินทาง',
+            'M1' => 'สถานะ',
+            'N1' => 'จัดสรรร่วม',
+            'O1' => 'ทะเบียนรถ',
+            'P1' => 'พนักงานขับ',
+            'Q1' => 'บันทึกเมื่อ',
+        ];
+
+        foreach ($headers as $cell => $label) {
+            $sheet->setCellValue($cell, $label);
+        }
+
+        $headerStyle = 'A1:Q1';
+        $sheet->getStyle($headerStyle)->getFont()->setBold(true);
+        $sheet->getStyle($headerStyle)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($headerStyle)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle($headerStyle)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9EAF7');
+        $sheet->getStyle($headerStyle)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($headerStyle)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
+
+        $columnWidths = [
+            'A' => 8,
+            'B' => 18,
+            'C' => 24,
+            'D' => 22,
+            'E' => 18,
+            'F' => 22,
+            'G' => 30,
+            'H' => 18,
+            'I' => 12,
+            'J' => 18,
+            'K' => 12,
+            'L' => 16,
+            'M' => 16,
+            'N' => 14,
+            'O' => 18,
+            'P' => 22,
+            'Q' => 20,
+        ];
+        foreach ($columnWidths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+
+        $row = 2;
+        foreach ($models as $index => $vehicle) {
+            $requester = $vehicle->userRequest();
+            $assignedPlates = [];
+            $assignedDrivers = [];
+
+            foreach ($vehicle->vehicleDetails as $detail) {
+                $plate = trim((string) ($detail->license_plate ?? ''));
+                if ($plate !== '') {
+                    $assignedPlates[$plate] = true;
+                }
+
+                $driverName = $detail->driver?->fullname ?? '';
+                if ($driverName !== '') {
+                    $assignedDrivers[$driverName] = true;
+                }
+            }
+
+            $statusLabel = $vehicle->viewStatus()['title'] ?? ($vehicle->status ?? '-');
+            $sharedLabel = ((int) ($vehicle->is_shared ?? 0) === 1) ? 'จัดสรรร่วม' : 'เดี่ยว';
+
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, (string) ($vehicle->code ?? '-'));
+            $sheet->setCellValue('C' . $row, (string) ($requester['fullname'] ?? '-'));
+            $sheet->setCellValue('D' . $row, (string) ($requester['department'] ?? '-'));
+            $sheet->setCellValue('E' . $row, (string) ($vehicle->viewUrgent() ?? '-'));
+            $sheet->setCellValue('F' . $row, (string) ($vehicle->locationOrg?->title ?? $vehicle->location ?? '-'));
+            $sheet->setCellValue('G' . $row, (string) ($vehicle->reason ?? '-'));
+            $sheet->setCellValue('H' . $row, $vehicle->date_start ? (string) \app\components\ThaiDateHelper::formatThaiDate($vehicle->date_start) : '-');
+            $sheet->setCellValue('I' . $row, (string) ($vehicle->viewTime()['start'] ?? '-'));
+            $sheet->setCellValue('J' . $row, $vehicle->date_end ? (string) \app\components\ThaiDateHelper::formatThaiDate($vehicle->date_end) : '-');
+            $sheet->setCellValue('K' . $row, (string) ($vehicle->viewTime()['end'] ?? '-'));
+            $sheet->setCellValue('L' . $row, (string) ($vehicle->viewGoType() ?? '-'));
+            $sheet->setCellValue('M' . $row, (string) $statusLabel);
+            $sheet->setCellValue('N' . $row, $sharedLabel);
+            $sheet->setCellValue('O' . $row, !empty($assignedPlates) ? implode(', ', array_keys($assignedPlates)) : '-');
+            $sheet->setCellValue('P' . $row, !empty($assignedDrivers) ? implode(', ', array_keys($assignedDrivers)) : '-');
+            $sheet->setCellValue('Q' . $row, (string) ($vehicle->viewCreated()['full'] ?? '-'));
+
+            $sheet->getStyle('A' . $row . ':Q' . $row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A' . $row . ':Q' . $row)->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+            $row++;
+        }
+
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:Q1');
+
+        $fileName = 'ทะเบียนขอใช้รถยนต์ทั่วไป.xlsx';
+        $tmpFile = tempnam(sys_get_temp_dir(), 'vehicle_official_');
+        if ($tmpFile === false) {
+            throw new \RuntimeException('Unable to create temporary file for export.');
+        }
+
+        $xlsxFile = $tmpFile . '.xlsx';
+        rename($tmpFile, $xlsxFile);
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($xlsxFile);
+
+        $response = Yii::$app->response;
+        $response->on(Response::EVENT_AFTER_SEND, static function () use ($xlsxFile) {
+            @unlink($xlsxFile);
+        });
+
+        return $response->sendFile($xlsxFile, $fileName);
     }
 
 

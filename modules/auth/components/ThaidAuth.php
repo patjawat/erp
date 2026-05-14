@@ -51,6 +51,24 @@ class ThaidAuth extends Component
     }
 
     /**
+     * สร้าง URL สำหรับ flow "ดึงข้อมูลมาเติมฟอร์ม" (ไม่ใช่ flow login)
+     * ใช้ redirect_uri เดิม แต่เก็บ state ไว้ใน session เพื่อให้ callback แยก flow ได้
+     */
+    public function getFillFormUrl(): string
+    {
+        $state = Yii::$app->security->generateRandomString(16);
+        Yii::$app->session->set('thaid_fill_form_state', $state);
+
+        return $this->authorizeUrl . '?' . http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'scope' => $this->scope,
+            'state' => $state,
+        ]);
+    }
+
+    /**
      * ดึง token และข้อมูลผู้ใช้จาก code
      */
     public function getUserFromCode(string $code)

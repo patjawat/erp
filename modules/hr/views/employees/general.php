@@ -60,6 +60,16 @@ $title = '<i class="fa-regular fa-address-card"></i> ข้อมูลพื้
                 </tr>
                 <tr>
                
+                    <td scope="row">วันที่เริ่มงาน</td>
+                    <td colspan="4"><span class="text-pink"> <?php
+                                    try {
+                                        echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
+                                    } catch (\Throwable $th) {
+                                    }
+                                    ?></span></td>
+                </tr>
+                <tr>
+               
                     <td scope="row">ตำแหน่งเลขที่</td>
                     <td><span class="text-pink"><?=$model->position_number?></span></td>
                     <td>ระดับตำแหน่ง</td>

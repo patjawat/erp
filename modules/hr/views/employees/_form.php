@@ -22,6 +22,13 @@ use iamsaint\datetimepicker\Datetimepicker;
     <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
     <?= $form->field($model, 'ref')->hiddenInput(['maxlength' => 50])->label(false); ?>
 
+ 
+        <div class="d-flex justify-content-end mb-2 me-5">
+            <button type="button" id="btn-thaid-fill" class="btn btn-outline-primary btn-sm me-3">
+                <i class="fa-solid fa-id-card me-1"></i> ดึงข้อมูลจาก ThaiD
+            </button>
+        </div>
+
     <div class="row">
         <div class="col-12">
             <div class="row">
@@ -363,6 +370,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 $ref = $model->ref;
 $urlUpload = Url::to('/filemanager/uploads/single');
 $getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
+$thaidFillUrl = Url::to(['/auth/thaid/fill-form']);
 $js = <<<JS
         getAvatar()
 
@@ -515,14 +523,52 @@ $js = <<<JS
             });       
             \$("#employees-join_date").datetimepicker({
                 timepicker:false,
-                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000            
+                format:'d/m/Y',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000
                 lang:'th',  // แสดงภาษาไทย
-                onChangeMonth:thaiYear,          
-                onShow:thaiYear,                  
+                onChangeMonth:thaiYear,
+                onShow:thaiYear,
                 yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ
                 closeOnDateSelect:true,
-            });  
-         
+            });
+
+
+            // ===== ThaiD: ดึงข้อมูลมาเติมฟอร์ม =====
+            \$('#btn-thaid-fill').on('click', function () {
+                var w = 480, h = 640;
+                var left = (screen.width - w) / 2, top = (screen.height - h) / 2;
+                window.open('$thaidFillUrl', 'thaid_fill_form',
+                    'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top);
+            });
+
+            window.addEventListener('message', function (e) {
+                if (e.origin !== window.location.origin) return;
+                if (!e.data || e.data.source !== 'thaid-fill-form') return;
+
+                var d = e.data.data || {};
+
+                if (d.fname) \$('#employees-fname').val(d.fname);
+                if (d.lname) \$('#employees-lname').val(d.lname);
+                if (d.address) \$('#employees-address').val(d.address);
+                if (d.cid) \$('#employees-cid').val(d.cid).trigger('input').trigger('change');
+
+                if (d.birthday) {
+                    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d.birthday);
+                    if (m) {
+                        var beYear = parseInt(m[1], 10) + 543;
+                        \$('#employees-birthday').val(m[3] + '/' + m[2] + '/' + beYear);
+                    }
+                }
+
+                if (d.prefix) {
+                    var \$prefix = \$('#employees-prefix');
+                    if (\$prefix.find('option[value="' + d.prefix + '"]').length === 0) {
+                        \$prefix.append(new Option(d.prefix, d.prefix, true, true));
+                    } else {
+                        \$prefix.val(d.prefix);
+                    }
+                    \$prefix.trigger('change');
+                }
+            });
 
 
         JS;

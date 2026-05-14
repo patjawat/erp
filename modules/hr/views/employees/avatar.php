@@ -7,7 +7,7 @@ use app\components\AppHelper;
 $avatar = $model->showAvatar();
 ?>
 
-<div class="card hover-card">
+<div class="card border border-1">
     <div class="card-body">
         <div class="d-flex">
             <div class="position-relative">
@@ -37,25 +37,30 @@ $avatar = $model->showAvatar();
                     </div>
                     <div class="col-lg-3 col-md-12 col-sm-12">
 
-                        <div class="dropdown float-end">
-                            <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa-solid fa-sliders"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <?= AppHelper::Btn([
-                                    'type' => 'update',
-                                    'url' => ['/hr/employees/update', 'id' => $model->id],
-                                    'modal' => true,
-                                    'size' => 'lg',
-                                    'class' => 'dropdown-item',
-                                ]) ?>
+                        <div class="dropdown flex-grow-1 flex-sm-grow-0">
+                            <button class="btn btn-outline-primary dropdown-toggle w-100 w-sm-auto" type="button"
+                                id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-angle-down"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i> แสดง',['/hr/employees/view', 'id' => $model->id],['class' => 'dropdown-item'])?></li>
+                                <li>
+                                    <?= AppHelper::Btn([
+                                        'type' => 'update',
+                                        'url' => ['/hr/employees/update', 'id' => $model->id],
+                                        'modal' => true,
+                                        'size' => 'lg',
+                                        'class' => 'dropdown-item',
+                                    ]) ?>
+                                </li>
+                                <li>
+                                    <?= Html::a(($model->status == 'CANCEL' ? '<i class="fa-solid fa-arrow-rotate-left me-1"></i> ใช้งาน' : '<i class="fa-solid fa-user-xmark me-1"></i> ยกเลิก'), ['/hr/employees/cancel', 'id' => $model->id], ['class' => 'dropdown-item a-action', 'data' => ['size' => 'modal-md']]) ?>
+                                </li>
+                                <li>
+                                    <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                </li>
 
-                                <?= Html::a(($model->status == 'CANCEL' ? '<i class="fa-solid fa-arrow-rotate-left me-1"></i> ใช้งาน':'<i class="fa-solid fa-user-xmark me-1"></i> ยกเลิก'), ['/hr/employees/cancel', 'id' => $model->id], ['class' => 'dropdown-item a-action', 'data' => ['size' => 'modal-md']]) ?>
-                                <?= Html::a('<i class="fa-solid fa-user-gear me-1"></i> ตั้งค่า', ['/usermanager/user/update-employee', 'id' => $model->user_id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                <?php // Html::a('<i class="bi bi-database-fill-gear me-1"></i>ตั้งค่า', ['/hr/categorise', 'id' => $model->id, 'title' => ''], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) 
-                                ?>
-                            </div>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -64,19 +69,12 @@ $avatar = $model->showAvatar();
                         <p class="text-muted mb-0">
                             <?= $model->positionName(['icon' => true]) ?>
                         </p>
-                        <?php if ($model->joinDate()): ?>
+
                             <p class="text-muted mb-0">
-                                <i class="bi bi-check2-circle text-primary"></i> เริ่มงาน
-                                <code>
-                                    <?php
-                                    try {
-                                        echo Yii::$app->thaiFormatter->asDate($model->joinDate(), 'medium');
-                                    } catch (\Throwable $th) {
-                                    }
-                                    ?>
-                                </code>
+                                <i class="bi bi-check2-circle text-primary"></i>
+                               <?=$model->positionTypeName();?>
                             </p>
-                        <?php endif; ?>
+
                         <p class="text-muted mb-0">
                             <i class="bi bi-check2-circle text-primary"></i>
                             อายุราชการ <?= $model->workLife()['full'] ?>
@@ -107,7 +105,7 @@ $avatar = $model->showAvatar();
     <div class="card-footer">
         <div class="row">
             <div class="col-6 text-truncate">
-                 <p class="mb-0"><i class="fa-regular fa-clock"></i> ประเภทเวร : <?=$model->viewWorkType()?></p>
+                <p class="mb-0"><i class="fa-regular fa-clock"></i> ประเภทเวร : <?= $model->viewWorkType() ?></p>
             </div>
             <!-- End col-6 -->
             <div class="col-6 text-truncate">
@@ -124,6 +122,6 @@ $avatar = $model->showAvatar();
             <!-- End col-6 -->
         </div>
         <!-- End Row -->
-       
+
     </div>
 </div>

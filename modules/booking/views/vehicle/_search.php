@@ -15,7 +15,8 @@ use app\components\DateFilterHelper;
     'action' => isset($action) && $action ? $action : ['index'],
     'method' => 'get',
     'options' => [
-        'data-pjax' => 1
+        'data-pjax' => 1,
+        'class' => 'vehicle-search-form',
     ],
     'fieldConfig' => ['options' => ['class' => 'form-group mb-0']],
 ]); ?>
