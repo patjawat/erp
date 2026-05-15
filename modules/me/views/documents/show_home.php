@@ -20,7 +20,8 @@ $me = UserHelper::GetEmployee();
 
 <div class="d-flex flex-column gap-2">
     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-        <div id="<?= $item->id ?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0 mb-2"
+        <?php $detailId = $item->detail_id ?? $item->id; ?>
+        <div id="<?= $detailId ?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0 mb-2"
             style="border-radius: 16px;">
             <div class="row g-0 align-items-center">
                 <div class="position-absolute start-0 top-0 bottom-0 bg-primary" style="width: 4px;"></div>
@@ -36,17 +37,17 @@ $me = UserHelper::GetEmployee();
                 </div>
                 <div class="col py-3 px-2">
                     
-                    <span class="mb-1 text-truncate fw-medium fs-14"><?php echo $item->document ? $item->document->topic : '' ?></span>
+                    <span class="mb-1 text-truncate fw-medium fs-14"><?= $item->topic ?></span>
                     <div>
                         <small>
-                            จาก: <?= $item->document->documentOrg->title ?? '-' ?></span><span class="d-flex align-items-center gap-1">
+                            จาก: <?= $item->documentOrg->title ?? '-' ?></span><span class="d-flex align-items-center gap-1">
                                 </small>
                             </div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                                             <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span
                             class="badge rounded-2 fw-bold px-2 py-1"
                             style="background-color: #eff6ff; color: #1d4ed8; font-size: 0.65rem;">
-                            <?= $item->document?->documentType?->title ?? 'ไมระบุ' ?>
+                            <?= $item->documentType?->title ?? 'ไมระบุ' ?>
                         </span>
                         <div class="d-flex align-items-center gap-1 text-muted fw-bold"><svg
                                 xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
@@ -56,29 +57,29 @@ $me = UserHelper::GetEmployee();
                                 <line x1="4" x2="20" y1="15" y2="15"></line>
                                 <line x1="10" x2="8" y1="3" y2="21"></line>
                                 <line x1="16" x2="14" y1="3" y2="21"></line>
-                            </svg><?= isset($item->document) ? $item->document->doc_number : '' ?></div>
+                            </svg><?= $item->doc_number ?></div>
                     </div>
                         <small class="d-flex align-items-center gap-1">
                             <span class="text-muted">
                                 เลขรับ:
                             </span>
-                            <?= $item->document ? $item->document->doc_regis_number : '' ?>
+                            <?= $item->doc_regis_number ?>
                         </small>
                         <small class="d-flex align-items-center gap-1">
                             <span class="text-muted">
                                 ลงรับวันที่:
                             </span>
-                            <?= $item->document ? ThaiDateHelper::formatThaiDate($item->document->doc_transactions_date, 'short') : '' ?>
+                            <?= ThaiDateHelper::formatThaiDate($item->doc_transactions_date, 'short') ?>
                         </small>
                     </div>
                 </div>
                 <div class="col-auto py-3 pe-4 ps-2 d-flex align-items-center gap-3">
                     <div class="text-end d-none d-md-block">
-                        <?php if ($item->document->doc_speed == 'ด่วนที่สุด'): ?>
+                        <?php if ($item->doc_speed == 'ด่วนที่สุด'): ?>
                             <span class="badge text-bg-danger fs-12 mb-1">ด่วนที่สุด</span>
                         <?php endif; ?>
 
-                        <?php if ($item->document->secret == 'ลับที่สุด'): ?>
+                        <?php if ($item->secret == 'ลับที่สุด'): ?>
                             <span class="badge text-bg-dark fs-12 mb-1">ลับที่สุด</span>
                         <?php endif; ?>
 
@@ -91,7 +92,7 @@ $me = UserHelper::GetEmployee();
                             <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
                             <path d="m9 11 3 3L22 4"></path>
                         </svg></button>
-                    <?php echo $item->document ? Html::a('เปิดอ่าน >>', ['view', 'id' => $item->id, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-fullscreen', 'tr-id' => $item->id]]) : '' ?>
+                    <?= Html::a('เปิดอ่าน >>', ['view', 'id' => $detailId, 'callback' => '/me'], ['class' => 'btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 px-3 py-1 shadow-sm open-modal view-document', 'data' => ['size' => 'modal-fullscreen', 'tr-id' => $detailId]]) ?>
                 </div>
             </div>
         </div>

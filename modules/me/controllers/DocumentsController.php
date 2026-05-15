@@ -379,18 +379,20 @@ class DocumentsController extends \yii\web\Controller
     //แสดงหน้า ถ้าเป็นหัวหน้าหน่วยงานที่ ที่ส่งถึง หรือ tag บุคคล
     public function actionShowHome()
     {
+        $me = UserHelper::GetEmployee();
+        $empId = $me->id ?? null;
+        $depId = $me->department ?? null;
 
-        $emp = UserHelper::GetEmployee();
-        $department = $emp->department;
-
-        $ids = $this->unreadDetailIdsShowHomeExact($department, $emp->id);
-
-        $searchModel = new DocumentsDetailSearch();
+        $searchModel = new DocumentSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['IN', 'id', $ids]);
+        $query = $dataProvider->query;
+        $this->applyDocumentsIndexBaseQuery($query, (int) $empId, (int) $depId);
+        $query->andWhere(['tr.id' => null]);
 
-
-
+        $query->orderBy([
+            'doc_transactions_date' => SORT_DESC,
+            'doc_regis_number' => SORT_DESC,
+        ]);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -398,46 +400,18 @@ class DocumentsController extends \yii\web\Controller
             return [
                 'title' => $this->request->get('tilte'),
                 'content' => $this->renderAjax('show_home', [
+                    'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                 ])
             ];
         } else {
             return $this->render('show_home', [
+                'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
             ]);
         }
     }
 
-    public function actionShowHomeV2()
-    {
-
-        $emp = UserHelper::GetEmployee();
-        $department = $emp->department;
-
-        $ids = $this->unreadDetailIdsShowHomeExact($department, $emp->id);
-
-        $searchModel = new DocumentsDetailSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['IN', 'id', $ids]);
-
-
-
-
-        if ($this->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-
-            return [
-                'title' => $this->request->get('tilte'),
-                'content' => $this->renderAjax('show_home_v2', [
-                    'dataProvider' => $dataProvider,
-                ])
-            ];
-        } else {
-            return $this->render('show_home_v2', [
-                'dataProvider' => $dataProvider,
-            ]);
-        }
-    }
 
     public function actionView($id)
     {

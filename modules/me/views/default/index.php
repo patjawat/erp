@@ -409,7 +409,13 @@ if (!empty($upcomingHealth)): ?>
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">หนังสือราชการที่รอการจัดการ</h3>
+                        <div class="d-flex gap-2 align-items-center">
+                            <h3 class="fw-black text-dark mb-0" style="font-size: 1rem;">หนังสือราชการที่รอการจัดการ</h3>
+                            <span id="unread-document-badge" class="badge bg-danger-subtle text-danger fw-bold"
+                                style="font-size: 0.7rem;<?= (empty($unreadDocumentCount) || (int) $unreadDocumentCount <= 0) ? ' display: none;' : '' ?>">
+                                ยังไม่ได้อ่าน <span id="unread-document-count"><?= (int) ($unreadDocumentCount ?? 0) ?></span> ฉบับ
+                            </span>
+                        </div>
                         <p class="text-muted mb-0" style="font-size: 0.75rem;">
                             รายการหนังสือรับเข้าจากระบบสารบรรณที่ส่งถึงคุณ
                         </p>
@@ -418,25 +424,10 @@ if (!empty($upcomingHealth)): ?>
                 <div class="d-flex gap-2 align-items-center flex-shrink-0 flex-wrap">
                     <a href="<?= Url::to(['/me/documents']) ?>"
                         class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm border">
-                        ดูทั้งหมด
+                        <i class="fa-solid fa-angles-right"></i> ดูหนังสือทั้งหมด
                     </a>
-                    <div class="d-none d-lg-flex gap-2">
-                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">ด่วนที่สุด</button>
-                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">บันทึกข้อความ</button>
-                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">หนังสือภายนอก</button>
-                        <button type="button" class="btn btn-white text-muted text-nowrap rounded-pill px-3 py-1 border hover-bg-light">คำสั่ง</button>
-                    </div>
-                    <div class="dropdown d-lg-none">
-                        <button type="button" class="btn btn-white text-muted rounded-pill px-3 py-1 border hover-bg-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            ตัวกรอง
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0 py-2">
-                            <li><button type="button" class="dropdown-item">ด่วนที่สุด</button></li>
-                            <li><button type="button" class="dropdown-item">บันทึกข้อความ</button></li>
-                            <li><button type="button" class="dropdown-item">หนังสือภายนอก</button></li>
-                            <li><button type="button" class="dropdown-item">คำสั่ง</button></li>
-                        </ul>
-                    </div>
+                   
+                    
                 </div>
             </div>
 
@@ -460,6 +451,18 @@ $userId = $me->id;
 
 $js = <<< JS
     loadDocumentMe();
+
+    // ลดจำนวน "ยังไม่ได้อ่าน" เมื่อกดเปิดอ่านหนังสือ
+    $('body').on('click', '.view-document', function () {
+        var \$badge = $('#unread-document-badge');
+        var \$count = $('#unread-document-count');
+        var n = parseInt(\$count.text(), 10) || 0;
+        n = Math.max(0, n - 1);
+        \$count.text(n);
+        if (n <= 0) {
+            \$badge.hide();
+        }
+    });
     
     //หนังสือ
     async function  loadDocumentMe(){

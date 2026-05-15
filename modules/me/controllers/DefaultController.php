@@ -5,6 +5,7 @@ namespace app\modules\me\controllers;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\appreciation\models\Appreciation;
+use app\modules\dms\models\Documents;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\helpdesk\models\HelpdeskSearch;
 use app\modules\hr\models\Employees;
@@ -51,6 +52,41 @@ class DefaultController extends Controller
 
         $todayCheckinCount = 0;
         $appreciationReceivedCount = 0;
+        $unreadDocumentCount = 0;
+        try {
+            $empId = (int) $model->id;
+            $depId = (int) ($model->department ?? 0);
+
+            $employeeNames = "'tags', 'employee_tag', 'employee', 'req_approve'";
+            $departmentNames = "'department'";
+
+            $query = Documents::find()
+                ->leftJoin(
+                    ['te' => 'documents_detail'],
+                    "te.document_id = documents.id AND te.name IN ({$employeeNames}) AND te.to_id = :empId",
+                    [':empId' => (string) $empId]
+                )
+                ->leftJoin(
+                    ['td' => 'documents_detail'],
+                    "td.document_id = documents.id AND td.name IN ({$departmentNames}) AND td.to_id = :depId",
+                    [':depId' => (string) $depId]
+                )
+                ->leftJoin(
+                    ['tr' => 'documents_detail'],
+                    'tr.document_id = documents.id AND tr.name = :readName AND tr.to_id = :empIdRead',
+                    [':readName' => 'read', ':empIdRead' => (string) $empId]
+                )
+                ->andWhere([
+                    'or',
+                    ['not', ['te.id' => null]],
+                    ['not', ['td.id' => null]],
+                ])
+                ->andWhere(['tr.id' => null]);
+
+            $unreadDocumentCount = (int) $query->count('DISTINCT [[documents]].[[id]]');
+        } catch (\Throwable $e) {
+            $unreadDocumentCount = 0;
+        }
         if ($model && $model->id) {
             try {
                 $todayCheckinCount = CheckinRecord::find()
@@ -74,6 +110,7 @@ class DefaultController extends Controller
             'dataProvider' => $dataProvider,
             'todayCheckinCount' => $todayCheckinCount,
             'appreciationReceivedCount' => $appreciationReceivedCount,
+            'unreadDocumentCount' => $unreadDocumentCount,
         ]);
     }
 
