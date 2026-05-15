@@ -443,6 +443,85 @@ if (!empty($upcomingHealth)): ?>
 </div>
 
 <?php
+$approveNameMap = [
+    'leave' => ['label' => 'การลา', 'url' => ['/approve-v2/leave']],
+    'vehicle' => ['label' => 'ขอใช้รถ', 'url' => ['/approve-v2/vehicle']],
+    'purchase' => ['label' => 'จัดซื้อจัดจ้าง', 'url' => ['/approve-v2/purchase']],
+    'development' => ['label' => 'อบรม/ดูงาน', 'url' => ['/approve-v2/development']],
+    'main-stock' => ['label' => 'เบิกวัสดุ', 'url' => ['/approve-v2/main-stock']],
+    'main_stock' => ['label' => 'เบิกวัสดุ', 'url' => ['/approve-v2/main-stock']],
+    'asset-move' => ['label' => 'โอนพัสดุ', 'url' => ['/approve-v2/asset-move']],
+    'checkin' => ['label' => 'การลงเวลา', 'url' => ['/approve-v2/checkin']],
+];
+$pendingApproveByName = $pendingApproveByName ?? [];
+$pendingApproveCount = (int) ($pendingApproveCount ?? 0);
+?>
+<?php if ((!empty($unreadDocumentCount) && (int) $unreadDocumentCount > 0) || $pendingApproveCount > 0): ?>
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+    <?php if (!empty($unreadDocumentCount) && (int) $unreadDocumentCount > 0): ?>
+    <div id="unread-document-toast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header bg-danger text-white border-0">
+            <i class="fa-solid fa-bell me-2"></i>
+            <strong class="me-auto">แจ้งเตือนหนังสือราชการ</strong>
+            <small class="text-white text-opacity-75">ตอนนี้</small>
+            <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body d-flex align-items-center gap-3">
+            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+                <i class="fa-regular fa-envelope fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark">คุณมีหนังสือที่ยังไม่ได้อ่าน <span class="text-danger"><?= (int) $unreadDocumentCount ?></span> ฉบับ</div>
+                <a href="<?= Url::to(['/me/documents', 'DocumentSearch' => ['q_status' => 'unread', 'date_filter' => '', 'date_start' => '', 'date_end' => '']]) ?>" class="small text-primary text-decoration-none fw-semibold">
+                    ดูทั้งหมด <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php
+    $approveIconMap = [
+        'leave' => 'fa-calendar-heart',
+        'vehicle' => 'fa-car-side',
+        'purchase' => 'fa-cart-shopping',
+        'development' => 'fa-graduation-cap',
+        'main-stock' => 'fa-boxes-stacked',
+        'main_stock' => 'fa-boxes-stacked',
+        'asset-move' => 'fa-truck-ramp-box',
+        'checkin' => 'fa-clock',
+    ];
+    $toastIdx = 0;
+    foreach ($pendingApproveByName as $name => $cnt):
+        if ((int) $cnt <= 0) continue;
+        $meta = $approveNameMap[$name] ?? ['label' => $name, 'url' => ['/approve-v2']];
+        $icon = $approveIconMap[$name] ?? 'fa-clipboard-check';
+        $toastIdx++;
+    ?>
+    <div id="pending-approve-toast-<?= $toastIdx ?>" class="toast pending-approve-toast border-0 shadow-lg mt-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header bg-warning text-dark border-0">
+            <i class="fa-solid <?= Html::encode($icon) ?> me-2"></i>
+            <strong class="me-auto">รออนุมัติ: <?= Html::encode($meta['label']) ?></strong>
+            <small class="text-dark text-opacity-75">ตอนนี้</small>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body d-flex align-items-center gap-3">
+            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+                <i class="fa-solid <?= Html::encode($icon) ?> fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark"><?= Html::encode($meta['label']) ?> รออนุมัติ <span class="text-warning"><?= (int) $cnt ?></span> รายการ</div>
+                <a href="<?= Url::to($meta['url']) ?>" class="small text-primary text-decoration-none fw-semibold">
+                    ไปที่หน้าอนุมัติ <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php
 
 $documentUrl = Url::to(['/me/documents/show-home']);
 $urlUpload = Url::to(["/filemanager/uploads/single"]);
@@ -451,6 +530,18 @@ $userId = $me->id;
 
 $js = <<< JS
     loadDocumentMe();
+
+    // แสดง toast หนังสือที่ยังไม่ได้อ่าน + รายการรออนุมัติ (แยกตามประเภท)
+    (function () {
+        if (!window.bootstrap || !bootstrap.Toast) return;
+        var unread = document.getElementById('unread-document-toast');
+        if (unread) {
+            new bootstrap.Toast(unread, { autohide: false }).show();
+        }
+        document.querySelectorAll('.pending-approve-toast').forEach(function (el) {
+            new bootstrap.Toast(el, { autohide: false }).show();
+        });
+    })();
 
     // ลดจำนวน "ยังไม่ได้อ่าน" เมื่อกดเปิดอ่านหนังสือ
     $('body').on('click', '.view-document', function () {
