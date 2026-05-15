@@ -75,31 +75,33 @@ $hasAdvancedFilters = !empty($model->q_department)
                         ])->label('ประเภท') ?>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                        <?= $form->field($model, 'position_name')->widget(Select2::classname(), [
-                            'data' => $model->ListPositionName(),
-                            'options' => ['placeholder' => '--ตำแหน่งทั้งหมด--'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ],
-                        ])->label('ตำแหน่ง') ?>
+                        <?php
+                        //  $form->field($model, 'position_name')->widget(Select2::classname(), [
+                        //     'data' => $model->ListPositionName(),
+                        //     'options' => ['placeholder' => '--ตำแหน่งทั้งหมด--'],
+                        //     'pluginOptions' => [
+                        //         'allowClear' => true
+                        //     ],
+                        // ])->label('ตำแหน่ง') 
+                        ?>
                         <?php
                         // DepDrop ของเดินเลือกตาม ประเภทตำแหน่ง
-                        // echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
-                        //     'options' => [
-                        //         'placeholder' => 'ตำแหน่งทั้งหมด---',
-                        //     ],
-                        //     'type' => DepDrop::TYPE_SELECT2,
-                        //     'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                        //     'pluginOptions' => [
-                        //         'depends' => ['employeessearch-position_type'],
-                        //         'url' => Url::to(['/hr/employees/get-position-name']),
-                        //         'loadingText' => 'กำลังโหลด---',
-                        //         'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
-                        //         'initDepends' => ['employeessearch-position_type'],
-                        //         'initialize' => true,
-                        //     ],
+                        echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
+                            'options' => [
+                                'placeholder' => 'ตำแหน่งทั้งหมด---',
+                            ],
+                            'type' => DepDrop::TYPE_SELECT2,
+                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
+                            'pluginOptions' => [
+                                'depends' => ['employeessearch-position_type'],
+                                'url' => Url::to(['/hr/employees/get-position-name']),
+                                'loadingText' => 'กำลังโหลด---',
+                                'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
+                                'initDepends' => ['employeessearch-position_type'],
+                                'initialize' => true,
+                            ],
 
-                        // ])->label(false); 
+                        ])->label('ตำแหน่ง') 
                         ?>
                     </div>
                     <div class="col-lg-4 col-md-6">

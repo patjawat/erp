@@ -1018,14 +1018,15 @@ class EmployeesController extends Controller
         $sheet->getColumnDimension('X')->setWidth(18);
         $sheet->getColumnDimension('Y')->setWidth(18);
         $sheet->getColumnDimension('Z')->setWidth(13);
+        $sheet->getColumnDimension('AA')->setWidth(10);
 
-        $setHeader = 'A1:Z1';
+        $setHeader = 'A1:AA1';
         $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
-        $sheet->getStyle('A1:Z1')->getFont()->setBold(true)->setItalic(false);
+        $sheet->getStyle('A1:AA1')->getFont()->setBold(true)->setItalic(false);
         // ตั้งชื่อแผ่นงาน
         $sheet->setTitle('ข้อมูลบุคลากร');
         $sheet->setCellValue('A1', 'ลำดับ');
@@ -1054,6 +1055,7 @@ class EmployeesController extends Controller
         $sheet->setCellValue('X1', 'ประเภท/กลุ่มงาน');
         $sheet->setCellValue('Y1', 'เงินเดือน');
         $sheet->setCellValue('Z1', 'หน่วยงาน');
+        $sheet->setCellValue('AA1', 'ลายเซ็น');
         $StartRowSheet = 2;
         // $dataItems = $this->findModelItem($params);
         foreach ($dataProvider->getModels() as $key => $value) {
@@ -1099,6 +1101,7 @@ class EmployeesController extends Controller
             $sheet->setCellValue('X' . $numRow, $value->positionGroupName());
             $sheet->setCellValue('Y' . $numRow, $value->salary ? number_format($value->salary, 2) : '');
             $sheet->setCellValue('Z' . $numRow, $value->departmentName());
+            $sheet->setCellValue('AA' . $numRow, $value->signature() ? 'มี' : 'ไม่มี');
         }
 
         $writer = new Xlsx($spreadsheet);
