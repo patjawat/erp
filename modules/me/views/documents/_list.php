@@ -14,6 +14,46 @@ $viewQueryParams = Yii::$app->request->queryParams;
 $unreadOpenDetailIdByDocument = $unreadOpenDetailIdByDocument ?? [];
 $unreadOpenDocumentsDetailById = $unreadOpenDocumentsDetailById ?? [];
 $readAtByRoutingId = $readAtByRoutingId ?? [];
+
+$elapsedLabel = function ($date) {
+    if (empty($date)) {
+        return '';
+    }
+    try {
+        $start = new \DateTime(date('Y-m-d', strtotime($date)));
+        $today = new \DateTime(date('Y-m-d'));
+        if ($start > $today) {
+            return '';
+        }
+        $diff = $today->diff($start);
+        $days = (int) $diff->days;
+        if ($days === 0) {
+            return 'วันนี้';
+        }
+        if ($days === 1) {
+            return 'เมื่อวาน';
+        }
+        $years = (int) $diff->y;
+        $months = (int) $diff->m;
+        $d = (int) $diff->d;
+        if ($years === 0 && $months === 0) {
+            return 'ผ่านมาแล้ว ' . $days . ' วัน';
+        }
+        $parts = [];
+        if ($years > 0) {
+            $parts[] = $years . ' ปี';
+        }
+        if ($months > 0) {
+            $parts[] = $months . ' เดือน';
+        }
+        if ($d > 0) {
+            $parts[] = $d . ' วัน';
+        }
+        return 'ผ่านมาแล้ว ' . implode(' ', $parts);
+    } catch (\Throwable $e) {
+        return '';
+    }
+};
 $models = $dataProvider->getModels();
 $hasSelectableRows = false;
 foreach ($models as $model) {
@@ -112,6 +152,12 @@ foreach ($models as $model) {
                                             <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle rounded-pill px-2 py-1 small">
                                                 <i class="bi bi-envelope"></i> ยังไม่อ่าน
                                             </span>
+                                            <?php $elapsed = $elapsedLabel($item->doc_transactions_date); ?>
+                                            <?php if ($elapsed !== ''): ?>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill px-2 py-1 small ms-1">
+                                                    <i class="bi bi-clock-history"></i> <?= Html::encode($elapsed) ?>
+                                                </span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
 

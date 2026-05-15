@@ -13,7 +13,45 @@ use yii\widgets\Pjax;
 
 $me = UserHelper::GetEmployee();
 
-
+$elapsedLabel = function ($date) {
+    if (empty($date)) {
+        return '';
+    }
+    try {
+        $start = new \DateTime(date('Y-m-d', strtotime($date)));
+        $today = new \DateTime(date('Y-m-d'));
+        if ($start > $today) {
+            return '';
+        }
+        $diff = $today->diff($start);
+        $days = (int) $diff->days;
+        if ($days === 0) {
+            return 'วันนี้';
+        }
+        if ($days === 1) {
+            return 'เมื่อวาน';
+        }
+        $years = (int) $diff->y;
+        $months = (int) $diff->m;
+        $d = (int) $diff->d;
+        if ($years === 0 && $months === 0) {
+            return 'ผ่านมาแล้ว ' . $days . ' วัน';
+        }
+        $parts = [];
+        if ($years > 0) {
+            $parts[] = $years . ' ปี';
+        }
+        if ($months > 0) {
+            $parts[] = $months . ' เดือน';
+        }
+        if ($d > 0) {
+            $parts[] = $d . ' วัน';
+        }
+        return 'ผ่านมาแล้ว ' . implode(' ', $parts);
+    } catch (\Throwable $e) {
+        return '';
+    }
+};
 ?>
 
 <?php Pjax::begin(['id' => 'document-container', 'enablePushState' => false, 'timeout' => 5000]); ?>
@@ -70,6 +108,13 @@ $me = UserHelper::GetEmployee();
                                 ลงรับวันที่:
                             </span>
                             <?= ThaiDateHelper::formatThaiDate($item->doc_transactions_date, 'short') ?>
+                            <?php $elapsed = $elapsedLabel($item->doc_transactions_date); ?>
+                            <?php if ($elapsed !== ''): ?>
+                                <span class="badge bg-warning-subtle text-warning fw-bold ms-1" style="font-size: 0.6rem;">
+                                    <i data-lucide="clock" style="width:10px;height:10px;"></i>
+                                    <?= $elapsed ?>
+                                </span>
+                            <?php endif; ?>
                         </small>
                     </div>
                 </div>
