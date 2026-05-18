@@ -114,9 +114,16 @@ class EmployeeDetailController extends Controller
                     $model->data_json = json_decode($model->data_json, true) ?: [];
                 }
                 $array2 = [
-                    'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateToDb($model->data_json['date_start']) : '',
-                    'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateToDb($model->data_json['date_end']) : '',
+                    'date_start' => $this->normalizeDateForSave($model->data_json['date_start'] ?? null),
+                    'date_end' => $this->normalizeDateForSave($model->data_json['date_end'] ?? null),
                 ];
+                if ($name === 'benefit') {
+                    $array2 = ArrayHelper::merge($array2, [
+                        'receive_date' => $this->normalizeDateForSave($model->data_json['receive_date'] ?? null),
+                        'start_date' => $this->normalizeDateForSave($model->data_json['start_date'] ?? null),
+                        'end_date' => $this->normalizeDateForSave($model->data_json['end_date'] ?? null),
+                    ]);
+                }
 
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->data_json = ArrayHelper::merge($model->data_json, $array2);
@@ -227,9 +234,16 @@ class EmployeeDetailController extends Controller
             $model->data_json = json_decode($model->data_json, true) ?: [];
         }
         $arrayUpdate = [
-            'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateFormDb($model->data_json['date_start']) : '',
-            'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateFormDb($model->data_json['date_end']) : '',
+            'date_start' => $this->normalizeDateForView($model->data_json['date_start'] ?? null),
+            'date_end' => $this->normalizeDateForView($model->data_json['date_end'] ?? null),
         ];
+        if ($model->name === 'benefit') {
+            $arrayUpdate = ArrayHelper::merge($arrayUpdate, [
+                'receive_date' => $this->normalizeDateForView($model->data_json['receive_date'] ?? null),
+                'start_date' => $this->normalizeDateForView($model->data_json['start_date'] ?? null),
+                'end_date' => $this->normalizeDateForView($model->data_json['end_date'] ?? null),
+            ]);
+        }
         $model->data_json = ArrayHelper::merge($model->data_json, $arrayUpdate);
 
         if ($this->request->isPost && $model->load($this->request->post())) {
@@ -237,9 +251,16 @@ class EmployeeDetailController extends Controller
                 $model->data_json = json_decode($model->data_json, true) ?: [];
             }
             $array2 = [
-                'date_start' => isset($model->data_json['date_start']) ? AppHelper::DateToDb($model->data_json['date_start']) : '',
-                'date_end' => isset($model->data_json['date_end']) ? AppHelper::DateToDb($model->data_json['date_end']) : '',
+                'date_start' => $this->normalizeDateForSave($model->data_json['date_start'] ?? null),
+                'date_end' => $this->normalizeDateForSave($model->data_json['date_end'] ?? null),
             ];
+            if ($model->name === 'benefit') {
+                $array2 = ArrayHelper::merge($array2, [
+                    'receive_date' => $this->normalizeDateForSave($model->data_json['receive_date'] ?? null),
+                    'start_date' => $this->normalizeDateForSave($model->data_json['start_date'] ?? null),
+                    'end_date' => $this->normalizeDateForSave($model->data_json['end_date'] ?? null),
+                ]);
+            }
 
             $model->data_json = ArrayHelper::merge($model->data_json, $array2);
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -486,6 +507,46 @@ class EmployeeDetailController extends Controller
                     return $this->asJson($result);
                 }
             }
+    }
+
+    private function normalizeDateForView($value)
+    {
+        if (!is_string($value) || $value === '' || $value === '__/__/____') {
+            return $value;
+        }
+
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $value)) {
+            return $value;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+            return AppHelper::convertToThai($value) ?: $value;
+        }
+
+        return $value;
+    }
+
+    private function normalizeDateForSave($value)
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '' || $value === '__/__/____') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+            return $value;
+        }
+
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $value)) {
+            return AppHelper::convertToGregorian($value) ?: $value;
+        }
+
+        return $value;
     }
 
 
