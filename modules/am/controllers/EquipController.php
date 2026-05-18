@@ -93,11 +93,13 @@ class EquipController extends Controller
         // จบการค้นหา
 
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
+        $q = trim($searchModel->q ?? '');
         $dataProvider->query->andFilterWhere([
             'or',
-            ['LIKE', 'asset.code', $searchModel->q],
-            ['LIKE', 'asset.asset_name', $searchModel->q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
+            ['LIKE', 'asset.code', $q],
+            ['LIKE', 'asset.asset_name', $q],
+            ['like', 'license_plate', $q],
+            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $q],
         ]);
 
         // ที่ยังไม่กำหนดหน่วยงาน

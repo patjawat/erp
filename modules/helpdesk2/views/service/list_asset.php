@@ -92,6 +92,7 @@ $equipStats = $equipStats ?? [
                     }
                     $catTitle = $item->assetCategory?->title ?? $item->assetType?->title ?? '-';
                     $titleName = $item->asset_name ?: ($item->AssetitemName() ?: '-');
+                     $licensePlate = trim((string) ($item->license_plate ?? ''));
                     $ownerEmp = $item->ownerEmployee;
                     if ($ownerEmp === null && $item->owner !== null && $item->owner !== '' && is_numeric($item->owner)) {
                         $ownerEmp = Employees::findOne((int) $item->owner);
@@ -100,7 +101,7 @@ $equipStats = $equipStats ?? [
                     ?>
 
                     <tr style="border-bottom: 1px solid rgb(241, 245, 249);">
-                        <td class="px-4 py-3 border-0">
+                       <td class="px-4 py-3 border-0">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 border" style="width: 40px; height: 40px; background-color: rgb(248, 250, 252); border-color: rgb(226, 232, 240); color: rgb(148, 163, 184);">
                                     <?= Html::img(
@@ -114,6 +115,9 @@ $equipStats = $equipStats ?? [
                                 </div>
                                 <div><span class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 200px;"><?= $titleName; ?></span>
                                     <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);"><span><?= $item->code; ?></span></div>
+                                    <?php if ($licensePlate !== ''): ?>
+                                        <div class="d-flex align-items-center mt-1"><span style="font-size: 11px; color: rgb(100, 116, 139);">ทะเบียน :</span> <span class="fw-bold"><?= Html::encode($licensePlate) ?></span></div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </td>

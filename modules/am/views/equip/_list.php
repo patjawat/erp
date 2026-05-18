@@ -92,7 +92,8 @@ $equipSubtitle = static function ($item): string {
         <table class="table equip-register-table mb-0">
             <thead style="background-color: white;">
                 <tr style="border-bottom: 1px solid rgb(226, 232, 240);">
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ข้อมูลครุภัณฑ์</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="min-width: 220px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ข้อมูลครุภัณฑ์</th>
+                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 140px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">GFMIS</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 160px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">หมวดหมู่</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 224px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 128px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">วันที่รับ</th>
@@ -115,6 +116,7 @@ $equipSubtitle = static function ($item): string {
                     }
                     $catTitle = $item->assetCategory?->title ?? $item->assetType?->title ?? '-';
                     $titleName = $item->asset_name ?: ($item->AssetitemName() ?: '-');
+                    $licensePlate = trim((string) ($item->license_plate ?? ''));
                     $ownerEmp = $item->ownerEmployee;
                     if ($ownerEmp === null && $item->owner !== null && $item->owner !== '' && is_numeric($item->owner)) {
                         $ownerEmp = Employees::findOne((int) $item->owner);
@@ -137,9 +139,14 @@ $equipSubtitle = static function ($item): string {
                                 </div>
                                 <div><span class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 200px;"><?= $titleName; ?></span>
                                     <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);"><span><?= $item->code; ?></span></div>
-                                    <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: rgb(100, 116, 139);"><span>GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></span></div>
+                                    <?php if ($licensePlate !== ''): ?>
+                                        <div class="d-flex align-items-center mt-1"><span style="font-size: 11px; color: rgb(100, 116, 139);">ทะเบียน :</span> <span class="fw-bold"><?= Html::encode($licensePlate) ?></span></div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
+                        </td>
+                        <td class="px-4 py-3 border-0">
+                            <span class="font-monospace" style="font-size: 12px; color: rgb(71, 85, 105);"><?= Html::encode($item->gfmis ?: '-') ?></span>
                         </td>
                         <td class="px-4 py-3 border-0"><span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= $catTitle ?></span></td>
                         <td class="px-4 py-3 border-0">

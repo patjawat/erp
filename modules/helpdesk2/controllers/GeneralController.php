@@ -149,11 +149,15 @@ class GeneralController extends \yii\web\Controller
     }
 
         $q = trim($searchModel->q ?? '');
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'asset_name', $searchModel->q],
-            ['like', 'code', $searchModel->q],
-        ]);
+        if ($q !== '') {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'asset_name', $q],
+                ['like', 'code', $q],
+                ['like', 'license_plate', $q],
+                ['like', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $q],
+            ]);
+        }
 
         $dataProvider->query->andWhere('asset.deleted_at IS NULL');
         //  $dataProvider->query->andFilterWhere(['asset_items.asset_type_id' => $searchModel->asset_type_id]);
@@ -189,12 +193,6 @@ class GeneralController extends \yii\web\Controller
         // จบการค้นหา
 
         $dataProvider->query->andFilterWhere(['at.category_id' => $searchModel->asset_type]);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['LIKE', 'asset.code', $searchModel->q],
-            ['LIKE', new Expression("JSON_EXTRACT(asset.data_json, '\$.asset_name')"), $searchModel->q],
-        ]);
-
         // ค้นหาตามอายุ
         if ($searchModel->price1 && !$searchModel->price2) {
             $dataProvider->query->andWhere(new \yii\db\Expression('price = ' . $searchModel->price1));
