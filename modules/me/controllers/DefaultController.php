@@ -5,7 +5,6 @@ namespace app\modules\me\controllers;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\appreciation\models\Appreciation;
-use app\modules\approveV2\models\Approve;
 use app\modules\dms\models\Documents;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\helpdesk\models\HelpdeskSearch;
@@ -105,29 +104,6 @@ class DefaultController extends Controller
             }
         }
 
-        $pendingApproveCount = 0;
-        $pendingApproveByName = [];
-        try {
-            $rows = Approve::find()
-                ->select(['name', 'cnt' => 'COUNT(*)'])
-                ->andWhere(['emp_id' => (int) $model->id, 'status' => 'Pending'])
-                ->groupBy(['name'])
-                ->asArray()
-                ->all();
-            foreach ($rows as $row) {
-                $name = (string) ($row['name'] ?? '');
-                $cnt = (int) ($row['cnt'] ?? 0);
-                if ($name === '' || $cnt <= 0) {
-                    continue;
-                }
-                $pendingApproveByName[$name] = $cnt;
-                $pendingApproveCount += $cnt;
-            }
-        } catch (\Throwable $e) {
-            $pendingApproveCount = 0;
-            $pendingApproveByName = [];
-        }
-
         return $this->render('index', [
             'model' => $model ? $model : new Employees(),
             'searchModel' => $searchModel,
@@ -135,8 +111,6 @@ class DefaultController extends Controller
             'todayCheckinCount' => $todayCheckinCount,
             'appreciationReceivedCount' => $appreciationReceivedCount,
             'unreadDocumentCount' => $unreadDocumentCount,
-            'pendingApproveCount' => $pendingApproveCount,
-            'pendingApproveByName' => $pendingApproveByName,
         ]);
     }
 

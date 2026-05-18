@@ -88,6 +88,54 @@ class VehicleController extends \yii\web\Controller
         
     }
 
+    public function actionApproveAll()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!$this->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request'];
+        }
+
+        $me = UserHelper::GetEmployee();
+        $status = $this->request->post('status');
+        $ids = $this->request->post('ids', []);
+
+        if (empty($ids) || !is_array($ids)) {
+            return ['status' => 'error', 'message' => 'No items selected'];
+        }
+
+        $updated = 0;
+        foreach ($ids as $id) {
+            $model = Approve::findOne(['id' => (int) $id, 'name' => 'vehicle']);
+            if (!$model || !$model->vehicle) {
+                continue;
+            }
+
+            $old = $model->data_json;
+            $approveDate = ['approve_date' => date('Y-m-d H:i:s')];
+            $model->data_json = ArrayHelper::merge($old, $model->data_json, $approveDate);
+            $model->status = $status;
+
+            if (empty($model->emp_id)) {
+                $model->emp_id = $me->id;
+            }
+
+            if (!$model->save()) {
+                continue;
+            }
+
+            $model->vehicle->status = ($model->status === 'Reject') ? 'Reject' : 'Approve';
+            $model->vehicle->save(false);
+            $updated++;
+        }
+
+        if ($updated <= 0) {
+            return ['status' => 'error', 'message' => 'No items updated'];
+        }
+
+        return ['status' => 'success'];
+    }
+
     protected function findModel($id)
     {
         if (($model = Approve::findOne(['id' => $id])) !== null) {

@@ -4,9 +4,68 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\UserHelper;
+use app\components\ApproveHelper;
 use app\components\ThaiDateHelper;
 
 $me = UserHelper::GetEmployee();
+$notify = ApproveHelper::Info();
+
+$pendingApproveItems = [
+    [
+        'key' => 'leave',
+        'label' => 'การลา',
+        'url' => ['/approve-v2/leave'],
+        'icon' => 'fa-calendar-heart',
+        'count' => (int) ($notify['leave']['total'] ?? 0),
+    ],
+    [
+        'key' => 'booking_car',
+        'label' => 'ขอใช้รถ',
+        'url' => ['/approve-v2/vehicle'],
+        'icon' => 'fa-car-side',
+        'count' => (int) ($notify['booking_car']['total'] ?? 0),
+    ],
+    [
+        'key' => 'purchase',
+        'label' => 'จัดซื้อจัดจ้าง',
+        'url' => ['/approve-v2/purchase'],
+        'icon' => 'fa-cart-shopping',
+        'count' => (int) ($notify['purchase']['total'] ?? 0),
+    ],
+    [
+        'key' => 'development',
+        'label' => 'อบรม/ดูงาน',
+        'url' => ['/approve-v2/development'],
+        'icon' => 'fa-graduation-cap',
+        'count' => (int) ($notify['development']['total'] ?? 0),
+    ],
+    [
+        'key' => 'stock',
+        'label' => 'เบิกวัสดุ',
+        'url' => ['/approve-v2/main-stock'],
+        'icon' => 'fa-boxes-stacked',
+        'count' => (int) ($notify['stock']['total'] ?? 0),
+    ],
+    [
+        'key' => 'requisitionV2',
+        'label' => 'ขออนุมัติเบิกวัสดุ',
+        'url' => ['/approve-v2/main-stock/requisition-v2'],
+        'icon' => 'fa-clipboard-check',
+        'count' => (int) ($notify['requisitionV2']['total'] ?? 0),
+    ],
+    [
+        'key' => 'assetMove',
+        'label' => 'โอนพัสดุ',
+        'url' => ['/approve-v2/asset-move'],
+        'icon' => 'fa-truck-ramp-box',
+        'count' => (int) ($notify['assetMove']['total'] ?? 0),
+    ],
+];
+
+$pendingApproveCount = 0;
+foreach ($pendingApproveItems as $pendingApproveItem) {
+    $pendingApproveCount += (int) ($pendingApproveItem['count'] ?? 0);
+}
 
 $this->title = 'ภาพรวมของ' . $me->fullname();
 $this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
@@ -30,7 +89,7 @@ $this->params['breadcrumbs'][] = ['label' => $me->fullname(), 'url' => ['/me']];
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?php echo $this->render('@app/modules/me/menu', ['active' => 'dashboard']) ?>
+<?php echo $this->render('@app/modules/me/menu', ['active' => 'dashboard', 'notify' => $notify]) ?>
 
 <?php $this->endBlock(); ?>
 
@@ -442,20 +501,6 @@ if (!empty($upcomingHealth)): ?>
 </div>
 </div>
 
-<?php
-$approveNameMap = [
-    'leave' => ['label' => 'การลา', 'url' => ['/approve-v2/leave']],
-    'vehicle' => ['label' => 'ขอใช้รถ', 'url' => ['/approve-v2/vehicle']],
-    'purchase' => ['label' => 'จัดซื้อจัดจ้าง', 'url' => ['/approve-v2/purchase']],
-    'development' => ['label' => 'อบรม/ดูงาน', 'url' => ['/approve-v2/development']],
-    'main-stock' => ['label' => 'เบิกวัสดุ', 'url' => ['/approve-v2/main-stock']],
-    'main_stock' => ['label' => 'เบิกวัสดุ', 'url' => ['/approve-v2/main-stock']],
-    'asset-move' => ['label' => 'โอนพัสดุ', 'url' => ['/approve-v2/asset-move']],
-    'checkin' => ['label' => 'การลงเวลา', 'url' => ['/approve-v2/checkin']],
-];
-$pendingApproveByName = $pendingApproveByName ?? [];
-$pendingApproveCount = (int) ($pendingApproveCount ?? 0);
-?>
 <?php if ((!empty($unreadDocumentCount) && (int) $unreadDocumentCount > 0) || $pendingApproveCount > 0): ?>
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
     <?php if (!empty($unreadDocumentCount) && (int) $unreadDocumentCount > 0): ?>
@@ -481,37 +526,25 @@ $pendingApproveCount = (int) ($pendingApproveCount ?? 0);
     <?php endif; ?>
 
     <?php
-    $approveIconMap = [
-        'leave' => 'fa-calendar-heart',
-        'vehicle' => 'fa-car-side',
-        'purchase' => 'fa-cart-shopping',
-        'development' => 'fa-graduation-cap',
-        'main-stock' => 'fa-boxes-stacked',
-        'main_stock' => 'fa-boxes-stacked',
-        'asset-move' => 'fa-truck-ramp-box',
-        'checkin' => 'fa-clock',
-    ];
     $toastIdx = 0;
-    foreach ($pendingApproveByName as $name => $cnt):
-        if ((int) $cnt <= 0) continue;
-        $meta = $approveNameMap[$name] ?? ['label' => $name, 'url' => ['/approve-v2']];
-        $icon = $approveIconMap[$name] ?? 'fa-clipboard-check';
+    foreach ($pendingApproveItems as $item):
+        if ((int) ($item['count'] ?? 0) <= 0) continue;
         $toastIdx++;
     ?>
-    <div id="pending-approve-toast-<?= $toastIdx ?>" class="toast pending-approve-toast border-0 shadow-lg mt-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+    <div id="pending-approve-toast-<?= Html::encode((string) ($item['key'] ?? $toastIdx)) ?>" class="toast pending-approve-toast border-0 shadow-lg mt-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header bg-warning text-dark border-0">
-            <i class="fa-solid <?= Html::encode($icon) ?> me-2"></i>
-            <strong class="me-auto">รออนุมัติ: <?= Html::encode($meta['label']) ?></strong>
+            <i class="fa-solid <?= Html::encode($item['icon'] ?? 'fa-clipboard-check') ?> me-2"></i>
+            <strong class="me-auto">รออนุมัติ: <?= Html::encode($item['label'] ?? 'รายการอนุมัติ') ?></strong>
             <small class="text-dark text-opacity-75">ตอนนี้</small>
             <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body d-flex align-items-center gap-3">
             <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
-                <i class="fa-solid <?= Html::encode($icon) ?> fs-5"></i>
+                <i class="fa-solid <?= Html::encode($item['icon'] ?? 'fa-clipboard-check') ?> fs-5"></i>
             </div>
             <div class="flex-grow-1">
-                <div class="fw-bold text-dark"><?= Html::encode($meta['label']) ?> รออนุมัติ <span class="text-warning"><?= (int) $cnt ?></span> รายการ</div>
-                <a href="<?= Url::to($meta['url']) ?>" class="small text-primary text-decoration-none fw-semibold">
+                <div class="fw-bold text-dark"><?= Html::encode($item['label'] ?? 'รายการอนุมัติ') ?> รออนุมัติ <span class="text-warning"><?= (int) ($item['count'] ?? 0) ?></span> รายการ</div>
+                <a href="<?= Url::to($item['url'] ?? ['/approve-v2']) ?>" class="small text-primary text-decoration-none fw-semibold">
                     ไปที่หน้าอนุมัติ <i class="fa-solid fa-arrow-right ms-1"></i>
                 </a>
             </div>

@@ -33,14 +33,14 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <h6>เห็นชอบการลา <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</h6>
+            <h6>เห็นชอบการขอใช้รถยนต์ <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</h6>
 
             <?php echo $this->render(
                 '@app/modules/approveV2/views/default/_search',
                 [
                     'model' => $searchModel,
                     'emp_label' => 'ผู้ขอใช้รถยนต์',
-                    'approveAllUrl' => Url::to(['/approve-v2/leave/approve-all'])
+                    'approveAllUrl' => Url::to(['/approve-v2/vehicle/approve-all'])
                 ]
             ) ?>
 

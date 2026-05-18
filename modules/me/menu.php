@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use app\components\ApproveHelper;
 use app\components\SiteHelper;
 
-$notify = ApproveHelper::Info();
+$notify = $notify ?? ApproveHelper::Info();
 $total = $notify['total'];
 $totalLeave = $notify['leave']['total'];
 $totalPurchase = $notify['purchase']['total'];
