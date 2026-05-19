@@ -105,6 +105,19 @@ use yii\helpers\Url;
 
 <?php
 $js = <<< JS
+function initTooltips() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip && !bootstrap.Tooltip.getInstance(el)) {
+            new bootstrap.Tooltip(el);
+        }
+    });
+}
+initTooltips();
+$(document).on('pjax:end', function() {
+    initTooltips();
+});
+
 $("body").on("click", ".export-document", function (e) {
     e.preventDefault();
     let form = $('#w0');

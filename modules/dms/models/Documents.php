@@ -461,17 +461,37 @@ class Documents extends \yii\db\ActiveRecord
     }
 
     // แสดงรายชื่อหน่วยงานที่ Tags ไป
-    public function viewTagsDepartment()
+    public function viewTagsDepartment($limit = 3)
     {
         $departments = DocumentsDetail::find()
             ->where(['name' => 'department', 'document_id' => $this->id])
             ->all();
 
-        $names = [];
-        foreach ($departments as $detail) {
-            $names[] = '<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 ms-1">' . $detail->department->name . '</span>';
+        $count = count($departments);
+        if ($count === 0) {
+            return '';
         }
-        return implode($names);
+
+        $names = [];
+        $tooltipNames = [];
+        foreach ($departments as $index => $detail) {
+            $deptName = $detail->department ? $detail->department->name : ('หน่วยงาน #' . $detail->to_id);
+            $tooltipNames[] = $deptName;
+            if ($limit === null || $index < $limit) {
+                $names[] = '<span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 ms-1">' . Html::encode($deptName) . '</span>';
+            }
+        }
+
+        if ($limit !== null && $count > $limit) {
+            $remaining = $count - $limit;
+            $tooltipHtml = '';
+            foreach ($tooltipNames as $n) {
+                $tooltipHtml .= Html::encode($n) . '<br>';
+            }
+            $names[] = '<span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 ms-1" data-bs-toggle="tooltip" data-bs-html="true" title="' . $tooltipHtml . '" style="cursor: pointer;"><i class="fa-solid fa-ellipsis"></i> +' . $remaining . '</span>';
+        }
+
+        return implode('', $names);
     }
 
     // รายการแสดงความเห็น
