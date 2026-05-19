@@ -27,7 +27,13 @@ use yii\widgets\DetailView;
 
                     </div>
                     <span class="text-white">
-                        <?php  echo $model->documentOrg->title ?? '-';?>
+                        <?php 
+                        if ($model->document_type === 'DT2') {
+                            echo $model->viewTagsDepartment() ?: 'หนังสือภายใน';
+                        } else {
+                            echo $model->documentOrg->title ?? '-';
+                        }
+                        ?>
                     </span>
                 </div>
             </div>

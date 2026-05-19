@@ -59,7 +59,13 @@ use yii\helpers\Url;
                     <span class="text-primary fw-normal fs-13">
                         |
                         <i class="fa-solid fa-inbox"></i>
-                        <?php echo $item->documentOrg->title ?? '-'; ?>
+                        <?php 
+                        if ($item->document_type === 'DT2') {
+                            echo $item->viewTagsDepartment() ?: '-';
+                        } else {
+                            echo $item->documentOrg->title ?? '-';
+                        }
+                        ?>
                         <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
                         </span>

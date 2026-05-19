@@ -226,7 +226,13 @@ if (file_exists($dataFile)) {
 <?php echo $item->viewReceiveDate()?>
 </p>
             <span class="transaction-details">
-                <?php  echo $item->documentOrg->title ?? '-';?>
+                <?php 
+                if ($item->document_type === 'DT2') {
+                    echo $item->viewTagsDepartment() ?: 'หนังสือภายใน';
+                } else {
+                    echo $item->documentOrg->title ?? '-';
+                }
+                ?>
             </span>
         </div>
 
