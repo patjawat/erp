@@ -26,7 +26,7 @@ $activeTab = in_array($activeTab ?? 'type', ['type', 'group', 'position'], true)
 
 <?php $this->beginBlock('action'); ?>
  <div class="d-flex flex-column flex-sm-row flex-wrap gap-2">
-                <?= Html::a('<i class="fa-solid fa-arrow-left me-1"></i> กลับหน้าตั้งค่า', ['/hr/default/settings'], [
+                <?= Html::a('<i class="fa-solid fa-arrow-left me-1"></i> กลับหน้าทะเบียนบุคลากร', ['/hr/employees'], [
                     'class' => 'btn btn-outline-secondary rounded-3 fw-semibold',
                 ]) ?>
             </div>

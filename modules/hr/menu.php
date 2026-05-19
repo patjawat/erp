@@ -37,7 +37,7 @@ use yii\helpers\Url;
                 </a>
             </li>
             <li><hr class="dropdown-divider my-1"></li>
-            <li>
+            <!-- <li>
                 <?= Html::a(
                     '<span class="d-flex align-items-center gap-2"><i data-lucide="tag" style="width:15px;height:15px" class="text-muted"></i> การตั้งค่าบุคลากร</span>',
                     ['/hr/categorise', 'title' => 'การตั้งค่าบุคลากร'],
@@ -50,10 +50,10 @@ use yii\helpers\Url;
                     ['/hr/position', 'title' => 'การตั้งค่าบุคลากร'],
                     ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]
                 ) ?>
-            </li>
+            </li> -->
             <li>
                 <?= Html::a(
-                    '<span class="d-flex align-items-center gap-2"><i data-lucide="sliders-horizontal" style="width:15px;height:15px" class="text-muted"></i> ข้อมูลหลักพนักงานใหม่</span>',
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="sliders-horizontal" style="width:15px;height:15px" class="text-muted"></i> ข้อมูลหลักพนักงาน</span>',
                     ['/hr/employee-master', 'title' => 'ตั้งค่าข้อมูลหลักพนักงาน'],
                     ['class' => 'dropdown-item', 'data' => ['pjax' => false]]
                 ) ?>
