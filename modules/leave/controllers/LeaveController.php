@@ -172,19 +172,37 @@ class LeaveController extends Controller
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $model->date_start = AppHelper::convertToGregorian($model->date_start);
             $model->date_end   = AppHelper::convertToGregorian($model->date_end);
+            $model->thai_year  = (int) AppHelper::YearBudget($model->date_start);
             
             $oldJson = $model->getOldAttribute('data_json');
             if (is_string($oldJson)) {
                 $oldJson = json_decode($oldJson, true) ?: [];
             }
             $model->data_json = array_merge((array) $oldJson, (array) $model->data_json);
-            
-            if ($model->save(false)) {
+
+            $annualError = $this->validateAnnualLeaveLimit(
+                (int) $model->emp_id,
+                (int) $model->thai_year,
+                (string) $model->leave_type_id,
+                $model->total_days
+            );
+            if ($annualError !== null) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'error', 'message' => $annualError];
+                }
+                Yii::$app->session->setFlash('error', $annualError);
+            } elseif ($model->save(false)) {
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return ['status' => 'success', 'redirect' => Url::to(['/leave/approver/index'])];
                 }
                 return $this->redirect(['/leave/approver/index']);
+            } elseif (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
+            } else {
+                Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ');
             }
         }
 
@@ -434,8 +452,17 @@ class LeaveController extends Controller
                     'director'          => SiteHelper::viewDirector()['id'] ?? null,
                     'director_fullname' => SiteHelper::viewDirector()['fullname'] ?? '',
                 ]);
+                $annualError = $this->validateAnnualLeaveLimit(
+                    (int) $me->id,
+                    (int) $model->thai_year,
+                    (string) $model->leave_type_id,
+                    $model->total_days
+                );
+                if ($annualError !== null) {
+                    $errors[] = $annualError;
+                }
 
-                if ($model->save(false)) {
+                if (empty($errors) && $model->save(false)) {
                     $model->createApprove();
                     Yii::$app->session->setFlash('success', 'สร้างใบลาสำเร็จ');
                     if (Yii::$app->request->isAjax) {
@@ -444,6 +471,10 @@ class LeaveController extends Controller
                     }
                     return $this->redirect(['/leave/default/index']);
                 }
+            }
+
+            if (!empty($errors) && !Yii::$app->request->isAjax) {
+                Yii::$app->session->setFlash('error', implode('<br>', $errors));
             }
 
             if (Yii::$app->request->isAjax) {
@@ -501,6 +532,51 @@ class LeaveController extends Controller
             ];
         }
         return $rows;
+    }
+
+    protected function getAnnualLeaveSummary(int $empId, int $thaiYear): array
+    {
+        $leave = new Leave();
+        $leave->emp_id = $empId;
+        $leave->thai_year = $thaiYear;
+        $summary = $leave->sumLeavePermission();
+
+        $total = max(0, (float) ($summary['total'] ?? 0));
+        $used = max(0, (float) ($summary['use_days'] ?? 0));
+        $remaining = max(0, (float) ($summary['sum'] ?? ($total - $used)));
+
+        return [
+            'total' => $total,
+            'used' => $used,
+            'remaining' => $remaining,
+        ];
+    }
+
+    protected function formatLeaveDays($days): string
+    {
+        $value = round((float) $days, 2);
+        $text = number_format($value, 2, '.', '');
+        return rtrim(rtrim($text, '0'), '.') ?: '0';
+    }
+
+    protected function validateAnnualLeaveLimit(int $empId, int $thaiYear, string $leaveTypeId, $totalDays): ?string
+    {
+        $requestedDays = round(max(0, (float) $totalDays), 2);
+        if ($requestedDays <= 0) {
+            return 'วันลาต้องมากกว่า 0';
+        }
+
+        if ($leaveTypeId !== 'LT4') {
+            return null;
+        }
+
+        $summary = $this->getAnnualLeaveSummary($empId, $thaiYear);
+        $remaining = round((float) ($summary['remaining'] ?? 0), 2);
+        if ($requestedDays > $remaining) {
+            return 'วันลาพักผ่อนไม่เพียงพอ (คงเหลือ ' . $this->formatLeaveDays($remaining) . ' วัน, ขอใช้ ' . $this->formatLeaveDays($requestedDays) . ' วัน)';
+        }
+
+        return null;
     }
 
     protected function calDays($start, $end)
@@ -642,7 +718,7 @@ class LeaveController extends Controller
         }
 
         // ตรวจสอบปีงบประมาณ (raw SQL แทน model ที่อยู่นอก modules/leave)
-        $checkYear = AppHelper::YearBudget($dateEnd);
+        $checkYear = AppHelper::YearBudget($dateStart);
         $entitleCount = (int) Yii::$app->db->createCommand(
             'SELECT COUNT(id) FROM `leave_entitlements` WHERE thai_year = :yr',
             [':yr' => $checkYear]
@@ -650,6 +726,8 @@ class LeaveController extends Controller
         if ($entitleCount === 0) {
             return ['status' => 'error', 'message' => 'ไม่พบข้อมูลสิทธิ์การลาในปี ' . $checkYear . ' กรุณาติดต่อเจ้าหน้าที่'];
         }
+
+        $annualSummary = $this->getAnnualLeaveSummary($empId, $checkYear);
 
         $result = LeaveHelper::CalDay($dateStart, $dateEnd, $empId);
         $allDays    = (float) ($result['allDays'] ?? 0);
@@ -680,6 +758,9 @@ class LeaveController extends Controller
             'shift_name' => $shift === 'normal' ? 'เวรเช้า' : 'เวร 8',
             'type_days'  => round($dateStartType + $dateEndType, 2),
             'total'      => $total,
+            'remaining_annual_leave' => $annualSummary['remaining'] ?? 0,
+            'annual_leave_total'     => $annualSummary['total'] ?? 0,
+            'annual_leave_used'      => $annualSummary['used'] ?? 0,
         ];
     }
 

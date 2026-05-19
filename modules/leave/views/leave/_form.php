@@ -213,10 +213,20 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
         $initSatsun = 0;
         $initHoliday = 0;
         $initTotal = 0;
+        $remainingAnnualLeave = 0;
         if ($isUpdate && is_array($model->data_json ?? null)) {
             $initSatsun  = (int) ($model->data_json['summary_sat_sun'] ?? $model->data_json['sat_sun_days'] ?? 0);
             $initHoliday = (int) ($model->data_json['summary_holiday'] ?? $model->data_json['holidays'] ?? 0);
             $initTotal   = (float) ($model->total_days ?? 0);
+        }
+        foreach ($stats as $row) {
+            if (($row['code'] ?? '') === 'LT4') {
+                $remainingAnnualLeave = max(
+                    0,
+                    (float) ($row['entitlement_days'] ?? 0) - (float) ($row['used_days'] ?? 0)
+                );
+                break;
+            }
         }
         ?>
         <div class="card border-0 border-start border-3 border-info mb-3">
@@ -239,6 +249,7 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
                         <input type="text" id="leave-summary-total" class="form-control text-center fw-bold text-primary" value="<?= (float) $initTotal ?>" readonly tabindex="-1">
                     </div>
                 </div>
+                <div id="leave-annual-leave-alert" class="alert alert-info py-2 px-3 small mt-3 mb-0 d-none" role="alert" aria-live="polite"></div>
             </div>
         </div>
         <?= $form->field($model, 'total_days')->hiddenInput(['id' => 'leave-total_days'])->label(false) ?>
@@ -453,7 +464,7 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
         </div>
 
         <div class="d-flex justify-content-center">
-            <button type="submit" class="btn btn-primary rounded-3 px-4">
+            <button type="submit" id="leave-submit-btn" class="btn btn-primary rounded-3 px-4">
                 <i class="bi bi-check2-circle me-1"></i> บันทึก
             </button>
         </div>
@@ -471,12 +482,15 @@ $updateShiftUrl   = \yii\helpers\Url::to(['/leave/leave/update-work-shift']);
 $empWorkShift     = $employee && isset($employee->work_shift) ? $employee->work_shift : 'normal';
 $csrfParam        = \Yii::$app->request->csrfParam;
 $csrfToken        = \Yii::$app->request->csrfToken;
+$remainingAnnualLeaveJs = json_encode((float) $remainingAnnualLeave);
 $js = <<<JS
 (function(){
     var calDaysUrl     = "{$calDaysUrl}";
     var updateShiftUrl = "{$updateShiftUrl}";
     var csrfParam      = "{$csrfParam}";
     var csrfToken      = "{$csrfToken}";
+    var annualLeaveTypeCode = 'LT4';
+    var annualLeaveRemaining = {$remainingAnnualLeaveJs};
 
     // ── helpers ───────────────────────────────────────────────────────────
     function getDateStart()     { var el = document.getElementById('leave-date_start');      return el ? el.value.trim() : ''; }
@@ -485,6 +499,45 @@ $js = <<<JS
     function getDateEndType()   { var el = document.getElementById('leave-date_end_type');   return el ? parseFloat(el.value) || 0 : 0; }
     function getWorkShift()     { var el = document.getElementById('leave-work_shift');      return el ? el.value : ''; }
     function getLeaveTypeId()   { var el = document.getElementById('leave-create-form-leave_type_id'); return el ? el.value : ''; }
+    function formatLeaveDays(days) {
+        var value = parseFloat(days);
+        if (isNaN(value)) value = 0;
+        return value.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    }
+    function isAnnualLeaveSelected() {
+        return getLeaveTypeId() === annualLeaveTypeCode;
+    }
+    function setSubmitBlocked(blocked) {
+        var btn = document.getElementById('leave-submit-btn');
+        if (!btn) return;
+        btn.disabled = !!blocked;
+        btn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+        btn.classList.toggle('opacity-75', !!blocked);
+    }
+    function updateAnnualLeaveWarning(total) {
+        var alertEl = document.getElementById('leave-annual-leave-alert');
+        if (!alertEl) return;
+
+        if (!isAnnualLeaveSelected()) {
+            alertEl.className = 'alert alert-info py-2 px-3 small mt-3 mb-0 d-none';
+            alertEl.innerHTML = '';
+            setSubmitBlocked(false);
+            return;
+        }
+
+        var totalVal = parseFloat(total) || 0;
+        var remaining = parseFloat(annualLeaveRemaining) || 0;
+        var blocked = remaining <= 0 || totalVal > remaining;
+        var text = blocked
+            ? (remaining <= 0
+                ? 'วันลาพักผ่อนคงเหลือ 0 วัน ไม่สามารถยื่นลาได้'
+                : 'วันลาพักผ่อนไม่เพียงพอ คงเหลือ ' + formatLeaveDays(remaining) + ' วัน แต่ขอใช้ ' + formatLeaveDays(totalVal) + ' วัน')
+            : 'วันลาพักผ่อนคงเหลือ ' + formatLeaveDays(remaining) + ' วัน';
+
+        alertEl.className = 'alert ' + (blocked ? 'alert-danger' : 'alert-info') + ' py-2 px-3 small mt-3 mb-0';
+        alertEl.innerHTML = '<i class="bi ' + (blocked ? 'bi-exclamation-triangle' : 'bi-info-circle') + ' me-1"></i> ' + text;
+        setSubmitBlocked(blocked);
+    }
 
     // ── toggleTotalEditable — เวร 8: สรุปวันลาแก้ไขได้ ───────────────────
     function toggleTotalEditable() {
@@ -538,7 +591,11 @@ $js = <<<JS
     function calDays() {
         var s = getDateStart();
         var e = getDateEnd();
-        if (!s || !e || s.length < 8 || e.length < 8) { updateSummary(0, 0, 0); return; }
+        if (!s || !e || s.length < 8 || e.length < 8) {
+            updateSummary(0, 0, 0);
+            updateAnnualLeaveWarning(0);
+            return;
+        }
         var params = new URLSearchParams({
             date_start:      s,
             date_end:        e,
@@ -552,6 +609,7 @@ $js = <<<JS
             .then(function(res){
                 if (res.status === 'error') {
                     updateSummary(0, 0, 0);
+                    updateAnnualLeaveWarning(0);
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: res.message, timer: 4000, showConfirmButton: false });
                     } else {
@@ -559,14 +617,21 @@ $js = <<<JS
                     }
                     return;
                 }
+                if (typeof res.remaining_annual_leave !== 'undefined') {
+                    annualLeaveRemaining = parseFloat(res.remaining_annual_leave) || 0;
+                }
                 updateSummary(res.satsunDays || 0, res.holiday || 0, res.total || 0);
+                updateAnnualLeaveWarning(res.total || 0);
                 // auto-fill work_shift ถ้าผู้ใช้ยังไม่เลือก
                 var shiftEl = document.getElementById('leave-work_shift');
                 if (shiftEl && shiftEl.value === '' && res.shift) {
                     shiftEl.value = res.shift;
                 }
             })
-            .catch(function(){ updateSummary(0, 0, 0); });
+            .catch(function(){
+                updateSummary(0, 0, 0);
+                updateAnnualLeaveWarning(0);
+            });
     }
 
     // ── updateWorkShift — บันทึก work_shift ลง DB แล้ว recalc ────────────
@@ -611,6 +676,7 @@ $js = <<<JS
                 var b   = document.getElementById('leave-total-days');
                 if (inp) inp.value = v;
                 if (b) b.textContent = v + ' วัน';
+                updateAnnualLeaveWarning(v);
             });
         }
 
@@ -640,8 +706,31 @@ $js = <<<JS
 
     // ── helper: ajax submit with Swal confirm ────────────────────────────
     function ajaxSubmitForm(form, totalVal, successKey) {
-        if (totalVal <= 0 && typeof Swal !== 'undefined') {
-            Swal.fire({ icon: 'error', title: 'วันลาต้องมากกว่า 0', text: '' });
+        if (totalVal <= 0) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'วันลาต้องมากกว่า 0', text: '' });
+            } else {
+                alert('วันลาต้องมากกว่า 0');
+            }
+            return false;
+        }
+        if (isAnnualLeaveSelected() && (annualLeaveRemaining <= 0 || totalVal > annualLeaveRemaining)) {
+            updateAnnualLeaveWarning(totalVal);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'วันลาพักผ่อนไม่เพียงพอ',
+                    text: annualLeaveRemaining <= 0
+                        ? 'วันลาพักผ่อนคงเหลือ 0 วัน ไม่สามารถยื่นลาได้'
+                        : 'คงเหลือ ' + formatLeaveDays(annualLeaveRemaining) + ' วัน แต่ขอใช้ ' + formatLeaveDays(totalVal) + ' วัน',
+                });
+            } else {
+                alert(
+                    annualLeaveRemaining <= 0
+                        ? 'วันลาพักผ่อนคงเหลือ 0 วัน ไม่สามารถยื่นลาได้'
+                        : 'คงเหลือ ' + formatLeaveDays(annualLeaveRemaining) + ' วัน แต่ขอใช้ ' + formatLeaveDays(totalVal) + ' วัน'
+                );
+            }
             return false;
         }
         if (typeof Swal !== 'undefined') {

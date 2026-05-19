@@ -497,35 +497,37 @@ class ReportController extends \yii\web\Controller
         // แถวที่ 1
         $sheet->setCellValue('A1', 'รหัสสินค้า');
         $sheet->setCellValue('B1', 'รายการสินค้า');
-        $sheet->setCellValue('C1', 'ประเภทวัสดุ');
-        $sheet->setCellValue('D1', 'ยอดยกมา');
-        $sheet->setCellValue('F1', 'รับเข้า');
-        $sheet->setCellValue('H1', 'จ่ายออก');
-        $sheet->setCellValue('J1', 'คงเหลือสิ้นเดือน');
+        $sheet->setCellValue('C1', 'หน่วย');
+        $sheet->setCellValue('D1', 'ประเภทวัสดุ');
+        $sheet->setCellValue('E1', 'ยอดยกมา');
+        $sheet->setCellValue('G1', 'รับเข้า');
+        $sheet->setCellValue('I1', 'จ่ายออก');
+        $sheet->setCellValue('K1', 'คงเหลือสิ้นเดือน');
 
         // รวมเซลล์ตามโครงสร้าง
         $sheet->mergeCells('A1:A2');
         $sheet->mergeCells('B1:B2');
         $sheet->mergeCells('C1:C2');
-        $sheet->mergeCells('D1:E1');
-        $sheet->mergeCells('F1:G1');
-        $sheet->mergeCells('H1:I1');
-        $sheet->mergeCells('J1:K1');
+        $sheet->mergeCells('D1:D2');
+        $sheet->mergeCells('E1:F1');
+        $sheet->mergeCells('G1:H1');
+        $sheet->mergeCells('I1:J1');
+        $sheet->mergeCells('K1:L1');
 
         // แถวที่ 2
-        $sheet->setCellValue('D2', 'จำนวน');
-        $sheet->setCellValue('E2', 'มูลค่า');
-        $sheet->setCellValue('F2', 'จำนวน');
-        $sheet->setCellValue('G2', 'มูลค่า');
-        $sheet->setCellValue('H2', 'จำนวน');
-        $sheet->setCellValue('I2', 'มูลค่า');
-        $sheet->setCellValue('J2', 'จำนวนคงเหลือ');
-        $sheet->setCellValue('K2', 'มูลค่าคงเหลือ');
+        $sheet->setCellValue('E2', 'จำนวน');
+        $sheet->setCellValue('F2', 'มูลค่า');
+        $sheet->setCellValue('G2', 'จำนวน');
+        $sheet->setCellValue('H2', 'มูลค่า');
+        $sheet->setCellValue('I2', 'จำนวน');
+        $sheet->setCellValue('J2', 'มูลค่า');
+        $sheet->setCellValue('K2', 'จำนวนคงเหลือ');
+        $sheet->setCellValue('L2', 'มูลค่าคงเหลือ');
 
         // --------------------------------------------------
         // จัดสไตล์หัวตาราง
         // --------------------------------------------------
-        $headerRange = 'A1:K2';
+        $headerRange = 'A1:L2';
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($headerRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($headerRange)->getFont()->setBold(true);
@@ -542,6 +544,7 @@ class ReportController extends \yii\web\Controller
             $sheet->fromArray([
                 $r['asset_item'],
                 $r['asset_name'],
+                $r['unit'] ?? '-',
                 $r['asset_type_name'],
                 $r['begin_qty'],
                 $r['begin_price'],
@@ -563,14 +566,13 @@ class ReportController extends \yii\web\Controller
 
 
         // ปรับความกว้างคอลัมน์อัตโนมัติ
-        foreach (range('A', 'K') as $col) {
+        foreach (range('A', 'L') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
         $sheet->setCellValue("A{$rowIndex}", 'รวมทั้งหมด');
         $sheet->mergeCells("A{$rowIndex}:D{$rowIndex}");
 
-        $sheet->setCellValue("D{$rowIndex}", "=SUM(D3:D" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("E{$rowIndex}", "=SUM(E3:E" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("F{$rowIndex}", "=SUM(F3:F" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("G{$rowIndex}", "=SUM(G3:G" . ($rowIndex - 1) . ")");
@@ -578,8 +580,12 @@ class ReportController extends \yii\web\Controller
         $sheet->setCellValue("I{$rowIndex}", "=SUM(I3:I" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("J{$rowIndex}", "=SUM(J3:J" . ($rowIndex - 1) . ")");
         $sheet->setCellValue("K{$rowIndex}", "=SUM(K3:K" . ($rowIndex - 1) . ")");
-        $sheet->getStyle("A{$rowIndex}:K{$rowIndex}")->getFont()->setBold(true);
-        $sheet->getStyle("A{$rowIndex}:K{$rowIndex}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->setCellValue("L{$rowIndex}", "=SUM(L3:L" . ($rowIndex - 1) . ")");
+        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$rowIndex}:L{$rowIndex}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("E{$rowIndex}:L{$rowIndex}")
+            ->getNumberFormat()
+            ->setFormatCode(NumberFormat::FORMAT_NUMBER_0);
 
         // ส่งไฟล์ออกไปยัง Browser
 
